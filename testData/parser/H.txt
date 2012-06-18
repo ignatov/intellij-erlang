@@ -15255,28 +15255,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement(})('}')
   PsiElement(.)('.')
-  ERL_ATTRIBUTE
-    PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        PsiElement(atom)('type')
-      ERL_ATTR_VAL
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_MAX_EXPRESSION
-            ERL_Q_ATOM
-              PsiElement(atom)('eval')
-          ERL_ARGUMENT_LIST
-            PsiElement(()('(')
-            PsiElement())(')')
-  PsiErrorElement:'!', '*', '+', '++', ',', '-', '--', '/', '/=', <, '=', '=/=', '=:=', '=<', '==', '>', '>=', and, andalso, band, bor, bsl, bsr, bxor, div, orelse, rem, xor or '|' expected, got ':'
-    PsiElement(:)(':')
-  PsiElement(:)(':')
-  PsiElement(atom)(''pos'')
-  PsiElement(|)('|')
-  PsiElement(atom)(''neg'')
-  PsiElement(|)('|')
-  PsiElement(atom)(''dont_know'')
-  PsiElement(.)('.')
+  PsiComment(ERL_LINE_COMMENT)('%-type eval() :: 'pos' | 'neg' | 'dont_know'.\n')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
@@ -32260,47 +32239,3 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
   PsiElement(.)('.')
-  PsiErrorElement:'-', '?' or atom expected, got '%'
-    PsiElement(BAD_CHARACTER)('%')
-  PsiElement(DUMMY_BLOCK)
-    PsiElement(BAD_CHARACTER)('%')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-  PsiElement(DUMMY_BLOCK)
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-  PsiElement(DUMMY_BLOCK)
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-    PsiElement(--)('--')
-  PsiElement(--)('--')
-  PsiElement(--)('--')
-  PsiElement(--)('--')
-  PsiElement(--)('--')
-  PsiElement(--)('--')
-  PsiElement(--)('--')
-  PsiElement(--)('--')
-  PsiElement(--)('--')
-  PsiElement(--)('--')

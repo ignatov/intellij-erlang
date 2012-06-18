@@ -22,6 +22,12 @@ public class ErlangColonQualifiedExpressionImpl extends ErlangExpressionImpl imp
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
+  @Override
+  @Nullable
+  public ErlangQAtom getQAtom() {
+    return findChildByClass(ErlangQAtom.class);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitColonQualifiedExpression(this);
     else super.accept(visitor);

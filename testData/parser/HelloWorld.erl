@@ -10,6 +10,6 @@ naive_reverse([]) ->
 hello_world() -> io:fwrite("hello, world").
 hello_world2() -> io:fwrite("hello, world").
 
-hello(X) -> X + 2.
+%-type eval() :: 'pos' | 'neg' | 'dont_know'.
 
--type eval() :: 'pos' | 'neg' | 'dont_know'.
+hello(X) -> X + 2.

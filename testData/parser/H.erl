@@ -867,7 +867,7 @@ bind_guard_list([G|Gs], Map, Env, Eval, State, Acc) ->
 bind_guard_list([], Map, _Env, _Eval, _State, Acc) ->
   {Map, lists:reverse(Acc)}.
 
--type eval() :: 'pos' | 'neg' | 'dont_know'.
+%-type eval() :: 'pos' | 'neg' | 'dont_know'.
 
 -spec signal_guard_fail(eval(), cerl:c_call(), [erl_types:erl_type()],
 			state()) -> no_return().
@@ -2052,4 +2052,3 @@ to_dot(_CG) ->
   ok.
 -endif.
 
-%%----------------------------------------------------------------------------

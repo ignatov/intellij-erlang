@@ -104,9 +104,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_EXPR_700_A) {
       result_ = expr_700_a(builder_, level_ + 1);
     }
-    else if (root_ == ERL_EXPR_900_A) {
-      result_ = expr_900_a(builder_, level_ + 1);
-    }
     else if (root_ == ERL_EXPRESSION) {
       result_ = expression(builder_, level_ + 1);
     }
@@ -279,11 +276,11 @@ public class ErlangParser implements PsiParser {
     TokenSet.create(ERL_ADDITIVE_EXPRESSION, ERL_BEGIN_END_EXPRESSION, ERL_BINARY_COMPREHENSION, ERL_BINARY_EXPRESSION,
       ERL_CASE_EXPRESSION, ERL_COLON_QUALIFIED_EXPRESSION, ERL_EXPRESSION, ERL_EXPR_100_A,
       ERL_EXPR_150_A, ERL_EXPR_160_A, ERL_EXPR_200_A, ERL_EXPR_300_A,
-      ERL_EXPR_400_A, ERL_EXPR_500_A, ERL_EXPR_700_A, ERL_EXPR_900_A,
-      ERL_FUNCTION_CALL_EXPRESSION, ERL_FUN_EXPRESSION, ERL_IF_EXPRESSION, ERL_LC_EXPRESSION,
-      ERL_LIST_COMPREHENSION, ERL_LIST_EXPRESSION, ERL_MAX_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION,
-      ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION, ERL_QUERY_EXPRESSION,
-      ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
+      ERL_EXPR_400_A, ERL_EXPR_500_A, ERL_EXPR_700_A, ERL_FUNCTION_CALL_EXPRESSION,
+      ERL_FUN_EXPRESSION, ERL_IF_EXPRESSION, ERL_LC_EXPRESSION, ERL_LIST_COMPREHENSION,
+      ERL_LIST_EXPRESSION, ERL_MAX_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION,
+      ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION, ERL_QUERY_EXPRESSION, ERL_RECEIVE_EXPRESSION,
+      ERL_RECORD_EXPRESSION, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
   };
   public static boolean type_extends_(IElementType child_, IElementType parent_) {
     for (TokenSet set : EXTENDS_SETS_) {
@@ -1141,7 +1138,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // expr_900_a colon_max_expression?
+  // (max_expression | qualified_reference) colon_max_expression?
   public static boolean colon_qualified_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "colon_qualified_expression")) return false;
     boolean result_ = false;
@@ -1149,7 +1146,7 @@ public class ErlangParser implements PsiParser {
     final int start_ = builder_.getCurrentOffset();
     final Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
-    result_ = expr_900_a(builder_, level_ + 1);
+    result_ = colon_qualified_expression_0(builder_, level_ + 1);
     result_ = result_ && colon_qualified_expression_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
     if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_COLON_QUALIFIED_EXPRESSION)) {
@@ -1163,6 +1160,28 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
+  }
+
+  // (max_expression | qualified_reference)
+  private static boolean colon_qualified_expression_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "colon_qualified_expression_0")) return false;
+    return colon_qualified_expression_0_0(builder_, level_ + 1);
+  }
+
+  // max_expression | qualified_reference
+  private static boolean colon_qualified_expression_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "colon_qualified_expression_0_0")) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = max_expression(builder_, level_ + 1);
+    if (!result_) result_ = qualified_reference(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
   }
 
   // colon_max_expression?
@@ -1651,43 +1670,6 @@ public class ErlangParser implements PsiParser {
     }
     else {
       marker_.rollbackTo();
-    }
-    return result_;
-  }
-
-  /* ********************************************************** */
-  // max_expression | (qualified_reference)
-  public static boolean expr_900_a(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "expr_900_a")) return false;
-    boolean result_ = false;
-    final int start_ = builder_.getCurrentOffset();
-    final Marker marker_ = builder_.mark();
-    result_ = max_expression(builder_, level_ + 1);
-    if (!result_) result_ = expr_900_a_1(builder_, level_ + 1);
-    LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
-    if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_EXPR_900_A)) {
-      marker_.drop();
-    }
-    else if (result_) {
-      marker_.done(ERL_EXPR_900_A);
-    }
-    else {
-      marker_.rollbackTo();
-    }
-    return result_;
-  }
-
-  // (qualified_reference)
-  private static boolean expr_900_a_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "expr_900_a_1")) return false;
-    boolean result_ = false;
-    final Marker marker_ = builder_.mark();
-    result_ = qualified_reference(builder_, level_ + 1);
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
     }
     return result_;
   }

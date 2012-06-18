@@ -187,10 +187,9 @@ left multiplicative_expression ::= mult_op prefix_expression {pin=1}
 //expr_500 ::= expr_600 (expr_500 mult_op expr_600) | expr_600
 prefix_expression ::= prefix_op? expr_700_a {pin=0}
 expr_700_a ::= function_call_expression | record_expression | colon_qualified_expression
-colon_qualified_expression ::= expr_900_a colon_max_expression? {pin=0}
+colon_qualified_expression ::= (max_expression | qualified_reference) colon_max_expression? {pin=0}
 private colon_max_expression ::= ':' max_expression
 //expr_900 ::= ('.' atom1) | expr_max | (expr_900 '.' atom1)
-expr_900_a ::= max_expression | (qualified_reference)
 private qualified_reference ::= q_atom qualified_expression*
 left qualified_expression ::= '.' q_atom {pin=0} //todo
 
