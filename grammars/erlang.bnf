@@ -1,0 +1,278 @@
+// http://erlang.org/pipermail/erlang-questions/2011-November/062390.html
+// http://erlang.org/pipermail/erlang-questions/attachments/20111114/ba08f89c/attachment.obj
+// https://github.com/erlang/otp/blob/master/lib/stdlib/src/erl_parse.yrl
+//
+// Erlang bnf grammar
+//
+// Rootsymbol form
+
+
+{
+  parserClass="org.intellij.erlang.parser.ErlangParser"
+  stubParserClass="org.intellij.erlang.parser.ErlangParserUtil"
+
+  implements="org.intellij.erlang.psi.ErlangCompositeElement"
+  extends="org.intellij.erlang.psi.impl.ErlangCompositeElementImpl"
+
+  elementTypeHolderClass="org.intellij.erlang.ErlangTypes"
+  elementTypePrefix="ERL_"
+  elementTypeClass="org.intellij.erlang.psi.ErlangCompositeElementType"
+  tokenTypeClass="org.intellij.erlang.psi.ErlangTokenType"
+
+  psiClassPrefix="Erlang"
+  psiImplClassSuffix="Impl"
+  psiPackage="org.intellij.erlang.psi"
+  psiImplPackage="org.intellij.erlang.psi.impl"
+
+  psiImplUtilClass="org.intellij.erlang.psi.impl.ErlangPsiImplUtil"
+
+
+  BIN_START=                  "<<"
+  BIN_END=                    ">>"
+  
+                             /* operators */
+  OP_PLUS=                    "+"
+  OP_MINUS=                   "-"
+  OP_AR_MUL=                  "*"
+  OP_AR_DIV=                  "/"
+  OP_DIV=                     "div"
+  OP_REM=                     "rem"
+  OP_OR=                      "or"
+  OP_XOR=                     "xor"
+  OP_BOR=                     "bor"
+  OP_BXOR=                    "bxor"
+  OP_BSL=                     "bsl"
+  OP_BSR=                     "bsr"
+  OP_AND=                     "and"
+  OP_BAND=                    "band"
+  OP_EQ_EQ=                   "=="
+  OP_DIV_EQ=                  "/="
+  OP_EQ_COL_EQ=               "=:="
+  OP_EQ_DIV_EQ=               "=/="
+  OP_LT=                      "<"
+  OP_EQ_LT=                   "=<"
+  OP_GT=                      ">"
+  OP_GT_EQ=                   ">="
+  OP_NOT=                     "not"
+  OP_BNOT=                    "bnot"
+  OP_PLUS_PLUS=               "++"
+  OP_MINUS_MINUS=             "--"
+  OP_EQ=                      "="
+  OP_EXL=                     "!"
+  OP_LT_MINUS=                "<-"
+  
+  OP_ANDALSO=                 "andalso"
+  OP_ORELSE=                  "orelse"
+  
+  PAR_LEFT=                    "("
+  PAR_RIGHT=                   ")"
+  CURLY_LEFT=                  "{"
+  CURLY_RIGHT=                 "}"
+  BRACKET_LEFT=                "["
+  BRACKET_RIGHT=               "]"
+  DOT=                         "."
+  COLON=                       ":"
+  OR_OR=                       "||"
+  OR=                          "|"
+  SEMI=                        ";"
+  COMMA=                       ","
+  ARROW=                       "->"
+  RADIX=                       "#"
+  QMARK=                       "?"
+  UNI_PATTERN="_"
+  
+  AFTER="after"
+  COND="cond"
+  LET="let"
+  WHEN="when"
+  BEGIN="begin"
+  END="end"
+  OF="of"
+  CASE="case"
+  FUN="fun"
+  QUERY="query"
+  CATCH="catch"
+  IF="if"
+  RECEIVE="receive"
+  TRY="try"
+  
+  INT="integer"
+  FLOAT="float"
+  CHAR="char"
+  
+//  SPEC="spec"
+//  CALLBACK="callback"
+  
+  pin(".*_expression")=1
+  
+  extends(".*_(expression|comprehension|literal|a)")="expression"
+}
+
+forms ::= form ('.' form)*
+private form ::= function | rule | attribute
+
+q_atom ::= '?'? atom
+q_var ::= ('?'? var) | '_'
+
+private recoverer ::= !('.')
+
+//attribute ::= '-' atom_attribute
+attribute ::= '-' (atom_attribute | specification | callback_spec) {pin=1 recoverUntil="recoverer"}
+atom_attribute ::= !('spec' | 'callback') q_atom [attr_val | typed_attr_val | ('(' typed_attr_val ')')]
+callback_spec ::= 'callback' type_spec {pin=1}
+specification ::= 'spec' type_spec {pin=1}
+
+type_spec ::= spec_fun_with_args | ('(' spec_fun_with_args ')')
+private spec_fun_with_args ::= spec_fun type_sigs
+spec_fun ::= q_atom [(':' q_atom) | ('/' integer '::') | (':' q_atom '/' integer '::')]
+typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
+typed_record_fields ::= '{' typed_exprs '}' {pin=1}
+typed_exprs ::= typed_expr | (typed_expr ',' typed_exprs) | (expression ',' typed_exprs) | (typed_expr ',' exprs)
+typed_expr ::= expression '::' top_type
+type_sigs ::= type_sig (';' type_sig)*
+type_sig ::= fun_type [when type_guards]
+private type_guards ::= type_guard (',' type_guard)*
+type_guard ::= q_atom '(' top_types ')'
+top_types ::= top_type (',' top_type)*
+top_type ::= [q_var '::'] top_type_100_t
+top_type_100_t ::= type ['|' top_type_100_t]
+type ::=
+  ('(' top_type ')')
+  | [q_atom ':'] q_atom ['(' top_types? ')']
+  | ( q_atom '(' top_types ')')
+  | q_var
+  | ('[' top_type (',' '.' '.' '.')? ']')
+  | ('{' top_types? '}')
+  | ('#' q_atom '{' field_types? '}')
+  | binary_type
+  | int_type
+  | (int_type '.' '.' int_type)
+  | (fun '(' fun_type_100_t? ')')
+
+int_type ::= '-'? integer
+fun_type_100_t ::= '(' (('.' '.' '.') | top_types?) ')' '->' top_type
+fun_type ::= '(' top_types? ')' '->' top_type
+field_types ::= field_type (',' field_type)*
+field_type ::= q_atom '::' top_type
+
+binary_type ::= '<<' [bin_base_type | bin_unit_type | bin_base_types] '>>' {pin=1}
+private bin_base_types ::= bin_base_type ',' bin_unit_type
+bin_base_type ::= q_var ':' integer
+bin_unit_type ::= q_var ':' q_var '*' integer
+
+attr_val ::= ('(' exprs ')') | exprs
+
+function ::= function_clause (';' function_clause)* {
+  methods = [
+    atom_name = "function_clause[0]/q_atom"
+  ]
+}
+function_clause ::= q_atom argument_list clause_guard? clause_body
+
+private clause_guard ::= when guard {pin=1}
+clause_body ::= '->' exprs {pin=1}
+
+expression ::= catch_expression | expr_100_a
+private catch_expression ::= catch expression
+expr_100_a ::= expr_150_a expr_155_expression?
+private expr_155_expression ::= ('='|'!') expr_100_a
+expr_150_a ::= expr_160_a [orelse expr_150_a]  {pin(".*")="orelse"}
+expr_160_a ::= expr_200_a [andalso expr_160_a] {pin(".*")="andalso"}
+expr_200_a ::= expr_300_a [comp_op expr_300_a] {pin(".*")="comp_op"}
+expr_300_a ::= expr_400_a [list_op expr_300_a] {pin(".*")="list_op"}
+expr_400_a ::= expr_500_a additive_expression*
+left additive_expression ::= add_op expr_500_a {pin=1}
+expr_500_a ::= prefix_expression multiplicative_expression*
+left multiplicative_expression ::= mult_op prefix_expression {pin=1}
+//expr_500 ::= expr_600 (expr_500 mult_op expr_600) | expr_600
+prefix_expression ::= prefix_op? expr_700_a {pin=0}
+expr_700_a ::= function_call_expression | record_expression | colon_qualified_expression
+colon_qualified_expression ::= expr_900_a colon_max_expression? {pin=0}
+private colon_max_expression ::= ':' max_expression
+//expr_900 ::= ('.' atom1) | expr_max | (expr_900 '.' atom1)
+expr_900_a ::= max_expression | (qualified_reference)
+private qualified_reference ::= q_atom qualified_expression*
+left qualified_expression ::= '.' q_atom {pin=0} //todo
+
+//expr_900 ::= ('.' atom) | (expr_900 '.' atom) | expr_max
+
+max_expression ::=
+  q_var
+  | list_comprehension | list_expression | binary_expression
+  | binary_comprehension | tuple_expression
+  | begin_end_expression | if_expression | case_expression
+  | receive_expression | fun_expression
+  | try_expression | query_expression | parenthesized_expression
+  | atomic
+
+begin_end_expression ::= begin exprs end
+
+parenthesized_expression ::= '(' expression ')'
+
+//list_expression ::= '[' expression? (',' expression)* ['|' expression] ']' {pin=0}
+
+list_expression ::= '[' (']' | (expression tail)) {pin=0} // todo: rewrite without tail
+private tail ::= ']' | ('|' expression ']') | (',' expression tail)
+
+binary_expression ::= '<<' bin_elements? '>>' {pin=1}
+private bin_elements ::= bin_element (',' bin_element)*
+bin_element ::= prefix_op? max_expression (colon_max_expression)? opt_bit_type_list?
+
+opt_bit_type_list ::= '/' bit_type_list {pin=1}
+bit_type_list ::= bit_type ('-' bit_type)*
+bit_type ::= q_atom [':' integer]
+
+list_comprehension ::= '[' expression '||' lc_exprs ']'
+binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {pin=1}
+private lc_exprs ::= lc_expression (',' lc_expression)*
+
+lc_expression ::= (expression lc_right_expression?) | (binary_expression '<=' expression) {pin=0}
+private lc_right_expression ::= '<-' expression {pin=0}
+
+tuple_expression ::= '{' exprs? '}' {pin=1}
+
+record_expression ::=
+  max_expression? '#' q_atom (('.' q_atom) | record_tuple) {pin=2}
+
+record_tuple ::= '{' record_fields? '}'
+private record_fields ::= record_field (',' record_field)*
+record_field ::= (q_var '=' expression) | (q_atom '=' expression)
+function_call_expression ::= colon_qualified_expression argument_list {
+  pin=0
+  methods = [
+
+  ]
+}
+
+if_expression ::= if if_clauses end
+private if_clauses ::= if_clause (';' if_clause)*
+if_clause ::= guard clause_body
+
+case_expression ::= case expression of cr_clauses end
+private cr_clauses ::= cr_clause (';' cr_clause)*
+cr_clause ::= expression clause_guard? clause_body
+
+receive_expression ::= receive ((cr_clauses end) | (after expression clause_body end) | (cr_clauses after expression clause_body end))
+fun_expression ::= fun ((fun_clauses end) | (q_atom '/' integer) | (q_atom ':' q_atom '/' integer))
+private fun_clauses ::= fun_clause (';' fun_clause)*
+fun_clause ::= argument_list clause_guard? clause_body
+try_expression ::= try exprs (of cr_clauses)? try_catch
+try_catch ::= (catch try_clauses end) | (catch try_clauses after exprs end) | (after exprs end)
+private try_clauses ::= try_clause (';' try_clause)*
+try_clause ::= (expression clause_guard? clause_body) | (q_atom ':' expression clause_guard? clause_body) | (q_var ':' expression clause_guard? clause_body)
+
+query_expression ::= query list_comprehension end
+argument_list ::= '(' exprs? ')' {pin=1}
+private exprs ::= expression (',' expression)*
+guard ::= exprs (';' exprs)*
+private atomic ::= char | integer | float | q_atom | string+
+
+private prefix_op ::= '+' | '-' | bnot | not
+private mult_op ::= '/' |'*' | div | rem  | band | and
+private add_op ::= '+' |'-' | bor | bxor | bsl | bsr | or | xor
+private list_op ::= '++' | '--'
+private comp_op ::= '==' | '/=' |'=<' |'<' |'>=' |'>' |'=:=' |'=/='
+
+rule ::= rule_clause (';' rule_clause)*
+rule_clause ::= q_atom argument_list clause_guard? rule_body
+rule_body ::= ':-' lc_exprs {pin=1}
