@@ -10,7 +10,7 @@ public interface ErlangTypedExpr extends ErlangCompositeElement {
   @NotNull
   ErlangExpression getExpression();
 
-  @NotNull
+  @Nullable
   ErlangTopType getTopType();
 
 }

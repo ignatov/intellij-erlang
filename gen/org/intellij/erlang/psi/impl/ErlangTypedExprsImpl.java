@@ -17,21 +17,9 @@ public class ErlangTypedExprsImpl extends ErlangCompositeElementImpl implements 
   }
 
   @Override
-  @Nullable
-  public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangTypedExpr getTypedExpr() {
-    return findChildByClass(ErlangTypedExpr.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangTypedExprs getTypedExprs() {
-    return findChildByClass(ErlangTypedExprs.class);
+  @NotNull
+  public List<ErlangTypedExpr> getTypedExprList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTypedExpr.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

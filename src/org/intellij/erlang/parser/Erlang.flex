@@ -160,6 +160,7 @@ FullStop = \.
   "]"                           { return ERL_BRACKET_RIGHT; }
   "."                           { return ERL_DOT; }
   ":"                           { return ERL_COLON; }
+  "::"                          { return ERL_COLON_COLON; }
   "||"                          { return ERL_OR_OR; }
   "|"                           { return ERL_OR; }
   ";"                           { return ERL_SEMI; }

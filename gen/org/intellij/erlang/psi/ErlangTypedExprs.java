@@ -7,13 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangTypedExprs extends ErlangCompositeElement {
 
-  @Nullable
-  ErlangExpression getExpression();
-
-  @Nullable
-  ErlangTypedExpr getTypedExpr();
-
-  @Nullable
-  ErlangTypedExprs getTypedExprs();
+  @NotNull
+  List<ErlangTypedExpr> getTypedExprList();
 
 }

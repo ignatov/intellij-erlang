@@ -72,6 +72,7 @@
   BRACKET_RIGHT=               "]"
   DOT=                         "."
   COLON=                       ":"
+  COLON_COLON=                 "::"
   OR_OR=                       "||"
   OR=                          "|"
   SEMI=                        ";"
@@ -118,7 +119,7 @@ private recoverer ::= !('.')
 
 //attribute ::= '-' atom_attribute
 attribute ::= '-' (atom_attribute | specification | callback_spec) {pin=1 recoverUntil="recoverer"}
-atom_attribute ::= !('spec' | 'callback') q_atom [attr_val | typed_attr_val | ('(' typed_attr_val ')')]
+atom_attribute ::= !('spec' | 'callback') q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
 callback_spec ::= 'callback' type_spec {pin=1}
 specification ::= 'spec' type_spec {pin=1}
 
@@ -127,8 +128,8 @@ private spec_fun_with_args ::= spec_fun type_sigs
 spec_fun ::= q_atom [(':' q_atom) | ('/' integer '::') | (':' q_atom '/' integer '::')]
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
 typed_record_fields ::= '{' typed_exprs '}' {pin=1}
-typed_exprs ::= typed_expr | (typed_expr ',' typed_exprs) | (expression ',' typed_exprs) | (typed_expr ',' exprs)
-typed_expr ::= expression '::' top_type
+typed_exprs ::= typed_expr (',' typed_expr)*
+typed_expr ::= expression ['::' top_type]
 type_sigs ::= type_sig (';' type_sig)*
 type_sig ::= fun_type [when type_guards]
 private type_guards ::= type_guard (',' type_guard)*
