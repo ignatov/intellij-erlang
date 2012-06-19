@@ -8,12 +8,12 @@ import com.intellij.psi.PsiElement;
 public interface ErlangExpression extends ErlangCompositeElement {
 
   @Nullable
-  PsiElement getAtom();
+  ErlangQAtom getQAtom();
+
+  @Nullable
+  ErlangQVar getQVar();
 
   @Nullable
   PsiElement getCatch();
-
-  @Nullable
-  PsiElement getVar();
 
 }

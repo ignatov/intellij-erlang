@@ -47,13 +47,15 @@ ERL_FILE
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
                   ERL_EXPRESSION
-                    PsiElement(var)('Tail')
+                    ERL_Q_VAR
+                      PsiElement(var)('Tail')
                   PsiElement())(')')
           PsiElement(;)(';')
           ERL_IF_CLAUSE
             ERL_GUARD
               ERL_EXPRESSION
-                PsiElement(atom)('true')
+                ERL_Q_ATOM
+                  PsiElement(atom)('true')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_MAX_EXPRESSION

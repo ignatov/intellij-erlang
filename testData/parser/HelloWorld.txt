@@ -7,7 +7,8 @@ ERL_FILE
       ERL_ATTR_VAL
         PsiElement(()('(')
         ERL_EXPRESSION
-          PsiElement(atom)('test')
+          ERL_Q_ATOM
+            PsiElement(atom)('test')
         PsiElement())(')')
   PsiElement(.)('.')
   ERL_ATTRIBUTE
@@ -73,13 +74,15 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_EXPRESSION
-                PsiElement(var)('T')
+                ERL_Q_VAR
+                  PsiElement(var)('T')
               PsiElement())(')')
           PsiElement(++)('++')
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
             ERL_EXPRESSION
-              PsiElement(var)('H')
+              ERL_Q_VAR
+                PsiElement(var)('H')
             PsiElement(])(']')
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
@@ -153,7 +156,8 @@ ERL_FILE
       ERL_ARGUMENT_LIST
         PsiElement(()('(')
         ERL_EXPRESSION
-          PsiElement(var)('X')
+          ERL_Q_VAR
+            PsiElement(var)('X')
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')

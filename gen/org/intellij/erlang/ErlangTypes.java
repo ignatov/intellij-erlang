@@ -115,6 +115,8 @@ public interface ErlangTypes {
   IElementType ERL_CURLY_RIGHT = new ErlangTokenType("}");
   IElementType ERL_DIV = new ErlangTokenType("div");
   IElementType ERL_DOT = new ErlangTokenType(".");
+  IElementType ERL_DOT_DOT = new ErlangTokenType("..");
+  IElementType ERL_DOT_DOT_DOT = new ErlangTokenType("...");
   IElementType ERL_END = new ErlangTokenType("end");
   IElementType ERL_FLOAT = new ErlangTokenType("float");
   IElementType ERL_FUN = new ErlangTokenType("fun");
