@@ -4,6 +4,7 @@ package org.intellij.erlang.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 
 public interface ErlangFunctionCallExpression extends ErlangExpression {
 
@@ -12,5 +13,11 @@ public interface ErlangFunctionCallExpression extends ErlangExpression {
 
   @NotNull
   ErlangExpression getExpression();
+
+  @Nullable
+  Object resolve();
+
+  @Nullable
+  PsiReference getReference();
 
 }

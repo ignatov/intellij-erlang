@@ -18,8 +18,20 @@ public class ErlangExpressionImpl extends ErlangCompositeElementImpl implements 
 
   @Override
   @Nullable
+  public PsiElement getAtom() {
+    return findChildByType(ERL_ATOM);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getCatch() {
     return findChildByType(ERL_CATCH);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getVar() {
+    return findChildByType(ERL_VAR);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

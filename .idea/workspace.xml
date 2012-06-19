@@ -1,289 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9387087c-31e5-49bb-a26e-5ff93d2c21a8" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/icons/erlang-16-7-2.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/icons/erlang-16-7.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/icons/erlang-16.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/icons/erlang-small-14.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/icons/erlang-small-16.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/icons/file.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/resources/icons/text.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer.hrl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_gui_wx.hrl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia.hrl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/.name" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/ant.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/compiler.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/copyright/profiles_settings.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/dictionaries/ignatov.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/encodings.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/scopes/scope_settings.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Erlang.iml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/META-INF/plugin.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/ErlangTypes.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/parser/ErlangParser.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangAdditiveExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangArgumentList.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangAtomAttribute.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangAttrVal.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangAttribute.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBeginEndExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBinBaseType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBinElement.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBinUnitType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBinaryComprehension.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBinaryExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBinaryType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBitType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangBitTypeList.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangCallbackSpec.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangCaseExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangClauseBody.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangColonQualifiedExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangCrClause.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr100A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr150A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr160A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr200A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr300A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr400A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr500A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr700A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpr900A.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFieldType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFieldTypes.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunClause.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunType100T.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunction.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunctionCallExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunctionClause.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangGuard.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangIfClause.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangIfExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangIntType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangLcExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangListComprehension.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangListExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangMaxExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangModuleQualifiedExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangMultiplicativeExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangOptBitSizeExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangOptBitTypeList.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangParenthesizedExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangPrefixExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangQAtom.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangQVar.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangQualifiedExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangQueryExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangReceiveExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangRecordExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangRecordField.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangRecordTuple.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangRule.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangRuleBody.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangRuleClause.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangSpecFun.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangSpecification.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTopType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTopType100T.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTopTypes.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTryCatch.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTryClause.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTryExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTupleExpression.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTypeGuard.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTypeSig.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTypeSigs.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTypeSpec.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTypedAttrVal.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTypedExpr.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTypedExprs.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangTypedRecordFields.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangVisitor.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangAdditiveExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangArgumentListImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangAtomAttributeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangAttrValImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangAttributeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBeginEndExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBinBaseTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBinElementImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBinUnitTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBinaryComprehensionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBinaryExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBinaryTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBitTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangBitTypeListImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangCallbackSpecImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangCaseExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangClauseBodyImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangColonQualifiedExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangCrClauseImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr100AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr150AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr160AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr200AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr300AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr400AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr500AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr700AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpr900AImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFieldTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFieldTypesImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunClauseImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunType100TImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionCallExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionClauseImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangGuardImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangIfClauseImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangIfExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangIntTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangLcExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangListComprehensionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangListExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangMaxExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangMultiplicativeExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangOptBitTypeListImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangParenthesizedExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangPrefixExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangQAtomImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangQVarImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangQualifiedExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangQueryExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangReceiveExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangRecordExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangRecordFieldImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangRecordTupleImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangRuleBodyImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangRuleClauseImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangRuleImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangSpecFunImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangSpecificationImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTopType100TImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTopTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTopTypesImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTryCatchImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTryClauseImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTryExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTupleExpressionImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypeGuardImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypeImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypeSigImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypeSigsImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypeSpecImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypedAttrValImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypedExprImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypedExprsImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangTypedRecordFieldsImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/grammars/erlang.bnf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/META-INF/plugin.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/ErlangBraceMatcher.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/ErlangCommenter.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/ErlangFileType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/ErlangFileTypeFactory.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/ErlangIcons.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/ErlangLanguage.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/ErlangParserDefinition.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/ErlangStructureViewFactory.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/editor/ErlangAnnotator.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/editor/ErlangSyntaxHighlighter.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/editor/ErlangSyntaxHighlighterFactory.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/parser/Erlang.flex" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/parser/ErlangLexer.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/parser/ErlangParserUtil.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/parser/ErlangTokenTypes.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/parser/GeneratedParserUtilBase.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/parser/_ErlangLexer.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/ErlangCompositeElement.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/ErlangCompositeElementType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/ErlangFile.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/ErlangNamedElement.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/ErlangTokenType.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangCompositeElementImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangFileImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangPsiImplUtil.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangReferenceImpl.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_analysis_callgraph.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_behaviours.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_callgraph.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_cl.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_cl_parse.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_codeserver.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_contracts.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_dataflow.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_dep.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_explanation.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_gui.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_gui_wx.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_options.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_plt.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_races.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_succ_typings.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_typesig.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_utils.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_backup.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_bup.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_checkpoint.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_checkpoint_sup.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_controller.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_dumper.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_event.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_frag.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_frag_hash.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_frag_old_hash.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_index.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_kernel_sup.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_late_loader.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_lib.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_loader.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_locker.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_log.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_monitor.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_recover.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_registry.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_schema.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_snmp_hook.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_snmp_sup.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_sp.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_subscr.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_sup.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_text.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/mnesia/mnesia_tm.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/examples/test.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/DialyzerDataflow.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/Export.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/Export.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/H.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/H.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/HelloWorld.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/HelloWorld.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/IsDigits.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/IsDigits.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/Mnesia.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/Mnesia.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/MnesiaBig.erl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/MnesiaBig.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/org/intellij/erlang/ErlangExamplesParserTest.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/org/intellij/erlang/ErlangParserTest.java" />
+    <list default="true" id="9387087c-31e5-49bb-a26e-5ff93d2c21a8" name="Default" comment=".gitignore updated">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExprRecover.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExprRecoverImpl.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/testData/parser/DialyzerDataflow.txt" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gen/org/intellij/erlang/ErlangTypes.java" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/ErlangTypes.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gen/org/intellij/erlang/parser/ErlangParser.java" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/parser/ErlangParser.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpression.java" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangExpression.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunctionCallExpression.java" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunctionCallExpression.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangVisitor.java" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangVisitor.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpressionImpl.java" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangExpressionImpl.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionCallExpressionImpl.java" afterPath="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionCallExpressionImpl.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/grammars/erlang.bnf" afterPath="$PROJECT_DIR$/grammars/erlang.bnf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/intellij/erlang/parser/Erlang.flex" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/parser/Erlang.flex" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/intellij/erlang/parser/_ErlangLexer.java" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/parser/_ErlangLexer.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangPsiImplUtil.java" afterPath="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangPsiImplUtil.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testData/parser/DialyzerDataflow.erl" afterPath="$PROJECT_DIR$/testData/parser/DialyzerDataflow.erl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testData/parser/Export.txt" afterPath="$PROJECT_DIR$/testData/parser/Export.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testData/parser/H.txt" afterPath="$PROJECT_DIR$/testData/parser/H.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testData/parser/HelloWorld.txt" afterPath="$PROJECT_DIR$/testData/parser/HelloWorld.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testData/parser/IsDigits.txt" afterPath="$PROJECT_DIR$/testData/parser/IsDigits.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testData/parser/Mnesia.txt" afterPath="$PROJECT_DIR$/testData/parser/Mnesia.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/org/intellij/erlang/ErlangParserTest.java" afterPath="$PROJECT_DIR$/tests/org/intellij/erlang/ErlangParserTest.java" />
     </list>
     <ignored path="jpa-ql.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -356,13 +96,156 @@
     <breakpoint_rules />
     <ui_properties />
   </component>
+  <component name="DockManager">
+    <window id="1">
+      <content type="file-editors">
+        <state>
+          <leaf>
+            <file leaf-file-name="dialyzer_dataflow.erl" pinned="false" current="false" current-in-tab="true">
+              <entry file="file://$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_dataflow.erl">
+                <provider selected="true" editor-type-id="text-editor">
+                  <state line="317" column="6" selection-start="11019" selection-end="11019" vertical-scroll-proportion="0.4864">
+                    <folding />
+                  </state>
+                </provider>
+              </entry>
+            </file>
+            <file leaf-file-name="ErlangParser.java" pinned="false" current="false" current-in-tab="false">
+              <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/parser/ErlangParser.java">
+                <provider selected="true" editor-type-id="text-editor">
+                  <state line="1732" column="24" selection-start="64915" selection-end="64915" vertical-scroll-proportion="0.0">
+                    <folding>
+                      <element signature="imports" expanded="false" />
+                      <element signature="e#567#633#0" expanded="false" />
+                      <element signature="e#186832#186970#0" expanded="true" />
+                      <element signature="e#186963#186964#0" expanded="true" />
+                    </folding>
+                  </state>
+                </provider>
+              </entry>
+            </file>
+          </leaf>
+        </state>
+      </content>
+    </window>
+  </component>
   <component name="FavoritesManager">
     <favorites_list name="Erlang" />
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="profiles_settings.xml" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.idea/copyright/profiles_settings.xml">
+      <file leaf-file-name="erlang.bnf" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/grammars/erlang.bnf">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="111" column="71" selection-start="3232" selection-end="3232" vertical-scroll-proportion="0.35725677">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DialyzerDataflow.txt" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/testData/parser/DialyzerDataflow.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="33902" column="9" selection-start="1401063" selection-end="1401063" vertical-scroll-proportion="-9.52">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DialyzerDataflow.erl" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/testData/parser/DialyzerDataflow.erl">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="2414" column="0" selection-start="82048" selection-end="82048" vertical-scroll-proportion="-8.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Erlang.flex" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/parser/Erlang.flex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="36" column="25" selection-start="716" selection-end="716" vertical-scroll-proportion="0.0">
+              <folding>
+                <marker date="1340127373000" expanded="true" signature="0:196" placeholder="/.../" />
+                <marker date="1340127373000" expanded="false" signature="241:422" placeholder="..." />
+                <marker date="1340127373000" expanded="true" signature="455:492" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2201:2222" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2256:2304" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2445:2464" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2605:2623" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2657:2676" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2710:2727" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2761:2777" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2811:2829" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2863:2880" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2914:2933" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="2967:2984" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3018:3037" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3071:3087" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3121:3142" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3308:3331" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3366:3387" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3439:3460" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3495:3517" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3552:3575" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3610:3633" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3668:3685" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3720:3737" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3772:3788" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3823:3840" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3875:3892" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3927:3945" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="3980:3997" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4032:4049" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4084:4101" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4136:4154" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4189:4211" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4246:4269" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4304:4330" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4365:4391" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4426:4445" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4480:4502" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4537:4556" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4591:4613" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4648:4665" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4700:4718" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4753:4779" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4814:4842" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4877:4896" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4931:4951" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="4986:5011" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5068:5089" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5124:5144" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5194:5215" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5249:5268" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5302:5327" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5362:5380" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5414:5434" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5468:5486" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5520:5537" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5588:5610" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5645:5668" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5703:5727" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5762:5787" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5822:5848" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5883:5910" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5945:5962" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="5997:6016" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="6051:6070" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="6105:6121" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="6156:6174" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="6209:6228" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="6263:6282" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="6317:6336" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="6371:6390" placeholder="{...}" />
+                <marker date="1340127373000" expanded="true" signature="6494:6544" placeholder="{...}" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="PsiBuilderImpl.class" pinned="false" current="false" current-in-tab="false">
+        <entry file="jar://$USER_HOME$/bin/idea-IC-118.652/lib/idea.jar!/com/intellij/lang/impl/PsiBuilderImpl.class">
           <provider selected="true" editor-type-id="text-editor">
             <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
               <folding />
@@ -370,10 +253,64 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ignatov.xml" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/.idea/dictionaries/ignatov.xml">
+      <file leaf-file-name="ErlangFunctionCallExpression.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunctionCallExpression.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="6" column="12" selection-start="145" selection-end="145" vertical-scroll-proportion="0.13259669">
+            <state line="20" column="13" selection-start="462" selection-end="462" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ErlangFunctionCallExpressionImpl.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionCallExpressionImpl.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="43" column="42" selection-start="1285" selection-end="1285" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ErlangPsiImplUtil.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangPsiImplUtil.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="11" column="0" selection-start="344" selection-end="344" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ErlangReferenceImpl.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangReferenceImpl.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="40" column="0" selection-start="1322" selection-end="1322" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ErlangParserTest.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/tests/org/intellij/erlang/ErlangParserTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="38" column="30" selection-start="1032" selection-end="1032" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="dialyzer_gui.erl" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_gui.erl">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="1330" column="31" selection-start="47959" selection-end="47959" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GeneratedParserUtilBase.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/parser/GeneratedParserUtilBase.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="234" column="36" selection-start="8850" selection-end="8850" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -450,7 +387,6 @@
         <option value="$PROJECT_DIR$/src/org/intellij/erlang/parser/ErlangTokenTypes.java" />
         <option value="$PROJECT_DIR$/tests/org/intellij/erlang/ErlangExamplesParserTest.java" />
         <option value="$PROJECT_DIR$/testData/parser/Mnesia.erl" />
-        <option value="$PROJECT_DIR$/src/org/intellij/erlang/parser/Erlang.flex" />
         <option value="$PROJECT_DIR$/testData/parser/Export.erl" />
         <option value="$PROJECT_DIR$/testData/parser/Mnesia.txt" />
         <option value="$PROJECT_DIR$/testData/parser/HelloWorld.txt" />
@@ -479,11 +415,15 @@
         <option value="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangFileImpl.java" />
         <option value="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangReferenceImpl.java" />
         <option value="$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionImpl.java" />
-        <option value="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangPsiImplUtil.java" />
-        <option value="$PROJECT_DIR$/tests/org/intellij/erlang/ErlangParserTest.java" />
         <option value="$PROJECT_DIR$/testData/parser/Export.txt" />
-        <option value="$PROJECT_DIR$/grammars/erlang.bnf" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangPsiImplUtil.java" />
+        <option value="$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_dataflow.erl" />
+        <option value="$PROJECT_DIR$/src/org/intellij/erlang/parser/Erlang.flex" />
+        <option value="$PROJECT_DIR$/tests/org/intellij/erlang/ErlangParserTest.java" />
+        <option value="$PROJECT_DIR$/testData/parser/DialyzerDataflow.txt" />
+        <option value="$PROJECT_DIR$/testData/parser/DialyzerDataflow.erl" />
+        <option value="$PROJECT_DIR$/grammars/erlang.bnf" />
       </list>
     </option>
   </component>
@@ -545,16 +485,6 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
           </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Erlang" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="erlang" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
         </subPane>
       </pane>
       <pane id="Scope">
@@ -585,7 +515,7 @@
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="MemberChooser.sorted" value="false" />
     <property name="recentsLimit" value="5" />
-    <property name="options.lastSelected" value="project.propVCSSupport.Mappings" />
+    <property name="options.lastSelected" value="org.intellij.lang.jflex.options.JFlexConfigurable" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="GoToClass.includeJavaFiles" value="false" />
@@ -647,7 +577,7 @@
       <option name="MAIN_CLASS_NAME" value="org.intellij.erlang.ErlangParserTest" />
       <option name="METHOD_NAME" value="" />
       <option name="TEST_OBJECT" value="class" />
-      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="VM_PARAMETERS" value="-ea -XX:+HeapDumpOnOutOfMemoryError -Xmx512m -XX:MaxPermSize=320m" />
       <option name="PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ENV_VARIABLES" />
@@ -734,14 +664,14 @@
       </extension>
       <module name="Erlang" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
       <option name="PACKAGE_NAME" value="org.intellij.erlang" />
       <option name="MAIN_CLASS_NAME" value="org.intellij.erlang.ErlangParserTest" />
       <option name="METHOD_NAME" value="testDialyzerDataflow" />
       <option name="TEST_OBJECT" value="method" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="VM_PARAMETERS" value="-ea -XX:+HeapDumpOnOutOfMemoryError -Xmx512m -XX:MaxPermSize=320m" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
       <option name="TEST_SEARCH_SCOPE">
@@ -754,7 +684,9 @@
         <option name="TRANSPORT" value="0" />
         <option name="LOCAL" value="true" />
       </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
       <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
       <method />
     </configuration>
     <configuration default="false" name="ErlangParserTest.testH" type="JUnit" factoryName="JUnit" temporary="true">
@@ -785,10 +717,62 @@
       <ConfigurationWrapper RunnerId="Run" />
       <method />
     </configuration>
+    <configuration default="true" type="#org.osmorc.OsgiConfigurationType" factoryName="OSGi Bundles" vmParameters="" programParameters="" includeAllBundlesInClassPath="false" workingDir="" useAlternativeJre="false" alternativeJrePath="" frameworkStartLevel="1" defaultStartLevel="5" generateWorkingDir="false">
+      <framework instance="" />
+      <additinalProperties startConsole="true" />
+      <method>
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="GroovyScriptRunConfiguration" factoryName="Groovy">
+      <module name="" />
+      <setting name="path" value="" />
+      <setting name="vmparams" value="" />
+      <setting name="params" value="" />
+      <setting name="workDir" value="$PROJECT_DIR$" />
+      <setting name="debug" value="false" />
+      <method>
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
       <module name="" />
       <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m" />
       <option name="PROGRAM_PARAMETERS" />
+      <method>
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="MavenRunConfiguration" factoryName="Maven">
+      <MavenSettings>
+        <option name="myGeneralSettings" />
+        <option name="myRunnerSettings" />
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list />
+            </option>
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="workingDirPath" value="" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+      <method>
+        <option name="Make" enabled="false" />
+      </method>
+    </configuration>
+    <configuration default="true" type="GriffonRunConfigurationType" factoryName="Griffon">
+      <module name="" />
+      <setting name="vmparams" value="" />
+      <setting name="cmdLine" value="run-app" />
+      <setting name="depsClasspath" value="true" />
+      <setting name="passParentEnv" value="true" />
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <method>
         <option name="Make" enabled="true" />
       </method>
@@ -800,6 +784,26 @@
       <option name="HOST" value="localhost" />
       <option name="PORT" value="5005" />
       <method />
+    </configuration>
+    <configuration default="true" type="#com.intellij.j2meplugin.run.J2MEConfigurationType" factoryName="J2ME">
+      <module name="" />
+      <USER_OPTIONS />
+      <option name="TARGET_DEVICE_NAME" />
+      <option name="COMMAND_LINE_PARAMETERS" />
+      <option name="MAIN_CLASS_NAME" value="" />
+      <option name="JAD_NAME" value="" />
+      <option name="IS_CLASSES" value="false" />
+      <option name="IS_OTA" value="false" />
+      <option name="INSTALL" />
+      <option name="REMOVE" />
+      <option name="RUN" />
+      <option name="TRANSIENT" />
+      <option name="FORCE" />
+      <option name="TO_START" />
+      <option name="SELECTION" value="0" />
+      <method>
+        <option name="Make" enabled="true" />
+      </method>
     </configuration>
     <configuration default="true" type="Applet" factoryName="Applet">
       <module name="" />
@@ -867,14 +871,14 @@
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
       <option name="PACKAGE_NAME" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="METHOD_NAME" />
+      <option name="MAIN_CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
       <option name="TEST_OBJECT" value="class" />
-      <option name="VM_PARAMETERS" value="-ea" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="VM_PARAMETERS" value="-ea -XX:+HeapDumpOnOutOfMemoryError -Xmx512m -XX:MaxPermSize=320m" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
       <option name="TEST_SEARCH_SCOPE">
@@ -902,18 +906,18 @@
       <method />
     </configuration>
     <list size="6">
-      <item index="0" class="java.lang.String" itemvalue="Plugin.Erlang" />
-      <item index="1" class="java.lang.String" itemvalue="JUnit.ErlangParserTest" />
-      <item index="2" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testMnesia" />
-      <item index="3" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testIsDigits" />
-      <item index="4" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testDialyzerDataflow" />
-      <item index="5" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testH" />
+      <item index="0" class="java.lang.String" itemvalue="JUnit.ErlangParserTest" />
+      <item index="1" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testMnesia" />
+      <item index="2" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testIsDigits" />
+      <item index="3" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testDialyzerDataflow" />
+      <item index="4" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testH" />
+      <item index="5" class="java.lang.String" itemvalue="Plugin.Erlang" />
     </list>
     <recent_temporary>
       <list size="5">
         <item index="0" class="java.lang.String" itemvalue="JUnit.ErlangParserTest" />
-        <item index="1" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testH" />
-        <item index="2" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testDialyzerDataflow" />
+        <item index="1" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testDialyzerDataflow" />
+        <item index="2" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testH" />
         <item index="3" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testMnesia" />
         <item index="4" class="java.lang.String" itemvalue="JUnit.ErlangParserTest.testIsDigits" />
       </list>
@@ -930,18 +934,23 @@
       <created>1330334088074</created>
       <updated>1330334088074</updated>
     </task>
+    <task id="LOCAL-00001" summary=".gitignore updated">
+      <created>1340018163261</created>
+      <updated>1340018163261</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="1280" y="0" width="1920" height="1200" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.23409894" sideWeight="0.99270076" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.41549295" sideWeight="0.99270076" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32658452" sideWeight="0.4984375" order="10" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24921794" sideWeight="0.34893993" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
@@ -950,8 +959,8 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24895833" sideWeight="0.66021127" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.33978873" sideWeight="0.49791667" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2484375" sideWeight="0.5950704" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.40492958" sideWeight="0.49791667" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3286219" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -999,7 +1008,7 @@
     <option name="CHANGE_DETAILS_ON" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" />
+    <option name="LAST_COMMIT_MESSAGE" value=".gitignore updated" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -1012,6 +1021,7 @@
     <option name="UPDATE_GROUP_BY_CHANGELIST" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
+    <MESSAGE value=".gitignore updated" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -1021,33 +1031,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/.idea/modules.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="0" selection-start="254" selection-end="254" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/grammars/erlang.bnf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="143" column="37" selection-start="4550" selection-end="4550" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/META-INF/plugin.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="16" column="81" selection-start="580" selection-end="580" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/ErlangFileTypeFactory.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="18" selection-start="805" selection-end="805" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/editor/ErlangSyntaxHighlighterFactory.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="18" selection-start="912" selection-end="912" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/editor/ErlangSyntaxHighlighter.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="34" column="17" selection-start="1346" selection-end="1346" vertical-scroll-proportion="0.0" />
@@ -1219,11 +1202,6 @@
         <state line="48" column="0" selection-start="2808" selection-end="2808" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
-    <entry file="jar://$USER_HOME$/bin/idea-IC-118.652/lib/idea.jar!/com/intellij/lang/impl/PsiBuilderImpl.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="112" column="14" selection-start="7774" selection-end="7774" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/testData/parser/Export.erl">
       <provider selected="true" editor-type-id="text-editor">
         <state line="5" column="36" selection-start="188" selection-end="188" vertical-scroll-proportion="0.0" />
@@ -1274,16 +1252,6 @@
         <state line="16" column="14" selection-start="554" selection-end="554" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/parser/GeneratedParserUtilBase.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="509" column="25" selection-start="19374" selection-end="19374" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/testData/parser/DialyzerDataflow.erl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2407" column="0" selection-start="81785" selection-end="81785" vertical-scroll-proportion="0.17052023" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.idea/modules.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state line="9" column="0" selection-start="254" selection-end="254" vertical-scroll-proportion="0.0" />
@@ -1329,11 +1297,6 @@
         <state line="468" column="10" selection-start="18291" selection-end="18291" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/parser/Erlang.flex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="99" column="52" selection-start="3036" selection-end="3036" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/ErlangTypes.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="99" column="56" selection-start="7744" selection-end="7744" vertical-scroll-proportion="0.0" />
@@ -1357,11 +1320,6 @@
     <entry file="jar://$USER_HOME$/bin/idea-IC-118.652/lib/idea.jar!/com/intellij/codeInsight/daemon/impl/JavaColorProvider.class">
       <provider selected="true" editor-type-id="text-editor">
         <state line="6" column="13" selection-start="179" selection-end="179" vertical-scroll-proportion="0.115606934" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/parser/ErlangParser.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4310" column="24" selection-start="158613" selection-end="158613" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/psi/ErlangTokenType.java">
@@ -1441,133 +1399,252 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/testData/parser/H.erl">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="2022" column="0" selection-start="62616" selection-end="62616" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="2022" column="0" selection-start="62616" selection-end="62616" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="jar://$USER_HOME$/bin/idea-IC-118.652/lib/openapi.jar!/com/intellij/util/PlatformIcons.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="40" selection-start="799" selection-end="799" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="22" column="40" selection-start="799" selection-end="799" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/ErlangStructureViewFactory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="49" column="13" selection-start="1643" selection-end="1643" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="49" column="13" selection-start="1643" selection-end="1643" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/psi/ErlangNamedElement.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="7" column="20" selection-start="123" selection-end="123" vertical-scroll-proportion="0.15469614">
-          <folding />
-        </state>
+        <state line="7" column="20" selection-start="123" selection-end="123" vertical-scroll-proportion="0.15469614" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/psi/ErlangFile.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="32" column="17" selection-start="946" selection-end="946" vertical-scroll-proportion="0.70718235">
-          <folding />
-        </state>
+        <state line="32" column="17" selection-start="946" selection-end="946" vertical-scroll-proportion="0.70718235" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangFileImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="82" column="13" selection-start="2914" selection-end="2914" vertical-scroll-proportion="0.022099448">
+        <state line="82" column="13" selection-start="2914" selection-end="2914" vertical-scroll-proportion="0.022099448" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="58" selection-start="791" selection-end="791" vertical-scroll-proportion="0.53038675" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testData/parser/H.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19888" column="18" selection-start="799098" selection-end="799098" vertical-scroll-proportion="0.5850914" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testData/parser/HelloWorld.erl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="21" selection-start="281" selection-end="281" vertical-scroll-proportion="0.30939227" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testData/parser/HelloWorld.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="78" column="22" selection-start="2298" selection-end="2298" vertical-scroll-proportion="0.79324895" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testData/parser/Export.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1" column="4" selection-start="20" selection-end="20" vertical-scroll-proportion="0.022759601" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/copyright/profiles_settings.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/dictionaries/ignatov.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="6" column="12" selection-start="145" selection-end="145" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Erlang.iml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="16" column="0" selection-start="758" selection-end="758" vertical-scroll-proportion="0.23146474" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/parser/GeneratedParserUtilBase.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="234" column="36" selection-start="8850" selection-end="8850" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_gui.erl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1330" column="31" selection-start="47959" selection-end="47959" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangReferenceImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="42" column="0" selection-start="1461" selection-end="1461" vertical-scroll-proportion="0.5801105">
+        <state line="40" column="0" selection-start="1322" selection-end="1322" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionImpl.java">
+    <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/psi/impl/ErlangFunctionCallExpressionImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="58" selection-start="791" selection-end="791" vertical-scroll-proportion="0.53038675">
+        <state line="43" column="42" selection-start="1285" selection-end="1285" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/testData/parser/H.txt">
+    <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/psi/ErlangFunctionCallExpression.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="19888" column="18" selection-start="799098" selection-end="799098" vertical-scroll-proportion="0.5850914">
+        <state line="20" column="13" selection-start="462" selection-end="462" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/testData/parser/HelloWorld.erl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="21" selection-start="281" selection-end="281" vertical-scroll-proportion="0.30939227">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/testData/parser/HelloWorld.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="78" column="22" selection-start="2298" selection-end="2298" vertical-scroll-proportion="0.79324895">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/testData/parser/Export.txt">
+    <entry file="jar://$USER_HOME$/bin/idea-IC-118.652/lib/idea.jar!/com/intellij/lang/impl/PsiBuilderImpl.class">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/org/intellij/erlang/ErlangParserTest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="39" column="0" selection-start="1035" selection-end="1035" vertical-scroll-proportion="0.658606">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/psi/impl/ErlangPsiImplUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="33" column="70" selection-start="0" selection-end="4102" vertical-scroll-proportion="0.40967283">
+        <state line="11" column="0" selection-start="344" selection-end="344" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gen/org/intellij/erlang/parser/ErlangParser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1732" column="24" selection-start="64915" selection-end="64915" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#567#633#0" expanded="false" />
+            <element signature="e#186832#186970#0" expanded="true" />
+            <element signature="e#186963#186964#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/intellij/erlang/parser/Erlang.flex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="36" column="25" selection-start="716" selection-end="716" vertical-scroll-proportion="0.0">
+          <folding>
+            <marker date="1340127373000" expanded="true" signature="0:196" placeholder="/.../" />
+            <marker date="1340127373000" expanded="false" signature="241:422" placeholder="..." />
+            <marker date="1340127373000" expanded="true" signature="455:492" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2201:2222" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2256:2304" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2445:2464" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2605:2623" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2657:2676" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2710:2727" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2761:2777" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2811:2829" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2863:2880" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2914:2933" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="2967:2984" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3018:3037" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3071:3087" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3121:3142" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3308:3331" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3366:3387" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3439:3460" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3495:3517" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3552:3575" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3610:3633" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3668:3685" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3720:3737" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3772:3788" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3823:3840" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3875:3892" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3927:3945" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="3980:3997" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4032:4049" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4084:4101" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4136:4154" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4189:4211" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4246:4269" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4304:4330" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4365:4391" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4426:4445" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4480:4502" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4537:4556" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4591:4613" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4648:4665" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4700:4718" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4753:4779" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4814:4842" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4877:4896" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4931:4951" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="4986:5011" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5068:5089" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5124:5144" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5194:5215" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5249:5268" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5302:5327" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5362:5380" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5414:5434" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5468:5486" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5520:5537" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5588:5610" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5645:5668" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5703:5727" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5762:5787" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5822:5848" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5883:5910" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5945:5962" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="5997:6016" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="6051:6070" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="6105:6121" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="6156:6174" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="6209:6228" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="6263:6282" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="6317:6336" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="6371:6390" placeholder="{...}" />
+            <marker date="1340127373000" expanded="true" signature="6494:6544" placeholder="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/org/intellij/erlang/ErlangParserTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="38" column="30" selection-start="1032" selection-end="1032" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testData/examples/dialyzer/dialyzer_dataflow.erl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="317" column="6" selection-start="11019" selection-end="11019" vertical-scroll-proportion="0.4864">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testData/parser/DialyzerDataflow.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="33902" column="9" selection-start="1401063" selection-end="1401063" vertical-scroll-proportion="-9.52">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testData/parser/DialyzerDataflow.erl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2414" column="0" selection-start="82048" selection-end="82048" vertical-scroll-proportion="-8.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/grammars/erlang.bnf">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="199" column="7" selection-start="6813" selection-end="6813" vertical-scroll-proportion="0.5376956">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Erlang.iml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="15" column="0" selection-start="757" selection-end="757" vertical-scroll-proportion="0.34139404">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1" column="4" selection-start="20" selection-end="20" vertical-scroll-proportion="0.022759601">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.idea/copyright/profiles_settings.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.idea/dictionaries/ignatov.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="12" selection-start="145" selection-end="145" vertical-scroll-proportion="0.13259669">
+        <state line="111" column="71" selection-start="3232" selection-end="3232" vertical-scroll-proportion="0.35725677">
           <folding />
         </state>
       </provider>

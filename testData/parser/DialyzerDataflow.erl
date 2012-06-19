@@ -86,24 +86,24 @@
 
 -define(TYPE_LIMIT, 3).
 
--record(state, {callgraph            :: dialyzer_callgraph:callgraph(),
-		envs                 :: dict(),
-		fun_tab		     :: dict(),
-		plt		     :: dialyzer_plt:plt(),
-		opaques              :: [erl_types:erl_type()],
-		races = dialyzer_races:new() :: dialyzer_races:races(),
-		records = dict:new() :: dict(),
-		tree_map	     :: dict(),
-		warning_mode = false :: boolean(),
-		warnings = []        :: [dial_warning()],
-		work                 :: {[_], [_], set()},
-		module               :: module(),
-		behaviour_api_dict = [] ::
-		  dialyzer_behaviours:behaviour_api_dict()}).
+%-record(state, {callgraph            :: dialyzer_callgraph:callgraph(),
+%		envs                 :: dict(),
+%		fun_tab		     :: dict(),
+%		plt		     :: dialyzer_plt:plt(),
+%		opaques              :: [erl_types:erl_type()],
+%		races = dialyzer_races:new() :: dialyzer_races:races(),
+%		records = dict:new() :: dict(),
+%		tree_map	     :: dict(),
+%		warning_mode = false :: boolean(),
+%		warnings = []        :: [dial_warning()],
+%		work                 :: {[_], [_], set()},
+%		module               :: module(),
+%		behaviour_api_dict = [] ::
+%		  dialyzer_behaviours:behaviour_api_dict()}).
 
 %% Exported Types
 
--opaque state() :: #state{}.
+%-opaque state() :: #state{}.
 
 %%--------------------------------------------------------------------
 
@@ -2412,7 +2412,7 @@ bind_guard_list([G|Gs], Map, Env, Eval, State, Acc) ->
 bind_guard_list([], Map, _Env, _Eval, _State, Acc) ->
   {Map, lists:reverse(Acc)}.
 
--type eval() :: 'pos' | 'neg' | 'dont_know'.
+%-type eval() :: 'pos' | 'neg' | 'dont_know'.
 
 -spec signal_guard_fail(eval(), cerl:c_call(), [erl_types:erl_type()],
 			state()) -> no_return().

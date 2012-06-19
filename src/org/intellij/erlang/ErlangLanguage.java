@@ -15,7 +15,7 @@
  */
 package org.intellij.erlang;
 
-import com.intellij.lang.Language;import java.lang.Override;import java.lang.String;
+import com.intellij.lang.Language;
 
 public class ErlangLanguage extends Language {
   public static final ErlangLanguage INSTANCE = new ErlangLanguage();

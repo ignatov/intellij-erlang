@@ -34,7 +34,7 @@ import static org.intellij.erlang.ErlangParserDefinition.*;
 /* This hex range is the same as octal \O00 - \O37 */
 ControlCharacter = [\000 - \037]
 
-CommentLine = "%" .* \n
+CommentLine = "%"[^\r\n]*
 Comment =  {CommentLine} {CommentLine}* 
 Whitespace = ([ \t\n] | {ControlCharacter})+
 ErlangUppercase = [A-Z]

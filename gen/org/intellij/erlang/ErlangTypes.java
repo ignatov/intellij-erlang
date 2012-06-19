@@ -38,6 +38,7 @@ public interface ErlangTypes {
   IElementType ERL_EXPR_400_A = new ErlangCompositeElementType("ERL_EXPR_400_A");
   IElementType ERL_EXPR_500_A = new ErlangCompositeElementType("ERL_EXPR_500_A");
   IElementType ERL_EXPR_700_A = new ErlangCompositeElementType("ERL_EXPR_700_A");
+  IElementType ERL_EXPR_RECOVER = new ErlangCompositeElementType("ERL_EXPR_RECOVER");
   IElementType ERL_FIELD_TYPE = new ErlangCompositeElementType("ERL_FIELD_TYPE");
   IElementType ERL_FIELD_TYPES = new ErlangCompositeElementType("ERL_FIELD_TYPES");
   IElementType ERL_FUNCTION = new ErlangCompositeElementType("ERL_FUNCTION");
@@ -242,6 +243,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_EXPR_700_A) {
         return new ErlangExpr700AImpl(node);
+      }
+      else if (type == ERL_EXPR_RECOVER) {
+        return new ErlangExprRecoverImpl(node);
       }
       else if (type == ERL_FIELD_TYPE) {
         return new ErlangFieldTypeImpl(node);

@@ -16,10 +16,12 @@
         <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
         <lang.parserDefinition language="Erlang" implementationClass="org.intellij.erlang.ErlangParserDefinition"/>
         <annotator language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangAnnotator"/>
-        <lang.syntaxHighlighterFactory key="Erlang" implementationClass="org.intellij.erlang.editor.ErlangSyntaxHighlighterFactory"/>
+        <lang.syntaxHighlighterFactory key="Erlang"
+                                       implementationClass="org.intellij.erlang.editor.ErlangSyntaxHighlighterFactory"/>
         <lang.braceMatcher language="Erlang" implementationClass="org.intellij.erlang.ErlangBraceMatcher"/>
         <lang.commenter language="Erlang" implementationClass="org.intellij.erlang.ErlangCommenter"/>
-        <lang.psiStructureViewFactory language="Erlang" implementationClass="org.intellij.erlang.ErlangStructureViewFactory"/>
+        <lang.psiStructureViewFactory language="Erlang"
+                                      implementationClass="org.intellij.erlang.ErlangStructureViewFactory"/>
         <!--<annotator language="BNF" implementationClass="org.intellij.erlang.editor.ErlangPinMarkerAnnotator"/>-->
         <!--<elementDescriptionProvider implementation="org.intellij.erlang.ErlangDescriptionProvider"/>-->
         <!--<lang.findUsagesProvider language="BNF" implementationClass="org.intellij.erlang.ErlangFindUsagesProvider"/>-->

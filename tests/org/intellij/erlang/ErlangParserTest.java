@@ -1,6 +1,5 @@
 package org.intellij.erlang;
 
-import com.intellij.lang.LanguageBraceMatching;
 import com.intellij.testFramework.ParsingTestCase;
 
 /**
@@ -27,16 +26,33 @@ public class ErlangParserTest extends ParsingTestCase {
     return true;
   }
 
-  public void testHelloWorld() { doTest(true); }
-  public void testExport()     { doTest(true); }
-  public void testH()          { doTest(true); }
-  public void testMnesia()     { doTest(true); }
-  public void testIsDigits()   { doTest(true); }
-//  public void testDialyzerDataflow()   { doTest(true); }
+  public void testHelloWorld() {
+    doTest(true);
+  }
+
+  public void testExport() {
+    doTest(true);
+  }
+
+  public void testH() {
+    doTest(true);
+  }
+
+  public void testMnesia() {
+    doTest(true);
+  }
+
+  public void testIsDigits() {
+    doTest(true);
+  }
+
+  public void testDialyzerDataflow() {
+    doTest(true);
+  }
 
   @Override
   protected void doTest(boolean checkResult) {
-    OVERWRITE_TESTDATA = true;
+//    OVERWRITE_TESTDATA = true;
 
     super.doTest(checkResult);
     assertFalse(

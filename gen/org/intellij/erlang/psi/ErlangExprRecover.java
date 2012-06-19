@@ -5,15 +5,6 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangExpression extends ErlangCompositeElement {
-
-  @Nullable
-  PsiElement getAtom();
-
-  @Nullable
-  PsiElement getCatch();
-
-  @Nullable
-  PsiElement getVar();
+public interface ErlangExprRecover extends ErlangCompositeElement {
 
 }

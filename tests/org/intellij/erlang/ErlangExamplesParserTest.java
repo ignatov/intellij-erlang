@@ -1,8 +1,6 @@
 package org.intellij.erlang;
 
 import com.intellij.FileSetTestCase;
-import com.intellij.openapi.application.PathManager;
-import com.intellij.openapi.application.ex.PathManagerEx;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.impl.DebugUtil;

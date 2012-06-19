@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl implements ErlangFunctionCallExpression {
 
@@ -31,6 +32,16 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunctionCallExpression(this);
     else super.accept(visitor);
+  }
+
+  @Nullable
+  public Object resolve() {
+    return ErlangPsiImplUtil.resolve(this);
+  }
+
+  @Nullable
+  public PsiReference getReference() {
+    return ErlangPsiImplUtil.getReference(this);
   }
 
 }

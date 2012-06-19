@@ -6,9 +6,8 @@ ERL_FILE
         PsiElement(atom)('module')
       ERL_ATTR_VAL
         PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            PsiElement(atom)('test')
+        ERL_EXPRESSION
+          PsiElement(atom)('test')
         PsiElement())(')')
   PsiElement(.)('.')
   ERL_ATTRIBUTE
@@ -73,16 +72,14 @@ ERL_FILE
                 PsiElement(atom)('naive_reverse')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+              ERL_EXPRESSION
+                PsiElement(var)('T')
               PsiElement())(')')
           PsiElement(++)('++')
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_MAX_EXPRESSION
-              ERL_Q_VAR
-                PsiElement(var)('H')
+            ERL_EXPRESSION
+              PsiElement(var)('H')
             PsiElement(])(']')
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
@@ -148,16 +145,15 @@ ERL_FILE
               PsiElement(string)('"hello, world"')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%-type eval() :: 'pos' | 'neg' | 'dont_know'.\n')
+  PsiComment(ERL_LINE_COMMENT)('%-type eval() :: 'pos' | 'neg' | 'dont_know'.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('hello')
       ERL_ARGUMENT_LIST
         PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          ERL_Q_VAR
-            PsiElement(var)('X')
+        ERL_EXPRESSION
+          PsiElement(var)('X')
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')

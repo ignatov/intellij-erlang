@@ -109,7 +109,7 @@
 }
 
 forms ::= form ('.' form)*
-private form ::= function | rule | attribute
+private form ::= function | rule | attribute {recoverUntil="recoverer"}
 
 q_atom ::= '?'? atom
 q_var ::= ('?'? var) | '_'
@@ -172,7 +172,7 @@ function_clause ::= q_atom argument_list clause_guard? clause_body
 private clause_guard ::= when guard {pin=1}
 clause_body ::= '->' exprs {pin=1}
 
-expression ::= catch_expression | expr_100_a
+expression ::= (atom | var)&(',' | ')' | '->' | '}' | ']') | catch_expression | expr_100_a
 private catch_expression ::= catch expression
 expr_100_a ::= expr_150_a expr_155_expression?
 private expr_155_expression ::= ('='|'!') expr_100_a
@@ -184,16 +184,12 @@ expr_400_a ::= expr_500_a additive_expression*
 left additive_expression ::= add_op expr_500_a {pin=1}
 expr_500_a ::= prefix_expression multiplicative_expression*
 left multiplicative_expression ::= mult_op prefix_expression {pin=1}
-//expr_500 ::= expr_600 (expr_500 mult_op expr_600) | expr_600
 prefix_expression ::= prefix_op? expr_700_a {pin=0}
 expr_700_a ::= function_call_expression | record_expression | colon_qualified_expression
 colon_qualified_expression ::= (max_expression | qualified_reference) colon_max_expression? {pin=0}
 private colon_max_expression ::= ':' max_expression
-//expr_900 ::= ('.' atom1) | expr_max | (expr_900 '.' atom1)
 private qualified_reference ::= q_atom qualified_expression*
 left qualified_expression ::= '.' q_atom {pin=0} //todo
-
-//expr_900 ::= ('.' atom) | (expr_900 '.' atom) | expr_max
 
 max_expression ::=
   q_var
@@ -205,7 +201,6 @@ max_expression ::=
   | atomic
 
 begin_end_expression ::= begin exprs end
-
 parenthesized_expression ::= '(' expression ')'
 
 //list_expression ::= '[' expression? (',' expression)* ['|' expression] ']' {pin=0}
@@ -239,7 +234,7 @@ record_field ::= (q_var '=' expression) | (q_atom '=' expression)
 function_call_expression ::= colon_qualified_expression argument_list {
   pin=0
   methods = [
-
+    resolve getReference
   ]
 }
 

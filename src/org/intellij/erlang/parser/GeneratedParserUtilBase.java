@@ -72,7 +72,7 @@ public class GeneratedParserUtilBase {
 
   public static boolean invalid_left_marker_guard_(PsiBuilder builder_, PsiBuilder.Marker marker_, String funcName_) {
     //builder_.error("Invalid left marker encountered in " + funcName_ +" at offset " + builder_.getCurrentOffset());
-    boolean goodMarker = marker_ != null && ((LighterASTNode)marker_).getTokenType() != TokenType.ERROR_ELEMENT;
+    boolean goodMarker = marker_ != null && ((LighterASTNode) marker_).getTokenType() != TokenType.ERROR_ELEMENT;
     if (!goodMarker) return false;
     ErrorState state = ErrorState.get(builder_);
 
@@ -141,8 +141,7 @@ public class GeneratedParserUtilBase {
         final int nextOffset = builder_.rawTokenTypeStart(++count);
         if (nextOffset > endOffset) {
           return false;
-        }
-        else if (nextOffset == endOffset) {
+        } else if (nextOffset == endOffset) {
           break;
         }
       }
@@ -164,33 +163,29 @@ public class GeneratedParserUtilBase {
     if (length == 0) return;
     if (diff == 0) {
       add = true;
-    }
-    else if (diff > 0 && diff <= length) {
+    } else if (diff > 0 && diff <= length) {
       CharSequence fragment = builder_.getOriginalText().subSequence(offset, completionState.offset);
       add = StringUtil.startsWithIgnoreCase(text, fragment.toString());
-    }
-    else if (diff < 0) {
+    } else if (diff < 0) {
       for (int i = -1; ; i--) {
         IElementType type = builder_.rawLookup(i);
         int tokenStart = builder_.rawTokenTypeStart(i);
         if (state.whitespaceTokens.contains(type) || state.commentTokens.contains(type)) {
           diff = completionState.offset - tokenStart;
-        }
-        else if (type != null && tokenStart < completionState.offset) {
+        } else if (type != null && tokenStart < completionState.offset) {
           CharSequence fragment = builder_.getOriginalText().subSequence(tokenStart, completionState.offset);
           if (StringUtil.startsWithIgnoreCase(text, fragment.toString())) {
             diff = completionState.offset - tokenStart;
           }
           break;
-        }
-        else {
+        } else {
           break;
         }
       }
       add = diff >= 0 && diff < length;
     }
     add = add && length > 1 && !(text.charAt(0) == '<' && text.charAt(length - 1) == '>') &&
-          !(text.charAt(0) == '\'' && text.charAt(length - 1) == '\'' && length < 5);
+      !(text.charAt(0) == '\'' && text.charAt(length - 1) == '\'' && length < 5);
     if (add) {
       completionState.items.add(text);
     }
@@ -210,12 +205,10 @@ public class GeneratedParserUtilBase {
         throw new AssertionError("Incorrect false predicate sign");
       }
       state.predicateCount++;
-    }
-    else if (sectionType == _SECTION_NOT_) {
+    } else if (sectionType == _SECTION_NOT_) {
       if (state.predicateCount == 0) {
         state.predicateSign = false;
-      }
-      else {
+      } else {
         state.predicateSign = !state.predicateSign;
       }
       state.predicateCount++;
@@ -249,13 +242,13 @@ public class GeneratedParserUtilBase {
 
       final LighterASTNode latestDoneMarker =
         (pinned || result) && (state.altMode || lastErrorPos > initialOffset) &&
-        eatMoreFlagOnce ? builder_.getLatestDoneMarker() : null;
+          eatMoreFlagOnce ? builder_.getLatestDoneMarker() : null;
       PsiBuilder.Marker extensionMarker = null;
       IElementType extensionTokenType = null;
       if (latestDoneMarker instanceof PsiBuilder.Marker) {
-        extensionMarker = ((PsiBuilder.Marker)latestDoneMarker).precede();
+        extensionMarker = ((PsiBuilder.Marker) latestDoneMarker).precede();
         extensionTokenType = latestDoneMarker.getTokenType();
-        ((PsiBuilder.Marker)latestDoneMarker).drop();
+        ((PsiBuilder.Marker) latestDoneMarker).drop();
       }
       // advance to the last error pos
       // skip tokens until lastErrorPos. parseAsTree might look better here...
@@ -264,8 +257,7 @@ public class GeneratedParserUtilBase {
         if (state.braces != null) {
           if (builder_.getTokenType() == state.braces[0].getLeftBraceType()) {
             parenCount++;
-          }
-          else if (builder_.getTokenType() == state.braces[0].getRightBraceType()) parenCount--;
+          } else if (builder_.getTokenType() == state.braces[0].getRightBraceType()) parenCount--;
         }
         builder_.advanceLexer();
         eatMoreFlag = parenCount != 0 || eatMore.parse(builder_, frame.level + 1);
@@ -276,8 +268,7 @@ public class GeneratedParserUtilBase {
           builder_.advanceLexer();
           parseAsTree(state, builder_, frame.level + 1, DUMMY_BLOCK, true, TOKEN_ADVANCER, eatMore);
         }
-      }
-      else if (eatMoreFlag) {
+      } else if (eatMoreFlag) {
         String tokenText = builder_.getTokenText();
         String expectedText = state.getExpectedText(builder_);
         PsiBuilder.Marker mark = builder_.mark();
@@ -286,8 +277,7 @@ public class GeneratedParserUtilBase {
         mark.error(expectedText + gotText);
         parseAsTree(state, builder_, frame.level + 1, DUMMY_BLOCK, true, TOKEN_ADVANCER, eatMore);
         errorReported = true;
-      }
-      else if (eatMoreFlagOnce || (!result && frame.offset != builder_.getCurrentOffset())) {
+      } else if (eatMoreFlagOnce || (!result && frame.offset != builder_.getCurrentOffset())) {
         reportError(state, builder_, true);
         errorReported = true;
       }
@@ -299,8 +289,7 @@ public class GeneratedParserUtilBase {
         state.clearExpectedVariants();
       }
       if (!result && eatMoreFlagOnce && frame.offset != builder_.getCurrentOffset()) result = true;
-    }
-    else if (!result && pinned && frame.errorReportedAt < 0) {
+    } else if (!result && pinned && frame.errorReportedAt < 0) {
       // do not report if there're errors after current offset
       if (getLastVariantOffset(state, initialOffset) == initialOffset) {
         // do not force, inner recoverRoot might have skipped some tokens
@@ -311,7 +300,8 @@ public class GeneratedParserUtilBase {
     }
     // propagate errorReportedAt up the stack to avoid duplicate reporting
     Frame prevFrame = state.levelCheck.isEmpty() ? null : state.levelCheck.getLast();
-    if (prevFrame != null && prevFrame.errorReportedAt < frame.errorReportedAt) prevFrame.errorReportedAt = frame.errorReportedAt;
+    if (prevFrame != null && prevFrame.errorReportedAt < frame.errorReportedAt)
+      prevFrame.errorReportedAt = frame.errorReportedAt;
     return result;
   }
 
@@ -345,8 +335,8 @@ public class GeneratedParserUtilBase {
     boolean notEmpty = StringUtil.isNotEmpty(expectedText);
     if (force || notEmpty) {
       final String gotText = builder_.eof() ? "unexpected end of file" :
-                             notEmpty ? "got '" + builder_.getTokenText() + "'" :
-                             "'" + builder_.getTokenText() + "' unexpected";
+        notEmpty ? "got '" + builder_.getTokenText() + "'" :
+          "'" + builder_.getTokenText() + "' unexpected";
       builder_.error(expectedText + gotText);
       return true;
     }
@@ -381,7 +371,7 @@ public class GeneratedParserUtilBase {
     }
 
     public Lexer getLexer() {
-      return ((PsiBuilderImpl)myDelegate).getLexer();
+      return ((PsiBuilderImpl) myDelegate).getLexer();
     }
   }
 
@@ -417,7 +407,7 @@ public class GeneratedParserUtilBase {
 
 
     public static ErrorState get(PsiBuilder builder) {
-      return ((Builder)builder).state;
+      return ((Builder) builder).state;
     }
 
     private static void initState(IElementType root, PsiBuilder builder, ErrorState state) {
@@ -440,8 +430,7 @@ public class GeneratedParserUtilBase {
       StringBuilder sb = new StringBuilder();
       if (addExpected(sb, offset, true)) {
         sb.append(" expected, ");
-      }
-      else if (addExpected(sb, offset, false)) sb.append(" unexpected, ");
+      } else if (addExpected(sb, offset, false)) sb.append(" unexpected, ");
       return sb.toString();
     }
 
@@ -474,8 +463,7 @@ public class GeneratedParserUtilBase {
           if (count > MAX_VARIANTS_TO_DISPLAY) {
             sb.append(" and ...");
             break;
-          }
-          else {
+          } else {
             sb.append(", ");
           }
         }
@@ -539,7 +527,7 @@ public class GeneratedParserUtilBase {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
 
-      Variant variant = (Variant)o;
+      Variant variant = (Variant) o;
 
       if (expected != variant.expected) return false;
       if (offset != variant.offset) return false;
@@ -604,15 +592,15 @@ public class GeneratedParserUtilBase {
     if (checkParens && builder_.rawLookup(-1) == state.braces[0].getLeftBraceType()) {
       LighterASTNode doneMarker = builder_.getLatestDoneMarker();
       if (doneMarker != null &&
-          doneMarker.getStartOffset() == builder_.rawTokenTypeStart(-1) &&
-          doneMarker.getTokenType() == TokenType.ERROR_ELEMENT) {
-        parenList.add(Pair.create(((PsiBuilder.Marker)doneMarker).precede(), (PsiBuilder.Marker)null));
+        doneMarker.getStartOffset() == builder_.rawTokenTypeStart(-1) &&
+        doneMarker.getTokenType() == TokenType.ERROR_ELEMENT) {
+        parenList.add(Pair.create(((PsiBuilder.Marker) doneMarker).precede(), (PsiBuilder.Marker) null));
       }
     }
     while (true) {
       final IElementType tokenType = builder_.getTokenType();
       if (checkParens &&
-          (tokenType == state.braces[0].getLeftBraceType() || tokenType == state.braces[0].getRightBraceType() && !parenList.isEmpty())) {
+        (tokenType == state.braces[0].getLeftBraceType() || tokenType == state.braces[0].getRightBraceType() && !parenList.isEmpty())) {
         if (marker != null) {
           marker.done(chunkType);
           siblingList.addFirst(Pair.create(marker, 1));
@@ -635,8 +623,7 @@ public class GeneratedParserUtilBase {
           siblingList.addFirst(Pair.create(pair.first, 1));
           checkSiblingsRunnable.run();
         }
-      }
-      else {
+      } else {
         if (marker == null) {
           marker = builder_.mark();
         }
