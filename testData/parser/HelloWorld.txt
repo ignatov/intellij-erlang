@@ -50,8 +50,8 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('naive_reverse')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
           ERL_ADDITIVE_EXPRESSION
@@ -63,7 +63,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('T')
           PsiElement(])(']')
-        PsiElement())(')')
+      PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_EXPR_300_A
@@ -88,12 +88,12 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('naive_reverse')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
           PsiElement(])(']')
-        PsiElement())(')')
+      PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_LIST_EXPRESSION
@@ -104,9 +104,8 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('hello_world')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
-        PsiElement())(')')
+      PsiElement(()('(')
+      PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_FUNCTION_CALL_EXPRESSION
@@ -128,9 +127,8 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('hello_world2')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
-        PsiElement())(')')
+      PsiElement(()('(')
+      PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_FUNCTION_CALL_EXPRESSION
@@ -153,12 +151,12 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('hello')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('X')
-        PsiElement())(')')
+      PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_ADDITIVE_EXPRESSION

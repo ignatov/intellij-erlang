@@ -11,7 +11,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.Function;
 import com.intellij.util.PlatformIcons;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.ErlangExpression;
+import org.intellij.erlang.psi.ErlangArgumentDefinition;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionClause;
@@ -116,11 +116,11 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     @Override
     public String getPresentableText() {
       if (myElement instanceof ErlangFunctionClause) {
-        final List<ErlangExpression> exprs = ((ErlangFunctionClause) myElement).getArgumentList().getExpressionList();
+        final List<ErlangArgumentDefinition> exprs = ((ErlangFunctionClause) myElement).getArgumentDefinitionList();
         String res = ((ErlangFunctionClause) myElement).getQAtom().getText();
-        final List<String> strings = ContainerUtil.map(exprs, new Function<ErlangExpression, String>() {
+        final List<String> strings = ContainerUtil.map(exprs, new Function<ErlangArgumentDefinition, String>() {
           @Override
-          public String fun(ErlangExpression o) {
+          public String fun(ErlangArgumentDefinition o) {
             return o.getText();
           }
         });
@@ -128,7 +128,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         return res + "(" + StringUtil.join(strings, ", ") + ")";
       }
       if (myElement instanceof ErlangFunction) {
-        final int argCount = ((ErlangFunction) myElement).getFunctionClauseList().get(0).getArgumentList().getExpressionList().size();
+        final int argCount = ((ErlangFunction) myElement).getFunctionClauseList().get(0).getArgumentDefinitionList().size();
         return ((ErlangFunction) myElement).getAtomName().getText() + "/" + argCount;
       } else if (myElement instanceof ErlangFileImpl) {
         return ((ErlangFileImpl) myElement).getName();

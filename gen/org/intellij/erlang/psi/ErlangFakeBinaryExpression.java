@@ -5,18 +5,15 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangFunClause extends ErlangCompositeElement {
+public interface ErlangFakeBinaryExpression extends ErlangExpression {
 
   @NotNull
-  List<ErlangArgumentDefinition> getArgumentDefinitionList();
+  List<ErlangExpression> getExpressionList();
 
   @NotNull
-  ErlangClauseBody getClauseBody();
+  ErlangExpression getLeft();
 
   @Nullable
-  ErlangGuard getGuard();
-
-  @Nullable
-  PsiElement getWhen();
+  ErlangExpression getRight();
 
 }

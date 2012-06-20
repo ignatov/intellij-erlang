@@ -93,7 +93,7 @@ ERL_FILE
                     PsiElement(])(']')
             PsiElement(,)(',')
             ERL_TYPED_EXPR
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('races')
@@ -123,7 +123,7 @@ ERL_FILE
                     PsiElement())(')')
             PsiElement(,)(',')
             ERL_TYPED_EXPR
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('records')
@@ -163,7 +163,7 @@ ERL_FILE
                     PsiElement())(')')
             PsiElement(,)(',')
             ERL_TYPED_EXPR
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('warning_mode')
@@ -181,7 +181,7 @@ ERL_FILE
                     PsiElement())(')')
             PsiElement(,)(',')
             ERL_TYPED_EXPR
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('warnings')
@@ -258,7 +258,7 @@ ERL_FILE
                     PsiElement())(')')
             PsiElement(,)(',')
             ERL_TYPED_EXPR
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('behaviour_api_dict')
@@ -344,7 +344,7 @@ ERL_FILE
                   PsiElement(atom)('cont')
             PsiElement(,)(',')
             ERL_TYPED_EXPR
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('written')

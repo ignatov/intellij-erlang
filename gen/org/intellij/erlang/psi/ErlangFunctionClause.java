@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ErlangFunctionClause extends ErlangCompositeElement {
 
   @NotNull
-  ErlangArgumentList getArgumentList();
+  List<ErlangArgumentDefinition> getArgumentDefinitionList();
 
   @NotNull
   ErlangClauseBody getClauseBody();

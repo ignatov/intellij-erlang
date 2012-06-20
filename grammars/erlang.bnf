@@ -108,16 +108,20 @@
   
   pin(".*_expression")=1
   
+  extends("assignment_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal|a)")=expression
   extends("atomic")=expression
-//  elementType("q_atom|q_var")=expression
 }
 
 forms ::= form ('.' form)*
 private form ::= function | rule | attribute {recoverUntil=recoverer}
 
 q_atom ::= '?'? atom
-q_var ::= '_' | ('?'? var)
+q_var ::= '_' | ('?'? var) {
+  methods = [
+    resolve getReference processDeclarations
+  ]
+}
 
 private recoverer ::= !('.')
 
@@ -171,15 +175,17 @@ function ::= function_clause (';' function_clause)* {
     atom_name = "function_clause[0]/q_atom"
   ]
 }
-function_clause ::= q_atom argument_list clause_guard? clause_body
+function_clause ::= q_atom argument_definition_list clause_guard? clause_body
+private argument_definition_list ::= '(' argument_definition? (',' argument_definition)* ')'
 
 private clause_guard ::= when guard {pin=1}
 clause_body ::= '->' exprs {pin=1}
 
 expression ::= (q_atom | q_var)&(',' | ')' | '->' | '}' | ']' | ';') | catch_expression | expr_100_a
 private catch_expression ::= catch expression
-expr_100_a ::= expr_150_a expr_155_expression?
-private expr_155_expression ::= ('='|'!') expr_100_a
+expr_100_a ::= expr_150_a [assignment_expression|send_expression]
+left assignment_expression ::= '=' expr_100_a
+left send_expression ::= '!' expr_100_a
 expr_150_a ::= expr_160_a [orelse expr_150_a]
 expr_160_a ::= expr_200_a [andalso expr_160_a]
 expr_200_a ::= expr_300_a [comp_op expr_300_a]
@@ -254,19 +260,27 @@ if_clause ::= guard clause_body
 
 case_expression ::= case expression of cr_clauses end
 private cr_clauses ::= cr_clause (';' cr_clause)*
-cr_clause ::= expression clause_guard? clause_body
+cr_clause ::= argument_definition clause_guard? clause_body
+argument_definition ::= expression
 
 receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end))
 fun_expression ::= fun ((fun_clauses end) | ([q_atom ':'] q_atom '/' integer))
 private fun_clauses ::= fun_clause (';' fun_clause)*
-fun_clause ::= argument_list clause_guard? clause_body
+fun_clause ::= argument_definition_list clause_guard? clause_body
 try_expression ::= try exprs (of cr_clauses)? try_catch
 try_catch ::= (catch try_clauses [after exprs] end) | (after exprs end) {pin(".*")="catch|after"}
 private try_clauses ::= try_clause (';' try_clause)*
 try_clause ::= [(q_atom | q_var) ':'] expression clause_guard? clause_body
 
 query_expression ::= query list_comprehension end
-argument_list ::= '(' exprs? ')' {pin=1}
+argument_list ::= '(' exprs? ')'
+
+fake fake_binary_expression ::= expression + {
+  methods = [
+    left="expression[0]"
+    right="expression[1]"]
+  }
+
 private exprs ::= expression (',' expression)*
 guard ::= exprs (';' exprs)*
 private atomic ::= char | integer | float | q_atom | string+

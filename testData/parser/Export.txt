@@ -3,12 +3,12 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('set_master_nodes')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Nodes')
-        PsiElement())(')')
+      PsiElement())(')')
       PsiElement(when)('when')
       ERL_GUARD
         ERL_FUNCTION_CALL_EXPRESSION
@@ -23,7 +23,7 @@ ERL_FILE
             PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_EXPR_100_A
+        ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('UseDir')
@@ -39,7 +39,7 @@ ERL_FILE
                   PsiElement(atom)('use_dir')
               PsiElement())(')')
         PsiElement(,)(',')
-        ERL_EXPR_100_A
+        ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('IsRunning')
@@ -62,12 +62,13 @@ ERL_FILE
               PsiElement(var)('IsRunning')
           PsiElement(of)('of')
           ERL_CR_CLAUSE
-            ERL_EXPRESSION
-              ERL_Q_ATOM
-                PsiElement(atom)('yes')
+            ERL_ARGUMENT_DEFINITION
+              ERL_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('yes')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('CsPat')
@@ -90,7 +91,7 @@ ERL_FILE
                       PsiElement(atom)(''_'')
                   PsiElement(})('}')
               PsiElement(,)(',')
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Cstructs0')
@@ -111,7 +112,7 @@ ERL_FILE
                         PsiElement(var)('CsPat')
                     PsiElement())(')')
               PsiElement(,)(',')
-              ERL_EXPR_100_A
+              ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Cstructs')
@@ -163,9 +164,10 @@ ERL_FILE
                   PsiElement())(')')
           PsiElement(;)(';')
           ERL_CR_CLAUSE
-            ERL_EXPRESSION
-              ERL_Q_VAR
-                PsiElement(var)('_NotRunning')
+            ERL_ARGUMENT_DEFINITION
+              ERL_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('_NotRunning')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_CASE_EXPRESSION
@@ -175,9 +177,10 @@ ERL_FILE
                     PsiElement(var)('UseDir')
                 PsiElement(of)('of')
                 ERL_CR_CLAUSE
-                  ERL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('true')
+                  ERL_ARGUMENT_DEFINITION
+                    ERL_EXPRESSION
+                      ERL_Q_ATOM
+                        PsiElement(atom)('true')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_FUNCTION_CALL_EXPRESSION
@@ -196,7 +199,7 @@ ERL_FILE
                             PsiElement(atom)('schema')
                         PsiElement())(')')
                     PsiElement(,)(',')
-                    ERL_EXPR_100_A
+                    ERL_ASSIGNMENT_EXPRESSION
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('Res')
@@ -217,16 +220,17 @@ ERL_FILE
                             PsiElement())(')')
                         PsiElement(of)('of')
                         ERL_CR_CLAUSE
-                          ERL_TUPLE_EXPRESSION
-                            PsiElement({)('{')
-                            ERL_EXPRESSION
-                              ERL_Q_ATOM
-                                PsiElement(atom)('ok')
-                            PsiElement(,)(',')
-                            ERL_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Cstructs')
-                            PsiElement(})('}')
+                          ERL_ARGUMENT_DEFINITION
+                            ERL_TUPLE_EXPRESSION
+                              PsiElement({)('{')
+                              ERL_EXPRESSION
+                                ERL_Q_ATOM
+                                  PsiElement(atom)('ok')
+                              PsiElement(,)(',')
+                              ERL_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('Cstructs')
+                              PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_FUNCTION_CALL_EXPRESSION
@@ -253,16 +257,17 @@ ERL_FILE
                                 PsiElement())(')')
                         PsiElement(;)(';')
                         ERL_CR_CLAUSE
-                          ERL_TUPLE_EXPRESSION
-                            PsiElement({)('{')
-                            ERL_EXPRESSION
-                              ERL_Q_ATOM
-                                PsiElement(atom)('error')
-                            PsiElement(,)(',')
-                            ERL_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Reason')
-                            PsiElement(})('}')
+                          ERL_ARGUMENT_DEFINITION
+                            ERL_TUPLE_EXPRESSION
+                              PsiElement({)('{')
+                              ERL_EXPRESSION
+                                ERL_Q_ATOM
+                                  PsiElement(atom)('error')
+                              PsiElement(,)(',')
+                              ERL_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('Reason')
+                              PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_TUPLE_EXPRESSION
@@ -298,9 +303,10 @@ ERL_FILE
                         PsiElement(var)('Res')
                 PsiElement(;)(';')
                 ERL_CR_CLAUSE
-                  ERL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('false')
+                  ERL_ARGUMENT_DEFINITION
+                    ERL_EXPRESSION
+                      ERL_Q_ATOM
+                        PsiElement(atom)('false')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_MAX_EXPRESSION
@@ -312,12 +318,12 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('set_master_nodes')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Nodes')
-        PsiElement())(')')
+      PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_TUPLE_EXPRESSION
@@ -342,27 +348,30 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('log_valid_master_nodes')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Cstructs')
-        PsiElement(,)(',')
+      PsiElement(,)(',')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Nodes')
-        PsiElement(,)(',')
+      PsiElement(,)(',')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('UseDir')
-        PsiElement(,)(',')
+      PsiElement(,)(',')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('IsRunning')
-        PsiElement())(')')
+      PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_EXPR_100_A
+        ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Fun')
@@ -370,15 +379,15 @@ ERL_FILE
           ERL_FUN_EXPRESSION
             PsiElement(fun)('fun')
             ERL_FUN_CLAUSE
-              ERL_ARGUMENT_LIST
-                PsiElement(()('(')
+              PsiElement(()('(')
+              ERL_ARGUMENT_DEFINITION
                 ERL_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Cs')
-                PsiElement())(')')
+              PsiElement())(')')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                ERL_EXPR_100_A
+                ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Copies')
@@ -399,7 +408,7 @@ ERL_FILE
                           PsiElement(var)('Cs')
                       PsiElement())(')')
                 PsiElement(,)(',')
-                ERL_EXPR_100_A
+                ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Valid')
@@ -443,7 +452,7 @@ ERL_FILE
                   PsiElement(})('}')
             PsiElement(end)('end')
         PsiElement(,)(',')
-        ERL_EXPR_100_A
+        ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Args')
@@ -496,16 +505,17 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('set_master_nodes')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Tab')
-        PsiElement(,)(',')
+      PsiElement(,)(',')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Nodes')
-        PsiElement())(')')
+      PsiElement())(')')
       PsiElement(when)('when')
       ERL_GUARD
         ERL_FUNCTION_CALL_EXPRESSION
@@ -520,7 +530,7 @@ ERL_FILE
             PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_EXPR_100_A
+        ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('UseDir')
@@ -536,7 +546,7 @@ ERL_FILE
                   PsiElement(atom)('use_dir')
               PsiElement())(')')
         PsiElement(,)(',')
-        ERL_EXPR_100_A
+        ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('IsRunning')
@@ -559,9 +569,10 @@ ERL_FILE
               PsiElement(var)('IsRunning')
           PsiElement(of)('of')
           ERL_CR_CLAUSE
-            ERL_EXPRESSION
-              ERL_Q_ATOM
-                PsiElement(atom)('yes')
+            ERL_ARGUMENT_DEFINITION
+              ERL_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('yes')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_CASE_EXPRESSION
@@ -586,16 +597,17 @@ ERL_FILE
                     PsiElement())(')')
                 PsiElement(of)('of')
                 ERL_CR_CLAUSE
-                  ERL_TUPLE_EXPRESSION
-                    PsiElement({)('{')
-                    ERL_EXPRESSION
-                      ERL_Q_ATOM
-                        PsiElement(atom)(''EXIT'')
-                    PsiElement(,)(',')
-                    ERL_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(_)('_')
-                    PsiElement(})('}')
+                  ERL_ARGUMENT_DEFINITION
+                    ERL_TUPLE_EXPRESSION
+                      PsiElement({)('{')
+                      ERL_EXPRESSION
+                        ERL_Q_ATOM
+                          PsiElement(atom)(''EXIT'')
+                      PsiElement(,)(',')
+                      ERL_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(_)('_')
+                      PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_TUPLE_EXPRESSION
@@ -617,9 +629,10 @@ ERL_FILE
                       PsiElement(})('}')
                 PsiElement(;)(';')
                 ERL_CR_CLAUSE
-                  ERL_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Cs')
+                  ERL_ARGUMENT_DEFINITION
+                    ERL_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Cs')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_CASE_EXPRESSION
@@ -646,12 +659,13 @@ ERL_FILE
                             PsiElement())(')')
                       PsiElement(of)('of')
                       ERL_CR_CLAUSE
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
-                          PsiElement(])(']')
+                        ERL_ARGUMENT_DEFINITION
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            PsiElement(])(']')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
-                          ERL_EXPR_100_A
+                          ERL_ASSIGNMENT_EXPRESSION
                             ERL_MAX_EXPRESSION
                               ERL_Q_VAR
                                 PsiElement(var)('Args')
@@ -695,9 +709,10 @@ ERL_FILE
                               PsiElement())(')')
                       PsiElement(;)(';')
                       ERL_CR_CLAUSE
-                        ERL_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('BadNodes')
+                        ERL_ARGUMENT_DEFINITION
+                          ERL_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('BadNodes')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
                           ERL_TUPLE_EXPRESSION
@@ -725,9 +740,10 @@ ERL_FILE
                 PsiElement(end)('end')
           PsiElement(;)(';')
           ERL_CR_CLAUSE
-            ERL_EXPRESSION
-              ERL_Q_VAR
-                PsiElement(var)('_NotRunning')
+            ERL_ARGUMENT_DEFINITION
+              ERL_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('_NotRunning')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_CASE_EXPRESSION
@@ -737,9 +753,10 @@ ERL_FILE
                     PsiElement(var)('UseDir')
                 PsiElement(of)('of')
                 ERL_CR_CLAUSE
-                  ERL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('true')
+                  ERL_ARGUMENT_DEFINITION
+                    ERL_EXPRESSION
+                      ERL_Q_ATOM
+                        PsiElement(atom)('true')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_FUNCTION_CALL_EXPRESSION
@@ -758,7 +775,7 @@ ERL_FILE
                             PsiElement(atom)('schema')
                         PsiElement())(')')
                     PsiElement(,)(',')
-                    ERL_EXPR_100_A
+                    ERL_ASSIGNMENT_EXPRESSION
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('Res')
@@ -779,16 +796,17 @@ ERL_FILE
                             PsiElement())(')')
                         PsiElement(of)('of')
                         ERL_CR_CLAUSE
-                          ERL_TUPLE_EXPRESSION
-                            PsiElement({)('{')
-                            ERL_EXPRESSION
-                              ERL_Q_ATOM
-                                PsiElement(atom)('ok')
-                            PsiElement(,)(',')
-                            ERL_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Cstructs')
-                            PsiElement(})('}')
+                          ERL_ARGUMENT_DEFINITION
+                            ERL_TUPLE_EXPRESSION
+                              PsiElement({)('{')
+                              ERL_EXPRESSION
+                                ERL_Q_ATOM
+                                  PsiElement(atom)('ok')
+                              PsiElement(,)(',')
+                              ERL_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('Cstructs')
+                              PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_CASE_EXPRESSION
@@ -817,16 +835,17 @@ ERL_FILE
                                   PsiElement())(')')
                               PsiElement(of)('of')
                               ERL_CR_CLAUSE
-                                ERL_TUPLE_EXPRESSION
-                                  PsiElement({)('{')
-                                  ERL_EXPRESSION
-                                    ERL_Q_ATOM
-                                      PsiElement(atom)('value')
-                                  PsiElement(,)(',')
-                                  ERL_EXPRESSION
-                                    ERL_Q_VAR
-                                      PsiElement(var)('Cs')
-                                  PsiElement(})('}')
+                                ERL_ARGUMENT_DEFINITION
+                                  ERL_TUPLE_EXPRESSION
+                                    PsiElement({)('{')
+                                    ERL_EXPRESSION
+                                      ERL_Q_ATOM
+                                        PsiElement(atom)('value')
+                                    PsiElement(,)(',')
+                                    ERL_EXPRESSION
+                                      ERL_Q_VAR
+                                        PsiElement(var)('Cs')
+                                    PsiElement(})('}')
                                 ERL_CLAUSE_BODY
                                   PsiElement(->)('->')
                                   ERL_CASE_EXPRESSION
@@ -853,12 +872,13 @@ ERL_FILE
                                           PsiElement())(')')
                                     PsiElement(of)('of')
                                     ERL_CR_CLAUSE
-                                      ERL_LIST_EXPRESSION
-                                        PsiElement([)('[')
-                                        PsiElement(])(']')
+                                      ERL_ARGUMENT_DEFINITION
+                                        ERL_LIST_EXPRESSION
+                                          PsiElement([)('[')
+                                          PsiElement(])(']')
                                       ERL_CLAUSE_BODY
                                         PsiElement(->)('->')
-                                        ERL_EXPR_100_A
+                                        ERL_ASSIGNMENT_EXPRESSION
                                           ERL_MAX_EXPRESSION
                                             ERL_Q_VAR
                                               PsiElement(var)('Args')
@@ -902,9 +922,10 @@ ERL_FILE
                                             PsiElement())(')')
                                     PsiElement(;)(';')
                                     ERL_CR_CLAUSE
-                                      ERL_EXPRESSION
-                                        ERL_Q_VAR
-                                          PsiElement(var)('BadNodes')
+                                      ERL_ARGUMENT_DEFINITION
+                                        ERL_EXPRESSION
+                                          ERL_Q_VAR
+                                            PsiElement(var)('BadNodes')
                                       ERL_CLAUSE_BODY
                                         PsiElement(->)('->')
                                         ERL_TUPLE_EXPRESSION
@@ -931,9 +952,10 @@ ERL_FILE
                                     PsiElement(end)('end')
                               PsiElement(;)(';')
                               ERL_CR_CLAUSE
-                                ERL_EXPRESSION
-                                  ERL_Q_ATOM
-                                    PsiElement(atom)('false')
+                                ERL_ARGUMENT_DEFINITION
+                                  ERL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      PsiElement(atom)('false')
                                 ERL_CLAUSE_BODY
                                   PsiElement(->)('->')
                                   ERL_TUPLE_EXPRESSION
@@ -956,16 +978,17 @@ ERL_FILE
                               PsiElement(end)('end')
                         PsiElement(;)(';')
                         ERL_CR_CLAUSE
-                          ERL_TUPLE_EXPRESSION
-                            PsiElement({)('{')
-                            ERL_EXPRESSION
-                              ERL_Q_ATOM
-                                PsiElement(atom)('error')
-                            PsiElement(,)(',')
-                            ERL_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Reason')
-                            PsiElement(})('}')
+                          ERL_ARGUMENT_DEFINITION
+                            ERL_TUPLE_EXPRESSION
+                              PsiElement({)('{')
+                              ERL_EXPRESSION
+                                ERL_Q_ATOM
+                                  PsiElement(atom)('error')
+                              PsiElement(,)(',')
+                              ERL_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('Reason')
+                              PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_TUPLE_EXPRESSION
@@ -1001,9 +1024,10 @@ ERL_FILE
                         PsiElement(var)('Res')
                 PsiElement(;)(';')
                 ERL_CR_CLAUSE
-                  ERL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('false')
+                  ERL_ARGUMENT_DEFINITION
+                    ERL_EXPRESSION
+                      ERL_Q_ATOM
+                        PsiElement(atom)('false')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_MAX_EXPRESSION
@@ -1015,16 +1039,17 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('set_master_nodes')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Tab')
-        PsiElement(,)(',')
+      PsiElement(,)(',')
+      ERL_ARGUMENT_DEFINITION
         ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Nodes')
-        PsiElement())(')')
+      PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_TUPLE_EXPRESSION

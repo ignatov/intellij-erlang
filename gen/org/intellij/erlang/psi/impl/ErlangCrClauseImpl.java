@@ -18,14 +18,14 @@ public class ErlangCrClauseImpl extends ErlangCompositeElementImpl implements Er
 
   @Override
   @NotNull
-  public ErlangClauseBody getClauseBody() {
-    return findNotNullChildByClass(ErlangClauseBody.class);
+  public ErlangArgumentDefinition getArgumentDefinition() {
+    return findNotNullChildByClass(ErlangArgumentDefinition.class);
   }
 
   @Override
   @NotNull
-  public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+  public ErlangClauseBody getClauseBody() {
+    return findNotNullChildByClass(ErlangClauseBody.class);
   }
 
   @Override

@@ -8,10 +8,10 @@ import com.intellij.psi.PsiElement;
 public interface ErlangCrClause extends ErlangCompositeElement {
 
   @NotNull
-  ErlangClauseBody getClauseBody();
+  ErlangArgumentDefinition getArgumentDefinition();
 
   @NotNull
-  ErlangExpression getExpression();
+  ErlangClauseBody getClauseBody();
 
   @Nullable
   ErlangGuard getGuard();

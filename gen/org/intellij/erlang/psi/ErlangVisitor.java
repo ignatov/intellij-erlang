@@ -10,8 +10,16 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitArgumentDefinition(@NotNull ErlangArgumentDefinition o) {
+    visitCompositeElement(o);
+  }
+
   public void visitArgumentList(@NotNull ErlangArgumentList o) {
     visitCompositeElement(o);
+  }
+
+  public void visitAssignmentExpression(@NotNull ErlangAssignmentExpression o) {
+    visitFakeBinaryExpression(o);
   }
 
   public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
@@ -116,6 +124,10 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitExpression(@NotNull ErlangExpression o) {
     visitCompositeElement(o);
+  }
+
+  public void visitFakeBinaryExpression(@NotNull ErlangFakeBinaryExpression o) {
+    visitExpression(o);
   }
 
   public void visitFieldType(@NotNull ErlangFieldType o) {
@@ -244,6 +256,10 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitRuleClause(@NotNull ErlangRuleClause o) {
     visitCompositeElement(o);
+  }
+
+  public void visitSendExpression(@NotNull ErlangSendExpression o) {
+    visitExpression(o);
   }
 
   public void visitSpecFun(@NotNull ErlangSpecFun o) {

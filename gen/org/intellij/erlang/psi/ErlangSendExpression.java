@@ -5,6 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangExpr100A extends ErlangExpression {
+public interface ErlangSendExpression extends ErlangExpression {
+
+  @NotNull
+  List<ErlangExpression> getExpressionList();
 
 }

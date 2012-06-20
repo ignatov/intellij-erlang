@@ -11,7 +11,9 @@ import org.intellij.erlang.psi.impl.*;
 public interface ErlangTypes {
 
   IElementType ERL_ADDITIVE_EXPRESSION = new ErlangCompositeElementType("ERL_ADDITIVE_EXPRESSION");
+  IElementType ERL_ARGUMENT_DEFINITION = new ErlangCompositeElementType("ERL_ARGUMENT_DEFINITION");
   IElementType ERL_ARGUMENT_LIST = new ErlangCompositeElementType("ERL_ARGUMENT_LIST");
+  IElementType ERL_ASSIGNMENT_EXPRESSION = new ErlangCompositeElementType("ERL_ASSIGNMENT_EXPRESSION");
   IElementType ERL_ATOM_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATOM_ATTRIBUTE");
   IElementType ERL_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATTRIBUTE");
   IElementType ERL_ATTR_VAL = new ErlangCompositeElementType("ERL_ATTR_VAL");
@@ -70,6 +72,7 @@ public interface ErlangTypes {
   IElementType ERL_RULE = new ErlangCompositeElementType("ERL_RULE");
   IElementType ERL_RULE_BODY = new ErlangCompositeElementType("ERL_RULE_BODY");
   IElementType ERL_RULE_CLAUSE = new ErlangCompositeElementType("ERL_RULE_CLAUSE");
+  IElementType ERL_SEND_EXPRESSION = new ErlangCompositeElementType("ERL_SEND_EXPRESSION");
   IElementType ERL_SPECIFICATION = new ErlangCompositeElementType("ERL_SPECIFICATION");
   IElementType ERL_SPEC_FUN = new ErlangCompositeElementType("ERL_SPEC_FUN");
   IElementType ERL_TOP_TYPE = new ErlangCompositeElementType("ERL_TOP_TYPE");
@@ -165,8 +168,14 @@ public interface ErlangTypes {
        if (type == ERL_ADDITIVE_EXPRESSION) {
         return new ErlangAdditiveExpressionImpl(node);
       }
+      else if (type == ERL_ARGUMENT_DEFINITION) {
+        return new ErlangArgumentDefinitionImpl(node);
+      }
       else if (type == ERL_ARGUMENT_LIST) {
         return new ErlangArgumentListImpl(node);
+      }
+      else if (type == ERL_ASSIGNMENT_EXPRESSION) {
+        return new ErlangAssignmentExpressionImpl(node);
       }
       else if (type == ERL_ATOM_ATTRIBUTE) {
         return new ErlangAtomAttributeImpl(node);
@@ -341,6 +350,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_RULE_CLAUSE) {
         return new ErlangRuleClauseImpl(node);
+      }
+      else if (type == ERL_SEND_EXPRESSION) {
+        return new ErlangSendExpressionImpl(node);
       }
       else if (type == ERL_SPECIFICATION) {
         return new ErlangSpecificationImpl(node);

@@ -26,13 +26,13 @@ public class ErlangParserTest extends ParsingTestCase {
     return true;
   }
 
-  public void testHelloWorld() { doTest(true); }
-  public void testExport() { doTest(true); }
-  public void testH() { doTest(true); }
-  public void testMnesia() { doTest(true); }
-  public void testIsDigits() { doTest(true); }
-  public void testDialyzerDataflow() { doTest(true); }
-  public void testTest() { doTest(true); }
+  public void testHelloWorld()        { doTest(true); }
+  public void testExport()            { doTest(true); }
+  public void testH()                 { doTest(true); }
+  public void testMnesia()            { doTest(true); }
+  public void testIsDigits()          { doTest(true); }
+  public void testDialyzerDataflow()  { doTest(true); }
+  public void testTest()              { doTest(true); }
 
   @Override
   protected void doTest(boolean checkResult) {
