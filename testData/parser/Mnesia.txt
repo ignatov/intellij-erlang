@@ -1804,7 +1804,7 @@ ERL_FILE
                     PsiElement(atom)(''_'')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('true')
           PsiElement(;)(';')
@@ -1980,7 +1980,7 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('false')
     PsiElement(;)(';')
@@ -2156,7 +2156,7 @@ ERL_FILE
                     PsiElement(])(']')
                   PsiElement())(')')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -2197,7 +2197,7 @@ ERL_FILE
                     PsiElement(])(']')
                   PsiElement())(')')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -2540,7 +2540,7 @@ ERL_FILE
                 PsiElement(atom)('ok')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('stopped')
           PsiElement(;)(';')
@@ -2565,7 +2565,7 @@ ERL_FILE
               PsiElement(})('}')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('stopped')
           PsiElement(;)(';')
@@ -3100,7 +3100,7 @@ ERL_FILE
                     PsiElement(atom)('tid')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('true')
           PsiElement(;)(';')
@@ -4944,7 +4944,7 @@ ERL_FILE
               PsiElement(})('}')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('GoodRes')
           PsiElement(;)(';')
@@ -6612,7 +6612,7 @@ ERL_FILE
                       PsiElement(var)('Val')
                   PsiElement())(')')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -7048,7 +7048,7 @@ ERL_FILE
                         PsiElement())(')')
                 PsiElement(end)('end')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -7474,7 +7474,7 @@ ERL_FILE
                       PsiElement(var)('Key')
                   PsiElement())(')')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -7654,7 +7654,7 @@ ERL_FILE
                     PsiElement(})('}')
                   PsiElement())(')')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -8347,7 +8347,7 @@ ERL_FILE
                       PsiElement(var)('Val')
                   PsiElement())(')')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -8720,7 +8720,7 @@ ERL_FILE
                       PsiElement(end)('end')
                 PsiElement(end)('end')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -10992,7 +10992,7 @@ ERL_FILE
               PsiElement(])(']')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)(''$end_of_table'')
           PsiElement(;)(';')
@@ -11271,7 +11271,7 @@ ERL_FILE
                           PsiElement(])(']')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
-                          ERL_MAX_EXPRESSION
+                          ERL_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)(''$end_of_table'')
                       PsiElement(;)(';')
@@ -11696,7 +11696,7 @@ ERL_FILE
               PsiElement(])(']')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('Key')
           PsiElement(;)(';')
@@ -11793,7 +11793,7 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('First')
     PsiElement(;)(';')
@@ -11834,7 +11834,7 @@ ERL_FILE
               PsiElement(var)('First')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('First')
     PsiElement(;)(';')
@@ -11875,7 +11875,7 @@ ERL_FILE
               PsiElement(var)('First')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('First')
     PsiElement(;)(';')
@@ -12071,7 +12071,7 @@ ERL_FILE
                       PsiElement(])(']')
                     ERL_CLAUSE_BODY
                       PsiElement(->)('->')
-                      ERL_MAX_EXPRESSION
+                      ERL_EXPRESSION
                         ERL_Q_ATOM
                           PsiElement(atom)(''$end_of_table'')
                   PsiElement(;)(';')
@@ -12111,7 +12111,7 @@ ERL_FILE
                 PsiElement(atom)(''$end_of_table'')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)(''$end_of_table'')
           PsiElement(;)(';')
@@ -12145,7 +12145,7 @@ ERL_FILE
                     PsiElement(])(']')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Next')
                 PsiElement(;)(';')
@@ -15290,7 +15290,7 @@ ERL_FILE
                     PsiElement(atom)('unknown')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ignore')
           PsiElement(;)(';')
@@ -15379,7 +15379,7 @@ ERL_FILE
                 PsiElement(atom)('unknown')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ignore')
           PsiElement(;)(';')
@@ -15634,7 +15634,7 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Objs')
     PsiElement(;)(';')
@@ -16940,7 +16940,7 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Objs')
     PsiElement(;)(';')
@@ -21669,7 +21669,7 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)(''$end_of_table'')
     PsiElement(;)(';')
@@ -21756,7 +21756,7 @@ ERL_FILE
                 PsiElement(atom)(''$end_of_table'')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)(''$end_of_table'')
           PsiElement(;)(';')
@@ -26818,7 +26818,7 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)(''$end_of_table'')
     PsiElement(;)(';')
@@ -28503,14 +28503,12 @@ ERL_FILE
                 ERL_TRY_CATCH
                   PsiElement(catch)('catch')
                   ERL_TRY_CLAUSE
-                    ERL_COLON_QUALIFIED_EXPRESSION
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(_)('_')
-                      PsiElement(:)(':')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(_)('_')
+                    ERL_Q_VAR
+                      PsiElement(_)('_')
+                    PsiElement(:)(':')
+                    ERL_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(_)('_')
                     ERL_CLAUSE_BODY
                       PsiElement(->)('->')
                       ERL_MAX_EXPRESSION
@@ -29309,7 +29307,7 @@ ERL_FILE
                 PsiElement(atom)('name')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('Tab')
           PsiElement(;)(';')
@@ -32082,7 +32080,7 @@ ERL_FILE
                     PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Nodes')
                 PsiElement(;)(';')
@@ -32678,7 +32676,7 @@ ERL_FILE
                     PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Version')
                 PsiElement(;)(';')
@@ -34113,7 +34111,7 @@ ERL_FILE
                 PsiElement(atom)('ok')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -35932,7 +35930,7 @@ ERL_FILE
                 PsiElement(atom)('ok')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('yes')
           PsiElement(;)(';')
@@ -36314,7 +36312,7 @@ ERL_FILE
                             PsiElement(atom)('schema')
                         PsiElement())(')')
                     PsiElement(,)(',')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Res')
                 PsiElement(;)(';')
@@ -37017,7 +37015,7 @@ ERL_FILE
                             PsiElement(atom)('schema')
                         PsiElement())(')')
                     PsiElement(,)(',')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Res')
                 PsiElement(;)(';')
@@ -38113,7 +38111,7 @@ ERL_FILE
                       PsiElement(atom)('endOfTable')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('endOfTable')
                 PsiElement(;)(';')
@@ -38769,7 +38767,7 @@ ERL_FILE
                     PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('MnesiaKey')
                 PsiElement(;)(';')
@@ -38862,7 +38860,7 @@ ERL_FILE
               PsiElement(])(']')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('Res')
           PsiElement(;)(';')
@@ -38907,7 +38905,7 @@ ERL_FILE
                     PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Res')
                 PsiElement(;)(';')
@@ -39213,7 +39211,7 @@ ERL_FILE
                     PsiElement(])(']')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('undefined')
                 PsiElement(;)(';')
@@ -40262,7 +40260,7 @@ ERL_FILE
                               PsiElement(var)('Stop')
                           PsiElement())(')')
                       PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
+                      ERL_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('Aid')
                   PsiElement(;)(';')
@@ -40317,7 +40315,7 @@ ERL_FILE
                 PsiElement(atom)('tid')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -40354,7 +40352,7 @@ ERL_FILE
                       PsiElement(atom)('ordered_set')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('ok')
                 PsiElement(;)(';')
@@ -40456,7 +40454,7 @@ ERL_FILE
               PsiElement(})('}')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')
@@ -40493,7 +40491,7 @@ ERL_FILE
                       PsiElement(atom)('ordered_set')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('ok')
                 PsiElement(;)(';')
@@ -40818,7 +40816,7 @@ ERL_FILE
                 PsiElement(})('}')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                ERL_MAX_EXPRESSION
+                ERL_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Value')
             PsiElement(;)(';')
@@ -41001,7 +40999,7 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('true')
     PsiElement(;)(';')
@@ -41046,7 +41044,7 @@ ERL_FILE
                 PsiElement(atom)('set')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('true')
           PsiElement(;)(';')
@@ -41056,7 +41054,7 @@ ERL_FILE
                 PsiElement(atom)('ordered_set')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('true')
           PsiElement(;)(';')
@@ -41146,7 +41144,7 @@ ERL_FILE
                     PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('ascending')
                 PsiElement(;)(';')
@@ -41635,7 +41633,7 @@ ERL_FILE
                 PsiElement(atom)('ordered_set')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
+              ERL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('ok')
           PsiElement(;)(';')

@@ -293,7 +293,7 @@ ERL_FILE
                             PsiElement(atom)('schema')
                         PsiElement())(')')
                     PsiElement(,)(',')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Res')
                 PsiElement(;)(';')
@@ -996,7 +996,7 @@ ERL_FILE
                             PsiElement(atom)('schema')
                         PsiElement())(')')
                     PsiElement(,)(',')
-                    ERL_MAX_EXPRESSION
+                    ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Res')
                 PsiElement(;)(';')

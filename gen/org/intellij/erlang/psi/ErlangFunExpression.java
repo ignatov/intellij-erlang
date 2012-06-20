@@ -10,8 +10,8 @@ public interface ErlangFunExpression extends ErlangExpression {
   @NotNull
   List<ErlangFunClause> getFunClauseList();
 
-  @Nullable
-  ErlangQAtom getQAtom();
+  @NotNull
+  List<ErlangQAtom> getQAtomList();
 
   @Nullable
   PsiElement getEnd();

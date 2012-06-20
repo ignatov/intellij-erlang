@@ -36,7 +36,7 @@ public class ErlangParserTest extends ParsingTestCase {
 
   @Override
   protected void doTest(boolean checkResult) {
-    OVERWRITE_TESTDATA = true;
+//    OVERWRITE_TESTDATA = true;
 
     super.doTest(checkResult);
     assertFalse(

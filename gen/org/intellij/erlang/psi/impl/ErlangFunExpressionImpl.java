@@ -23,9 +23,9 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
-  @Nullable
-  public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+  @NotNull
+  public List<ErlangQAtom> getQAtomList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
   }
 
   @Override

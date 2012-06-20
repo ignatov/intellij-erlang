@@ -109,11 +109,12 @@
   pin(".*_expression")=1
   
   extends(".*_(expression|comprehension|literal|a)")=expression
+  extends("atomic")=expression
 //  elementType("q_atom|q_var")=expression
 }
 
 forms ::= form ('.' form)*
-private form ::= function | rule | attribute {recoverUntil="recoverer"}
+private form ::= function | rule | attribute {recoverUntil=recoverer}
 
 q_atom ::= '?'? atom
 q_var ::= '_' | ('?'? var)
@@ -126,9 +127,8 @@ atom_attribute ::= !('spec' | 'callback') q_atom [('(' typed_attr_val ')') | typ
 callback_spec ::= 'callback' type_spec {pin=1}
 specification ::= 'spec' type_spec {pin=1}
 
-type_spec ::= spec_fun_with_args | ('(' spec_fun_with_args ')')
-private spec_fun_with_args ::= spec_fun type_sigs
-spec_fun ::= q_atom [(':' q_atom) | ('/' integer '::') | (':' q_atom '/' integer '::')]
+type_spec ::= ('(' spec_fun type_sigs ')') | spec_fun type_sigs
+spec_fun ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])]
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
 typed_record_fields ::= '{' typed_exprs '}' {pin=1}
 typed_exprs ::= typed_expr (',' typed_expr)*
@@ -142,16 +142,16 @@ top_type ::= [q_var '::'] top_type_100_t
 top_type_100_t ::= type ['|' top_type_100_t]
 type ::=
   ('(' top_type ')')
+  | int_type
+  | (int_type '..' int_type)
+  | (fun '(' fun_type_100_t? ')')
   | [q_atom ':'] q_atom ['(' top_types? ')']
   | ( q_atom '(' top_types ')')
+  | binary_type
   | q_var
   | ('[' top_type (',' '...')? ']')
   | ('{' top_types? '}')
   | ('#' q_atom '{' field_types? '}')
-  | binary_type
-  | int_type
-  | (int_type '..' int_type)
-  | (fun '(' fun_type_100_t? ')')
 
 int_type ::= '-'? integer
 fun_type_100_t ::= '(' ('...' | top_types?) ')' '->' top_type
@@ -176,14 +176,14 @@ function_clause ::= q_atom argument_list clause_guard? clause_body
 private clause_guard ::= when guard {pin=1}
 clause_body ::= '->' exprs {pin=1}
 
-expression ::= (q_atom | q_var)&(',' | ')' | '->' | '}' | ']') | catch_expression | expr_100_a
+expression ::= (q_atom | q_var)&(',' | ')' | '->' | '}' | ']' | ';') | catch_expression | expr_100_a
 private catch_expression ::= catch expression
 expr_100_a ::= expr_150_a expr_155_expression?
 private expr_155_expression ::= ('='|'!') expr_100_a
-expr_150_a ::= expr_160_a [orelse expr_150_a]  {pin(".*")="orelse"}
-expr_160_a ::= expr_200_a [andalso expr_160_a] {pin(".*")="andalso"}
-expr_200_a ::= expr_300_a [comp_op expr_300_a] {pin(".*")="comp_op"}
-expr_300_a ::= expr_400_a [list_op expr_300_a] {pin(".*")="list_op"}
+expr_150_a ::= expr_160_a [orelse expr_150_a]
+expr_160_a ::= expr_200_a [andalso expr_160_a]
+expr_200_a ::= expr_300_a [comp_op expr_300_a]
+expr_300_a ::= expr_400_a [list_op expr_300_a]
 expr_400_a ::= expr_500_a additive_expression*
 left additive_expression ::= add_op expr_500_a {pin=1}
 expr_500_a ::= prefix_expression multiplicative_expression*
@@ -196,13 +196,21 @@ private qualified_reference ::= q_atom qualified_expression*
 left qualified_expression ::= '.' q_atom {pin=0} //todo
 
 max_expression ::=
-  q_var
-  | list_comprehension | list_expression | binary_expression
-  | binary_comprehension | tuple_expression
-  | begin_end_expression | if_expression | case_expression
-  | receive_expression | fun_expression
-  | try_expression | query_expression | parenthesized_expression
-  | atomic
+  atomic
+  | q_var
+  | tuple_expression
+  | list_expression
+  | case_expression
+  | if_expression
+  | list_comprehension
+  | receive_expression
+  | fun_expression
+  | try_expression
+  | query_expression
+  | parenthesized_expression
+  | binary_expression
+  | binary_comprehension
+  | begin_end_expression
 
 begin_end_expression ::= begin exprs end
 parenthesized_expression ::= '(' expression ')'
@@ -220,8 +228,8 @@ opt_bit_type_list ::= '/' bit_type_list {pin=1}
 bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
 
-list_comprehension ::= '[' expression '||' lc_exprs ']'
-binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {pin=1}
+list_comprehension ::= '[' expression '||' lc_exprs ']' {pin=3}
+binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {pin=3}
 private lc_exprs ::= lc_expression (',' lc_expression)*
 
 lc_expression ::= (expression ('<-' expression)?) | (binary_expression '<=' expression) {pin=0}
@@ -232,7 +240,7 @@ record_expression ::= max_expression? '#' q_atom (('.' q_atom) | record_tuple) {
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
 private record_fields ::= record_field (',' record_field)*
-record_field ::= (q_var | q_atom) '=' expression
+record_field ::= (q_atom | q_var) '=' expression
 function_call_expression ::= colon_qualified_expression argument_list {
   pin=0
   methods = [
@@ -248,14 +256,14 @@ case_expression ::= case expression of cr_clauses end
 private cr_clauses ::= cr_clause (';' cr_clause)*
 cr_clause ::= expression clause_guard? clause_body
 
-receive_expression ::= receive ((cr_clauses end) | (after expression clause_body end) | (cr_clauses after expression clause_body end))
-fun_expression ::= fun ((fun_clauses end) | (q_atom '/' integer) | (q_atom ':' q_atom '/' integer))
+receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end))
+fun_expression ::= fun ((fun_clauses end) | ([q_atom ':'] q_atom '/' integer))
 private fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_list clause_guard? clause_body
 try_expression ::= try exprs (of cr_clauses)? try_catch
-try_catch ::= (catch try_clauses end) | (catch try_clauses after exprs end) | (after exprs end) {pin(".*")="catch|after"}
+try_catch ::= (catch try_clauses [after exprs] end) | (after exprs end) {pin(".*")="catch|after"}
 private try_clauses ::= try_clause (';' try_clause)*
-try_clause ::= (expression clause_guard? clause_body) | (q_atom ':' expression clause_guard? clause_body) | (q_var ':' expression clause_guard? clause_body)
+try_clause ::= [(q_atom | q_var) ':'] expression clause_guard? clause_body
 
 query_expression ::= query list_comprehension end
 argument_list ::= '(' exprs? ')' {pin=1}
