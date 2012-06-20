@@ -135,9 +135,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         ErlangAtomAttribute attribute = ((ErlangAttribute) myElement).getAtomAttribute();
         ErlangSpecification specification = ((ErlangAttribute) myElement).getSpecification();
         ErlangCallbackSpec callbackSpec = ((ErlangAttribute) myElement).getCallbackSpec();
-        return "-" + (attribute != null ? attribute.getText() :
-          specification != null ? specification.getText() :
-          callbackSpec != null ? callbackSpec.getText() : "<empty>");
+        return "-" + (attribute != null ? attribute.getQAtom().getText() :
+          specification != null ? "spec" :
+          callbackSpec != null ? "callback" : "<empty>");
       }
       throw new AssertionError(myElement.getClass().getName());
     }
