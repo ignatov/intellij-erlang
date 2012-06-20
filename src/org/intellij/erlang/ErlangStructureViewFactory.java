@@ -11,11 +11,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.Function;
 import com.intellij.util.PlatformIcons;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.ErlangArgumentDefinition;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangFunctionClause;
-import org.intellij.erlang.psi.impl.ErlangFileImpl;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -44,7 +40,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   public static class Model extends StructureViewModelBase implements StructureViewModel.ElementInfoProvider {
     public Model(PsiFile psiFile) {
       super(psiFile, new Element(psiFile));
-      withSuitableClasses(ErlangFile.class, ErlangFunction.class, ErlangFunctionClause.class);
+      withSuitableClasses(ErlangFile.class, ErlangFunction.class, ErlangFunctionClause.class, ErlangAttribute.class);
     }
 
     @Override
@@ -105,6 +101,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
           }
         }
       } else if (myElement instanceof ErlangFile) {
+        for (ErlangAttribute o : ((ErlangFile) myElement).getAttributes()) {
+          result.add(new Element(o));
+        }
         for (ErlangFunction o : ((ErlangFile) myElement).getFunctions()) {
           result.add(new Element(o));
         }
@@ -130,8 +129,15 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       if (myElement instanceof ErlangFunction) {
         final int argCount = ((ErlangFunction) myElement).getFunctionClauseList().get(0).getArgumentDefinitionList().size();
         return ((ErlangFunction) myElement).getAtomName().getText() + "/" + argCount;
-      } else if (myElement instanceof ErlangFileImpl) {
-        return ((ErlangFileImpl) myElement).getName();
+      } else if (myElement instanceof ErlangFile) {
+        return ((ErlangFile) myElement).getName();
+      } else if (myElement instanceof ErlangAttribute) {
+        ErlangAtomAttribute attribute = ((ErlangAttribute) myElement).getAtomAttribute();
+        ErlangSpecification specification = ((ErlangAttribute) myElement).getSpecification();
+        ErlangCallbackSpec callbackSpec = ((ErlangAttribute) myElement).getCallbackSpec();
+        return "-" + (attribute != null ? attribute.getText() :
+          specification != null ? specification.getText() :
+          callbackSpec != null ? callbackSpec.getText() : "<empty>");
       }
       throw new AssertionError(myElement.getClass().getName());
     }
@@ -148,6 +154,8 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         return PlatformIcons.FUNCTION_ICON;
       } else if (myElement instanceof ErlangFunctionClause) {
         return PlatformIcons.PACKAGE_LOCAL_ICON;
+      } else if (myElement instanceof ErlangAttribute) {
+        return PlatformIcons.ANNOTATION_TYPE_ICON;
       }
       return myElement.getIcon(0);
     }

@@ -12,6 +12,7 @@ import gnu.trove.THashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangRule;
@@ -32,6 +33,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
 
   private CachedValue<List<ErlangRule>> myRulesValue;
   private CachedValue<List<ErlangFunction>> myFunctionValue;
+  private CachedValue<List<ErlangAttribute>> myAttributeValue;
   private CachedValue<Map<String, ErlangFunction>> myNamesMap;
 
   @NotNull
@@ -52,6 +54,20 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
       }, false);
     }
     return myRulesValue.getValue();
+  }
+
+  @NotNull
+  @Override
+  public List<ErlangAttribute> getAttributes() {
+    if (myAttributeValue == null) {
+          myAttributeValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangAttribute>>() {
+            @Override
+            public Result<List<ErlangAttribute>> compute() {
+              return Result.create(calcAttributes(), ErlangFileImpl.this);
+            }
+          }, false);
+        }
+        return myAttributeValue.getValue();
   }
 
   @NotNull
@@ -96,6 +112,20 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
       public boolean process(PsiElement psiElement) {
         if (psiElement instanceof ErlangFunction) {
           result.add((ErlangFunction) psiElement);
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
+  private List<ErlangAttribute> calcAttributes() {
+    final List<ErlangAttribute> result = new ArrayList<ErlangAttribute>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangAttribute) {
+          result.add((ErlangAttribute) psiElement);
         }
         return true;
       }

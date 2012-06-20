@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/ignatov/erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>1.0.5</version>
+    <version>0.1</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="116.108" until-build=""/>
 
@@ -12,29 +12,14 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
-
         <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
         <lang.parserDefinition language="Erlang" implementationClass="org.intellij.erlang.ErlangParserDefinition"/>
         <annotator language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangAnnotator"/>
-        <lang.syntaxHighlighterFactory key="Erlang"
-                                       implementationClass="org.intellij.erlang.editor.ErlangSyntaxHighlighterFactory"/>
+        <lang.syntaxHighlighterFactory key="Erlang" implementationClass="org.intellij.erlang.editor.ErlangSyntaxHighlighterFactory"/>
         <lang.braceMatcher language="Erlang" implementationClass="org.intellij.erlang.ErlangBraceMatcher"/>
         <lang.commenter language="Erlang" implementationClass="org.intellij.erlang.ErlangCommenter"/>
-        <lang.psiStructureViewFactory language="Erlang"
-                                      implementationClass="org.intellij.erlang.ErlangStructureViewFactory"/>
-        <!--<annotator language="BNF" implementationClass="org.intellij.erlang.editor.ErlangPinMarkerAnnotator"/>-->
-        <!--<elementDescriptionProvider implementation="org.intellij.erlang.ErlangDescriptionProvider"/>-->
-        <!--<lang.findUsagesProvider language="BNF" implementationClass="org.intellij.erlang.ErlangFindUsagesProvider"/>-->
-        <!--<codeInsight.lineMarkerProvider language="BNF" implementationClass="org.intellij.erlang.ErlangRuleLineMarkerProvider"/>-->
-        <!--<completion.contributor language="BNF" implementationClass="org.intellij.erlang.ErlangCompletionContributor" order="before javaClassName"/>-->
-        <!--<lang.elementManipulator forClass="org.intellij.erlang.psi.impl.ErlangStringLiteralExpressionImpl"-->
-        <!--implementationClass="org.intellij.erlang.psi.impl.ErlangStringManipulator"/>-->
-
-        <!--<lang.unwrapDescriptor language="BNF" implementationClass="org.intellij.erlang.refactor.ErlangUnwrapDescriptor"/>-->
-
-        <!--<documentationProvider implementation="org.intellij.erlang.ErlangDocumentationProvider"/>-->
-
-
+        <lang.psiStructureViewFactory language="Erlang" implementationClass="org.intellij.erlang.ErlangStructureViewFactory"/>
+        <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
     </extensions>
     <project-components>
 

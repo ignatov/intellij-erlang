@@ -27,6 +27,9 @@ public interface ErlangFile extends PsiFile {
   List<ErlangRule> getRules();
 
   @NotNull
+  List<ErlangAttribute> getAttributes();
+
+  @NotNull
   List<ErlangFunction> getFunctions();
 
   @Nullable
