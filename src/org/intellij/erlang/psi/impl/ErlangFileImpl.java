@@ -2,6 +2,7 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.util.Pair;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.CachedValue;
@@ -34,7 +35,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   private CachedValue<List<ErlangRule>> myRulesValue;
   private CachedValue<List<ErlangFunction>> myFunctionValue;
   private CachedValue<List<ErlangAttribute>> myAttributeValue;
-  private CachedValue<Map<String, ErlangFunction>> myNamesMap;
+  private CachedValue<Map<Pair<String, Integer>, ErlangFunction>> myNamesMap;
 
   @NotNull
   @Override
@@ -60,14 +61,14 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   @Override
   public List<ErlangAttribute> getAttributes() {
     if (myAttributeValue == null) {
-          myAttributeValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangAttribute>>() {
-            @Override
-            public Result<List<ErlangAttribute>> compute() {
-              return Result.create(calcAttributes(), ErlangFileImpl.this);
-            }
-          }, false);
+      myAttributeValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangAttribute>>() {
+        @Override
+        public Result<List<ErlangAttribute>> compute() {
+          return Result.create(calcAttributes(), ErlangFileImpl.this);
         }
-        return myAttributeValue.getValue();
+      }, false);
+    }
+    return myAttributeValue.getValue();
   }
 
   @NotNull
@@ -86,23 +87,25 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
 
   @Nullable
   @Override
-  public ErlangFunction getFunction(String name) {
+  public ErlangFunction getFunction(String name, int argsCount) {
     if (myNamesMap == null) {
-      myNamesMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangFunction>>() {
+      myNamesMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<Pair<String, Integer>, ErlangFunction>>() {
         @Override
-        public Result<Map<String, ErlangFunction>> compute() {
-          Map<String, ErlangFunction> map = new THashMap<String, ErlangFunction>();
+        public Result<Map<Pair<String, Integer>, ErlangFunction>> compute() {
+          Map<Pair<String, Integer>, ErlangFunction> map = new THashMap<Pair<String, Integer>, ErlangFunction>();
           for (ErlangFunction function : getFunctions()) {
             String name = function.getAtomName().getAtom().getText(); // todo: replace with the getName()
-            if (!map.containsKey(name)) {
-              map.put(name, function);
+            int argsCount = function.getFunctionClauseList().get(0).getArgumentDefinitionList().size();
+            Pair<String, Integer> key = new Pair<String, Integer>(name, argsCount);
+            if (!map.containsKey(key)) {
+              map.put(key, function);
             }
           }
           return Result.create(map, ErlangFileImpl.this);
         }
       }, false);
     }
-    return myNamesMap.getValue().get(name);
+    return myNamesMap.getValue().get(new Pair<String, Integer>(name, argsCount));
   }
 
   private List<ErlangFunction> calcFunctions() {

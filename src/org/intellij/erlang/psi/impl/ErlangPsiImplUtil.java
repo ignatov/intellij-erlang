@@ -17,7 +17,7 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangFunctionCallExpression o) {
-    return new ErlangReferenceImpl<ErlangExpression>(o.getExpression(), TextRange.from(0, o.getExpression().getTextLength()));
+    return new ErlangReferenceImpl<ErlangFunctionCallExpression>(o, TextRange.from(0, o.getExpression().getTextLength()));
   }
 
   @Nullable

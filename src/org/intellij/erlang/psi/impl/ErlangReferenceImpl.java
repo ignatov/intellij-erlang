@@ -23,6 +23,7 @@ import com.intellij.psi.PsiReferenceBase;
 import com.intellij.util.ArrayUtil;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ import java.util.ArrayList;
 /**
  * @author ignatov
  */
-public class ErlangReferenceImpl<T extends ErlangCompositeElement> extends PsiReferenceBase<T> {
+public class ErlangReferenceImpl<T extends ErlangFunctionCallExpression> extends PsiReferenceBase<T> {
 
   public ErlangReferenceImpl(@NotNull T element, TextRange range) {
     super(element, range);
@@ -39,9 +40,11 @@ public class ErlangReferenceImpl<T extends ErlangCompositeElement> extends PsiRe
   @Override
   public PsiElement resolve() {
     PsiFile containingFile = myElement.getContainingFile();
-    String referenceName = getRangeInElement().substring(myElement.getText());
 
-    return containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunction(referenceName) : null;
+    String referenceName = getRangeInElement().substring(myElement.getExpression().getText());
+    int size = myElement.getArgumentList().getExpressionList().size();
+
+    return containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunction(referenceName, size) : null;
   }
 
 
