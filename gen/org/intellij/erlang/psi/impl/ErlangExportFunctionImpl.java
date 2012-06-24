@@ -10,38 +10,33 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.scope.PsiScopeProcessor;
-import com.intellij.psi.ResolveState;
 
-public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar {
+public class ErlangExportFunctionImpl extends ErlangCompositeElementImpl implements ErlangExportFunction {
 
-  public ErlangQVarImpl(ASTNode node) {
+  public ErlangExportFunctionImpl(ASTNode node) {
     super(node);
   }
 
   @Override
+  @NotNull
+  public ErlangQAtom getQAtom() {
+    return findNotNullChildByClass(ErlangQAtom.class);
+  }
+
+  @Override
   @Nullable
-  public PsiElement getVar() {
-    return findChildByType(ERL_VAR);
+  public PsiElement getInteger() {
+    return findChildByType(ERL_INTEGER);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQVar(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExportFunction(this);
     else super.accept(visitor);
   }
 
   @Nullable
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
-  }
-
-  public boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place) {
-    return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
-  }
-
-  @NotNull
-  public String getName() {
-    return ErlangPsiImplUtil.getName(this);
   }
 
 }

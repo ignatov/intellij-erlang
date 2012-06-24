@@ -105,25 +105,37 @@
   extends("assignment_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal|a)")=expression
   extends("atomic")=expression
+
+  implements("function|q_var")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("function|q_var")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
 forms ::= form ('.' form)*
 private form ::= function | rule | attribute {recoverUntil=recoverer}
 
-q_atom ::= '?'? atom
+q_atom ::= '?'? atom { methods = [getReference] }
 q_var ::= '_' | ('?'? var) {
-  methods = [
-    resolve getReference processDeclarations
-  ]
+  methods = [getReference processDeclarations getName]
 }
 
 private recoverer ::= !('.')
 
 //attribute ::= '-' atom_attribute
-attribute ::= '-' (atom_attribute | specification | callback_spec) {pin=1 recoverUntil="recoverer"}
+attribute ::= '-' (
+  export
+  | specification
+  | callback_spec
+  | atom_attribute
+  ) {pin=1 recoverUntil="recoverer"}
 atom_attribute ::= !('spec' | 'callback') q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
 callback_spec ::= 'callback' type_spec {pin=1}
 specification ::= 'spec' type_spec {pin=1}
+export ::= 'export' '(' export_functions ')' {pin=1}
+private export_functions ::= '[' export_function (',' export_function)* ']'
+export_function ::= q_atom '/' integer {
+  pin= 1
+  methods = [getReference]
+}
 
 type_spec ::= ('(' spec_fun type_sigs ')') | spec_fun type_sigs
 spec_fun ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])]
@@ -167,8 +179,11 @@ attr_val ::= ('(' exprs ')') | exprs
 function ::= function_clause (';' function_clause)* {
   methods = [
     atom_name = "function_clause[0]/q_atom"
+    getName
+    getArity
   ]
 }
+
 function_clause ::= q_atom argument_definition_list clause_guard? clause_body
 private argument_definition_list ::= '(' argument_definition? (',' argument_definition)* ')'
 
@@ -243,9 +258,7 @@ private record_fields ::= record_field (',' record_field)*
 record_field ::= (q_atom | q_var) '=' expression
 function_call_expression ::= colon_qualified_expression argument_list {
   pin=0
-  methods = [
-    resolve getReference
-  ]
+  methods = [getReference]
 }
 
 if_expression ::= if if_clauses end

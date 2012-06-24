@@ -127,17 +127,22 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         return res + "(" + StringUtil.join(strings, ", ") + ")";
       }
       if (myElement instanceof ErlangFunction) {
-        final int argCount = ((ErlangFunction) myElement).getFunctionClauseList().get(0).getArgumentDefinitionList().size();
-        return ((ErlangFunction) myElement).getAtomName().getText() + "/" + argCount;
+        final int argCount = ((ErlangFunction) myElement).getArity();
+        return ((ErlangFunction) myElement).getName() + "/" + argCount;
       } else if (myElement instanceof ErlangFile) {
         return ((ErlangFile) myElement).getName();
       } else if (myElement instanceof ErlangAttribute) {
         ErlangAtomAttribute attribute = ((ErlangAttribute) myElement).getAtomAttribute();
         ErlangSpecification specification = ((ErlangAttribute) myElement).getSpecification();
         ErlangCallbackSpec callbackSpec = ((ErlangAttribute) myElement).getCallbackSpec();
+        ErlangExport export = ((ErlangAttribute) myElement).getExport();
+        String name = myElement.getChildren().length > 1 ? myElement.getChildren()[1].getText() : "<empty>";
         return "-" + (attribute != null ? attribute.getQAtom().getText() :
           specification != null ? "spec" :
-          callbackSpec != null ? "callback" : "<empty>");
+            callbackSpec != null ? "callback" :
+              export != null ? "export" :
+                name
+        );
       }
       throw new AssertionError(myElement.getClass().getName());
     }

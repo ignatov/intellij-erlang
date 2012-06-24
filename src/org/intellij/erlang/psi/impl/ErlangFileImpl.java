@@ -94,7 +94,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
         public Result<Map<Pair<String, Integer>, ErlangFunction>> compute() {
           Map<Pair<String, Integer>, ErlangFunction> map = new THashMap<Pair<String, Integer>, ErlangFunction>();
           for (ErlangFunction function : getFunctions()) {
-            String name = function.getAtomName().getAtom().getText(); // todo: replace with the getName()
+            String name = function.getName();
             int argsCount = function.getFunctionClauseList().get(0).getArgumentDefinitionList().size();
             Pair<String, Integer> key = new Pair<String, Integer>(name, argsCount);
             if (!map.containsKey(key)) {

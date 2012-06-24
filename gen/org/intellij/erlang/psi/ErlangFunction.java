@@ -5,12 +5,18 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangFunction extends ErlangCompositeElement {
+public interface ErlangFunction extends ErlangNamedElement {
 
   @NotNull
   List<ErlangFunctionClause> getFunctionClauseList();
 
   @NotNull
   ErlangQAtom getAtomName();
+
+  @NotNull
+  String getName();
+
+  @NotNull
+  int getArity();
 
 }

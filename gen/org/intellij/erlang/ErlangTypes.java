@@ -31,6 +31,8 @@ public interface ErlangTypes {
   IElementType ERL_CLAUSE_BODY = new ErlangCompositeElementType("ERL_CLAUSE_BODY");
   IElementType ERL_COLON_QUALIFIED_EXPRESSION = new ErlangCompositeElementType("ERL_COLON_QUALIFIED_EXPRESSION");
   IElementType ERL_CR_CLAUSE = new ErlangCompositeElementType("ERL_CR_CLAUSE");
+  IElementType ERL_EXPORT = new ErlangCompositeElementType("ERL_EXPORT");
+  IElementType ERL_EXPORT_FUNCTION = new ErlangCompositeElementType("ERL_EXPORT_FUNCTION");
   IElementType ERL_EXPRESSION = new ErlangCompositeElementType("ERL_EXPRESSION");
   IElementType ERL_EXPR_100_A = new ErlangCompositeElementType("ERL_EXPR_100_A");
   IElementType ERL_EXPR_150_A = new ErlangCompositeElementType("ERL_EXPR_150_A");
@@ -227,6 +229,12 @@ public interface ErlangTypes {
       }
       else if (type == ERL_CR_CLAUSE) {
         return new ErlangCrClauseImpl(node);
+      }
+      else if (type == ERL_EXPORT) {
+        return new ErlangExportImpl(node);
+      }
+      else if (type == ERL_EXPORT_FUNCTION) {
+        return new ErlangExportFunctionImpl(node);
       }
       else if (type == ERL_EXPRESSION) {
         return new ErlangExpressionImpl(node);

@@ -86,6 +86,12 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_CR_CLAUSE) {
       result_ = cr_clause(builder_, level_ + 1);
     }
+    else if (root_ == ERL_EXPORT) {
+      result_ = export(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_EXPORT_FUNCTION) {
+      result_ = export_function(builder_, level_ + 1);
+    }
     else if (root_ == ERL_EXPR_100_A) {
       result_ = expr_100_a(builder_, level_ + 1);
     }
@@ -664,7 +670,12 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '-' (atom_attribute | specification | callback_spec)
+  // '-' (
+  //   export
+  //   | specification
+  //   | callback_spec
+  //   | atom_attribute
+  //   )
   public static boolean attribute(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "attribute")) return false;
     boolean result_ = false;
@@ -684,20 +695,29 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // (atom_attribute | specification | callback_spec)
+  // (
+  //   export
+  //   | specification
+  //   | callback_spec
+  //   | atom_attribute
+  //   )
   private static boolean attribute_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "attribute_1")) return false;
     return attribute_1_0(builder_, level_ + 1);
   }
 
-  // atom_attribute | specification | callback_spec
+  // export
+  //   | specification
+  //   | callback_spec
+  //   | atom_attribute
   private static boolean attribute_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "attribute_1_0")) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
-    result_ = atom_attribute(builder_, level_ + 1);
+    result_ = export(builder_, level_ + 1);
     if (!result_) result_ = specification(builder_, level_ + 1);
     if (!result_) result_ = callback_spec(builder_, level_ + 1);
+    if (!result_) result_ = atom_attribute(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }
@@ -1397,6 +1417,110 @@ public class ErlangParser implements PsiParser {
     final Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_SEMI);
     result_ = result_ && cr_clause(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // 'export' '(' export_functions ')'
+  public static boolean export(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "export")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    final Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
+    result_ = consumeToken(builder_, "export");
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, export_functions(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_EXPORT);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // q_atom '/' integer
+  public static boolean export_function(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "export_function")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    final Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
+    result_ = q_atom(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_OP_AR_DIV));
+    result_ = pinned_ && consumeToken(builder_, ERL_INTEGER) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_EXPORT_FUNCTION);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // '[' export_function (',' export_function)* ']'
+  static boolean export_functions(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "export_functions")) return false;
+    if (!nextTokenIs(builder_, ERL_BRACKET_LEFT)) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_BRACKET_LEFT);
+    result_ = result_ && export_function(builder_, level_ + 1);
+    result_ = result_ && export_functions_2(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_BRACKET_RIGHT);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // (',' export_function)*
+  private static boolean export_functions_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "export_functions_2")) return false;
+    int offset_ = builder_.getCurrentOffset();
+    while (true) {
+      if (!export_functions_2_0(builder_, level_ + 1)) break;
+      int next_offset_ = builder_.getCurrentOffset();
+      if (offset_ == next_offset_) {
+        empty_element_parsed_guard_(builder_, offset_, "export_functions_2");
+        break;
+      }
+      offset_ = next_offset_;
+    }
+    return true;
+  }
+
+  // (',' export_function)
+  private static boolean export_functions_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "export_functions_2_0")) return false;
+    return export_functions_2_0_0(builder_, level_ + 1);
+  }
+
+  // ',' export_function
+  private static boolean export_functions_2_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "export_functions_2_0_0")) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_COMMA);
+    result_ = result_ && export_function(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }

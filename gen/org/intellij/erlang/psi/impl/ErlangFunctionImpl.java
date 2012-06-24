@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangFunctionImpl extends ErlangCompositeElementImpl implements ErlangFunction {
+public class ErlangFunctionImpl extends ErlangNamedElementImpl implements ErlangFunction {
 
   public ErlangFunctionImpl(ASTNode node) {
     super(node);
@@ -33,6 +33,15 @@ public class ErlangFunctionImpl extends ErlangCompositeElementImpl implements Er
     List<ErlangFunctionClause> p1 = getFunctionClauseList();
     ErlangFunctionClause p2 = p1.get(0);
     return p2.getQAtom();
+  }
+
+  @NotNull
+  public String getName() {
+    return ErlangPsiImplUtil.getName(this);
+  }
+
+  public int getArity() {
+    return ErlangPsiImplUtil.getArity(this);
   }
 
 }

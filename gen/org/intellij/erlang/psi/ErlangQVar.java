@@ -8,17 +8,17 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.ResolveState;
 
-public interface ErlangQVar extends ErlangCompositeElement {
+public interface ErlangQVar extends ErlangNamedElement {
 
   @Nullable
   PsiElement getVar();
 
   @Nullable
-  Object resolve();
-
-  @Nullable
   PsiReference getReference();
 
   boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place);
+
+  @NotNull
+  String getName();
 
 }

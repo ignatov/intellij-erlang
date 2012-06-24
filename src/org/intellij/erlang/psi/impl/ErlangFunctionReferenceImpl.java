@@ -21,38 +21,41 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author ignatov
  */
-public class ErlangReferenceImpl<T extends ErlangFunctionCallExpression> extends PsiReferenceBase<T> {
+public class ErlangFunctionReferenceImpl<T extends ErlangCompositeElement> extends PsiReferenceBase<T> {
+  private String myReferenceName;
+  private int myArity;
 
-  public ErlangReferenceImpl(@NotNull T element, TextRange range) {
+  public ErlangFunctionReferenceImpl(@NotNull T element, TextRange range, String name, int arity) {
     super(element, range);
+    myReferenceName = name;
+    myArity = arity;
   }
 
   @Override
   public PsiElement resolve() {
     PsiFile containingFile = myElement.getContainingFile();
-
-    String referenceName = getRangeInElement().substring(myElement.getExpression().getText());
-    int size = myElement.getArgumentList().getExpressionList().size();
-
-    return containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunction(referenceName, size) : null;
+    return containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunction(myReferenceName, myArity) : null;
   }
-
 
   @NotNull
   @Override
   public Object[] getVariants() {
-    final ArrayList<LookupElement> list = new ArrayList<LookupElement>();
+    List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile());
+    return ArrayUtil.toObjectArray(lookupElements);
+  }
 
-    return ArrayUtil.toObjectArray(list);
+  @Override
+  public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+    return myElement;
   }
 }

@@ -1,20 +1,22 @@
 package org.intellij.erlang.psi.impl;
 
-import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
-import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.intellij.erlang.psi.ErlangArgumentDefinition;
-import org.intellij.erlang.psi.ErlangAssignmentExpression;
+import org.intellij.erlang.psi.ErlangFunctionClause;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inDefinition;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inFunctionClause;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignment;
+
 /**
  * @author ignatov
  */
-public class ErlangVarProcessor implements PsiScopeProcessor {
+public class ErlangVarProcessor extends BaseScopeProcessor {
   private ErlangQVar result = null;
   private final String myRequestedName;
   private final PsiElement myOrigin;
@@ -26,38 +28,18 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
 
   @Override
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
-//    System.out.print(psiElement.getText() + " : ");
-//    System.out.println(psiElement.hashCode());
+    ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myOrigin, ErlangFunctionClause.class);
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
-      boolean b1 = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
-      if (b1 || b2(psiElement)) {
-        //      final PsiElement var = ((ErlangQVar) psiElement).getVar();
-        //      if (var != null && var.getText().equals(myRequestedName)) {
+      if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement))) {
         result = (ErlangQVar) psiElement;
         return false;
-        //      }
       }
     }
     return true;
   }
 
-  private static boolean b2(PsiElement psiElement) {
-    ErlangAssignmentExpression assignmentExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
-    if (assignmentExpression == null) return false;
-    return PsiTreeUtil.isAncestor(assignmentExpression.getLeft(), psiElement, false);
-  }
-
-  @Override
-  public <T> T getHint(@NotNull Key<T> tKey) {
-    return null;
-  }
-
   @Nullable
   public ErlangQVar getResult() {
     return result;
-  }
-
-  @Override
-  public void handleEvent(Event event, @Nullable Object o) {
   }
 }

@@ -29,31 +29,36 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       @Override
       public void visitCallbackSpec(@NotNull ErlangCallbackSpec o) {
-        final PsiElement firstChild = o.getFirstChild();
-        if (firstChild != null) {
-          setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
-        }
+        firstChildAsKeyword(o, annotationHolder);
       }
 
       @Override
       public void visitSpecification(@NotNull ErlangSpecification o) {
-        final PsiElement firstChild = o.getFirstChild();
-        if (firstChild != null) {
-          setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
-        }
+        firstChildAsKeyword(o, annotationHolder);
       }
 
       @Override
       public void visitAttribute(@NotNull ErlangAttribute o) {
-        final PsiElement firstChild = o.getFirstChild();
-        if (firstChild != null) {
-          setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
-        }
+        firstChildAsKeyword(o, annotationHolder);
       }
+
+      @Override
+      public void visitExport(@NotNull ErlangExport o) {
+        firstChildAsKeyword(o, annotationHolder);
+      }
+
+      // todo: add export, import and other bundled attributes
     });
   }
 
-  protected static void setHighlighting(@NotNull PsiElement element, @NotNull AnnotationHolder holder, final TextAttributesKey key) {
+  private static void firstChildAsKeyword(ErlangCompositeElement o, AnnotationHolder annotationHolder) {
+    final PsiElement firstChild = o.getFirstChild();
+    if (firstChild != null) {
+      setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+    }
+  }
+
+  private static void setHighlighting(@NotNull PsiElement element, @NotNull AnnotationHolder holder, final TextAttributesKey key) {
     holder.createInfoAnnotation(element, null).setEnforcedTextAttributes(TextAttributes.ERASE_MARKER);
     holder.createInfoAnnotation(element, null).setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key));
   }

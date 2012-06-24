@@ -35,11 +35,6 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
   }
 
   @Nullable
-  public Object resolve() {
-    return ErlangPsiImplUtil.resolve(this);
-  }
-
-  @Nullable
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
