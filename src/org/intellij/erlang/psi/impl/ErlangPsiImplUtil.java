@@ -75,7 +75,7 @@ public class ErlangPsiImplUtil {
         @Override
         public LookupElement fun(ErlangFunction function) {
           return LookupElementBuilder.create(function)
-            .setIcon(PlatformIcons.FUNCTION_ICON).setTailText("/" + function.getArity());
+            .withIcon(PlatformIcons.FUNCTION_ICON).withTailText("/" + function.getArity());
         }
       });
     }
@@ -92,7 +92,6 @@ public class ErlangPsiImplUtil {
     return o.getText();
   }
 
-  @NotNull
   public static int getArity(ErlangFunction o) {
     return o.getFunctionClauseList().get(0).getArgumentDefinitionList().size();
   }

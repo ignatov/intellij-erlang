@@ -16,7 +16,6 @@ public interface ErlangFunction extends ErlangNamedElement {
   @NotNull
   String getName();
 
-  @NotNull
   int getArity();
 
 }

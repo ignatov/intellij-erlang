@@ -25,6 +25,7 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.PlatformIcons;
 import org.intellij.erlang.psi.ErlangArgumentDefinition;
 import org.intellij.erlang.psi.ErlangFunctionClause;
@@ -65,10 +66,10 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase {
     final ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myElement, ErlangFunctionClause.class);
     BaseScopeProcessor processor = new BaseScopeProcessor() {
       @Override
-      public boolean execute(PsiElement psiElement, ResolveState resolveState) {
+      public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
         if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar) {
           if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement))) {
-            result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).setIcon(PlatformIcons.VARIABLE_ICON));
+            result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).withIcon(PlatformIcons.VARIABLE_ICON));
           }
         }
         return true;
@@ -80,5 +81,10 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase {
     result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile()));
 
     return ArrayUtil.toObjectArray(result);
+  }
+
+  @Override
+  public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+    return myElement;
   }
 }
