@@ -68,6 +68,7 @@ public interface ErlangTypes {
   IElementType ERL_Q_ATOM = new ErlangCompositeElementType("ERL_Q_ATOM");
   IElementType ERL_Q_VAR = new ErlangCompositeElementType("ERL_Q_VAR");
   IElementType ERL_RECEIVE_EXPRESSION = new ErlangCompositeElementType("ERL_RECEIVE_EXPRESSION");
+  IElementType ERL_RECORD_DEFINITION = new ErlangCompositeElementType("ERL_RECORD_DEFINITION");
   IElementType ERL_RECORD_EXPRESSION = new ErlangCompositeElementType("ERL_RECORD_EXPRESSION");
   IElementType ERL_RECORD_FIELD = new ErlangCompositeElementType("ERL_RECORD_FIELD");
   IElementType ERL_RECORD_TUPLE = new ErlangCompositeElementType("ERL_RECORD_TUPLE");
@@ -340,6 +341,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_RECEIVE_EXPRESSION) {
         return new ErlangReceiveExpressionImpl(node);
+      }
+      else if (type == ERL_RECORD_DEFINITION) {
+        return new ErlangRecordDefinitionImpl(node);
       }
       else if (type == ERL_RECORD_EXPRESSION) {
         return new ErlangRecordExpressionImpl(node);

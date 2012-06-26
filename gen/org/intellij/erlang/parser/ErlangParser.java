@@ -197,6 +197,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_RECEIVE_EXPRESSION) {
       result_ = receive_expression(builder_, level_ + 1);
     }
+    else if (root_ == ERL_RECORD_DEFINITION) {
+      result_ = record_definition(builder_, level_ + 1);
+    }
     else if (root_ == ERL_RECORD_EXPRESSION) {
       result_ = record_expression(builder_, level_ + 1);
     }
@@ -485,15 +488,14 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // !('spec' | 'callback') q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
+  // q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
   public static boolean atom_attribute(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "atom_attribute")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
-    result_ = atom_attribute_0(builder_, level_ + 1);
-    result_ = result_ && q_atom(builder_, level_ + 1);
-    result_ = result_ && atom_attribute_2(builder_, level_ + 1);
+    result_ = q_atom(builder_, level_ + 1);
+    result_ = result_ && atom_attribute_1(builder_, level_ + 1);
     if (result_) {
       marker_.done(ERL_ATOM_ATTRIBUTE);
     }
@@ -503,53 +505,19 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // !('spec' | 'callback')
-  private static boolean atom_attribute_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_0")) return false;
-    boolean result_ = false;
-    final Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_NOT_);
-    result_ = !atom_attribute_0_0(builder_, level_ + 1);
-    marker_.rollbackTo();
-    result_ = exitErrorRecordingSection(builder_, result_, level_, false, _SECTION_NOT_, null);
-    return result_;
-  }
-
-  // ('spec' | 'callback')
-  private static boolean atom_attribute_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_0_0")) return false;
-    return atom_attribute_0_0_0(builder_, level_ + 1);
-  }
-
-  // 'spec' | 'callback'
-  private static boolean atom_attribute_0_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_0_0_0")) return false;
-    boolean result_ = false;
-    final Marker marker_ = builder_.mark();
-    result_ = consumeToken(builder_, "spec");
-    if (!result_) result_ = consumeToken(builder_, "callback");
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
-    }
-    return result_;
-  }
-
   // [('(' typed_attr_val ')') | typed_attr_val | attr_val]
-  private static boolean atom_attribute_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_2")) return false;
-    atom_attribute_2_0(builder_, level_ + 1);
+  private static boolean atom_attribute_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atom_attribute_1")) return false;
+    atom_attribute_1_0(builder_, level_ + 1);
     return true;
   }
 
   // ('(' typed_attr_val ')') | typed_attr_val | attr_val
-  private static boolean atom_attribute_2_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_2_0")) return false;
+  private static boolean atom_attribute_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atom_attribute_1_0")) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
-    result_ = atom_attribute_2_0_0(builder_, level_ + 1);
+    result_ = atom_attribute_1_0_0(builder_, level_ + 1);
     if (!result_) result_ = typed_attr_val(builder_, level_ + 1);
     if (!result_) result_ = attr_val(builder_, level_ + 1);
     if (!result_) {
@@ -562,14 +530,14 @@ public class ErlangParser implements PsiParser {
   }
 
   // ('(' typed_attr_val ')')
-  private static boolean atom_attribute_2_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_2_0_0")) return false;
-    return atom_attribute_2_0_0_0(builder_, level_ + 1);
+  private static boolean atom_attribute_1_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atom_attribute_1_0_0")) return false;
+    return atom_attribute_1_0_0_0(builder_, level_ + 1);
   }
 
   // '(' typed_attr_val ')'
-  private static boolean atom_attribute_2_0_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_2_0_0_0")) return false;
+  private static boolean atom_attribute_1_0_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atom_attribute_1_0_0_0")) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_PAR_LEFT);
@@ -672,6 +640,7 @@ public class ErlangParser implements PsiParser {
   /* ********************************************************** */
   // '-' (
   //   export
+  //   | record_definition
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -697,6 +666,7 @@ public class ErlangParser implements PsiParser {
 
   // (
   //   export
+  //   | record_definition
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -707,6 +677,7 @@ public class ErlangParser implements PsiParser {
   }
 
   // export
+  //   | record_definition
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -715,6 +686,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
     result_ = export(builder_, level_ + 1);
+    if (!result_) result_ = record_definition(builder_, level_ + 1);
     if (!result_) result_ = specification(builder_, level_ + 1);
     if (!result_) result_ = callback_spec(builder_, level_ + 1);
     if (!result_) result_ = atom_attribute(builder_, level_ + 1);
@@ -3446,6 +3418,27 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "receive_expression_1_0_1_0_0")) return false;
     cr_clauses(builder_, level_ + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // 'record' '(' q_atom ',' typed_record_fields ')'
+  public static boolean record_definition(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_definition")) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, "record");
+    result_ = result_ && consumeToken(builder_, ERL_PAR_LEFT);
+    result_ = result_ && q_atom(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_COMMA);
+    result_ = result_ && typed_record_fields(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
+    if (result_) {
+      marker_.done(ERL_RECORD_DEFINITION);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    return result_;
   }
 
   /* ********************************************************** */

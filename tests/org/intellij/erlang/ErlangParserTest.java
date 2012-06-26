@@ -33,6 +33,7 @@ public class ErlangParserTest extends ParsingTestCase {
   public void testIsDigits()          { doTest(true); }
   public void testDialyzerDataflow()  { doTest(true); }
   public void testTest()              { doTest(true); }
+  public void testRecords()           { doTest(true); }
 
   @Override
   protected void doTest(boolean checkResult) {

@@ -242,6 +242,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
+    visitCompositeElement(o);
+  }
+
   public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
     visitExpression(o);
   }

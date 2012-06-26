@@ -123,14 +123,16 @@ private recoverer ::= !('.')
 //attribute ::= '-' atom_attribute
 attribute ::= '-' (
   export
+  | record_definition
   | specification
   | callback_spec
   | atom_attribute
   ) {pin=1 recoverUntil="recoverer"}
-atom_attribute ::= !('spec' | 'callback') q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
 callback_spec ::= 'callback' type_spec {pin=1}
 specification ::= 'spec' type_spec {pin=1}
 export ::= 'export' '(' export_functions ')' {pin=1}
+record_definition ::= 'record' '(' q_atom ',' typed_record_fields ')'
+atom_attribute ::= q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
 private export_functions ::= '[' export_function (',' export_function)* ']'
 export_function ::= q_atom '/' integer {
   pin= 1
