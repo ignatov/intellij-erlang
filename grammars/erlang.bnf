@@ -106,24 +106,28 @@
   extends(".*_(expression|comprehension|literal|a)")=expression
   extends("atomic")=expression
 
-  implements("function|q_var")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("function|q_var")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("record_definition|function|q_var")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("record_definition|function|q_var")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
 forms ::= form ('.' form)*
-private form ::= function | rule | attribute {recoverUntil=recoverer}
+private form ::= function | rule | record_definition | attribute {recoverUntil=recoverer}
 
-q_atom ::= '?'? atom { methods = [getReference] }
+q_atom ::= '?'? atom
 q_var ::= '_' | ('?'? var) {
-  methods = [getReference processDeclarations getName]
+  methods = [getReference processDeclarations getName getNameIdentifier]
 }
 
 private recoverer ::= !('.')
 
 //attribute ::= '-' atom_attribute
+record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
+  pin=2
+  methods = [getName getNameIdentifier getTextOffset]
+}
+
 attribute ::= '-' (
   export
-  | record_definition
   | specification
   | callback_spec
   | atom_attribute
@@ -131,7 +135,7 @@ attribute ::= '-' (
 callback_spec ::= 'callback' type_spec {pin=1}
 specification ::= 'spec' type_spec {pin=1}
 export ::= 'export' '(' export_functions ')' {pin=1}
-record_definition ::= 'record' '(' q_atom ',' typed_record_fields ')'
+
 atom_attribute ::= q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
 private export_functions ::= '[' export_function (',' export_function)* ']'
 export_function ::= q_atom '/' integer {
@@ -183,6 +187,7 @@ function ::= function_clause (';' function_clause)* {
     atom_name = "function_clause[0]/q_atom"
     getName
     getArity
+    getNameIdentifier
   ]
 }
 
@@ -253,7 +258,13 @@ lc_expression ::= (expression ('<-' expression)?) | (binary_expression '<=' expr
 
 tuple_expression ::= '{' exprs? '}' {pin=1}
 
-record_expression ::= max_expression? '#' q_atom (('.' q_atom) | record_tuple) {pin=2}
+record_expression ::= max_expression? '#' q_atom (('.' q_atom) | record_tuple) {
+  pin=2
+  methods = [
+    atom_name = "q_atom[0]"
+    getReference
+  ]
+}
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
 private record_fields ::= record_field (',' record_field)*

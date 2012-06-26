@@ -4,6 +4,7 @@ package org.intellij.erlang.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 
 public interface ErlangRecordExpression extends ErlangExpression {
 
@@ -15,5 +16,11 @@ public interface ErlangRecordExpression extends ErlangExpression {
 
   @Nullable
   ErlangRecordTuple getRecordTuple();
+
+  @Nullable
+  ErlangQAtom getAtomName();
+
+  @Nullable
+  PsiReference getReference();
 
 }

@@ -5,12 +5,20 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangRecordDefinition extends ErlangCompositeElement {
+public interface ErlangRecordDefinition extends ErlangNamedElement {
 
-  @NotNull
+  @Nullable
   ErlangQAtom getQAtom();
 
-  @NotNull
+  @Nullable
   ErlangTypedRecordFields getTypedRecordFields();
+
+  @NotNull
+  String getName();
+
+  @NotNull
+  PsiElement getNameIdentifier();
+
+  int getTextOffset();
 
 }

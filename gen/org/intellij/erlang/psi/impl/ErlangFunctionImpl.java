@@ -44,4 +44,9 @@ public class ErlangFunctionImpl extends ErlangNamedElementImpl implements Erlang
     return ErlangPsiImplUtil.getArity(this);
   }
 
+  @NotNull
+  public PsiElement getNameIdentifier() {
+    return ErlangPsiImplUtil.getNameIdentifier(this);
+  }
+
 }

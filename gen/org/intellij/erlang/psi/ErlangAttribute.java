@@ -17,9 +17,6 @@ public interface ErlangAttribute extends ErlangCompositeElement {
   ErlangExport getExport();
 
   @Nullable
-  ErlangRecordDefinition getRecordDefinition();
-
-  @Nullable
   ErlangSpecification getSpecification();
 
 }

@@ -13,10 +13,7 @@ import gnu.trove.THashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
-import org.intellij.erlang.psi.ErlangAttribute;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangRule;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,7 +32,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   private CachedValue<List<ErlangRule>> myRulesValue;
   private CachedValue<List<ErlangFunction>> myFunctionValue;
   private CachedValue<List<ErlangAttribute>> myAttributeValue;
-  private CachedValue<Map<Pair<String, Integer>, ErlangFunction>> myNamesMap;
+  private CachedValue<List<ErlangRecordDefinition>> myRecordValue;
+  private CachedValue<Map<Pair<String, Integer>, ErlangFunction>> myFunctionsMap;
+  private CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap;
 
   @NotNull
   @Override
@@ -88,8 +87,8 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   @Nullable
   @Override
   public ErlangFunction getFunction(String name, int argsCount) {
-    if (myNamesMap == null) {
-      myNamesMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<Pair<String, Integer>, ErlangFunction>>() {
+    if (myFunctionsMap == null) {
+      myFunctionsMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<Pair<String, Integer>, ErlangFunction>>() {
         @Override
         public Result<Map<Pair<String, Integer>, ErlangFunction>> compute() {
           Map<Pair<String, Integer>, ErlangFunction> map = new THashMap<Pair<String, Integer>, ErlangFunction>();
@@ -105,7 +104,55 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
         }
       }, false);
     }
-    return myNamesMap.getValue().get(new Pair<String, Integer>(name, argsCount));
+    return myFunctionsMap.getValue().get(new Pair<String, Integer>(name, argsCount));
+  }
+
+  @NotNull
+  @Override
+  public List<ErlangRecordDefinition> getRecords() {
+    if (myRecordValue == null) {
+      myRecordValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangRecordDefinition>>() {
+        @Override
+        public Result<List<ErlangRecordDefinition>> compute() {
+          return Result.create(calcRecords(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myRecordValue.getValue();
+  }
+
+  private List<ErlangRecordDefinition> calcRecords() {
+    final List<ErlangRecordDefinition> result = new ArrayList<ErlangRecordDefinition>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangRecordDefinition) {
+          result.add((ErlangRecordDefinition) psiElement);
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
+  @Override
+  public ErlangRecordDefinition getRecord(String name) {
+    if (myRecordsMap == null) {
+      myRecordsMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangRecordDefinition>>() {
+        @Override
+        public Result<Map<String, ErlangRecordDefinition>> compute() {
+          Map<String, ErlangRecordDefinition> map = new THashMap<String, ErlangRecordDefinition>();
+          for (ErlangRecordDefinition record : getRecords()) {
+            String recordName = record.getName();
+            if (!map.containsKey(recordName)) {
+              map.put(recordName, record);
+            }
+          }
+          return Result.create(map, ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myRecordsMap.getValue().get(name);
   }
 
   private List<ErlangFunction> calcFunctions() {

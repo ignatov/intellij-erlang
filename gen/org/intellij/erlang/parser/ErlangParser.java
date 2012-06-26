@@ -640,7 +640,6 @@ public class ErlangParser implements PsiParser {
   /* ********************************************************** */
   // '-' (
   //   export
-  //   | record_definition
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -666,7 +665,6 @@ public class ErlangParser implements PsiParser {
 
   // (
   //   export
-  //   | record_definition
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -677,7 +675,6 @@ public class ErlangParser implements PsiParser {
   }
 
   // export
-  //   | record_definition
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -686,7 +683,6 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
     result_ = export(builder_, level_ + 1);
-    if (!result_) result_ = record_definition(builder_, level_ + 1);
     if (!result_) result_ = specification(builder_, level_ + 1);
     if (!result_) result_ = callback_spec(builder_, level_ + 1);
     if (!result_) result_ = atom_attribute(builder_, level_ + 1);
@@ -2056,7 +2052,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // function | rule | attribute
+  // function | rule | record_definition | attribute
   static boolean form(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "form")) return false;
     boolean result_ = false;
@@ -2064,6 +2060,7 @@ public class ErlangParser implements PsiParser {
     enterErrorRecordingSection(builder_, level_, _SECTION_RECOVER_);
     result_ = function(builder_, level_ + 1);
     if (!result_) result_ = rule(builder_, level_ + 1);
+    if (!result_) result_ = record_definition(builder_, level_ + 1);
     if (!result_) result_ = attribute(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
@@ -3421,24 +3418,30 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // 'record' '(' q_atom ',' typed_record_fields ')'
+  // '-' 'record' '(' q_atom ',' typed_record_fields ')'
   public static boolean record_definition(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_definition")) return false;
+    if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     final Marker marker_ = builder_.mark();
-    result_ = consumeToken(builder_, "record");
-    result_ = result_ && consumeToken(builder_, ERL_PAR_LEFT);
-    result_ = result_ && q_atom(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_COMMA);
-    result_ = result_ && typed_record_fields(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
-    if (result_) {
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
+    result_ = consumeToken(builder_, ERL_OP_MINUS);
+    result_ = result_ && consumeToken(builder_, "record");
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, q_atom(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_COMMA)) && result_;
+    result_ = pinned_ && report_error_(builder_, typed_record_fields(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    if (result_ || pinned_) {
       marker_.done(ERL_RECORD_DEFINITION);
     }
     else {
       marker_.rollbackTo();
     }
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */

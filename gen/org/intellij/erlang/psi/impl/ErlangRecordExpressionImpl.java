@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements ErlangRecordExpression {
 
@@ -37,6 +38,18 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordExpression(this);
     else super.accept(visitor);
+  }
+
+  @Override
+  @Nullable
+  public ErlangQAtom getAtomName() {
+    List<ErlangQAtom> p1 = getQAtomList();
+    return p1.size() < 1 ? null : p1.get(0);
+  }
+
+  @Nullable
+  public PsiReference getReference() {
+    return ErlangPsiImplUtil.getReference(this);
   }
 
 }

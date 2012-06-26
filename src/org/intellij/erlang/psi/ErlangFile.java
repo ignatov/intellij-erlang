@@ -34,4 +34,10 @@ public interface ErlangFile extends PsiFile {
 
   @Nullable
   ErlangFunction getFunction(String name, int argsCount);
+
+  @NotNull
+  List<ErlangRecordDefinition> getRecords();
+
+  @Nullable
+  ErlangRecordDefinition getRecord(String name);
 }

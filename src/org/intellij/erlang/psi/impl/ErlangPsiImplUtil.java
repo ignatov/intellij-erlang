@@ -11,8 +11,8 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
-import com.intellij.util.PlatformIcons;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,12 +48,7 @@ public class ErlangPsiImplUtil {
       o.getQAtom().getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
   }
 
-  public static PsiReference getReference(ErlangQAtom o) {
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o, TextRange.from(0, o.getAtom().getTextLength()), o.getAtom().getText(), -1);
-  }
-
   // Utilities for processors
-
   static boolean inFunctionClause(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangFunctionClause.class) != null;
   }
@@ -75,7 +70,20 @@ public class ErlangPsiImplUtil {
         @Override
         public LookupElement fun(ErlangFunction function) {
           return LookupElementBuilder.create(function)
-            .setIcon(PlatformIcons.FUNCTION_ICON).setTailText("/" + function.getArity());
+            .setIcon(ErlangIcons.FUNCTION).setTailText("/" + function.getArity());
+        }
+      });
+    }
+    return Collections.emptyList();
+  }
+
+  @NotNull
+  public static List<LookupElement> getRecordLookupElements(PsiFile containingFile) {
+    if (containingFile instanceof ErlangFile) {
+      return ContainerUtil.map(((ErlangFile) containingFile).getRecords(), new Function<ErlangRecordDefinition, LookupElement>() {
+        @Override
+        public LookupElement fun(ErlangRecordDefinition rd) {
+          return LookupElementBuilder.create(rd).setIcon(ErlangIcons.RECORD);
         }
       });
     }
@@ -94,5 +102,40 @@ public class ErlangPsiImplUtil {
 
   public static int getArity(ErlangFunction o) {
     return o.getFunctionClauseList().get(0).getArgumentDefinitionList().size();
+  }
+
+  @NotNull
+  public static String getName(ErlangRecordDefinition o) {
+    ErlangQAtom atom = o.getQAtom();
+    if (atom == null) return "";
+    return atom.getText();
+  }
+
+  @NotNull
+  public static PsiElement getNameIdentifier(ErlangRecordDefinition o) {
+    ErlangQAtom atom = o.getQAtom();
+    return atom != null ? atom : o;
+  }
+
+  public static int getTextOffset(ErlangRecordDefinition o) {
+    return o.getNameIdentifier().getTextOffset();
+  }
+
+  @NotNull
+  public static PsiElement getNameIdentifier(ErlangQVar o) {
+    return o;
+  }
+
+  @NotNull
+  public static PsiElement getNameIdentifier(ErlangFunction o) {
+    return o.getAtomName();
+  }
+
+  @Nullable
+  public static PsiReference getReference(ErlangRecordExpression o) {
+    ErlangQAtom atom = o.getAtomName();
+    if (atom == null) return null;
+    return new ErlangRecordReferenceImpl<ErlangRecordExpression>(o,
+      TextRange.from(atom.getStartOffsetInParent(), atom.getTextLength()), atom.getText());
   }
 }

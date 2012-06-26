@@ -36,12 +36,6 @@ public class ErlangAttributeImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @Nullable
-  public ErlangRecordDefinition getRecordDefinition() {
-    return findChildByClass(ErlangRecordDefinition.class);
-  }
-
-  @Override
-  @Nullable
   public ErlangSpecification getSpecification() {
     return findChildByClass(ErlangSpecification.class);
   }

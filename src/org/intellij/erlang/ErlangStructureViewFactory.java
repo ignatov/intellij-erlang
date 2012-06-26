@@ -9,7 +9,6 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.Function;
-import com.intellij.util.PlatformIcons;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -104,6 +103,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         for (ErlangAttribute o : ((ErlangFile) myElement).getAttributes()) {
           result.add(new Element(o));
         }
+        for (ErlangRecordDefinition o : ((ErlangFile) myElement).getRecords()) {
+          result.add(new Element(o));
+        }
         for (ErlangFunction o : ((ErlangFile) myElement).getFunctions()) {
           result.add(new Element(o));
         }
@@ -131,6 +133,8 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         return ((ErlangFunction) myElement).getName() + "/" + argCount;
       } else if (myElement instanceof ErlangFile) {
         return ((ErlangFile) myElement).getName();
+      } else if (myElement instanceof ErlangRecordDefinition) {
+        return ((ErlangRecordDefinition) myElement).getName();
       } else if (myElement instanceof ErlangAttribute) {
         ErlangAtomAttribute attribute = ((ErlangAttribute) myElement).getAtomAttribute();
         ErlangSpecification specification = ((ErlangAttribute) myElement).getSpecification();
@@ -156,11 +160,13 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     @Override
     public Icon getIcon(boolean open) {
       if (myElement instanceof ErlangFunction) {
-        return PlatformIcons.FUNCTION_ICON;
+        return ErlangIcons.FUNCTION;
       } else if (myElement instanceof ErlangFunctionClause) {
-        return PlatformIcons.PACKAGE_LOCAL_ICON;
+        return ErlangIcons.FUNCTION_CLAUSE;
       } else if (myElement instanceof ErlangAttribute) {
-        return PlatformIcons.ANNOTATION_TYPE_ICON;
+        return ErlangIcons.ATTRIBUTE;
+      } else if (myElement instanceof ErlangRecordDefinition) {
+        return ErlangIcons.RECORD;
       }
       return myElement.getIcon(0);
     }

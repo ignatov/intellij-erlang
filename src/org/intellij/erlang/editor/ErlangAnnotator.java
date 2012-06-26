@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,6 +46,19 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitExport(@NotNull ErlangExport o) {
         firstChildAsKeyword(o, annotationHolder);
+      }
+
+      @Override
+      public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
+        firstChildAsKeyword(o, annotationHolder);
+        PsiElement rec = o.getFirstChild();
+        while (rec != null) {
+          if (rec instanceof LeafPsiElement && "record".equals(rec.getText())) break;
+          rec = rec.getNextSibling();
+        }
+        if (rec != null) {
+          setHighlighting(rec, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+        }
       }
 
       // todo: add export, import and other bundled attributes

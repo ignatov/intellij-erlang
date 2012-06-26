@@ -21,4 +21,7 @@ public interface ErlangQVar extends ErlangNamedElement {
   @NotNull
   String getName();
 
+  @NotNull
+  PsiElement getNameIdentifier();
+
 }

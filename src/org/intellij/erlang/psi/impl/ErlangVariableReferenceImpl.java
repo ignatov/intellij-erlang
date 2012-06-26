@@ -26,7 +26,7 @@ import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.PlatformIcons;
+import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.ErlangArgumentDefinition;
 import org.intellij.erlang.psi.ErlangFunctionClause;
 import org.intellij.erlang.psi.ErlangQVar;
@@ -69,7 +69,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase {
       public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
         if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar) {
           if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement))) {
-            result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).setIcon(PlatformIcons.VARIABLE_ICON));
+            result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).setIcon(ErlangIcons.VARIABLE));
           }
         }
         return true;

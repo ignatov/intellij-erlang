@@ -26,9 +26,9 @@ import javax.swing.*;
 public interface ErlangIcons {
   Icon FILE = IconLoader.getIcon("/icons/erlang-16-7-2.png");
 
-  Icon RULE = PlatformIcons.METHOD_ICON;
-  Icon EXTERNAL_RULE = PlatformIcons.ABSTRACT_METHOD_ICON;
-  Icon ATTRIBUTE = PlatformIcons.FIELD_ICON;
-
-  Icon RELATED_METHOD = IconLoader.getIcon("/gutter/implementedMethod.png");
+  Icon FUNCTION = PlatformIcons.FUNCTION_ICON;
+  Icon ATTRIBUTE = PlatformIcons.ANNOTATION_TYPE_ICON;
+  Icon FUNCTION_CLAUSE = PlatformIcons.PACKAGE_LOCAL_ICON;
+  Icon RECORD = PlatformIcons.ANONYMOUS_CLASS_ICON;
+  Icon VARIABLE = PlatformIcons.VARIABLE_ICON;
 }

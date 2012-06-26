@@ -10,27 +10,41 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangRecordDefinitionImpl extends ErlangCompositeElementImpl implements ErlangRecordDefinition {
+public class ErlangRecordDefinitionImpl extends ErlangNamedElementImpl implements ErlangRecordDefinition {
 
   public ErlangRecordDefinitionImpl(ASTNode node) {
     super(node);
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangQAtom getQAtom() {
-    return findNotNullChildByClass(ErlangQAtom.class);
+    return findChildByClass(ErlangQAtom.class);
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangTypedRecordFields getTypedRecordFields() {
-    return findNotNullChildByClass(ErlangTypedRecordFields.class);
+    return findChildByClass(ErlangTypedRecordFields.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordDefinition(this);
     else super.accept(visitor);
+  }
+
+  @NotNull
+  public String getName() {
+    return ErlangPsiImplUtil.getName(this);
+  }
+
+  @NotNull
+  public PsiElement getNameIdentifier() {
+    return ErlangPsiImplUtil.getNameIdentifier(this);
+  }
+
+  public int getTextOffset() {
+    return ErlangPsiImplUtil.getTextOffset(this);
   }
 
 }

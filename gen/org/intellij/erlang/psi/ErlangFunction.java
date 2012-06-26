@@ -18,4 +18,7 @@ public interface ErlangFunction extends ErlangNamedElement {
 
   int getArity();
 
+  @NotNull
+  PsiElement getNameIdentifier();
+
 }

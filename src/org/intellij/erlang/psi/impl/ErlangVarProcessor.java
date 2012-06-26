@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inDefinition;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inFunctionClause;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignment;
 
 /**
