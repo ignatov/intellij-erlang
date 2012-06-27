@@ -21,14 +21,14 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
-import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
-public class ErlangRecordReferenceImpl<T extends ErlangCompositeElement> extends PsiReferenceBase<T> {
+public class ErlangRecordReferenceImpl<T extends ErlangQAtom> extends PsiReferenceBase<T> {
   private String myReferenceName;
 
   public ErlangRecordReferenceImpl(@NotNull T element, TextRange range, String name) {
@@ -50,6 +50,7 @@ public class ErlangRecordReferenceImpl<T extends ErlangCompositeElement> extends
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+    myElement.getAtom().replace(ErlangElementFactory.createAtomFromText(getElement().getProject(), newElementName));
     return myElement;
   }
 }

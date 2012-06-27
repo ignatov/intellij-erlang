@@ -39,6 +39,11 @@ public class ErlangRecordDefinitionImpl extends ErlangNamedElementImpl implement
   }
 
   @NotNull
+  public PsiElement setName(String newName) {
+    return ErlangPsiImplUtil.setName(this, newName);
+  }
+
+  @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }

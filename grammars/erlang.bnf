@@ -123,7 +123,7 @@ private recoverer ::= !('.')
 //attribute ::= '-' atom_attribute
 record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   pin=2
-  methods = [getName getNameIdentifier getTextOffset]
+  methods = [getName setName getNameIdentifier getTextOffset]
 }
 
 attribute ::= '-' (
@@ -186,6 +186,7 @@ function ::= function_clause (';' function_clause)* {
   methods = [
     atom_name = "function_clause[0]/q_atom"
     getName
+    setName
     getArity
     getNameIdentifier
   ]

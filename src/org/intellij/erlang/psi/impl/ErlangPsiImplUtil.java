@@ -34,23 +34,19 @@ public class ErlangPsiImplUtil {
     return new ErlangVariableReferenceImpl(o, TextRange.from(0, o.getTextLength()));
   }
 
-  @NotNull
+  @Nullable
   public static PsiReference getReference(@NotNull ErlangFunctionCallExpression o) {
-    return new ErlangFunctionReferenceImpl<ErlangFunctionCallExpression>(
-      o, TextRange.from(0, o.getExpression().getTextLength()),
-      o.getExpression().getText(), o.getArgumentList().getExpressionList().size());
+    ErlangQAtom atom = o.getQAtom();
+    return atom == null ? null : new ErlangFunctionReferenceImpl<ErlangQAtom>(
+      atom, TextRange.from(0, atom.getTextLength()),
+      atom.getText(), o.getArgumentList().getExpressionList().size());
   }
 
   @NotNull
   public static PsiReference getReference(ErlangExportFunction o) {
     PsiElement arity = o.getInteger();
-    return new ErlangFunctionReferenceImpl<ErlangExportFunction>(o, TextRange.from(0, o.getQAtom().getTextLength()),
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), TextRange.from(0, o.getQAtom().getTextLength()),
       o.getQAtom().getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
-  }
-
-  // Utilities for processors
-  static boolean inFunctionClause(PsiElement psiElement) {
-    return PsiTreeUtil.getParentOfType(psiElement, ErlangFunctionClause.class) != null;
   }
 
   static boolean inDefinition(PsiElement psiElement) {
@@ -135,7 +131,24 @@ public class ErlangPsiImplUtil {
   public static PsiReference getReference(ErlangRecordExpression o) {
     ErlangQAtom atom = o.getAtomName();
     if (atom == null) return null;
-    return new ErlangRecordReferenceImpl<ErlangRecordExpression>(o,
-      TextRange.from(atom.getStartOffsetInParent(), atom.getTextLength()), atom.getText());
+    return new ErlangRecordReferenceImpl<ErlangQAtom>(atom,
+      TextRange.from(0, atom.getTextLength()), atom.getText());
+  }
+
+  @NotNull
+  public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
+    for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
+      clause.getQAtom().replace(ErlangElementFactory.createAtomFromText(o.getProject(), newName));
+    }
+    return o;
+  }
+
+  @NotNull
+  public static PsiElement setName(@NotNull ErlangRecordDefinition o, @NotNull String newName) {
+    ErlangQAtom atom = o.getQAtom();
+    if (atom != null) {
+        atom.replace(ErlangElementFactory.createAtomFromText(o.getProject(), newName));
+    }
+    return o;
   }
 }

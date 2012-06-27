@@ -17,6 +17,9 @@ public interface ErlangRecordDefinition extends ErlangNamedElement {
   String getName();
 
   @NotNull
+  PsiElement setName(String newName);
+
+  @NotNull
   PsiElement getNameIdentifier();
 
   int getTextOffset();
