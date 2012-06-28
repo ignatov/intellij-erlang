@@ -85,6 +85,11 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase {
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+    try {
+      myElement.replace(ErlangElementFactory.createQVarFromText(myElement.getProject(), newElementName));
+    } catch (Exception e) {
+      throw new IncorrectOperationException("Incorrect variable name");
+    }
     return myElement;
   }
 }

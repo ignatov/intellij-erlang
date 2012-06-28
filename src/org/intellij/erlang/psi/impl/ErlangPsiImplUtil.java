@@ -11,6 +11,7 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
+import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.*;
@@ -137,17 +138,35 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
-    for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
-      clause.getQAtom().replace(ErlangElementFactory.createAtomFromText(o.getProject(), newName));
+    try {
+      for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
+        clause.getQAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+      }
+    } catch (Exception e) {
+      throw new IncorrectOperationException("Incorrect function name");
+    }
+    return o;
+  }
+
+  @NotNull
+  public static PsiElement setName(@NotNull ErlangQVar o, @NotNull String newName) {
+    try {
+      o.getVar().replace(ErlangElementFactory.createQVarFromText(o.getProject(), newName));
+    } catch (Exception e) {
+      throw new IncorrectOperationException("Incorrect variable name");
     }
     return o;
   }
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangRecordDefinition o, @NotNull String newName) {
-    ErlangQAtom atom = o.getQAtom();
-    if (atom != null) {
-        atom.replace(ErlangElementFactory.createAtomFromText(o.getProject(), newName));
+    try {
+      ErlangQAtom atom = o.getQAtom();
+      if (atom != null) {
+        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+      }
+    } catch (Exception e) {
+      throw new IncorrectOperationException("Incorrect record name");
     }
     return o;
   }

@@ -50,7 +50,11 @@ public class ErlangRecordReferenceImpl<T extends ErlangQAtom> extends PsiReferen
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    myElement.getAtom().replace(ErlangElementFactory.createAtomFromText(getElement().getProject(), newElementName));
+    try {
+      myElement.replace(ErlangElementFactory.createQAtomFromText(getElement().getProject(), newElementName));
+    } catch (Exception e) {
+      throw new IncorrectOperationException("Incorrect record name");
+    }
     return myElement;
   }
 }

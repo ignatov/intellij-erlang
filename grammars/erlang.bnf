@@ -115,7 +115,7 @@ private form ::= function | rule | record_definition | attribute {recoverUntil=r
 
 q_atom ::= '?'? atom
 q_var ::= '_' | ('?'? var) {
-  methods = [getReference processDeclarations getName getNameIdentifier]
+  methods = [getReference processDeclarations getName setName getNameIdentifier]
 }
 
 private recoverer ::= !('.')
