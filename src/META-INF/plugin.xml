@@ -20,6 +20,7 @@
         <lang.commenter language="Erlang" implementationClass="org.intellij.erlang.ErlangCommenter"/>
         <lang.psiStructureViewFactory language="Erlang" implementationClass="org.intellij.erlang.ErlangStructureViewFactory"/>
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
+        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.ErlangCompletionContributor"/>
     </extensions>
     <project-components>
 
