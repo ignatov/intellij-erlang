@@ -36,7 +36,7 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangFunctionCallExpression o) {
-    ErlangQAtom atom = o.getQAtom();
+    ErlangQAtom atom = o.getExpression().getQAtom();
     return atom == null ? null : new ErlangFunctionReferenceImpl<ErlangQAtom>(
       atom, TextRange.from(0, atom.getTextLength()),
       atom.getText(), o.getArgumentList().getExpressionList().size());
