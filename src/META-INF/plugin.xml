@@ -21,6 +21,7 @@
         <lang.psiStructureViewFactory language="Erlang" implementationClass="org.intellij.erlang.ErlangStructureViewFactory"/>
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.ErlangCompletionContributor"/>
+        <renameInputValidator implementation="org.intellij.erlang.ErlangRenameInputValidator"/>
     </extensions>
     <project-components>
 

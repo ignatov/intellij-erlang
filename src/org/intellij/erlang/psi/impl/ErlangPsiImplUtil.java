@@ -138,35 +138,23 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
-    try {
-      for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
-        clause.getQAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
-      }
-    } catch (Exception e) {
-      throw new IncorrectOperationException("Incorrect function name");
+    for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
+      clause.getQAtom().getAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
     }
     return o;
   }
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangQVar o, @NotNull String newName) {
-    try {
-      o.getVar().replace(ErlangElementFactory.createQVarFromText(o.getProject(), newName));
-    } catch (Exception e) {
-      throw new IncorrectOperationException("Incorrect variable name");
-    }
+    o.replace(ErlangElementFactory.createQVarFromText(o.getProject(), newName));
     return o;
   }
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangRecordDefinition o, @NotNull String newName) {
-    try {
-      ErlangQAtom atom = o.getQAtom();
-      if (atom != null) {
-        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
-      }
-    } catch (Exception e) {
-      throw new IncorrectOperationException("Incorrect record name");
+    ErlangQAtom atom = o.getQAtom();
+    if (atom != null) {
+      atom.getAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
     }
     return o;
   }

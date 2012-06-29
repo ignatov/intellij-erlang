@@ -56,11 +56,8 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiRefer
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    try {
-      myElement.replace(ErlangElementFactory.createQAtomFromText(getElement().getProject(), newElementName));
-    } catch (Exception e) {
-      throw new IncorrectOperationException("Incorrect function name");
-    }
+    PsiElement atomFromText = ErlangElementFactory.createQAtomFromText(getElement().getProject(), newElementName);
+    myElement.getAtom().replace(atomFromText);
     return myElement;
   }
 }

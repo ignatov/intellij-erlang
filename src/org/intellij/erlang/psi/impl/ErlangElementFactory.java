@@ -18,12 +18,12 @@ public class ErlangElementFactory {
   @NotNull
   public static PsiElement createQAtomFromText(Project project, String text) {
     ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-" + text + ".");
-    return fileFromText.getAttributes().get(0).getAtomAttribute().getQAtom();
+    return fileFromText.getAttributes().get(0).getAtomAttribute().getQAtom().getAtom();
   }
 
   @NotNull
   public static PsiElement createQVarFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "f(" + text + ") -> 0.");
-    return fileFromText.getFunctions().get(0).getFunctionClauseList().get(0).getArgumentDefinitionList().get(0).getExpression().getQVar();
+    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "f(" + text + ") -> " + text + ".");
+    return fileFromText.getFunctions().get(0).getFunctionClauseList().get(0).getClauseBody().getExpressionList().get(0).getQVar();
   }
 }

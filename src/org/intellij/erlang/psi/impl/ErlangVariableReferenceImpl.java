@@ -41,8 +41,7 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignm
 /**
  * @author ignatov
  */
-public class ErlangVariableReferenceImpl extends PsiReferenceBase {
-  @SuppressWarnings("unchecked")
+public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
   public ErlangVariableReferenceImpl(@NotNull ErlangQVar element, TextRange range) {
     super(element, range);
   }
@@ -85,11 +84,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase {
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    try {
-      myElement.replace(ErlangElementFactory.createQVarFromText(myElement.getProject(), newElementName));
-    } catch (Exception e) {
-      throw new IncorrectOperationException("Incorrect variable name");
-    }
+    myElement.replace(ErlangElementFactory.createQVarFromText(myElement.getProject(), newElementName));
     return myElement;
   }
 }
