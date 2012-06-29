@@ -11,7 +11,6 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
-import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.*;
@@ -44,17 +43,21 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static PsiReference getReference(ErlangExportFunction o) {
+  public static PsiReference getReference(@NotNull ErlangExportFunction o) {
     PsiElement arity = o.getInteger();
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), TextRange.from(0, o.getQAtom().getTextLength()),
       o.getQAtom().getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
   }
 
-  static boolean inDefinition(PsiElement psiElement) {
+  public static boolean inDefinition(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
   }
 
-  static boolean isLeftPartOfAssignment(PsiElement psiElement) {
+  public static boolean inAtomAttribute(PsiElement psiElement) {
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class) != null;
+  }
+
+  public static boolean isLeftPartOfAssignment(@NotNull PsiElement psiElement) {
     ErlangAssignmentExpression assignmentExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
     if (assignmentExpression == null) return false;
     return PsiTreeUtil.isAncestor(assignmentExpression.getLeft(), psiElement, false);
@@ -65,7 +68,7 @@ public class ErlangPsiImplUtil {
     if (containingFile instanceof ErlangFile) {
       return ContainerUtil.map(((ErlangFile) containingFile).getFunctions(), new Function<ErlangFunction, LookupElement>() {
         @Override
-        public LookupElement fun(ErlangFunction function) {
+        public LookupElement fun(@NotNull ErlangFunction function) {
           return LookupElementBuilder.create(function)
             .setIcon(ErlangIcons.FUNCTION).setTailText("/" + function.getArity());
         }
@@ -75,11 +78,11 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getRecordLookupElements(PsiFile containingFile) {
+  public static List<LookupElement> getRecordLookupElements(@NotNull PsiFile containingFile) {
     if (containingFile instanceof ErlangFile) {
       return ContainerUtil.map(((ErlangFile) containingFile).getRecords(), new Function<ErlangRecordDefinition, LookupElement>() {
         @Override
-        public LookupElement fun(ErlangRecordDefinition rd) {
+        public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
           return LookupElementBuilder.create(rd).setIcon(ErlangIcons.RECORD);
         }
       });
@@ -88,48 +91,48 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static String getName(ErlangFunction o) {
+  public static String getName(@NotNull ErlangFunction o) {
     return o.getAtomName().getAtom().getText();
   }
 
   @NotNull
-  public static String getName(ErlangQVar o) {
+  public static String getName(@NotNull ErlangQVar o) {
     return o.getText();
   }
 
-  public static int getArity(ErlangFunction o) {
+  public static int getArity(@NotNull ErlangFunction o) {
     return o.getFunctionClauseList().get(0).getArgumentDefinitionList().size();
   }
 
   @NotNull
-  public static String getName(ErlangRecordDefinition o) {
+  public static String getName(@NotNull ErlangRecordDefinition o) {
     ErlangQAtom atom = o.getQAtom();
     if (atom == null) return "";
     return atom.getText();
   }
 
   @NotNull
-  public static PsiElement getNameIdentifier(ErlangRecordDefinition o) {
+  public static PsiElement getNameIdentifier(@NotNull ErlangRecordDefinition o) {
     ErlangQAtom atom = o.getQAtom();
     return atom != null ? atom : o;
   }
 
-  public static int getTextOffset(ErlangRecordDefinition o) {
+  public static int getTextOffset(@NotNull ErlangRecordDefinition o) {
     return o.getNameIdentifier().getTextOffset();
   }
 
   @NotNull
-  public static PsiElement getNameIdentifier(ErlangQVar o) {
+  public static PsiElement getNameIdentifier(@NotNull ErlangQVar o) {
     return o;
   }
 
   @NotNull
-  public static PsiElement getNameIdentifier(ErlangFunction o) {
+  public static PsiElement getNameIdentifier(@NotNull ErlangFunction o) {
     return o.getAtomName();
   }
 
   @Nullable
-  public static PsiReference getReference(ErlangRecordExpression o) {
+  public static PsiReference getReference(@NotNull ErlangRecordExpression o) {
     ErlangQAtom atom = o.getAtomName();
     if (atom == null) return null;
     return new ErlangRecordReferenceImpl<ErlangQAtom>(atom,

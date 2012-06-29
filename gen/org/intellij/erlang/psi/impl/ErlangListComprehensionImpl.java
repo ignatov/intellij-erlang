@@ -18,6 +18,12 @@ public class ErlangListComprehensionImpl extends ErlangExpressionImpl implements
 
   @Override
   @NotNull
+  public ErlangArgumentDefinition getArgumentDefinition() {
+    return findNotNullChildByClass(ErlangArgumentDefinition.class);
+  }
+
+  @Override
+  @NotNull
   public List<ErlangExpression> getExpressionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }

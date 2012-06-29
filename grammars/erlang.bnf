@@ -251,8 +251,8 @@ opt_bit_type_list ::= '/' bit_type_list {pin=1}
 bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
 
-list_comprehension ::= '[' expression '||' lc_exprs ']' {pin=3}
-binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {pin=3}
+list_comprehension ::= '[' argument_definition '||' lc_exprs ']' {pin=3}
+binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {pin=3} // todo: definition
 private lc_exprs ::= lc_expression (',' lc_expression)*
 
 lc_expression ::= (expression ('<-' expression)?) | (binary_expression '<=' expression) {pin=0}
@@ -291,7 +291,7 @@ fun_clause ::= argument_definition_list clause_guard? clause_body
 try_expression ::= try exprs (of cr_clauses)? try_catch
 try_catch ::= (catch try_clauses [after exprs] end) | (after exprs end) {pin(".*")="catch|after"}
 private try_clauses ::= try_clause (';' try_clause)*
-try_clause ::= [(q_atom | q_var) ':'] expression clause_guard? clause_body
+try_clause ::= [(q_atom | q_var) ':'] argument_definition clause_guard? clause_body
 
 query_expression ::= query list_comprehension end
 argument_list ::= '(' exprs? ')'

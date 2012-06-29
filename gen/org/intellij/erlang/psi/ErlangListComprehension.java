@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface ErlangListComprehension extends ErlangExpression {
 
   @NotNull
+  ErlangArgumentDefinition getArgumentDefinition();
+
+  @NotNull
   List<ErlangExpression> getExpressionList();
 
 }

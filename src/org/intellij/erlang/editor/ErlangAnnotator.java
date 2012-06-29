@@ -7,9 +7,14 @@ import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
+
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inAtomAttribute;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inDefinition;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignment;
 
 /**
  * @author ignatov
@@ -21,6 +26,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         setHighlighting(o, annotationHolder, ErlangSyntaxHighlighter.VARIABLES);
+        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o)) return;
+        markIfUnresolved(o, annotationHolder, "Unresolved variable " + o.getText());
       }
 
       @Override
@@ -30,27 +37,27 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       @Override
       public void visitCallbackSpec(@NotNull ErlangCallbackSpec o) {
-        firstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsKeyword(o, annotationHolder);
       }
 
       @Override
       public void visitSpecification(@NotNull ErlangSpecification o) {
-        firstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsKeyword(o, annotationHolder);
       }
 
       @Override
       public void visitAttribute(@NotNull ErlangAttribute o) {
-        firstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsKeyword(o, annotationHolder);
       }
 
       @Override
       public void visitExport(@NotNull ErlangExport o) {
-        firstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsKeyword(o, annotationHolder);
       }
 
       @Override
       public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
-        firstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsKeyword(o, annotationHolder);
         PsiElement rec = o.getFirstChild();
         while (rec != null) {
           if (rec instanceof LeafPsiElement && "record".equals(rec.getText())) break;
@@ -61,11 +68,23 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         }
       }
 
+      @Override
+      public void visitExportFunction(@NotNull ErlangExportFunction o) {
+        markIfUnresolved(o, annotationHolder, "Unresolved function " + o.getText());
+      }
+
       // todo: add export, import and other bundled attributes
     });
   }
 
-  private static void firstChildAsKeyword(ErlangCompositeElement o, AnnotationHolder annotationHolder) {
+  private static void markIfUnresolved(ErlangCompositeElement o, AnnotationHolder annotationHolder, String text) {
+    PsiReference reference = o.getReference();
+    if (reference != null && reference.resolve() == null) {
+      annotationHolder.createErrorAnnotation(o, text);
+    }
+  }
+
+  private static void markFirstChildAsKeyword(ErlangCompositeElement o, AnnotationHolder annotationHolder) {
     final PsiElement firstChild = o.getFirstChild();
     if (firstChild != null) {
       setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
