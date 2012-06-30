@@ -119,9 +119,10 @@ ERL_FILE
                 PsiElement(=)('=')
                 ERL_LIST_COMPREHENSION
                   PsiElement([)('[')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Cs')
+                  ERL_ARGUMENT_DEFINITION
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Cs')
                   PsiElement(||)('||')
                   ERL_LC_EXPRESSION
                     ERL_TUPLE_EXPRESSION
