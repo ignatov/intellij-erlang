@@ -26,5 +26,6 @@ public class ErlangFileTypeFactory extends FileTypeFactory {
   @Override
   public void createFileTypes(@NotNull FileTypeConsumer fileTypeConsumer) {
     fileTypeConsumer.consume(ErlangFileType.INSTANCE);
+    fileTypeConsumer.consume(ErlangFileType.HRL);
   }
 }
