@@ -106,8 +106,8 @@
   extends(".*_(expression|comprehension|literal|a)")=expression
   extends("atomic")=expression
 
-  implements("record_definition|function|q_var")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("record_definition|function|q_var")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("record_definition|function|q_var|module")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("record_definition|function|q_var|module")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
 forms ::= form ('.' form)*
@@ -127,7 +127,8 @@ record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
 }
 
 attribute ::= '-' (
-  export
+  module
+  | export
   | specification
   | callback_spec
   | atom_attribute
@@ -135,6 +136,10 @@ attribute ::= '-' (
 callback_spec ::= 'callback' type_spec {pin=1}
 specification ::= 'spec' type_spec {pin=1}
 export ::= 'export' '(' export_functions ')' {pin=1}
+module ::= 'module' '(' q_atom ')' {
+  pin=1
+  methods = [getName setName getNameIdentifier getTextOffset]
+}
 
 atom_attribute ::= q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
 private export_functions ::= '[' export_function (',' export_function)* ']'

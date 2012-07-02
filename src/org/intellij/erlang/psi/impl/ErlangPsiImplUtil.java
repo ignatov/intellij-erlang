@@ -3,7 +3,9 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -17,6 +19,7 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -160,5 +163,42 @@ public class ErlangPsiImplUtil {
       atom.getAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
     }
     return o;
+  }
+
+  @NotNull
+  public static String getName(@NotNull ErlangModule o) {
+    ErlangQAtom atom = o.getQAtom();
+    return atom == null ? "" : atom.getText();
+  }
+
+  @NotNull
+  public static PsiElement setName(@NotNull ErlangModule o, String newName) {
+    VirtualFile virtualFile = o.getContainingFile().getVirtualFile();
+    if (virtualFile != null) {
+      try {
+        // rename file first
+        // todo: use FileUtil#sanitizeFileName for filename validation
+        String ext = FileUtil.getExtension(virtualFile.getName());
+        virtualFile.rename(o, newName + "." + ext);
+
+        ErlangQAtom atom = o.getQAtom();
+        if (atom != null) {
+          atom.getAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+        }
+
+      } catch (IOException ignored) {
+      }
+    }
+    return o;
+  }
+
+  @NotNull
+  public static PsiElement getNameIdentifier(@NotNull ErlangModule o) {
+    ErlangQAtom atom = o.getQAtom();
+    return atom == null ? o : atom;
+  }
+
+  public static int getTextOffset(@NotNull ErlangModule o) {
+    return o.getNameIdentifier().getTextOffset();
   }
 }

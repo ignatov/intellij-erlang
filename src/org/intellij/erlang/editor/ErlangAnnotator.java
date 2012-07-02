@@ -56,6 +56,11 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       }
 
       @Override
+      public void visitModule(@NotNull ErlangModule o) {
+        markFirstChildAsKeyword(o, annotationHolder);
+      }
+
+      @Override
       public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
         markFirstChildAsKeyword(o, annotationHolder);
         PsiElement rec = o.getFirstChild();

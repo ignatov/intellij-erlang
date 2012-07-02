@@ -59,6 +59,7 @@ public interface ErlangTypes {
   IElementType ERL_LIST_COMPREHENSION = new ErlangCompositeElementType("ERL_LIST_COMPREHENSION");
   IElementType ERL_LIST_EXPRESSION = new ErlangCompositeElementType("ERL_LIST_EXPRESSION");
   IElementType ERL_MAX_EXPRESSION = new ErlangCompositeElementType("ERL_MAX_EXPRESSION");
+  IElementType ERL_MODULE = new ErlangCompositeElementType("ERL_MODULE");
   IElementType ERL_MULTIPLICATIVE_EXPRESSION = new ErlangCompositeElementType("ERL_MULTIPLICATIVE_EXPRESSION");
   IElementType ERL_OPT_BIT_TYPE_LIST = new ErlangCompositeElementType("ERL_OPT_BIT_TYPE_LIST");
   IElementType ERL_PARENTHESIZED_EXPRESSION = new ErlangCompositeElementType("ERL_PARENTHESIZED_EXPRESSION");
@@ -314,6 +315,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_MAX_EXPRESSION) {
         return new ErlangMaxExpressionImpl(node);
+      }
+      else if (type == ERL_MODULE) {
+        return new ErlangModuleImpl(node);
       }
       else if (type == ERL_MULTIPLICATIVE_EXPRESSION) {
         return new ErlangMultiplicativeExpressionImpl(node);

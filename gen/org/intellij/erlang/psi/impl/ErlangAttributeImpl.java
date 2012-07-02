@@ -36,6 +36,12 @@ public class ErlangAttributeImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @Nullable
+  public ErlangModule getModule() {
+    return findChildByClass(ErlangModule.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangSpecification getSpecification() {
     return findChildByClass(ErlangSpecification.class);
   }

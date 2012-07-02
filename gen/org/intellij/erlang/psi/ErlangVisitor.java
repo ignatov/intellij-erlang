@@ -206,6 +206,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitModule(@NotNull ErlangModule o) {
+    visitNamedElement(o);
+  }
+
   public void visitMultiplicativeExpression(@NotNull ErlangMultiplicativeExpression o) {
     visitExpression(o);
   }

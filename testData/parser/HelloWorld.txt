@@ -1,15 +1,12 @@
 ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
+    ERL_MODULE
+      PsiElement(atom)('module')
+      PsiElement(()('(')
       ERL_Q_ATOM
-        PsiElement(atom)('module')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_EXPRESSION
-          ERL_Q_ATOM
-            PsiElement(atom)('test')
-        PsiElement())(')')
+        PsiElement(atom)('test')
+      PsiElement())(')')
   PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')

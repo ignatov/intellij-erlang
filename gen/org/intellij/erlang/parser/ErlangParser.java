@@ -170,6 +170,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_MAX_EXPRESSION) {
       result_ = max_expression(builder_, level_ + 1);
     }
+    else if (root_ == ERL_MODULE) {
+      result_ = module(builder_, level_ + 1);
+    }
     else if (root_ == ERL_MULTIPLICATIVE_EXPRESSION) {
       result_ = multiplicative_expression(builder_, level_ + 1);
     }
@@ -639,7 +642,8 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // '-' (
-  //   export
+  //   module
+  //   | export
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -664,7 +668,8 @@ public class ErlangParser implements PsiParser {
   }
 
   // (
-  //   export
+  //   module
+  //   | export
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -674,7 +679,8 @@ public class ErlangParser implements PsiParser {
     return attribute_1_0(builder_, level_ + 1);
   }
 
-  // export
+  // module
+  //   | export
   //   | specification
   //   | callback_spec
   //   | atom_attribute
@@ -682,7 +688,8 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "attribute_1_0")) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
-    result_ = export(builder_, level_ + 1);
+    result_ = module(builder_, level_ + 1);
+    if (!result_) result_ = export(builder_, level_ + 1);
     if (!result_) result_ = specification(builder_, level_ + 1);
     if (!result_) result_ = callback_spec(builder_, level_ + 1);
     if (!result_) result_ = atom_attribute(builder_, level_ + 1);
@@ -3009,6 +3016,29 @@ public class ErlangParser implements PsiParser {
       marker_.rollbackTo();
     }
     return result_;
+  }
+
+  /* ********************************************************** */
+  // 'module' '(' q_atom ')'
+  public static boolean module(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "module")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    final Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
+    result_ = consumeToken(builder_, "module");
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, q_atom(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_MODULE);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */
