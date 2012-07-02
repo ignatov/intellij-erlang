@@ -1,14 +1,12 @@
 package org.intellij.erlang;
 
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.patterns.ElementPattern;
 import com.intellij.patterns.ElementPatternCondition;
 import com.intellij.psi.PsiElement;
 import com.intellij.refactoring.rename.RenameInputValidator;
 import com.intellij.util.ProcessingContext;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangQAtom;
-import org.intellij.erlang.psi.ErlangQVar;
-import org.intellij.erlang.psi.ErlangRecordDefinition;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +24,8 @@ public class ErlangRenameInputValidator implements RenameInputValidator {
 
       @Override
       public boolean accepts(@Nullable Object o, ProcessingContext context) {
-        return o instanceof ErlangQVar || o instanceof ErlangQAtom || o instanceof ErlangFunction || o instanceof ErlangRecordDefinition;
+        return o instanceof ErlangQVar || o instanceof ErlangQAtom ||
+          o instanceof ErlangFunction || o instanceof ErlangRecordDefinition || o instanceof ErlangModule;
       }
 
       @Override
@@ -47,8 +46,11 @@ public class ErlangRenameInputValidator implements RenameInputValidator {
         ErlangElementFactory.createQAtomFromText(o.getProject(), s);
         return true;
       }
-    } catch (Exception e) {
-      return false;
+      else if (o instanceof ErlangModule) {
+        ErlangElementFactory.createQAtomFromText(o.getProject(), s);
+        return s != null && s.equals(FileUtil.sanitizeFileName(s));
+      }
+    } catch (Exception ignored) {
     }
     return false;
   }

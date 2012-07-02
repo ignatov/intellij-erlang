@@ -6,15 +6,14 @@ import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inAtomAttribute;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inDefinition;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignment;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 /**
  * @author ignatov
@@ -58,6 +57,14 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitModule(@NotNull ErlangModule o) {
         markFirstChildAsKeyword(o, annotationHolder);
+        String ext = FileUtil.getExtension(o.getContainingFile().getName());
+        String withoutExtension = FileUtil.getNameWithoutExtension(o.getContainingFile().getName());
+        String moduleName = o.getName();
+        ErlangCompositeElement atom = o.getQAtom();
+        if (atom != null && !moduleName.equals(withoutExtension)) {
+          annotationHolder.createErrorAnnotation(atom, "Module with name '" + moduleName + "' should be declared in a file named '" +
+            moduleName + "." + ext + "'.");
+        }
       }
 
       @Override
