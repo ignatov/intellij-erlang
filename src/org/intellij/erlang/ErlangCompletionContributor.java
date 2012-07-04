@@ -13,6 +13,7 @@ import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -28,7 +29,14 @@ public class ErlangCompletionContributor extends CompletionContributor {
     extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFileImpl.class)), new CompletionProvider<CompletionParameters>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
-        for (String keywords : suggestKeywords(parameters.getPosition())) {
+        // add completion for records on #<caret>
+        PsiElement position = parameters.getPosition();
+        PsiElement prevSibling = position.getParent().getPrevSibling();
+        if (prevSibling!= null && "#".equals(prevSibling.getText())) {
+          result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(position.getContainingFile()));
+        }
+
+        for (String keywords : suggestKeywords(position)) {
           result.addElement(LookupElementBuilder.create(keywords).setBold());
         }
       }
