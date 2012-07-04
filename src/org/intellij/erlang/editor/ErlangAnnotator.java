@@ -26,7 +26,15 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       public void visitQVar(@NotNull ErlangQVar o) {
         setHighlighting(o, annotationHolder, ErlangSyntaxHighlighter.VARIABLES);
         if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o)) return;
-        markIfUnresolved(o, annotationHolder, "Unresolved variable " + o.getText());
+        markIfUnresolved(o, o, annotationHolder, "Unresolved variable " + o.getText());
+      }
+
+      @Override
+      public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
+        ErlangQAtom atomName = o.getAtomName();
+        if (atomName != null) {
+          markIfUnresolved(o, atomName, annotationHolder, "Unresolved record " + atomName.getText());
+        }
       }
 
       @Override
@@ -82,17 +90,17 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       @Override
       public void visitExportFunction(@NotNull ErlangExportFunction o) {
-        markIfUnresolved(o, annotationHolder, "Unresolved function " + o.getText());
+        markIfUnresolved(o, o, annotationHolder, "Unresolved function " + o.getText());
       }
 
       // todo: add export, import and other bundled attributes
     });
   }
 
-  private static void markIfUnresolved(ErlangCompositeElement o, AnnotationHolder annotationHolder, String text) {
+  private static void markIfUnresolved(ErlangCompositeElement o, ErlangCompositeElement errorElement, AnnotationHolder annotationHolder, String text) {
     PsiReference reference = o.getReference();
     if (reference != null && reference.resolve() == null) {
-      annotationHolder.createErrorAnnotation(o, text);
+      annotationHolder.createErrorAnnotation(errorElement, text);
     }
   }
 
