@@ -203,7 +203,7 @@ private argument_definition_list ::= '(' argument_definition? (',' argument_defi
 private clause_guard ::= when guard {pin=1}
 clause_body ::= '->' exprs {pin=1}
 
-expression ::= (q_atom | q_var)&(',' | ')' | '->' | '}' | ']' | ';') | catch_expression | expr_100_a
+expression ::= q_atom_or_var&(',' | ')' | '->' | '}' | ']' | ';') | catch_expression | expr_100_a
 private catch_expression ::= catch expression
 expr_100_a ::= expr_150_a [assignment_expression|send_expression]
 left assignment_expression ::= '=' expr_100_a
@@ -217,7 +217,7 @@ left additive_expression ::= add_op expr_500_a {pin=1}
 expr_500_a ::= prefix_expression multiplicative_expression*
 left multiplicative_expression ::= mult_op prefix_expression {pin=1}
 prefix_expression ::= prefix_op? expr_700_a {pin=0}
-expr_700_a ::= function_call_expression | record_expression | colon_qualified_expression
+expr_700_a ::= global_function_call_expression | function_call_expression | generic_function_call_expression | record_expression | colon_qualified_expression
 colon_qualified_expression ::= (max_expression | qualified_reference) colon_max_expression? {pin=0}
 private colon_max_expression ::= ':' max_expression
 private qualified_reference ::= q_atom qualified_expression*
@@ -274,11 +274,17 @@ record_expression ::= max_expression? '#' q_atom (('.' q_atom) | record_tuple) {
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
 private record_fields ::= record_field (',' record_field)*
-record_field ::= (q_atom | q_var) '=' expression
-function_call_expression ::= colon_qualified_expression argument_list {
-  pin=0
+record_field ::= q_atom_or_var '=' expression
+module_ref ::= q_atom {
   methods = [getReference]
 }
+global_function_call_expression ::= module_ref ':' function_call_expression {pin=0}
+function_call_expression ::= q_atom argument_list {
+  pin=0
+  methods = [getReference getNameIdentifier getTextOffset]
+}
+generic_function_call_expression ::= (q_atom_or_var ':')? q_atom_or_var argument_list {pin=0}
+private q_atom_or_var ::= q_atom | q_var
 
 if_expression ::= if if_clauses end
 private if_clauses ::= if_clause (';' if_clause)*
@@ -296,7 +302,7 @@ fun_clause ::= argument_definition_list clause_guard? clause_body
 try_expression ::= try exprs (of cr_clauses)? try_catch
 try_catch ::= (catch try_clauses [after exprs] end) | (after exprs end) {pin(".*")="catch|after"}
 private try_clauses ::= try_clause (';' try_clause)*
-try_clause ::= [(q_atom | q_var) ':'] argument_definition clause_guard? clause_body
+try_clause ::= [q_atom_or_var ':'] argument_definition clause_guard? clause_body
 
 query_expression ::= query list_comprehension end
 argument_list ::= '(' exprs? ')'

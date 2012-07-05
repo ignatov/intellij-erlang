@@ -39,16 +39,23 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangFunctionCallExpression o) {
-    ErlangQAtom atom = o.getExpression().getQAtom();
-    return atom == null ? null : new ErlangFunctionReferenceImpl<ErlangQAtom>(
-      atom, TextRange.from(0, atom.getTextLength()),
-      atom.getText(), o.getArgumentList().getExpressionList().size());
+    PsiElement parent = o.getParent();
+    ErlangModuleRef moduleReference = null;
+    if (parent instanceof ErlangGlobalFunctionCallExpression) {
+      moduleReference = ((ErlangGlobalFunctionCallExpression) parent).getModuleRef();
+    }
+    ErlangQAtom moduleAtom = moduleReference == null ? null : moduleReference.getQAtom();
+    ErlangQAtom nameAtom = o.getQAtom();
+
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(
+      nameAtom, moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
+      nameAtom.getText(), o.getArgumentList().getExpressionList().size());
   }
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportFunction o) {
     PsiElement arity = o.getInteger();
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), TextRange.from(0, o.getQAtom().getTextLength()),
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), null, TextRange.from(0, o.getQAtom().getTextLength()),
       o.getQAtom().getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
   }
 
@@ -138,8 +145,15 @@ public class ErlangPsiImplUtil {
   public static PsiReference getReference(@NotNull ErlangRecordExpression o) {
     ErlangQAtom atom = o.getAtomName();
     if (atom == null) return null;
-    return new ErlangRecordReferenceImpl<ErlangQAtom>(atom,
+    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom,
       TextRange.from(0, atom.getTextLength()), atom.getText());
+  }
+
+  @Nullable
+  public static PsiReference getReference(@NotNull ErlangModuleRef o) {
+    ErlangQAtom atom = o.getQAtom();
+    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom,
+      TextRange.from(0, atom.getTextLength()), atom.getText() + ".erl");
   }
 
   @NotNull
@@ -176,8 +190,6 @@ public class ErlangPsiImplUtil {
     VirtualFile virtualFile = o.getContainingFile().getVirtualFile();
     if (virtualFile != null) {
       try {
-        // rename file first
-        // todo: use FileUtil#sanitizeFileName for filename validation
         String ext = FileUtil.getExtension(virtualFile.getName());
         virtualFile.rename(o, newName + "." + ext);
 
@@ -185,7 +197,6 @@ public class ErlangPsiImplUtil {
         if (atom != null) {
           atom.getAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
         }
-
       } catch (IOException ignored) {
       }
     }
@@ -200,5 +211,14 @@ public class ErlangPsiImplUtil {
 
   public static int getTextOffset(@NotNull ErlangModule o) {
     return o.getNameIdentifier().getTextOffset();
+  }
+
+  @NotNull
+  public static PsiElement getNameIdentifier(@NotNull ErlangFunctionCallExpression o) {
+    return o.getQAtom();
+  }
+
+  public static int getTextOffset(@NotNull ErlangFunctionCallExpression o) {
+    return o.getQAtom().getTextOffset();
   }
 }

@@ -94,18 +94,17 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('races')
             PsiElement(=)('=')
-            ERL_FUNCTION_CALL_EXPRESSION
-              ERL_COLON_QUALIFIED_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('dialyzer_races')
-                PsiElement(:)(':')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('new')
-              ERL_ARGUMENT_LIST
-                PsiElement(()('(')
-                PsiElement())(')')
+            ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+              ERL_MODULE_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('dialyzer_races')
+              PsiElement(:)(':')
+              ERL_FUNCTION_CALL_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('new')
+                ERL_ARGUMENT_LIST
+                  PsiElement(()('(')
+                  PsiElement())(')')
           PsiElement(::)('::')
           ERL_TOP_TYPE
             ERL_TOP_TYPE_100_T
@@ -124,18 +123,17 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('records')
             PsiElement(=)('=')
-            ERL_FUNCTION_CALL_EXPRESSION
-              ERL_COLON_QUALIFIED_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('dict')
-                PsiElement(:)(':')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('new')
-              ERL_ARGUMENT_LIST
-                PsiElement(()('(')
-                PsiElement())(')')
+            ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+              ERL_MODULE_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('dict')
+              PsiElement(:)(':')
+              ERL_FUNCTION_CALL_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('new')
+                ERL_ARGUMENT_LIST
+                  PsiElement(()('(')
+                  PsiElement())(')')
           PsiElement(::)('::')
           ERL_TOP_TYPE
             ERL_TOP_TYPE_100_T
@@ -284,9 +282,8 @@ ERL_FILE
         PsiElement(atom)('opaque')
       ERL_TYPED_ATTR_VAL
         ERL_FUNCTION_CALL_EXPRESSION
-          ERL_MAX_EXPRESSION
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+          ERL_Q_ATOM
+            PsiElement(atom)('state')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             PsiElement())(')')

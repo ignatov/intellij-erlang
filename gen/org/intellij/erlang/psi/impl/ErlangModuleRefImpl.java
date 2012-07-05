@@ -11,16 +11,10 @@ import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.PsiReference;
 
-public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl implements ErlangFunctionCallExpression {
+public class ErlangModuleRefImpl extends ErlangCompositeElementImpl implements ErlangModuleRef {
 
-  public ErlangFunctionCallExpressionImpl(ASTNode node) {
+  public ErlangModuleRefImpl(ASTNode node) {
     super(node);
-  }
-
-  @Override
-  @NotNull
-  public ErlangArgumentList getArgumentList() {
-    return findNotNullChildByClass(ErlangArgumentList.class);
   }
 
   @Override
@@ -30,22 +24,13 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunctionCallExpression(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitModuleRef(this);
     else super.accept(visitor);
   }
 
   @Nullable
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
-  }
-
-  @NotNull
-  public PsiElement getNameIdentifier() {
-    return ErlangPsiImplUtil.getNameIdentifier(this);
-  }
-
-  public int getTextOffset() {
-    return ErlangPsiImplUtil.getTextOffset(this);
   }
 
 }

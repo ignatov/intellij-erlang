@@ -56,9 +56,8 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_EXPR_300_A
           ERL_FUNCTION_CALL_EXPRESSION
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                PsiElement(atom)('naive_reverse')
+            ERL_Q_ATOM
+              PsiElement(atom)('naive_reverse')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_EXPRESSION
@@ -96,20 +95,19 @@ ERL_FILE
       PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_COLON_QUALIFIED_EXPRESSION
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                PsiElement(atom)('io')
-            PsiElement(:)(':')
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                PsiElement(atom)('fwrite')
-          ERL_ARGUMENT_LIST
-            PsiElement(()('(')
-            ERL_MAX_EXPRESSION
-              PsiElement(string)('"hello, world"')
-            PsiElement())(')')
+        ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+          ERL_MODULE_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('io')
+          PsiElement(:)(':')
+          ERL_FUNCTION_CALL_EXPRESSION
+            ERL_Q_ATOM
+              PsiElement(atom)('fwrite')
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_MAX_EXPRESSION
+                PsiElement(string)('"hello, world"')
+              PsiElement())(')')
   PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -119,20 +117,19 @@ ERL_FILE
       PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_COLON_QUALIFIED_EXPRESSION
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                PsiElement(atom)('io')
-            PsiElement(:)(':')
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                PsiElement(atom)('fwrite')
-          ERL_ARGUMENT_LIST
-            PsiElement(()('(')
-            ERL_MAX_EXPRESSION
-              PsiElement(string)('"hello, world"')
-            PsiElement())(')')
+        ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+          ERL_MODULE_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('io')
+          PsiElement(:)(':')
+          ERL_FUNCTION_CALL_EXPRESSION
+            ERL_Q_ATOM
+              PsiElement(atom)('fwrite')
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_MAX_EXPRESSION
+                PsiElement(string)('"hello, world"')
+              PsiElement())(')')
   PsiElement(.)('.')
   PsiComment(ERL_LINE_COMMENT)('%-type eval() :: 'pos' | 'neg' | 'dont_know'.')
   ERL_FUNCTION

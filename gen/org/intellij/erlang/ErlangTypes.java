@@ -51,6 +51,8 @@ public interface ErlangTypes {
   IElementType ERL_FUN_EXPRESSION = new ErlangCompositeElementType("ERL_FUN_EXPRESSION");
   IElementType ERL_FUN_TYPE = new ErlangCompositeElementType("ERL_FUN_TYPE");
   IElementType ERL_FUN_TYPE_100_T = new ErlangCompositeElementType("ERL_FUN_TYPE_100_T");
+  IElementType ERL_GENERIC_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GENERIC_FUNCTION_CALL_EXPRESSION");
+  IElementType ERL_GLOBAL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GLOBAL_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GUARD = new ErlangCompositeElementType("ERL_GUARD");
   IElementType ERL_IF_CLAUSE = new ErlangCompositeElementType("ERL_IF_CLAUSE");
   IElementType ERL_IF_EXPRESSION = new ErlangCompositeElementType("ERL_IF_EXPRESSION");
@@ -60,6 +62,7 @@ public interface ErlangTypes {
   IElementType ERL_LIST_EXPRESSION = new ErlangCompositeElementType("ERL_LIST_EXPRESSION");
   IElementType ERL_MAX_EXPRESSION = new ErlangCompositeElementType("ERL_MAX_EXPRESSION");
   IElementType ERL_MODULE = new ErlangCompositeElementType("ERL_MODULE");
+  IElementType ERL_MODULE_REF = new ErlangCompositeElementType("ERL_MODULE_REF");
   IElementType ERL_MULTIPLICATIVE_EXPRESSION = new ErlangCompositeElementType("ERL_MULTIPLICATIVE_EXPRESSION");
   IElementType ERL_OPT_BIT_TYPE_LIST = new ErlangCompositeElementType("ERL_OPT_BIT_TYPE_LIST");
   IElementType ERL_PARENTHESIZED_EXPRESSION = new ErlangCompositeElementType("ERL_PARENTHESIZED_EXPRESSION");
@@ -292,6 +295,12 @@ public interface ErlangTypes {
       else if (type == ERL_FUN_TYPE_100_T) {
         return new ErlangFunType100TImpl(node);
       }
+      else if (type == ERL_GENERIC_FUNCTION_CALL_EXPRESSION) {
+        return new ErlangGenericFunctionCallExpressionImpl(node);
+      }
+      else if (type == ERL_GLOBAL_FUNCTION_CALL_EXPRESSION) {
+        return new ErlangGlobalFunctionCallExpressionImpl(node);
+      }
       else if (type == ERL_GUARD) {
         return new ErlangGuardImpl(node);
       }
@@ -318,6 +327,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_MODULE) {
         return new ErlangModuleImpl(node);
+      }
+      else if (type == ERL_MODULE_REF) {
+        return new ErlangModuleRefImpl(node);
       }
       else if (type == ERL_MULTIPLICATIVE_EXPRESSION) {
         return new ErlangMultiplicativeExpressionImpl(node);

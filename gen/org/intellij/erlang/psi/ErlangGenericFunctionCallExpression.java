@@ -4,22 +4,16 @@ package org.intellij.erlang.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
 
-public interface ErlangFunctionCallExpression extends ErlangExpression {
+public interface ErlangGenericFunctionCallExpression extends ErlangExpression {
 
   @NotNull
   ErlangArgumentList getArgumentList();
 
   @NotNull
-  ErlangQAtom getQAtom();
-
-  @Nullable
-  PsiReference getReference();
+  List<ErlangQAtom> getQAtomList();
 
   @NotNull
-  PsiElement getNameIdentifier();
-
-  int getTextOffset();
+  List<ErlangQVar> getQVarList();
 
 }

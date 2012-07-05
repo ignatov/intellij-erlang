@@ -174,6 +174,14 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitGenericFunctionCallExpression(@NotNull ErlangGenericFunctionCallExpression o) {
+    visitExpression(o);
+  }
+
+  public void visitGlobalFunctionCallExpression(@NotNull ErlangGlobalFunctionCallExpression o) {
+    visitExpression(o);
+  }
+
   public void visitGuard(@NotNull ErlangGuard o) {
     visitCompositeElement(o);
   }
@@ -208,6 +216,10 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitModule(@NotNull ErlangModule o) {
     visitNamedElement(o);
+  }
+
+  public void visitModuleRef(@NotNull ErlangModuleRef o) {
+    visitCompositeElement(o);
   }
 
   public void visitMultiplicativeExpression(@NotNull ErlangMultiplicativeExpression o) {

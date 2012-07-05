@@ -6,20 +6,12 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 
-public interface ErlangFunctionCallExpression extends ErlangExpression {
-
-  @NotNull
-  ErlangArgumentList getArgumentList();
+public interface ErlangModuleRef extends ErlangCompositeElement {
 
   @NotNull
   ErlangQAtom getQAtom();
 
   @Nullable
   PsiReference getReference();
-
-  @NotNull
-  PsiElement getNameIdentifier();
-
-  int getTextOffset();
 
 }

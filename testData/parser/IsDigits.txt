@@ -41,9 +41,8 @@ ERL_FILE
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_FUNCTION_CALL_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('is_digits')
+                ERL_Q_ATOM
+                  PsiElement(atom)('is_digits')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
                   ERL_EXPRESSION
