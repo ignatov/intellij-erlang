@@ -145,7 +145,7 @@ public class ErlangPsiImplUtil {
   public static PsiReference getReference(@NotNull ErlangRecordExpression o) {
     ErlangQAtom atom = o.getAtomName();
     if (atom == null) return null;
-    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom,
+    return new ErlangRecordReferenceImpl<ErlangQAtom>(atom,
       TextRange.from(0, atom.getTextLength()), atom.getText());
   }
 
