@@ -39,7 +39,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   public static class Model extends StructureViewModelBase implements StructureViewModel.ElementInfoProvider {
     public Model(PsiFile psiFile) {
       super(psiFile, new Element(psiFile));
-      withSuitableClasses(ErlangFile.class, ErlangFunction.class, ErlangFunctionClause.class, ErlangAttribute.class);
+      withSuitableClasses(ErlangFile.class, ErlangFunction.class, ErlangFunctionClause.class);
     }
 
     @Override
@@ -99,10 +99,8 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
             result.add(new Element(o));
           }
         }
-      } else if (myElement instanceof ErlangFile) {
-        for (ErlangAttribute o : ((ErlangFile) myElement).getAttributes()) {
-          result.add(new Element(o));
-        }
+      }
+      else if (myElement instanceof ErlangFile) {
         for (ErlangRecordDefinition o : ((ErlangFile) myElement).getRecords()) {
           result.add(new Element(o));
         }
@@ -131,22 +129,12 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       if (myElement instanceof ErlangFunction) {
         final int argCount = ((ErlangFunction) myElement).getArity();
         return ((ErlangFunction) myElement).getName() + "/" + argCount;
-      } else if (myElement instanceof ErlangFile) {
+      }
+      else if (myElement instanceof ErlangFile) {
         return ((ErlangFile) myElement).getName();
-      } else if (myElement instanceof ErlangRecordDefinition) {
+      }
+      else if (myElement instanceof ErlangRecordDefinition) {
         return ((ErlangRecordDefinition) myElement).getName();
-      } else if (myElement instanceof ErlangAttribute) {
-        ErlangAtomAttribute attribute = ((ErlangAttribute) myElement).getAtomAttribute();
-        ErlangSpecification specification = ((ErlangAttribute) myElement).getSpecification();
-        ErlangCallbackSpec callbackSpec = ((ErlangAttribute) myElement).getCallbackSpec();
-        ErlangExport export = ((ErlangAttribute) myElement).getExport();
-        String name = myElement.getChildren().length > 1 ? myElement.getChildren()[1].getText() : "<empty>";
-        return "-" + (attribute != null ? attribute.getQAtom().getText() :
-          specification != null ? "spec" :
-            callbackSpec != null ? "callback" :
-              export != null ? "export" :
-                name
-        );
       }
       throw new AssertionError(myElement.getClass().getName());
     }
@@ -161,11 +149,14 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     public Icon getIcon(boolean open) {
       if (myElement instanceof ErlangFunction) {
         return ErlangIcons.FUNCTION;
-      } else if (myElement instanceof ErlangFunctionClause) {
+      }
+      else if (myElement instanceof ErlangFunctionClause) {
         return ErlangIcons.FUNCTION_CLAUSE;
-      } else if (myElement instanceof ErlangAttribute) {
+      }
+      else if (myElement instanceof ErlangAttribute) {
         return ErlangIcons.ATTRIBUTE;
-      } else if (myElement instanceof ErlangRecordDefinition) {
+      }
+      else if (myElement instanceof ErlangRecordDefinition) {
         return ErlangIcons.RECORD;
       }
       return myElement.getIcon(0);
