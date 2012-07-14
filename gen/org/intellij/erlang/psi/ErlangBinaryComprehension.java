@@ -7,7 +7,10 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangBinaryComprehension extends ErlangExpression {
 
+  @Nullable
+  ErlangBinaryLcExprs getBinaryLcExprs();
+
   @NotNull
-  List<ErlangExpression> getExpressionList();
+  ErlangExpression getExpression();
 
 }

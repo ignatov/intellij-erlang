@@ -10,20 +10,20 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangRuleBodyImpl extends ErlangCompositeElementImpl implements ErlangRuleBody {
+public class ErlangBinaryLcExprsImpl extends ErlangCompositeElementImpl implements ErlangBinaryLcExprs {
 
-  public ErlangRuleBodyImpl(ASTNode node) {
+  public ErlangBinaryLcExprsImpl(ASTNode node) {
     super(node);
   }
 
   @Override
-  @Nullable
-  public ErlangLcExprs getLcExprs() {
-    return findChildByClass(ErlangLcExprs.class);
+  @NotNull
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRuleBody(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinaryLcExprs(this);
     else super.accept(visitor);
   }
 

@@ -18,8 +18,14 @@ public class ErlangLcExpressionImpl extends ErlangExpressionImpl implements Erla
 
   @Override
   @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  public ErlangArgumentDefinition getArgumentDefinition() {
+    return findNotNullChildByClass(ErlangArgumentDefinition.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangExpression getExpression() {
+    return findChildByClass(ErlangExpression.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

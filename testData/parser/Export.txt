@@ -115,26 +115,27 @@ ERL_FILE
                 PsiElement(=)('=')
                 ERL_LIST_COMPREHENSION
                   PsiElement([)('[')
-                  ERL_ARGUMENT_DEFINITION
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Cs')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Cs')
                   PsiElement(||)('||')
-                  ERL_LC_EXPRESSION
-                    ERL_TUPLE_EXPRESSION
-                      PsiElement({)('{')
+                  ERL_LC_EXPRS
+                    ERL_LC_EXPRESSION
+                      ERL_ARGUMENT_DEFINITION
+                        ERL_TUPLE_EXPRESSION
+                          PsiElement({)('{')
+                          ERL_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(_)('_')
+                          PsiElement(,)(',')
+                          ERL_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Cs')
+                          PsiElement(})('}')
+                      PsiElement(<-)('<-')
                       ERL_EXPRESSION
                         ERL_Q_VAR
-                          PsiElement(_)('_')
-                      PsiElement(,)(',')
-                      ERL_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Cs')
-                      PsiElement(})('}')
-                    PsiElement(<-)('<-')
-                    ERL_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Cstructs0')
+                          PsiElement(var)('Cstructs0')
                   PsiElement(])(']')
               PsiElement(,)(',')
               ERL_FUNCTION_CALL_EXPRESSION

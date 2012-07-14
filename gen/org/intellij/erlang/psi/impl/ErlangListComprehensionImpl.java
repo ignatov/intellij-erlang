@@ -9,6 +9,8 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.psi.ResolveState;
 
 public class ErlangListComprehensionImpl extends ErlangExpressionImpl implements ErlangListComprehension {
 
@@ -18,19 +20,23 @@ public class ErlangListComprehensionImpl extends ErlangExpressionImpl implements
 
   @Override
   @NotNull
-  public ErlangArgumentDefinition getArgumentDefinition() {
-    return findNotNullChildByClass(ErlangArgumentDefinition.class);
+  public ErlangExpression getExpression() {
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   @Override
-  @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  @Nullable
+  public ErlangLcExprs getLcExprs() {
+    return findChildByClass(ErlangLcExprs.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitListComprehension(this);
     else super.accept(visitor);
+  }
+
+  public boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place) {
+    return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }
 
 }

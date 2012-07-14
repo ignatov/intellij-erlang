@@ -58,6 +58,14 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitBinaryLcExpression(@NotNull ErlangBinaryLcExpression o) {
+    visitExpression(o);
+  }
+
+  public void visitBinaryLcExprs(@NotNull ErlangBinaryLcExprs o) {
+    visitCompositeElement(o);
+  }
+
   public void visitBinaryType(@NotNull ErlangBinaryType o) {
     visitCompositeElement(o);
   }
@@ -200,6 +208,10 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitLcExpression(@NotNull ErlangLcExpression o) {
     visitExpression(o);
+  }
+
+  public void visitLcExprs(@NotNull ErlangLcExprs o) {
+    visitCompositeElement(o);
   }
 
   public void visitListComprehension(@NotNull ErlangListComprehension o) {

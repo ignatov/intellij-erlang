@@ -12,9 +12,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.ErlangIcons;
-import org.intellij.erlang.psi.ErlangArgumentDefinition;
-import org.intellij.erlang.psi.ErlangFunctionClause;
-import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -35,7 +33,9 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
   public PsiElement resolve() {
     if (PsiTreeUtil.getParentOfType(myElement, ErlangArgumentDefinition.class) != null) return null;
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
-    ResolveUtil.treeWalkUp(myElement, processor);
+    ErlangListComprehension lc = PsiTreeUtil.getParentOfType(myElement, ErlangListComprehension.class);
+    ErlangCompositeElement place = lc != null ? lc.getLcExprs() : myElement;
+    ResolveUtil.treeWalkUp(place, processor);
     return processor.getResult();
   }
 

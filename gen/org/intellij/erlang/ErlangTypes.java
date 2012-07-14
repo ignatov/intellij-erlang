@@ -20,6 +20,8 @@ public interface ErlangTypes {
   IElementType ERL_BEGIN_END_EXPRESSION = new ErlangCompositeElementType("ERL_BEGIN_END_EXPRESSION");
   IElementType ERL_BINARY_COMPREHENSION = new ErlangCompositeElementType("ERL_BINARY_COMPREHENSION");
   IElementType ERL_BINARY_EXPRESSION = new ErlangCompositeElementType("ERL_BINARY_EXPRESSION");
+  IElementType ERL_BINARY_LC_EXPRESSION = new ErlangCompositeElementType("ERL_BINARY_LC_EXPRESSION");
+  IElementType ERL_BINARY_LC_EXPRS = new ErlangCompositeElementType("ERL_BINARY_LC_EXPRS");
   IElementType ERL_BINARY_TYPE = new ErlangCompositeElementType("ERL_BINARY_TYPE");
   IElementType ERL_BIN_BASE_TYPE = new ErlangCompositeElementType("ERL_BIN_BASE_TYPE");
   IElementType ERL_BIN_ELEMENT = new ErlangCompositeElementType("ERL_BIN_ELEMENT");
@@ -58,6 +60,7 @@ public interface ErlangTypes {
   IElementType ERL_IF_EXPRESSION = new ErlangCompositeElementType("ERL_IF_EXPRESSION");
   IElementType ERL_INT_TYPE = new ErlangCompositeElementType("ERL_INT_TYPE");
   IElementType ERL_LC_EXPRESSION = new ErlangCompositeElementType("ERL_LC_EXPRESSION");
+  IElementType ERL_LC_EXPRS = new ErlangCompositeElementType("ERL_LC_EXPRS");
   IElementType ERL_LIST_COMPREHENSION = new ErlangCompositeElementType("ERL_LIST_COMPREHENSION");
   IElementType ERL_LIST_EXPRESSION = new ErlangCompositeElementType("ERL_LIST_EXPRESSION");
   IElementType ERL_MAX_EXPRESSION = new ErlangCompositeElementType("ERL_MAX_EXPRESSION");
@@ -202,6 +205,12 @@ public interface ErlangTypes {
       else if (type == ERL_BINARY_EXPRESSION) {
         return new ErlangBinaryExpressionImpl(node);
       }
+      else if (type == ERL_BINARY_LC_EXPRESSION) {
+        return new ErlangBinaryLcExpressionImpl(node);
+      }
+      else if (type == ERL_BINARY_LC_EXPRS) {
+        return new ErlangBinaryLcExprsImpl(node);
+      }
       else if (type == ERL_BINARY_TYPE) {
         return new ErlangBinaryTypeImpl(node);
       }
@@ -315,6 +324,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_LC_EXPRESSION) {
         return new ErlangLcExpressionImpl(node);
+      }
+      else if (type == ERL_LC_EXPRS) {
+        return new ErlangLcExprsImpl(node);
       }
       else if (type == ERL_LIST_COMPREHENSION) {
         return new ErlangListComprehensionImpl(node);

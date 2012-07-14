@@ -5,12 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangLcExpression extends ErlangExpression {
+public interface ErlangBinaryLcExpression extends ErlangExpression {
 
   @NotNull
-  ErlangArgumentDefinition getArgumentDefinition();
-
-  @Nullable
-  ErlangExpression getExpression();
+  List<ErlangExpression> getExpressionList();
 
 }

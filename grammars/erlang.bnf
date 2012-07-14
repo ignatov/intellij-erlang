@@ -256,11 +256,16 @@ opt_bit_type_list ::= '/' bit_type_list {pin=1}
 bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
 
-list_comprehension ::= '[' argument_definition '||' lc_exprs ']' {pin=3}
-binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {pin=3} // todo: definition
-private lc_exprs ::= lc_expression (',' lc_expression)*
+list_comprehension ::= '[' expression '||' lc_exprs ']' {
+  pin=3
+  methods=[processDeclarations]
+}
+binary_comprehension ::= '<<' binary_expression '||' binary_lc_exprs '>>' {pin=3} // todo: definition
+lc_exprs ::= lc_expression (',' lc_expression)*
+binary_lc_exprs ::= binary_lc_expression (',' binary_lc_expression)*
 
-lc_expression ::= (expression ('<-' expression)?) | (binary_expression '<=' expression) {pin=0}
+lc_expression ::= (argument_definition ('<-' expression)?) {pin=0}
+binary_lc_expression ::= (binary_expression '<=' expression) {pin=0}
 
 tuple_expression ::= '{' exprs? '}' {pin=1}
 

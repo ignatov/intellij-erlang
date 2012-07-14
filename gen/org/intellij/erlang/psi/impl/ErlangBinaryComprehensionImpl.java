@@ -17,9 +17,15 @@ public class ErlangBinaryComprehensionImpl extends ErlangExpressionImpl implemen
   }
 
   @Override
+  @Nullable
+  public ErlangBinaryLcExprs getBinaryLcExprs() {
+    return findChildByClass(ErlangBinaryLcExprs.class);
+  }
+
+  @Override
   @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  public ErlangExpression getExpression() {
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

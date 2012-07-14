@@ -20,8 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class ErlangPsiImplUtil {
   private ErlangPsiImplUtil() {
@@ -221,4 +220,16 @@ public class ErlangPsiImplUtil {
   public static int getTextOffset(@NotNull ErlangFunctionCallExpression o) {
     return o.getQAtom().getTextOffset();
   }
+
+  public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    Queue<ErlangCompositeElement> queue = new LinkedList<ErlangCompositeElement>();
+    queue.add(o);
+    while (!queue.isEmpty()) {
+      ErlangCompositeElement top = queue.remove();
+      if (!processor.execute(top, state)) return false;
+      queue.addAll(PsiTreeUtil.getChildrenOfTypeAsList(top, ErlangCompositeElement.class));
+    }
+    return true;
+  }
+
 }
