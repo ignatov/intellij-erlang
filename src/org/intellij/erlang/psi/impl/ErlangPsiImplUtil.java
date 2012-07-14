@@ -20,7 +20,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 public class ErlangPsiImplUtil {
   private ErlangPsiImplUtil() {
@@ -70,6 +73,10 @@ public class ErlangPsiImplUtil {
     ErlangAssignmentExpression assignmentExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
     if (assignmentExpression == null) return false;
     return PsiTreeUtil.isAncestor(assignmentExpression.getLeft(), psiElement, false);
+  }
+
+  public static boolean isMacros(ErlangQVar o) {
+    return o.getName().startsWith("?");
   }
 
   @NotNull
@@ -231,5 +238,4 @@ public class ErlangPsiImplUtil {
     }
     return true;
   }
-
 }
