@@ -237,7 +237,6 @@ max_expression ::=
   | query_expression
   | parenthesized_expression
   | binary_expression
-  | binary_comprehension
   | begin_end_expression
 
 begin_end_expression ::= begin exprs end
@@ -260,12 +259,9 @@ list_comprehension ::= '[' expression '||' lc_exprs ']' {
   pin=3
   methods=[processDeclarations]
 }
-binary_comprehension ::= '<<' binary_expression '||' binary_lc_exprs '>>' {pin=3} // todo: definition
 lc_exprs ::= lc_expression (',' lc_expression)*
-binary_lc_exprs ::= binary_lc_expression (',' binary_lc_expression)*
 
-lc_expression ::= (argument_definition ('<-' expression)?) {pin=0}
-binary_lc_expression ::= (binary_expression '<=' expression) {pin=0}
+lc_expression ::= (argument_definition (('<-' | '<=') expression)?) {pin=0}
 
 tuple_expression ::= '{' exprs? '}' {pin=1}
 

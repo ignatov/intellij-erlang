@@ -50,20 +50,8 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
-  public void visitBinaryComprehension(@NotNull ErlangBinaryComprehension o) {
-    visitExpression(o);
-  }
-
   public void visitBinaryExpression(@NotNull ErlangBinaryExpression o) {
     visitExpression(o);
-  }
-
-  public void visitBinaryLcExpression(@NotNull ErlangBinaryLcExpression o) {
-    visitExpression(o);
-  }
-
-  public void visitBinaryLcExprs(@NotNull ErlangBinaryLcExprs o) {
-    visitCompositeElement(o);
   }
 
   public void visitBinaryType(@NotNull ErlangBinaryType o) {

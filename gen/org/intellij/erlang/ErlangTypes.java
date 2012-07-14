@@ -18,10 +18,7 @@ public interface ErlangTypes {
   IElementType ERL_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATTRIBUTE");
   IElementType ERL_ATTR_VAL = new ErlangCompositeElementType("ERL_ATTR_VAL");
   IElementType ERL_BEGIN_END_EXPRESSION = new ErlangCompositeElementType("ERL_BEGIN_END_EXPRESSION");
-  IElementType ERL_BINARY_COMPREHENSION = new ErlangCompositeElementType("ERL_BINARY_COMPREHENSION");
   IElementType ERL_BINARY_EXPRESSION = new ErlangCompositeElementType("ERL_BINARY_EXPRESSION");
-  IElementType ERL_BINARY_LC_EXPRESSION = new ErlangCompositeElementType("ERL_BINARY_LC_EXPRESSION");
-  IElementType ERL_BINARY_LC_EXPRS = new ErlangCompositeElementType("ERL_BINARY_LC_EXPRS");
   IElementType ERL_BINARY_TYPE = new ErlangCompositeElementType("ERL_BINARY_TYPE");
   IElementType ERL_BIN_BASE_TYPE = new ErlangCompositeElementType("ERL_BIN_BASE_TYPE");
   IElementType ERL_BIN_ELEMENT = new ErlangCompositeElementType("ERL_BIN_ELEMENT");
@@ -199,17 +196,8 @@ public interface ErlangTypes {
       else if (type == ERL_BEGIN_END_EXPRESSION) {
         return new ErlangBeginEndExpressionImpl(node);
       }
-      else if (type == ERL_BINARY_COMPREHENSION) {
-        return new ErlangBinaryComprehensionImpl(node);
-      }
       else if (type == ERL_BINARY_EXPRESSION) {
         return new ErlangBinaryExpressionImpl(node);
-      }
-      else if (type == ERL_BINARY_LC_EXPRESSION) {
-        return new ErlangBinaryLcExpressionImpl(node);
-      }
-      else if (type == ERL_BINARY_LC_EXPRS) {
-        return new ErlangBinaryLcExprsImpl(node);
       }
       else if (type == ERL_BINARY_TYPE) {
         return new ErlangBinaryTypeImpl(node);
