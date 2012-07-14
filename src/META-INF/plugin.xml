@@ -13,6 +13,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
         <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
+        <lang.findUsagesProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangFindUsagesProvider"/>
+        <elementDescriptionProvider implementation="org.intellij.erlang.ErlangDescriptionProvider"/>
         <lang.parserDefinition language="Erlang" implementationClass="org.intellij.erlang.ErlangParserDefinition"/>
         <annotator language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangAnnotator"/>
         <lang.syntaxHighlighterFactory key="Erlang" implementationClass="org.intellij.erlang.editor.ErlangSyntaxHighlighterFactory"/>
