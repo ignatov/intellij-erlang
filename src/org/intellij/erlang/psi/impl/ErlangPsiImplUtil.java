@@ -36,6 +36,7 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangQVar o) {
+    if (inDefinition(o)) return null;
     return new ErlangVariableReferenceImpl(o, TextRange.from(0, o.getTextLength()));
   }
 
@@ -228,10 +229,12 @@ public class ErlangPsiImplUtil {
     return o.getQAtom().getTextOffset();
   }
 
+  @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return processDeclarationRecursive(o, processor, state);
   }
 
+  @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangModule o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return processDeclarationRecursive(o, processor, state);
   }

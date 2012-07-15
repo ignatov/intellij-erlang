@@ -32,7 +32,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
 
   @Override
   public PsiElement resolve() {
-    if (PsiTreeUtil.getParentOfType(myElement, ErlangArgumentDefinition.class) != null) return null;
+//    if (PsiTreeUtil.getParentOfType(myElement, ErlangArgumentDefinition.class) != null) return null;
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
     ErlangListComprehension lc = PsiTreeUtil.getParentOfType(myElement, ErlangListComprehension.class);
     ErlangCompositeElement place = lc != null ? lc.getLcExprs() : myElement;

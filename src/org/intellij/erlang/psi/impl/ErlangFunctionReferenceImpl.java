@@ -4,11 +4,9 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ArrayUtil;
-import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangQAtom;
@@ -21,16 +19,14 @@ import java.util.List;
 /**
  * @author ignatov
  */
-public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiReferenceBase<T> {
+public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBasedReferenceImpl<T> {
   @Nullable
   private ErlangQAtom myModuleAtom;
-  private String myReferenceName;
   private int myArity;
 
   public ErlangFunctionReferenceImpl(@NotNull T element, @Nullable ErlangQAtom moduleAtom, TextRange range, String name, int arity) {
-    super(element, range);
+    super(element, range, name);
     myModuleAtom = moduleAtom;
-    myReferenceName = name;
     myArity = arity;
   }
 
@@ -61,12 +57,5 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiRefer
   public Object[] getVariants() {
     List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile());
     return ArrayUtil.toObjectArray(lookupElements);
-  }
-
-  @Override
-  public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    PsiElement atomFromText = ErlangElementFactory.createQAtomFromText(getElement().getProject(), newElementName);
-    myElement.getAtom().replace(atomFromText);
-    return myElement;
   }
 }
