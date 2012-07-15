@@ -10,26 +10,20 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangExpressionImpl extends ErlangCompositeElementImpl implements ErlangExpression {
+public class ErlangCrClausesImpl extends ErlangCompositeElementImpl implements ErlangCrClauses {
 
-  public ErlangExpressionImpl(ASTNode node) {
+  public ErlangCrClausesImpl(ASTNode node) {
     super(node);
   }
 
   @Override
-  @Nullable
-  public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangQVar getQVar() {
-    return findChildByClass(ErlangQVar.class);
+  @NotNull
+  public List<ErlangCrClause> getCrClauseList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangCrClause.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExpression(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCrClauses(this);
     else super.accept(visitor);
   }
 

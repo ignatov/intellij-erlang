@@ -10,32 +10,26 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangBeginEndExpressionImpl extends ErlangExpressionImpl implements ErlangBeginEndExpression {
+public class ErlangCatchExpressionImpl extends ErlangExpressionImpl implements ErlangCatchExpression {
 
-  public ErlangBeginEndExpressionImpl(ASTNode node) {
+  public ErlangCatchExpressionImpl(ASTNode node) {
     super(node);
   }
 
   @Override
   @Nullable
-  public ErlangBeginEndBody getBeginEndBody() {
-    return findChildByClass(ErlangBeginEndBody.class);
+  public ErlangExpression getExpression() {
+    return findChildByClass(ErlangExpression.class);
   }
 
   @Override
   @NotNull
-  public PsiElement getBegin() {
-    return findNotNullChildByType(ERL_BEGIN);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getEnd() {
-    return findChildByType(ERL_END);
+  public PsiElement getCatch() {
+    return findNotNullChildByType(ERL_CATCH);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBeginEndExpression(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCatchExpression(this);
     else super.accept(visitor);
   }
 

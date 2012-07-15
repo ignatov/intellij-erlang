@@ -2,9 +2,6 @@
 package org.intellij.erlang.psi.impl;
 
 import java.util.List;
-
-import com.intellij.psi.impl.source.tree.LeafPsiElement;
-import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
@@ -14,6 +11,7 @@ import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
 public class ErlangFunctionImpl extends ErlangNamedElementImpl implements ErlangFunction {
+
   public ErlangFunctionImpl(ASTNode node) {
     super(node);
   }

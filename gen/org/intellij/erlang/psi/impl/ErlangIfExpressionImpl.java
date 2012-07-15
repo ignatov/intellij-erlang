@@ -17,9 +17,9 @@ public class ErlangIfExpressionImpl extends ErlangExpressionImpl implements Erla
   }
 
   @Override
-  @NotNull
-  public List<ErlangIfClause> getIfClauseList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangIfClause.class);
+  @Nullable
+  public ErlangIfClauses getIfClauses() {
+    return findChildByClass(ErlangIfClauses.class);
   }
 
   @Override

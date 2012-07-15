@@ -48,6 +48,7 @@
   OP_EQ_LT        = "=<"
   OP_GT           = ">"
   OP_GT_EQ        = ">="
+//  OP_LT_EQ        = "<="
   OP_NOT          = "not"
   OP_BNOT         = "bnot"
   OP_PLUS_PLUS    = "++"
@@ -200,11 +201,11 @@ function ::= function_clause (';' function_clause)* {
 function_clause ::= q_atom argument_definition_list clause_guard? clause_body
 private argument_definition_list ::= '(' argument_definition? (',' argument_definition)* ')'
 
-private clause_guard ::= when guard {pin=1}
+clause_guard ::= when guard {pin=1}
 clause_body ::= '->' exprs {pin=1}
 
 expression ::= q_atom_or_var&(',' | ')' | '->' | '}' | ']' | ';') | catch_expression | expr_100_a
-private catch_expression ::= catch expression
+catch_expression ::= catch expression
 expr_100_a ::= expr_150_a [assignment_expression|send_expression]
 left assignment_expression ::= '=' expr_100_a
 left send_expression ::= '!' expr_100_a
@@ -239,7 +240,8 @@ max_expression ::=
   | binary_expression
   | begin_end_expression
 
-begin_end_expression ::= begin exprs end
+begin_end_expression ::= begin begin_end_body end
+begin_end_body ::= exprs
 parenthesized_expression ::= '(' expression ')'
 
 //list_expression ::= '[' expression? (',' expression)* ['|' expression] ']' {pin=0}
@@ -288,11 +290,11 @@ generic_function_call_expression ::= (q_atom_or_var ':')? q_atom_or_var argument
 private q_atom_or_var ::= q_atom | q_var
 
 if_expression ::= if if_clauses end
-private if_clauses ::= if_clause (';' if_clause)*
+if_clauses ::= if_clause (';' if_clause)*
 if_clause ::= guard clause_body
 
 case_expression ::= case expression of cr_clauses end
-private cr_clauses ::= cr_clause (';' cr_clause)*
+cr_clauses ::= cr_clause (';' cr_clause)*
 cr_clause ::= argument_definition clause_guard? clause_body
 argument_definition ::= expression
 
@@ -302,7 +304,7 @@ private fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body
 try_expression ::= try exprs (of cr_clauses)? try_catch
 try_catch ::= (catch try_clauses [after exprs] end) | (after exprs end) {pin(".*")="catch|after"}
-private try_clauses ::= try_clause (';' try_clause)*
+try_clauses ::= try_clause (';' try_clause)*
 try_clause ::= [q_atom_or_var ':'] argument_definition clause_guard? clause_body
 
 query_expression ::= query list_comprehension end

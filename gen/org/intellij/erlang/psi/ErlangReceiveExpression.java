@@ -10,8 +10,8 @@ public interface ErlangReceiveExpression extends ErlangExpression {
   @Nullable
   ErlangClauseBody getClauseBody();
 
-  @NotNull
-  List<ErlangCrClause> getCrClauseList();
+  @Nullable
+  ErlangCrClauses getCrClauses();
 
   @Nullable
   ErlangExpression getExpression();

@@ -17,6 +17,7 @@ public interface ErlangTypes {
   IElementType ERL_ATOM_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATOM_ATTRIBUTE");
   IElementType ERL_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATTRIBUTE");
   IElementType ERL_ATTR_VAL = new ErlangCompositeElementType("ERL_ATTR_VAL");
+  IElementType ERL_BEGIN_END_BODY = new ErlangCompositeElementType("ERL_BEGIN_END_BODY");
   IElementType ERL_BEGIN_END_EXPRESSION = new ErlangCompositeElementType("ERL_BEGIN_END_EXPRESSION");
   IElementType ERL_BINARY_EXPRESSION = new ErlangCompositeElementType("ERL_BINARY_EXPRESSION");
   IElementType ERL_BINARY_TYPE = new ErlangCompositeElementType("ERL_BINARY_TYPE");
@@ -27,9 +28,12 @@ public interface ErlangTypes {
   IElementType ERL_BIT_TYPE_LIST = new ErlangCompositeElementType("ERL_BIT_TYPE_LIST");
   IElementType ERL_CALLBACK_SPEC = new ErlangCompositeElementType("ERL_CALLBACK_SPEC");
   IElementType ERL_CASE_EXPRESSION = new ErlangCompositeElementType("ERL_CASE_EXPRESSION");
+  IElementType ERL_CATCH_EXPRESSION = new ErlangCompositeElementType("ERL_CATCH_EXPRESSION");
   IElementType ERL_CLAUSE_BODY = new ErlangCompositeElementType("ERL_CLAUSE_BODY");
+  IElementType ERL_CLAUSE_GUARD = new ErlangCompositeElementType("ERL_CLAUSE_GUARD");
   IElementType ERL_COLON_QUALIFIED_EXPRESSION = new ErlangCompositeElementType("ERL_COLON_QUALIFIED_EXPRESSION");
   IElementType ERL_CR_CLAUSE = new ErlangCompositeElementType("ERL_CR_CLAUSE");
+  IElementType ERL_CR_CLAUSES = new ErlangCompositeElementType("ERL_CR_CLAUSES");
   IElementType ERL_EXPORT = new ErlangCompositeElementType("ERL_EXPORT");
   IElementType ERL_EXPORT_FUNCTION = new ErlangCompositeElementType("ERL_EXPORT_FUNCTION");
   IElementType ERL_EXPRESSION = new ErlangCompositeElementType("ERL_EXPRESSION");
@@ -54,6 +58,7 @@ public interface ErlangTypes {
   IElementType ERL_GLOBAL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GLOBAL_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GUARD = new ErlangCompositeElementType("ERL_GUARD");
   IElementType ERL_IF_CLAUSE = new ErlangCompositeElementType("ERL_IF_CLAUSE");
+  IElementType ERL_IF_CLAUSES = new ErlangCompositeElementType("ERL_IF_CLAUSES");
   IElementType ERL_IF_EXPRESSION = new ErlangCompositeElementType("ERL_IF_EXPRESSION");
   IElementType ERL_INT_TYPE = new ErlangCompositeElementType("ERL_INT_TYPE");
   IElementType ERL_LC_EXPRESSION = new ErlangCompositeElementType("ERL_LC_EXPRESSION");
@@ -87,6 +92,7 @@ public interface ErlangTypes {
   IElementType ERL_TOP_TYPE_100_T = new ErlangCompositeElementType("ERL_TOP_TYPE_100_T");
   IElementType ERL_TRY_CATCH = new ErlangCompositeElementType("ERL_TRY_CATCH");
   IElementType ERL_TRY_CLAUSE = new ErlangCompositeElementType("ERL_TRY_CLAUSE");
+  IElementType ERL_TRY_CLAUSES = new ErlangCompositeElementType("ERL_TRY_CLAUSES");
   IElementType ERL_TRY_EXPRESSION = new ErlangCompositeElementType("ERL_TRY_EXPRESSION");
   IElementType ERL_TUPLE_EXPRESSION = new ErlangCompositeElementType("ERL_TUPLE_EXPRESSION");
   IElementType ERL_TYPE = new ErlangCompositeElementType("ERL_TYPE");
@@ -193,6 +199,9 @@ public interface ErlangTypes {
       else if (type == ERL_ATTR_VAL) {
         return new ErlangAttrValImpl(node);
       }
+      else if (type == ERL_BEGIN_END_BODY) {
+        return new ErlangBeginEndBodyImpl(node);
+      }
       else if (type == ERL_BEGIN_END_EXPRESSION) {
         return new ErlangBeginEndExpressionImpl(node);
       }
@@ -223,14 +232,23 @@ public interface ErlangTypes {
       else if (type == ERL_CASE_EXPRESSION) {
         return new ErlangCaseExpressionImpl(node);
       }
+      else if (type == ERL_CATCH_EXPRESSION) {
+        return new ErlangCatchExpressionImpl(node);
+      }
       else if (type == ERL_CLAUSE_BODY) {
         return new ErlangClauseBodyImpl(node);
+      }
+      else if (type == ERL_CLAUSE_GUARD) {
+        return new ErlangClauseGuardImpl(node);
       }
       else if (type == ERL_COLON_QUALIFIED_EXPRESSION) {
         return new ErlangColonQualifiedExpressionImpl(node);
       }
       else if (type == ERL_CR_CLAUSE) {
         return new ErlangCrClauseImpl(node);
+      }
+      else if (type == ERL_CR_CLAUSES) {
+        return new ErlangCrClausesImpl(node);
       }
       else if (type == ERL_EXPORT) {
         return new ErlangExportImpl(node);
@@ -303,6 +321,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_IF_CLAUSE) {
         return new ErlangIfClauseImpl(node);
+      }
+      else if (type == ERL_IF_CLAUSES) {
+        return new ErlangIfClausesImpl(node);
       }
       else if (type == ERL_IF_EXPRESSION) {
         return new ErlangIfExpressionImpl(node);
@@ -402,6 +423,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_TRY_CLAUSE) {
         return new ErlangTryClauseImpl(node);
+      }
+      else if (type == ERL_TRY_CLAUSES) {
+        return new ErlangTryClausesImpl(node);
       }
       else if (type == ERL_TRY_EXPRESSION) {
         return new ErlangTryExpressionImpl(node);

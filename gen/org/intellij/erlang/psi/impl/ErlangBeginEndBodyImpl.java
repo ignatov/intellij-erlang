@@ -10,9 +10,9 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangTryCatchImpl extends ErlangCompositeElementImpl implements ErlangTryCatch {
+public class ErlangBeginEndBodyImpl extends ErlangCompositeElementImpl implements ErlangBeginEndBody {
 
-  public ErlangTryCatchImpl(ASTNode node) {
+  public ErlangBeginEndBodyImpl(ASTNode node) {
     super(node);
   }
 
@@ -22,32 +22,8 @@ public class ErlangTryCatchImpl extends ErlangCompositeElementImpl implements Er
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
-  @Override
-  @Nullable
-  public ErlangTryClauses getTryClauses() {
-    return findChildByClass(ErlangTryClauses.class);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getAfter() {
-    return findChildByType(ERL_AFTER);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getCatch() {
-    return findChildByType(ERL_CATCH);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getEnd() {
-    return findChildByType(ERL_END);
-  }
-
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryCatch(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBeginEndBody(this);
     else super.accept(visitor);
   }
 

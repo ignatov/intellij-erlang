@@ -13,7 +13,4 @@ public interface ErlangExpression extends ErlangCompositeElement {
   @Nullable
   ErlangQVar getQVar();
 
-  @Nullable
-  PsiElement getCatch();
-
 }

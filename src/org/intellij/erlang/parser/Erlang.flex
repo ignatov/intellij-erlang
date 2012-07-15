@@ -137,6 +137,7 @@ FullStop = \.
  "="                            { return ERL_OP_EQ; }
  "!"                            { return ERL_OP_EXL; }
  "<-"                           { return ERL_OP_LT_MINUS; }
+ "<="                           { return ERL_OP_LT_EQ; }
 /* Newer additions */
  "andalso"                      { return ERL_ANDALSO; }
  "orelse"                       { return ERL_ORELSE; }

@@ -34,6 +34,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitBeginEndBody(@NotNull ErlangBeginEndBody o) {
+    visitCompositeElement(o);
+  }
+
   public void visitBeginEndExpression(@NotNull ErlangBeginEndExpression o) {
     visitExpression(o);
   }
@@ -74,7 +78,15 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitCatchExpression(@NotNull ErlangCatchExpression o) {
+    visitExpression(o);
+  }
+
   public void visitClauseBody(@NotNull ErlangClauseBody o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitClauseGuard(@NotNull ErlangClauseGuard o) {
     visitCompositeElement(o);
   }
 
@@ -83,6 +95,10 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitCrClause(@NotNull ErlangCrClause o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitCrClauses(@NotNull ErlangCrClauses o) {
     visitCompositeElement(o);
   }
 
@@ -183,6 +199,10 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitIfClause(@NotNull ErlangIfClause o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitIfClauses(@NotNull ErlangIfClauses o) {
     visitCompositeElement(o);
   }
 
@@ -315,6 +335,10 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitTryClause(@NotNull ErlangTryClause o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitTryClauses(@NotNull ErlangTryClauses o) {
     visitCompositeElement(o);
   }
 

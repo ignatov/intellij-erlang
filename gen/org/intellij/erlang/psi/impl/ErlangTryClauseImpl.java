@@ -30,8 +30,8 @@ public class ErlangTryClauseImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @Nullable
-  public ErlangGuard getGuard() {
-    return findChildByClass(ErlangGuard.class);
+  public ErlangClauseGuard getClauseGuard() {
+    return findChildByClass(ErlangClauseGuard.class);
   }
 
   @Override
@@ -44,12 +44,6 @@ public class ErlangTryClauseImpl extends ErlangCompositeElementImpl implements E
   @Nullable
   public ErlangQVar getQVar() {
     return findChildByClass(ErlangQVar.class);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getWhen() {
-    return findChildByType(ERL_WHEN);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

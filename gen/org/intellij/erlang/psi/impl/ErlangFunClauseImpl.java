@@ -30,14 +30,8 @@ public class ErlangFunClauseImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @Nullable
-  public ErlangGuard getGuard() {
-    return findChildByClass(ErlangGuard.class);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getWhen() {
-    return findChildByType(ERL_WHEN);
+  public ErlangClauseGuard getClauseGuard() {
+    return findChildByClass(ErlangClauseGuard.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

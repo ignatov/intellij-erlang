@@ -7,8 +7,8 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangBeginEndExpression extends ErlangExpression {
 
-  @NotNull
-  List<ErlangExpression> getExpressionList();
+  @Nullable
+  ErlangBeginEndBody getBeginEndBody();
 
   @NotNull
   PsiElement getBegin();

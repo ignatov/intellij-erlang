@@ -10,8 +10,8 @@ public interface ErlangTryCatch extends ErlangCompositeElement {
   @NotNull
   List<ErlangExpression> getExpressionList();
 
-  @NotNull
-  List<ErlangTryClause> getTryClauseList();
+  @Nullable
+  ErlangTryClauses getTryClauses();
 
   @Nullable
   PsiElement getAfter();

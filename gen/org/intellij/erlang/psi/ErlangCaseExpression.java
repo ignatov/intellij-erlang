@@ -7,8 +7,8 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangCaseExpression extends ErlangExpression {
 
-  @NotNull
-  List<ErlangCrClause> getCrClauseList();
+  @Nullable
+  ErlangCrClauses getCrClauses();
 
   @Nullable
   ErlangExpression getExpression();

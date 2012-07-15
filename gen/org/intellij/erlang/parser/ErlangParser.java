@@ -44,6 +44,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_ATTRIBUTE) {
       result_ = attribute(builder_, level_ + 1);
     }
+    else if (root_ == ERL_BEGIN_END_BODY) {
+      result_ = begin_end_body(builder_, level_ + 1);
+    }
     else if (root_ == ERL_BEGIN_END_EXPRESSION) {
       result_ = begin_end_expression(builder_, level_ + 1);
     }
@@ -74,14 +77,23 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_CASE_EXPRESSION) {
       result_ = case_expression(builder_, level_ + 1);
     }
+    else if (root_ == ERL_CATCH_EXPRESSION) {
+      result_ = catch_expression(builder_, level_ + 1);
+    }
     else if (root_ == ERL_CLAUSE_BODY) {
       result_ = clause_body(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_CLAUSE_GUARD) {
+      result_ = clause_guard(builder_, level_ + 1);
     }
     else if (root_ == ERL_COLON_QUALIFIED_EXPRESSION) {
       result_ = colon_qualified_expression(builder_, level_ + 1);
     }
     else if (root_ == ERL_CR_CLAUSE) {
       result_ = cr_clause(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_CR_CLAUSES) {
+      result_ = cr_clauses(builder_, level_ + 1);
     }
     else if (root_ == ERL_EXPORT) {
       result_ = export(builder_, level_ + 1);
@@ -154,6 +166,9 @@ public class ErlangParser implements PsiParser {
     }
     else if (root_ == ERL_IF_CLAUSE) {
       result_ = if_clause(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_IF_CLAUSES) {
+      result_ = if_clauses(builder_, level_ + 1);
     }
     else if (root_ == ERL_IF_EXPRESSION) {
       result_ = if_expression(builder_, level_ + 1);
@@ -254,6 +269,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_TRY_CLAUSE) {
       result_ = try_clause(builder_, level_ + 1);
     }
+    else if (root_ == ERL_TRY_CLAUSES) {
+      result_ = try_clauses(builder_, level_ + 1);
+    }
     else if (root_ == ERL_TRY_EXPRESSION) {
       result_ = try_expression(builder_, level_ + 1);
     }
@@ -304,14 +322,14 @@ public class ErlangParser implements PsiParser {
 
   private static final TokenSet[] EXTENDS_SETS_ = new TokenSet[] {
     TokenSet.create(ERL_ADDITIVE_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION, ERL_BEGIN_END_EXPRESSION, ERL_BINARY_EXPRESSION,
-      ERL_CASE_EXPRESSION, ERL_COLON_QUALIFIED_EXPRESSION, ERL_EXPRESSION, ERL_EXPR_100_A,
-      ERL_EXPR_150_A, ERL_EXPR_160_A, ERL_EXPR_200_A, ERL_EXPR_300_A,
-      ERL_EXPR_400_A, ERL_EXPR_500_A, ERL_EXPR_700_A, ERL_FUNCTION_CALL_EXPRESSION,
-      ERL_FUN_EXPRESSION, ERL_GENERIC_FUNCTION_CALL_EXPRESSION, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION, ERL_IF_EXPRESSION,
-      ERL_LC_EXPRESSION, ERL_LIST_COMPREHENSION, ERL_LIST_EXPRESSION, ERL_MAX_EXPRESSION,
-      ERL_MULTIPLICATIVE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION,
-      ERL_QUERY_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION,
-      ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
+      ERL_CASE_EXPRESSION, ERL_CATCH_EXPRESSION, ERL_COLON_QUALIFIED_EXPRESSION, ERL_EXPRESSION,
+      ERL_EXPR_100_A, ERL_EXPR_150_A, ERL_EXPR_160_A, ERL_EXPR_200_A,
+      ERL_EXPR_300_A, ERL_EXPR_400_A, ERL_EXPR_500_A, ERL_EXPR_700_A,
+      ERL_FUNCTION_CALL_EXPRESSION, ERL_FUN_EXPRESSION, ERL_GENERIC_FUNCTION_CALL_EXPRESSION, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION,
+      ERL_IF_EXPRESSION, ERL_LC_EXPRESSION, ERL_LIST_COMPREHENSION, ERL_LIST_EXPRESSION,
+      ERL_MAX_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION,
+      ERL_QUALIFIED_EXPRESSION, ERL_QUERY_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION,
+      ERL_SEND_EXPRESSION, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
   };
   public static boolean type_extends_(IElementType child_, IElementType parent_) {
     for (TokenSet set : EXTENDS_SETS_) {
@@ -712,7 +730,23 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // begin exprs end
+  // exprs
+  public static boolean begin_end_body(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "begin_end_body")) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = exprs(builder_, level_ + 1);
+    if (result_) {
+      marker_.done(ERL_BEGIN_END_BODY);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // begin begin_end_body end
   public static boolean begin_end_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "begin_end_expression")) return false;
     if (!nextTokenIs(builder_, ERL_BEGIN)) return false;
@@ -723,7 +757,7 @@ public class ErlangParser implements PsiParser {
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
     result_ = consumeToken(builder_, ERL_BEGIN);
     pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, exprs(builder_, level_ + 1));
+    result_ = result_ && report_error_(builder_, begin_end_body(builder_, level_ + 1));
     result_ = pinned_ && consumeToken(builder_, ERL_END) && result_;
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
     if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_BEGIN_END_EXPRESSION)) {
@@ -1137,21 +1171,26 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // catch expression
-  static boolean catch_expression(PsiBuilder builder_, int level_) {
+  public static boolean catch_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "catch_expression")) return false;
     if (!nextTokenIs(builder_, ERL_CATCH)) return false;
     boolean result_ = false;
     boolean pinned_ = false;
+    final int start_ = builder_.getCurrentOffset();
     final Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
     result_ = consumeToken(builder_, ERL_CATCH);
     pinned_ = result_; // pin = 1
     result_ = result_ && expression(builder_, level_ + 1);
-    if (!result_ && !pinned_) {
-      marker_.rollbackTo();
+    LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
+    if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_CATCH_EXPRESSION)) {
+      marker_.drop();
+    }
+    else if (result_ || pinned_) {
+      marker_.done(ERL_CATCH_EXPRESSION);
     }
     else {
-      marker_.drop();
+      marker_.rollbackTo();
     }
     result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
@@ -1181,7 +1220,7 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // when guard
-  static boolean clause_guard(PsiBuilder builder_, int level_) {
+  public static boolean clause_guard(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "clause_guard")) return false;
     if (!nextTokenIs(builder_, ERL_WHEN)) return false;
     boolean result_ = false;
@@ -1191,11 +1230,11 @@ public class ErlangParser implements PsiParser {
     result_ = consumeToken(builder_, ERL_WHEN);
     pinned_ = result_; // pin = 1
     result_ = result_ && guard(builder_, level_ + 1);
-    if (!result_ && !pinned_) {
-      marker_.rollbackTo();
+    if (result_ || pinned_) {
+      marker_.done(ERL_CLAUSE_GUARD);
     }
     else {
-      marker_.drop();
+      marker_.rollbackTo();
     }
     result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
@@ -1327,17 +1366,17 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // cr_clause (';' cr_clause)*
-  static boolean cr_clauses(PsiBuilder builder_, int level_) {
+  public static boolean cr_clauses(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "cr_clauses")) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
     result_ = cr_clause(builder_, level_ + 1);
     result_ = result_ && cr_clauses_1(builder_, level_ + 1);
-    if (!result_) {
-      marker_.rollbackTo();
+    if (result_) {
+      marker_.done(ERL_CR_CLAUSES);
     }
     else {
-      marker_.drop();
+      marker_.rollbackTo();
     }
     return result_;
   }
@@ -2636,17 +2675,17 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // if_clause (';' if_clause)*
-  static boolean if_clauses(PsiBuilder builder_, int level_) {
+  public static boolean if_clauses(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "if_clauses")) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
     result_ = if_clause(builder_, level_ + 1);
     result_ = result_ && if_clauses_1(builder_, level_ + 1);
-    if (!result_) {
-      marker_.rollbackTo();
+    if (result_) {
+      marker_.done(ERL_IF_CLAUSES);
     }
     else {
-      marker_.drop();
+      marker_.rollbackTo();
     }
     return result_;
   }
@@ -4385,17 +4424,17 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // try_clause (';' try_clause)*
-  static boolean try_clauses(PsiBuilder builder_, int level_) {
+  public static boolean try_clauses(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "try_clauses")) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
     result_ = try_clause(builder_, level_ + 1);
     result_ = result_ && try_clauses_1(builder_, level_ + 1);
-    if (!result_) {
-      marker_.rollbackTo();
+    if (result_) {
+      marker_.done(ERL_TRY_CLAUSES);
     }
     else {
-      marker_.drop();
+      marker_.rollbackTo();
     }
     return result_;
   }

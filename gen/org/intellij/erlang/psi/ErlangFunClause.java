@@ -14,9 +14,6 @@ public interface ErlangFunClause extends ErlangCompositeElement {
   ErlangClauseBody getClauseBody();
 
   @Nullable
-  ErlangGuard getGuard();
-
-  @Nullable
-  PsiElement getWhen();
+  ErlangClauseGuard getClauseGuard();
 
 }

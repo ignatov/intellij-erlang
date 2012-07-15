@@ -5,15 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangIfExpression extends ErlangExpression {
-
-  @Nullable
-  ErlangIfClauses getIfClauses();
-
-  @Nullable
-  PsiElement getEnd();
+public interface ErlangBeginEndBody extends ErlangCompositeElement {
 
   @NotNull
-  PsiElement getIf();
+  List<ErlangExpression> getExpressionList();
 
 }

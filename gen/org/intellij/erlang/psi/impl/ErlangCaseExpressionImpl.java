@@ -17,9 +17,9 @@ public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements Er
   }
 
   @Override
-  @NotNull
-  public List<ErlangCrClause> getCrClauseList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangCrClause.class);
+  @Nullable
+  public ErlangCrClauses getCrClauses() {
+    return findChildByClass(ErlangCrClauses.class);
   }
 
   @Override

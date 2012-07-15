@@ -11,15 +11,12 @@ public interface ErlangRuleClause extends ErlangCompositeElement {
   ErlangArgumentList getArgumentList();
 
   @Nullable
-  ErlangGuard getGuard();
+  ErlangClauseGuard getClauseGuard();
 
   @NotNull
   ErlangQAtom getQAtom();
 
   @NotNull
   ErlangRuleBody getRuleBody();
-
-  @Nullable
-  PsiElement getWhen();
 
 }
