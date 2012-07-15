@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inDefinition;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isInModule;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignment;
 
 /**
@@ -29,7 +30,8 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
     ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myOrigin, ErlangFunctionClause.class);
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
-      if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement))) {
+      if ((PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement)))
+          || isInModule(psiElement)) {
         result = (ErlangQVar) psiElement;
         return false;
       }

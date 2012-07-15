@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getModule;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inDefinition;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignment;
 
@@ -36,6 +37,14 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     ErlangListComprehension lc = PsiTreeUtil.getParentOfType(myElement, ErlangListComprehension.class);
     ErlangCompositeElement place = lc != null ? lc.getLcExprs() : myElement;
     ResolveUtil.treeWalkUp(place, processor);
+    ErlangQVar processorResult = processor.getResult();
+    if (processorResult != null) return processorResult;
+
+    ErlangModule module = getModule(myElement.getContainingFile());
+    if (module == null) return null;
+    module.processDeclarations(processor, ResolveState.initial(), module, module);
+//    ResolveUtil.treeWalkUp(module.getArgumentDefinition(), processor);
+
     return processor.getResult();
   }
 

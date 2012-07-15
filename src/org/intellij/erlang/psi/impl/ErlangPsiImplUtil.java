@@ -229,6 +229,14 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    return processDeclarationRecursive(o, processor, state);
+  }
+
+  public static boolean processDeclarations(@NotNull ErlangModule o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    return processDeclarationRecursive(o, processor, state);
+  }
+
+  private static boolean processDeclarationRecursive(ErlangCompositeElement o, PsiScopeProcessor processor, ResolveState state) {
     Queue<ErlangCompositeElement> queue = new LinkedList<ErlangCompositeElement>();
     queue.add(o);
     while (!queue.isEmpty()) {
@@ -237,5 +245,23 @@ public class ErlangPsiImplUtil {
       queue.addAll(PsiTreeUtil.getChildrenOfTypeAsList(top, ErlangCompositeElement.class));
     }
     return true;
+  }
+
+  @Nullable
+  public static ErlangModule getModule(PsiFile file) {
+    if (file instanceof ErlangFile) {
+      List<ErlangAttribute> attributes = PsiTreeUtil.getChildrenOfTypeAsList(file, ErlangAttribute.class);
+      for (ErlangAttribute attribute : attributes) {
+        ErlangModule module = attribute.getModule();
+        if (module != null) {
+          return module;
+        }
+      }
+    }
+    return null;
+  }
+
+  static boolean isInModule(PsiElement psiElement) {
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangModule.class) != null;
   }
 }

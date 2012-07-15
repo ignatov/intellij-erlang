@@ -3045,7 +3045,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // 'module' '(' q_atom ')'
+  // 'module' '(' q_atom (',' argument_definition)? ')'
   public static boolean module(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "module")) return false;
     boolean result_ = false;
@@ -3056,6 +3056,7 @@ public class ErlangParser implements PsiParser {
     pinned_ = result_; // pin = 1
     result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
     result_ = pinned_ && report_error_(builder_, q_atom(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && report_error_(builder_, module_3(builder_, level_ + 1)) && result_;
     result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
     if (result_ || pinned_) {
       marker_.done(ERL_MODULE);
@@ -3065,6 +3066,35 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
+  }
+
+  // (',' argument_definition)?
+  private static boolean module_3(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "module_3")) return false;
+    module_3_0(builder_, level_ + 1);
+    return true;
+  }
+
+  // (',' argument_definition)
+  private static boolean module_3_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "module_3_0")) return false;
+    return module_3_0_0(builder_, level_ + 1);
+  }
+
+  // ',' argument_definition
+  private static boolean module_3_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "module_3_0_0")) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_COMMA);
+    result_ = result_ && argument_definition(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
   }
 
   /* ********************************************************** */

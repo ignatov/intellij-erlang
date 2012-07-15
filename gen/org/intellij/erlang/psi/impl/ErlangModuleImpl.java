@@ -9,11 +9,19 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.psi.ResolveState;
 
 public class ErlangModuleImpl extends ErlangNamedElementImpl implements ErlangModule {
 
   public ErlangModuleImpl(ASTNode node) {
     super(node);
+  }
+
+  @Override
+  @Nullable
+  public ErlangArgumentDefinition getArgumentDefinition() {
+    return findChildByClass(ErlangArgumentDefinition.class);
   }
 
   @Override
@@ -44,6 +52,10 @@ public class ErlangModuleImpl extends ErlangNamedElementImpl implements ErlangMo
 
   public int getTextOffset() {
     return ErlangPsiImplUtil.getTextOffset(this);
+  }
+
+  public boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place) {
+    return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }
 
 }
