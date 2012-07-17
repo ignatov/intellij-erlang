@@ -2853,7 +2853,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_OP_LT_MINUS);
-    if (!result_) result_ = consumeToken(builder_, "<=");
+    if (!result_) result_ = consumeToken(builder_, ERL_OP_LT_EQ);
     if (!result_) {
       marker_.rollbackTo();
     }

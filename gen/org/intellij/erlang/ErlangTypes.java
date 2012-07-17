@@ -152,6 +152,7 @@ public interface ErlangTypes {
   IElementType ERL_OP_GT = new ErlangTokenType(">");
   IElementType ERL_OP_GT_EQ = new ErlangTokenType(">=");
   IElementType ERL_OP_LT = new ErlangTokenType("<");
+  IElementType ERL_OP_LT_EQ = new ErlangTokenType("<=");
   IElementType ERL_OP_LT_MINUS = new ErlangTokenType("<-");
   IElementType ERL_OP_MINUS = new ErlangTokenType("-");
   IElementType ERL_OP_MINUS_MINUS = new ErlangTokenType("--");

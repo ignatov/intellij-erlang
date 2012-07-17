@@ -48,7 +48,7 @@
   OP_EQ_LT        = "=<"
   OP_GT           = ">"
   OP_GT_EQ        = ">="
-//  OP_LT_EQ        = "<="
+  OP_LT_EQ        = "<="
   OP_NOT          = "not"
   OP_BNOT         = "bnot"
   OP_PLUS_PLUS    = "++"
