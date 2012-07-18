@@ -8,9 +8,11 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
+import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -25,6 +27,16 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
  * @author ignatov
  */
 public class ErlangCompletionContributor extends CompletionContributor {
+  @Override
+  public void beforeCompletion(@NotNull CompletionInitializationContext context) {
+    PsiElement elementAt = context.getFile().findElementAt(context.getStartOffset());
+    PsiElement parent = elementAt == null ? null : elementAt.getParent();
+    ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
+    if (export != null) {
+      context.setFileCopyPatcher(new DummyIdentifierPatcher("a"));
+    }
+  }
+
   public ErlangCompletionContributor() {
     extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFileImpl.class)), new CompletionProvider<CompletionParameters>() {
       @Override
