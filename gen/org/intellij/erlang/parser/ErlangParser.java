@@ -1471,18 +1471,22 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "export_functions")) return false;
     if (!nextTokenIs(builder_, ERL_BRACKET_LEFT)) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     final Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
     result_ = consumeToken(builder_, ERL_BRACKET_LEFT);
-    result_ = result_ && export_function(builder_, level_ + 1);
-    result_ = result_ && export_functions_2(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_BRACKET_RIGHT);
-    if (!result_) {
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, export_function(builder_, level_ + 1));
+    result_ = pinned_ && report_error_(builder_, export_functions_2(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_BRACKET_RIGHT) && result_;
+    if (!result_ && !pinned_) {
       marker_.rollbackTo();
     }
     else {
       marker_.drop();
     }
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   // (',' export_function)*
