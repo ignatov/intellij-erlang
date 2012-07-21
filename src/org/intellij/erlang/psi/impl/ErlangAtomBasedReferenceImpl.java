@@ -10,7 +10,7 @@ import org.intellij.erlang.psi.ErlangQAtom;
  * @author ignatov
  */
 public abstract class ErlangAtomBasedReferenceImpl<T extends ErlangQAtom> extends PsiReferenceBase<T> {
-  protected String myReferenceName;
+  protected final String myReferenceName;
 
   public ErlangAtomBasedReferenceImpl(T element, TextRange range, String name) {
     super(element, range);

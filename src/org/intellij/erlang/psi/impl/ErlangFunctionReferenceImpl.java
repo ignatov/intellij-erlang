@@ -21,8 +21,8 @@ import java.util.List;
  */
 public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBasedReferenceImpl<T> {
   @Nullable
-  private ErlangQAtom myModuleAtom;
-  private int myArity;
+  private final ErlangQAtom myModuleAtom;
+  private final int myArity;
 
   public ErlangFunctionReferenceImpl(@NotNull T element, @Nullable ErlangQAtom moduleAtom, TextRange range, String name, int arity) {
     super(element, range, name);

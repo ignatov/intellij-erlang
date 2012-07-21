@@ -12,11 +12,6 @@ public class ErlangParserTest extends ParsingTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-  }
-
-  @Override
   protected String getTestDataPath() {
     return "testData";
   }

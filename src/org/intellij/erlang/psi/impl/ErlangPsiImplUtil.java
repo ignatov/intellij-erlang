@@ -75,6 +75,10 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class) != null;
   }
 
+  public static boolean inSpecification(PsiElement psiElement) {
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangSpecification.class) != null;
+  }
+
   public static boolean isLeftPartOfAssignment(@NotNull PsiElement psiElement) {
     ErlangAssignmentExpression assignmentExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
     if (assignmentExpression == null) return false;

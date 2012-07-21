@@ -49,7 +49,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
 
         for (String keywords : suggestKeywords(position)) {
-          result.addElement(LookupElementBuilder.create(keywords).setBold());
+          result.addElement(LookupElementBuilder.create(keywords).bold());
         }
       }
     });
@@ -58,7 +58,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static Collection<String> suggestKeywords(PsiElement position) {
     TextRange posRange = position.getTextRange();
     ErlangFile posFile = (ErlangFile) position.getContainingFile();
-//    final TextRange range = new TextRange(posRange.getStartOffset(), posRange.getStartOffset());
     final TextRange range = new TextRange(0, posRange.getStartOffset());
     final String text = range.isEmpty() ? CompletionInitializationContext.DUMMY_IDENTIFIER : range.substring(posFile.getText());
 

@@ -25,7 +25,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         setHighlighting(o, annotationHolder, ErlangSyntaxHighlighter.VARIABLES);
-        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o)) return;
+        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o)  || inSpecification(o)) return;
         markIfUnresolved(o, o, annotationHolder, "Unresolved variable " + o.getText());
       }
 

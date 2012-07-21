@@ -18,6 +18,6 @@ public abstract class ErlangNamedElementImpl extends ErlangCompositeElementImpl 
 
   @Override
   public PsiElement setName(@NonNls @NotNull String s) throws IncorrectOperationException {
-    return null;
+    return this;
   }
 }
