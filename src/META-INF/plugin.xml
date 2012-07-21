@@ -25,6 +25,7 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.ErlangCompletionContributor"/>
         <renameInputValidator implementation="org.intellij.erlang.ErlangRenameInputValidator"/>
+        <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler" />
     </extensions>
     <project-components>
 
