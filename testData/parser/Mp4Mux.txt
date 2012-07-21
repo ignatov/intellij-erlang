@@ -3082,8 +3082,7 @@ ERL_FILE
                     ERL_MAX_EXPRESSION
                       PsiElement(integer)('32')
                   PsiElement(>>)('>>')
-              PsiElement(<)('<')
-              PsiElement(=)('=')
+              PsiElement(<=)('<=')
               ERL_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('Chunks')
@@ -6738,8 +6737,7 @@ ERL_FILE
                           ERL_MAX_EXPRESSION
                             PsiElement(integer)('32')
                         PsiElement(>>)('>>')
-                    PsiElement(<)('<')
-                    PsiElement(=)('=')
+                    PsiElement(<=)('<=')
                     ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('SampleSizeData')
@@ -6818,8 +6816,7 @@ ERL_FILE
                       ERL_MAX_EXPRESSION
                         PsiElement(integer)('32')
                     PsiElement(>>)('>>')
-                PsiElement(<)('<')
-                PsiElement(=)('=')
+                PsiElement(<=)('<=')
                 ERL_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('STCO')
@@ -6877,8 +6874,7 @@ ERL_FILE
                           ERL_MAX_EXPRESSION
                             PsiElement(integer)('32')
                         PsiElement(>>)('>>')
-                    PsiElement(<)('<')
-                    PsiElement(=)('=')
+                    PsiElement(<=)('<=')
                     ERL_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('STSC')
@@ -7342,8 +7338,7 @@ ERL_FILE
                             ERL_MAX_EXPRESSION
                               PsiElement(integer)('32')
                           PsiElement(>>)('>>')
-                      PsiElement(<)('<')
-                      PsiElement(=)('=')
+                      PsiElement(<=)('<=')
                       ERL_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('SampleSizes')

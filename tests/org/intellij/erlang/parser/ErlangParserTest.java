@@ -1,6 +1,7 @@
-package org.intellij.erlang;
+package org.intellij.erlang.parser;
 
 import com.intellij.testFramework.ParsingTestCase;
+import org.intellij.erlang.ErlangParserDefinition;
 
 /**
  * @author ignatov
@@ -13,7 +14,6 @@ public class ErlangParserTest extends ParsingTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-//    addExplicitExtension(LanguageBraceMatching.INSTANCE, myLanguage, new ErlangBraceMatcher()); // todo
   }
 
   @Override

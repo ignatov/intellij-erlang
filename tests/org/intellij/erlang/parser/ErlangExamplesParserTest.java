@@ -1,4 +1,4 @@
-package org.intellij.erlang;
+package org.intellij.erlang.parser;
 
 import com.intellij.FileSetTestCase;
 import com.intellij.psi.PsiFile;
@@ -7,6 +7,7 @@ import com.intellij.psi.impl.DebugUtil;
 import com.intellij.util.LocalTimeCounter;
 import junit.framework.Assert;
 import junit.framework.Test;
+import org.intellij.erlang.ErlangFileType;
 import org.jetbrains.annotations.NonNls;
 
 /**
