@@ -1,7 +1,12 @@
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.codeInsight.completion.BasicInsertHandler;
+import com.intellij.codeInsight.completion.InsertionContext;
+import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -81,13 +86,32 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile) {
+  static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, final boolean withArity) {
     if (containingFile instanceof ErlangFile) {
       return ContainerUtil.map(((ErlangFile) containingFile).getFunctions(), new Function<ErlangFunction, LookupElement>() {
         @Override
-        public LookupElement fun(@NotNull ErlangFunction function) {
+        public LookupElement fun(@NotNull final ErlangFunction function) {
           return LookupElementBuilder.create(function)
-            .setIcon(ErlangIcons.FUNCTION).setTailText("/" + function.getArity());
+            .withIcon(ErlangIcons.FUNCTION).withTailText("/" + function.getArity()).
+              withInsertHandler(
+                withArity ?
+                  new BasicInsertHandler<LookupElement>() {
+                    @Override
+                    public void handleInsert(InsertionContext context, LookupElement item) {
+                      final Editor editor = context.getEditor();
+                      final Document document = editor.getDocument();
+                      context.commitDocument();
+                      document.insertString(context.getTailOffset(), "/" + function.getArity());
+                      editor.getCaretModel().moveToOffset(context.getTailOffset());
+                    }
+                  } :
+                  new ParenthesesInsertHandler<LookupElement>() {
+                    @Override
+                    protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
+                      return function.getArity() > 0;
+                    }
+                  }
+              );
         }
       });
     }
@@ -100,7 +124,7 @@ public class ErlangPsiImplUtil {
       return ContainerUtil.map(((ErlangFile) containingFile).getRecords(), new Function<ErlangRecordDefinition, LookupElement>() {
         @Override
         public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
-          return LookupElementBuilder.create(rd).setIcon(ErlangIcons.RECORD);
+          return LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD);
         }
       });
     }

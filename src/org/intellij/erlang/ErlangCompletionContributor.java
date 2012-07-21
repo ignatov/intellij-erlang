@@ -32,8 +32,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement elementAt = context.getFile().findElementAt(context.getStartOffset());
     PsiElement parent = elementAt == null ? null : elementAt.getParent();
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
-    if (export != null) {
-      context.setFileCopyPatcher(new DummyIdentifierPatcher("a"));
+    if (parent instanceof ErlangExport || export != null) {
+      context.setDummyIdentifier("a");
     }
   }
 

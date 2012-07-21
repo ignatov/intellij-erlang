@@ -60,9 +60,9 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     BaseScopeProcessor processor = new BaseScopeProcessor() {
       @Override
       public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
-        if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar) {
+        if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_")) {
           if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement))) {
-            result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).setIcon(ErlangIcons.VARIABLE));
+            result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).withIcon(ErlangIcons.VARIABLE));
           }
         }
         return true;
@@ -71,7 +71,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     ResolveUtil.treeWalkUp(myElement, processor);
 
     // todo: support for functions completion when item under caret is empty
-    result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile()));
+    result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), false));
 
     return ArrayUtil.toObjectArray(result);
   }

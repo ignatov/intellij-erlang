@@ -55,7 +55,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends ErlangAt
   @NotNull
   @Override
   public Object[] getVariants() {
-    List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile());
+    List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), true);
     return ArrayUtil.toObjectArray(lookupElements);
   }
 }
