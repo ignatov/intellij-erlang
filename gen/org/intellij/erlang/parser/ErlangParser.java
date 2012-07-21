@@ -3096,9 +3096,9 @@ public class ErlangParser implements PsiParser {
     final Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
     result_ = consumeToken(builder_, "module");
-    pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
-    result_ = pinned_ && report_error_(builder_, q_atom(builder_, level_ + 1)) && result_;
+    result_ = result_ && consumeToken(builder_, ERL_PAR_LEFT);
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, q_atom(builder_, level_ + 1));
     result_ = pinned_ && report_error_(builder_, module_3(builder_, level_ + 1)) && result_;
     result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
     if (result_ || pinned_) {

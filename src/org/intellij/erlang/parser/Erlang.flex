@@ -34,8 +34,13 @@ import static org.intellij.erlang.ErlangParserDefinition.*;
 /* This hex range is the same as octal \O00 - \O37 */
 ControlCharacter = [\000 - \037]
 
+ModuleDocCommentLine = "%%%"[^\r\n]*
+FunctionDocCommentLine = "%%"[^\r\n]*
 CommentLine = "%"[^\r\n]*
-Comment =  {CommentLine} {CommentLine}* 
+
+ModuleDocComment = {ModuleDocCommentLine} ({Whitespace}? {ModuleDocCommentLine})*
+FunctionDocComment = {FunctionDocCommentLine} ({Whitespace}? {FunctionDocCommentLine})*
+Comment = {CommentLine} {CommentLine}*
 Whitespace = ([ \t\n] | {ControlCharacter})+
 ErlangUppercase = [A-Z]
 ErlangLowercase = [a-z]
@@ -79,6 +84,8 @@ FullStop = \.
 
 %%
 
+ {ModuleDocComment}            { return ERL_MODULE_DOC_COMMENT; }
+ {FunctionDocComment}          { return ERL_FUNCTION_DOC_COMMENT; }
  {Comment}                     { return ERL_COMMENT; }
  {Whitespace}                  { return com.intellij.psi.TokenType.WHITE_SPACE; }
 

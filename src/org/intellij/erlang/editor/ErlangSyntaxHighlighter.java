@@ -50,7 +50,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
     if (type == TokenType.BAD_CHARACTER) {
       return pack(ILLEGAL);
     }
-    if (type == ErlangParserDefinition.ERL_COMMENT) {
+    if (ErlangParserDefinition.COMMENTS.contains(type)) {
       return pack(COMMENT);
     }
     if (type == ERL_STRING) {

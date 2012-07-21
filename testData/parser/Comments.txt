@@ -1,0 +1,24 @@
+ERL_FILE
+  PsiComment(module_doc_comment)('%%% Module\n%%% comment\n%%% 5')
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_MODULE
+      PsiElement(atom)('module')
+      PsiElement(()('(')
+      ERL_Q_ATOM
+        PsiElement(atom)('test')
+      PsiElement())(')')
+  PsiElement(.)('.')
+  PsiComment(function_doc_comment)('%% function comment\n%% %% second line\n%% third line')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('main')
+      PsiElement(()('(')
+      PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('ok')
+  PsiElement(.)('.')

@@ -25,7 +25,9 @@ public class ErlangParserDefinition implements ParserDefinition {
   public static final IFileElementType BNF_FILE_ELEMENT_TYPE = new IFileElementType("ERL_FILE", ErlangLanguage.INSTANCE);
   public static final TokenSet WS = TokenSet.create(TokenType.WHITE_SPACE);
   public static final IElementType ERL_COMMENT = new ErlangTokenType("ERL_LINE_COMMENT");
-  public static final TokenSet COMMENTS = TokenSet.create(ERL_COMMENT);
+  public static final IElementType ERL_FUNCTION_DOC_COMMENT = new ErlangTokenType("function_doc_comment");
+  public static final IElementType ERL_MODULE_DOC_COMMENT = new ErlangTokenType("module_doc_comment");
+  public static final TokenSet COMMENTS = TokenSet.create(ERL_COMMENT, ERL_FUNCTION_DOC_COMMENT, ERL_MODULE_DOC_COMMENT);
   public static final TokenSet LITERALS = TokenSet.create(ErlangTypes.ERL_STRING);
 
   @NotNull
