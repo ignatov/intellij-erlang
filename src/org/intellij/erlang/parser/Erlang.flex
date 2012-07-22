@@ -1,11 +1,8 @@
-/*** JFlex specification for Erlang ****
-
-     Erlang lexer definition.
-
-     @author Joachim Ansorg, mail@ansorg-it.com
-**/
-
-/** Based on the arc lexer (http://code.google.com/p/intelli-arc/) **/
+/**
+ * @author ignatov
+ * Based on the ErlGray lexer (http://code.google.com/p/idea-erlang/)
+ * Thanks for Joachim Ansorg, mail@ansorg-it.com
+ **/
 
 package org.intellij.erlang.parser;
 import com.intellij.lexer.FlexLexer;
@@ -66,20 +63,10 @@ CharLiteralChar = {InputCharacter} | {EscapeSequence}
 CharLiteral = \$ {CharLiteralChar}
 
 /* Without the \\\" at the start the lexer won't find it, for unknown reasons */
-StringChar =  \\\" | [^\"]
-StringLiteral = \"\" | \"{StringChar}+\"
-
-//QUOTED_LITERAL="'" ([^\\\'\r\n] | {ESCAPE_SEQUENCE} | (\[\r\n]))* ("'"|\)?
-//ESCAPE_SEQUENCE=\[^\r\n]
-//ANY_ESCAPE_SEQUENCE = \[^]
-//THREE_QUO = (\"\"\")
-//ONE_TWO_QUO = (\"[^\"]) | (\"\[^]) | (\"\"[^\"]) | (\"\"\[^])
-//QUO_STRING_CHAR = [^\\\"] | {ANY_ESCAPE_SEQUENCE} | {ONE_TWO_QUO}
-//TRIPLE_QUOTED_LITERAL = {THREE_QUO} {QUO_STRING_CHAR}* {THREE_QUO}?
-
-//%%
-//<YYINITIAL> {TRIPLE_QUOTED_LITERAL }{ return STRING; }
-//<YYINITIAL> {QUOTED_LITERAL} { return STRING; }
+ESC = "\\" ( [^] )
+CHAR = {ESC} | [^\'\"\\]
+STRING_BAD1 = \" ({CHAR} | \') *
+StringLiteral = {STRING_BAD1} \"
 
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
 NameChars = {NameChar}+
