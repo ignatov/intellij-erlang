@@ -5335,7 +5335,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '{' typed_exprs '}'
+  // '{' typed_exprs? '}'
   public static boolean typed_record_fields(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_record_fields")) return false;
     if (!nextTokenIs(builder_, ERL_CURLY_LEFT)) return false;
@@ -5345,7 +5345,7 @@ public class ErlangParser implements PsiParser {
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
     result_ = consumeToken(builder_, ERL_CURLY_LEFT);
     pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, typed_exprs(builder_, level_ + 1));
+    result_ = result_ && report_error_(builder_, typed_record_fields_1(builder_, level_ + 1));
     result_ = pinned_ && consumeToken(builder_, ERL_CURLY_RIGHT) && result_;
     if (result_ || pinned_) {
       marker_.done(ERL_TYPED_RECORD_FIELDS);
@@ -5355,6 +5355,13 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
+  }
+
+  // typed_exprs?
+  private static boolean typed_record_fields_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "typed_record_fields_1")) return false;
+    typed_exprs(builder_, level_ + 1);
+    return true;
   }
 
   final static Parser recoverer_parser_ = new Parser() {

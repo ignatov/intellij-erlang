@@ -153,7 +153,7 @@ export_function ::= q_atom '/' integer {
 type_spec ::= ('(' spec_fun type_sigs ')') | spec_fun type_sigs
 spec_fun ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])]
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
-typed_record_fields ::= '{' typed_exprs '}' {pin=1}
+typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
 typed_exprs ::= typed_expr (',' typed_expr)*
 typed_expr ::= expression ['::' top_type]
 type_sigs ::= type_sig (';' type_sig)*
