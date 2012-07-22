@@ -1,0 +1,26 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('slow_media')
+      PsiElement(()('(')
+      PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_RECORD_EXPRESSION
+          PsiElement(#)('#')
+          ERL_Q_ATOM
+            PsiElement(atom)('erlyvideo_event')
+          ERL_RECORD_TUPLE
+            PsiElement({)('{')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('event')
+              PsiElement(=)('=')
+              ERL_Q_ATOM
+                PsiElement(atom)('stream')
+              PsiElement(.)('.')
+              ERL_Q_ATOM
+                PsiElement(atom)('slow_media')
+            PsiElement(})('}')
+  PsiElement(.)('.')

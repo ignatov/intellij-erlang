@@ -3421,6 +3421,28 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // q_atom '.' q_atom
+  static boolean qualified_atom_expression(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "qualified_atom_expression")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    final Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
+    result_ = q_atom(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_DOT);
+    result_ = result_ && q_atom(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
   // '.' q_atom
   public static boolean qualified_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "qualified_expression")) return false;
@@ -3716,19 +3738,41 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom_or_var '=' expression
+  // q_atom_or_var '=' (qualified_atom_expression | expression)
   public static boolean record_field(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_field")) return false;
     boolean result_ = false;
     final Marker marker_ = builder_.mark();
     result_ = q_atom_or_var(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_OP_EQ);
-    result_ = result_ && expression(builder_, level_ + 1);
+    result_ = result_ && record_field_2(builder_, level_ + 1);
     if (result_) {
       marker_.done(ERL_RECORD_FIELD);
     }
     else {
       marker_.rollbackTo();
+    }
+    return result_;
+  }
+
+  // (qualified_atom_expression | expression)
+  private static boolean record_field_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_field_2")) return false;
+    return record_field_2_0(builder_, level_ + 1);
+  }
+
+  // qualified_atom_expression | expression
+  private static boolean record_field_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_field_2_0")) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = qualified_atom_expression(builder_, level_ + 1);
+    if (!result_) result_ = expression(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
     }
     return result_;
   }

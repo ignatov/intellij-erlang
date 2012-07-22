@@ -278,7 +278,8 @@ record_expression ::= max_expression? '#' q_atom (('.' q_atom) | record_tuple) {
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
 private record_fields ::= record_field (',' record_field)*
-record_field ::= q_atom_or_var '=' expression
+record_field ::= q_atom_or_var '=' (qualified_atom_expression | expression)
+private qualified_atom_expression ::= q_atom '.' q_atom {pin=0}
 module_ref ::= q_atom {
   methods = [getReference]
 }

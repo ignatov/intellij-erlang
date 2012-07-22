@@ -17,15 +17,15 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+    return findChildByClass(ErlangExpression.class);
   }
 
   @Override
-  @Nullable
-  public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+  @NotNull
+  public List<ErlangQAtom> getQAtomList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
   }
 
   @Override

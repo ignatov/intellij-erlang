@@ -33,10 +33,11 @@ public class ErlangParserTest extends ParsingTestCase {
   public void testMp4Mux()            { doTest(true); }
   public void testComments()          { doTest(true); }
   public void testMultiline()         { doTest(true); }
+  public void testRecordExpression()  { doTest(true); }
 
   @Override
   protected void doTest(boolean checkResult) {
-//    OVERWRITE_TESTDATA = true;
+    OVERWRITE_TESTDATA = true;
 
     super.doTest(checkResult);
     assertFalse(

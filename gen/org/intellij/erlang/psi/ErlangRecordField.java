@@ -7,11 +7,11 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangRecordField extends ErlangCompositeElement {
 
-  @NotNull
+  @Nullable
   ErlangExpression getExpression();
 
-  @Nullable
-  ErlangQAtom getQAtom();
+  @NotNull
+  List<ErlangQAtom> getQAtomList();
 
   @Nullable
   ErlangQVar getQVar();
