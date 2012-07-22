@@ -144,7 +144,7 @@ module ::= 'module' '(' q_atom (',' argument_definition)? ')' {
 }
 
 atom_attribute ::= q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
-private export_functions ::= '[' export_function (',' export_function)* ']' {pin=1}
+private export_functions ::= '[' [export_function (',' export_function)*] ']' {pin=1}
 export_function ::= q_atom '/' integer {
   pin= 1
   methods = [getReference]
