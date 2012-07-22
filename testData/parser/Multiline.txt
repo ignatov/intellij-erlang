@@ -1,0 +1,12 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('handle')
+      PsiElement(()('(')
+      PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          PsiElement(string)('"<html xmlns=\"xhtml\">\n  </html>\n\t"')
+  PsiElement(.)('.')

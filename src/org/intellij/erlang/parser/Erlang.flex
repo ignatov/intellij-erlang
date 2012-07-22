@@ -66,8 +66,20 @@ CharLiteralChar = {InputCharacter} | {EscapeSequence}
 CharLiteral = \$ {CharLiteralChar}
 
 /* Without the \\\" at the start the lexer won't find it, for unknown reasons */
-StringChar =  \\\" | EscapeSequence | [^\"\n\000-\037] | \n
+StringChar =  \\\" | [^\"]
 StringLiteral = \"\" | \"{StringChar}+\"
+
+//QUOTED_LITERAL="'" ([^\\\'\r\n] | {ESCAPE_SEQUENCE} | (\[\r\n]))* ("'"|\)?
+//ESCAPE_SEQUENCE=\[^\r\n]
+//ANY_ESCAPE_SEQUENCE = \[^]
+//THREE_QUO = (\"\"\")
+//ONE_TWO_QUO = (\"[^\"]) | (\"\[^]) | (\"\"[^\"]) | (\"\"\[^])
+//QUO_STRING_CHAR = [^\\\"] | {ANY_ESCAPE_SEQUENCE} | {ONE_TWO_QUO}
+//TRIPLE_QUOTED_LITERAL = {THREE_QUO} {QUO_STRING_CHAR}* {THREE_QUO}?
+
+//%%
+//<YYINITIAL> {TRIPLE_QUOTED_LITERAL }{ return STRING; }
+//<YYINITIAL> {QUOTED_LITERAL} { return STRING; }
 
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
 NameChars = {NameChar}+
