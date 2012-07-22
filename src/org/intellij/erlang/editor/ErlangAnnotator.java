@@ -63,6 +63,12 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       }
 
       @Override
+      public void visitInclude(@NotNull ErlangInclude o) {
+        markFirstChildAsKeyword(o, annotationHolder);
+        markAttributeNameAsKeyword(o, annotationHolder, "include");
+      }
+
+      @Override
       public void visitModule(@NotNull ErlangModule o) {
         markFirstChildAsKeyword(o, annotationHolder);
         String ext = FileUtil.getExtension(o.getContainingFile().getName());
@@ -78,14 +84,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
         markFirstChildAsKeyword(o, annotationHolder);
-        PsiElement rec = o.getFirstChild();
-        while (rec != null) {
-          if (rec instanceof LeafPsiElement && "record".equals(rec.getText())) break;
-          rec = rec.getNextSibling();
-        }
-        if (rec != null) {
-          setHighlighting(rec, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
-        }
+        markAttributeNameAsKeyword(o, annotationHolder, "record");
       }
 
       @Override
@@ -95,6 +94,17 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       // todo: add export, import and other bundled attributes
     });
+  }
+
+  private static void markAttributeNameAsKeyword(ErlangCompositeElement o, AnnotationHolder annotationHolder, String name) {
+    PsiElement rec = o.getFirstChild();
+    while (rec != null) {
+      if (rec instanceof LeafPsiElement && name.equals(rec.getText())) break;
+      rec = rec.getNextSibling();
+    }
+    if (rec != null) {
+      setHighlighting(rec, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+    }
   }
 
   private static void markIfUnresolved(ErlangCompositeElement o, ErlangCompositeElement errorElement, AnnotationHolder annotationHolder, String text) {

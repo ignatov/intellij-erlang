@@ -274,7 +274,7 @@ ERL_FILE
       PsiElement(})('}')
     PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Exported Types')
+  PsiComment(function_doc_comment)('%% Exported Types')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE

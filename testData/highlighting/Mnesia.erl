@@ -302,7 +302,7 @@ ms() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Activity mgt
 
--spec abort(<error>_</error>) -> no_return().
+-spec abort(_) -> no_return().
 
 abort(Reason) -> 
     exit({aborted, Reason}).

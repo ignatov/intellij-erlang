@@ -42,9 +42,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
         // add completion for records on #<caret>
+        // todo: cleanup this weird code
         PsiElement position = parameters.getPosition();
-        PsiElement prevSibling = position.getParent().getPrevSibling();
-        if (prevSibling!= null && "#".equals(prevSibling.getText())) {
+        PsiElement possibleDies = position.getParent().getPrevSibling();
+        PsiElement prevSibling = position.getPrevSibling();
+        possibleDies = possibleDies != null ? possibleDies : prevSibling == null ? null : PsiTreeUtil.getDeepestLast(prevSibling).getPrevSibling();
+        if (possibleDies != null && "#".equals(possibleDies.getText())) {
           result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(position.getContainingFile()));
         }
 

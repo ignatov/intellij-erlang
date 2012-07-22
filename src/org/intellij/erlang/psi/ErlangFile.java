@@ -24,4 +24,7 @@ public interface ErlangFile extends PsiFile {
 
   @Nullable
   ErlangRecordDefinition getRecord(String name);
+
+  @NotNull
+  List<ErlangInclude> getIncludes();
 }

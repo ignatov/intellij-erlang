@@ -173,6 +173,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_IF_EXPRESSION) {
       result_ = if_expression(builder_, level_ + 1);
     }
+    else if (root_ == ERL_INCLUDE) {
+      result_ = include(builder_, level_ + 1);
+    }
     else if (root_ == ERL_INT_TYPE) {
       result_ = int_type(builder_, level_ + 1);
     }
@@ -2061,7 +2064,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // function | rule | record_definition | attribute
+  // function | rule | record_definition | include | attribute
   static boolean form(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "form")) return false;
     boolean result_ = false;
@@ -2070,6 +2073,7 @@ public class ErlangParser implements PsiParser {
     result_ = function(builder_, level_ + 1);
     if (!result_) result_ = rule(builder_, level_ + 1);
     if (!result_) result_ = record_definition(builder_, level_ + 1);
+    if (!result_) result_ = include(builder_, level_ + 1);
     if (!result_) result_ = attribute(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
@@ -2761,6 +2765,31 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // '-' 'include' '(' string ')'
+  public static boolean include(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "include")) return false;
+    if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    final Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
+    result_ = consumeToken(builder_, ERL_OP_MINUS);
+    result_ = result_ && consumeToken(builder_, "include");
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_STRING)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_INCLUDE);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
   // '-'? integer
   public static boolean int_type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "int_type")) return false;
@@ -3096,9 +3125,9 @@ public class ErlangParser implements PsiParser {
     final Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
     result_ = consumeToken(builder_, "module");
-    result_ = result_ && consumeToken(builder_, ERL_PAR_LEFT);
-    pinned_ = result_; // pin = 2
-    result_ = result_ && report_error_(builder_, q_atom(builder_, level_ + 1));
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, q_atom(builder_, level_ + 1)) && result_;
     result_ = pinned_ && report_error_(builder_, module_3(builder_, level_ + 1)) && result_;
     result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
     if (result_ || pinned_) {

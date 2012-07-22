@@ -112,7 +112,7 @@
 }
 
 forms ::= form ('.' form)*
-private form ::= function | rule | record_definition | attribute {recoverUntil=recoverer}
+private form ::= function | rule | record_definition | include | attribute {recoverUntil=recoverer}
 
 q_atom ::= '?'? atom
 q_var ::= '_' | ('?'? var) {
@@ -125,6 +125,8 @@ record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   pin=2
   methods = [getName setName getNameIdentifier getTextOffset]
 }
+
+include ::= '-' 'include' '(' string ')' {pin=2}
 
 attribute ::= '-' (
   module

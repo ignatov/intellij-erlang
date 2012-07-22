@@ -3167,7 +3167,7 @@ ERL_FILE
   PsiComment(ERL_LINE_COMMENT)('%   ?D({pread, Offset, CachedSize}),')
   PsiComment(ERL_LINE_COMMENT)('%   {ok, Bin} = Module:pread(Device, Offset, CachedSize),')
   PsiComment(ERL_LINE_COMMENT)('%   put(cached_bin, Bin).')
-  PsiComment(ERL_LINE_COMMENT)('%% Generic')
+  PsiComment(function_doc_comment)('%% Generic')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4651,7 +4651,7 @@ ERL_FILE
               PsiElement(])(']')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Special')
+  PsiComment(function_doc_comment)('%% Special')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -6695,7 +6695,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('State')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%% NIF')
+  PsiComment(module_doc_comment)('%%% NIF')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

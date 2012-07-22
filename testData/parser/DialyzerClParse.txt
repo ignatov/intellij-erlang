@@ -1,23 +1,5 @@
 ERL_FILE
-  PsiComment(ERL_LINE_COMMENT)('%% -*- erlang-indent-level: 2 -*-')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
-  PsiComment(ERL_LINE_COMMENT)('%% %CopyrightBegin%')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Copyright Ericsson AB 2006-2011. All Rights Reserved.')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% The contents of this file are subject to the Erlang Public License,')
-  PsiComment(ERL_LINE_COMMENT)('%% Version 1.1, (the "License"); you may not use this file except in')
-  PsiComment(ERL_LINE_COMMENT)('%% compliance with the License. You should have received a copy of the')
-  PsiComment(ERL_LINE_COMMENT)('%% Erlang Public License along with this software. If not, it can be')
-  PsiComment(ERL_LINE_COMMENT)('%% retrieved online at http://www.erlang.org/.')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Software distributed under the License is distributed on an "AS IS"')
-  PsiComment(ERL_LINE_COMMENT)('%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See')
-  PsiComment(ERL_LINE_COMMENT)('%% the License for the specific language governing rights and limitations')
-  PsiComment(ERL_LINE_COMMENT)('%% under the License.')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% %CopyrightEnd%')
-  PsiComment(ERL_LINE_COMMENT)('%%')
+  PsiComment(function_doc_comment)('%% -*- erlang-indent-level: 2 -*-\n%%-----------------------------------------------------------------------\n%% %CopyrightBegin%\n%%\n%% Copyright Ericsson AB 2006-2011. All Rights Reserved.\n%%\n%% The contents of this file are subject to the Erlang Public License,\n%% Version 1.1, (the "License"); you may not use this file except in\n%% compliance with the License. You should have received a copy of the\n%% Erlang Public License along with this software. If not, it can be\n%% retrieved online at http://www.erlang.org/.\n%%\n%% Software distributed under the License is distributed on an "AS IS"\n%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See\n%% the License for the specific language governing rights and limitations\n%% under the License.\n%%\n%% %CopyrightEnd%\n%%')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
@@ -62,18 +44,14 @@ ERL_FILE
       PsiElement())(')')
   PsiElement(.)('.')
   PsiComment(ERL_LINE_COMMENT)('% used also by typer')
-  ERL_ATTRIBUTE
+  ERL_INCLUDE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        PsiElement(atom)('include')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          PsiElement(string)('"dialyzer.hrl"')
-        PsiElement())(')')
+    PsiElement(atom)('include')
+    PsiElement(()('(')
+    PsiElement(string)('"dialyzer.hrl"')
+    PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -237,7 +215,7 @@ ERL_FILE
                       PsiElement())(')')
                 PsiElement(])(']')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
@@ -2874,7 +2852,7 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2923,7 +2901,7 @@ ERL_FILE
                 PsiElement(var)('Args')
             PsiElement())(')')
         PsiElement(,)(',')
-        PsiComment(ERL_LINE_COMMENT)('%% if all files specified are ".erl" files, set the 'src' flag automatically')
+        PsiComment(function_doc_comment)('%% if all files specified are ".erl" files, set the 'src' flag automatically')
         ERL_CASE_EXPRESSION
           PsiElement(case)('case')
           ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -3524,7 +3502,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('ok')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
@@ -3750,7 +3728,7 @@ ERL_FILE
             PsiElement(])(']')
           PsiElement(})('}')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4070,7 +4048,7 @@ ERL_FILE
             PsiElement(})('}')
           PsiElement(])(']')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
@@ -4331,7 +4309,7 @@ ERL_FILE
                   PsiElement(var)('Acc')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4525,7 +4503,7 @@ ERL_FILE
             PsiElement(])(']')
           PsiElement(})('}')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%-----------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION

@@ -1,24 +1,5 @@
 ERL_FILE
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% %CopyrightBegin%')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Copyright Ericsson AB 1996-2011. All Rights Reserved.')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% The contents of this file are subject to the Erlang Public License,')
-  PsiComment(ERL_LINE_COMMENT)('%% Version 1.1, (the "License"); you may not use this file except in')
-  PsiComment(ERL_LINE_COMMENT)('%% compliance with the License. You should have received a copy of the')
-  PsiComment(ERL_LINE_COMMENT)('%% Erlang Public License along with this software. If not, it can be')
-  PsiComment(ERL_LINE_COMMENT)('%% retrieved online at http://www.erlang.org/.')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Software distributed under the License is distributed on an "AS IS"')
-  PsiComment(ERL_LINE_COMMENT)('%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See')
-  PsiComment(ERL_LINE_COMMENT)('%% the License for the specific language governing rights and limitations')
-  PsiComment(ERL_LINE_COMMENT)('%% under the License.')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% %CopyrightEnd%')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%%')
-  PsiComment(ERL_LINE_COMMENT)('%% This module exports the public interface of the Mnesia DBMS engine')
+  PsiComment(function_doc_comment)('%%\n%% %CopyrightBegin%\n%%\n%% Copyright Ericsson AB 1996-2011. All Rights Reserved.\n%%\n%% The contents of this file are subject to the Erlang Public License,\n%% Version 1.1, (the "License"); you may not use this file except in\n%% compliance with the License. You should have received a copy of the\n%% Erlang Public License along with this software. If not, it can be\n%% retrieved online at http://www.erlang.org/.\n%%\n%% Software distributed under the License is distributed on an "AS IS"\n%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See\n%% the License for the specific language governing rights and limitations\n%% under the License.\n%%\n%% %CopyrightEnd%\n%%\n\n%%\n%% This module exports the public interface of the Mnesia DBMS engine')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
@@ -35,7 +16,7 @@ ERL_FILE
       PsiElement(atom)('export')
       PsiElement(()('(')
       PsiElement([)('[')
-      PsiComment(ERL_LINE_COMMENT)('%% Start, stop and debugging')
+      PsiComment(function_doc_comment)('%% Start, stop and debugging')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('start')
@@ -86,7 +67,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('2')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Activity mgt')
+      PsiComment(function_doc_comment)('%% Activity mgt')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('abort')
@@ -190,7 +171,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('0')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Access within an activity - Lock acquisition')
+      PsiComment(function_doc_comment)('%% Access within an activity - Lock acquisition')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('lock')
@@ -215,7 +196,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('1')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Access within an activity - Updates')
+      PsiComment(function_doc_comment)('%% Access within an activity - Updates')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('write')
@@ -288,7 +269,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('5')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Access within an activity - Reads')
+      PsiComment(function_doc_comment)('%% Access within an activity - Reads')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('read')
@@ -463,7 +444,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('4')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Iterators within an activity ')
+      PsiComment(function_doc_comment)('%% Iterators within an activity ')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('foldl')
@@ -488,7 +469,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('4')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Dirty access regardless of activities - Updates')
+      PsiComment(function_doc_comment)('%% Dirty access regardless of activities - Updates')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('dirty_write')
@@ -537,7 +518,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('3')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Dirty access regardless of activities - Read')
+      PsiComment(function_doc_comment)('%% Dirty access regardless of activities - Read')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('dirty_read')
@@ -622,7 +603,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('2')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Info')
+      PsiComment(function_doc_comment)('%% Info')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('table_info')
@@ -672,7 +653,7 @@ ERL_FILE
         PsiElement(integer)('0')
       PsiElement(,)(',')
       PsiComment(ERL_LINE_COMMENT)('% Not for public use')
-      PsiComment(ERL_LINE_COMMENT)('%% Database mgt')
+      PsiComment(function_doc_comment)('%% Database mgt')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('create_schema')
@@ -763,7 +744,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('2')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Table mgt')
+      PsiComment(function_doc_comment)('%% Table mgt')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('create_table')
@@ -866,7 +847,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('4')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Table load')
+      PsiComment(function_doc_comment)('%% Table load')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('dump_tables')
@@ -909,7 +890,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('2')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Misc admin')
+      PsiComment(function_doc_comment)('%% Misc admin')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('dump_log')
@@ -934,7 +915,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('1')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Snmp')
+      PsiComment(function_doc_comment)('%% Snmp')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('snmp_open_table')
@@ -965,7 +946,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('2')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Textfile access')
+      PsiComment(function_doc_comment)('%% Textfile access')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('load_textfile')
@@ -978,7 +959,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('1')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% QLC functions')
+      PsiComment(function_doc_comment)('%% QLC functions')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('table')
@@ -991,7 +972,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('2')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Mnemosyne exclusive')
+      PsiComment(function_doc_comment)('%% Mnemosyne exclusive')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('get_activity_id')
@@ -1005,7 +986,7 @@ ERL_FILE
         PsiElement(integer)('1')
       PsiElement(,)(',')
       PsiComment(ERL_LINE_COMMENT)('% Not for public use')
-      PsiComment(ERL_LINE_COMMENT)('%% Mnesia internal functions')
+      PsiComment(function_doc_comment)('%% Mnesia internal functions')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('dirty_rpc')
@@ -1055,7 +1036,7 @@ ERL_FILE
         PsiElement(/)('/')
         PsiElement(integer)('6')
       PsiElement(,)(',')
-      PsiComment(ERL_LINE_COMMENT)('%% Module internal callback functions')
+      PsiComment(function_doc_comment)('%% Module internal callback functions')
       ERL_EXPORT_FUNCTION
         ERL_Q_ATOM
           PsiElement(atom)('raw_table_info')
@@ -1079,17 +1060,13 @@ ERL_FILE
       PsiElement(])(']')
       PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  ERL_ATTRIBUTE
+  PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+  ERL_INCLUDE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        PsiElement(atom)('include')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          PsiElement(string)('"mnesia.hrl"')
-        PsiElement())(')')
+    PsiElement(atom)('include')
+    PsiElement(()('(')
+    PsiElement(string)('"mnesia.hrl"')
+    PsiElement())(')')
   PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -1131,7 +1108,7 @@ ERL_FILE
             PsiElement(var)('MODULE')
         PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Select ')
+  PsiComment(function_doc_comment)('%% Select ')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -1210,7 +1187,7 @@ ERL_FILE
           PsiElement(])(']')
         PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Local function in order to avoid external function call')
+  PsiComment(function_doc_comment)('%% Local function in order to avoid external function call')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1715,8 +1692,7 @@ ERL_FILE
                     PsiElement(var)('Other')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Start and stop')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Start and stop')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2431,8 +2407,7 @@ ERL_FILE
             PsiElement(})('}')
           PsiElement(})('}')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Debugging')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Debugging')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2625,8 +2600,7 @@ ERL_FILE
             ERL_Q_ATOM
               PsiElement(atom)('mnesia_locker')
           PsiElement(,)(',')
-          PsiComment(ERL_LINE_COMMENT)('%% Keep these last in the list, so')
-          PsiComment(ERL_LINE_COMMENT)('%% mnesia_sup kills these last')
+          PsiComment(function_doc_comment)('%% Keep these last in the list, so\n     %% mnesia_sup kills these last')
           ERL_EXPRESSION
             ERL_Q_ATOM
               PsiElement(atom)('mnesia_monitor')
@@ -2636,8 +2610,7 @@ ERL_FILE
               PsiElement(atom)('mnesia_event')
           PsiElement(])(']')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Activity mgt')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Activity mgt')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
@@ -4631,15 +4604,7 @@ ERL_FILE
                     PsiElement())(')')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Access within an activity - lock acquisition')
-  PsiComment(ERL_LINE_COMMENT)('%% Grab a lock on an item in the global lock table')
-  PsiComment(ERL_LINE_COMMENT)('%% Item may be any term. Lock may be write or read.')
-  PsiComment(ERL_LINE_COMMENT)('%% write lock is set on all the given nodes')
-  PsiComment(ERL_LINE_COMMENT)('%% read lock is only set on the first node')
-  PsiComment(ERL_LINE_COMMENT)('%% Nodes may either be a list of nodes or one node as an atom')
-  PsiComment(ERL_LINE_COMMENT)('%% Mnesia on all Nodes must be connected to each other, but')
-  PsiComment(ERL_LINE_COMMENT)('%% it is not neccessary that they are up and running.')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Access within an activity - lock acquisition\n\n%% Grab a lock on an item in the global lock table\n%% Item may be any term. Lock may be write or read.\n%% write lock is set on all the given nodes\n%% read lock is only set on the first node\n%% Nodes may either be a list of nodes or one node as an atom\n%% Mnesia on all Nodes must be connected to each other, but\n%% it is not neccessary that they are up and running.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4990,7 +4955,7 @@ ERL_FILE
                   PsiElement(])(']')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Grab a read lock on a whole table')
+  PsiComment(function_doc_comment)('%% Grab a read lock on a whole table')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -5028,7 +4993,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('ok')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Grab a write lock on a whole table')
+  PsiComment(function_doc_comment)('%% Grab a write lock on a whole table')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -5857,8 +5822,7 @@ ERL_FILE
                   PsiElement(var)('Recover')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Access within an activity - updates')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Access within an activity - updates')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -8442,8 +8406,7 @@ ERL_FILE
                     PsiElement())(')')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Access within an activity - read')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Access within an activity - read')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -10606,7 +10569,7 @@ ERL_FILE
               PsiElement(})('}')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Compensate for transaction written and/or deleted records')
+  PsiComment(function_doc_comment)('%% Compensate for transaction written and/or deleted records')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -10833,7 +10796,7 @@ ERL_FILE
       PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(ERL_LINE_COMMENT)('%% Had to match on error, ouch..')
+        PsiComment(function_doc_comment)('%% Had to match on error, ouch..')
         ERL_CASE_EXPRESSION
           PsiElement(case)('case')
           ERL_FUNCTION_CALL_EXPRESSION
@@ -11790,7 +11753,7 @@ ERL_FILE
                                   PsiElement(var)('Keys')
                               PsiElement())(')')
                       PsiElement(;)(';')
-                      PsiComment(ERL_LINE_COMMENT)('%% First stored key')
+                      PsiComment(function_doc_comment)('%% First stored key')
                       ERL_CR_CLAUSE
                         ERL_ARGUMENT_DEFINITION
                           ERL_LIST_EXPRESSION
@@ -11855,7 +11818,7 @@ ERL_FILE
                     PsiElement(_)('_')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Really slow anybody got another solution??')
+                PsiComment(function_doc_comment)('%% Really slow anybody got another solution??')
                 ERL_CASE_EXPRESSION
                   PsiElement(case)('case')
                   ERL_FUNCTION_CALL_EXPRESSION
@@ -11891,7 +11854,7 @@ ERL_FILE
                             PsiElement(_)('_')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        PsiComment(ERL_LINE_COMMENT)('%% Updated value we already returned this key')
+                        PsiComment(function_doc_comment)('%% Updated value we already returned this key')
                         ERL_FUNCTION_CALL_EXPRESSION
                           ERL_Q_ATOM
                             PsiElement(atom)('get_next_tskey')
@@ -12388,8 +12351,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('Acc')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Iterators ')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%\n%% Iterators ')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -13482,7 +13444,7 @@ ERL_FILE
       PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(ERL_LINE_COMMENT)('%% Type is set or bag ')
+        PsiComment(function_doc_comment)('%% Type is set or bag ')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
@@ -13958,11 +13920,11 @@ ERL_FILE
                       PsiElement(atom)('true')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
-                  PsiComment(ERL_LINE_COMMENT)('%% Order doesn't matter for set and bag')
+                  PsiComment(function_doc_comment)('%% Order doesn't matter for set and bag')
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('TempPrev')
-            PsiComment(ERL_LINE_COMMENT)('%% Keep the order so we can use ordsets:del_element')
+            PsiComment(function_doc_comment)('%% Keep the order so we can use ordsets:del_element')
             PsiElement(end)('end')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
@@ -14772,7 +14734,7 @@ ERL_FILE
       PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(ERL_LINE_COMMENT)('%% Type is set or bag ')
+        PsiComment(function_doc_comment)('%% Type is set or bag ')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
@@ -15390,9 +15352,7 @@ ERL_FILE
                     PsiElement())(')')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% This routine fixes up the return value from read/1 so that')
-  PsiComment(ERL_LINE_COMMENT)('%% it is correct with respect to what this particular transaction')
-  PsiComment(ERL_LINE_COMMENT)('%% has already written, deleted .... etc')
+  PsiComment(function_doc_comment)('%% This routine fixes up the return value from read/1 so that\n%% it is correct with respect to what this particular transaction\n%% has already written, deleted .... etc')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -15727,7 +15687,7 @@ ERL_FILE
                     PsiElement(var)('Ack')
                 PsiElement())(')')
     PsiElement(;)(';')
-    PsiComment(ERL_LINE_COMMENT)('%% Oldest write first as in ets')
+    PsiComment(function_doc_comment)('%% Oldest write first as in ets')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('add_written_to_bag')
@@ -15768,8 +15728,7 @@ ERL_FILE
       PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(ERL_LINE_COMMENT)('%% This transaction just deleted all objects')
-        PsiComment(ERL_LINE_COMMENT)('%% with this key')
+        PsiComment(function_doc_comment)('%% This transaction just deleted all objects\n    %% with this key')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('add_written_to_bag')
@@ -16754,7 +16713,7 @@ ERL_FILE
       PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(ERL_LINE_COMMENT)('%% Must use keysort which is stable')
+        PsiComment(function_doc_comment)('%% Must use keysort which is stable')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('add_ordered_match')
@@ -17085,7 +17044,7 @@ ERL_FILE
                 PsiElement(atom)('set')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% For ordered_set only !!')
+  PsiComment(function_doc_comment)('%% For ordered_set only !!')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -17397,7 +17356,7 @@ ERL_FILE
                 PsiElement(var)('Acc')
             PsiElement())(')')
     PsiElement(;)(';')
-    PsiComment(ERL_LINE_COMMENT)('%% Greater than last object')
+    PsiComment(function_doc_comment)('%% Greater than last object')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('add_ordered_match')
@@ -17506,7 +17465,7 @@ ERL_FILE
                 PsiElement(var)('Acc')
             PsiElement())(')')
     PsiElement(;)(';')
-    PsiComment(ERL_LINE_COMMENT)('%% Keys are equal from here ')
+    PsiComment(function_doc_comment)('%% Keys are equal from here ')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('add_ordered_match')
@@ -17811,7 +17770,7 @@ ERL_FILE
                   PsiElement(var)('Objs')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% For select chunk')
+  PsiComment(function_doc_comment)('%% For select chunk')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -18095,7 +18054,7 @@ ERL_FILE
                     PsiElement(var)('NewObjs')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% If bag we may get more in next chunk')
+                PsiComment(function_doc_comment)('%% If bag we may get more in next chunk')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('add_sel_match')
@@ -18652,7 +18611,7 @@ ERL_FILE
                     PsiElement())(')')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% For ordered_set only !!')
+  PsiComment(function_doc_comment)('%% For ordered_set only !!')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -18964,7 +18923,7 @@ ERL_FILE
                 PsiElement(var)('Acc')
             PsiElement())(')')
     PsiElement(;)(';')
-    PsiComment(ERL_LINE_COMMENT)('%% Greater than last object')
+    PsiComment(function_doc_comment)('%% Greater than last object')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('add_sel_ordered_match')
@@ -19008,7 +18967,7 @@ ERL_FILE
               PsiElement(var)('Ops1')
           PsiElement(})('}')
     PsiElement(;)(';')
-    PsiComment(ERL_LINE_COMMENT)('%% Keys are equal from here ')
+    PsiComment(function_doc_comment)('%% Keys are equal from here ')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('add_sel_ordered_match')
@@ -19459,7 +19418,7 @@ ERL_FILE
                 PsiElement())(')')
           PsiElement(])(']')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%')
+  PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%')
   PsiComment(ERL_LINE_COMMENT)('% select ')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -20000,8 +19959,7 @@ ERL_FILE
                           PsiElement(])(']')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        PsiComment(ERL_LINE_COMMENT)('%% Nothing changed in the table during this transaction,')
-                        PsiComment(ERL_LINE_COMMENT)('%% Simple case get results from [d]ets')
+                        PsiComment(function_doc_comment)('%% Nothing changed in the table during this transaction,\n\t\t    %% Simple case get results from [d]ets')
                         ERL_GENERIC_FUNCTION_CALL_EXPRESSION
                           ERL_Q_VAR
                             PsiElement(var)('SelectFun')
@@ -20019,8 +19977,7 @@ ERL_FILE
                             PsiElement(_)('_')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        PsiComment(ERL_LINE_COMMENT)('%% Hard (slow case) records added or deleted earlier ')
-                        PsiComment(ERL_LINE_COMMENT)('%% in the transaction, have to cope with that.')
+                        PsiComment(function_doc_comment)('%% Hard (slow case) records added or deleted earlier \n\t\t    %% in the transaction, have to cope with that.')
                         ERL_ASSIGNMENT_EXPRESSION
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
@@ -20186,7 +20143,7 @@ ERL_FILE
       PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(ERL_LINE_COMMENT)('%% Avoid table lock if possible')
+        PsiComment(function_doc_comment)('%% Avoid table lock if possible')
         ERL_CASE_EXPRESSION
           PsiElement(case)('case')
           ERL_MAX_EXPRESSION
@@ -20365,7 +20322,7 @@ ERL_FILE
                     PsiElement())(')')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Breakable Select')
+  PsiComment(function_doc_comment)('%% Breakable Select')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -21134,8 +21091,7 @@ ERL_FILE
                           PsiElement(])(']')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        PsiComment(ERL_LINE_COMMENT)('%% Nothing changed in the table during this transaction,')
-                        PsiComment(ERL_LINE_COMMENT)('%% Simple case get results from [d]ets')
+                        PsiComment(function_doc_comment)('%% Nothing changed in the table during this transaction,\n\t\t    %% Simple case get results from [d]ets')
                         ERL_FUNCTION_CALL_EXPRESSION
                           ERL_Q_ATOM
                             PsiElement(atom)('select_state')
@@ -21163,8 +21119,7 @@ ERL_FILE
                             PsiElement(_)('_')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        PsiComment(ERL_LINE_COMMENT)('%% Hard (slow case) records added or deleted earlier ')
-                        PsiComment(ERL_LINE_COMMENT)('%% in the transaction, have to cope with that.')
+                        PsiComment(function_doc_comment)('%% Hard (slow case) records added or deleted earlier \n\t\t    %% in the transaction, have to cope with that.')
                         ERL_ASSIGNMENT_EXPRESSION
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
@@ -21207,7 +21162,7 @@ ERL_FILE
                                         PsiElement(atom)('ordered_set')
                                 ERL_CLAUSE_BODY
                                   PsiElement(->)('->')
-                                  PsiComment(ERL_LINE_COMMENT)('%% Sort stable')
+                                  PsiComment(function_doc_comment)('%% Sort stable')
                                   ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                                     ERL_MODULE_REF
                                       ERL_Q_ATOM
@@ -23838,8 +23793,7 @@ ERL_FILE
               PsiElement(})('}')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Dirty access regardless of activities - updates')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Dirty access regardless of activities - updates')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24836,7 +24790,7 @@ ERL_FILE
               PsiElement(})('}')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% A Counter is an Oid being {CounterTab, CounterName}')
+  PsiComment(function_doc_comment)('%% A Counter is an Oid being {CounterTab, CounterName}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -25181,8 +25135,7 @@ ERL_FILE
               PsiElement(})('}')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Dirty access regardless of activities - read')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Dirty access regardless of activities - read')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -25282,9 +25235,7 @@ ERL_FILE
                 PsiElement(atom)('schema')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(ERL_LINE_COMMENT)('%%    case catch ?ets_lookup(Tab, Key) of')
-        PsiComment(ERL_LINE_COMMENT)('%%        {'EXIT', _} ->')
-        PsiComment(ERL_LINE_COMMENT)('%% Bad luck, we have to perform a real lookup')
+        PsiComment(function_doc_comment)('%%    case catch ?ets_lookup(Tab, Key) of\n%%        {'EXIT', _} ->\n            %% Bad luck, we have to perform a real lookup')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('dirty_rpc')
@@ -25314,9 +25265,7 @@ ERL_FILE
               PsiElement(])(']')
             PsiElement())(')')
     PsiElement(;)(';')
-    PsiComment(ERL_LINE_COMMENT)('%%        Val ->')
-    PsiComment(ERL_LINE_COMMENT)('%%            Val')
-    PsiComment(ERL_LINE_COMMENT)('%%    end;')
+    PsiComment(function_doc_comment)('%%        Val ->\n%%            Val\n%%    end;')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('dirty_read')
@@ -26391,8 +26340,7 @@ ERL_FILE
                             PsiElement(var)('Pos')
                         PsiElement())(')')
                 PsiElement(,)(',')
-                PsiComment(ERL_LINE_COMMENT)('%% Returns the records without applying the match spec')
-                PsiComment(ERL_LINE_COMMENT)('%% The actual filtering is handled by the caller')
+                PsiComment(function_doc_comment)('%% Returns the records without applying the match spec\n\t    %% The actual filtering is handled by the caller')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
@@ -28324,8 +28272,7 @@ ERL_FILE
                         PsiElement(integer)('20')
                       PsiElement())(')')
                 PsiElement(,)(',')
-                PsiComment(ERL_LINE_COMMENT)('%% Do not be too eager, and can't use yield on SMP')
-                PsiComment(ERL_LINE_COMMENT)('%% Sync with mnesia_monitor')
+                PsiComment(function_doc_comment)('%% Do not be too eager, and can't use yield on SMP\n\t    %% Sync with mnesia_monitor')
                 ERL_TRY_EXPRESSION
                   PsiElement(try)('try')
                   ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -28504,12 +28451,7 @@ ERL_FILE
                                       PsiElement())(')')
                               ERL_CLAUSE_BODY
                                 PsiElement(->)('->')
-                                PsiComment(ERL_LINE_COMMENT)('%% In order to perform a consistent')
-                                PsiComment(ERL_LINE_COMMENT)('%% retry of a transaction we need')
-                                PsiComment(ERL_LINE_COMMENT)('%% to acquire the lock on the NewNode.')
-                                PsiComment(ERL_LINE_COMMENT)('%% In this context we do neither know')
-                                PsiComment(ERL_LINE_COMMENT)('%% the kind or granularity of the lock.')
-                                PsiComment(ERL_LINE_COMMENT)('%% --> Abort the transaction ')
+                                PsiComment(function_doc_comment)('%% In order to perform a consistent\n\t\t\t    %% retry of a transaction we need\n\t\t\t    %% to acquire the lock on the NewNode.\n\t\t\t    %% In this context we do neither know\n\t\t\t    %% the kind or granularity of the lock.\n\t\t\t    %% --> Abort the transaction ')
                                 ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                                   ERL_MODULE_REF
                                     ERL_Q_ATOM
@@ -28553,7 +28495,7 @@ ERL_FILE
                                   PsiElement(})('}')
                               ERL_CLAUSE_BODY
                                 PsiElement(->)('->')
-                                PsiComment(ERL_LINE_COMMENT)('%% Mnesia is stopping')
+                                PsiComment(function_doc_comment)('%% Mnesia is stopping')
                                 ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                                   ERL_MODULE_REF
                                     ERL_Q_ATOM
@@ -28583,9 +28525,7 @@ ERL_FILE
                                     PsiElement(_)('_')
                               ERL_CLAUSE_BODY
                                 PsiElement(->)('->')
-                                PsiComment(ERL_LINE_COMMENT)('%% Splendid! A dirty retry is safe')
-                                PsiComment(ERL_LINE_COMMENT)('%% 'Node' probably went down now')
-                                PsiComment(ERL_LINE_COMMENT)('%% Let mnesia_controller get broken link message first')
+                                PsiComment(function_doc_comment)('%% Splendid! A dirty retry is safe\n\t\t\t    %% 'Node' probably went down now\n\t\t\t    %% Let mnesia_controller get broken link message first')
                                 ERL_FUNCTION_CALL_EXPRESSION
                                   ERL_Q_ATOM
                                     PsiElement(atom)('do_dirty_rpc')
@@ -28626,9 +28566,7 @@ ERL_FILE
                     PsiElement(var)('Other')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Info')
-  PsiComment(ERL_LINE_COMMENT)('%% Info about one table')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Info\n\n%% Info about one table')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
@@ -29665,7 +29603,7 @@ ERL_FILE
               PsiElement(})('}')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Raw info about all tables')
+  PsiComment(function_doc_comment)('%% Raw info about all tables')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -29686,7 +29624,7 @@ ERL_FILE
               PsiElement(()('(')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% Raw info about one tables')
+  PsiComment(function_doc_comment)('%% Raw info about one tables')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -31971,10 +31909,7 @@ ERL_FILE
                   PsiElement(})('}')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Ensure that we access the intended Mnesia')
-                PsiComment(ERL_LINE_COMMENT)('%% directory. This function may not be called')
-                PsiComment(ERL_LINE_COMMENT)('%% during startup since it will cause the')
-                PsiComment(ERL_LINE_COMMENT)('%% application_controller to get into deadlock')
+                PsiComment(function_doc_comment)('%% Ensure that we access the intended Mnesia\n\t    %% directory. This function may not be called\n\t    %% during startup since it will cause the\n\t    %% application_controller to get into deadlock')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('load_mnesia_or_abort')
@@ -32045,10 +31980,7 @@ ERL_FILE
                   PsiElement(})('}')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Ensure that we access the intended Mnesia')
-                PsiComment(ERL_LINE_COMMENT)('%% directory. This function may not be called')
-                PsiComment(ERL_LINE_COMMENT)('%% during startup since it will cause the')
-                PsiComment(ERL_LINE_COMMENT)('%% application_controller to get into deadlock')
+                PsiComment(function_doc_comment)('%% Ensure that we access the intended Mnesia\n\t    %% directory. This function may not be called\n\t    %% during startup since it will cause the\n\t    %% application_controller to get into deadlock')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('load_mnesia_or_abort')
@@ -32122,10 +32054,7 @@ ERL_FILE
                   PsiElement(})('}')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Ensure that we access the intended Mnesia')
-                PsiComment(ERL_LINE_COMMENT)('%% directory. This function may not be called')
-                PsiComment(ERL_LINE_COMMENT)('%% during startup since it will cause the')
-                PsiComment(ERL_LINE_COMMENT)('%% application_controller to get into deadlock')
+                PsiComment(function_doc_comment)('%% Ensure that we access the intended Mnesia\n\t    %% directory. This function may not be called\n\t    %% during startup since it will cause the\n\t    %% application_controller to get into deadlock')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('load_mnesia_or_abort')
@@ -32199,10 +32128,7 @@ ERL_FILE
                   PsiElement(})('}')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Ensure that we access the intended Mnesia')
-                PsiComment(ERL_LINE_COMMENT)('%% directory. This function may not be called')
-                PsiComment(ERL_LINE_COMMENT)('%% during startup since it will cause the')
-                PsiComment(ERL_LINE_COMMENT)('%% application_controller to get into deadlock')
+                PsiComment(function_doc_comment)('%% Ensure that we access the intended Mnesia\n\t    %% directory. This function may not be called\n\t    %% during startup since it will cause the\n\t    %% application_controller to get into deadlock')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('load_mnesia_or_abort')
@@ -32273,10 +32199,7 @@ ERL_FILE
                   PsiElement(})('}')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Ensure that we access the intended Mnesia')
-                PsiComment(ERL_LINE_COMMENT)('%% directory. This function may not be called')
-                PsiComment(ERL_LINE_COMMENT)('%% during startup since it will cause the')
-                PsiComment(ERL_LINE_COMMENT)('%% application_controller to get into deadlock')
+                PsiComment(function_doc_comment)('%% Ensure that we access the intended Mnesia\n\t    %% directory. This function may not be called\n\t    %% during startup since it will cause the\n\t    %% application_controller to get into deadlock')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('load_mnesia_or_abort')
@@ -32350,10 +32273,7 @@ ERL_FILE
                   PsiElement(})('}')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Ensure that we access the intended Mnesia')
-                PsiComment(ERL_LINE_COMMENT)('%% directory. This function may not be called')
-                PsiComment(ERL_LINE_COMMENT)('%% during startup since it will cause the')
-                PsiComment(ERL_LINE_COMMENT)('%% application_controller to get into deadlock')
+                PsiComment(function_doc_comment)('%% Ensure that we access the intended Mnesia\n\t    %% directory. This function may not be called\n\t    %% during startup since it will cause the\n\t    %% application_controller to get into deadlock')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('load_mnesia_or_abort')
@@ -32503,7 +32423,7 @@ ERL_FILE
                             PsiElement(atom)('false')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        PsiComment(ERL_LINE_COMMENT)('%% Ensure that it does not match')
+                        PsiComment(function_doc_comment)('%% Ensure that it does not match')
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
                           ERL_EXPRESSION
@@ -33917,8 +33837,7 @@ ERL_FILE
                     PsiElement())(')')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Database mgt')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Database mgt')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34443,8 +34362,7 @@ ERL_FILE
                   PsiElement(var)('Args')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Table mgt')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Table mgt')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35169,7 +35087,7 @@ ERL_FILE
                     PsiElement(_)('_')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Not allowed for clear_table')
+                PsiComment(function_doc_comment)('%% Not allowed for clear_table')
                 ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                   ERL_MODULE_REF
                     ERL_Q_ATOM
@@ -35452,8 +35370,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('ok')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Table mgt - user properties')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Table mgt - user properties')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35564,8 +35481,7 @@ ERL_FILE
                   PsiElement(var)('PropKey')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Table mgt - user properties')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Table mgt - user properties')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35602,9 +35518,7 @@ ERL_FILE
                   PsiElement(var)('FragProp')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Table mgt - table load')
-  PsiComment(ERL_LINE_COMMENT)('%% Dump a ram table to disc')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Table mgt - table load\n\n%% Dump a ram table to disc')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35632,7 +35546,7 @@ ERL_FILE
                   PsiElement(var)('Tabs')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%% allow the user to wait for some tables to be loaded')
+  PsiComment(function_doc_comment)('%% allow the user to wait for some tables to be loaded')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36859,8 +36773,7 @@ ERL_FILE
             PsiElement(})('}')
           PsiElement(})('}')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Misc admin')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Misc admin')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36986,8 +36899,7 @@ ERL_FILE
                 PsiElement(})('}')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Snmp')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Snmp')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -37190,7 +37102,7 @@ ERL_FILE
                             PsiElement(atom)('unknown')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        PsiComment(ERL_LINE_COMMENT)('%% Arrg contains fix_string')
+                        PsiComment(function_doc_comment)('%% Arrg contains fix_string')
                         ERL_ASSIGNMENT_EXPRESSION
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
@@ -37537,7 +37449,7 @@ ERL_FILE
               PsiElement(})('}')
             PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%')
+  PsiComment(module_doc_comment)('%%%%%%%%%%%%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -38240,7 +38152,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('endOfTable')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%')
+  PsiComment(module_doc_comment)('%%%%%%%%%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -38519,7 +38431,7 @@ ERL_FILE
                     PsiElement(atom)('unknown')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Contains fix_string needs lookup')
+                PsiComment(function_doc_comment)('%% Contains fix_string needs lookup')
                 ERL_CASE_EXPRESSION
                   PsiElement(case)('case')
                   ERL_FUNCTION_CALL_EXPRESSION
@@ -38784,7 +38696,7 @@ ERL_FILE
                     PsiElement(atom)('unknown')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(ERL_LINE_COMMENT)('%% Arrg contains fix_string')
+                PsiComment(function_doc_comment)('%% Arrg contains fix_string')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
@@ -39099,8 +39011,7 @@ ERL_FILE
                   PsiElement(end)('end')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Textfile access')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Textfile access')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -39155,9 +39066,7 @@ ERL_FILE
                   PsiElement(var)('F')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% QLC Handles')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% QLC Handles\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -40975,7 +40884,7 @@ ERL_FILE
                             PsiElement(_)('_')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        PsiComment(ERL_LINE_COMMENT)('%% Fragmented tables are not ordered')
+                        PsiComment(function_doc_comment)('%% Fragmented tables are not ordered')
                         ERL_MAX_EXPRESSION
                           ERL_Q_ATOM
                             PsiElement(atom)('no')
@@ -41385,7 +41294,7 @@ ERL_FILE
                 PsiElement(])(']')
               PsiElement())(')')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+  PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -41609,8 +41518,7 @@ ERL_FILE
                     PsiElement(atom)('ok')
           PsiElement(end)('end')
   PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-  PsiComment(ERL_LINE_COMMENT)('%% Mnemosyne exclusive')
+  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Mnemosyne exclusive')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

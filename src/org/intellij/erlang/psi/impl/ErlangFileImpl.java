@@ -33,6 +33,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   private CachedValue<List<ErlangFunction>> myFunctionValue;
   private CachedValue<List<ErlangAttribute>> myAttributeValue;
   private CachedValue<List<ErlangRecordDefinition>> myRecordValue;
+  private CachedValue<List<ErlangInclude>> myIncludeValue;
   private CachedValue<Map<Pair<String, Integer>, ErlangFunction>> myFunctionsMap;
   private CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap;
 
@@ -128,6 +129,34 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
       public boolean process(PsiElement psiElement) {
         if (psiElement instanceof ErlangRecordDefinition) {
           result.add((ErlangRecordDefinition) psiElement);
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
+  @NotNull
+  @Override
+  public List<ErlangInclude> getIncludes() {
+    if (myIncludeValue == null) {
+      myIncludeValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangInclude>>() {
+        @Override
+        public Result<List<ErlangInclude>> compute() {
+          return Result.create(calcIncludes(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myIncludeValue.getValue();
+  }
+
+  private List<ErlangInclude> calcIncludes() {
+    final List<ErlangInclude> result = new ArrayList<ErlangInclude>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangInclude) {
+          result.add((ErlangInclude) psiElement);
         }
         return true;
       }
