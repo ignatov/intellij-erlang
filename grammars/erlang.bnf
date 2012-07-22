@@ -268,7 +268,7 @@ lc_expression ::= (argument_definition (('<-' | '<=') expression)?) {pin=0}
 
 tuple_expression ::= '{' exprs? '}' {pin=1}
 
-record_expression ::= max_expression? '#' q_atom (('.' q_atom) | record_tuple) {
+record_expression ::= max_expression? '#' (q_atom | q_var) (('.' q_atom) | record_tuple) {
   pin=2
   methods = [
     atom_name = "q_atom[0]"

@@ -3659,7 +3659,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // max_expression? '#' q_atom (('.' q_atom) | record_tuple)
+  // max_expression? '#' (q_atom | q_var) (('.' q_atom) | record_tuple)
   public static boolean record_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_expression")) return false;
     boolean result_ = false;
@@ -3670,7 +3670,7 @@ public class ErlangParser implements PsiParser {
     result_ = record_expression_0(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_RADIX);
     pinned_ = result_; // pin = 2
-    result_ = result_ && report_error_(builder_, q_atom(builder_, level_ + 1));
+    result_ = result_ && report_error_(builder_, record_expression_2(builder_, level_ + 1));
     result_ = pinned_ && record_expression_3(builder_, level_ + 1) && result_;
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
     if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_RECORD_EXPRESSION)) {
@@ -3691,6 +3691,28 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "record_expression_0")) return false;
     max_expression(builder_, level_ + 1);
     return true;
+  }
+
+  // (q_atom | q_var)
+  private static boolean record_expression_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_expression_2")) return false;
+    return record_expression_2_0(builder_, level_ + 1);
+  }
+
+  // q_atom | q_var
+  private static boolean record_expression_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_expression_2_0")) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = q_atom(builder_, level_ + 1);
+    if (!result_) result_ = q_var(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
   }
 
   // (('.' q_atom) | record_tuple)

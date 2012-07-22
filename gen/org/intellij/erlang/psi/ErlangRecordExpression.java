@@ -15,6 +15,9 @@ public interface ErlangRecordExpression extends ErlangExpression {
   List<ErlangQAtom> getQAtomList();
 
   @Nullable
+  ErlangQVar getQVar();
+
+  @Nullable
   ErlangRecordTuple getRecordTuple();
 
   @Nullable

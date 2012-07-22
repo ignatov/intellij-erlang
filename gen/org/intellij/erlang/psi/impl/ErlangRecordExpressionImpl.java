@@ -31,6 +31,12 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
 
   @Override
   @Nullable
+  public ErlangQVar getQVar() {
+    return findChildByClass(ErlangQVar.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangRecordTuple getRecordTuple() {
     return findChildByClass(ErlangRecordTuple.class);
   }
