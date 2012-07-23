@@ -16,6 +16,12 @@ public class ErlangExpr700AImpl extends ErlangExpressionImpl implements ErlangEx
     super(node);
   }
 
+  @Override
+  @Nullable
+  public ErlangArgumentList getArgumentList() {
+    return findChildByClass(ErlangArgumentList.class);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExpr700A(this);
     else super.accept(visitor);

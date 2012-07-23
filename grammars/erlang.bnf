@@ -219,7 +219,8 @@ left additive_expression ::= add_op expr_500_a {pin=1}
 expr_500_a ::= prefix_expression multiplicative_expression*
 left multiplicative_expression ::= mult_op prefix_expression {pin=1}
 prefix_expression ::= prefix_op? expr_700_a {pin=0}
-expr_700_a ::= global_function_call_expression | function_call_expression | generic_function_call_expression | record_expression | colon_qualified_expression
+expr_700_a ::= global_function_call_expression | function_call_expression | generic_function_call_expression |
+  anonymous_call_expression | record_expression | colon_qualified_expression
 colon_qualified_expression ::= (max_expression | qualified_reference) colon_max_expression? {pin=0}
 private colon_max_expression ::= ':' max_expression
 private qualified_reference ::= q_atom qualified_expression*
@@ -290,6 +291,8 @@ function_call_expression ::= q_atom argument_list {
 }
 generic_function_call_expression ::= (q_atom_or_var ':')? q_atom_or_var argument_list {pin=0}
 private q_atom_or_var ::= q_atom | q_var
+
+private anonymous_call_expression ::= (fun_expression|parenthesized_expression) argument_list {pin=0}
 
 if_expression ::= if if_clauses end
 if_clauses ::= if_clause (';' if_clause)*

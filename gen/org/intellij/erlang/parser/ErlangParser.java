@@ -389,6 +389,49 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // (fun_expression|parenthesized_expression) argument_list
+  static boolean anonymous_call_expression(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "anonymous_call_expression")) return false;
+    if (!nextTokenIs(builder_, ERL_PAR_LEFT) && !nextTokenIs(builder_, ERL_FUN)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    final Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_);
+    result_ = anonymous_call_expression_0(builder_, level_ + 1);
+    result_ = result_ && argument_list(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, result_, level_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // (fun_expression|parenthesized_expression)
+  private static boolean anonymous_call_expression_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "anonymous_call_expression_0")) return false;
+    return anonymous_call_expression_0_0(builder_, level_ + 1);
+  }
+
+  // fun_expression|parenthesized_expression
+  private static boolean anonymous_call_expression_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "anonymous_call_expression_0_0")) return false;
+    boolean result_ = false;
+    final Marker marker_ = builder_.mark();
+    result_ = fun_expression(builder_, level_ + 1);
+    if (!result_) result_ = parenthesized_expression(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
   // expression
   public static boolean argument_definition(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "argument_definition")) return false;
@@ -1854,7 +1897,8 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // global_function_call_expression | function_call_expression | generic_function_call_expression | record_expression | colon_qualified_expression
+  // global_function_call_expression | function_call_expression | generic_function_call_expression |
+  //   anonymous_call_expression | record_expression | colon_qualified_expression
   public static boolean expr_700_a(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "expr_700_a")) return false;
     boolean result_ = false;
@@ -1863,6 +1907,7 @@ public class ErlangParser implements PsiParser {
     result_ = global_function_call_expression(builder_, level_ + 1);
     if (!result_) result_ = function_call_expression(builder_, level_ + 1);
     if (!result_) result_ = generic_function_call_expression(builder_, level_ + 1);
+    if (!result_) result_ = anonymous_call_expression(builder_, level_ + 1);
     if (!result_) result_ = record_expression(builder_, level_ + 1);
     if (!result_) result_ = colon_qualified_expression(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
