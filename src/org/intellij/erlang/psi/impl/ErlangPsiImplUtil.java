@@ -7,6 +7,7 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -15,6 +16,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiManagerEx;
 import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
 import com.intellij.util.PathUtil;
@@ -86,6 +89,10 @@ public class ErlangPsiImplUtil {
     return o.getName().startsWith("?");
   }
 
+  public static boolean isForseScipped(ErlangQVar o) {
+    return o.getName().startsWith("_");
+  }
+
   @NotNull
   static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, final boolean withArity) {
     if (containingFile instanceof ErlangFile) {
@@ -126,11 +133,11 @@ public class ErlangPsiImplUtil {
       return ContainerUtil.map(
         concat,
         new Function<ErlangRecordDefinition, LookupElement>() {
-        @Override
-        public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
-          return LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD);
-        }
-      });
+          @Override
+          public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
+            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD);
+          }
+        });
     }
     return Collections.emptyList();
   }
@@ -306,13 +313,45 @@ public class ErlangPsiImplUtil {
       if (string != null) {
         String includeFilePath = string.getText().replaceAll("\"", "");
         fromIncludes.addAll(justAppend(containingFile, includeFilePath, forCompletion, name));
+        fromIncludes.addAll(findByWildCard(containingFile, includeFilePath, forCompletion, name));
       }
     }
     return fromIncludes;
   }
 
   @NotNull
-  public static List<ErlangRecordDefinition> justAppend(@NotNull PsiFile containingFile, @NotNull String includeFilePath, boolean forCompletion, String name) {
+  private static Collection<ErlangRecordDefinition> findByWildCard(@NotNull PsiFile containingFile, @NotNull final String includeFilePath, boolean forCompletion, @NotNull String name) {
+    List<String> split = StringUtil.split(includeFilePath, "/");
+    String last = ContainerUtil.iterateAndGetLastItem(split);
+    if (last != null) {
+      PsiFile[] filesByName = FilenameIndex.getFilesByName(containingFile.getProject(), last, GlobalSearchScope.projectScope(containingFile.getProject()));
+      List<PsiFile> filter = ContainerUtil.filter(filesByName, new Condition<PsiFile>() {
+        @Override
+        public boolean value(PsiFile psiFile) {
+          VirtualFile virtualFile = psiFile.getVirtualFile();
+          if (virtualFile == null) return false;
+          String canonicalPath = virtualFile.getCanonicalPath();
+          if (canonicalPath == null) return false;
+          return canonicalPath.endsWith(includeFilePath);
+        }
+      });
+
+      for (PsiFile file : filter) {
+        if (file instanceof ErlangFile) {
+          if (!forCompletion) {
+            ErlangRecordDefinition recordFromIncludeFile = ((ErlangFile) file).getRecord(name);
+            return recordFromIncludeFile == null ? ContainerUtil.<ErlangRecordDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile);
+          } else {
+            return ((ErlangFile) file).getRecords();
+          }
+        }
+      }
+    }
+    return ContainerUtil.emptyList();
+  }
+
+  @NotNull
+  public static List<ErlangRecordDefinition> justAppend(@NotNull PsiFile containingFile, @NotNull String includeFilePath, boolean forCompletion, @NotNull String name) {
     VirtualFile virtualFile = containingFile.getOriginalFile().getVirtualFile();
     VirtualFile parent = virtualFile != null ? virtualFile.getParent() : null;
     if (parent == null) return ContainerUtil.emptyList();
@@ -326,8 +365,7 @@ public class ErlangPsiImplUtil {
       if (!forCompletion) {
         ErlangRecordDefinition recordFromIncludeFile = ((ErlangFile) file).getRecord(name);
         return recordFromIncludeFile == null ? ContainerUtil.<ErlangRecordDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile);
-      }
-      else {
+      } else {
         return ((ErlangFile) file).getRecords();
       }
     }

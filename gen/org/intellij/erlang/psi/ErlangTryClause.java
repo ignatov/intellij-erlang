@@ -8,18 +8,12 @@ import com.intellij.psi.PsiElement;
 public interface ErlangTryClause extends ErlangCompositeElement {
 
   @NotNull
-  ErlangArgumentDefinition getArgumentDefinition();
+  List<ErlangArgumentDefinition> getArgumentDefinitionList();
 
   @NotNull
   ErlangClauseBody getClauseBody();
 
   @Nullable
   ErlangClauseGuard getClauseGuard();
-
-  @Nullable
-  ErlangQAtom getQAtom();
-
-  @Nullable
-  ErlangQVar getQVar();
 
 }

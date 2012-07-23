@@ -126,7 +126,7 @@ record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   methods = [getName setName getNameIdentifier getTextOffset]
 }
 
-include ::= '-' 'include' '(' string ')' {pin=2}
+include ::= '-' ('include' | 'include_lib') '(' string ')' {pin=2}
 
 attribute ::= '-' (
   module
@@ -307,7 +307,7 @@ fun_clause ::= argument_definition_list clause_guard? clause_body
 try_expression ::= try exprs (of cr_clauses)? try_catch
 try_catch ::= (catch try_clauses [after exprs] end) | (after exprs end) {pin(".*")="catch|after"}
 try_clauses ::= try_clause (';' try_clause)*
-try_clause ::= [q_atom_or_var ':'] argument_definition clause_guard? clause_body
+try_clause ::= [argument_definition ':'] argument_definition clause_guard? clause_body
 
 query_expression ::= query list_comprehension end
 argument_list ::= '(' exprs? ')'

@@ -18,8 +18,8 @@ public class ErlangTryClauseImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @NotNull
-  public ErlangArgumentDefinition getArgumentDefinition() {
-    return findNotNullChildByClass(ErlangArgumentDefinition.class);
+  public List<ErlangArgumentDefinition> getArgumentDefinitionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangArgumentDefinition.class);
   }
 
   @Override
@@ -32,18 +32,6 @@ public class ErlangTryClauseImpl extends ErlangCompositeElementImpl implements E
   @Nullable
   public ErlangClauseGuard getClauseGuard() {
     return findChildByClass(ErlangClauseGuard.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangQVar getQVar() {
-    return findChildByClass(ErlangQVar.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
