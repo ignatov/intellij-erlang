@@ -3912,20 +3912,22 @@ ERL_FILE
             PsiElement(catch)('catch')
             ERL_TRY_CLAUSES
               ERL_TRY_CLAUSE
-                ERL_Q_ATOM
-                  PsiElement(atom)('throw')
-                PsiElement(:)(':')
                 ERL_ARGUMENT_DEFINITION
-                  ERL_TUPLE_EXPRESSION
-                    PsiElement({)('{')
-                    ERL_EXPRESSION
+                  ERL_COLON_QUALIFIED_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('fail')
-                    PsiElement(,)(',')
-                    ERL_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Warning')
-                    PsiElement(})('}')
+                        PsiElement(atom)('throw')
+                    PsiElement(:)(':')
+                    ERL_TUPLE_EXPRESSION
+                      PsiElement({)('{')
+                      ERL_EXPRESSION
+                        ERL_Q_ATOM
+                          PsiElement(atom)('fail')
+                      PsiElement(,)(',')
+                      ERL_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Warning')
+                      PsiElement(})('}')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
                   ERL_TUPLE_EXPRESSION
@@ -3940,20 +3942,22 @@ ERL_FILE
                     PsiElement(})('}')
               PsiElement(;)(';')
               ERL_TRY_CLAUSE
-                ERL_Q_ATOM
-                  PsiElement(atom)('throw')
-                PsiElement(:)(':')
                 ERL_ARGUMENT_DEFINITION
-                  ERL_TUPLE_EXPRESSION
-                    PsiElement({)('{')
-                    ERL_EXPRESSION
+                  ERL_COLON_QUALIFIED_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('fatal_fail')
-                    PsiElement(,)(',')
-                    ERL_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Warning')
-                    PsiElement(})('}')
+                        PsiElement(atom)('throw')
+                    PsiElement(:)(':')
+                    ERL_TUPLE_EXPRESSION
+                      PsiElement({)('{')
+                      ERL_EXPRESSION
+                        ERL_Q_ATOM
+                          PsiElement(atom)('fatal_fail')
+                      PsiElement(,)(',')
+                      ERL_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Warning')
+                      PsiElement(})('}')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
                   ERL_TUPLE_EXPRESSION
@@ -12869,20 +12873,22 @@ ERL_FILE
                       PsiElement(catch)('catch')
                       ERL_TRY_CLAUSES
                         ERL_TRY_CLAUSE
-                          ERL_Q_ATOM
-                            PsiElement(atom)('throw')
-                          PsiElement(:)(':')
                           ERL_ARGUMENT_DEFINITION
-                            ERL_TUPLE_EXPRESSION
-                              PsiElement({)('{')
-                              ERL_EXPRESSION
+                            ERL_COLON_QUALIFIED_EXPRESSION
+                              ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('fail')
-                              PsiElement(,)(',')
-                              ERL_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(_)('_')
-                              PsiElement(})('}')
+                                  PsiElement(atom)('throw')
+                              PsiElement(:)(':')
+                              ERL_TUPLE_EXPRESSION
+                                PsiElement({)('{')
+                                ERL_EXPRESSION
+                                  ERL_Q_ATOM
+                                    PsiElement(atom)('fail')
+                                PsiElement(,)(',')
+                                ERL_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(_)('_')
+                                PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_FUNCTION_CALL_EXPRESSION
@@ -12955,20 +12961,22 @@ ERL_FILE
                       PsiElement(catch)('catch')
                       ERL_TRY_CLAUSES
                         ERL_TRY_CLAUSE
-                          ERL_Q_ATOM
-                            PsiElement(atom)('throw')
-                          PsiElement(:)(':')
                           ERL_ARGUMENT_DEFINITION
-                            ERL_TUPLE_EXPRESSION
-                              PsiElement({)('{')
-                              ERL_EXPRESSION
+                            ERL_COLON_QUALIFIED_EXPRESSION
+                              ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('fail')
-                              PsiElement(,)(',')
-                              ERL_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(_)('_')
-                              PsiElement(})('}')
+                                  PsiElement(atom)('throw')
+                              PsiElement(:)(':')
+                              ERL_TUPLE_EXPRESSION
+                                PsiElement({)('{')
+                                ERL_EXPRESSION
+                                  ERL_Q_ATOM
+                                    PsiElement(atom)('fail')
+                                PsiElement(,)(',')
+                                ERL_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(_)('_')
+                                PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_FUNCTION_CALL_EXPRESSION
@@ -13582,20 +13590,22 @@ ERL_FILE
                       PsiElement(catch)('catch')
                       ERL_TRY_CLAUSES
                         ERL_TRY_CLAUSE
-                          ERL_Q_ATOM
-                            PsiElement(atom)('throw')
-                          PsiElement(:)(':')
                           ERL_ARGUMENT_DEFINITION
-                            ERL_TUPLE_EXPRESSION
-                              PsiElement({)('{')
-                              ERL_EXPRESSION
+                            ERL_COLON_QUALIFIED_EXPRESSION
+                              ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('fail')
-                              PsiElement(,)(',')
-                              ERL_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(_)('_')
-                              PsiElement(})('}')
+                                  PsiElement(atom)('throw')
+                              PsiElement(:)(':')
+                              ERL_TUPLE_EXPRESSION
+                                PsiElement({)('{')
+                                ERL_EXPRESSION
+                                  ERL_Q_ATOM
+                                    PsiElement(atom)('fail')
+                                PsiElement(,)(',')
+                                ERL_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(_)('_')
+                                PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_FUNCTION_CALL_EXPRESSION
@@ -13668,20 +13678,22 @@ ERL_FILE
                       PsiElement(catch)('catch')
                       ERL_TRY_CLAUSES
                         ERL_TRY_CLAUSE
-                          ERL_Q_ATOM
-                            PsiElement(atom)('throw')
-                          PsiElement(:)(':')
                           ERL_ARGUMENT_DEFINITION
-                            ERL_TUPLE_EXPRESSION
-                              PsiElement({)('{')
-                              ERL_EXPRESSION
+                            ERL_COLON_QUALIFIED_EXPRESSION
+                              ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('fail')
-                              PsiElement(,)(',')
-                              ERL_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(_)('_')
-                              PsiElement(})('}')
+                                  PsiElement(atom)('throw')
+                              PsiElement(:)(':')
+                              ERL_TUPLE_EXPRESSION
+                                PsiElement({)('{')
+                                ERL_EXPRESSION
+                                  ERL_Q_ATOM
+                                    PsiElement(atom)('fail')
+                                PsiElement(,)(',')
+                                ERL_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(_)('_')
+                                PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_FUNCTION_CALL_EXPRESSION
@@ -16900,20 +16912,22 @@ ERL_FILE
                               PsiElement(catch)('catch')
                               ERL_TRY_CLAUSES
                                 ERL_TRY_CLAUSE
-                                  ERL_Q_ATOM
-                                    PsiElement(atom)('throw')
-                                  PsiElement(:)(':')
                                   ERL_ARGUMENT_DEFINITION
-                                    ERL_TUPLE_EXPRESSION
-                                      PsiElement({)('{')
-                                      ERL_EXPRESSION
+                                    ERL_COLON_QUALIFIED_EXPRESSION
+                                      ERL_MAX_EXPRESSION
                                         ERL_Q_ATOM
-                                          PsiElement(atom)('fail')
-                                      PsiElement(,)(',')
-                                      ERL_EXPRESSION
-                                        ERL_Q_VAR
-                                          PsiElement(_)('_')
-                                      PsiElement(})('}')
+                                          PsiElement(atom)('throw')
+                                      PsiElement(:)(':')
+                                      ERL_TUPLE_EXPRESSION
+                                        PsiElement({)('{')
+                                        ERL_EXPRESSION
+                                          ERL_Q_ATOM
+                                            PsiElement(atom)('fail')
+                                        PsiElement(,)(',')
+                                        ERL_EXPRESSION
+                                          ERL_Q_VAR
+                                            PsiElement(_)('_')
+                                        PsiElement(})('}')
                                   ERL_CLAUSE_BODY
                                     PsiElement(->)('->')
                                     ERL_TUPLE_EXPRESSION
@@ -17671,20 +17685,22 @@ ERL_FILE
                       PsiElement(catch)('catch')
                       ERL_TRY_CLAUSES
                         ERL_TRY_CLAUSE
-                          ERL_Q_ATOM
-                            PsiElement(atom)('throw')
-                          PsiElement(:)(':')
                           ERL_ARGUMENT_DEFINITION
-                            ERL_TUPLE_EXPRESSION
-                              PsiElement({)('{')
-                              ERL_EXPRESSION
+                            ERL_COLON_QUALIFIED_EXPRESSION
+                              ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('fail')
-                              PsiElement(,)(',')
-                              ERL_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('_What')
-                              PsiElement(})('}')
+                                  PsiElement(atom)('throw')
+                              PsiElement(:)(':')
+                              ERL_TUPLE_EXPRESSION
+                                PsiElement({)('{')
+                                ERL_EXPRESSION
+                                  ERL_Q_ATOM
+                                    PsiElement(atom)('fail')
+                                PsiElement(,)(',')
+                                ERL_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('_What')
+                                PsiElement(})('}')
                           ERL_CLAUSE_BODY
                             PsiElement(->)('->')
                             ERL_TUPLE_EXPRESSION

@@ -96,7 +96,7 @@
 		tree_map	     :: dict(),
 		warning_mode = false :: boolean(),
 		warnings = []        :: [dial_warning()],
-		work                 :: {[<error>_</error>], set()},
+		work                 :: {[_], set()},
 		module               :: module(),
 		behaviour_api_dict = [] ::
 		  dialyzer_behaviours:behaviour_api_dict()}).

@@ -46,7 +46,7 @@ start() ->
     cl(Args)
   catch
     throw:{dialyzer_cl_parse_error, Msg} -> {error, Msg};
-    <error>_</error>:R ->
+    _:R ->
       Msg = io_lib:format("~p\n~p\n", [R, erlang:get_stacktrace()]),
       {error, lists:flatten(Msg)}
   end.
@@ -340,8 +340,3 @@ help_warnings() ->
   S = warning_options_msg(),
   io:put_chars(S),
   erlang:halt(?RET_NOTHING_SUSPICIOUS).
-
--spec help_message() -> no_return().
-
-help_message() ->
-  S = "Usage: dialyzer [--help] [--version] [--shell] [--quiet] [--verbose]".

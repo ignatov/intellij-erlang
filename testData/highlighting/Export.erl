@@ -57,7 +57,7 @@ set_master_nodes(Tab, Nodes) when is_list(Nodes) ->
 	    case UseDir of
 		true ->
 		    mnesia_lib:lock_table(schema),
-		    Res = 
+		    Res =
 			case mnesia_schema:read_cstructs_from_disc() of
 			    {ok, Cstructs} ->
 				case lists:keysearch(Tab, 2, Cstructs) of

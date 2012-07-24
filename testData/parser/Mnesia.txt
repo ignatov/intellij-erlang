@@ -28293,13 +28293,15 @@ ERL_FILE
                     PsiElement(catch)('catch')
                     ERL_TRY_CLAUSES
                       ERL_TRY_CLAUSE
-                        ERL_Q_VAR
-                          PsiElement(_)('_')
-                        PsiElement(:)(':')
                         ERL_ARGUMENT_DEFINITION
-                          ERL_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(_)('_')
+                          ERL_COLON_QUALIFIED_EXPRESSION
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(_)('_')
+                            PsiElement(:)(':')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(_)('_')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
                           ERL_MAX_EXPRESSION

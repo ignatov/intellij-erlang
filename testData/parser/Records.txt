@@ -11,16 +11,12 @@ ERL_FILE
         PsiElement(atom)('mnesia_backup')
       PsiElement())(')')
   PsiElement(.)('.')
-  ERL_ATTRIBUTE
+  ERL_INCLUDE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        PsiElement(atom)('include_lib')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          PsiElement(string)('"kernel/include/file.hrl"')
-        PsiElement())(')')
+    PsiElement(atom)('include_lib')
+    PsiElement(()('(')
+    PsiElement(string)('"kernel/include/file.hrl"')
+    PsiElement())(')')
   PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')

@@ -35,7 +35,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         if (atomName != null) {
           PsiElement prevSibling = atomName.getPrevSibling();
           if (prevSibling != null && "#".equals(prevSibling.getText())) {
-            markIfUnresolved(o, atomName, annotationHolder, "Unresolved record " + atomName.getText());
+            o.getReference(); // todo: rewrite
+            markIfUnresolved(atomName, atomName, annotationHolder, "Unresolved record " + atomName.getText());
           }
         }
       }

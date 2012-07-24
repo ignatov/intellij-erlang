@@ -1802,7 +1802,7 @@ do_dirty_rpc(Tab, Node, M, F, Args) ->
 	{badrpc, Reason} ->
 	    timer:sleep(20), %% Do not be too eager, and can't use yield on SMP
 	    %% Sync with mnesia_monitor
-	    try sys:get_status(mnesia_monitor) catch <error>_</error>:_ -> ok end,
+	    try sys:get_status(mnesia_monitor) catch _:_ -> ok end,
 	    case mnesia_controller:call({check_w2r, Node, Tab}) of % Sync
 		NewNode when NewNode =:= Node -> 
 		    ErrorTag = mnesia_lib:dirty_rpc_error_tag(Reason),
