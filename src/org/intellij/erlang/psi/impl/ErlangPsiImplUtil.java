@@ -170,6 +170,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static int getTextOffset(@NotNull ErlangRecordDefinition o) {
+    if (o.getNameIdentifier() == o) return 0;//o.getNode().getTextOffset();
     return o.getNameIdentifier().getTextOffset();
   }
 
@@ -184,11 +185,11 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static PsiReference getReference(@NotNull ErlangRecordExpression o) {
+  public static PsiReference getReference(@NotNull ErlangRecordExpression o) { // todo: hack?
     ErlangQAtom atom = o.getAtomName();
     if (atom == null) return null;
-    return new ErlangRecordReferenceImpl<ErlangQAtom>(atom,
-      TextRange.from(0, atom.getTextLength()), atom.getText());
+    atom.setReference(new ErlangRecordReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText()));
+    return null;
   }
 
   @Nullable
