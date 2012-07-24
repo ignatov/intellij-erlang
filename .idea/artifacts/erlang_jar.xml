@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="erlang:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/erlang_jar</output-path>
+    <root id="archive" name="erlang.jar">
+      <element id="module-output" name="Erlang" />
+    </root>
+  </artifact>
+</component>

@@ -1,13 +1,27 @@
-<idea-plugin url="https://github.com/ignatov/erlang" version="2">
+<idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
     <version>0.1</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
-    <idea-version since-build="116.108" until-build=""/>
+    <idea-version since-build="117.148" until-build=""/>
 
     <name>Erlang</name>
     <description>Erlang plugin</description>
     <change-notes>
-        <![CDATA[ ]]>
+        <![CDATA[
+            <p>0.1:</p>
+            <ul>
+              <li>Syntax and errors highlighting</li>
+              <li>References resolving</li>
+              <li>Code completion for functions, records and variables</li>
+              <li>Keyword code completion</li>
+              <li>Rename refactoring for modules, functions, records and variables</li>
+              <li>Safe delete refactoring</li>
+              <li>Structure view</li>
+              <li>Find usages</li>
+              <li>Code commenting/uncommenting</li>
+              <li>Brace matching</li>
+            </ul>
+        ]]>
     </change-notes>
 
     <extensions defaultExtensionNs="com.intellij">

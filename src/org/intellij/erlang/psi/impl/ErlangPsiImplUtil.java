@@ -100,8 +100,8 @@ public class ErlangPsiImplUtil {
         @Override
         public LookupElement fun(@NotNull final ErlangFunction function) {
           return LookupElementBuilder.create(function)
-            .withIcon(ErlangIcons.FUNCTION).withTailText("/" + function.getArity()).
-              withInsertHandler(
+            .setIcon(ErlangIcons.FUNCTION).setTailText("/" + function.getArity()).
+              setInsertHandler(
                 withArity ?
                   new BasicInsertHandler<LookupElement>() {
                     @Override
@@ -135,7 +135,7 @@ public class ErlangPsiImplUtil {
         new Function<ErlangRecordDefinition, LookupElement>() {
           @Override
           public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
-            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD);
+            return LookupElementBuilder.create(rd).setIcon(ErlangIcons.RECORD);
           }
         });
     }

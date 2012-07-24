@@ -52,7 +52,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
 
         for (String keywords : suggestKeywords(position)) {
-          result.addElement(LookupElementBuilder.create(keywords).bold());
+          result.addElement(LookupElementBuilder.create(keywords).setBold());
         }
       }
     });

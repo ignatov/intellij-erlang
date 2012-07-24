@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="erlang.zip">
+    <output-path>$PROJECT_DIR$/out/artifacts/Erlang_zip</output-path>
+    <root id="archive" name="Erlang.zip">
+      <element id="directory" name="Erlang">
+        <element id="directory" name="lib">
+          <element id="artifact" artifact-name="erlang:jar" />
+        </element>
+      </element>
+    </root>
+  </artifact>
+</component>
