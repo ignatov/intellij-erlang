@@ -2,7 +2,8 @@
     <id>org.jetbrains.erlang</id>
     <version>0.1</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
-    <idea-version since-build="117.148" until-build=""/>
+    <idea-version since-build="117.105" until-build=""/>
+    <depends>com.intellij.modules.lang</depends>
 
     <name>Erlang</name>
     <description>Erlang plugin</description>
@@ -20,6 +21,7 @@
               <li>Find usages</li>
               <li>Code commenting/uncommenting</li>
               <li>Brace matching</li>
+              <li>Basic code formatter</li>
             </ul>
         ]]>
     </change-notes>
