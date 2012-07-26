@@ -27,6 +27,9 @@
     </change-notes>
 
     <extensions defaultExtensionNs="com.intellij">
+
+        <internalFileTemplate name="Erlang File"/>
+
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder" />
         <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
@@ -48,5 +51,10 @@
 
     </project-components>
     <actions>
+      <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
+              text="Erlang File" description="Create new Erlang file">
+          <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
+          <!--<add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>-->
+      </action>
     </actions>
 </idea-plugin>
