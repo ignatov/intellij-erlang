@@ -51,10 +51,9 @@
 
     </project-components>
     <actions>
-      <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
-              text="Erlang File" description="Create new Erlang file">
-          <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
-          <!--<add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>-->
-      </action>
+        <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
+                text="Erlang File" description="Create new Erlang file">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+        </action>
     </actions>
 </idea-plugin>
