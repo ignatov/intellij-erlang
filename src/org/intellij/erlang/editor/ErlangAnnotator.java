@@ -6,10 +6,12 @@ import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,8 +27,13 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         setHighlighting(o, annotationHolder, ErlangSyntaxHighlighter.VARIABLES);
-        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForseScipped(o) || inSpecification(o)) return;
+        if (!isForceSkipped(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {
+          markIfUnused(o, o, annotationHolder, "Unused variable " + o.getText());
+        }
+        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForceSkipped(o) || inSpecification(o))
+          return;
         markIfUnresolved(o, o, annotationHolder, "Unresolved variable " + o.getText());
+
       }
 
       @Override
@@ -109,6 +116,44 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     }
     if (rec != null) {
       setHighlighting(rec, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+    }
+  }
+
+  private static void markIfUnused(final ErlangQVar element, ErlangQVar warningElement, AnnotationHolder annotationHolder, String text) {
+    ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(element, ErlangFunctionClause.class);
+    if (functionClause == null) return;
+
+    final Ref<ErlangQVar> usage = new Ref<ErlangQVar>();
+
+    functionClause.accept(
+      new ErlangVisitor() {
+        @Override
+        public void visitCompositeElement(@NotNull ErlangCompositeElement o) {
+          if (usage.get() != null) return;
+          for (PsiElement psiElement : o.getChildren()) {
+            if (psiElement instanceof ErlangCompositeElement) {
+              psiElement.accept(this);
+            }
+          }
+        }
+
+        @Override
+        public void visitQVar(@NotNull ErlangQVar o) {
+          if (o.getName().equals(element.getName())) {
+            PsiReference reference = o.getReference();
+            if (reference != null) {
+              PsiElement resolve = reference.resolve();
+              if (resolve != null) {
+                if (resolve.equals(element))
+                  usage.set(o);
+              }
+            }
+          }
+        }
+      });
+
+    if (usage.get() == null) {
+      annotationHolder.createWarningAnnotation(warningElement, text);
     }
   }
 

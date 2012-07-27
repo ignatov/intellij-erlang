@@ -89,7 +89,7 @@ public class ErlangPsiImplUtil {
     return o.getName().startsWith("?");
   }
 
-  public static boolean isForseScipped(ErlangQVar o) {
+  public static boolean isForceSkipped(ErlangQVar o) {
     return o.getName().startsWith("_");
   }
 
