@@ -1975,7 +1975,7 @@ find_rec_warnings(Tree, State) ->
 	end
     end, State, Tree).
 
-find_rec_warnings_tuple(Tree, State) -> ok.
+find_rec_warnings_tuple(<warning>Tree</warning>, <warning>State</warning>) -> ok.
 
 -ifdef(DEBUG_PP).
 debug_pp(Tree, true) ->

@@ -28,7 +28,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
 
   @Override
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
-    ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myOrigin, ErlangFunctionClause.class);
+    ErlangFunctionClause clause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
       if ((PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement)))
           || isInModule(psiElement)) {

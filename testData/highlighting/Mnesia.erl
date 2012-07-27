@@ -2855,7 +2855,7 @@ qlc_format({lookup, Index,Keys}, Tab, _, _, _) ->
 		  [?MODULE, Tab, Index, Keys]).
 
 do_fixtable(Tab, #<error>tidstore</error>{store=Store}) -> do_fixtable(Tab,Store);
-do_fixtable(Tab, Store) -> ok.
+do_fixtable(<warning>Tab</warning>, <warning>Store</warning>) -> ok.
 
 get_activity_id() -> get(mnesia_activity_state).
 

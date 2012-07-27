@@ -27,8 +27,10 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         setHighlighting(o, annotationHolder, ErlangSyntaxHighlighter.VARIABLES);
-        if (!isForceSkipped(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {
-          markIfUnused(o, o, annotationHolder, "Unused variable " + o.getText());
+        PsiReference reference = o.getReference();
+        PsiElement resolve = reference != null ? reference.resolve() : null;
+        if (resolve == null && !isForceSkipped(o) && !isMacros(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {
+          markVariableIfUnused(o, annotationHolder, "Unused variable " + o.getText());
         }
         if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForceSkipped(o) || inSpecification(o))
           return;
@@ -108,7 +110,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     });
   }
 
-  private static void markAttributeNameAsKeyword(ErlangCompositeElement o, AnnotationHolder annotationHolder, String name) {
+  private static void markAttributeNameAsKeyword(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder, @NotNull String name) {
     PsiElement rec = o.getFirstChild();
     while (rec != null) {
       if (rec instanceof LeafPsiElement && name.equals(rec.getText())) break;
@@ -119,52 +121,45 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     }
   }
 
-  private static void markIfUnused(final ErlangQVar element, ErlangQVar warningElement, AnnotationHolder annotationHolder, String text) {
-    ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(element, ErlangFunctionClause.class);
+  private static void markVariableIfUnused(@NotNull final ErlangQVar var, @NotNull AnnotationHolder annotationHolder, @NotNull String text) {
+    ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(var, ErlangFunctionClause.class);
     if (functionClause == null) return;
 
     final Ref<ErlangQVar> usage = new Ref<ErlangQVar>();
 
     functionClause.accept(
-      new ErlangVisitor() {
+      new ErlangRecursiveVisitor() {
         @Override
         public void visitCompositeElement(@NotNull ErlangCompositeElement o) {
           if (usage.get() != null) return;
-          for (PsiElement psiElement : o.getChildren()) {
-            if (psiElement instanceof ErlangCompositeElement) {
-              psiElement.accept(this);
-            }
-          }
+          super.visitCompositeElement(o);
         }
 
         @Override
         public void visitQVar(@NotNull ErlangQVar o) {
-          if (o.getName().equals(element.getName())) {
+          if (o.getName().equals(var.getName())) { // faster
             PsiReference reference = o.getReference();
-            if (reference != null) {
-              PsiElement resolve = reference.resolve();
-              if (resolve != null) {
-                if (resolve.equals(element))
-                  usage.set(o);
-              }
+            PsiElement resolve = reference != null ? reference.resolve() : null;
+            if (var.equals(resolve)) {
+              usage.set(o);
             }
           }
         }
       });
 
     if (usage.get() == null) {
-      annotationHolder.createWarningAnnotation(warningElement, text);
+      annotationHolder.createWarningAnnotation(var, text);
     }
   }
 
-  private static void markIfUnresolved(ErlangCompositeElement o, ErlangCompositeElement errorElement, AnnotationHolder annotationHolder, String text) {
+  private static void markIfUnresolved(@NotNull ErlangCompositeElement o, @NotNull ErlangCompositeElement errorElement, @NotNull AnnotationHolder annotationHolder, @NotNull String text) {
     PsiReference reference = o.getReference();
     if (reference != null && reference.resolve() == null) {
       annotationHolder.createErrorAnnotation(errorElement, text);
     }
   }
 
-  private static void markFirstChildAsKeyword(ErlangCompositeElement o, AnnotationHolder annotationHolder) {
+  private static void markFirstChildAsKeyword(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder) {
     final PsiElement firstChild = o.getFirstChild();
     if (firstChild != null) {
       setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);

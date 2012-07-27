@@ -41,7 +41,6 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangQVar o) {
-    if (inDefinition(o)) return null;
     return new ErlangVariableReferenceImpl(o, TextRange.from(0, o.getTextLength()));
   }
 
