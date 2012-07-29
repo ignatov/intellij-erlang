@@ -91,7 +91,9 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
         ERL_IF == type ||
         ERL_RECEIVE == type ||
         ERL_TRY == type ||
-        ERL_DOT == type
+        ERL_DOT == type ||
+        ERL_ANDALSO == type ||
+        ERL_ORELSE == type
 //        ||
 //        ERL_ARROW == type
       ) {
