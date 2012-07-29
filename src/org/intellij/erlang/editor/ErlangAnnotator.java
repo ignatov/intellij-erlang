@@ -43,7 +43,6 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     psiElement.accept(new ErlangVisitor() {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
-        setHighlighting(o, annotationHolder, ErlangSyntaxHighlighter.VARIABLES);
         PsiReference reference = o.getReference();
         PsiElement resolve = reference != null ? reference.resolve() : null;
         if (resolve == null && !isForceSkipped(o) && !isMacros(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {

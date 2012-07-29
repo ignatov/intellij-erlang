@@ -78,6 +78,9 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
     if (type == ERL_BRACKET_LEFT || type == ERL_BRACKET_RIGHT) {
       return pack(BRACKETS);
     }
+    if (type == ERL_VAR) {
+      return pack(VARIABLES);
+    }
     if (
       ERL_AFTER == type ||
         ERL_WHEN == type ||
