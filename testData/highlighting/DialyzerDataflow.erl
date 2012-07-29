@@ -2017,7 +2017,7 @@ handle_guard_comp(Guard, Comp, Map, Env, Eval, State) ->
       handle_guard_gen_fun({erlang, Comp, 2}, Guard, Map, Env, Eval, State)
   end.
 
-invert_comp('=<') -> '>=';
+<warning>invert_comp</warning>('=<') -> '>=';
 invert_comp('<')  -> '>';
 invert_comp('>=') -> '=<';
 invert_comp('>')  -> '<'.
@@ -2732,7 +2732,7 @@ debug_pp_map(Map = {Map0, _Subst}) ->
 		end, Keys),
   ok.
 -else.
-debug_pp_map(_Map) -> ok.
+<warning>debug_pp_map</warning>(_Map) -> ok.
 -endif.
 
 %%% ===========================================================================
@@ -2899,7 +2899,7 @@ state__get_race_warnings(#state{races = Races} = State) ->
   {Races1, State1} = dialyzer_races:get_race_warnings(Races, State),
   State1#state{races = Races1}.
 
-state__get_warnings(#state{tree_map = TreeMap, fun_tab = FunTab,
+<warning>state__get_warnings</warning>(#state{tree_map = TreeMap, fun_tab = FunTab,
 			   callgraph = Callgraph, plt = Plt} = State,
 		    NoWarnUnused) ->
   FoldFun =
@@ -3511,7 +3511,7 @@ find_mismatched_record_patterns(Tree, State) ->
 	end
     end, State, Tree).
 
-find_rec_warnings(Tree, State) ->
+<warning>find_rec_warnings</warning>(Tree, State) ->
   cerl_trees:fold(
     fun(SubTree, AccState) ->
 	case cerl:is_c_tuple(SubTree) of
@@ -3520,7 +3520,7 @@ find_rec_warnings(Tree, State) ->
 	end
     end, State, Tree).
 
-find_rec_warnings_tuple(Tree, State) ->
+<warning>find_rec_warnings_tuple</warning>(Tree, State) ->
   Elements = cerl:tuple_es(Tree),
   {_, _, EsType} = traverse_list(Elements, map__new(), State),
   TupleType = t_tuple(EsType),
@@ -3566,7 +3566,7 @@ debug_pp(Tree, false) ->
   io:nl(),
   ok.
 
-strip_annotations(Tree) ->
+<warning>strip_annotations</warning>(Tree) ->
   Fun = fun(T) ->
 	    case cerl:type(T) of
 	      var ->
@@ -3581,7 +3581,7 @@ strip_annotations(Tree) ->
 
 -else.
 
-debug_pp(_Tree, _UseHook) ->
+<warning>debug_pp</warning>(_Tree, _UseHook) ->
   ok.
 -endif.
 
@@ -3593,7 +3593,7 @@ debug_pp(_Tree, _UseHook) ->
 to_dot(CG) ->
   dialyzer_callgraph:to_dot(CG).
 -else.
-to_dot(_CG) ->
+<warning>to_dot</warning>(_CG) ->
   ok.
 -endif.
 

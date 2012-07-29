@@ -236,7 +236,7 @@ bind_opaque_pats(GenType, Type, Pat, Map, State, Rev) ->
 %% Guards
 %%
 
-bind_guard(Guard, Map, State) ->
+<warning>bind_guard</warning>(Guard, Map, State) ->
   try bind_guard(Guard, Map, dict:new(), pos, State) of
     {Map1, _Type} -> Map1
   catch
@@ -472,7 +472,7 @@ handle_guard_comp(Guard, Comp, Map, Env, Eval, State) ->
       handle_guard_gen_fun({erlang, Comp, 2}, Guard, Map, Env, Eval, State)
   end.
 
-invert_comp('=<') -> '>=';
+<warning>invert_comp</warning>('=<') -> '>=';
 invert_comp('<')  -> '>';
 invert_comp('>=') -> '=<';
 invert_comp('>')  -> '<'.
@@ -1037,7 +1037,7 @@ bind_guard_case_clauses(_GenArgType, _GenMap, _ArgExpr, [], Map, _Env, _Eval,
 %%%
 %%% ===========================================================================
 
-map__new() ->
+<warning>map__new</warning>() ->
   {dict:new(), dict:new()}.
 
 join_maps(Maps, MapOut) ->
@@ -1178,7 +1178,7 @@ mark_as_fresh([], Map) ->
   Map.
 
 -ifdef(DEBUG).
-debug_pp_map(Map = {Map0, _Subst}) ->
+<warning>debug_pp_map</warning>(Map = {Map0, _Subst}) ->
   Keys = dict:fetch_keys(Map0),
   io:format("Map:\n", []),
   lists:foreach(fun (Key) ->
@@ -1187,7 +1187,7 @@ debug_pp_map(Map = {Map0, _Subst}) ->
 		end, Keys),
   ok.
 -else.
-debug_pp_map(_Map) -> ok.
+<warning>debug_pp_map</warning>(_Map) -> ok.
 -endif.
 
 %%% ===========================================================================
@@ -1201,7 +1201,7 @@ get_label(L) when is_integer(L) ->
 get_label(T) ->
   cerl_trees:get_label(T).
 
-t_is_simple(ArgType) ->
+<warning>t_is_simple</warning>(ArgType) ->
   t_is_atom(ArgType) orelse t_is_number(ArgType) orelse t_is_port(ArgType)
     orelse t_is_pid(ArgType) orelse t_is_reference(ArgType)
     orelse t_is_nil(ArgType).
@@ -1214,7 +1214,7 @@ t_is_simple(ArgType) ->
 %%       t_is_equal(ArgType, SType)
 %%   end.
 
-is_call_to_send(Tree) ->
+<warning>is_call_to_send</warning>(Tree) ->
   case cerl:is_c_call(Tree) of
     false -> false;
     true ->
@@ -1228,7 +1228,7 @@ is_call_to_send(Tree) ->
 	andalso (Arity =:= 2)
   end.
 
-any_opaque(Ts) ->
+<warning>any_opaque</warning>(Ts) ->
   lists:any(fun erl_types:t_is_opaque/1, Ts).
 
 any_has_opaque_subtype(Ts) ->
@@ -1720,7 +1720,7 @@ state__records_only(#<error>state</error>{records = Records}) ->
 %%%
 %%% ===========================================================================
 
-renew_code(Fun, FunArgs, Code, WarningMode, Callgraph) ->
+<warning>renew_code</warning>(Fun, FunArgs, Code, WarningMode, Callgraph) ->
   case WarningMode of
     true -> Callgraph;
     false ->
@@ -1729,7 +1729,7 @@ renew_code(Fun, FunArgs, Code, WarningMode, Callgraph) ->
         dict:store(Fun, [FunArgs, Code], RaceCode), Callgraph)
   end.
 
-renew_public_tables([Var], Table, WarningMode, Callgraph) ->
+<warning>renew_public_tables</warning>([Var], Table, WarningMode, Callgraph) ->
   case WarningMode of
     true -> Callgraph;
     false ->
@@ -1846,7 +1846,7 @@ format_cerl(Tree) ->
 			{ribbon, 100000} %% newlines.
 		       ]).
 
-format_patterns(Pats) ->
+<warning>format_patterns</warning>(Pats) ->
   NewPats = map_pats(cerl:c_values(Pats)),
   String = format_cerl(NewPats),
   case Pats of
@@ -1955,7 +1955,7 @@ find_terminals_list([], Explicit, Normal) ->
 %% definition it will never match. However, the warning is lost in the
 %% regular analysis. This after-pass catches it.
 
-find_mismatched_record_patterns(Tree, State) ->
+<warning>find_mismatched_record_patterns</warning>(Tree, State) ->
   cerl_trees:fold(
     fun(SubTree, AccState) ->
 	case cerl:is_c_clause(SubTree) of
@@ -1966,7 +1966,7 @@ find_mismatched_record_patterns(Tree, State) ->
 	end
     end, State, Tree).
 
-find_rec_warnings(Tree, State) ->
+<warning>find_rec_warnings</warning>(Tree, State) ->
   cerl_trees:fold(
     fun(SubTree, AccState) ->
 	case cerl:is_c_tuple(SubTree) of
@@ -1975,10 +1975,10 @@ find_rec_warnings(Tree, State) ->
 	end
     end, State, Tree).
 
-find_rec_warnings_tuple(<warning>Tree</warning>, <warning>State</warning>) -> ok.
+<error>State</error>) -> ok.
 
 -ifdef(DEBUG_PP).
-debug_pp(Tree, true) ->
+<warning>debug_pp</warning>(Tree, true) ->
   io:put_chars(cerl_prettypr:format(Tree, [{hook, cerl_typean:pp_hook()}])),
   io:nl(),
   ok;
@@ -1987,7 +1987,7 @@ debug_pp(Tree, false) ->
   io:nl(),
   ok.
 
-strip_annotations(Tree) ->
+<warning>strip_annotations</warning>(Tree) ->
   Fun = fun(T) ->
 	    case cerl:type(T) of
 	      var ->
@@ -2002,17 +2002,17 @@ strip_annotations(Tree) ->
 
 -else.
 
-debug_pp(_Tree, _UseHook) ->
+<warning>debug_pp</warning>(_Tree, _UseHook) ->
   ok.
 -endif.
 
 -spec to_dot(dialyzer_callgraph:callgraph()) -> 'ok'.
 
 -ifdef(DOT).
-to_dot(CG) ->
+<warning>to_dot</warning>(CG) ->
   dialyzer_callgraph:to_dot(CG).
 -else.
-to_dot(_CG) ->
+<warning>to_dot</warning>(_CG) ->
   ok.
 -endif.
 

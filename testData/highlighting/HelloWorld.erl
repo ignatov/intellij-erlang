@@ -6,8 +6,8 @@ naive_reverse([H|T]) ->
 naive_reverse([]) ->
     [].
 
-hello_world() -> io:fwrite("hello, world").
-hello_world2() -> io:fwrite("hello, world").
+<warning>hello_world</warning>() -> io:fwrite("hello, world").
+<warning>hello_world2</warning>() -> io:fwrite("hello, world").
 
 hello(X) -> X + 2.
 

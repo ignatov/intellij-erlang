@@ -1,4 +1,4 @@
 -record(test, {id, name, date}).
 
-f(AAAA) -> AAAA#test{id=1}.
+<warning>f</warning>(AAAA) -> AAAA#test{id=1}.
 

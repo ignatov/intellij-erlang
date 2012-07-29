@@ -1,4 +1,4 @@
-set_master_nodes(Nodes) when is_list(Nodes) ->
+<warning>set_master_nodes</warning>(Nodes) when is_list(Nodes) ->
     UseDir = system_info(use_dir),
     IsRunning = system_info(is_running),
     case IsRunning of
@@ -36,7 +36,7 @@ log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning) ->
     Args = lists:map(Fun, Cstructs),
     mnesia_recover:log_master_nodes(Args, UseDir, IsRunning).
 
-set_master_nodes(Tab, Nodes) when is_list(Nodes) ->
+<warning>set_master_nodes</warning>(Tab, Nodes) when is_list(Nodes) ->
     UseDir = system_info(use_dir),
     IsRunning = system_info(is_running),
     case IsRunning of

@@ -9,6 +9,7 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -32,8 +33,9 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         if (resolve == null && !isForceSkipped(o) && !isMacros(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {
           markVariableIfUnused(o, annotationHolder, "Unused variable " + o.getText());
         }
-        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForceSkipped(o) || inSpecification(o))
+        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForceSkipped(o) || inSpecification(o)) {
           return;
+        }
         markIfUnresolved(o, o, annotationHolder, "Unresolved variable " + o.getText());
 
       }
@@ -106,6 +108,49 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         markIfUnresolved(o, o, annotationHolder, "Unresolved function " + o.getText());
       }
 
+      @Override
+      public void visitFunction(@NotNull final ErlangFunction function) {
+        final Ref<Object> usage = new Ref<Object>();
+
+        function.getContainingFile().accept(
+          new ErlangRecursiveVisitor() {
+            @Override
+            public void visitFile(PsiFile file) {
+              for (PsiElement psiElement : file.getChildren()) {
+                if (psiElement instanceof ErlangCompositeElement) {
+                  psiElement.accept(this);
+                }
+              }
+            }
+
+            @Override
+            public void visitCompositeElement(@NotNull ErlangCompositeElement o) {
+              if (!usage.isNull()) return;
+              super.visitCompositeElement(o);
+            }
+
+            @Override
+            public void visitExportFunction(@NotNull ErlangExportFunction o) {
+              PsiReference reference = o.getReference();
+              if (reference != null && function.equals(reference.resolve())) {
+                usage.set(o);
+              }
+            }
+
+            @Override
+            public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
+              PsiReference reference = o.getReference();
+              if (reference != null && function.equals(reference.resolve())) {
+                usage.set(o);
+              }
+            }
+          });
+
+
+        if (usage.get() == null) {
+          annotationHolder.createWarningAnnotation(function.getNameIdentifier(), "Unused function " + function.getName());
+        }
+      }
       // todo: add export, import and other bundled attributes
     });
   }
@@ -131,7 +176,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       new ErlangRecursiveVisitor() {
         @Override
         public void visitCompositeElement(@NotNull ErlangCompositeElement o) {
-          if (usage.get() != null) return;
+          if (!usage.isNull()) return;
           super.visitCompositeElement(o);
         }
 

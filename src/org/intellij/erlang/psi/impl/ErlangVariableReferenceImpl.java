@@ -3,10 +3,7 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNamedElement;
-import com.intellij.psi.PsiReferenceBase;
-import com.intellij.psi.ResolveState;
+import com.intellij.psi.*;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
@@ -18,9 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getModule;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inDefinition;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignment;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 /**
  * @author ignatov
@@ -32,18 +27,16 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
 
   @Override
   public PsiElement resolve() {
-//    if (PsiTreeUtil.getParentOfType(myElement, ErlangArgumentDefinition.class) != null) return null;
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
     ErlangListComprehension lc = PsiTreeUtil.getParentOfType(myElement, ErlangListComprehension.class);
     ErlangCompositeElement place = lc != null ? lc.getLcExprs() : myElement;
     ResolveUtil.treeWalkUp(place, processor);
-    ErlangQVar processorResult = processor.getResult();
-    if (processorResult != null) return processorResult;
+    ErlangQVar result = processor.getResult();
+    if (result != null) return result;
 
     ErlangModule module = getModule(myElement.getContainingFile());
     if (module == null) return null;
     module.processDeclarations(processor, ResolveState.initial(), module, module);
-//    ResolveUtil.treeWalkUp(module.getArgumentDefinition(), processor);
 
     return processor.getResult();
   }
