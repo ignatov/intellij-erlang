@@ -25,7 +25,6 @@ public interface ErlangTypes {
   IElementType ERL_BIN_ELEMENT = new ErlangCompositeElementType("ERL_BIN_ELEMENT");
   IElementType ERL_BIN_UNIT_TYPE = new ErlangCompositeElementType("ERL_BIN_UNIT_TYPE");
   IElementType ERL_BIT_TYPE = new ErlangCompositeElementType("ERL_BIT_TYPE");
-  IElementType ERL_BIT_TYPE_LIST = new ErlangCompositeElementType("ERL_BIT_TYPE_LIST");
   IElementType ERL_CALLBACK_SPEC = new ErlangCompositeElementType("ERL_CALLBACK_SPEC");
   IElementType ERL_CASE_EXPRESSION = new ErlangCompositeElementType("ERL_CASE_EXPRESSION");
   IElementType ERL_CATCH_EXPRESSION = new ErlangCompositeElementType("ERL_CATCH_EXPRESSION");
@@ -46,7 +45,6 @@ public interface ErlangTypes {
   IElementType ERL_EXPR_500_A = new ErlangCompositeElementType("ERL_EXPR_500_A");
   IElementType ERL_EXPR_700_A = new ErlangCompositeElementType("ERL_EXPR_700_A");
   IElementType ERL_FIELD_TYPE = new ErlangCompositeElementType("ERL_FIELD_TYPE");
-  IElementType ERL_FIELD_TYPES = new ErlangCompositeElementType("ERL_FIELD_TYPES");
   IElementType ERL_FUNCTION = new ErlangCompositeElementType("ERL_FUNCTION");
   IElementType ERL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_FUNCTION_CLAUSE = new ErlangCompositeElementType("ERL_FUNCTION_CLAUSE");
@@ -89,7 +87,6 @@ public interface ErlangTypes {
   IElementType ERL_SPECIFICATION = new ErlangCompositeElementType("ERL_SPECIFICATION");
   IElementType ERL_SPEC_FUN = new ErlangCompositeElementType("ERL_SPEC_FUN");
   IElementType ERL_TOP_TYPE = new ErlangCompositeElementType("ERL_TOP_TYPE");
-  IElementType ERL_TOP_TYPES = new ErlangCompositeElementType("ERL_TOP_TYPES");
   IElementType ERL_TOP_TYPE_100_T = new ErlangCompositeElementType("ERL_TOP_TYPE_100_T");
   IElementType ERL_TRY_CATCH = new ErlangCompositeElementType("ERL_TRY_CATCH");
   IElementType ERL_TRY_CLAUSE = new ErlangCompositeElementType("ERL_TRY_CLAUSE");
@@ -99,11 +96,9 @@ public interface ErlangTypes {
   IElementType ERL_TYPE = new ErlangCompositeElementType("ERL_TYPE");
   IElementType ERL_TYPED_ATTR_VAL = new ErlangCompositeElementType("ERL_TYPED_ATTR_VAL");
   IElementType ERL_TYPED_EXPR = new ErlangCompositeElementType("ERL_TYPED_EXPR");
-  IElementType ERL_TYPED_EXPRS = new ErlangCompositeElementType("ERL_TYPED_EXPRS");
   IElementType ERL_TYPED_RECORD_FIELDS = new ErlangCompositeElementType("ERL_TYPED_RECORD_FIELDS");
   IElementType ERL_TYPE_GUARD = new ErlangCompositeElementType("ERL_TYPE_GUARD");
   IElementType ERL_TYPE_SIG = new ErlangCompositeElementType("ERL_TYPE_SIG");
-  IElementType ERL_TYPE_SIGS = new ErlangCompositeElementType("ERL_TYPE_SIGS");
   IElementType ERL_TYPE_SPEC = new ErlangCompositeElementType("ERL_TYPE_SPEC");
 
   IElementType ERL_AFTER = new ErlangTokenType("after");
@@ -225,9 +220,6 @@ public interface ErlangTypes {
       else if (type == ERL_BIT_TYPE) {
         return new ErlangBitTypeImpl(node);
       }
-      else if (type == ERL_BIT_TYPE_LIST) {
-        return new ErlangBitTypeListImpl(node);
-      }
       else if (type == ERL_CALLBACK_SPEC) {
         return new ErlangCallbackSpecImpl(node);
       }
@@ -287,9 +279,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_FIELD_TYPE) {
         return new ErlangFieldTypeImpl(node);
-      }
-      else if (type == ERL_FIELD_TYPES) {
-        return new ErlangFieldTypesImpl(node);
       }
       else if (type == ERL_FUNCTION) {
         return new ErlangFunctionImpl(node);
@@ -417,9 +406,6 @@ public interface ErlangTypes {
       else if (type == ERL_TOP_TYPE) {
         return new ErlangTopTypeImpl(node);
       }
-      else if (type == ERL_TOP_TYPES) {
-        return new ErlangTopTypesImpl(node);
-      }
       else if (type == ERL_TOP_TYPE_100_T) {
         return new ErlangTopType100TImpl(node);
       }
@@ -447,9 +433,6 @@ public interface ErlangTypes {
       else if (type == ERL_TYPED_EXPR) {
         return new ErlangTypedExprImpl(node);
       }
-      else if (type == ERL_TYPED_EXPRS) {
-        return new ErlangTypedExprsImpl(node);
-      }
       else if (type == ERL_TYPED_RECORD_FIELDS) {
         return new ErlangTypedRecordFieldsImpl(node);
       }
@@ -458,9 +441,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_TYPE_SIG) {
         return new ErlangTypeSigImpl(node);
-      }
-      else if (type == ERL_TYPE_SIGS) {
-        return new ErlangTypeSigsImpl(node);
       }
       else if (type == ERL_TYPE_SPEC) {
         return new ErlangTypeSpecImpl(node);

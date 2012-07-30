@@ -24,8 +24,8 @@ public class ErlangTypeGuardImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @NotNull
-  public ErlangTopTypes getTopTypes() {
-    return findNotNullChildByClass(ErlangTopTypes.class);
+  public List<ErlangTopType> getTopTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

@@ -8,9 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ErlangFunType100T extends ErlangCompositeElement {
 
   @NotNull
-  ErlangTopType getTopType();
-
-  @Nullable
-  ErlangTopTypes getTopTypes();
+  List<ErlangTopType> getTopTypeList();
 
 }

@@ -11,6 +11,6 @@ public interface ErlangTypeGuard extends ErlangCompositeElement {
   ErlangQAtom getQAtom();
 
   @NotNull
-  ErlangTopTypes getTopTypes();
+  List<ErlangTopType> getTopTypeList();
 
 }

@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangTypedRecordFields extends ErlangCompositeElement {
 
-  @Nullable
-  ErlangTypedExprs getTypedExprs();
+  @NotNull
+  List<ErlangTypedExpr> getTypedExprList();
 
 }

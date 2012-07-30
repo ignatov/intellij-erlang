@@ -105,6 +105,9 @@
   
   extends("assignment_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal|a)")=expression
+  name(".*_(expression|comprehension|literal|a)")=expression
+  name(".*attribute")=attribute
+  name(".*type|.*_t")=type
   extends("atomic")=expression
 
   implements("record_definition|function|q_var|module")="org.intellij.erlang.psi.ErlangNamedElement"
@@ -154,13 +157,13 @@ type_spec ::= ('(' spec_fun type_sigs ')') | spec_fun type_sigs
 spec_fun ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])]
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
 typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
-typed_exprs ::= typed_expr (',' typed_expr)*
+private typed_exprs ::= typed_expr (',' typed_expr)*
 typed_expr ::= expression ['::' top_type]
-type_sigs ::= type_sig (';' type_sig)*
+private type_sigs ::= type_sig (';' type_sig)*
 type_sig ::= fun_type [when type_guards]
 private type_guards ::= type_guard (',' type_guard)*
 type_guard ::= q_atom '(' top_types ')'
-top_types ::= top_type (',' top_type)*
+private top_types ::= top_type (',' top_type)*
 top_type ::= [q_var '::'] top_type_100_t
 top_type_100_t ::= type ['|' top_type_100_t]
 type ::=
@@ -179,7 +182,7 @@ type ::=
 int_type ::= '-'? integer
 fun_type_100_t ::= '(' ('...' | top_types?) ')' '->' top_type
 fun_type ::= '(' top_types? ')' '->' top_type
-field_types ::= field_type (',' field_type)*
+private field_types ::= field_type (',' field_type)*
 field_type ::= q_atom '::' top_type
 
 binary_type ::= '<<' [bin_base_type | bin_unit_type | bin_base_types] '>>' {pin=1}
@@ -187,7 +190,7 @@ private bin_base_types ::= bin_base_type ',' bin_unit_type
 bin_base_type ::= q_var ':' integer
 bin_unit_type ::= q_var ':' q_var '*' integer
 
-attr_val ::= ('(' exprs ')') | exprs
+attr_val ::= ('(' exprs ')') | exprs {name="attribute value"}
 
 function ::= function_clause (';' function_clause)* {
   methods = [
@@ -243,7 +246,7 @@ max_expression ::=
   | begin_end_expression
 
 begin_end_expression ::= begin begin_end_body end
-begin_end_body ::= exprs
+begin_end_body ::= exprs {name="expression"}
 parenthesized_expression ::= '(' expression ')'
 
 //list_expression ::= '[' expression? (',' expression)* ['|' expression] ']' {pin=0}
@@ -253,10 +256,10 @@ private tail ::= ']' | ('|' expression ']') | (',' expression tail)
 
 binary_expression ::= '<<' bin_elements? '>>' {pin=1}
 private bin_elements ::= bin_element (',' bin_element)*
-bin_element ::= prefix_op? max_expression (colon_max_expression)? opt_bit_type_list?
+bin_element ::= prefix_op? max_expression (colon_max_expression)? opt_bit_type_list? {name="binary element"}
 
 opt_bit_type_list ::= '/' bit_type_list {pin=1}
-bit_type_list ::= bit_type ('-' bit_type)*
+private bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
 
 list_comprehension ::= '[' expression '||' lc_exprs ']' {

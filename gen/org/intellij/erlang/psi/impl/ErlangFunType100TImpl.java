@@ -18,14 +18,8 @@ public class ErlangFunType100TImpl extends ErlangCompositeElementImpl implements
 
   @Override
   @NotNull
-  public ErlangTopType getTopType() {
-    return findNotNullChildByClass(ErlangTopType.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangTopTypes getTopTypes() {
-    return findChildByClass(ErlangTopTypes.class);
+  public List<ErlangTopType> getTopTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

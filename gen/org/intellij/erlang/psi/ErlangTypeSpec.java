@@ -11,6 +11,6 @@ public interface ErlangTypeSpec extends ErlangCompositeElement {
   ErlangSpecFun getSpecFun();
 
   @NotNull
-  ErlangTypeSigs getTypeSigs();
+  List<ErlangTypeSig> getTypeSigList();
 
 }

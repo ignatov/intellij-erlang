@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangOptBitTypeList extends ErlangCompositeElement {
 
-  @Nullable
-  ErlangBitTypeList getBitTypeList();
+  @NotNull
+  List<ErlangBitType> getBitTypeList();
 
 }

@@ -17,9 +17,9 @@ public class ErlangOptBitTypeListImpl extends ErlangCompositeElementImpl impleme
   }
 
   @Override
-  @Nullable
-  public ErlangBitTypeList getBitTypeList() {
-    return findChildByClass(ErlangBitTypeList.class);
+  @NotNull
+  public List<ErlangBitType> getBitTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangBitType.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

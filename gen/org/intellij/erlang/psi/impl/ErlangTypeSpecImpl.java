@@ -24,8 +24,8 @@ public class ErlangTypeSpecImpl extends ErlangCompositeElementImpl implements Er
 
   @Override
   @NotNull
-  public ErlangTypeSigs getTypeSigs() {
-    return findNotNullChildByClass(ErlangTypeSigs.class);
+  public List<ErlangTypeSig> getTypeSigList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTypeSig.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

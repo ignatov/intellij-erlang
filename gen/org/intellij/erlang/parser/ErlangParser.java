@@ -68,9 +68,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_BIT_TYPE) {
       result_ = bit_type(builder_, level_ + 1);
     }
-    else if (root_ == ERL_BIT_TYPE_LIST) {
-      result_ = bit_type_list(builder_, level_ + 1);
-    }
     else if (root_ == ERL_CALLBACK_SPEC) {
       result_ = callback_spec(builder_, level_ + 1);
     }
@@ -130,9 +127,6 @@ public class ErlangParser implements PsiParser {
     }
     else if (root_ == ERL_FIELD_TYPE) {
       result_ = field_type(builder_, level_ + 1);
-    }
-    else if (root_ == ERL_FIELD_TYPES) {
-      result_ = field_types(builder_, level_ + 1);
     }
     else if (root_ == ERL_FUN_CLAUSE) {
       result_ = fun_clause(builder_, level_ + 1);
@@ -263,9 +257,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_TOP_TYPE_100_T) {
       result_ = top_type_100_t(builder_, level_ + 1);
     }
-    else if (root_ == ERL_TOP_TYPES) {
-      result_ = top_types(builder_, level_ + 1);
-    }
     else if (root_ == ERL_TRY_CATCH) {
       result_ = try_catch(builder_, level_ + 1);
     }
@@ -290,9 +281,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_TYPE_SIG) {
       result_ = type_sig(builder_, level_ + 1);
     }
-    else if (root_ == ERL_TYPE_SIGS) {
-      result_ = type_sigs(builder_, level_ + 1);
-    }
     else if (root_ == ERL_TYPE_SPEC) {
       result_ = type_spec(builder_, level_ + 1);
     }
@@ -301,9 +289,6 @@ public class ErlangParser implements PsiParser {
     }
     else if (root_ == ERL_TYPED_EXPR) {
       result_ = typed_expr(builder_, level_ + 1);
-    }
-    else if (root_ == ERL_TYPED_EXPRS) {
-      result_ = typed_exprs(builder_, level_ + 1);
     }
     else if (root_ == ERL_TYPED_RECORD_FIELDS) {
       result_ = typed_record_fields(builder_, level_ + 1);
@@ -373,7 +358,7 @@ public class ErlangParser implements PsiParser {
     Marker left_marker_ = (Marker)builder_.getLatestDoneMarker();
     if (!invalid_left_marker_guard_(builder_, left_marker_, "additive_expression")) return false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<additive expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = add_op(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && expr_500_a(builder_, level_ + 1);
@@ -392,11 +377,12 @@ public class ErlangParser implements PsiParser {
   // (fun_expression|parenthesized_expression) argument_list
   static boolean anonymous_call_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "anonymous_call_expression")) return false;
-    if (!nextTokenIs(builder_, ERL_PAR_LEFT) && !nextTokenIs(builder_, ERL_FUN)) return false;
+    if (!nextTokenIs(builder_, ERL_PAR_LEFT) && !nextTokenIs(builder_, ERL_FUN)
+        && replaceVariants(builder_, 2, "<expression>")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = anonymous_call_expression_0(builder_, level_ + 1);
     result_ = result_ && argument_list(builder_, level_ + 1);
     if (!result_ && !pinned_) {
@@ -570,10 +556,10 @@ public class ErlangParser implements PsiParser {
   public static boolean atom_attribute(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "atom_attribute")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<atom attribute>")) return false;
+        && replaceVariants(builder_, 2, "<attribute>")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<atom attribute>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<attribute>");
     result_ = q_atom(builder_, level_ + 1);
     result_ = result_ && atom_attribute_1(builder_, level_ + 1);
     if (result_) {
@@ -684,7 +670,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "attr_val")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<attr val>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<attribute value>");
     result_ = attr_val_0(builder_, level_ + 1);
     if (!result_) result_ = exprs(builder_, level_ + 1);
     if (result_) {
@@ -788,7 +774,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "begin_end_body")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<begin end body>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = exprs(builder_, level_ + 1);
     if (result_) {
       marker_.done(ERL_BEGIN_END_BODY);
@@ -834,7 +820,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "bin_base_type")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<bin base type>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
     result_ = q_var(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON);
     result_ = result_ && consumeToken(builder_, ERL_INTEGER);
@@ -872,7 +858,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "bin_element")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<bin element>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<binary element>");
     result_ = bin_element_0(builder_, level_ + 1);
     result_ = result_ && max_expression(builder_, level_ + 1);
     result_ = result_ && bin_element_2(builder_, level_ + 1);
@@ -984,7 +970,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "bin_unit_type")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<bin unit type>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
     result_ = q_var(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON);
     result_ = result_ && q_var(builder_, level_ + 1);
@@ -1087,10 +1073,10 @@ public class ErlangParser implements PsiParser {
   public static boolean bit_type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bit_type")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<bit type>")) return false;
+        && replaceVariants(builder_, 2, "<type>")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<bit type>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
     result_ = q_atom(builder_, level_ + 1);
     result_ = result_ && bit_type_1(builder_, level_ + 1);
     if (result_) {
@@ -1128,22 +1114,19 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // bit_type ('-' bit_type)*
-  public static boolean bit_type_list(PsiBuilder builder_, int level_) {
+  static boolean bit_type_list(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bit_type_list")) return false;
-    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<bit type list>")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<bit type list>");
     result_ = bit_type(builder_, level_ + 1);
     result_ = result_ && bit_type_list_1(builder_, level_ + 1);
-    if (result_) {
-      marker_.done(ERL_BIT_TYPE_LIST);
-    }
-    else {
+    if (!result_) {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
+    else {
+      marker_.drop();
+    }
     return result_;
   }
 
@@ -1337,7 +1320,7 @@ public class ErlangParser implements PsiParser {
     boolean pinned_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<colon qualified expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = colon_qualified_expression_0(builder_, level_ + 1);
     result_ = result_ && colon_qualified_expression_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -1628,7 +1611,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expr 100 a>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = expr_150_a(builder_, level_ + 1);
     result_ = result_ && expr_100_a_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -1675,7 +1658,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expr 150 a>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = expr_160_a(builder_, level_ + 1);
     result_ = result_ && expr_150_a_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -1722,7 +1705,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expr 160 a>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = expr_200_a(builder_, level_ + 1);
     result_ = result_ && expr_160_a_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -1769,7 +1752,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expr 200 a>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = expr_300_a(builder_, level_ + 1);
     result_ = result_ && expr_200_a_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -1816,7 +1799,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expr 300 a>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = expr_400_a(builder_, level_ + 1);
     result_ = result_ && expr_300_a_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -1863,7 +1846,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expr 400 a>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = expr_500_a(builder_, level_ + 1);
     result_ = result_ && expr_400_a_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -1903,7 +1886,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expr 500 a>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = prefix_expression(builder_, level_ + 1);
     result_ = result_ && expr_500_a_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -1944,7 +1927,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expr 700 a>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = global_function_call_expression(builder_, level_ + 1);
     if (!result_) result_ = function_call_expression(builder_, level_ + 1);
     if (!result_) result_ = generic_function_call_expression(builder_, level_ + 1);
@@ -2104,10 +2087,10 @@ public class ErlangParser implements PsiParser {
   public static boolean field_type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "field_type")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<field type>")) return false;
+        && replaceVariants(builder_, 2, "<type>")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<field type>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
     result_ = q_atom(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON_COLON);
     result_ = result_ && top_type(builder_, level_ + 1);
@@ -2123,22 +2106,19 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // field_type (',' field_type)*
-  public static boolean field_types(PsiBuilder builder_, int level_) {
+  static boolean field_types(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "field_types")) return false;
-    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<field types>")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<field types>");
     result_ = field_type(builder_, level_ + 1);
     result_ = result_ && field_types_1(builder_, level_ + 1);
-    if (result_) {
-      marker_.done(ERL_FIELD_TYPES);
-    }
-    else {
+    if (!result_) {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
+    else {
+      marker_.drop();
+    }
     return result_;
   }
 
@@ -2599,12 +2579,12 @@ public class ErlangParser implements PsiParser {
   public static boolean function_call_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "function_call_expression")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<function call expression>")) return false;
+        && replaceVariants(builder_, 2, "<expression>")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<function call expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = q_atom(builder_, level_ + 1);
     result_ = result_ && argument_list(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -2659,7 +2639,7 @@ public class ErlangParser implements PsiParser {
     boolean pinned_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<generic function call expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = generic_function_call_expression_0(builder_, level_ + 1);
     result_ = result_ && q_atom_or_var(builder_, level_ + 1);
     result_ = result_ && argument_list(builder_, level_ + 1);
@@ -2711,12 +2691,12 @@ public class ErlangParser implements PsiParser {
   public static boolean global_function_call_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "global_function_call_expression")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<global function call expression>")) return false;
+        && replaceVariants(builder_, 2, "<expression>")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<global function call expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = module_ref(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON);
     result_ = result_ && function_call_expression(builder_, level_ + 1);
@@ -2947,10 +2927,10 @@ public class ErlangParser implements PsiParser {
   public static boolean int_type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "int_type")) return false;
     if (!nextTokenIs(builder_, ERL_OP_MINUS) && !nextTokenIs(builder_, ERL_INTEGER)
-        && replaceVariants(builder_, 2, "<int type>")) return false;
+        && replaceVariants(builder_, 2, "<type>")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<int type>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
     result_ = int_type_0(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_INTEGER);
     if (result_) {
@@ -2984,7 +2964,7 @@ public class ErlangParser implements PsiParser {
     boolean pinned_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<lc expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = argument_definition(builder_, level_ + 1);
     result_ = result_ && lc_expression_0_1(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -3247,7 +3227,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<max expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = atomic(builder_, level_ + 1);
     if (!result_) result_ = q_var(builder_, level_ + 1);
     if (!result_) result_ = tuple_expression(builder_, level_ + 1);
@@ -3379,7 +3359,7 @@ public class ErlangParser implements PsiParser {
     Marker left_marker_ = (Marker)builder_.getLatestDoneMarker();
     if (!invalid_left_marker_guard_(builder_, left_marker_, "multiplicative_expression")) return false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<multiplicative expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = mult_op(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && prefix_expression(builder_, level_ + 1);
@@ -3452,7 +3432,7 @@ public class ErlangParser implements PsiParser {
     boolean pinned_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<prefix expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = prefix_expression_0(builder_, level_ + 1);
     result_ = result_ && expr_700_a(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
@@ -3592,11 +3572,12 @@ public class ErlangParser implements PsiParser {
   // q_atom '.' q_atom
   static boolean qualified_atom_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "qualified_atom_expression")) return false;
-    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
+        && replaceVariants(builder_, 2, "<expression>")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = q_atom(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_DOT);
     result_ = result_ && q_atom(builder_, level_ + 1);
@@ -3834,7 +3815,7 @@ public class ErlangParser implements PsiParser {
     boolean pinned_ = false;
     int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<record expression>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = record_expression_0(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_RADIX);
     pinned_ = result_; // pin = 2
@@ -4422,7 +4403,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "top_type")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<top type>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
     result_ = top_type_0(builder_, level_ + 1);
     result_ = result_ && top_type_100_t(builder_, level_ + 1);
     if (result_) {
@@ -4464,7 +4445,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "top_type_100_t")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<top type 100 t>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
     result_ = type(builder_, level_ + 1);
     result_ = result_ && top_type_100_t_1(builder_, level_ + 1);
     if (result_) {
@@ -4502,20 +4483,18 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // top_type (',' top_type)*
-  public static boolean top_types(PsiBuilder builder_, int level_) {
+  static boolean top_types(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "top_types")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<top types>");
     result_ = top_type(builder_, level_ + 1);
     result_ = result_ && top_types_1(builder_, level_ + 1);
-    if (result_) {
-      marker_.done(ERL_TOP_TYPES);
-    }
-    else {
+    if (!result_) {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
+    else {
+      marker_.drop();
+    }
     return result_;
   }
 
@@ -5308,18 +5287,18 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // type_sig (';' type_sig)*
-  public static boolean type_sigs(PsiBuilder builder_, int level_) {
+  static boolean type_sigs(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "type_sigs")) return false;
     if (!nextTokenIs(builder_, ERL_PAR_LEFT)) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = type_sig(builder_, level_ + 1);
     result_ = result_ && type_sigs_1(builder_, level_ + 1);
-    if (result_) {
-      marker_.done(ERL_TYPE_SIGS);
+    if (!result_) {
+      marker_.rollbackTo();
     }
     else {
-      marker_.rollbackTo();
+      marker_.drop();
     }
     return result_;
   }
@@ -5550,20 +5529,18 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // typed_expr (',' typed_expr)*
-  public static boolean typed_exprs(PsiBuilder builder_, int level_) {
+  static boolean typed_exprs(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_exprs")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<typed exprs>");
     result_ = typed_expr(builder_, level_ + 1);
     result_ = result_ && typed_exprs_1(builder_, level_ + 1);
-    if (result_) {
-      marker_.done(ERL_TYPED_EXPRS);
-    }
-    else {
+    if (!result_) {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
+    else {
+      marker_.drop();
+    }
     return result_;
   }
 

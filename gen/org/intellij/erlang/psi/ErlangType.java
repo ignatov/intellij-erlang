@@ -10,8 +10,8 @@ public interface ErlangType extends ErlangCompositeElement {
   @Nullable
   ErlangBinaryType getBinaryType();
 
-  @Nullable
-  ErlangFieldTypes getFieldTypes();
+  @NotNull
+  List<ErlangFieldType> getFieldTypeList();
 
   @Nullable
   ErlangFunType100T getFunType100T();
@@ -27,9 +27,6 @@ public interface ErlangType extends ErlangCompositeElement {
 
   @Nullable
   ErlangTopType getTopType();
-
-  @Nullable
-  ErlangTopTypes getTopTypes();
 
   @Nullable
   PsiElement getFun();
