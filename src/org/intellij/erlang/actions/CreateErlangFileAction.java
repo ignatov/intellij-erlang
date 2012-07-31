@@ -31,7 +31,6 @@ import org.intellij.erlang.psi.impl.ErlangElementFactory;
  */
 public class CreateErlangFileAction extends CreateFileFromTemplateAction {
   public static final String NEW_ERLANG_FILE = "New Erlang File";
-  public static final String ERLANG_FILE = "Erlang file";
 
   public CreateErlangFileAction() {
     super(NEW_ERLANG_FILE, "", ErlangIcons.FILE);
@@ -41,7 +40,9 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction {
   protected void buildDialog(final Project project, PsiDirectory directory, CreateFileFromTemplateDialog.Builder builder) {
     builder.
       setTitle(NEW_ERLANG_FILE).
-      addKind(ERLANG_FILE, ErlangIcons.FILE, "Erlang File").
+      addKind("Empty module", ErlangIcons.FILE, "Erlang File").
+      addKind("OTP application", ErlangIcons.FILE, "Erlang Application").
+      addKind("OTP gen_server", ErlangIcons.FILE, "Erlang Gen Server").
       setValidator(new InputValidatorEx() {
         @Override
         public boolean checkInput(String inputString) {

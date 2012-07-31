@@ -29,6 +29,8 @@
     <extensions defaultExtensionNs="com.intellij">
 
         <internalFileTemplate name="Erlang File"/>
+        <internalFileTemplate name="Erlang Application"/>
+        <internalFileTemplate name="Erlang Gen Server"/>
 
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder" />
