@@ -79,15 +79,20 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
   @NotNull
   public String getDemoText() {
     return "%%% Module fact documentation\n" +
-      "-module(fact).\n" +
-      "-export([fac/1]).\n" +
+      "-<k>module</k>(fact).\n" +
+      "-<k>export</k>([fac/1]).\n" +
+      "\n" +
+      "-<k>record</k>(state, {id, name}).\n" +
       "\n" +
       "% Factorial implementation\n" +
       "fac(0) -> 1;\n" +
       "fac(N) when N > 0, is_integer(N) -> N * fac(N-1).\n" +
       "\n" +
       "string_sample(A) -> \"string\n" +
-      "  second line\".";
+      "  second line\".\n" +
+      "\n" +
+      "update_state(State) -> State#state{id=10}."
+      ;
   }
 
   public Map<String, TextAttributesKey> getAdditionalHighlightingTagToDescriptorMap() {
