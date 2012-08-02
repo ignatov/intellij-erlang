@@ -16,9 +16,14 @@
 
 package org.intellij.erlang.editor;
 
+import com.intellij.ide.util.projectWizard.ModuleWizardStep;
+import com.intellij.ide.util.projectWizard.ProjectJdkForModuleStep;
+import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.ModuleTypeManager;
+import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.sdk.ErlangSdkType;
 
 import javax.swing.*;
 
@@ -59,5 +64,15 @@ public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
   @Override
   public Icon getNodeIcon(boolean isOpened) {
     return isOpened ? ErlangIcons.ERLANG_MODULE_NODE_OPEN : ErlangIcons.ERLANG_MODULE_NODE;
+  }
+
+  @Override
+  public ModuleWizardStep[] createWizardSteps(WizardContext wizardContext, final ErlangModuleBuilder moduleBuilder, ModulesProvider modulesProvider) {
+    return new ModuleWizardStep[]{new ProjectJdkForModuleStep(wizardContext, ErlangSdkType.getInstance()) {
+      public void updateDataModel() {
+        super.updateDataModel();
+        moduleBuilder.setModuleJdk(getJdk());
+      }
+    }};
   }
 }

@@ -17,6 +17,7 @@
 package org.intellij.erlang.psi.impl;
 
 import com.intellij.codeInsight.completion.BasicInsertHandler;
+import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
@@ -38,6 +39,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
 import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +47,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ErlangPsiImplUtil {
   private ErlangPsiImplUtil() {
@@ -111,34 +115,62 @@ public class ErlangPsiImplUtil {
   @NotNull
   static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, final boolean withArity) {
     if (containingFile instanceof ErlangFile) {
-      return ContainerUtil.map(((ErlangFile) containingFile).getFunctions(), new Function<ErlangFunction, LookupElement>() {
+      List<ErlangFunction> functions = ((ErlangFile) containingFile).getFunctions();
+
+      List<LookupElement> lookupElements = ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
         @Override
         public LookupElement fun(@NotNull final ErlangFunction function) {
-          return LookupElementBuilder.create(function)
-            .setIcon(ErlangIcons.FUNCTION).setTailText("/" + function.getArity()).
-              setInsertHandler(
-                withArity ?
-                  new BasicInsertHandler<LookupElement>() {
-                    @Override
-                    public void handleInsert(InsertionContext context, LookupElement item) {
-                      final Editor editor = context.getEditor();
-                      final Document document = editor.getDocument();
-                      context.commitDocument();
-                      document.insertString(context.getTailOffset(), "/" + function.getArity());
-                      editor.getCaretModel().moveToOffset(context.getTailOffset());
-                    }
-                  } :
-                  new ParenthesesInsertHandler<LookupElement>() {
-                    @Override
-                    protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
-                      return function.getArity() > 0;
-                    }
-                  }
-              );
+          return createFunctionLookupElement(function.getName(), function.getArity(), withArity);
         }
       });
+
+      // todo: move to more appropriate place
+      PsiFile[] erlInternals = FilenameIndex.getFilesByName(containingFile.getProject(), "erl_internal.erl",
+            GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
+
+      if (erlInternals.length == 1) {
+        for (String line  : StringUtil.splitByLines(erlInternals[0].getText())) {
+          Pattern bifPattern = Pattern.compile("bif\\((\\w+), (\\d+)\\) -> true;");
+          Matcher m = bifPattern.matcher(line);
+          if (m.matches()) {
+            String name = m.group(1);
+            int arity = Integer.parseInt(m.group(2));
+            lookupElements.add(createFunctionLookupElement(name, arity, withArity));
+          }
+        }
+      }
+
+      return lookupElements;
     }
     return Collections.emptyList();
+  }
+
+  private static LookupElement createFunctionLookupElement(String name, int arity, boolean withArity) {
+    return LookupElementBuilder.create(name)
+      .setIcon(ErlangIcons.FUNCTION).setTailText("/" + arity).
+        setInsertHandler(
+          getInsertHandler(arity, withArity)
+        );
+  }
+
+  private static InsertHandler<LookupElement> getInsertHandler(final int arity, boolean withArity) {
+    return withArity ?
+      new BasicInsertHandler<LookupElement>() {
+        @Override
+        public void handleInsert(InsertionContext context, LookupElement item) {
+          final Editor editor = context.getEditor();
+          final Document document = editor.getDocument();
+          context.commitDocument();
+          document.insertString(context.getTailOffset(), "/" + arity);
+          editor.getCaretModel().moveToOffset(context.getTailOffset());
+        }
+      } :
+      new ParenthesesInsertHandler<LookupElement>() {
+        @Override
+        protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
+          return arity > 0;
+        }
+      };
   }
 
   @NotNull
@@ -340,7 +372,8 @@ public class ErlangPsiImplUtil {
     List<String> split = StringUtil.split(includeFilePath, "/");
     String last = ContainerUtil.iterateAndGetLastItem(split);
     if (last != null) {
-      PsiFile[] filesByName = FilenameIndex.getFilesByName(containingFile.getProject(), last, GlobalSearchScope.projectScope(containingFile.getProject()));
+      PsiFile[] filesByName = FilenameIndex.getFilesByName(containingFile.getProject(), last,
+        GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.HRL, ErlangFileType.INSTANCE));
       List<PsiFile> filter = ContainerUtil.filter(filesByName, new Condition<PsiFile>() {
         @Override
         public boolean value(PsiFile psiFile) {
@@ -348,7 +381,7 @@ public class ErlangPsiImplUtil {
           if (virtualFile == null) return false;
           String canonicalPath = virtualFile.getCanonicalPath();
           if (canonicalPath == null) return false;
-          return canonicalPath.endsWith(includeFilePath);
+          return canonicalPath.replaceAll("-[\\d\\.\\w-]+/", "/").endsWith(includeFilePath);
         }
       });
 

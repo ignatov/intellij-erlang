@@ -52,6 +52,8 @@
         <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler" />
         <colorSettingsPage implementation="org.intellij.erlang.editor.ErlangColorSettingsPage" />
         <lang.documentationProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangDocumentationProvider"/>
+
+        <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
     </extensions>
     <project-components>
 
