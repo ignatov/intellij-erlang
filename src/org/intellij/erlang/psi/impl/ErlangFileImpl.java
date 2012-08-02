@@ -19,6 +19,7 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.CachedValue;
@@ -112,7 +113,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
           for (ErlangFunction function : getFunctions()) {
             String name = function.getName();
             int argsCount = function.getFunctionClauseList().get(0).getArgumentDefinitionList().size();
-            Pair<String, Integer> key = new Pair<String, Integer>(name, argsCount);
+            Pair<String, Integer> key = Pair.create(name, argsCount);
             if (!map.containsKey(key)) {
               map.put(key, function);
             }
@@ -121,7 +122,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
         }
       }, false);
     }
-    return myFunctionsMap.getValue().get(new Pair<String, Integer>(name, argsCount));
+    // todo: cleanup
+    Map<Pair<String, Integer>, ErlangFunction> value = myFunctionsMap.getValue();
+    ErlangFunction byName = value.get(Pair.create(name, argsCount));
+    ErlangFunction byUnquote = byName == null ? value.get(Pair.create(StringUtil.unquoteString(name), argsCount)) : byName;
+    return byUnquote == null ? value.get(Pair.create("'" + name + "'", argsCount)) : byUnquote;
   }
 
   @NotNull
@@ -197,7 +202,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
         }
       }, false);
     }
-    return myRecordsMap.getValue().get(name);
+    // todo: cleanup
+    Map<String, ErlangRecordDefinition> value = myRecordsMap.getValue();
+    ErlangRecordDefinition byName = value.get(name);
+    ErlangRecordDefinition byUnquote = byName == null ? value.get(StringUtil.unquoteString(name)) : byName;
+    return byUnquote == null ? value.get("'" + name + "'") : byUnquote;
   }
 
   private List<ErlangFunction> calcFunctions() {

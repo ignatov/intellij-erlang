@@ -36,6 +36,8 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @Override
   public WordsScanner getWordsScanner() {
     return null;
+    // todo
+    //new DefaultWordsScanner(new ErlangLexer(), TokenSet.create(ErlangTypes.ERL_ATOM, ErlangTypes.ERL_VAR), ErlangParserDefinition.COMMENTS, TokenSet.create(ErlangTypes.ERL_STRING));
   }
 
   @Override
