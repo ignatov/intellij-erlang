@@ -30881,10 +30881,11 @@ ERL_FILE
                 PsiElement(()('(')
                 ERL_FUN_EXPRESSION
                   PsiElement(fun)('fun')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('storage_count')
-                  PsiElement(/)('/')
-                  PsiElement(integer)('2')
+                  ERL_EXPORT_FUNCTION
+                    ERL_Q_ATOM
+                      PsiElement(atom)('storage_count')
+                    PsiElement(/)('/')
+                    PsiElement(integer)('2')
                 PsiElement(,)(',')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')

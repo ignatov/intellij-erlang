@@ -17,15 +17,21 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
+  @Nullable
+  public ErlangExportFunction getExportFunction() {
+    return findChildByClass(ErlangExportFunction.class);
+  }
+
+  @Override
   @NotNull
   public List<ErlangFunClause> getFunClauseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangFunClause.class);
   }
 
   @Override
-  @NotNull
-  public List<ErlangQAtom> getQAtomList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
+  @Nullable
+  public ErlangModuleRef getModuleRef() {
+    return findChildByClass(ErlangModuleRef.class);
   }
 
   @Override
@@ -38,12 +44,6 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   @NotNull
   public PsiElement getFun() {
     return findNotNullChildByType(ERL_FUN);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getInteger() {
-    return findChildByType(ERL_INTEGER);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

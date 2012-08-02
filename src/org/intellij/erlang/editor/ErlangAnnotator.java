@@ -28,7 +28,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.search.LocalSearchScope;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -163,7 +166,10 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
 
         if (usage.get() == null) {
-          annotationHolder.createWarningAnnotation(function.getNameIdentifier(), "Unused function " + function.getName());
+          Query<PsiReference> search = ReferencesSearch.search(function, new LocalSearchScope(function.getContainingFile()));
+          if (search.findFirst() == null) {
+            annotationHolder.createWarningAnnotation(function.getNameIdentifier(), "Unused function " + function.getName());
+          }
         }
       }
       // todo: add export, import and other bundled attributes
@@ -184,30 +190,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
   private static void markVariableIfUnused(@NotNull final ErlangQVar var, @NotNull AnnotationHolder annotationHolder, @NotNull String text) {
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(var, ErlangFunctionClause.class);
     if (functionClause == null) return;
-
-    final Ref<ErlangQVar> usage = new Ref<ErlangQVar>();
-
-    functionClause.accept(
-      new ErlangRecursiveVisitor() {
-        @Override
-        public void visitCompositeElement(@NotNull ErlangCompositeElement o) {
-          if (!usage.isNull()) return;
-          super.visitCompositeElement(o);
-        }
-
-        @Override
-        public void visitQVar(@NotNull ErlangQVar o) {
-          if (o.getName().equals(var.getName())) { // faster
-            PsiReference reference = o.getReference();
-            PsiElement resolve = reference != null ? reference.resolve() : null;
-            if (var.equals(resolve)) {
-              usage.set(o);
-            }
-          }
-        }
-      });
-
-    if (usage.get() == null) {
+    Query<PsiReference> search = ReferencesSearch.search(var, new LocalSearchScope(functionClause));
+    if (search.findFirst() == null) {
       annotationHolder.createWarningAnnotation(var, text);
     }
   }

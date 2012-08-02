@@ -106,7 +106,7 @@ rewrite_track_offsets([], _, Acc) ->
 rewrite_track_offsets([#track{total_size = Size} = Track|Tracks], Offset, Acc) ->
   rewrite_track_offsets(Tracks, Offset + Size, [rewrite_track_atoms(Track#track{offset = Offset})|Acc]).
 
-<warning>rewrite_track_atoms</warning>(#track{buffer = Atoms, sample_count = Count, offset = Offset} = Track) ->
+rewrite_track_atoms(#track{buffer = Atoms, sample_count = Count, offset = Offset} = Track) ->
   Atoms1 = rewrite_track_atoms(Atoms, Count, Offset, []),
   % ?D(Atoms1),
   Track#track{buffer = Atoms1}.
@@ -177,7 +177,7 @@ cached_pread({Module, Device}, Offset, ChunkSize) when ChunkSize > 0 ->
 
 %% Generic
 
-<warning>append_track</warning>(Input, State) ->
+append_track(Input, State) ->
   Pos = 0,
   mp4_foldl(Input, Pos, State).
 

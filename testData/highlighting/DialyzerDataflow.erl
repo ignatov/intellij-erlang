@@ -2017,7 +2017,7 @@ handle_guard_comp(Guard, Comp, Map, Env, Eval, State) ->
       handle_guard_gen_fun({erlang, Comp, 2}, Guard, Map, Env, Eval, State)
   end.
 
-<warning>invert_comp</warning>('=<') -> '>=';
+invert_comp('=<') -> '>=';
 invert_comp('<')  -> '>';
 invert_comp('>=') -> '=<';
 invert_comp('>')  -> '<'.
@@ -2774,10 +2774,10 @@ is_call_to_send(Tree) ->
   end.
 
 any_opaque(Ts) ->
-  lists:any(fun erl_types:t_is_opaque/1, Ts).
+  lists:any(fun erl_types:<error>t_is_opaque/1</error>, Ts).
 
 any_has_opaque_subtype(Ts) ->
-  lists:any(fun erl_types:t_has_opaque_subtype/1, Ts).
+  lists:any(fun erl_types:<error>t_has_opaque_subtype/1</error>, Ts).
 
 filter_match_fail([Clause] = Cls) ->
   Body = cerl:clause_body(Clause),
@@ -2899,7 +2899,7 @@ state__get_race_warnings(#state{races = Races} = State) ->
   {Races1, State1} = dialyzer_races:get_race_warnings(Races, State),
   State1#state{races = Races1}.
 
-<warning>state__get_warnings</warning>(#state{tree_map = TreeMap, fun_tab = FunTab,
+state__get_warnings(#state{tree_map = TreeMap, fun_tab = FunTab,
 			   callgraph = Callgraph, plt = Plt} = State,
 		    NoWarnUnused) ->
   FoldFun =
@@ -3511,7 +3511,7 @@ find_mismatched_record_patterns(Tree, State) ->
 	end
     end, State, Tree).
 
-<warning>find_rec_warnings</warning>(Tree, State) ->
+find_rec_warnings(Tree, State) ->
   cerl_trees:fold(
     fun(SubTree, AccState) ->
 	case cerl:is_c_tuple(SubTree) of
@@ -3520,7 +3520,7 @@ find_mismatched_record_patterns(Tree, State) ->
 	end
     end, State, Tree).
 
-<warning>find_rec_warnings_tuple</warning>(Tree, State) ->
+find_rec_warnings_tuple(Tree, State) ->
   Elements = cerl:tuple_es(Tree),
   {_, _, EsType} = traverse_list(Elements, map__new(), State),
   TupleType = t_tuple(EsType),
@@ -3566,7 +3566,7 @@ debug_pp(Tree, false) ->
   io:nl(),
   ok.
 
-<warning>strip_annotations</warning>(Tree) ->
+strip_annotations(Tree) ->
   Fun = fun(T) ->
 	    case cerl:type(T) of
 	      var ->

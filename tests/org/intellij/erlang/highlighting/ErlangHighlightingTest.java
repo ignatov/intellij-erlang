@@ -52,4 +52,5 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void testMp4Mux()            { doTest(); }
   public void testRecord()            { doTest(); }
   public void testQuoteUnquote()      { doTest(); }
+  public void test23()                { doTest(); }
 }

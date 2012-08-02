@@ -1706,7 +1706,7 @@ remote_dirty_select(Tab, Spec, _) ->
 dirty_sel_init(Node,Tab,Spec,NObjects,Type) ->
     do_dirty_rpc(Tab,Node,mnesia_lib,db_select_init,[Type,Tab,Spec,NObjects]).
 
-<warning>dirty_sel_cont</warning>(#mnesia_select{cont='$end_of_table'}) -> '$end_of_table';
+dirty_sel_cont(#mnesia_select{cont='$end_of_table'}) -> '$end_of_table';
 dirty_sel_cont(#mnesia_select{node=Node,tab=Tab,storage=Type,cont=Cont,orig=Ms}) ->
     do_dirty_rpc(Tab,Node,mnesia_lib,db_select_cont,[Type,Cont,Ms]).
 
@@ -2045,7 +2045,7 @@ display_tab_info() ->
     Rdisp = fun({Rpat, Rtabs}) -> io:format("~p = ~p~n", [Rpat, Rtabs]) end,
     lists:foreach(Rdisp, lists:sort(Repl)).
 
-<warning>storage_count</warning>(T, {U, R, D, DO}) ->
+storage_count(T, {U, R, D, DO}) ->
     case table_info(T, storage_type) of
 	unknown -> {[T | U], R, D, DO};
 	ram_copies -> {U, [T | R], D, DO};
@@ -2397,7 +2397,7 @@ clear_table(Tab) ->
 	    mnesia:abort({aborted, nested_transaction})
     end.
 	    
-<warning>do_clear_table</warning>(Tab) ->
+do_clear_table(Tab) ->
     case get(mnesia_activity_state) of
 	{?DEFAULT_ACCESS, Tid, Ts}  ->
 	    clear_table(Tid, Ts, Tab, '_');
@@ -2855,7 +2855,7 @@ qlc_format({lookup, Index,Keys}, Tab, _, _, _) ->
 		  [?MODULE, Tab, Index, Keys]).
 
 do_fixtable(Tab, #<error>tidstore</error>{store=Store}) -> do_fixtable(Tab,Store);
-do_fixtable(<warning>Tab</warning>, <warning>Store</warning>) -> ok.
+do_fixtable(<warning>Store</warning>) -> ok.
 
 get_activity_id() -> get(mnesia_activity_state).
 

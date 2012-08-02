@@ -300,6 +300,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static int getTextOffset(@NotNull ErlangModule o) {
+    if (o.getNameIdentifier() == o) return 0; //o.getNode().getTextOffset();
     return o.getNameIdentifier().getTextOffset();
   }
 

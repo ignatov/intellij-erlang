@@ -472,7 +472,7 @@ handle_guard_comp(Guard, Comp, Map, Env, Eval, State) ->
       handle_guard_gen_fun({erlang, Comp, 2}, Guard, Map, Env, Eval, State)
   end.
 
-<warning>invert_comp</warning>('=<') -> '>=';
+invert_comp('=<') -> '>=';
 invert_comp('<')  -> '>';
 invert_comp('>=') -> '=<';
 invert_comp('>')  -> '<'.
@@ -1037,7 +1037,7 @@ bind_guard_case_clauses(_GenArgType, _GenMap, _ArgExpr, [], Map, _Env, _Eval,
 %%%
 %%% ===========================================================================
 
-<warning>map__new</warning>() ->
+map__new() ->
   {dict:new(), dict:new()}.
 
 join_maps(Maps, MapOut) ->
@@ -1228,11 +1228,11 @@ get_label(T) ->
 	andalso (Arity =:= 2)
   end.
 
-<warning>any_opaque</warning>(Ts) ->
-  lists:any(fun erl_types:t_is_opaque/1, Ts).
+any_opaque(Ts) ->
+  lists:any(fun erl_types:<error>t_is_opaque/1</error>, Ts).
 
 any_has_opaque_subtype(Ts) ->
-  lists:any(fun erl_types:t_has_opaque_subtype/1, Ts).
+  lists:any(fun erl_types:<error>t_has_opaque_subtype/1</error>, Ts).
 
 filter_match_fail([Clause] = Cls) ->
   Body = cerl:clause_body(Clause),
@@ -1966,7 +1966,7 @@ find_terminals_list([], Explicit, Normal) ->
 	end
     end, State, Tree).
 
-<warning>find_rec_warnings</warning>(Tree, State) ->
+find_rec_warnings(Tree, State) ->
   cerl_trees:fold(
     fun(SubTree, AccState) ->
 	case cerl:is_c_tuple(SubTree) of
@@ -1975,7 +1975,7 @@ find_terminals_list([], Explicit, Normal) ->
 	end
     end, State, Tree).
 
-<error>State</error>) -> ok.
+<error>.</error>
 
 -ifdef(DEBUG_PP).
 <warning>debug_pp</warning>(Tree, true) ->
@@ -1987,7 +1987,7 @@ debug_pp(Tree, false) ->
   io:nl(),
   ok.
 
-<warning>strip_annotations</warning>(Tree) ->
+strip_annotations(Tree) ->
   Fun = fun(T) ->
 	    case cerl:type(T) of
 	      var ->

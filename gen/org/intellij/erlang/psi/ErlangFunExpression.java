@@ -7,19 +7,19 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangFunExpression extends ErlangExpression {
 
+  @Nullable
+  ErlangExportFunction getExportFunction();
+
   @NotNull
   List<ErlangFunClause> getFunClauseList();
 
-  @NotNull
-  List<ErlangQAtom> getQAtomList();
+  @Nullable
+  ErlangModuleRef getModuleRef();
 
   @Nullable
   PsiElement getEnd();
 
   @NotNull
   PsiElement getFun();
-
-  @Nullable
-  PsiElement getInteger();
 
 }

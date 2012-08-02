@@ -307,7 +307,7 @@ cr_clause ::= argument_definition clause_guard? clause_body
 argument_definition ::= expression
 
 receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end))
-fun_expression ::= fun ((fun_clauses end) | ([q_atom ':'] q_atom '/' integer))
+fun_expression ::= fun ((fun_clauses end) | ([module_ref ':'] export_function))
 private fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body
 try_expression ::= try exprs (of cr_clauses)? try_catch
