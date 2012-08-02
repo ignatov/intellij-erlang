@@ -50,7 +50,7 @@ public class ErlangParserTest extends ParsingTestCase {
   public void testComments()          { doTest(true, false); }
   public void testMultiline()         { doTest(true, false); }
   public void testRecordExpression()  { doTest(true, false); }
-  public void testPeriods()           { doTest(true, true); }
+//  public void testPeriods()           { doTest(true, true); }
   public void test19()                { doTest(true, true); }
 
   protected void doTest(boolean checkResult, boolean suppressErrors) {
