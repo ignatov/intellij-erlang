@@ -114,15 +114,15 @@
   extends("record_definition|function|q_var|module")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
-forms ::= form ('.' form)*
-private form ::= function | rule | record_definition | include | attribute {recoverUntil=recoverer}
+forms ::= form *
+private form ::= (function | rule | record_definition | include | attribute) '.' {recoverUntil=recoverer}
 
 q_atom ::= '?'? atom
 q_var ::= '_' | ('?'? var) {
   methods = [getReference processDeclarations getName setName getNameIdentifier]
 }
 
-private recoverer ::= !('.')
+private recoverer ::= !('-' | '?' | atom)
 
 record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   pin=2
@@ -137,7 +137,7 @@ attribute ::= '-' (
   | specification
   | callback_spec
   | atom_attribute
-  ) {pin=1 recoverUntil="recoverer"}
+  ) {pin=1}
 callback_spec ::= 'callback' type_spec {pin=1}
 specification ::= 'spec' type_spec {pin=1}
 export ::= 'export' '(' export_functions ')' {pin=1}
