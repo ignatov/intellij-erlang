@@ -47,20 +47,6 @@ public class ErlangAnnotator implements Annotator, DumbAware {
   public void annotate(@NotNull PsiElement psiElement, @NotNull final AnnotationHolder annotationHolder) {
     psiElement.accept(new ErlangVisitor() {
       @Override
-      public void visitQVar(@NotNull ErlangQVar o) {
-        PsiReference reference = o.getReference();
-        PsiElement resolve = reference != null ? reference.resolve() : null;
-        if (resolve == null && !isForceSkipped(o) && !isMacros(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {
-          markVariableIfUnused(o, annotationHolder, "Unused variable " + o.getText());
-        }
-//        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForceSkipped(o) || inSpecification(o)) {
-//          return;
-//        }
-//        markIfUnresolved(o, o, annotationHolder, "Unresolved variable " + o.getText());
-
-      }
-
-      @Override
       public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
         ErlangQAtom atomName = o.getAtomName();
         if (atomName != null) {
