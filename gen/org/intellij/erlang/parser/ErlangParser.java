@@ -1922,7 +1922,7 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // global_function_call_expression | function_call_expression | generic_function_call_expression |
-  //   anonymous_call_expression | record_expression | colon_qualified_expression
+  //   anonymous_call_expression | record_expression+ | colon_qualified_expression
   public static boolean expr_700_a(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "expr_700_a")) return false;
     boolean result_ = false;
@@ -1933,7 +1933,7 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = function_call_expression(builder_, level_ + 1);
     if (!result_) result_ = generic_function_call_expression(builder_, level_ + 1);
     if (!result_) result_ = anonymous_call_expression(builder_, level_ + 1);
-    if (!result_) result_ = record_expression(builder_, level_ + 1);
+    if (!result_) result_ = expr_700_a_4(builder_, level_ + 1);
     if (!result_) result_ = colon_qualified_expression(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
     if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_EXPR_700_A)) {
@@ -1946,6 +1946,31 @@ public class ErlangParser implements PsiParser {
       marker_.rollbackTo();
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
+    return result_;
+  }
+
+  // record_expression+
+  private static boolean expr_700_a_4(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "expr_700_a_4")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = record_expression(builder_, level_ + 1);
+    int offset_ = builder_.getCurrentOffset();
+    while (result_) {
+      if (!record_expression(builder_, level_ + 1)) break;
+      int next_offset_ = builder_.getCurrentOffset();
+      if (offset_ == next_offset_) {
+        empty_element_parsed_guard_(builder_, offset_, "expr_700_a_4");
+        break;
+      }
+      offset_ = next_offset_;
+    }
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
     return result_;
   }
 

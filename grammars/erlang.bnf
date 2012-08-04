@@ -223,7 +223,7 @@ expr_500_a ::= prefix_expression multiplicative_expression*
 left multiplicative_expression ::= mult_op prefix_expression {pin=1}
 prefix_expression ::= prefix_op? expr_700_a {pin=0}
 expr_700_a ::= global_function_call_expression | function_call_expression | generic_function_call_expression |
-  anonymous_call_expression | record_expression | colon_qualified_expression
+  anonymous_call_expression | record_expression+ | colon_qualified_expression
 colon_qualified_expression ::= (max_expression | qualified_reference) colon_max_expression? {pin=0}
 private colon_max_expression ::= ':' max_expression
 private qualified_reference ::= q_atom qualified_expression*
