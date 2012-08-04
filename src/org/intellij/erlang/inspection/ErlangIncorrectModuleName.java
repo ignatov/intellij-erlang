@@ -64,13 +64,23 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalQuickFix;
+import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.application.AccessToken;
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiReference;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangCompositeElement;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 
 /**
  * @author ignatov
@@ -101,9 +111,80 @@ public class ErlangIncorrectModuleName extends ErlangBaseInspection {
         ErlangCompositeElement atom = o.getQAtom();
         if (atom != null && !moduleName.equals(withoutExtension)) {
           problemsHolder.registerProblem(atom, "Module with name '" + moduleName + "' should be declared in a file named '" +
-            moduleName + "." + ext + "'.");
+            moduleName + "." + ext + "'.",
+            new ErlangRenameModuleFix(o, withoutExtension),
+            new ErlangRenameFileFix(o)
+          );
         }
       }
     });
+  }
+
+  private static class ErlangRenameModuleFix implements LocalQuickFix {
+    private final ErlangModule myModule;
+    private final String myShouldBeName;
+
+    public ErlangRenameModuleFix(ErlangModule module, String shouldBeName) {
+      myModule = module;
+      myShouldBeName = shouldBeName;
+    }
+
+    @NotNull
+    @Override
+    public String getName() {
+      return "Rename module '" + myModule.getName() + "' to '" + myShouldBeName + "'";
+    }
+
+    @NotNull
+    @Override
+    public String getFamilyName() {
+      return "Rename module";
+    }
+
+    @Override
+    public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+      final AccessToken token = WriteAction.start();
+      try {
+        myModule.setName(myShouldBeName);
+      } finally {
+        token.finish();
+      }
+    }
+  }
+
+  private static class ErlangRenameFileFix implements LocalQuickFix {
+    private final ErlangModule myModule;
+    private final String myExtension;
+
+    public ErlangRenameFileFix(ErlangModule module) {
+      myModule = module;
+      myExtension = FileUtil.getExtension(myModule.getContainingFile().getName());
+    }
+
+    @NotNull
+    @Override
+    public String getName() {
+      return "Rename containing file to '" + myModule.getName() + "." + myExtension + "'";
+    }
+
+    @NotNull
+    @Override
+    public String getFamilyName() {
+      return "Rename containing file";
+    }
+
+    @Override
+    public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+      final AccessToken token = WriteAction.start();
+      try {
+        VirtualFile virtualFile = myModule.getContainingFile().getVirtualFile();
+        if (virtualFile != null) {
+          virtualFile.rename(problemDescriptor, myModule.getName() + "." + myExtension);
+        }
+      } catch (IOException e) { //
+      } finally {
+        token.finish();
+      }
+    }
   }
 }
