@@ -92,61 +92,6 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         markAttributeNameAsKeyword(o, annotationHolder, "record");
       }
 
-      @Override
-      public void visitFunction(@NotNull final ErlangFunction function) {
-//        List<ErlangFunction> funs = PsiTreeUtil.getChildrenOfTypeAsList(function.getContainingFile(), ErlangFunction.class);
-//
-//        for (ErlangFunction fun : funs) {
-//          if (!function.equals(fun) && function.getName().equals(fun.getName()) && function.getArity() == fun.getArity()) {
-//            annotationHolder.createErrorAnnotation(fun.getNameIdentifier(), "Duplicate function " + fun.getName() + "/" + fun.getArity());
-//            return;
-//          }
-//        }
-
-        final Ref<Object> usage = new Ref<Object>();
-
-        function.getContainingFile().accept(
-          new ErlangRecursiveVisitor() {
-            @Override
-            public void visitFile(PsiFile file) {
-              for (PsiElement psiElement : file.getChildren()) {
-                if (psiElement instanceof ErlangCompositeElement) {
-                  psiElement.accept(this);
-                }
-              }
-            }
-
-            @Override
-            public void visitCompositeElement(@NotNull ErlangCompositeElement o) {
-              if (!usage.isNull()) return;
-              super.visitCompositeElement(o);
-            }
-
-            @Override
-            public void visitExportFunction(@NotNull ErlangExportFunction o) {
-              PsiReference reference = o.getReference();
-              if (reference != null && function.equals(reference.resolve())) {
-                usage.set(o);
-              }
-            }
-
-            @Override
-            public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-              PsiReference reference = o.getReference();
-              if (reference != null && function.equals(reference.resolve())) {
-                usage.set(o);
-              }
-            }
-          });
-
-
-        if (usage.get() == null) {
-          Query<PsiReference> search = ReferencesSearch.search(function, new LocalSearchScope(function.getContainingFile()));
-          if (search.findFirst() == null) {
-            annotationHolder.createWarningAnnotation(function.getNameIdentifier(), "Unused function " + function.getName());
-          }
-        }
-      }
       // todo: add export, import and other bundled attributes
     });
   }

@@ -65,10 +65,16 @@
       <localInspection language="Erlang" shortName="ErlangUnresolvedRecordInspection" displayName="Unresolved record"
                        groupName="Erlang" enabledByDefault="true" level="ERROR"
                        implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordInspection"/>
+      <localInspection language="Erlang" shortName="ErlangUnresolvedFunctionInspection" displayName="Unresolved function"
+                       groupName="Erlang" enabledByDefault="true" level="ERROR"
+                       implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection"/>
       <!--warnings-->
       <localInspection language="Erlang" shortName="ErlangUnusedVariableInspection" displayName="Unused variable"
                        groupName="Erlang" enabledByDefault="true" level="WARNING"
                        implementationClass="org.intellij.erlang.inspection.ErlangUnusedVariableInspection"/>
+      <localInspection language="Erlang" shortName="ErlangUnusedFunctionInspection" displayName="Unused function"
+                       groupName="Erlang" enabledByDefault="true" level="WARNING"
+                       implementationClass="org.intellij.erlang.inspection.ErlangUnusedFunctionInspection"/>
     </extensions>
     <project-components>
 
