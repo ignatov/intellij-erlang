@@ -1,4 +1,4 @@
--module(<error>test</error>).
+-module(<warning>test</warning>).
 -export([hello/1, <warning>hello_world/1</warning>, naive_reverse/1]).
 
 naive_reverse([H|T]) ->

@@ -1,4 +1,4 @@
--module(<error>mp4mux</error>).
+-module(<warning>mp4mux</warning>).
 -export([run/2]).
 
 -record(state, {

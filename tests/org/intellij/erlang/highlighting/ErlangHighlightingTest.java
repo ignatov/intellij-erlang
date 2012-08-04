@@ -36,7 +36,8 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
 
       ErlangUnusedVariableInspection.class,
       ErlangUnusedFunctionInspection.class,
-      ErlangDuplicateFunctionInspection.class
+      ErlangDuplicateFunctionInspection.class,
+      ErlangIncorrectModuleName.class
     );
     myFixture.checkHighlighting(true, false, false);
   }

@@ -68,6 +68,9 @@
       <localInspection language="Erlang" shortName="ErlangUnresolvedFunctionInspection" displayName="Unresolved function"
                        groupName="Erlang" enabledByDefault="true" level="ERROR"
                        implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection"/>
+      <localInspection language="Erlang" shortName="ErlangIncorrectModuleName" displayName="Incorrect module name"
+                       groupName="Erlang" enabledByDefault="true" level="ERROR"
+                       implementationClass="org.intellij.erlang.inspection.ErlangIncorrectModuleName"/>
       <!--warnings-->
       <localInspection language="Erlang" shortName="ErlangUnusedVariableInspection" displayName="Unused variable"
                        groupName="Erlang" enabledByDefault="true" level="WARNING"

@@ -76,14 +76,6 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitModule(@NotNull ErlangModule o) {
         markFirstChildAsKeyword(o, annotationHolder);
-        String ext = FileUtil.getExtension(o.getContainingFile().getName());
-        String withoutExtension = FileUtil.getNameWithoutExtension(o.getContainingFile().getName());
-        String moduleName = o.getName();
-        ErlangCompositeElement atom = o.getQAtom();
-        if (atom != null && !moduleName.equals(withoutExtension)) {
-          annotationHolder.createErrorAnnotation(atom, "Module with name '" + moduleName + "' should be declared in a file named '" +
-            moduleName + "." + ext + "'.");
-        }
       }
 
       @Override
