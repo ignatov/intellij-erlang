@@ -35,7 +35,8 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
       ErlangUnresolvedFunctionInspection.class,
 
       ErlangUnusedVariableInspection.class,
-      ErlangUnusedFunctionInspection.class
+      ErlangUnusedFunctionInspection.class,
+      ErlangDuplicateFunctionInspection.class
     );
     myFixture.checkHighlighting(true, false, false);
   }
@@ -66,4 +67,5 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void testRecordsResolve()    { doTest(); }
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
+  public void testDuplicate()         { doTest(); }
 }
