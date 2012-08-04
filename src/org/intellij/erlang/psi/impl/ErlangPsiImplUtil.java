@@ -124,18 +124,20 @@ public class ErlangPsiImplUtil {
         }
       });
 
-      // todo: move to more appropriate place
-      PsiFile[] erlInternals = FilenameIndex.getFilesByName(containingFile.getProject(), "erl_internal.erl",
-            GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
+      if (!withArity) {
+        // todo: move to more appropriate place
+        PsiFile[] erlInternals = FilenameIndex.getFilesByName(containingFile.getProject(), "erl_internal.erl",
+              GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
 
-      if (erlInternals.length == 1) {
-        for (String line  : StringUtil.splitByLines(erlInternals[0].getText())) {
-          Pattern bifPattern = Pattern.compile("bif\\((\\w+), (\\d+)\\) -> true;");
-          Matcher m = bifPattern.matcher(line);
-          if (m.matches()) {
-            String name = m.group(1);
-            int arity = Integer.parseInt(m.group(2));
-            lookupElements.add(createFunctionLookupElement(name, arity, withArity));
+        if (erlInternals.length == 1) {
+          for (String line  : StringUtil.splitByLines(erlInternals[0].getText())) {
+            Pattern bifPattern = Pattern.compile("bif\\((\\w+), (\\d+)\\) -> true;");
+            Matcher m = bifPattern.matcher(line);
+            if (m.matches()) {
+              String name = m.group(1);
+              int arity = Integer.parseInt(m.group(2));
+              lookupElements.add(createFunctionLookupElement(name, arity, withArity));
+            }
           }
         }
       }
