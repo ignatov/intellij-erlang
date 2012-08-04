@@ -16,8 +16,6 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.InspectionManager;
-import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -28,8 +26,6 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inSpecification;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isForceSkipped;
 
 /**
  * @author ignatov
@@ -46,11 +42,6 @@ public class ErlangUnresolvedVariableInspection extends ErlangBaseInspection {
   @Override
   public String getShortName() {
     return "ErlangUnresolvedVariableInspection";
-  }
-
-  @Override
-  public ProblemDescriptor[] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly) {
-    return super.checkFile(file, manager, isOnTheFly);
   }
 
   @Override

@@ -58,9 +58,14 @@
                          <!--language="Erlang" enabledByDefault="true" level="ERROR" groupName="Erlang"-->
                          <!--displayName="Unresolved variable" shortName="ErlangUnresolvedVariableInspection"/>-->
 
+      <!--errors-->
       <localInspection language="Erlang" shortName="ErlangUnresolvedVariableInspection" displayName="Unresolved variable"
                        groupName="Erlang" enabledByDefault="true" level="ERROR"
                        implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedVariableInspection"/>
+      <localInspection language="Erlang" shortName="ErlangUnresolvedRecordInspection" displayName="Unresolved record"
+                       groupName="Erlang" enabledByDefault="true" level="ERROR"
+                       implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordInspection"/>
+      <!--warnings-->
       <localInspection language="Erlang" shortName="ErlangUnusedVariableInspection" displayName="Unused variable"
                        groupName="Erlang" enabledByDefault="true" level="WARNING"
                        implementationClass="org.intellij.erlang.inspection.ErlangUnusedVariableInspection"/>

@@ -17,6 +17,9 @@
 package org.intellij.erlang.highlighting;
 
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import org.intellij.erlang.inspection.ErlangUnresolvedRecordInspection;
+import org.intellij.erlang.inspection.ErlangUnresolvedVariableInspection;
+import org.intellij.erlang.inspection.ErlangUnusedVariableInspection;
 
 public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -27,6 +30,11 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
 
   protected void doTest() {
     myFixture.configureByFile(getTestName(false) + ".erl");
+    //noinspection unchecked
+    myFixture.enableInspections(
+      ErlangUnresolvedVariableInspection.class,
+      ErlangUnresolvedRecordInspection.class,
+      ErlangUnusedVariableInspection.class);
     myFixture.checkHighlighting(true, false, false);
   }
 
@@ -53,4 +61,5 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void testRecord()            { doTest(); }
   public void testQuoteUnquote()      { doTest(); }
   public void test23()                { doTest(); }
+  public void testRecordsResolve()    { doTest(); }
 }

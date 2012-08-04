@@ -32,38 +32,34 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.InspectionManager;
+import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.search.LocalSearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
-import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.Query;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunctionClause;
-import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.psi.ErlangRecordExpression;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
-
 /**
  * @author ignatov
  */
-public class ErlangUnusedVariableInspection extends ErlangBaseInspection {
+public class ErlangUnresolvedRecordInspection extends ErlangBaseInspection {
   @Nls
   @NotNull
   @Override
   public String getDisplayName() {
-    return "Unused variable";
+    return "Unresolved record";
   }
 
   @NotNull
   @Override
   public String getShortName() {
-    return "ErlangUnusedVariableInspection";
+    return "ErlangUnresolvedRecordInspection";
   }
 
   @Override
@@ -71,15 +67,16 @@ public class ErlangUnusedVariableInspection extends ErlangBaseInspection {
     if (!(file instanceof ErlangFile)) return;
     file.accept(new ErlangRecursiveVisitor() {
       @Override
-      public void visitQVar(@NotNull ErlangQVar o) {
-        PsiReference reference = o.getReference();
-        PsiElement resolve = reference != null ? reference.resolve() : null;
-        if (resolve == null && !isForceSkipped(o) && !isMacros(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {
-          ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(o, ErlangFunctionClause.class);
-          if (functionClause == null) return;
-          Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
-          if (search.findFirst() == null) {
-            problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'");
+      public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
+        ErlangQAtom atomName = o.getAtomName();
+        if (atomName != null) {
+          PsiElement prevSibling = atomName.getPrevSibling();
+          if (prevSibling != null && "#".equals(prevSibling.getText())) {
+            o.getReference();
+            PsiReference reference = atomName.getReference(); // todo: rewrite
+            if (reference == null || reference.resolve() == null) {
+              problemsHolder.registerProblem(atomName, "Unresolved record " + "'" + atomName.getText() + "'");
+            }
           }
         }
       }

@@ -46,17 +46,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
   @Override
   public void annotate(@NotNull PsiElement psiElement, @NotNull final AnnotationHolder annotationHolder) {
     psiElement.accept(new ErlangVisitor() {
-      @Override
-      public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
-        ErlangQAtom atomName = o.getAtomName();
-        if (atomName != null) {
-          PsiElement prevSibling = atomName.getPrevSibling();
-          if (prevSibling != null && "#".equals(prevSibling.getText())) {
-            o.getReference(); // todo: rewrite
-            markIfUnresolved(atomName, atomName, annotationHolder, "Unresolved record " + atomName.getText());
-          }
-        }
-      }
+
 
       @Override
       public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
