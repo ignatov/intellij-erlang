@@ -30,14 +30,9 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
-
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 /**
  * @author ignatov
@@ -46,8 +41,6 @@ public class ErlangAnnotator implements Annotator, DumbAware {
   @Override
   public void annotate(@NotNull PsiElement psiElement, @NotNull final AnnotationHolder annotationHolder) {
     psiElement.accept(new ErlangVisitor() {
-
-
       @Override
       public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
         setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
@@ -97,11 +90,6 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
         markFirstChildAsKeyword(o, annotationHolder);
         markAttributeNameAsKeyword(o, annotationHolder, "record");
-      }
-
-      @Override
-      public void visitExportFunction(@NotNull ErlangExportFunction o) {
-        markIfUnresolved(o, o, annotationHolder, "Unresolved function " + o.getText());
       }
 
       @Override
@@ -171,22 +159,6 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     }
     if (rec != null) {
       setHighlighting(rec, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
-    }
-  }
-
-  private static void markVariableIfUnused(@NotNull final ErlangQVar var, @NotNull AnnotationHolder annotationHolder, @NotNull String text) {
-    ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(var, ErlangFunctionClause.class);
-    if (functionClause == null) return;
-    Query<PsiReference> search = ReferencesSearch.search(var, new LocalSearchScope(functionClause));
-    if (search.findFirst() == null) {
-      annotationHolder.createWarningAnnotation(var, text);
-    }
-  }
-
-  private static void markIfUnresolved(@NotNull ErlangCompositeElement o, @NotNull ErlangCompositeElement errorElement, @NotNull AnnotationHolder annotationHolder, @NotNull String text) {
-    PsiReference reference = o.getReference();
-    if (reference != null && reference.resolve() == null) {
-      annotationHolder.createErrorAnnotation(errorElement, text);
     }
   }
 
