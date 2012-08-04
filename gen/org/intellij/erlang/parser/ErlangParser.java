@@ -5165,18 +5165,14 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom '(' top_types ')'
+  // (q_atom '(' top_types ')') | top_type
   public static boolean type_guard(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "type_guard")) return false;
-    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<type guard>")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type guard>");
-    result_ = q_atom(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_PAR_LEFT);
-    result_ = result_ && top_types(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
+    result_ = type_guard_0(builder_, level_ + 1);
+    if (!result_) result_ = top_type(builder_, level_ + 1);
     if (result_) {
       marker_.done(ERL_TYPE_GUARD);
     }
@@ -5187,11 +5183,34 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
+  // (q_atom '(' top_types ')')
+  private static boolean type_guard_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_guard_0")) return false;
+    return type_guard_0_0(builder_, level_ + 1);
+  }
+
+  // q_atom '(' top_types ')'
+  private static boolean type_guard_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_guard_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = q_atom(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_PAR_LEFT);
+    result_ = result_ && top_types(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
   /* ********************************************************** */
   // type_guard (',' type_guard)*
   static boolean type_guards(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "type_guards")) return false;
-    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = type_guard(builder_, level_ + 1);

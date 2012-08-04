@@ -17,9 +17,9 @@ public class ErlangTypeGuardImpl extends ErlangCompositeElementImpl implements E
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangQAtom getQAtom() {
-    return findNotNullChildByClass(ErlangQAtom.class);
+    return findChildByClass(ErlangQAtom.class);
   }
 
   @Override
