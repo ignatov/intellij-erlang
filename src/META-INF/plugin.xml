@@ -54,6 +54,13 @@
         <lang.documentationProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangDocumentationProvider"/>
 
         <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
+        <!--<localInspection implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedVariableInspection"-->
+                         <!--language="Erlang" enabledByDefault="true" level="ERROR" groupName="Erlang"-->
+                         <!--displayName="Unresolved variable" shortName="ErlangUnresolvedVariableInspection"/>-->
+
+        <localInspection language="Erlang" shortName="ErlangUnresolvedVariableInspection" displayName="Unresolved variable"
+                       groupName="Erlang" enabledByDefault="true" level="ERROR"
+                       implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedVariableInspection"/>
     </extensions>
     <project-components>
 

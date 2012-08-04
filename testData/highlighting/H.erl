@@ -1975,8 +1975,6 @@ find_rec_warnings(Tree, State) ->
 	end
     end, State, Tree).
 
-<error>.</error>
-
 -ifdef(DEBUG_PP).
 <warning>debug_pp</warning>(Tree, true) ->
   io:put_chars(cerl_prettypr:format(Tree, [{hook, cerl_typean:pp_hook()}])),

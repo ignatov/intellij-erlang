@@ -35,6 +35,8 @@ import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 /**
@@ -51,10 +53,10 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         if (resolve == null && !isForceSkipped(o) && !isMacros(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {
           markVariableIfUnused(o, annotationHolder, "Unused variable " + o.getText());
         }
-        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForceSkipped(o) || inSpecification(o)) {
-          return;
-        }
-        markIfUnresolved(o, o, annotationHolder, "Unresolved variable " + o.getText());
+//        if (inDefinition(o) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForceSkipped(o) || inSpecification(o)) {
+//          return;
+//        }
+//        markIfUnresolved(o, o, annotationHolder, "Unresolved variable " + o.getText());
 
       }
 
@@ -128,6 +130,15 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       @Override
       public void visitFunction(@NotNull final ErlangFunction function) {
+//        List<ErlangFunction> funs = PsiTreeUtil.getChildrenOfTypeAsList(function.getContainingFile(), ErlangFunction.class);
+//
+//        for (ErlangFunction fun : funs) {
+//          if (!function.equals(fun) && function.getName().equals(fun.getName()) && function.getArity() == fun.getArity()) {
+//            annotationHolder.createErrorAnnotation(fun.getNameIdentifier(), "Duplicate function " + fun.getName() + "/" + fun.getArity());
+//            return;
+//          }
+//        }
+
         final Ref<Object> usage = new Ref<Object>();
 
         function.getContainingFile().accept(
