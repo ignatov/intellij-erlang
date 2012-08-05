@@ -18,6 +18,7 @@ package org.intellij.erlang.actions;
 
 import com.intellij.ide.actions.CreateFileFromTemplateAction;
 import com.intellij.ide.actions.CreateFileFromTemplateDialog;
+import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.InputValidatorEx;
 import com.intellij.openapi.util.io.FileUtil;
@@ -29,7 +30,7 @@ import org.intellij.erlang.psi.impl.ErlangElementFactory;
 /**
  * @author ignatov
  */
-public class CreateErlangFileAction extends CreateFileFromTemplateAction {
+public class CreateErlangFileAction extends CreateFileFromTemplateAction implements DumbAware {
   public static final String NEW_ERLANG_FILE = "New Erlang File";
 
   public CreateErlangFileAction() {
