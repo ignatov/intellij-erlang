@@ -30,6 +30,7 @@ import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangRecordExpression;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -58,17 +59,14 @@ public class ErlangCompletionContributor extends CompletionContributor {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
         // add completion for records on #<caret>
-        // todo: cleanup this weird code
         PsiElement position = parameters.getPosition();
-        PsiElement possibleDies = position.getParent().getPrevSibling();
-        PsiElement prevSibling = position.getPrevSibling();
-        possibleDies = possibleDies != null ? possibleDies : prevSibling == null ? null : PsiTreeUtil.getDeepestLast(prevSibling).getPrevSibling();
-        if (possibleDies != null && "#".equals(possibleDies.getText())) {
+        PsiElement parent = position.getParent().getParent();
+        if (parent instanceof ErlangRecordExpression) {
           result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(position.getContainingFile()));
-        }
-
-        for (String keywords : suggestKeywords(position)) {
-          result.addElement(LookupElementBuilder.create(keywords).setBold());
+        } else {
+          for (String keywords : suggestKeywords(position)) {
+            result.addElement(LookupElementBuilder.create(keywords).setBold());
+          }
         }
       }
     });

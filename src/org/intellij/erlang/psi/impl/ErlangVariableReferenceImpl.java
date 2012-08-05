@@ -19,7 +19,10 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNamedElement;
+import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
@@ -64,23 +67,23 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     if (PsiTreeUtil.getParentOfType(myElement, ErlangArgumentDefinition.class) != null) return new Object[]{};
 
     final List<LookupElement> result = new ArrayList<LookupElement>();
-
-    final ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myElement, ErlangFunctionClause.class);
-    BaseScopeProcessor processor = new BaseScopeProcessor() {
-      @Override
-      public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
-        if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_")) {
-          if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement))) {
-            result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).setIcon(ErlangIcons.VARIABLE));
+    if (!(myElement.getParent() instanceof ErlangRecordExpression)) {
+      final ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myElement, ErlangFunctionClause.class);
+      BaseScopeProcessor processor = new BaseScopeProcessor() {
+        @Override
+        public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
+          if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_")) {
+            if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement))) {
+              result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).setIcon(ErlangIcons.VARIABLE));
+            }
           }
+          return true;
         }
-        return true;
-      }
-    };
-    ResolveUtil.treeWalkUp(myElement, processor);
+      };
+      ResolveUtil.treeWalkUp(myElement, processor);
 
-    // todo: support for functions completion when item under caret is empty
-    result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), false));
+      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), false));
+    }
 
     return ArrayUtil.toObjectArray(result);
   }
