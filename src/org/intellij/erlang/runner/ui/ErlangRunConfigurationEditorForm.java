@@ -22,28 +22,17 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.io.FileUtil;
 import org.intellij.erlang.editor.ErlangModuleType;
 import org.intellij.erlang.runner.ErlangApplicationConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangApplicationConfiguration> {
   private JPanel component;
   private JComboBox myComboModules;
   private JTextField myParamsField;
-
-  private String customPathToFile = "";
-
-  private final Project project;
-
-  public ErlangRunConfigurationEditorForm(Project project) {
-    this.project = project;
-  }
+  private JTextField myModuleAndFunctionField;
 
   @Override
   protected void resetEditorFrom(ErlangApplicationConfiguration configuration) {
@@ -67,19 +56,15 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
       }
     });
 
-    customPathToFile = configuration.getParams();
-    updateCustomFilePath();
+    myParamsField.setText(configuration.getParams());
+    myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
   }
 
   @Override
   protected void applyEditorTo(ErlangApplicationConfiguration configuration) throws ConfigurationException {
     configuration.setModule(getSelectedModule());
-    String fileName = myParamsField.getText();
-    configuration.setParams(fileName);
-  }
-
-  private void updateCustomFilePath() {
-    myParamsField.setText(customPathToFile);
+    configuration.setParams(myParamsField.getText());
+    configuration.setModuleAndFunction(myModuleAndFunctionField.getText());
   }
 
   private Module getSelectedModule() {

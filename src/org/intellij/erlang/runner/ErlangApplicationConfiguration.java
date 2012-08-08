@@ -21,7 +21,6 @@ import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ModuleBasedConfiguration;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
-import com.intellij.execution.configurations.RuntimeConfigurationException;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
@@ -43,8 +42,8 @@ import java.util.Collection;
  */
 public class ErlangApplicationConfiguration extends ModuleBasedConfiguration<ErlangApplicationModuleBasedConfiguration>
   implements RunConfigurationWithSuppressedDefaultRunAction {
-  private boolean customFileToLaunch = false;
   private String myParams = "";
+  private String myModuleAndFunction = "";
 
   public ErlangApplicationConfiguration(String name, Project project, ErlangRunConfigurationType configurationType) {
     super(name, new ErlangApplicationModuleBasedConfiguration(project), configurationType.getConfigurationFactories()[0]);
@@ -62,37 +61,11 @@ public class ErlangApplicationConfiguration extends ModuleBasedConfiguration<Erl
   }
 
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new ErlangRunConfigurationEditorForm(getProject());
+    return new ErlangRunConfigurationEditorForm();
   }
 
   public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) throws ExecutionException {
     return ErlangRunner.EMPTY_RUN_STATE; // todo: CommandLineState
-  }
-
-  @Override
-  public void checkConfiguration() throws RuntimeConfigurationException {
-    super.checkConfiguration();
-    // todo
-//    final HaxeApplicationModuleBasedConfiguration configurationModule = getConfigurationModule();
-//    final Module module = configurationModule.getModule();
-//    if (module == null) {
-//      throw new RuntimeConfigurationException(HaxeBundle.message("haxe.run.no.module", getName()));
-//    }
-//    final HaxeModuleSettings settings = HaxeModuleSettings.getInstance(module);
-//    if (settings.isUseHxmlToBuild() && !customFileToLaunch) {
-//      throw new RuntimeConfigurationException(HaxeBundle.message("haxe.run.select.custom.file"));
-//    }
-//    if (settings.isUseNmmlToBuild() && !customFileToLaunch) {
-//      throw new RuntimeConfigurationException(HaxeBundle.message("haxe.run.select.custom.file"));
-//    }
-  }
-
-  public boolean isCustomFileToLaunch() {
-    return customFileToLaunch;
-  }
-
-  public void setCustomFileToLaunch(boolean customFileToLaunch) {
-    this.customFileToLaunch = customFileToLaunch;
   }
 
   public String getParams() {
@@ -101,6 +74,14 @@ public class ErlangApplicationConfiguration extends ModuleBasedConfiguration<Erl
 
   public void setParams(String params) {
     this.myParams = params;
+  }
+
+  public String getModuleAndFunction() {
+    return myModuleAndFunction;
+  }
+
+  public void setModuleAndFunction(String moduleAndFunction) {
+    myModuleAndFunction = moduleAndFunction;
   }
 
   public void writeExternal(final Element element) throws WriteExternalException {
