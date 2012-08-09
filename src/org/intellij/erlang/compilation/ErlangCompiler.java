@@ -42,7 +42,6 @@ import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.compiler.TranslatingCompiler;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.SystemInfo;
@@ -51,8 +50,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.util.Chunk;
 import com.intellij.util.PathUtil;
 import org.intellij.erlang.ErlangFileType;
@@ -80,13 +77,9 @@ public class ErlangCompiler implements TranslatingCompiler {
 
   @Override
   public boolean isCompilableFile(VirtualFile file, CompileContext context) {
-    Project project = context.getProject();
-    if (project == null) return false;
-    PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-    if (psiFile == null) return false;
     String extension = file.getExtension();
     if (extension == null) return false;
-    return extension.equals("erl") && psiFile.getFileType() == ErlangFileType.INSTANCE /*|| psiFile.getFileType() == ErlangFileType.HRL*/;
+    return extension.equals("erl") && file.getFileType() == ErlangFileType.INSTANCE;
   }
 
   @Override
