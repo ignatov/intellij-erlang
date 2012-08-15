@@ -86,8 +86,19 @@ public class ErlangPsiImplUtil {
       o.getQAtom().getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
   }
 
+  @Nullable
+  public static PsiReference getReference(@NotNull ErlangMacros o) {
+    ErlangMacrosName macrosName = o.getMacrosName();
+    if (macrosName == null) return null;
+    return new ErlangMacrosReferenceImpl<ErlangMacrosName>(macrosName, TextRange.from(0, macrosName.getTextLength()), macrosName.getText());
+  }
+
   public static boolean inDefinition(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
+  }
+
+  public static boolean inDefine(PsiElement psiElement) {
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangMacrosDefinition.class) != null;
   }
 
   public static boolean inAtomAttribute(PsiElement psiElement) {
@@ -127,10 +138,10 @@ public class ErlangPsiImplUtil {
       if (!withArity) {
         // todo: move to more appropriate place
         PsiFile[] erlInternals = FilenameIndex.getFilesByName(containingFile.getProject(), "erl_internal.erl",
-              GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
+          GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
 
         if (erlInternals.length == 1) {
-          for (String line  : StringUtil.splitByLines(erlInternals[0].getText())) {
+          for (String line : StringUtil.splitByLines(erlInternals[0].getText())) {
             Pattern bifPattern = Pattern.compile("bif\\((\\w+), (\\d+)\\) -> true;");
             Matcher m = bifPattern.matcher(line);
             if (m.matches()) {
@@ -176,9 +187,25 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  public static List<LookupElement> getMacrosLookupElements(@NotNull PsiFile containingFile) {
+    if (containingFile instanceof ErlangFile) {
+      List<ErlangMacrosDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getMacroses(), getErlangMacrosesFromIncludes((ErlangFile) containingFile, true, ""));
+      return ContainerUtil.map(
+        concat,
+        new Function<ErlangMacrosDefinition, LookupElement>() {
+          @Override
+          public LookupElement fun(@NotNull ErlangMacrosDefinition md) {
+            return LookupElementBuilder.create(md).setIcon(ErlangIcons.MACROS);
+          }
+        });
+    }
+    return Collections.emptyList();
+  }
+
+  @NotNull
   public static List<LookupElement> getRecordLookupElements(@NotNull PsiFile containingFile) {
     if (containingFile instanceof ErlangFile) {
-      List<ErlangRecordDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getRecords(), getErlangRecordFromIncludes(containingFile, true, ""));
+      List<ErlangRecordDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getRecords(), getErlangRecordFromIncludes((ErlangFile) containingFile, true, ""));
       return ContainerUtil.map(
         concat,
         new Function<ErlangRecordDefinition, LookupElement>() {
@@ -193,7 +220,12 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangFunction o) {
-    return o.getAtomName().getAtom().getText();
+    PsiElement atom = o.getAtomName().getAtom();
+    if (atom != null) {
+      return atom.getText();
+    }
+    //noinspection ConstantConditions
+    return o.getAtomName().getMacros().getText();
   }
 
   @NotNull
@@ -237,7 +269,8 @@ public class ErlangPsiImplUtil {
   public static PsiReference getReference(@NotNull ErlangRecordExpression o) { // todo: hack?
     ErlangQAtom atom = o.getAtomName();
     if (atom == null) return null;
-    atom.setReference(new ErlangRecordReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText()));
+    // case for #?macro_record_name{id=10}
+    atom.setReference(new ErlangRecordReferenceImpl<ErlangQAtom>(atom, atom.getMacros() == null ? TextRange.from(0, atom.getTextLength()) : TextRange.from(0, 1) , atom.getText()));
     return null;
   }
 
@@ -251,7 +284,10 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
     for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
-      clause.getQAtom().getAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+      PsiElement atom = clause.getQAtom().getAtom();
+      if (atom != null) {
+        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+      }
     }
     return o;
   }
@@ -264,9 +300,12 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangRecordDefinition o, @NotNull String newName) {
-    ErlangQAtom atom = o.getQAtom();
-    if (atom != null) {
-      atom.getAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+    ErlangQAtom qAtom = o.getQAtom();
+    if (qAtom != null) {
+      PsiElement atom = qAtom.getAtom();
+      if (atom != null) {
+        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+      }
     }
     return o;
   }
@@ -285,9 +324,12 @@ public class ErlangPsiImplUtil {
         String ext = FileUtil.getExtension(virtualFile.getName());
         virtualFile.rename(o, newName + "." + ext);
 
-        ErlangQAtom atom = o.getQAtom();
-        if (atom != null) {
-          atom.getAtom().replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+        ErlangQAtom qAtom = o.getQAtom();
+        if (qAtom != null) {
+          PsiElement atom = qAtom.getAtom();
+          if (atom != null) {
+            atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+          }
         }
       } catch (IOException ignored) {
       }
@@ -355,23 +397,66 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  static List<ErlangRecordDefinition> getErlangRecordFromIncludes(@NotNull PsiFile containingFile, boolean forCompletion, String name) {
-    List<ErlangInclude> includes = ((ErlangFile) containingFile).getIncludes();
+  static List<ErlangRecordDefinition> getErlangRecordFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
+    List<ErlangInclude> includes = containingFile.getIncludes();
 
     List<ErlangRecordDefinition> fromIncludes = new ArrayList<ErlangRecordDefinition>();
     for (ErlangInclude include : includes) {
       PsiElement string = include.getString();
       if (string != null) {
         String includeFilePath = string.getText().replaceAll("\"", "");
-        fromIncludes.addAll(justAppend(containingFile, includeFilePath, forCompletion, name));
-        fromIncludes.addAll(findByWildCard(containingFile, includeFilePath, forCompletion, name));
+
+        List<ErlangFile> justAppend = justAppend(containingFile, includeFilePath);
+        List<ErlangFile> byWildCard = findByWildCard(containingFile, includeFilePath);
+
+        List<ErlangFile> files = ContainerUtil.concat(justAppend, byWildCard);
+
+        for (ErlangFile file : files) {
+          if (!forCompletion) {
+            ErlangRecordDefinition recordFromIncludeFile = file.getRecord(name);
+            fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangRecordDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
+          }
+          else {
+            fromIncludes.addAll(file.getRecords());
+          }
+        }
       }
     }
     return fromIncludes;
   }
 
   @NotNull
-  private static Collection<ErlangRecordDefinition> findByWildCard(@NotNull PsiFile containingFile, @NotNull final String includeFilePath, boolean forCompletion, @NotNull String name) {
+  static List<ErlangMacrosDefinition> getErlangMacrosesFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
+    List<ErlangInclude> includes = containingFile.getIncludes();
+
+    List<ErlangMacrosDefinition> fromIncludes = new ArrayList<ErlangMacrosDefinition>();
+    for (ErlangInclude include : includes) {
+      PsiElement string = include.getString();
+      if (string != null) {
+        String includeFilePath = string.getText().replaceAll("\"", "");
+
+        List<ErlangFile> justAppend = justAppend(containingFile, includeFilePath);
+        List<ErlangFile> byWildCard = findByWildCard(containingFile, includeFilePath);
+
+        List<ErlangFile> files = ContainerUtil.concat(justAppend, byWildCard);
+
+        for (ErlangFile file : files) {
+          if (!forCompletion) {
+            ErlangMacrosDefinition recordFromIncludeFile = file.getMacros(name);
+            fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangMacrosDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
+          }
+          else {
+            fromIncludes.addAll(file.getMacroses());
+          }
+        }
+      }
+    }
+    return fromIncludes;
+  }
+
+  @NotNull
+  private static List<ErlangFile> findByWildCard(@NotNull PsiFile containingFile, @NotNull final String includeFilePath) {
+    List<ErlangFile> erlangFiles = new ArrayList<ErlangFile>();
     List<String> split = StringUtil.split(includeFilePath, "/");
     String last = ContainerUtil.iterateAndGetLastItem(split);
     if (last != null) {
@@ -390,20 +475,16 @@ public class ErlangPsiImplUtil {
 
       for (PsiFile file : filter) {
         if (file instanceof ErlangFile) {
-          if (!forCompletion) {
-            ErlangRecordDefinition recordFromIncludeFile = ((ErlangFile) file).getRecord(name);
-            return recordFromIncludeFile == null ? ContainerUtil.<ErlangRecordDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile);
-          } else {
-            return ((ErlangFile) file).getRecords();
-          }
+          erlangFiles.add((ErlangFile) file);
         }
       }
     }
-    return ContainerUtil.emptyList();
+    return erlangFiles;
   }
 
   @NotNull
-  public static List<ErlangRecordDefinition> justAppend(@NotNull PsiFile containingFile, @NotNull String includeFilePath, boolean forCompletion, @NotNull String name) {
+  public static List<ErlangFile> justAppend(@NotNull PsiFile containingFile, @NotNull String includeFilePath) {
+    List<ErlangFile> erlangFiles = new ArrayList<ErlangFile>();
     VirtualFile virtualFile = containingFile.getOriginalFile().getVirtualFile();
     VirtualFile parent = virtualFile != null ? virtualFile.getParent() : null;
     if (parent == null) return ContainerUtil.emptyList();
@@ -414,13 +495,31 @@ public class ErlangPsiImplUtil {
     if (fileByUrl == null) return ContainerUtil.emptyList();
     PsiFile file = ((PsiManagerEx) PsiManager.getInstance(containingFile.getProject())).getFileManager().findFile(fileByUrl);
     if (file instanceof ErlangFile) {
-      if (!forCompletion) {
-        ErlangRecordDefinition recordFromIncludeFile = ((ErlangFile) file).getRecord(name);
-        return recordFromIncludeFile == null ? ContainerUtil.<ErlangRecordDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile);
-      } else {
-        return ((ErlangFile) file).getRecords();
-      }
+      erlangFiles.add((ErlangFile) file);
     }
-    return ContainerUtil.emptyList();
+    return erlangFiles;
+  }
+
+  public static PsiElement getNameIdentifier(ErlangMacrosDefinition o) {
+    ErlangMacrosName macrosName = o.getMacrosName();
+    if (macrosName == null) return o;
+    return macrosName;
+  }
+
+  public static int getTextOffset(ErlangMacrosDefinition o) {
+    if (o.getMacrosName() == null) return 0;
+    return getNameIdentifier(o).getTextOffset();
+  }
+
+  public static String getName(ErlangMacrosDefinition o) {
+    return o.getNameIdentifier().getText();
+  }
+
+  public static PsiElement setName(ErlangMacrosDefinition o, String newName) {
+    ErlangMacrosName macrosName = o.getMacrosName();
+    if (macrosName != null) {
+      macrosName.replace(ErlangElementFactory.createMacrosFromText(o.getProject(), newName));
+    }
+    return o;
   }
 }

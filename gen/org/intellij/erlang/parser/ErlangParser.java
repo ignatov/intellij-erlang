@@ -185,6 +185,15 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_LIST_EXPRESSION) {
       result_ = list_expression(builder_, level_ + 1);
     }
+    else if (root_ == ERL_MACROS) {
+      result_ = macros(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_MACROS_DEFINITION) {
+      result_ = macros_definition(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_MACROS_NAME) {
+      result_ = macros_name(builder_, level_ + 1);
+    }
     else if (root_ == ERL_MAX_EXPRESSION) {
       result_ = max_expression(builder_, level_ + 1);
     }
@@ -819,6 +828,8 @@ public class ErlangParser implements PsiParser {
   // q_var ':' integer
   public static boolean bin_base_type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bin_base_type")) return false;
+    if (!nextTokenIs(builder_, ERL_UNI_PATTERN) && !nextTokenIs(builder_, ERL_VAR)
+        && replaceVariants(builder_, 2, "<type>")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
@@ -839,6 +850,7 @@ public class ErlangParser implements PsiParser {
   // bin_base_type ',' bin_unit_type
   static boolean bin_base_types(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bin_base_types")) return false;
+    if (!nextTokenIs(builder_, ERL_UNI_PATTERN) && !nextTokenIs(builder_, ERL_VAR)) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = bin_base_type(builder_, level_ + 1);
@@ -969,6 +981,8 @@ public class ErlangParser implements PsiParser {
   // q_var ':' q_var '*' integer
   public static boolean bin_unit_type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bin_unit_type")) return false;
+    if (!nextTokenIs(builder_, ERL_UNI_PATTERN) && !nextTokenIs(builder_, ERL_VAR)
+        && replaceVariants(builder_, 2, "<type>")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type>");
@@ -2187,7 +2201,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // function | rule | record_definition | include | attribute
+  // function | rule | record_definition | include | macros_definition | attribute
   static boolean form(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "form")) return false;
     boolean result_ = false;
@@ -2197,6 +2211,7 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = rule(builder_, level_ + 1);
     if (!result_) result_ = record_definition(builder_, level_ + 1);
     if (!result_) result_ = include(builder_, level_ + 1);
+    if (!result_) result_ = macros_definition(builder_, level_ + 1);
     if (!result_) result_ = attribute(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
@@ -3232,6 +3247,140 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // '?' macros_name
+  public static boolean macros(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_QMARK);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && macros_name(builder_, level_ + 1);
+    if (result_ || pinned_) {
+      marker_.done(ERL_MACROS);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // '-' 'define' '(' macros_name ['(' q_atom_or_var (',' q_atom_or_var)* ')']',' expression ')'
+  public static boolean macros_definition(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_definition")) return false;
+    if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_OP_MINUS);
+    result_ = result_ && consumeToken(builder_, "define");
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, macros_name(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && report_error_(builder_, macros_definition_4(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_COMMA)) && result_;
+    result_ = pinned_ && report_error_(builder_, expression(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_MACROS_DEFINITION);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // ['(' q_atom_or_var (',' q_atom_or_var)* ')']
+  private static boolean macros_definition_4(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_definition_4")) return false;
+    macros_definition_4_0(builder_, level_ + 1);
+    return true;
+  }
+
+  // '(' q_atom_or_var (',' q_atom_or_var)* ')'
+  private static boolean macros_definition_4_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_definition_4_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_PAR_LEFT);
+    result_ = result_ && q_atom_or_var(builder_, level_ + 1);
+    result_ = result_ && macros_definition_4_0_2(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // (',' q_atom_or_var)*
+  private static boolean macros_definition_4_0_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_definition_4_0_2")) return false;
+    int offset_ = builder_.getCurrentOffset();
+    while (true) {
+      if (!macros_definition_4_0_2_0(builder_, level_ + 1)) break;
+      int next_offset_ = builder_.getCurrentOffset();
+      if (offset_ == next_offset_) {
+        empty_element_parsed_guard_(builder_, offset_, "macros_definition_4_0_2");
+        break;
+      }
+      offset_ = next_offset_;
+    }
+    return true;
+  }
+
+  // (',' q_atom_or_var)
+  private static boolean macros_definition_4_0_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_definition_4_0_2_0")) return false;
+    return macros_definition_4_0_2_0_0(builder_, level_ + 1);
+  }
+
+  // ',' q_atom_or_var
+  private static boolean macros_definition_4_0_2_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_definition_4_0_2_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_COMMA);
+    result_ = result_ && q_atom_or_var(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // atom | var
+  public static boolean macros_name(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_name")) return false;
+    if (!nextTokenIs(builder_, ERL_ATOM) && !nextTokenIs(builder_, ERL_VAR)
+        && replaceVariants(builder_, 2, "<macros name>")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<macros name>");
+    result_ = consumeToken(builder_, ERL_ATOM);
+    if (!result_) result_ = consumeToken(builder_, ERL_VAR);
+    if (result_) {
+      marker_.done(ERL_MACROS_NAME);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
+    return result_;
+  }
+
+  /* ********************************************************** */
   // atomic
   //   | q_var
   //   | tuple_expression
@@ -3500,7 +3649,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '?'? atom
+  // macros | atom
   public static boolean q_atom(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "q_atom")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
@@ -3508,8 +3657,8 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<q atom>");
-    result_ = q_atom_0(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_ATOM);
+    result_ = macros(builder_, level_ + 1);
+    if (!result_) result_ = consumeToken(builder_, ERL_ATOM);
     if (result_) {
       marker_.done(ERL_Q_ATOM);
     }
@@ -3518,13 +3667,6 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
     return result_;
-  }
-
-  // '?'?
-  private static boolean q_atom_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "q_atom_0")) return false;
-    consumeToken(builder_, ERL_QMARK);
-    return true;
   }
 
   /* ********************************************************** */
@@ -3545,14 +3687,16 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '_' | ('?'? var)
+  // '_' | var
   public static boolean q_var(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "q_var")) return false;
+    if (!nextTokenIs(builder_, ERL_UNI_PATTERN) && !nextTokenIs(builder_, ERL_VAR)
+        && replaceVariants(builder_, 2, "<q var>")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<q var>");
     result_ = consumeToken(builder_, ERL_UNI_PATTERN);
-    if (!result_) result_ = q_var_1(builder_, level_ + 1);
+    if (!result_) result_ = consumeToken(builder_, ERL_VAR);
     if (result_) {
       marker_.done(ERL_Q_VAR);
     }
@@ -3561,35 +3705,6 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
     return result_;
-  }
-
-  // ('?'? var)
-  private static boolean q_var_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "q_var_1")) return false;
-    return q_var_1_0(builder_, level_ + 1);
-  }
-
-  // '?'? var
-  private static boolean q_var_1_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "q_var_1_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
-    result_ = q_var_1_0_0(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_VAR);
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
-    }
-    return result_;
-  }
-
-  // '?'?
-  private static boolean q_var_1_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "q_var_1_0_0")) return false;
-    consumeToken(builder_, ERL_QMARK);
-    return true;
   }
 
   /* ********************************************************** */

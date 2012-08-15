@@ -226,6 +226,18 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitMacros(@NotNull ErlangMacros o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
+    visitNamedElement(o);
+  }
+
+  public void visitMacrosName(@NotNull ErlangMacrosName o) {
+    visitCompositeElement(o);
+  }
+
   public void visitMaxExpression(@NotNull ErlangMaxExpression o) {
     visitExpression(o);
   }

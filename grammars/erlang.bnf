@@ -110,22 +110,32 @@
   name(".*type|.*_t")=type
   extends("atomic")=expression
 
-  implements("record_definition|function|q_var|module")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("record_definition|function|q_var|module")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("record_definition|function|q_var|module|macros_definition")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("record_definition|function|q_var|module|macros_definition")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
 forms ::= form ('.' form)*
-private form ::= function | rule | record_definition | include | attribute {recoverUntil=recoverer}
+private form ::= function | rule | record_definition | include | macros_definition | attribute {recoverUntil=recoverer}
 
-q_atom ::= '?'? atom
-q_var ::= '_' | ('?'? var) {
+q_atom ::= macros | atom
+q_var ::= '_' | var {
   methods = [getReference processDeclarations getName setName getNameIdentifier]
 }
+macros ::= '?' macros_name {
+  pin=1
+  methods = [getReference]
+}
+macros_name ::= atom | var
 
 private recoverer ::= !('.')
 
 record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   pin=2
+  methods = [getName setName getNameIdentifier getTextOffset]
+}
+
+macros_definition ::= '-' 'define' '(' macros_name ['(' q_atom_or_var (',' q_atom_or_var)* ')']',' expression ')' {
+  pin = 2
   methods = [getName setName getNameIdentifier getTextOffset]
 }
 
@@ -230,7 +240,7 @@ private qualified_reference ::= q_atom qualified_expression*
 left qualified_expression ::= '.' q_atom {pin=0} //todo
 
 max_expression ::=
-  atomic
+    atomic
   | q_var
   | tuple_expression
   | list_expression

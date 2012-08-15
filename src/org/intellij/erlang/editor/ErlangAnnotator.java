@@ -22,15 +22,8 @@ import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.DumbAware;
-import com.intellij.openapi.util.Ref;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
-import com.intellij.psi.search.LocalSearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
-import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -82,6 +75,20 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
         markFirstChildAsKeyword(o, annotationHolder);
         markAttributeNameAsKeyword(o, annotationHolder, "record");
+      }
+
+      @Override
+      public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
+        markFirstChildAsKeyword(o, annotationHolder);
+        markAttributeNameAsKeyword(o, annotationHolder, "define");
+      }
+
+      @Override
+      public void visitMacrosName(@NotNull ErlangMacrosName o) {
+        final PsiElement firstChild = o.getFirstChild();
+        if (firstChild != null) {
+          setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.VARIABLES);
+        }
       }
 
       // todo: add export, import and other bundled attributes

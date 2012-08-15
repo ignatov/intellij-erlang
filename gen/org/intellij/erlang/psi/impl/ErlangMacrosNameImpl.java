@@ -10,16 +10,10 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements ErlangQAtom {
+public class ErlangMacrosNameImpl extends ErlangCompositeElementImpl implements ErlangMacrosName {
 
-  public ErlangQAtomImpl(ASTNode node) {
+  public ErlangMacrosNameImpl(ASTNode node) {
     super(node);
-  }
-
-  @Override
-  @Nullable
-  public ErlangMacros getMacros() {
-    return findChildByClass(ErlangMacros.class);
   }
 
   @Override
@@ -28,8 +22,14 @@ public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements Erlan
     return findChildByType(ERL_ATOM);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getVar() {
+    return findChildByType(ERL_VAR);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQAtom(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosName(this);
     else super.accept(visitor);
   }
 

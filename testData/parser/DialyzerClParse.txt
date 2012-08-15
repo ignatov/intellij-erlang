@@ -2079,9 +2079,11 @@ ERL_FILE
                 PsiElement(++)('++')
                 ERL_EXPR_300_A
                   ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(?)('?')
-                      PsiElement(var)('VSN')
+                    ERL_Q_ATOM
+                      ERL_MACROS
+                        PsiElement(?)('?')
+                        ERL_MACROS_NAME
+                          PsiElement(var)('VSN')
                   PsiElement(++)('++')
                   ERL_MAX_EXPRESSION
                     PsiElement(string)('"\n"')
@@ -2098,9 +2100,11 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(?)('?')
-                  PsiElement(var)('RET_NOTHING_SUSPICIOUS')
+                ERL_Q_ATOM
+                  ERL_MACROS
+                    PsiElement(?)('?')
+                    ERL_MACROS_NAME
+                      PsiElement(var)('RET_NOTHING_SUSPICIOUS')
               PsiElement())(')')
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
@@ -2137,9 +2141,11 @@ ERL_FILE
                 PsiElement(++)('++')
                 ERL_EXPR_300_A
                   ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(?)('?')
-                      PsiElement(var)('VSN')
+                    ERL_Q_ATOM
+                      ERL_MACROS
+                        PsiElement(?)('?')
+                        ERL_MACROS_NAME
+                          PsiElement(var)('VSN')
                   PsiElement(++)('++')
                   ERL_MAX_EXPRESSION
                     PsiElement(string)('"\n"')
@@ -2156,9 +2162,11 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(?)('?')
-                  PsiElement(var)('RET_NOTHING_SUSPICIOUS')
+                ERL_Q_ATOM
+                  ERL_MACROS
+                    PsiElement(?)('?')
+                    ERL_MACROS_NAME
+                      PsiElement(var)('RET_NOTHING_SUSPICIOUS')
               PsiElement())(')')
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
@@ -4561,9 +4569,11 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(?)('?')
-                  PsiElement(var)('RET_NOTHING_SUSPICIOUS')
+                ERL_Q_ATOM
+                  ERL_MACROS
+                    PsiElement(?)('?')
+                    ERL_MACROS_NAME
+                      PsiElement(var)('RET_NOTHING_SUSPICIOUS')
               PsiElement())(')')
   PsiElement(.)('.')
   ERL_ATTRIBUTE

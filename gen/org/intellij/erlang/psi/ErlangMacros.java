@@ -4,13 +4,14 @@ package org.intellij.erlang.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 
-public interface ErlangQAtom extends ErlangCompositeElement {
-
-  @Nullable
-  ErlangMacros getMacros();
+public interface ErlangMacros extends ErlangCompositeElement {
 
   @Nullable
-  PsiElement getAtom();
+  ErlangMacrosName getMacrosName();
+
+  @Nullable
+  PsiReference getReference();
 
 }

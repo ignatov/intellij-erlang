@@ -23,10 +23,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangModule;
-import org.intellij.erlang.psi.ErlangQVar;
-import org.intellij.erlang.psi.ErlangRecordDefinition;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -43,7 +40,7 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @Override
   public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
     return psiElement instanceof ErlangFunction || psiElement instanceof ErlangQVar
-      || psiElement instanceof ErlangRecordDefinition || psiElement instanceof ErlangModule;
+      || psiElement instanceof ErlangRecordDefinition || psiElement instanceof ErlangModule || psiElement instanceof ErlangMacrosDefinition;
   }
 
   @Override

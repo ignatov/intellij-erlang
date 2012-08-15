@@ -43,8 +43,7 @@ public class ErlangRecordReferenceImpl<T extends ErlangQAtom> extends ErlangAtom
       ErlangRecordDefinition record = ((ErlangFile) containingFile).getRecord(myReferenceName);
       if (record != null) return record;
 
-      List<ErlangRecordDefinition> fromIncludes = ErlangPsiImplUtil.getErlangRecordFromIncludes(containingFile, false, myReferenceName);
-      return ContainerUtil.getFirstItem(fromIncludes);
+      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangRecordFromIncludes((ErlangFile) containingFile, false, myReferenceName));
     }
     return null;
   }

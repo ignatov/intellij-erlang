@@ -14,38 +14,19 @@
  * limitations under the License.
  */
 
+// This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi;
 
-import com.intellij.psi.PsiFile;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
+import org.jetbrains.annotations.*;
+import com.intellij.psi.PsiElement;
 
-public interface ErlangFile extends PsiFile {
-  @NotNull
-  List<ErlangRule> getRules();
-
-  @NotNull
-  List<ErlangAttribute> getAttributes();
-
-  @NotNull
-  List<ErlangFunction> getFunctions();
+public interface ErlangMacrosName extends ErlangCompositeElement {
 
   @Nullable
-  ErlangFunction getFunction(String name, int argsCount);
-
-  @NotNull
-  List<ErlangRecordDefinition> getRecords();
-
-  @NotNull
-  List<ErlangMacrosDefinition> getMacroses();
+  PsiElement getAtom();
 
   @Nullable
-  ErlangRecordDefinition getRecord(String name);
+  PsiElement getVar();
 
-  @NotNull
-  List<ErlangInclude> getIncludes();
-
-  ErlangMacrosDefinition getMacros(String name);
 }

@@ -117,11 +117,10 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         }
       }
       else if (myElement instanceof ErlangFile) {
-        for (ErlangRecordDefinition o : ((ErlangFile) myElement).getRecords()) {
-          result.add(new Element(o));
-        }
-        for (ErlangFunction o : ((ErlangFile) myElement).getFunctions()) {
-          result.add(new Element(o));
+        for (PsiElement o : myElement.getChildren()) {
+          if (o instanceof ErlangRecordDefinition || o instanceof ErlangFunction || o instanceof ErlangMacrosDefinition) {
+            result.add(new Element(o));
+          }
         }
       }
 
@@ -152,6 +151,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       else if (myElement instanceof ErlangRecordDefinition) {
         return ((ErlangRecordDefinition) myElement).getName();
       }
+      else if (myElement instanceof ErlangMacrosDefinition) {
+        return ((ErlangMacrosDefinition) myElement).getName();
+      }
       throw new AssertionError(myElement.getClass().getName());
     }
 
@@ -174,6 +176,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       }
       else if (myElement instanceof ErlangRecordDefinition) {
         return ErlangIcons.RECORD;
+      }
+      else if (myElement instanceof ErlangMacrosDefinition) {
+        return ErlangIcons.MACROS;
       }
       return myElement.getIcon(0);
     }
