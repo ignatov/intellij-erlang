@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.2</version>
+    <version>0.2.5</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="117.105" until-build="120.1"/>
     <depends>com.intellij.modules.lang</depends>
@@ -9,6 +9,11 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.2.5:</p>
+            <ul>
+              <li>Compilation and run (experimental)</li>
+              <li>Macros support</li>
+            </ul>
             <p>0.2:</p>
             <ul>
               <li>Erlang SDK</li>
