@@ -15,6 +15,10 @@ You need to specify module name, function name and input parameters in run confi
 
 ## Change log
 
+### Version 0.2.5:
+* Compilation and run
+* Resolve, completion, rename and find usages for macroses
+
 ### Version 0.2:
 * Erlang SDK
 * Autocompletion for BIFs
