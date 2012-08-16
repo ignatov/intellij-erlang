@@ -170,6 +170,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_INCLUDE) {
       result_ = include(builder_, level_ + 1);
     }
+    else if (root_ == ERL_INCLUDE_STRING) {
+      result_ = include_string(builder_, level_ + 1);
+    }
     else if (root_ == ERL_INT_TYPE) {
       result_ = int_type(builder_, level_ + 1);
     }
@@ -2915,7 +2918,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '-' ('include' | 'include_lib') '(' string ')'
+  // '-' ('include' | 'include_lib') '(' include_string ')'
   public static boolean include(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "include")) return false;
     if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
@@ -2927,7 +2930,7 @@ public class ErlangParser implements PsiParser {
     result_ = result_ && include_1(builder_, level_ + 1);
     pinned_ = result_; // pin = 2
     result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
-    result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_STRING)) && result_;
+    result_ = pinned_ && report_error_(builder_, include_string(builder_, level_ + 1)) && result_;
     result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
     if (result_ || pinned_) {
       marker_.done(ERL_INCLUDE);
@@ -2957,6 +2960,23 @@ public class ErlangParser implements PsiParser {
     }
     else {
       marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // string
+  public static boolean include_string(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "include_string")) return false;
+    if (!nextTokenIs(builder_, ERL_STRING)) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_STRING);
+    if (result_) {
+      marker_.done(ERL_INCLUDE_STRING);
+    }
+    else {
+      marker_.rollbackTo();
     }
     return result_;
   }

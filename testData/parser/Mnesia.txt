@@ -1065,7 +1065,8 @@ ERL_FILE
     PsiElement(-)('-')
     PsiElement(atom)('include')
     PsiElement(()('(')
-    PsiElement(string)('"mnesia.hrl"')
+    ERL_INCLUDE_STRING
+      PsiElement(string)('"mnesia.hrl"')
     PsiElement())(')')
   PsiElement(.)('.')
   ERL_ATTRIBUTE

@@ -206,6 +206,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitIncludeString(@NotNull ErlangIncludeString o) {
+    visitCompositeElement(o);
+  }
+
   public void visitIntType(@NotNull ErlangIntType o) {
     visitCompositeElement(o);
   }

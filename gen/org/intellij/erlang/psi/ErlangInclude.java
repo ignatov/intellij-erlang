@@ -8,6 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ErlangInclude extends ErlangCompositeElement {
 
   @Nullable
-  PsiElement getString();
+  ErlangIncludeString getIncludeString();
 
 }

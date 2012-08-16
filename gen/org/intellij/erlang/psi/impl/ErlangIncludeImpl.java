@@ -18,8 +18,8 @@ public class ErlangIncludeImpl extends ErlangCompositeElementImpl implements Erl
 
   @Override
   @Nullable
-  public PsiElement getString() {
-    return findChildByType(ERL_STRING);
+  public ErlangIncludeString getIncludeString() {
+    return findChildByClass(ErlangIncludeString.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

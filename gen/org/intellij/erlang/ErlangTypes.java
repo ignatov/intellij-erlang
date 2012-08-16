@@ -59,6 +59,7 @@ public interface ErlangTypes {
   IElementType ERL_IF_CLAUSES = new ErlangCompositeElementType("ERL_IF_CLAUSES");
   IElementType ERL_IF_EXPRESSION = new ErlangCompositeElementType("ERL_IF_EXPRESSION");
   IElementType ERL_INCLUDE = new ErlangCompositeElementType("ERL_INCLUDE");
+  IElementType ERL_INCLUDE_STRING = new ErlangCompositeElementType("ERL_INCLUDE_STRING");
   IElementType ERL_INT_TYPE = new ErlangCompositeElementType("ERL_INT_TYPE");
   IElementType ERL_LC_EXPRESSION = new ErlangCompositeElementType("ERL_LC_EXPRESSION");
   IElementType ERL_LC_EXPRS = new ErlangCompositeElementType("ERL_LC_EXPRS");
@@ -324,6 +325,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_INCLUDE) {
         return new ErlangIncludeImpl(node);
+      }
+      else if (type == ERL_INCLUDE_STRING) {
+        return new ErlangIncludeStringImpl(node);
       }
       else if (type == ERL_INT_TYPE) {
         return new ErlangIntTypeImpl(node);

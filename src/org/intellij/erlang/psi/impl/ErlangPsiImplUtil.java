@@ -65,6 +65,26 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
+  public static PsiReference getReference(@NotNull final ErlangIncludeString o) {
+    final PsiElement parent = o.getParent();
+    if (o.getTextLength() >= 2 && parent instanceof ErlangInclude) {
+      return new PsiReferenceBase<PsiElement>(o, TextRange.from(1, o.getTextLength() - 2)) {
+        @Override
+        public PsiElement resolve() {
+          return ContainerUtil.getFirstItem(filesFromInclude((ErlangInclude) parent));
+        }
+
+        @NotNull
+        @Override
+        public Object[] getVariants() {
+          return new Object[0];
+        }
+      };
+    }
+    return null;
+  }
+
+  @Nullable
   public static PsiReference getReference(@NotNull ErlangFunctionCallExpression o) {
     PsiElement parent = o.getParent();
     ErlangModuleRef moduleReference = null;
@@ -402,7 +422,7 @@ public class ErlangPsiImplUtil {
 
     List<ErlangRecordDefinition> fromIncludes = new ArrayList<ErlangRecordDefinition>();
     for (ErlangInclude include : includes) {
-      PsiElement string = include.getString();
+      PsiElement string = include.getIncludeString();
       if (string != null) {
         String includeFilePath = string.getText().replaceAll("\"", "");
 
@@ -426,12 +446,23 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  static List<ErlangFile> filesFromInclude(@NotNull ErlangInclude include) {
+    PsiElement string = include.getIncludeString();
+    PsiFile containingFile = include.getContainingFile();
+    if (string != null) {
+      String includeFilePath = string.getText().replaceAll("\"", "");
+      return ContainerUtil.concat(justAppend(containingFile, includeFilePath), findByWildCard(containingFile, includeFilePath));
+    }
+    return Collections.emptyList();
+  }
+
+  @NotNull
   static List<ErlangMacrosDefinition> getErlangMacrosesFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
     List<ErlangInclude> includes = containingFile.getIncludes();
 
     List<ErlangMacrosDefinition> fromIncludes = new ArrayList<ErlangMacrosDefinition>();
     for (ErlangInclude include : includes) {
-      PsiElement string = include.getString();
+      PsiElement string = include.getIncludeString();
       if (string != null) {
         String includeFilePath = string.getText().replaceAll("\"", "");
 

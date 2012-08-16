@@ -139,7 +139,8 @@ macros_definition ::= '-' 'define' '(' macros_name ['(' q_atom_or_var (',' q_ato
   methods = [getName setName getNameIdentifier getTextOffset]
 }
 
-include ::= '-' ('include' | 'include_lib') '(' string ')' {pin=2}
+include ::= '-' ('include' | 'include_lib') '(' include_string ')' {pin=2}
+include_string ::= string {methods = [getReference]}
 
 attribute ::= '-' (
   module

@@ -48,7 +48,8 @@ ERL_FILE
     PsiElement(-)('-')
     PsiElement(atom)('include')
     PsiElement(()('(')
-    PsiElement(string)('"dialyzer.hrl"')
+    ERL_INCLUDE_STRING
+      PsiElement(string)('"dialyzer.hrl"')
     PsiElement())(')')
   PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')

@@ -15,7 +15,8 @@ ERL_FILE
     PsiElement(-)('-')
     PsiElement(atom)('include_lib')
     PsiElement(()('(')
-    PsiElement(string)('"kernel/include/file.hrl"')
+    ERL_INCLUDE_STRING
+      PsiElement(string)('"kernel/include/file.hrl"')
     PsiElement())(')')
   PsiElement(.)('.')
   ERL_ATTRIBUTE
