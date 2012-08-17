@@ -24,6 +24,7 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
@@ -129,6 +130,10 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangSpecification.class) != null;
   }
 
+  public static boolean inColonQualified(PsiElement psiElement) {
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangColonQualifiedExpression.class) != null;
+  }
+
   public static boolean isLeftPartOfAssignment(@NotNull PsiElement psiElement) {
     ErlangAssignmentExpression assignmentExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
     if (assignmentExpression == null) return false;
@@ -144,9 +149,18 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, final boolean withArity) {
+  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, final boolean withArity, @Nullable ErlangColonQualifiedExpression colonQualifier) {
     if (containingFile instanceof ErlangFile) {
-      List<ErlangFunction> functions = ((ErlangFile) containingFile).getFunctions();
+      List<ErlangFunction> functions = new ArrayList<ErlangFunction>();
+
+      if (colonQualifier != null) {
+        ErlangExpression qAtom = ContainerUtil.getFirstItem(colonQualifier.getExpressionList());
+        if (qAtom != null) {
+          functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), qAtom.getText() + ".erl"));
+        }
+      } else {
+        functions.addAll(((ErlangFile) containingFile).getFunctions());
+      }
 
       List<LookupElement> lookupElements = ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
         @Override
@@ -155,7 +169,7 @@ public class ErlangPsiImplUtil {
         }
       });
 
-      if (!withArity) {
+      if (!withArity && colonQualifier == null) {
         // todo: move to more appropriate place
         PsiFile[] erlInternals = FilenameIndex.getFilesByName(containingFile.getProject(), "erl_internal.erl",
           GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
@@ -552,5 +566,17 @@ public class ErlangPsiImplUtil {
       macrosName.replace(ErlangElementFactory.createMacrosFromText(o.getProject(), newName));
     }
     return o;
+  }
+
+  @Nullable
+  public static List<ErlangFunction> getExternalFunctionForCompletion(Project project, @NotNull String moduleFileName) {
+    PsiFile[] files = FilenameIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project));
+    List<ErlangFunction> result = new ArrayList<ErlangFunction>();
+    for (PsiFile file : files) {
+      if (file instanceof ErlangFile) {
+        result.addAll(((ErlangFile) file).getFunctions());
+      }
+    }
+    return result;
   }
 }

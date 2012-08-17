@@ -23,7 +23,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ArrayUtil;
-import org.intellij.erlang.ErlangFileType;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangQAtom;
@@ -58,21 +58,22 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends ErlangAt
   }
 
   @Nullable
-  private ErlangFunction getExternalFunction(@NotNull String name) {
-    PsiFile[] files = FilenameIndex.getFilesByName(myElement.getProject(), name, GlobalSearchScope.projectScope(myElement.getProject()));
+  private ErlangFunction getExternalFunction(@NotNull String moduleFileName) {
+    PsiFile[] files = FilenameIndex.getFilesByName(myElement.getProject(), moduleFileName,
+      GlobalSearchScope.allScope(myElement.getProject())); // todo: use module scope
     List<ErlangFunction> result = new ArrayList<ErlangFunction>();
     for (PsiFile file : files) {
       if (file instanceof ErlangFile) {
         result.add(((ErlangFile) file).getFunction(myReferenceName, myArity));
       }
     }
-    return result.isEmpty() ? null : result.get(0);
+    return ContainerUtil.getFirstItem(result);
   }
 
   @NotNull
   @Override
   public Object[] getVariants() {
-    List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), true);
+    List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), true, null);
     return ArrayUtil.toObjectArray(lookupElements);
   }
 }

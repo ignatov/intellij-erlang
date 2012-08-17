@@ -72,7 +72,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
       BaseScopeProcessor processor = new BaseScopeProcessor() {
         @Override
         public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
-          if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_")) {
+          if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_") && !inColonQualified(myElement)) {
             if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement))) {
               result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).setIcon(ErlangIcons.VARIABLE));
             }
@@ -82,7 +82,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
       };
       ResolveUtil.treeWalkUp(myElement, processor);
 
-      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), false));
+      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), false, PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class)));
     }
 
     return ArrayUtil.toObjectArray(result);

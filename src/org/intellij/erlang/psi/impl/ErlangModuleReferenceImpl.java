@@ -38,7 +38,7 @@ public class ErlangModuleReferenceImpl<T extends ErlangQAtom> extends ErlangAtom
 
   @Override
   public PsiElement resolve() {
-    PsiFile[] files = FilenameIndex.getFilesByName(myElement.getProject(), myReferenceName, GlobalSearchScope.projectScope(myElement.getProject()));
+    PsiFile[] files = FilenameIndex.getFilesByName(myElement.getProject(), myReferenceName, GlobalSearchScope.allScope(myElement.getProject()));
     for (PsiFile file : files) {
       ErlangModule module = getModule(file);
       if (module != null) return module;

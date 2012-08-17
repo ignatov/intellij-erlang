@@ -17,17 +17,28 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.completion.*;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.impl.source.tree.TreeUtil;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
+import org.intellij.erlang.psi.ErlangColonQualifiedExpression;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangRecordExpression;
@@ -36,6 +47,7 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.List;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 import static com.intellij.patterns.StandardPatterns.instanceOf;
@@ -63,13 +75,57 @@ public class ErlangCompletionContributor extends CompletionContributor {
         PsiElement parent = position.getParent().getParent();
         if (parent instanceof ErlangRecordExpression) {
           result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(position.getContainingFile()));
-        } else {
-          for (String keywords : suggestKeywords(position)) {
-            result.addElement(LookupElementBuilder.create(keywords).setBold());
+        }
+        else {
+          ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
+          if (colonQualified != null) {
+            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(position.getContainingFile(), false, colonQualified));
+          }
+          else {
+            for (String keywords : suggestKeywords(position)) {
+              result.addElement(LookupElementBuilder.create(keywords).setBold());
+            }
+            suggestModules(result, position);
           }
         }
       }
     });
+  }
+
+  private static void suggestModules(CompletionResultSet result, PsiElement position) {
+    Project project = position.getProject();
+    Collection<VirtualFile> files = FilenameIndex.getAllFilesByExt(project, "erl", GlobalSearchScope.projectScope(project));
+
+    List<VirtualFile> standardModules = ContainerUtil.filter(FilenameIndex.getAllFilesByExt(project, "erl", GlobalSearchScope.allScope(project)),
+      new Condition<VirtualFile>() {
+        @Override
+        public boolean value(VirtualFile virtualFile) {
+          String canonicalPath = virtualFile.getCanonicalPath();
+          canonicalPath = FileUtil.toSystemIndependentName(canonicalPath != null ? canonicalPath : "");
+          return canonicalPath.matches(".*\\/lib\\/.*[kernel|stdlib].*\\/src\\/.*\\.erl");
+        }
+      });// todo: module with libs scope
+
+    //noinspection unchecked
+    for (VirtualFile file : ContainerUtil.concat(files, standardModules)) {
+      if (file.getFileType() == ErlangFileType.INSTANCE) {
+        result.addElement(LookupElementBuilder.create(file.getNameWithoutExtension()).setIcon(ErlangIcons.MODULE).setInsertHandler(
+          new BasicInsertHandler<LookupElement>() {
+            @Override
+            public void handleInsert(InsertionContext context, LookupElement item) {
+              if (context.getCompletionChar() != ':') {
+                final Editor editor = context.getEditor();
+                final Document document = editor.getDocument();
+                context.commitDocument();
+                int tailOffset = context.getTailOffset();
+                document.insertString(tailOffset, ":");
+                editor.getCaretModel().moveToOffset(tailOffset + 1);
+              }
+            }
+          }
+        ));
+      }
+    }
   }
 
   private static Collection<String> suggestKeywords(PsiElement position) {
