@@ -102,7 +102,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
         public boolean value(VirtualFile virtualFile) {
           String canonicalPath = virtualFile.getCanonicalPath();
           canonicalPath = FileUtil.toSystemIndependentName(canonicalPath != null ? canonicalPath : "");
-          return canonicalPath.matches(".*\\/lib\\/.*[kernel|stdlib].*\\/src\\/.*\\.erl");
+          String kernelRegExp = ".*\\/lib\\/kernel[\\-\\d\\.]+\\/src\\/.*\\.erl";
+          String stdlibRegExp = ".*\\/lib\\/stdlib[\\-\\d\\.]+\\/src\\/.*\\.erl";
+          return canonicalPath.matches(kernelRegExp) || canonicalPath.matches(stdlibRegExp);
         }
       });// todo: module with libs scope
 
