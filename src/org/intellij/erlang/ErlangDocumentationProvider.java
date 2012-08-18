@@ -23,8 +23,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.psi.ErlangSpecification;
 
 import java.util.Set;
 
@@ -37,8 +39,15 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
     if (element instanceof ErlangFunction) {
       ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(element, ErlangFunction.class);
       PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(element, PsiComment.class);
-      if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT && (prevFunction == null || (comment.getTextOffset() > prevFunction.getTextOffset()))) {
-        return getCommentText(comment, "%%");
+      ErlangAttribute attribute = PsiTreeUtil.getPrevSiblingOfType(element, ErlangAttribute.class);
+      PsiElement spec = attribute != null ? PsiTreeUtil.getChildOfType(attribute, ErlangSpecification.class) : null;
+      String commentText = "";
+      if (spec instanceof ErlangSpecification && notFromPreviousFunction(spec, prevFunction)) {
+        commentText += spec.getText().replaceFirst("spec", "<b>spec</b>") + "<br/>";
+      }
+      if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT && notFromPreviousFunction(comment, prevFunction)) {
+        commentText += getCommentText(comment, "%%");
+        return commentText;
       }
     }
     else if (element instanceof ErlangModule) {
@@ -49,6 +58,10 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
       }
     }
     return null;
+  }
+
+  private static boolean notFromPreviousFunction(PsiElement spec, ErlangFunction prevFunction) {
+    return (prevFunction == null || (spec.getTextOffset() > prevFunction.getTextOffset()));
   }
 
   private static String getCommentText(PsiComment comment, final String commentStartsWith) {
