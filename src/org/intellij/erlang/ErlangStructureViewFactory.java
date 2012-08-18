@@ -31,6 +31,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -117,11 +119,23 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         }
       }
       else if (myElement instanceof ErlangFile) {
-        for (PsiElement o : myElement.getChildren()) {
-          if (o instanceof ErlangRecordDefinition || o instanceof ErlangFunction || o instanceof ErlangMacrosDefinition) {
-            result.add(new Element(o));
+        Comparator<ErlangNamedElement> comparator = new Comparator<ErlangNamedElement>() {
+          @Override
+          public int compare(ErlangNamedElement o1, ErlangNamedElement o2) {
+            String name = o1.getName();
+            if (name == null) return -1;
+            return name.compareToIgnoreCase(o2.getName());
           }
-        }
+        };
+        List<ErlangMacrosDefinition> macroses = ((ErlangFile) myElement).getMacroses();
+        List<ErlangRecordDefinition> records = ((ErlangFile) myElement).getRecords();
+        List<ErlangFunction> functions = ((ErlangFile) myElement).getFunctions();
+        Collections.sort(macroses, comparator);
+        Collections.sort(records, comparator);
+        Collections.sort(functions, comparator);
+        for (ErlangMacrosDefinition o : macroses) result.add(new Element(o));
+        for (ErlangRecordDefinition o : records) result.add(new Element(o));
+        for (ErlangFunction o : functions) result.add(new Element(o));
       }
 
       return result.toArray(new TreeElement[result.size()]);
