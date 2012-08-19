@@ -16,8 +16,8 @@ public interface ErlangType extends ErlangCompositeElement {
   @Nullable
   ErlangFunType100T getFunType100T();
 
-  @Nullable
-  ErlangIntType getIntType();
+  @NotNull
+  List<ErlangIntType> getIntTypeList();
 
   @NotNull
   List<ErlangQAtom> getQAtomList();

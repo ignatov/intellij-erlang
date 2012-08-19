@@ -17,9 +17,15 @@ public class ErlangIntTypeImpl extends ErlangCompositeElementImpl implements Erl
   }
 
   @Override
-  @NotNull
+  @Nullable
+  public ErlangMacros getMacros() {
+    return findChildByClass(ErlangMacros.class);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getInteger() {
-    return findNotNullChildByType(ERL_INTEGER);
+    return findChildByType(ERL_INTEGER);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

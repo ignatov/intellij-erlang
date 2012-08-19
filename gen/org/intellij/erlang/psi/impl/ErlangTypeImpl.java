@@ -35,9 +35,9 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
   }
 
   @Override
-  @Nullable
-  public ErlangIntType getIntType() {
-    return findChildByClass(ErlangIntType.class);
+  @NotNull
+  public List<ErlangIntType> getIntTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangIntType.class);
   }
 
   @Override

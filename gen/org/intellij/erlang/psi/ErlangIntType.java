@@ -7,7 +7,10 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangIntType extends ErlangCompositeElement {
 
-  @NotNull
+  @Nullable
+  ErlangMacros getMacros();
+
+  @Nullable
   PsiElement getInteger();
 
 }

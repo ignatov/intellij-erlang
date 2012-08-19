@@ -179,8 +179,7 @@ top_type ::= [q_var '::'] top_type_100_t
 top_type_100_t ::= type ['|' top_type_100_t]
 type ::=
   ('(' top_type ')')
-  | int_type
-  | (int_type '..' int_type)
+  | (int_type ['..' int_type])
   | (fun '(' fun_type_100_t? ')')
   | [q_atom ':'] q_atom ['(' top_types? ')']
   | ( q_atom '(' top_types ')')
@@ -190,7 +189,7 @@ type ::=
   | ('{' top_types? '}')
   | ('#' q_atom '{' field_types? '}')
 
-int_type ::= '-'? integer
+int_type ::= '-'? (integer | macros)
 fun_type_100_t ::= '(' ('...' | top_types?) ')' '->' top_type
 fun_type ::= '(' top_types? ')' '->' top_type
 private field_types ::= field_type (',' field_type)*
