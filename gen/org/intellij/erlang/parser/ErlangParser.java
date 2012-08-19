@@ -149,6 +149,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_FUNCTION_CLAUSE) {
       result_ = function_clause(builder_, level_ + 1);
     }
+    else if (root_ == ERL_FUNCTION_WITH_ARITY) {
+      result_ = function_with_arity(builder_, level_ + 1);
+    }
     else if (root_ == ERL_GENERIC_FUNCTION_CALL_EXPRESSION) {
       result_ = generic_function_call_expression(builder_, level_ + 1);
     }
@@ -2364,7 +2367,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // fun ((fun_clauses end) | ([module_ref ':'] export_function))
+  // fun ((fun_clauses end) | ([module_ref ':'] function_with_arity))
   public static boolean fun_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression")) return false;
     if (!nextTokenIs(builder_, ERL_FUN)) return false;
@@ -2390,13 +2393,13 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // ((fun_clauses end) | ([module_ref ':'] export_function))
+  // ((fun_clauses end) | ([module_ref ':'] function_with_arity))
   private static boolean fun_expression_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression_1")) return false;
     return fun_expression_1_0(builder_, level_ + 1);
   }
 
-  // (fun_clauses end) | ([module_ref ':'] export_function)
+  // (fun_clauses end) | ([module_ref ':'] function_with_arity)
   private static boolean fun_expression_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression_1_0")) return false;
     boolean result_ = false;
@@ -2434,19 +2437,19 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // ([module_ref ':'] export_function)
+  // ([module_ref ':'] function_with_arity)
   private static boolean fun_expression_1_0_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression_1_0_1")) return false;
     return fun_expression_1_0_1_0(builder_, level_ + 1);
   }
 
-  // [module_ref ':'] export_function
+  // [module_ref ':'] function_with_arity
   private static boolean fun_expression_1_0_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression_1_0_1_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = fun_expression_1_0_1_0_0(builder_, level_ + 1);
-    result_ = result_ && export_function(builder_, level_ + 1);
+    result_ = result_ && function_with_arity(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }
@@ -2671,6 +2674,30 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "function_clause_2")) return false;
     clause_guard(builder_, level_ + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // q_atom '/' integer
+  public static boolean function_with_arity(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "function_with_arity")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
+        && replaceVariants(builder_, 2, "<function with arity>")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<function with arity>");
+    result_ = q_atom(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_OP_AR_DIV));
+    result_ = pinned_ && consumeToken(builder_, ERL_INTEGER) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_FUNCTION_WITH_ARITY);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */

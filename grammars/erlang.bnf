@@ -318,7 +318,11 @@ cr_clause ::= argument_definition clause_guard? clause_body
 argument_definition ::= expression
 
 receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end))
-fun_expression ::= fun ((fun_clauses end) | ([module_ref ':'] export_function))
+fun_expression ::= fun ((fun_clauses end) | ([module_ref ':'] function_with_arity))
+function_with_arity ::= q_atom '/' integer {
+  pin= 1
+  methods = [getReference]
+}
 private fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body
 try_expression ::= try exprs (of cr_clauses)? try_catch

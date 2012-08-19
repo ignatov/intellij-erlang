@@ -17,15 +17,15 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
-  @Nullable
-  public ErlangExportFunction getExportFunction() {
-    return findChildByClass(ErlangExportFunction.class);
-  }
-
-  @Override
   @NotNull
   public List<ErlangFunClause> getFunClauseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangFunClause.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangFunctionWithArity getFunctionWithArity() {
+    return findChildByClass(ErlangFunctionWithArity.class);
   }
 
   @Override

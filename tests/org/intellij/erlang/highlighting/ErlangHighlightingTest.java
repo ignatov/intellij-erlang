@@ -69,4 +69,6 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
   public void testDuplicate()         { doTest(); }
+  public void testmod2()              { doTest(); }
+
 }

@@ -31022,7 +31022,7 @@ ERL_FILE
                 PsiElement(()('(')
                 ERL_FUN_EXPRESSION
                   PsiElement(fun)('fun')
-                  ERL_EXPORT_FUNCTION
+                  ERL_FUNCTION_WITH_ARITY
                     ERL_Q_ATOM
                       PsiElement(atom)('storage_count')
                     PsiElement(/)('/')

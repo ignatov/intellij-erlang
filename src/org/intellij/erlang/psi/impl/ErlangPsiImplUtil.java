@@ -100,6 +100,17 @@ public class ErlangPsiImplUtil {
       nameAtom.getText(), o.getArgumentList().getExpressionList().size());
   }
 
+  @Nullable
+  public static PsiReference getReference(@NotNull ErlangFunctionWithArity o) {
+    ErlangModuleRef moduleReference = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
+    ErlangQAtom moduleAtom = moduleReference == null ? null : moduleReference.getQAtom();
+    ErlangQAtom nameAtom = o.getQAtom();
+
+    PsiElement arity = o.getInteger();
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(nameAtom, moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
+      nameAtom.getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
+  }
+
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportFunction o) {
     PsiElement arity = o.getInteger();

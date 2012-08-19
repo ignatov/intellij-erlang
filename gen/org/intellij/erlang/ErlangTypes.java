@@ -48,6 +48,7 @@ public interface ErlangTypes {
   IElementType ERL_FUNCTION = new ErlangCompositeElementType("ERL_FUNCTION");
   IElementType ERL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_FUNCTION_CLAUSE = new ErlangCompositeElementType("ERL_FUNCTION_CLAUSE");
+  IElementType ERL_FUNCTION_WITH_ARITY = new ErlangCompositeElementType("ERL_FUNCTION_WITH_ARITY");
   IElementType ERL_FUN_CLAUSE = new ErlangCompositeElementType("ERL_FUN_CLAUSE");
   IElementType ERL_FUN_EXPRESSION = new ErlangCompositeElementType("ERL_FUN_EXPRESSION");
   IElementType ERL_FUN_TYPE = new ErlangCompositeElementType("ERL_FUN_TYPE");
@@ -292,6 +293,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_FUNCTION_CLAUSE) {
         return new ErlangFunctionClauseImpl(node);
+      }
+      else if (type == ERL_FUNCTION_WITH_ARITY) {
+        return new ErlangFunctionWithArityImpl(node);
       }
       else if (type == ERL_FUN_CLAUSE) {
         return new ErlangFunClauseImpl(node);

@@ -42939,7 +42939,7 @@ ERL_FILE
                   ERL_Q_ATOM
                     PsiElement(atom)('erl_types')
                 PsiElement(:)(':')
-                ERL_EXPORT_FUNCTION
+                ERL_FUNCTION_WITH_ARITY
                   ERL_Q_ATOM
                     PsiElement(atom)('t_is_opaque')
                   PsiElement(/)('/')
@@ -42978,7 +42978,7 @@ ERL_FILE
                   ERL_Q_ATOM
                     PsiElement(atom)('erl_types')
                 PsiElement(:)(':')
-                ERL_EXPORT_FUNCTION
+                ERL_FUNCTION_WITH_ARITY
                   ERL_Q_ATOM
                     PsiElement(atom)('t_has_opaque_subtype')
                   PsiElement(/)('/')
