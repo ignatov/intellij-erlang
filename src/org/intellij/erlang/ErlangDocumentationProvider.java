@@ -43,10 +43,10 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
       PsiElement spec = attribute != null ? PsiTreeUtil.getChildOfType(attribute, ErlangSpecification.class) : null;
       String commentText = "";
       if (spec instanceof ErlangSpecification && notFromPreviousFunction(spec, prevFunction)) {
-        commentText += spec.getText().replaceFirst("spec", "<b>spec</b>") + "<br/>";
+        commentText += spec.getText().replaceFirst("spec", "<b>Specification:</b><br/>") + "<br/><br/>";
       }
       if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT && notFromPreviousFunction(comment, prevFunction)) {
-        commentText += getCommentText(comment, "%%");
+        commentText += "<b>Comment:</b><br/>" + getCommentText(comment, "%%");
         return commentText;
       }
     }
