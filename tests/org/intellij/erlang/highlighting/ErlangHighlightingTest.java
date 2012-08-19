@@ -54,13 +54,9 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
 
   public void testHelloWorld()        { doTest(); }
   public void testExport()            { doTest(); }
-//  public void testH()                 { doTest(); }
-//  public void testMnesia()            { doTest(); }
   public void testIsDigits()          { doTest(); }
-//  public void testDialyzerDataflow()  { doTest(); }
   public void testTest()              { doTest(); }
   public void testRecords()           { doTest(); }
-//  public void testDialyzerClParse()   { doTest(); }
   public void testMp4Mux()            { doTest(); }
   public void testRecord()            { doTest(); }
   public void testQuoteUnquote()      { doTest(); }
@@ -70,5 +66,4 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void testUnusedFunction()    { doTest(); }
   public void testDuplicate()         { doTest(); }
   public void testmod2()              { doTest(); }
-
 }
