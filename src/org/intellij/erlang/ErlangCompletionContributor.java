@@ -81,7 +81,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           if (colonQualified != null) {
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(position.getContainingFile(), false, colonQualified));
           }
-          else {
+          else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
             for (String keywords : suggestKeywords(position)) {
               result.addElement(LookupElementBuilder.create(keywords).setBold());
             }
