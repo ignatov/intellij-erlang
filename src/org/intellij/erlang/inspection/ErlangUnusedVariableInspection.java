@@ -74,7 +74,7 @@ public class ErlangUnusedVariableInspection extends ErlangBaseInspection {
       public void visitQVar(@NotNull ErlangQVar o) {
         PsiReference reference = o.getReference();
         PsiElement resolve = reference != null ? reference.resolve() : null;
-        if (resolve == null && !isForceSkipped(o) && !isMacros(o) && (inDefinition(o) || isLeftPartOfAssignment(o))) {
+        if (resolve == null && !isForceSkipped(o) && !isMacros(o) && ((inDefinition(o) && !inArgumentList(o)) || isLeftPartOfAssignment(o))) {
           ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(o, ErlangFunctionClause.class);
           if (functionClause == null) return;
           Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));

@@ -25,9 +25,7 @@ import org.intellij.erlang.psi.ErlangQVar;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.inDefinition;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isInModule;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.isLeftPartOfAssignment;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 /**
  * @author ignatov
@@ -48,6 +46,8 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
       if ((PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement)))
           || isInModule(psiElement)) {
+        if (inArgumentList(psiElement)) return true;
+
         result = (ErlangQVar) psiElement;
         return false;
       }

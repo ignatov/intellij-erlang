@@ -129,6 +129,13 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
   }
 
+  @SuppressWarnings("unchecked")
+  public static boolean inArgumentList(PsiElement psiElement) {
+    ErlangArgumentList argList = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, true,
+      ErlangFunctionCallExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
+    return (argList != null ? argList.getParent() : null) instanceof ErlangFunctionCallExpression;
+  }
+
   public static boolean inDefine(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangMacrosDefinition.class) != null;
   }
