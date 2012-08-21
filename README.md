@@ -11,9 +11,10 @@ If you want to help but doesn't know how, you may check out issues [for collabor
 1. Checkout plugin repo and open the plugin project
 1. [Setup IDEA SDK](http://confluence.jetbrains.net/display/IDEADEV/Getting+Started+with+Plugin+Development#GettingStartedwithPluginDevelopment-anchor2):
 select the IDEA installation directory as SDK root 
-1. Run the Erlang project (F9 or Alt + Shift + F10)
+1. Run the Erlang project (**F9** or **Alt + Shift + F10**)
 
-For further information please see http://confluence.jetbrains.net/display/IDEADEV/PluginDevelopment
+For further information please see [official plugin development page](http://confluence.jetbrains.net/display/IDEADEV/PluginDevelopment).
+Also you can read some [tips and tricks](http://tomaszdziurko.pl/2011/09/developing-plugin-intellij-idea-some-tips-and-links/).
 
 ## Compilation and running
 The recent build supports compiling and running Erlang projects.
