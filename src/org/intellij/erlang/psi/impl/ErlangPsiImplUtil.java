@@ -601,4 +601,8 @@ public class ErlangPsiImplUtil {
     }
     return result;
   }
+
+  public static boolean inFunction(PsiElement position) {
+    return PsiTreeUtil.getParentOfType(position, ErlangFunction.class) != null;
+  }
 }

@@ -38,10 +38,7 @@ import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
-import org.intellij.erlang.psi.ErlangColonQualifiedExpression;
-import org.intellij.erlang.psi.ErlangExport;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangRecordExpression;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -86,6 +83,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
               result.addElement(LookupElementBuilder.create(keywords).setBold());
             }
             suggestModules(result, position);
+          }
+          if (colonQualified == null && parent instanceof ErlangExpression && ErlangPsiImplUtil.inFunction(position)) {
+            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(position.getContainingFile(), false, null));
           }
         }
       }
