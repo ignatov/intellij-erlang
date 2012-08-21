@@ -50,7 +50,9 @@ public class ErlangUnresolvedVariableInspection extends ErlangBaseInspection {
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
-        if ((inDefinition(o) && !inArgumentList(o)) || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o) || isForceSkipped(o) || inSpecification(o) || inDefine(o)) {
+        if ((inDefinition(o) && !inArgumentList(o))
+          || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o)
+          || isForceSkipped(o) || inSpecification(o) || inDefine(o) || inCallback(o)) {
           return;
         }
         PsiReference reference = o.getReference();

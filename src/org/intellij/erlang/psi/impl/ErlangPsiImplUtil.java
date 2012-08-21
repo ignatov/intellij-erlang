@@ -140,6 +140,10 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangMacrosDefinition.class) != null;
   }
 
+  public static boolean inCallback(PsiElement psiElement) {
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangCallbackSpec.class) != null;
+  }
+
   public static boolean inAtomAttribute(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class) != null;
   }
