@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangExport extends ErlangCompositeElement {
 
-  @NotNull
-  List<ErlangExportFunction> getExportFunctionList();
+  @Nullable
+  ErlangExportFunctions getExportFunctions();
 
 }

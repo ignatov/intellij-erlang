@@ -22,6 +22,12 @@ public class ErlangFunType100TImpl extends ErlangCompositeElementImpl implements
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
   }
 
+  @Override
+  @NotNull
+  public ErlangTopTypeClause getTopTypeClause() {
+    return findNotNullChildByClass(ErlangTopTypeClause.class);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunType100T(this);
     else super.accept(visitor);

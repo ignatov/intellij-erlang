@@ -12,6 +12,7 @@ public interface ErlangTypes {
 
   IElementType ERL_ADDITIVE_EXPRESSION = new ErlangCompositeElementType("ERL_ADDITIVE_EXPRESSION");
   IElementType ERL_ARGUMENT_DEFINITION = new ErlangCompositeElementType("ERL_ARGUMENT_DEFINITION");
+  IElementType ERL_ARGUMENT_DEFINITION_LIST = new ErlangCompositeElementType("ERL_ARGUMENT_DEFINITION_LIST");
   IElementType ERL_ARGUMENT_LIST = new ErlangCompositeElementType("ERL_ARGUMENT_LIST");
   IElementType ERL_ASSIGNMENT_EXPRESSION = new ErlangCompositeElementType("ERL_ASSIGNMENT_EXPRESSION");
   IElementType ERL_ATOM_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATOM_ATTRIBUTE");
@@ -35,6 +36,7 @@ public interface ErlangTypes {
   IElementType ERL_CR_CLAUSES = new ErlangCompositeElementType("ERL_CR_CLAUSES");
   IElementType ERL_EXPORT = new ErlangCompositeElementType("ERL_EXPORT");
   IElementType ERL_EXPORT_FUNCTION = new ErlangCompositeElementType("ERL_EXPORT_FUNCTION");
+  IElementType ERL_EXPORT_FUNCTIONS = new ErlangCompositeElementType("ERL_EXPORT_FUNCTIONS");
   IElementType ERL_EXPRESSION = new ErlangCompositeElementType("ERL_EXPRESSION");
   IElementType ERL_EXPR_100_A = new ErlangCompositeElementType("ERL_EXPR_100_A");
   IElementType ERL_EXPR_150_A = new ErlangCompositeElementType("ERL_EXPR_150_A");
@@ -50,6 +52,7 @@ public interface ErlangTypes {
   IElementType ERL_FUNCTION_CLAUSE = new ErlangCompositeElementType("ERL_FUNCTION_CLAUSE");
   IElementType ERL_FUNCTION_WITH_ARITY = new ErlangCompositeElementType("ERL_FUNCTION_WITH_ARITY");
   IElementType ERL_FUN_CLAUSE = new ErlangCompositeElementType("ERL_FUN_CLAUSE");
+  IElementType ERL_FUN_CLAUSES = new ErlangCompositeElementType("ERL_FUN_CLAUSES");
   IElementType ERL_FUN_EXPRESSION = new ErlangCompositeElementType("ERL_FUN_EXPRESSION");
   IElementType ERL_FUN_TYPE = new ErlangCompositeElementType("ERL_FUN_TYPE");
   IElementType ERL_FUN_TYPE_100_T = new ErlangCompositeElementType("ERL_FUN_TYPE_100_T");
@@ -93,10 +96,12 @@ public interface ErlangTypes {
   IElementType ERL_SPEC_FUN = new ErlangCompositeElementType("ERL_SPEC_FUN");
   IElementType ERL_TOP_TYPE = new ErlangCompositeElementType("ERL_TOP_TYPE");
   IElementType ERL_TOP_TYPE_100_T = new ErlangCompositeElementType("ERL_TOP_TYPE_100_T");
+  IElementType ERL_TOP_TYPE_CLAUSE = new ErlangCompositeElementType("ERL_TOP_TYPE_CLAUSE");
   IElementType ERL_TRY_CATCH = new ErlangCompositeElementType("ERL_TRY_CATCH");
   IElementType ERL_TRY_CLAUSE = new ErlangCompositeElementType("ERL_TRY_CLAUSE");
   IElementType ERL_TRY_CLAUSES = new ErlangCompositeElementType("ERL_TRY_CLAUSES");
   IElementType ERL_TRY_EXPRESSION = new ErlangCompositeElementType("ERL_TRY_EXPRESSION");
+  IElementType ERL_TRY_EXPRESSIONS_CLAUSE = new ErlangCompositeElementType("ERL_TRY_EXPRESSIONS_CLAUSE");
   IElementType ERL_TUPLE_EXPRESSION = new ErlangCompositeElementType("ERL_TUPLE_EXPRESSION");
   IElementType ERL_TYPE = new ErlangCompositeElementType("ERL_TYPE");
   IElementType ERL_TYPED_ATTR_VAL = new ErlangCompositeElementType("ERL_TYPED_ATTR_VAL");
@@ -186,6 +191,9 @@ public interface ErlangTypes {
       else if (type == ERL_ARGUMENT_DEFINITION) {
         return new ErlangArgumentDefinitionImpl(node);
       }
+      else if (type == ERL_ARGUMENT_DEFINITION_LIST) {
+        return new ErlangArgumentDefinitionListImpl(node);
+      }
       else if (type == ERL_ARGUMENT_LIST) {
         return new ErlangArgumentListImpl(node);
       }
@@ -255,6 +263,9 @@ public interface ErlangTypes {
       else if (type == ERL_EXPORT_FUNCTION) {
         return new ErlangExportFunctionImpl(node);
       }
+      else if (type == ERL_EXPORT_FUNCTIONS) {
+        return new ErlangExportFunctionsImpl(node);
+      }
       else if (type == ERL_EXPRESSION) {
         return new ErlangExpressionImpl(node);
       }
@@ -299,6 +310,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_FUN_CLAUSE) {
         return new ErlangFunClauseImpl(node);
+      }
+      else if (type == ERL_FUN_CLAUSES) {
+        return new ErlangFunClausesImpl(node);
       }
       else if (type == ERL_FUN_EXPRESSION) {
         return new ErlangFunExpressionImpl(node);
@@ -429,6 +443,9 @@ public interface ErlangTypes {
       else if (type == ERL_TOP_TYPE_100_T) {
         return new ErlangTopType100TImpl(node);
       }
+      else if (type == ERL_TOP_TYPE_CLAUSE) {
+        return new ErlangTopTypeClauseImpl(node);
+      }
       else if (type == ERL_TRY_CATCH) {
         return new ErlangTryCatchImpl(node);
       }
@@ -440,6 +457,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_TRY_EXPRESSION) {
         return new ErlangTryExpressionImpl(node);
+      }
+      else if (type == ERL_TRY_EXPRESSIONS_CLAUSE) {
+        return new ErlangTryExpressionsClauseImpl(node);
       }
       else if (type == ERL_TUPLE_EXPRESSION) {
         return new ErlangTupleExpressionImpl(node);

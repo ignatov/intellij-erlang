@@ -17,15 +17,15 @@ public class ErlangTryCatchImpl extends ErlangCompositeElementImpl implements Er
   }
 
   @Override
-  @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  @Nullable
+  public ErlangTryClauses getTryClauses() {
+    return findChildByClass(ErlangTryClauses.class);
   }
 
   @Override
   @Nullable
-  public ErlangTryClauses getTryClauses() {
-    return findChildByClass(ErlangTryClauses.class);
+  public ErlangTryExpressionsClause getTryExpressionsClause() {
+    return findChildByClass(ErlangTryExpressionsClause.class);
   }
 
   @Override

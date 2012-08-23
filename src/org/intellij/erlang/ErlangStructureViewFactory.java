@@ -144,7 +144,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     @Override
     public String getPresentableText() {
       if (myElement instanceof ErlangFunctionClause) {
-        final List<ErlangArgumentDefinition> exprs = ((ErlangFunctionClause) myElement).getArgumentDefinitionList();
+        final List<ErlangArgumentDefinition> exprs = ((ErlangFunctionClause) myElement).getArgumentDefinitionList().getArgumentDefinitionList();
         String res = ((ErlangFunctionClause) myElement).getQAtom().getText();
         final List<String> strings = ContainerUtil.map(exprs, new Function<ErlangArgumentDefinition, String>() {
           @Override

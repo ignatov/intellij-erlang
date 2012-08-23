@@ -14,6 +14,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitArgumentDefinitionList(@NotNull ErlangArgumentDefinitionList o) {
+    visitCompositeElement(o);
+  }
+
   public void visitArgumentList(@NotNull ErlangArgumentList o) {
     visitCompositeElement(o);
   }
@@ -106,6 +110,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitExportFunctions(@NotNull ErlangExportFunctions o) {
+    visitCompositeElement(o);
+  }
+
   public void visitExpr100A(@NotNull ErlangExpr100A o) {
     visitExpression(o);
   }
@@ -151,6 +159,10 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitFunClause(@NotNull ErlangFunClause o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitFunClauses(@NotNull ErlangFunClauses o) {
     visitCompositeElement(o);
   }
 
@@ -342,6 +354,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitTopTypeClause(@NotNull ErlangTopTypeClause o) {
+    visitCompositeElement(o);
+  }
+
   public void visitTryCatch(@NotNull ErlangTryCatch o) {
     visitCompositeElement(o);
   }
@@ -356,6 +372,10 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitTryExpression(@NotNull ErlangTryExpression o) {
     visitExpression(o);
+  }
+
+  public void visitTryExpressionsClause(@NotNull ErlangTryExpressionsClause o) {
+    visitCompositeElement(o);
   }
 
   public void visitTupleExpression(@NotNull ErlangTupleExpression o) {

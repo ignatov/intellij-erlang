@@ -17,9 +17,9 @@ public class ErlangExportImpl extends ErlangCompositeElementImpl implements Erla
   }
 
   @Override
-  @NotNull
-  public List<ErlangExportFunction> getExportFunctionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExportFunction.class);
+  @Nullable
+  public ErlangExportFunctions getExportFunctions() {
+    return findChildByClass(ErlangExportFunctions.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

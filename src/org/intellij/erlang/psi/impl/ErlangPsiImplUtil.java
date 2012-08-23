@@ -290,7 +290,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static int getArity(@NotNull ErlangFunction o) {
-    return o.getFunctionClauseList().get(0).getArgumentDefinitionList().size();
+    return o.getFunctionClauseList().get(0).getArgumentDefinitionList().getArgumentDefinitionList().size();
   }
 
   @NotNull

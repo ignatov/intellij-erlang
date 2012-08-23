@@ -10,26 +10,20 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangFunTypeImpl extends ErlangCompositeElementImpl implements ErlangFunType {
+public class ErlangTryExpressionsClauseImpl extends ErlangCompositeElementImpl implements ErlangTryExpressionsClause {
 
-  public ErlangFunTypeImpl(ASTNode node) {
+  public ErlangTryExpressionsClauseImpl(ASTNode node) {
     super(node);
   }
 
   @Override
   @NotNull
-  public List<ErlangTopType> getTopTypeList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
-  }
-
-  @Override
-  @NotNull
-  public ErlangTopTypeClause getTopTypeClause() {
-    return findNotNullChildByClass(ErlangTopTypeClause.class);
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunType(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryExpressionsClause(this);
     else super.accept(visitor);
   }
 

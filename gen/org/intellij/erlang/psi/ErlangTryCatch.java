@@ -7,11 +7,11 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangTryCatch extends ErlangCompositeElement {
 
-  @NotNull
-  List<ErlangExpression> getExpressionList();
-
   @Nullable
   ErlangTryClauses getTryClauses();
+
+  @Nullable
+  ErlangTryExpressionsClause getTryExpressionsClause();
 
   @Nullable
   PsiElement getAfter();

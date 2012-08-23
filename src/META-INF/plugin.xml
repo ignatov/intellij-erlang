@@ -81,6 +81,9 @@
         <programRunner implementation="org.intellij.erlang.runner.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.runner.ErlangRunConfigurationType"/>
 
+        <codeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangCodeStyleSettingsProvider"/>
+        <langCodeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangLanguageCodeStyleSettingsProvider"/>
+
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnresolvedVariableInspection"
                          displayName="Unresolved variable"

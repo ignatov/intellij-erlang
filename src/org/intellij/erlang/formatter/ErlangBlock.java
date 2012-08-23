@@ -23,38 +23,33 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-import org.intellij.erlang.ErlangTypes;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.intellij.erlang.ErlangTypes.*;
+
 /**
  * @author ignatov
  */
 public class ErlangBlock implements ASTBlock {
   public static final TokenSet BLOCKS_TOKEN_SET = TokenSet.create(
-    ErlangTypes.ERL_CLAUSE_BODY,
-    ErlangTypes.ERL_TYPED_RECORD_FIELDS,
-    ErlangTypes.ERL_ARGUMENT_LIST,
-    ErlangTypes.ERL_TUPLE_EXPRESSION,
-    ErlangTypes.ERL_LIST_EXPRESSION,
-    ErlangTypes.ERL_CR_CLAUSES,
-    ErlangTypes.ERL_IF_CLAUSES,
-    ErlangTypes.ERL_TRY_CLAUSES,
-    ErlangTypes.ERL_CATCH_EXPRESSION,
-    ErlangTypes.ERL_CLAUSE_GUARD,
-    ErlangTypes.ERL_BEGIN_END_BODY
-  );
-
-  public static final TokenSet BRACES_TOKEN_SET = TokenSet.create(
-    ErlangTypes.ERL_CURLY_LEFT,
-    ErlangTypes.ERL_CURLY_RIGHT,
-    ErlangTypes.ERL_BRACKET_LEFT,
-    ErlangTypes.ERL_BRACKET_RIGHT,
-    ErlangTypes.ERL_PAR_LEFT,
-    ErlangTypes.ERL_PAR_RIGHT
+    ERL_CLAUSE_BODY,
+    ERL_TYPED_RECORD_FIELDS,
+    ERL_ARGUMENT_LIST,
+    ERL_TUPLE_EXPRESSION,
+    ERL_LIST_EXPRESSION,
+    ERL_CR_CLAUSES,
+    ERL_IF_CLAUSES,
+    ERL_TRY_CLAUSES,
+    ERL_CATCH_EXPRESSION,
+    ERL_CLAUSE_GUARD,
+    ERL_BEGIN_END_BODY,
+    ERL_TOP_TYPE_CLAUSE,
+    ERL_FUN_CLAUSES,
+    ERL_TRY_EXPRESSIONS_CLAUSE
   );
 
   private ASTNode myNode;
@@ -65,14 +60,14 @@ public class ErlangBlock implements ASTBlock {
   private final SpacingBuilder mySpacingBuilder;
   private List<Block> mySubBlocks;
 
-  public ErlangBlock(ASTNode node, Alignment alignment, Indent indent, Wrap wrap, CodeStyleSettings settings,
+  public ErlangBlock(ASTNode node, Alignment alignment, Wrap wrap, CodeStyleSettings settings,
                      SpacingBuilder spacingBuilder) {
     myNode = node;
     myAlignment = alignment;
-    myIndent = indent;
     myWrap = wrap;
     mySettings = settings;
     mySpacingBuilder = spacingBuilder;
+    myIndent = new ErlangIndentProcessor(mySettings).getChildIndent(node);
   }
 
   @Override
@@ -128,19 +123,7 @@ public class ErlangBlock implements ASTBlock {
   }
 
   private Block buildSubBlock(ASTNode child) {
-    Wrap wrap = null;
-    Indent childIndent = Indent.getNoneIndent();
-    Alignment childAlignment = null;
-
-    if (BLOCKS_TOKEN_SET.contains(myNode.getElementType())) {
-      childIndent = indentIfNotBrace(child);
-    }
-
-    return new ErlangBlock(child, childAlignment, childIndent, wrap, mySettings, mySpacingBuilder);
-  }
-
-  private static Indent indentIfNotBrace(ASTNode child) {
-    return BRACES_TOKEN_SET.contains(child.getElementType()) ? Indent.getNoneIndent() : Indent.getNormalIndent();
+    return new ErlangBlock(child, null, null, mySettings, mySpacingBuilder);
   }
 
   @Override

@@ -17,9 +17,9 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
-  @NotNull
-  public List<ErlangFunClause> getFunClauseList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangFunClause.class);
+  @Nullable
+  public ErlangFunClauses getFunClauses() {
+    return findChildByClass(ErlangFunClauses.class);
   }
 
   @Override

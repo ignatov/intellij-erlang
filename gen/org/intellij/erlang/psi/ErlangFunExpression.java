@@ -7,8 +7,8 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangFunExpression extends ErlangExpression {
 
-  @NotNull
-  List<ErlangFunClause> getFunClauseList();
+  @Nullable
+  ErlangFunClauses getFunClauses();
 
   @Nullable
   ErlangFunctionWithArity getFunctionWithArity();

@@ -22,6 +22,8 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.ErlangTypes.*;
@@ -33,25 +35,64 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   @NotNull
   @Override
   public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-    final ErlangBlock block = new ErlangBlock(element.getNode(), null, Indent.getNoneIndent(), null, settings,
+    final ErlangBlock block = new ErlangBlock(element.getNode(), null, null, settings,
       createSpacingBuilder(settings));
     return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
   }
 
   private static SpacingBuilder createSpacingBuilder(CodeStyleSettings settings) {
+    TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
+
+
     return new SpacingBuilder(settings)
-      .before(ERL_COMMA)        .spaceIf(false) //.spaceIf(settings.SPACE_BEFORE_COMMA)
-      .after(ERL_COMMA)         .spaceIf(true) //.spaceIf(settings.SPACE_AFTER_COMMA)
-      .around(ERL_OP_EQ)        .spaceIf(true) //.spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
-      .around(ERL_OP_PLUS)      .spaceIf(true) //.spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
-//      .around(ERL_OP_MINUS)     .spaceIf(true) //.spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
-//      .around(ERL_OP_AR_DIV)    .spaceIf(true) //.spaceIf(settings.SPACE_AROUND_MULTIPLICATIVE_OPERATORS)
-      .around(ERL_OP_AR_MUL)    .spaceIf(true) //.spaceIf(settings.SPACE_AROUND_MULTIPLICATIVE_OPERATORS)
-      .around(ERL_OP_EQ_EQ)     .spaceIf(true) //.spaceIf(settings.SPACE_AROUND_EQUALITY_OPERATORS)
-      .around(ERL_OP_EQ_DIV_EQ) .spaceIf(true) //.spaceIf(settings.SPACE_AROUND_EQUALITY_OPERATORS)
-      .around(ERL_OP_EQ_COL_EQ) .spaceIf(true) //.spaceIf(settings.SPACE_AROUND_EQUALITY_OPERATORS)
-      .around(ERL_OR_OR).spaceIf(true)
-      ;
+      .before(ERL_COMMA).spaceIf(settings.SPACE_BEFORE_COMMA)
+      .after(ERL_COMMA).spaceIf(settings.SPACE_AFTER_COMMA)
+
+      .around(ERL_OP_EQ).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+      .around(ERL_OP_LT_MINUS).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+      .around(ERL_OP_EXL).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+
+      .after(ERL_ARROW).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+      .before(ERL_CLAUSE_BODY).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+
+      .around(ERL_OP_PLUS).spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
+      .around(ERL_OP_PLUS_PLUS).spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
+      .aroundInside(ERL_OP_MINUS, ERL_ADDITIVE_EXPRESSION).spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
+
+      .aroundInside(ERL_OP_AR_DIV, ERL_MULTIPLICATIVE_EXPRESSION).spaceIf(settings.SPACE_AROUND_MULTIPLICATIVE_OPERATORS)
+      .around(ERL_OP_AR_MUL).spaceIf(settings.SPACE_AROUND_MULTIPLICATIVE_OPERATORS)
+
+      .around(ERL_OP_EQ_EQ).spaceIf(settings.SPACE_AROUND_EQUALITY_OPERATORS)
+      .around(ERL_OP_DIV_EQ).spaceIf(settings.SPACE_AROUND_EQUALITY_OPERATORS)
+      .around(ERL_OP_EQ_DIV_EQ).spaceIf(settings.SPACE_AROUND_EQUALITY_OPERATORS)
+      .around(ERL_OP_EQ_COL_EQ).spaceIf(settings.SPACE_AROUND_EQUALITY_OPERATORS)
+
+      .around(ERL_OP_LT).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
+      .around(ERL_OP_EQ_LT).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
+      .around(ERL_OP_GT).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
+      .around(ERL_OP_GT_EQ).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
+      .around(ERL_OR_OR).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
+      .around(ERL_OR).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
+
+      .after(ERL_BRACKET_LEFT).none()
+      .before(ERL_BRACKET_RIGHT).none()
+      .after(ERL_CURLY_LEFT).none()
+      .before(ERL_CURLY_RIGHT).none()
+      .after(ERL_BIN_START).none()
+      .before(ERL_BIN_END).none()
+      .before(ERL_ARGUMENT_DEFINITION_LIST).none()
+      .before(ERL_ARGUMENT_LIST).none()
+      .withinPair(ERL_PAR_LEFT, ERL_PAR_RIGHT).spaceIf(settings.SPACE_WITHIN_METHOD_CALL_PARENTHESES)
+      .withinPair(ERL_BRACKET_LEFT, ERL_BRACKET_RIGHT).spaceIf(true)
+      .withinPair(ERL_CURLY_LEFT, ERL_CURLY_RIGHT).spaceIf(true)
+      .withinPair(ERL_BIN_START, ERL_BIN_END).spaceIf(true)
+
+      .beforeInside(rules, ERL_PAR_LEFT).none()
+
+      .aroundInside(ERL_COLON, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION).none()
+      .aroundInside(ERL_DOT, ERL_RECORD_EXPRESSION).none()
+      .aroundInside(ERL_RADIX, ERL_RECORD_EXPRESSION).none()
+      .before(ERL_DOT).none();
   }
 
   @Override

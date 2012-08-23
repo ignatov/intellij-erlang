@@ -18,8 +18,8 @@ public class ErlangFunctionClauseImpl extends ErlangCompositeElementImpl impleme
 
   @Override
   @NotNull
-  public List<ErlangArgumentDefinition> getArgumentDefinitionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangArgumentDefinition.class);
+  public ErlangArgumentDefinitionList getArgumentDefinitionList() {
+    return findNotNullChildByClass(ErlangArgumentDefinitionList.class);
   }
 
   @Override
