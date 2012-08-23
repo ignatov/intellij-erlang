@@ -45,9 +45,15 @@
 
     <extensions defaultExtensionNs="com.intellij">
 
-        <internalFileTemplate name="Erlang File"/>
+        <internalFileTemplate name="Erlang Module"/>
+        <internalFileTemplate name="Erlang Header"/>
+				<internalFileTemplate name="Erlang EUnit Tests"/>
         <internalFileTemplate name="Erlang Application"/>
+        <internalFileTemplate name="Erlang Application Resource File"/>
+        <internalFileTemplate name="Erlang Supervisor"/>
         <internalFileTemplate name="Erlang Gen Server"/>
+				<internalFileTemplate name="Erlang Gen FSM"/>
+        <internalFileTemplate name="Erlang Gen Event"/>
 
         <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.editor.ErlangModuleType"/>
         <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector" />
