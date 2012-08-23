@@ -1,0 +1,8 @@
+#parse("Erlang File Header.erl")
+-module(${NAME}).
+#parse("Erlang File Module.erl")
+
+-include_lib("eunit/include/eunit.hrl").
+
+simple_test() ->
+    ?assert(true).

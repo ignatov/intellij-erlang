@@ -1,0 +1,6 @@
+#parse("Erlang File Header.erl")
+-module(${NAME}).
+#parse("Erlang File Module.erl")
+
+%% API
+-export([]).

@@ -1,8 +1,13 @@
+#parse("Erlang File Header.erl")
 -module(${NAME}).
+#parse("Erlang File Module.erl")
+
 -behaviour(application).
 
+% application
 -export([start/2, stop/1]).
 
+% application callbacks
 start(_Type, _Args) ->
     ok.
 
