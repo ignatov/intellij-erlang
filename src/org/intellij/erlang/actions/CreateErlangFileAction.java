@@ -43,13 +43,13 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
       setTitle(NEW_ERLANG_FILE).
       addKind("Empty module", ErlangIcons.FILE, "Erlang Module").
       addKind("Header file", ErlangIcons.FILE, "Erlang Header").
-	  addKind("EUnit tests", ErlangIcons.FILE, "Erlang EUnit Tests").
+      addKind("EUnit tests", ErlangIcons.FILE, "Erlang EUnit Tests").
       addKind("OTP application", ErlangIcons.FILE, "Erlang Application").
       addKind("OTP application resource file", ErlangIcons.FILE, "Erlang Application Resource File").
-	  addKind("OTP supervisor", ErlangIcons.FILE, "Erlang Supervisor").
+      addKind("OTP supervisor", ErlangIcons.FILE, "Erlang Supervisor").
       addKind("OTP gen_server", ErlangIcons.FILE, "Erlang Gen Server").
       addKind("OTP gen_fsm", ErlangIcons.FILE, "Erlang Gen FSM").
-	  addKind("OTP gen_event", ErlangIcons.FILE, "Erlang Gen Event").
+      addKind("OTP gen_event", ErlangIcons.FILE, "Erlang Gen Event").
       setValidator(new InputValidatorEx() {
         @Override
         public boolean checkInput(String inputString) {
