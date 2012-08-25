@@ -76,6 +76,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (originalParent instanceof ErlangRecordExpression) {
           result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(position.getContainingFile()));
         }
+        else if (originalParent instanceof ErlangExportFunctions) {
+          result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(position.getContainingFile(), true, null));
+        }
         else {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
           if (colonQualified != null) {
