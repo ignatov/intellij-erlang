@@ -92,6 +92,9 @@
         <localInspection language="Erlang" shortName="ErlangUnresolvedRecordInspection" displayName="Unresolved record"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordInspection"/>
+        <localInspection language="Erlang" shortName="ErlangUnresolvedRecordFieldInspection" displayName="Unresolved record field"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordFieldInspection" />
         <localInspection language="Erlang" shortName="ErlangUnresolvedFunctionInspection"
                          displayName="Unresolved function"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"

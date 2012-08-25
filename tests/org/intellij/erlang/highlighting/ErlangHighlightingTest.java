@@ -32,6 +32,7 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
     myFixture.enableInspections(
       ErlangUnresolvedVariableInspection.class,
       ErlangUnresolvedRecordInspection.class,
+      ErlangUnresolvedRecordFieldInspection.class,
       ErlangUnresolvedFunctionInspection.class,
 
       ErlangUnusedVariableInspection.class,
@@ -67,4 +68,5 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void testDuplicate()         { doTest(); }
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
+  public void testUnresolvedField()   { doTest(); }
 }

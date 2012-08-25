@@ -1,4 +1,3 @@
+-export([f/1]).
 -record(test, {id, name, date}).
-
-<warning>f</warning>(AAAA) -> AAAA#test{id=1}.
-
+f(AAAA) -> AAAA#test{id=1}.
