@@ -14,8 +14,9 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('main')
-      PsiElement(()('(')
-      PsiElement())(')')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION

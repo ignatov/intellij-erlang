@@ -33,6 +33,7 @@ public interface ErlangIcons {
   Icon MACROS = IconLoader.getIcon("/icons/macro.png");
   Icon MODULE = PlatformIcons.PACKAGE_ICON;
   Icon VARIABLE = PlatformIcons.VARIABLE_ICON;
+  Icon FIELD = PlatformIcons.FIELD_ICON;
   Icon ERLANG_MODULE_NODE = IconLoader.getIcon("/icons/erlang-module-with-icon.png");
   Icon ERLANG_MODULE_NODE_OPEN = IconLoader.getIcon("/icons/erlang-module-with-icon-open.png");
   Icon ERLANG_BIG = IconLoader.getIcon("/icons/erlang-big.png");

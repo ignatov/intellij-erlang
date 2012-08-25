@@ -13,45 +13,47 @@ ERL_FILE
     ERL_EXPORT
       PsiElement(atom)('export')
       PsiElement(()('(')
-      PsiElement([)('[')
-      ERL_EXPORT_FUNCTION
-        ERL_Q_ATOM
-          PsiElement(atom)('hello')
-        PsiElement(/)('/')
-        PsiElement(integer)('1')
-      PsiElement(,)(',')
-      ERL_EXPORT_FUNCTION
-        ERL_Q_ATOM
-          PsiElement(atom)('hello_world')
-        PsiElement(/)('/')
-        PsiElement(integer)('1')
-      PsiElement(,)(',')
-      ERL_EXPORT_FUNCTION
-        ERL_Q_ATOM
-          PsiElement(atom)('naive_reverse')
-        PsiElement(/)('/')
-        PsiElement(integer)('1')
-      PsiElement(])(']')
+      ERL_EXPORT_FUNCTIONS
+        PsiElement([)('[')
+        ERL_EXPORT_FUNCTION
+          ERL_Q_ATOM
+            PsiElement(atom)('hello')
+          PsiElement(/)('/')
+          PsiElement(integer)('1')
+        PsiElement(,)(',')
+        ERL_EXPORT_FUNCTION
+          ERL_Q_ATOM
+            PsiElement(atom)('hello_world')
+          PsiElement(/)('/')
+          PsiElement(integer)('1')
+        PsiElement(,)(',')
+        ERL_EXPORT_FUNCTION
+          ERL_Q_ATOM
+            PsiElement(atom)('naive_reverse')
+          PsiElement(/)('/')
+          PsiElement(integer)('1')
+        PsiElement(])(']')
       PsiElement())(')')
   PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('naive_reverse')
-      PsiElement(()('(')
-      ERL_ARGUMENT_DEFINITION
-        ERL_LIST_EXPRESSION
-          PsiElement([)('[')
-          ERL_ADDITIVE_EXPRESSION
-            ERL_MAX_EXPRESSION
-              ERL_Q_VAR
-                PsiElement(var)('H')
-            PsiElement(|)('|')
-            ERL_MAX_EXPRESSION
-              ERL_Q_VAR
-                PsiElement(var)('T')
-          PsiElement(])(']')
-      PsiElement())(')')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_LIST_EXPRESSION
+            PsiElement([)('[')
+            ERL_ADDITIVE_EXPRESSION
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('H')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('T')
+            PsiElement(])(']')
+        PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_EXPR_300_A
@@ -75,12 +77,13 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('naive_reverse')
-      PsiElement(()('(')
-      ERL_ARGUMENT_DEFINITION
-        ERL_LIST_EXPRESSION
-          PsiElement([)('[')
-          PsiElement(])(']')
-      PsiElement())(')')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_LIST_EXPRESSION
+            PsiElement([)('[')
+            PsiElement(])(']')
+        PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_LIST_EXPRESSION
@@ -91,8 +94,9 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('hello_world')
-      PsiElement(()('(')
-      PsiElement())(')')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -113,8 +117,9 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('hello_world2')
-      PsiElement(()('(')
-      PsiElement())(')')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -136,12 +141,13 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('hello')
-      PsiElement(()('(')
-      ERL_ARGUMENT_DEFINITION
-        ERL_EXPRESSION
-          ERL_Q_VAR
-            PsiElement(var)('X')
-      PsiElement())(')')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_EXPRESSION
+            ERL_Q_VAR
+              PsiElement(var)('X')
+        PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_ADDITIVE_EXPRESSION

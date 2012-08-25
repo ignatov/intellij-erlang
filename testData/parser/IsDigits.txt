@@ -3,20 +3,21 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('is_digits')
-      PsiElement(()('(')
-      ERL_ARGUMENT_DEFINITION
-        ERL_LIST_EXPRESSION
-          PsiElement([)('[')
-          ERL_ADDITIVE_EXPRESSION
-            ERL_MAX_EXPRESSION
-              ERL_Q_VAR
-                PsiElement(var)('Dig')
-            PsiElement(|)('|')
-            ERL_MAX_EXPRESSION
-              ERL_Q_VAR
-                PsiElement(var)('Tail')
-          PsiElement(])(']')
-      PsiElement())(')')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_LIST_EXPRESSION
+            PsiElement([)('[')
+            ERL_ADDITIVE_EXPRESSION
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Dig')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Tail')
+            PsiElement(])(']')
+        PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_IF_EXPRESSION
@@ -66,12 +67,13 @@ ERL_FILE
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
         PsiElement(atom)('is_digits')
-      PsiElement(()('(')
-      ERL_ARGUMENT_DEFINITION
-        ERL_LIST_EXPRESSION
-          PsiElement([)('[')
-          PsiElement(])(']')
-      PsiElement())(')')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_LIST_EXPRESSION
+            PsiElement([)('[')
+            PsiElement(])(']')
+        PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION

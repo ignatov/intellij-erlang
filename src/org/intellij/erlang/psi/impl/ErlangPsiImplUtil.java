@@ -65,6 +65,46 @@ public class ErlangPsiImplUtil {
     return new ErlangVariableReferenceImpl(o, TextRange.from(0, o.getTextLength()));
   }
 
+  public static List<ErlangTypedExpr> getRecordFields(PsiElement element) {
+    List<ErlangTypedExpr> result = new ArrayList<ErlangTypedExpr>(0);
+    ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
+    ErlangQAtom atomName = recordExpression != null ? recordExpression.getAtomName() : null;
+    PsiReference reference = atomName != null ? atomName.getReference() : null;
+    PsiElement resolve = reference != null ? reference.resolve() : null;
+
+    if (resolve instanceof ErlangRecordDefinition) {
+      ErlangTypedRecordFields typedRecordFields = ((ErlangRecordDefinition) resolve).getTypedRecordFields();
+      if (typedRecordFields != null) {
+        for (ErlangTypedExpr e : typedRecordFields.getTypedExprList()) {
+          result.add(e);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  @Nullable
+  public static PsiReference getReference(@NotNull ErlangRecordField o) {
+    final ErlangQAtom atom = o.getFieldNameAtom();
+    return new ErlangAtomBasedReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText()) {
+      @Override
+      public PsiElement resolve() {
+        List<ErlangTypedExpr> fields = getRecordFields(myElement);
+        for (ErlangTypedExpr field : fields) {
+          if (field.getName().equals(myReferenceName)) return field;
+        }
+        return null;
+      }
+
+      @NotNull
+      @Override
+      public Object[] getVariants() {
+        return new Object[0];
+      }
+    };
+  }
+
   @Nullable
   public static PsiReference getReference(@NotNull final ErlangIncludeString o) {
     final PsiElement parent = o.getParent();
@@ -604,5 +644,26 @@ public class ErlangPsiImplUtil {
 
   public static boolean inFunction(PsiElement position) {
     return PsiTreeUtil.getParentOfType(position, ErlangFunction.class) != null;
+  }
+
+  public static String getName(ErlangTypedExpr o) {
+    return o.getNameIdentifier().getText();
+  }
+
+  public static PsiElement setName(ErlangTypedExpr o, String newName) {
+    ErlangQAtom qAtom = o.getQAtom();
+    PsiElement atom = qAtom.getAtom();
+    if (atom != null) {
+      atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+    }
+    return o;
+  }
+
+  public static PsiElement getNameIdentifier(ErlangTypedExpr o) {
+    return o.getQAtom();
+  }
+
+  public static int getTextOffset(ErlangTypedExpr o) {
+    return o.getNameIdentifier().getTextOffset();
   }
 }

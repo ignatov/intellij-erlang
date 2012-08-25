@@ -5,12 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangTypeSig extends ErlangCompositeElement {
+public interface ErlangExportType extends ErlangCompositeElement {
 
   @NotNull
-  ErlangFunType getFunType();
+  ErlangQAtom getQAtom();
 
   @Nullable
-  ErlangTypeSigGuard getTypeSigGuard();
+  PsiElement getInteger();
 
 }

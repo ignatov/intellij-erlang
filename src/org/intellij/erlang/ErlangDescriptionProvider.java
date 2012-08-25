@@ -45,6 +45,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (psiElement instanceof ErlangRecordDefinition) return "Record";
       if (psiElement instanceof ErlangQVar) return "Variable";
       if (psiElement instanceof ErlangMacrosDefinition) return "Macros";
+      if (psiElement instanceof ErlangTypedExpr) return "Record field";
     }
     return null;
   }

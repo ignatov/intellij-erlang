@@ -10,26 +10,26 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangTypeSigImpl extends ErlangCompositeElementImpl implements ErlangTypeSig {
+public class ErlangExportTypeImpl extends ErlangCompositeElementImpl implements ErlangExportType {
 
-  public ErlangTypeSigImpl(ASTNode node) {
+  public ErlangExportTypeImpl(ASTNode node) {
     super(node);
   }
 
   @Override
   @NotNull
-  public ErlangFunType getFunType() {
-    return findNotNullChildByClass(ErlangFunType.class);
+  public ErlangQAtom getQAtom() {
+    return findNotNullChildByClass(ErlangQAtom.class);
   }
 
   @Override
   @Nullable
-  public ErlangTypeSigGuard getTypeSigGuard() {
-    return findChildByClass(ErlangTypeSigGuard.class);
+  public PsiElement getInteger() {
+    return findChildByType(ERL_INTEGER);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeSig(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExportType(this);
     else super.accept(visitor);
   }
 

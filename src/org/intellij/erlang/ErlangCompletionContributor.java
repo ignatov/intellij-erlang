@@ -19,8 +19,6 @@ package org.intellij.erlang;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
@@ -34,6 +32,7 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Function;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.parser.ErlangLexer;
@@ -58,7 +57,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement elementAt = context.getFile().findElementAt(context.getStartOffset());
     PsiElement parent = elementAt == null ? null : elementAt.getParent();
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
-    if (parent instanceof ErlangExport || export != null) {
+    ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
+    if (parent instanceof ErlangExport || export != null || parent instanceof ErlangRecordTuple || recordTuple != null) {
       context.setDummyIdentifier("a");
     }
   }
@@ -70,7 +70,10 @@ public class ErlangCompletionContributor extends CompletionContributor {
         // add completion for records on #<caret>
         PsiElement position = parameters.getPosition();
         PsiElement parent = position.getParent().getParent();
-        if (parent instanceof ErlangRecordExpression) {
+        PsiElement originalPosition = parameters.getOriginalPosition();
+        PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
+
+        if (originalParent instanceof ErlangRecordExpression) {
           result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(position.getContainingFile()));
         }
         else {
@@ -78,9 +81,21 @@ public class ErlangCompletionContributor extends CompletionContributor {
           if (colonQualified != null) {
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(position.getContainingFile(), false, colonQualified));
           }
+          else if (originalParent instanceof ErlangRecordFields || parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
+            List<ErlangTypedExpr> fields = ErlangPsiImplUtil.getRecordFields(parent);
+            result.addAllElements(ContainerUtil.map(fields, new Function<ErlangTypedExpr, LookupElement>() {
+              @Override
+              public LookupElement fun(ErlangTypedExpr a) {
+                return LookupElementBuilder.create(a.getName())
+                  .setIcon(ErlangIcons.FIELD)
+                  .setInsertHandler(new SingleCharInsertHandler('='));
+              }
+            }));
+            return;
+          }
           else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
-            for (String keywords : suggestKeywords(position)) {
-              result.addElement(LookupElementBuilder.create(keywords).setBold());
+            for (String keyword : suggestKeywords(position)) {
+              result.addElement(LookupElementBuilder.create(keyword).setBold());
             }
             if (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null) {
               suggestModules(result, position);
@@ -113,21 +128,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
     //noinspection unchecked
     for (VirtualFile file : ContainerUtil.concat(files, standardModules)) {
       if (file.getFileType() == ErlangFileType.INSTANCE) {
-        result.addElement(LookupElementBuilder.create(file.getNameWithoutExtension()).setIcon(ErlangIcons.MODULE).setInsertHandler(
-          new BasicInsertHandler<LookupElement>() {
-            @Override
-            public void handleInsert(InsertionContext context, LookupElement item) {
-              if (context.getCompletionChar() != ':') {
-                final Editor editor = context.getEditor();
-                final Document document = editor.getDocument();
-                context.commitDocument();
-                int tailOffset = context.getTailOffset();
-                document.insertString(tailOffset, ":");
-                editor.getCaretModel().moveToOffset(tailOffset + 1);
-              }
-            }
-          }
-        ));
+        result.addElement(LookupElementBuilder.create(file.getNameWithoutExtension()).
+          setIcon(ErlangIcons.MODULE).
+          setInsertHandler(new SingleCharInsertHandler(':')));
       }
     }
   }

@@ -110,8 +110,8 @@
   name(".*type|.*_t")=type
   extends("atomic")=expression
 
-  implements("record_definition|function|q_var|module|macros_definition")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("record_definition|function|q_var|module|macros_definition")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
 forms ::= form ('.' form)*
@@ -128,6 +128,7 @@ macros ::= '?' macros_name {
 macros_name ::= atom | var
 
 private recoverer ::= !('.')
+private tuple_recoverer ::= !('}'|',')
 
 record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   pin=2
@@ -145,6 +146,7 @@ include_string ::= string {methods = [getReference]}
 attribute ::= '-' (
   module
   | export
+  | export_type_attribute
   | specification
   | callback_spec
   | atom_attribute
@@ -152,6 +154,7 @@ attribute ::= '-' (
 callback_spec ::= 'callback' type_spec {pin=1}
 specification ::= 'spec' type_spec {pin=1}
 export ::= 'export' '(' export_functions ')' {pin=1}
+export_type_attribute ::= 'export_type' '(' export_types ')' {pin=1}
 module ::= 'module' '(' q_atom (',' argument_definition)? ')' {
   pin=1
   methods = [getName setName getNameIdentifier getTextOffset processDeclarations]
@@ -163,15 +166,21 @@ export_function ::= q_atom '/' integer {
   pin= 1
   methods = [getReference]
 }
+export_types ::= '[' [export_type (',' export_type)*] ']' {pin=1}
+export_type ::= q_atom '/' integer {pin=1}
 
 type_spec ::= ('(' spec_fun type_sigs ')') | spec_fun type_sigs
 spec_fun ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])]
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
 typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
 private typed_exprs ::= typed_expr (',' typed_expr)*
-typed_expr ::= expression ['::' top_type]
+typed_expr ::= q_atom ['=' expression] ['::' top_type] {
+  pin=1
+  methods=[getName setName getNameIdentifier getTextOffset]
+}
 private type_sigs ::= type_sig (';' type_sig)*
-type_sig ::= fun_type [when type_guards]
+type_sig ::= fun_type [type_sig_guard]
+type_sig_guard ::= when type_guards
 private type_guards ::= type_guard (',' type_guard)*
 type_guard ::= (q_atom '(' top_types ')') | top_type
 private top_types ::= top_type (',' top_type)*
@@ -297,8 +306,15 @@ record_expression ::= max_expression? '#' (q_atom | q_var) (('.' q_atom) | recor
 }
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
-private record_fields ::= record_field (',' record_field)*
-record_field ::= q_atom_or_var '=' (qualified_atom_expression | expression)
+record_fields ::= record_field (',' record_field)*
+record_field ::= q_atom '=' (qualified_atom_expression | expression) {
+  pin=1
+  methods = [
+    getReference
+    field_name_atom = "q_atom[0]"
+  ]
+  recoverUntil="tuple_recoverer"
+}
 private qualified_atom_expression ::= q_atom '.' q_atom {pin=0}
 module_ref ::= q_atom {
   methods = [getReference]

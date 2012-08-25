@@ -49,7 +49,8 @@ public class ErlangBlock implements ASTBlock {
     ERL_BEGIN_END_BODY,
     ERL_TOP_TYPE_CLAUSE,
     ERL_FUN_CLAUSES,
-    ERL_TRY_EXPRESSIONS_CLAUSE
+    ERL_TRY_EXPRESSIONS_CLAUSE,
+    ERL_TYPE_SIG_GUARD
   );
 
   private ASTNode myNode;

@@ -37,6 +37,9 @@ public interface ErlangTypes {
   IElementType ERL_EXPORT = new ErlangCompositeElementType("ERL_EXPORT");
   IElementType ERL_EXPORT_FUNCTION = new ErlangCompositeElementType("ERL_EXPORT_FUNCTION");
   IElementType ERL_EXPORT_FUNCTIONS = new ErlangCompositeElementType("ERL_EXPORT_FUNCTIONS");
+  IElementType ERL_EXPORT_TYPE = new ErlangCompositeElementType("ERL_EXPORT_TYPE");
+  IElementType ERL_EXPORT_TYPES = new ErlangCompositeElementType("ERL_EXPORT_TYPES");
+  IElementType ERL_EXPORT_TYPE_ATTRIBUTE = new ErlangCompositeElementType("ERL_EXPORT_TYPE_ATTRIBUTE");
   IElementType ERL_EXPRESSION = new ErlangCompositeElementType("ERL_EXPRESSION");
   IElementType ERL_EXPR_100_A = new ErlangCompositeElementType("ERL_EXPR_100_A");
   IElementType ERL_EXPR_150_A = new ErlangCompositeElementType("ERL_EXPR_150_A");
@@ -87,6 +90,7 @@ public interface ErlangTypes {
   IElementType ERL_RECORD_DEFINITION = new ErlangCompositeElementType("ERL_RECORD_DEFINITION");
   IElementType ERL_RECORD_EXPRESSION = new ErlangCompositeElementType("ERL_RECORD_EXPRESSION");
   IElementType ERL_RECORD_FIELD = new ErlangCompositeElementType("ERL_RECORD_FIELD");
+  IElementType ERL_RECORD_FIELDS = new ErlangCompositeElementType("ERL_RECORD_FIELDS");
   IElementType ERL_RECORD_TUPLE = new ErlangCompositeElementType("ERL_RECORD_TUPLE");
   IElementType ERL_RULE = new ErlangCompositeElementType("ERL_RULE");
   IElementType ERL_RULE_BODY = new ErlangCompositeElementType("ERL_RULE_BODY");
@@ -109,6 +113,7 @@ public interface ErlangTypes {
   IElementType ERL_TYPED_RECORD_FIELDS = new ErlangCompositeElementType("ERL_TYPED_RECORD_FIELDS");
   IElementType ERL_TYPE_GUARD = new ErlangCompositeElementType("ERL_TYPE_GUARD");
   IElementType ERL_TYPE_SIG = new ErlangCompositeElementType("ERL_TYPE_SIG");
+  IElementType ERL_TYPE_SIG_GUARD = new ErlangCompositeElementType("ERL_TYPE_SIG_GUARD");
   IElementType ERL_TYPE_SPEC = new ErlangCompositeElementType("ERL_TYPE_SPEC");
 
   IElementType ERL_AFTER = new ErlangTokenType("after");
@@ -266,6 +271,15 @@ public interface ErlangTypes {
       else if (type == ERL_EXPORT_FUNCTIONS) {
         return new ErlangExportFunctionsImpl(node);
       }
+      else if (type == ERL_EXPORT_TYPE) {
+        return new ErlangExportTypeImpl(node);
+      }
+      else if (type == ERL_EXPORT_TYPES) {
+        return new ErlangExportTypesImpl(node);
+      }
+      else if (type == ERL_EXPORT_TYPE_ATTRIBUTE) {
+        return new ErlangExportTypeAttributeImpl(node);
+      }
       else if (type == ERL_EXPRESSION) {
         return new ErlangExpressionImpl(node);
       }
@@ -416,6 +430,9 @@ public interface ErlangTypes {
       else if (type == ERL_RECORD_FIELD) {
         return new ErlangRecordFieldImpl(node);
       }
+      else if (type == ERL_RECORD_FIELDS) {
+        return new ErlangRecordFieldsImpl(node);
+      }
       else if (type == ERL_RECORD_TUPLE) {
         return new ErlangRecordTupleImpl(node);
       }
@@ -481,6 +498,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_TYPE_SIG) {
         return new ErlangTypeSigImpl(node);
+      }
+      else if (type == ERL_TYPE_SIG_GUARD) {
+        return new ErlangTypeSigGuardImpl(node);
       }
       else if (type == ERL_TYPE_SPEC) {
         return new ErlangTypeSpecImpl(node);

@@ -5,12 +5,26 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangTypedExpr extends ErlangCompositeElement {
+public interface ErlangTypedExpr extends ErlangNamedElement {
+
+  @Nullable
+  ErlangExpression getExpression();
 
   @NotNull
-  ErlangExpression getExpression();
+  ErlangQAtom getQAtom();
 
   @Nullable
   ErlangTopType getTopType();
+
+  @NotNull
+  String getName();
+
+  @NotNull
+  PsiElement setName(String newName);
+
+  @NotNull
+  PsiElement getNameIdentifier();
+
+  int getTextOffset();
 
 }

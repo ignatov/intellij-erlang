@@ -114,6 +114,18 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitExportType(@NotNull ErlangExportType o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitExportTypeAttribute(@NotNull ErlangExportTypeAttribute o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitExportTypes(@NotNull ErlangExportTypes o) {
+    visitCompositeElement(o);
+  }
+
   public void visitExpr100A(@NotNull ErlangExpr100A o) {
     visitExpression(o);
   }
@@ -318,6 +330,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitRecordFields(@NotNull ErlangRecordFields o) {
+    visitCompositeElement(o);
+  }
+
   public void visitRecordTuple(@NotNull ErlangRecordTuple o) {
     visitCompositeElement(o);
   }
@@ -394,6 +410,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitTypeSigGuard(@NotNull ErlangTypeSigGuard o) {
+    visitCompositeElement(o);
+  }
+
   public void visitTypeSpec(@NotNull ErlangTypeSpec o) {
     visitCompositeElement(o);
   }
@@ -403,7 +423,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitTypedExpr(@NotNull ErlangTypedExpr o) {
-    visitCompositeElement(o);
+    visitNamedElement(o);
   }
 
   public void visitTypedRecordFields(@NotNull ErlangTypedRecordFields o) {

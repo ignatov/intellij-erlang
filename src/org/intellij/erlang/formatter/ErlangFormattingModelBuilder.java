@@ -43,11 +43,12 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   private static SpacingBuilder createSpacingBuilder(CodeStyleSettings settings) {
     TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
 
-
     return new SpacingBuilder(settings)
       .before(ERL_COMMA).spaceIf(settings.SPACE_BEFORE_COMMA)
       .after(ERL_COMMA).spaceIf(settings.SPACE_AFTER_COMMA)
 
+      .aroundInside(ERL_OP_EQ, ERL_RECORD_FIELD).none()
+      .aroundInside(ERL_OP_EQ, ERL_TYPED_EXPR).none()
       .around(ERL_OP_EQ).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
       .around(ERL_OP_LT_MINUS).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
       .around(ERL_OP_EXL).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
@@ -92,7 +93,10 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .aroundInside(ERL_COLON, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION).none()
       .aroundInside(ERL_DOT, ERL_RECORD_EXPRESSION).none()
       .aroundInside(ERL_RADIX, ERL_RECORD_EXPRESSION).none()
-      .before(ERL_DOT).none();
+      .before(ERL_DOT).none()
+      .around(ERL_QMARK).none()
+      .before(ERL_RECORD_TUPLE).none()
+      ;
   }
 
   @Override

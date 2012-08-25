@@ -10,16 +10,22 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangTypedExprImpl extends ErlangCompositeElementImpl implements ErlangTypedExpr {
+public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements ErlangTypedExpr {
 
   public ErlangTypedExprImpl(ASTNode node) {
     super(node);
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+    return findChildByClass(ErlangExpression.class);
+  }
+
+  @Override
+  @NotNull
+  public ErlangQAtom getQAtom() {
+    return findNotNullChildByClass(ErlangQAtom.class);
   }
 
   @Override
@@ -31,6 +37,25 @@ public class ErlangTypedExprImpl extends ErlangCompositeElementImpl implements E
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedExpr(this);
     else super.accept(visitor);
+  }
+
+  @NotNull
+  public String getName() {
+    return ErlangPsiImplUtil.getName(this);
+  }
+
+  @NotNull
+  public PsiElement setName(String newName) {
+    return ErlangPsiImplUtil.setName(this, newName);
+  }
+
+  @NotNull
+  public PsiElement getNameIdentifier() {
+    return ErlangPsiImplUtil.getNameIdentifier(this);
+  }
+
+  public int getTextOffset() {
+    return ErlangPsiImplUtil.getTextOffset(this);
   }
 
 }

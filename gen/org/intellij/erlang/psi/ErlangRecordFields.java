@@ -5,12 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangTypeSig extends ErlangCompositeElement {
+public interface ErlangRecordFields extends ErlangCompositeElement {
 
   @NotNull
-  ErlangFunType getFunType();
-
-  @Nullable
-  ErlangTypeSigGuard getTypeSigGuard();
+  List<ErlangRecordField> getRecordFieldList();
 
 }

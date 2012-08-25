@@ -60,6 +60,11 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       }
 
       @Override
+      public void visitExportTypeAttribute(@NotNull ErlangExportTypeAttribute o) {
+        markFirstChildAsKeyword(o, annotationHolder);
+      }
+
+      @Override
       public void visitInclude(@NotNull ErlangInclude o) {
         markFirstChildAsKeyword(o, annotationHolder);
         markAttributeNameAsKeyword(o, annotationHolder, "include");

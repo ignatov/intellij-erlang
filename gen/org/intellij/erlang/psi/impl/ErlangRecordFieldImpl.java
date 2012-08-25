@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements ErlangRecordField {
 
@@ -28,15 +29,21 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
   }
 
-  @Override
-  @Nullable
-  public ErlangQVar getQVar() {
-    return findChildByClass(ErlangQVar.class);
-  }
-
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordField(this);
     else super.accept(visitor);
+  }
+
+  @Nullable
+  public PsiReference getReference() {
+    return ErlangPsiImplUtil.getReference(this);
+  }
+
+  @Override
+  @NotNull
+  public ErlangQAtom getFieldNameAtom() {
+    List<ErlangQAtom> p1 = getQAtomList();
+    return p1.get(0);
   }
 
 }

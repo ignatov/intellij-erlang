@@ -17,9 +17,9 @@ public class ErlangRecordTupleImpl extends ErlangCompositeElementImpl implements
   }
 
   @Override
-  @NotNull
-  public List<ErlangRecordField> getRecordFieldList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangRecordField.class);
+  @Nullable
+  public ErlangRecordFields getRecordFields() {
+    return findChildByClass(ErlangRecordFields.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
