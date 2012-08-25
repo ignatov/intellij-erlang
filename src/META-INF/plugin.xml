@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.2.5</version>
+    <version>0.3</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="117.105" until-build="120.1"/>
     <depends>com.intellij.modules.lang</depends>
@@ -9,6 +9,14 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.3:</p>
+            <ul>
+              <li>Better completion</li>
+              <li>Record fields support</li>
+              <li>Formatter impovement</li>
+              <li>New file templates for 'New File' action</li>
+              <li>Bugfixes</li>
+            </ul>
             <p>0.2.5:</p>
             <ul>
               <li>Compilation and run (experimental)</li>
@@ -25,7 +33,6 @@
               <li>'New File From Template' action</li>
               <li>Bugfixes</li>
             </ul>
-
             <p>0.1:</p>
             <ul>
               <li>Syntax and errors highlighting</li>
