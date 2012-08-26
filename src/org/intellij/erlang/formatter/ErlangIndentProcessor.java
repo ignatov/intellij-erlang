@@ -64,7 +64,8 @@ public class ErlangIndentProcessor {
 //    if (node instanceof PsiErrorElement) {
 //      return Indent.getContinuationIndent();
 //    }
-    if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_LIST || elementType == ERL_ARGUMENT_DEFINITION_LIST) {
+    if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_LIST
+      || elementType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE) {
       if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) {
         return Indent.getNoneIndent();
       }
@@ -81,6 +82,9 @@ public class ErlangIndentProcessor {
         return Indent.getNoneIndent();
       }
       return Indent.getContinuationIndent();
+    }
+    if (parentType == ERL_GUARD || (parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN)) {
+      return Indent.getNormalIndent();
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();

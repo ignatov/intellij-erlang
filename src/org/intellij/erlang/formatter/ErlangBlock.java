@@ -45,7 +45,6 @@ public class ErlangBlock implements ASTBlock {
     ERL_IF_CLAUSES,
     ERL_TRY_CLAUSES,
     ERL_CATCH_EXPRESSION,
-    ERL_CLAUSE_GUARD,
     ERL_BEGIN_END_BODY,
     ERL_TOP_TYPE_CLAUSE,
     ERL_FUN_CLAUSES,
