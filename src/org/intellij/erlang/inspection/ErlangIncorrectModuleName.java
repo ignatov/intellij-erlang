@@ -71,12 +71,14 @@ import com.intellij.openapi.application.AccessToken;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
@@ -107,9 +109,9 @@ public class ErlangIncorrectModuleName extends ErlangBaseInspection {
       public void visitModule(@NotNull ErlangModule o) {
         String ext = FileUtil.getExtension(o.getContainingFile().getName());
         String withoutExtension = FileUtil.getNameWithoutExtension(o.getContainingFile().getName());
-        String moduleName = o.getName();
+        String moduleName = StringUtil.replace(o.getName(), "'", "");
         ErlangCompositeElement atom = o.getQAtom();
-        if (atom != null && !moduleName.equals(withoutExtension)) {
+        if (atom != null && !StringUtil.equals(moduleName, withoutExtension)) {
           problemsHolder.registerProblem(atom, "Module with name '" + moduleName + "' should be declared in a file named '" +
             moduleName + "." + ext + "'.",
             new ErlangRenameModuleFix(o, withoutExtension),
@@ -132,7 +134,7 @@ public class ErlangIncorrectModuleName extends ErlangBaseInspection {
     @NotNull
     @Override
     public String getName() {
-      return "Rename module '" + myModule.getName() + "' to '" + myShouldBeName + "'";
+      return "Rename module";
     }
 
     @NotNull
@@ -144,8 +146,15 @@ public class ErlangIncorrectModuleName extends ErlangBaseInspection {
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
       final AccessToken token = WriteAction.start();
+      String name;
       try {
-        myModule.setName(myShouldBeName);
+        ErlangElementFactory.createQAtomFromText(project, myShouldBeName);
+        name = myShouldBeName;
+      } catch (Exception e) {
+        name = "'" + myShouldBeName + "'";
+      }
+      try {
+        myModule.setName(name);
       } finally {
         token.finish();
       }
@@ -164,7 +173,7 @@ public class ErlangIncorrectModuleName extends ErlangBaseInspection {
     @NotNull
     @Override
     public String getName() {
-      return "Rename containing file to '" + myModule.getName() + "." + myExtension + "'";
+      return "Rename file";
     }
 
     @NotNull
@@ -179,7 +188,7 @@ public class ErlangIncorrectModuleName extends ErlangBaseInspection {
       try {
         VirtualFile virtualFile = myModule.getContainingFile().getVirtualFile();
         if (virtualFile != null) {
-          virtualFile.rename(problemDescriptor, myModule.getName() + "." + myExtension);
+          virtualFile.rename(problemDescriptor, StringUtil.replace(myModule.getName(), "'", "") + "." + myExtension);
         }
       } catch (IOException e) { //
       } finally {

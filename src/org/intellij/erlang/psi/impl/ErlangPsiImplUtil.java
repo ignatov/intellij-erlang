@@ -418,7 +418,7 @@ public class ErlangPsiImplUtil {
     if (virtualFile != null) {
       try {
         String ext = FileUtil.getExtension(virtualFile.getName());
-        virtualFile.rename(o, newName + "." + ext);
+        virtualFile.rename(o, StringUtil.replace(newName, "'", "") + "." + ext);
 
         ErlangQAtom qAtom = o.getQAtom();
         if (qAtom != null) {
