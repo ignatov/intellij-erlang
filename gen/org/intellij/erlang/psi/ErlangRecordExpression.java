@@ -12,7 +12,7 @@ public interface ErlangRecordExpression extends ErlangExpression {
   ErlangExpression getExpression();
 
   @Nullable
-  ErlangQAtom getQAtom();
+  ErlangRecordField getRecordField();
 
   @Nullable
   ErlangRecordRef getRecordRef();

@@ -25,8 +25,8 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
 
   @Override
   @Nullable
-  public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+  public ErlangRecordField getRecordField() {
+    return findChildByClass(ErlangRecordField.class);
   }
 
   @Override

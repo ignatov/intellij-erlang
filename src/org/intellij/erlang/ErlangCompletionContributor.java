@@ -19,14 +19,17 @@ package org.intellij.erlang;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -58,7 +61,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement parent = elementAt == null ? null : elementAt.getParent();
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
     ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
-    if (parent instanceof ErlangExport || export != null || parent instanceof ErlangRecordTuple || recordTuple != null) {
+    if (parent instanceof ErlangExport || export != null
+      || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) {
       context.setDummyIdentifier("a");
     }
   }
@@ -86,12 +90,16 @@ public class ErlangCompletionContributor extends CompletionContributor {
           }
           else if (originalParent instanceof ErlangRecordFields || parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
             List<ErlangTypedExpr> fields = ErlangPsiImplUtil.getRecordFields(parent);
+            ASTNode prev = FormatterUtil.getPreviousNonWhitespaceSibling(originalPosition != null ? originalPosition.getNode() : null);
+            boolean isDotQualified = StringUtil.equals(prev != null ? prev.getText() : "", ".");
+            final SingleCharInsertHandler insertHandler = isDotQualified ? null : new SingleCharInsertHandler('=');
+
             result.addAllElements(ContainerUtil.map(fields, new Function<ErlangTypedExpr, LookupElement>() {
               @Override
               public LookupElement fun(ErlangTypedExpr a) {
                 return LookupElementBuilder.create(a.getName())
                   .setIcon(ErlangIcons.FIELD)
-                  .setInsertHandler(new SingleCharInsertHandler('='));
+                  .setInsertHandler(insertHandler);
               }
             }));
             return;
