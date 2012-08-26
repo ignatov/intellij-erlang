@@ -51,8 +51,10 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.util.PsiTreeUtil;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.psi.ErlangRecordField;
+import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
@@ -79,10 +81,6 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangBaseInspection 
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitRecordField(@NotNull ErlangRecordField o) {
-        ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(o, ErlangRecordExpression.class);
-        if (recordExpression != null) {
-          recordExpression.getReference(); // todo: remove hack
-        }
         PsiReference reference = o.getReference();
         if (reference == null || reference.resolve() == null) {
           ErlangQAtom atom = o.getFieldNameAtom();

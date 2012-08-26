@@ -11,38 +11,20 @@ import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.PsiReference;
 
-public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements ErlangRecordExpression {
+public class ErlangRecordRefImpl extends ErlangCompositeElementImpl implements ErlangRecordRef {
 
-  public ErlangRecordExpressionImpl(ASTNode node) {
+  public ErlangRecordRefImpl(ASTNode node) {
     super(node);
   }
 
   @Override
-  @Nullable
-  public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
-  }
-
-  @Override
-  @Nullable
+  @NotNull
   public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangRecordRef getRecordRef() {
-    return findChildByClass(ErlangRecordRef.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangRecordTuple getRecordTuple() {
-    return findChildByClass(ErlangRecordTuple.class);
+    return findNotNullChildByClass(ErlangQAtom.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordExpression(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordRef(this);
     else super.accept(visitor);
   }
 

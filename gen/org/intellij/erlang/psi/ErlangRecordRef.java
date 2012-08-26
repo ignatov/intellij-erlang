@@ -6,19 +6,10 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 
-public interface ErlangRecordExpression extends ErlangExpression {
+public interface ErlangRecordRef extends ErlangCompositeElement {
 
-  @Nullable
-  ErlangExpression getExpression();
-
-  @Nullable
+  @NotNull
   ErlangQAtom getQAtom();
-
-  @Nullable
-  ErlangRecordRef getRecordRef();
-
-  @Nullable
-  ErlangRecordTuple getRecordTuple();
 
   @Nullable
   PsiReference getReference();

@@ -266,6 +266,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_RECORD_FIELDS) {
       result_ = record_fields(builder_, level_ + 1);
     }
+    else if (root_ == ERL_RECORD_REF) {
+      result_ = record_ref(builder_, level_ + 1);
+    }
     else if (root_ == ERL_RECORD_TUPLE) {
       result_ = record_tuple(builder_, level_ + 1);
     }
@@ -4209,7 +4212,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // max_expression? '#' (q_atom | q_var) (('.' q_atom) | record_tuple)
+  // max_expression? '#' record_ref (('.' q_atom) | record_tuple)
   public static boolean record_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_expression")) return false;
     boolean result_ = false;
@@ -4220,7 +4223,7 @@ public class ErlangParser implements PsiParser {
     result_ = record_expression_0(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_RADIX);
     pinned_ = result_; // pin = 2
-    result_ = result_ && report_error_(builder_, record_expression_2(builder_, level_ + 1));
+    result_ = result_ && report_error_(builder_, record_ref(builder_, level_ + 1));
     result_ = pinned_ && record_expression_3(builder_, level_ + 1) && result_;
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
     if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_RECORD_EXPRESSION)) {
@@ -4241,28 +4244,6 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "record_expression_0")) return false;
     max_expression(builder_, level_ + 1);
     return true;
-  }
-
-  // (q_atom | q_var)
-  private static boolean record_expression_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "record_expression_2")) return false;
-    return record_expression_2_0(builder_, level_ + 1);
-  }
-
-  // q_atom | q_var
-  private static boolean record_expression_2_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "record_expression_2_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
-    result_ = q_atom(builder_, level_ + 1);
-    if (!result_) result_ = q_var(builder_, level_ + 1);
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
-    }
-    return result_;
   }
 
   // (('.' q_atom) | record_tuple)
@@ -4409,6 +4390,26 @@ public class ErlangParser implements PsiParser {
     else {
       marker_.drop();
     }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // q_atom
+  public static boolean record_ref(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_ref")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
+        && replaceVariants(builder_, 2, "<record ref>")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<record ref>");
+    result_ = q_atom(builder_, level_ + 1);
+    if (result_) {
+      marker_.done(ERL_RECORD_REF);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
     return result_;
   }
 

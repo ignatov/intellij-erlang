@@ -3204,8 +3204,9 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('options')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('options')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               PsiElement(})('}')
@@ -3224,8 +3225,9 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('DefaultOpts')
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('options')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('options')
               PsiElement(.)('.')
               ERL_Q_ATOM
                 PsiElement(atom)('include_dirs')
@@ -3245,8 +3247,9 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('DefaultOpts')
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('options')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('options')
               PsiElement(.)('.')
               ERL_Q_ATOM
                 PsiElement(atom)('defines')
@@ -3266,8 +3269,9 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('DefaultOpts')
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('options')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('options')
               PsiElement(.)('.')
               ERL_Q_ATOM
                 PsiElement(atom)('files')
@@ -3315,8 +3319,9 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('DefaultOpts')
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('options')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('options')
               PsiElement(.)('.')
               ERL_Q_ATOM
                 PsiElement(atom)('check_plt')

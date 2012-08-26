@@ -297,13 +297,12 @@ binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {
 
 tuple_expression ::= '{' exprs? '}' {pin=1}
 
-record_expression ::= max_expression? '#' (q_atom | q_var) (('.' q_atom) | record_tuple) {
+record_expression ::= max_expression? '#' record_ref (('.' q_atom) | record_tuple) {
   pin=2
-  methods = [
-    atom_name = "q_atom[0]"
-    getReference
-  ]
+  methods = [getReference]
 }
+
+record_ref ::= q_atom {methods = [getReference]}
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
 record_fields ::= record_field (',' record_field)*

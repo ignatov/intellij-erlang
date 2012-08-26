@@ -264,8 +264,9 @@ ERL_FILE
                   PsiElement(,)(',')
                   ERL_RECORD_EXPRESSION
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('backup')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('backup')
                     ERL_RECORD_TUPLE
                       PsiElement({)('{')
                       ERL_RECORD_FIELDS
@@ -366,8 +367,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('B')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('backup')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('backup')
                   PsiElement(.)('.')
                   ERL_Q_ATOM
                     PsiElement(atom)('file_desc')
@@ -472,8 +474,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('B')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('backup')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('backup')
                   PsiElement(.)('.')
                   ERL_Q_ATOM
                     PsiElement(atom)('file_desc')
@@ -504,8 +507,9 @@ ERL_FILE
                             ERL_Q_VAR
                               PsiElement(var)('B')
                           PsiElement(#)('#')
-                          ERL_Q_ATOM
-                            PsiElement(atom)('backup')
+                          ERL_RECORD_REF
+                            ERL_Q_ATOM
+                              PsiElement(atom)('backup')
                           PsiElement(.)('.')
                           ERL_Q_ATOM
                             PsiElement(atom)('file_desc')
@@ -536,8 +540,9 @@ ERL_FILE
                                     ERL_Q_VAR
                                       PsiElement(var)('B')
                                   PsiElement(#)('#')
-                                  ERL_Q_ATOM
-                                    PsiElement(atom)('backup')
+                                  ERL_RECORD_REF
+                                    ERL_Q_ATOM
+                                      PsiElement(atom)('backup')
                                   PsiElement(.)('.')
                                   ERL_Q_ATOM
                                     PsiElement(atom)('tmp_file')
@@ -547,8 +552,9 @@ ERL_FILE
                                     ERL_Q_VAR
                                       PsiElement(var)('B')
                                   PsiElement(#)('#')
-                                  ERL_Q_ATOM
-                                    PsiElement(atom)('backup')
+                                  ERL_RECORD_REF
+                                    ERL_Q_ATOM
+                                      PsiElement(atom)('backup')
                                   PsiElement(.)('.')
                                   ERL_Q_ATOM
                                     PsiElement(atom)('file')
@@ -573,8 +579,9 @@ ERL_FILE
                                       ERL_Q_VAR
                                         PsiElement(var)('B')
                                     PsiElement(#)('#')
-                                    ERL_Q_ATOM
-                                      PsiElement(atom)('backup')
+                                    ERL_RECORD_REF
+                                      ERL_Q_ATOM
+                                        PsiElement(atom)('backup')
                                     PsiElement(.)('.')
                                     ERL_Q_ATOM
                                       PsiElement(atom)('file')
@@ -692,8 +699,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('BackupRef')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('backup')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('backup')
                   PsiElement(.)('.')
                   ERL_Q_ATOM
                     PsiElement(atom)('file_desc')
@@ -714,8 +722,9 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('BackupRef')
                 PsiElement(#)('#')
-                ERL_Q_ATOM
-                  PsiElement(atom)('backup')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('backup')
                 PsiElement(.)('.')
                 ERL_Q_ATOM
                   PsiElement(atom)('tmp_file')
@@ -746,8 +755,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('BackupRef')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('backup')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('backup')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('file')
@@ -1483,8 +1493,9 @@ ERL_FILE
                           PsiElement(,)(',')
                           ERL_RECORD_EXPRESSION
                             PsiElement(#)('#')
-                            ERL_Q_ATOM
-                              PsiElement(atom)('restore')
+                            ERL_RECORD_REF
+                              ERL_Q_ATOM
+                                PsiElement(atom)('restore')
                             ERL_RECORD_TUPLE
                               PsiElement({)('{')
                               ERL_RECORD_FIELDS
@@ -1550,8 +1561,9 @@ ERL_FILE
                           PsiElement(,)(',')
                           ERL_RECORD_EXPRESSION
                             PsiElement(#)('#')
-                            ERL_Q_ATOM
-                              PsiElement(atom)('restore')
+                            ERL_RECORD_REF
+                              ERL_Q_ATOM
+                                PsiElement(atom)('restore')
                             ERL_RECORD_TUPLE
                               PsiElement({)('{')
                               ERL_RECORD_FIELDS
@@ -1611,8 +1623,9 @@ ERL_FILE
                           PsiElement(,)(',')
                           ERL_RECORD_EXPRESSION
                             PsiElement(#)('#')
-                            ERL_Q_ATOM
-                              PsiElement(atom)('restore')
+                            ERL_RECORD_REF
+                              ERL_Q_ATOM
+                                PsiElement(atom)('restore')
                             ERL_RECORD_TUPLE
                               PsiElement({)('{')
                               ERL_RECORD_FIELDS
@@ -1702,8 +1715,9 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('R')
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('restore')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('restore')
             PsiElement(.)('.')
             ERL_Q_ATOM
               PsiElement(atom)('file_desc')
@@ -1729,8 +1743,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('R')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('restore')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('restore')
                   PsiElement(.)('.')
                   ERL_Q_ATOM
                     PsiElement(atom)('cont')
@@ -1814,8 +1829,9 @@ ERL_FILE
                         ERL_Q_VAR
                           PsiElement(var)('R')
                       PsiElement(#)('#')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('restore')
+                      ERL_RECORD_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('restore')
                       ERL_RECORD_TUPLE
                         PsiElement({)('{')
                         ERL_RECORD_FIELDS
@@ -1858,8 +1874,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('R')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('restore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('restore')
                     ERL_RECORD_TUPLE
                       PsiElement({)('{')
                       ERL_RECORD_FIELDS
@@ -1902,8 +1919,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('R')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('restore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('restore')
                     ERL_RECORD_TUPLE
                       PsiElement({)('{')
                       ERL_RECORD_FIELDS
@@ -1962,8 +1980,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('R')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('restore')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('restore')
                   PsiElement(.)('.')
                   ERL_Q_ATOM
                     PsiElement(atom)('file_desc')
@@ -1988,8 +2007,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('R')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('restore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('restore')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('file')

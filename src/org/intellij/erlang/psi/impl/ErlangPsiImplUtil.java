@@ -68,8 +68,7 @@ public class ErlangPsiImplUtil {
   public static List<ErlangTypedExpr> getRecordFields(PsiElement element) {
     List<ErlangTypedExpr> result = new ArrayList<ErlangTypedExpr>(0);
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
-    ErlangQAtom atomName = recordExpression != null ? recordExpression.getAtomName() : null;
-    PsiReference reference = atomName != null ? atomName.getReference() : null;
+    PsiReference reference = recordExpression != null ? recordExpression.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
 
     if (resolve instanceof ErlangRecordDefinition) {
@@ -362,13 +361,16 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static PsiReference getReference(@NotNull ErlangRecordExpression o) { // todo: hack?
-    ErlangQAtom atom = o.getAtomName();
-    if (atom == null) return null;
-    // case for #?macro_record_name{id=10}
-    atom.setReference(new ErlangRecordReferenceImpl<ErlangQAtom>(atom, atom.getMacros() == null ? TextRange.from(0, atom.getTextLength()) : TextRange.from(0, 1) , atom.getText()));
-    return null;
+  public static PsiReference getReference(@NotNull ErlangRecordExpression o) {
+    ErlangRecordRef recordRef = o.getRecordRef();
+    return recordRef != null ? recordRef.getReference() : null;
   }
+
+  @Nullable
+    public static PsiReference getReference(@NotNull ErlangRecordRef o) {
+      ErlangQAtom atom = o.getQAtom();
+      return new ErlangRecordReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getMacros() == null ? atom.getTextLength() : 1), atom.getText());
+    }
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangModuleRef o) {

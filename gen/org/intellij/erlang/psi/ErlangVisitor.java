@@ -334,6 +334,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitRecordRef(@NotNull ErlangRecordRef o) {
+    visitCompositeElement(o);
+  }
+
   public void visitRecordTuple(@NotNull ErlangRecordTuple o) {
     visitCompositeElement(o);
   }

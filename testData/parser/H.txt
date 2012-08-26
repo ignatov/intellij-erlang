@@ -717,8 +717,9 @@ ERL_FILE
                               ERL_Q_VAR
                                 PsiElement(var)('State')
                             PsiElement(#)('#')
-                            ERL_Q_ATOM
-                              PsiElement(atom)('state')
+                            ERL_RECORD_REF
+                              ERL_Q_ATOM
+                                PsiElement(atom)('state')
                             PsiElement(.)('.')
                             ERL_Q_ATOM
                               PsiElement(atom)('opaques')
@@ -1772,8 +1773,9 @@ ERL_FILE
                         ERL_Q_VAR
                           PsiElement(var)('State')
                       PsiElement(#)('#')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('state')
+                      ERL_RECORD_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('state')
                       PsiElement(.)('.')
                       ERL_Q_ATOM
                         PsiElement(atom)('opaques')
@@ -3672,8 +3674,9 @@ ERL_FILE
                             ERL_Q_VAR
                               PsiElement(var)('State')
                           PsiElement(#)('#')
-                          ERL_Q_ATOM
-                            PsiElement(atom)('state')
+                          ERL_RECORD_REF
+                            ERL_Q_ATOM
+                              PsiElement(atom)('state')
                           PsiElement(.)('.')
                           ERL_Q_ATOM
                             PsiElement(atom)('opaques')
@@ -6020,8 +6023,9 @@ ERL_FILE
                               ERL_Q_VAR
                                 PsiElement(var)('State')
                             PsiElement(#)('#')
-                            ERL_Q_ATOM
-                              PsiElement(atom)('state')
+                            ERL_RECORD_REF
+                              ERL_Q_ATOM
+                                PsiElement(atom)('state')
                             PsiElement(.)('.')
                             ERL_Q_ATOM
                               PsiElement(atom)('opaques')
@@ -7071,8 +7075,9 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('State')
                 PsiElement(#)('#')
-                ERL_Q_ATOM
-                  PsiElement(atom)('state')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('state')
                 PsiElement(.)('.')
                 ERL_Q_ATOM
                   PsiElement(atom)('opaques')
@@ -9321,8 +9326,9 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('State')
                 PsiElement(#)('#')
-                ERL_Q_ATOM
-                  PsiElement(atom)('state')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('state')
                 PsiElement(.)('.')
                 ERL_Q_ATOM
                   PsiElement(atom)('opaques')
@@ -9349,8 +9355,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('State')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('state')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('state')
                   PsiElement(.)('.')
                   ERL_Q_ATOM
                     PsiElement(atom)('opaques')
@@ -21085,8 +21092,9 @@ ERL_FILE
         PsiElement(,)(',')
         ERL_RECORD_EXPRESSION
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -21213,8 +21221,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -21301,8 +21310,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('State')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('state')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('state')
                   ERL_RECORD_TUPLE
                     PsiElement({)('{')
                     ERL_RECORD_FIELDS
@@ -21369,8 +21379,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -21399,8 +21410,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -21476,8 +21488,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -21566,8 +21579,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -21591,8 +21605,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -21635,8 +21650,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -21660,8 +21676,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -21709,8 +21726,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -21734,8 +21752,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -21782,8 +21801,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -21838,8 +21858,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('State')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('state')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('state')
                   ERL_RECORD_TUPLE
                     PsiElement({)('{')
                     ERL_RECORD_FIELDS
@@ -21888,8 +21909,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -21913,8 +21935,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -21969,8 +21992,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -22035,8 +22059,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -22060,8 +22085,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -22146,8 +22172,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -22199,8 +22226,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -22331,8 +22359,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('State')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('state')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('state')
                   ERL_RECORD_TUPLE
                     PsiElement({)('{')
                     ERL_RECORD_FIELDS
@@ -22435,8 +22464,9 @@ ERL_FILE
                             ERL_Q_VAR
                               PsiElement(var)('State')
                           PsiElement(#)('#')
-                          ERL_Q_ATOM
-                            PsiElement(atom)('state')
+                          ERL_RECORD_REF
+                            ERL_Q_ATOM
+                              PsiElement(atom)('state')
                           ERL_RECORD_TUPLE
                             PsiElement({)('{')
                             ERL_RECORD_FIELDS
@@ -22469,8 +22499,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -22525,8 +22556,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State1')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -22549,8 +22581,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -23450,8 +23483,9 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -23516,8 +23550,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -23566,8 +23601,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -23731,8 +23767,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               PsiElement(})('}')
@@ -23756,8 +23793,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               PsiElement(})('}')
@@ -23781,8 +23819,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -23868,8 +23907,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -24002,8 +24042,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -24795,8 +24836,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -24854,8 +24896,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -24882,8 +24925,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -24975,8 +25019,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -25105,8 +25150,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -25128,8 +25174,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -25237,8 +25284,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -25421,8 +25469,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -25828,8 +25877,9 @@ ERL_FILE
                               ERL_Q_VAR
                                 PsiElement(var)('State')
                             PsiElement(#)('#')
-                            ERL_Q_ATOM
-                              PsiElement(atom)('state')
+                            ERL_RECORD_REF
+                              ERL_Q_ATOM
+                                PsiElement(atom)('state')
                             ERL_RECORD_TUPLE
                               PsiElement({)('{')
                               ERL_RECORD_FIELDS
@@ -25982,8 +26032,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('State')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('state')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('state')
                     ERL_RECORD_TUPLE
                       PsiElement({)('{')
                       ERL_RECORD_FIELDS
@@ -26026,8 +26077,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -26064,8 +26116,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -26415,8 +26468,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -26459,8 +26513,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -26483,8 +26538,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -26575,8 +26631,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('State')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('state')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('state')
                     ERL_RECORD_TUPLE
                       PsiElement({)('{')
                       ERL_RECORD_FIELDS
@@ -26605,8 +26662,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -26669,8 +26727,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               PsiElement(})('}')
@@ -26710,8 +26769,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -26791,8 +26851,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -27051,8 +27112,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -27270,8 +27332,9 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('state')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -27622,8 +27685,9 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('State')
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('state')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('state')
                   ERL_RECORD_TUPLE
                     PsiElement({)('{')
                     ERL_RECORD_FIELDS
@@ -27683,8 +27747,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -27717,8 +27782,9 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_RECORD_EXPRESSION
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -27810,8 +27876,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -27871,8 +27938,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -27929,8 +27997,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -28012,8 +28081,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -28089,8 +28159,9 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('State')
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -28141,8 +28212,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -28159,8 +28231,9 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_RECORD_EXPRESSION
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('state')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
@@ -29518,8 +29591,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -29602,8 +29676,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -29691,8 +29766,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('state')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS

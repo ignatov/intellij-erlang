@@ -19,7 +19,6 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.scope.PsiScopeProcessor;
@@ -35,8 +34,6 @@ import static org.intellij.erlang.ErlangTypes.ERL_DOT;
  * @author ignatov
  */
 public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements ErlangCompositeElement {
-  private PsiReference myReference = null;
-
   public ErlangCompositeElementImpl(ASTNode node) {
     super(node);
   }
@@ -50,7 +47,8 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
   public boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     if (!processor.execute(this, state)) {
       return false;
-    } else {
+    }
+    else {
       return ResolveUtil.processChildren(this, processor, state, lastParent, place);
     }
   }
@@ -64,15 +62,5 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
       nextSibling.delete();
     }
     super.delete();
-  }
-
-  @Override
-  public PsiReference getReference() {
-    return myReference;
-  }
-
-  @Override
-  public void setReference(PsiReference reference) {
-    myReference = reference;
   }
 }

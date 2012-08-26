@@ -5169,8 +5169,9 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Ts')
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('tidstore')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('tidstore')
             PsiElement(.)('.')
             ERL_Q_ATOM
               PsiElement(atom)('store')
@@ -5427,8 +5428,9 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Ts')
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('tidstore')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('tidstore')
             PsiElement(.)('.')
             ERL_Q_ATOM
               PsiElement(atom)('store')
@@ -5692,8 +5694,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Ts')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tidstore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tidstore')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('store')
@@ -6379,8 +6382,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Ts')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tidstore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tidstore')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('store')
@@ -7267,8 +7271,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Ts')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tidstore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tidstore')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('store')
@@ -8161,8 +8166,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Ts')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tidstore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tidstore')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('store')
@@ -8986,8 +8992,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Ts')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tidstore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tidstore')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('store')
@@ -10812,8 +10819,9 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Ts')
                 PsiElement(#)('#')
-                ERL_Q_ATOM
-                  PsiElement(atom)('tidstore')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tidstore')
                 PsiElement(.)('.')
                 ERL_Q_ATOM
                   PsiElement(atom)('store')
@@ -10965,8 +10973,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('tidstore')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('tidstore')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -11251,8 +11260,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('tidstore')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('tidstore')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -11510,8 +11520,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('tidstore')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('tidstore')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -15550,8 +15561,9 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Ts')
                 PsiElement(#)('#')
-                ERL_Q_ATOM
-                  PsiElement(atom)('tidstore')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tidstore')
                 PsiElement(.)('.')
                 ERL_Q_ATOM
                   PsiElement(atom)('store')
@@ -16601,8 +16613,9 @@ ERL_FILE
                         ERL_Q_VAR
                           PsiElement(var)('Ts')
                       PsiElement(#)('#')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('tidstore')
+                      ERL_RECORD_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('tidstore')
                       PsiElement(.)('.')
                       ERL_Q_ATOM
                         PsiElement(atom)('store')
@@ -20214,8 +20227,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Ts')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tidstore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tidstore')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('store')
@@ -21184,8 +21198,9 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('mnesia_select')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -21333,8 +21348,9 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Ts')
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tidstore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tidstore')
                     PsiElement(.)('.')
                     ERL_Q_ATOM
                       PsiElement(atom)('store')
@@ -21564,8 +21580,9 @@ ERL_FILE
                                 ERL_Q_VAR
                                   PsiElement(var)('Def')
                               PsiElement(#)('#')
-                              ERL_Q_ATOM
-                                PsiElement(atom)('mnesia_select')
+                              ERL_RECORD_REF
+                                ERL_Q_ATOM
+                                  PsiElement(atom)('mnesia_select')
                               ERL_RECORD_TUPLE
                                 PsiElement({)('{')
                                 ERL_RECORD_FIELDS
@@ -21804,8 +21821,9 @@ ERL_FILE
             PsiElement(=)('=')
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('mnesia_select')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -21938,8 +21956,9 @@ ERL_FILE
             PsiElement(=)('=')
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('mnesia_select')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -22005,8 +22024,9 @@ ERL_FILE
             PsiElement(=)('=')
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('mnesia_select')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -22059,8 +22079,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('mnesia_select')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -22139,8 +22160,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('mnesia_select')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -22245,8 +22267,9 @@ ERL_FILE
             PsiElement(=)('=')
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('mnesia_select')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -22343,8 +22366,9 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('State')
               PsiElement(#)('#')
-              ERL_Q_ATOM
-                PsiElement(atom)('mnesia_select')
+              ERL_RECORD_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
                 ERL_RECORD_FIELDS
@@ -22394,8 +22418,9 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('MS')
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('mnesia_select')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -23360,8 +23385,9 @@ ERL_FILE
                                       ERL_Q_VAR
                                         PsiElement(var)('Ts')
                                     PsiElement(#)('#')
-                                    ERL_Q_ATOM
-                                      PsiElement(atom)('tidstore')
+                                    ERL_RECORD_REF
+                                      ERL_Q_ATOM
+                                        PsiElement(atom)('tidstore')
                                     PsiElement(.)('.')
                                     ERL_Q_ATOM
                                       PsiElement(atom)('store')
@@ -23908,8 +23934,9 @@ ERL_FILE
                                       ERL_Q_VAR
                                         PsiElement(var)('Ts')
                                     PsiElement(#)('#')
-                                    ERL_Q_ATOM
-                                      PsiElement(atom)('tidstore')
+                                    ERL_RECORD_REF
+                                      ERL_Q_ATOM
+                                        PsiElement(atom)('tidstore')
                                     PsiElement(.)('.')
                                     ERL_Q_ATOM
                                       PsiElement(atom)('store')
@@ -26996,8 +27023,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('mnesia_select')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -27024,8 +27052,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('mnesia_select')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS
@@ -35884,8 +35913,9 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Ts')
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('tidstore')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('tidstore')
             PsiElement(.)('.')
             ERL_Q_ATOM
               PsiElement(atom)('store')
@@ -36752,8 +36782,9 @@ ERL_FILE
                         ERL_Q_VAR
                           PsiElement(var)('Cs')
                       PsiElement(#)('#')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('cstruct')
+                      ERL_RECORD_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('cstruct')
                       PsiElement(.)('.')
                       ERL_Q_ATOM
                         PsiElement(atom)('name')
@@ -37661,8 +37692,9 @@ ERL_FILE
                     PsiElement(=)('=')
                     ERL_RECORD_EXPRESSION
                       PsiElement(#)('#')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('tidstore')
+                      ERL_RECORD_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('tidstore')
                       ERL_RECORD_TUPLE
                         PsiElement({)('{')
                         ERL_RECORD_FIELDS
@@ -38189,8 +38221,9 @@ ERL_FILE
                   PsiElement(,)(',')
                   ERL_RECORD_EXPRESSION
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tidstore')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tidstore')
                     ERL_RECORD_TUPLE
                       PsiElement({)('{')
                       ERL_RECORD_FIELDS
@@ -38942,8 +38975,9 @@ ERL_FILE
                         ERL_Q_VAR
                           PsiElement(var)('Ts')
                       PsiElement(#)('#')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('tidstore')
+                      ERL_RECORD_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('tidstore')
                       PsiElement(.)('.')
                       ERL_Q_ATOM
                         PsiElement(atom)('store')
@@ -40836,8 +40870,9 @@ ERL_FILE
                   PsiElement(,)(',')
                   ERL_RECORD_EXPRESSION
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tid')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('tid')
                     ERL_RECORD_TUPLE
                       PsiElement({)('{')
                       PsiElement(})('}')
@@ -42016,8 +42051,9 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_RECORD_EXPRESSION
             PsiElement(#)('#')
-            ERL_Q_ATOM
-              PsiElement(atom)('tidstore')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('tidstore')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELDS

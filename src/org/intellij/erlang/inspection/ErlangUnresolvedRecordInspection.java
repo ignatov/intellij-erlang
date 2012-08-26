@@ -32,15 +32,12 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.InspectionManager;
-import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.ErlangRecordExpression;
+import org.intellij.erlang.psi.ErlangRecordRef;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -68,16 +65,10 @@ public class ErlangUnresolvedRecordInspection extends ErlangBaseInspection {
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
-        ErlangQAtom atomName = o.getAtomName();
-        if (atomName != null) {
-          PsiElement prevSibling = atomName.getPrevSibling();
-          if (prevSibling != null && "#".equals(prevSibling.getText())) {
-            o.getReference();
-            PsiReference reference = atomName.getReference(); // todo: rewrite
-            if (reference == null || reference.resolve() == null) {
-              problemsHolder.registerProblem(atomName, "Unresolved record " + "'" + atomName.getText() + "'");
-            }
-          }
+        ErlangRecordRef ref = o.getRecordRef();
+        PsiReference reference = ref != null ? ref.getReference() : null;
+        if (reference == null || reference.resolve() == null) {
+          problemsHolder.registerProblem(ref != null ? ref : o, "Unresolved record " + "'" + (ref != null ? ref.getText() : "") + "'");
         }
       }
     });

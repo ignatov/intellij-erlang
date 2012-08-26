@@ -29,8 +29,9 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_RECORD_EXPRESSION
           PsiElement(#)('#')
-          ERL_Q_ATOM
-            PsiElement(atom)('test')
+          ERL_RECORD_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('test')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELDS
