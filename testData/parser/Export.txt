@@ -445,9 +445,10 @@ ERL_FILE
                       ERL_RECORD_REF
                         ERL_Q_ATOM
                           PsiElement(atom)('cstruct')
-                      PsiElement(.)('.')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('name')
+                      ERL_RECORD_FIELD
+                        PsiElement(.)('.')
+                        ERL_Q_ATOM
+                          PsiElement(atom)('name')
                     PsiElement(,)(',')
                     ERL_EXPRESSION
                       ERL_Q_VAR

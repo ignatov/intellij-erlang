@@ -115,25 +115,28 @@ ERL_FILE
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('nrec2')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('nrec1')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('nrec1')
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('nrec1')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('nrec0')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('nrec0')
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('nrec0')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('name')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('name')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
@@ -149,17 +152,19 @@ ERL_FILE
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('nrec2')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('nrec1')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('nrec1')
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('nrec1')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('nrec0')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('nrec0')
             ERL_RECORD_EXPRESSION
               PsiElement(#)('#')
               ERL_RECORD_REF

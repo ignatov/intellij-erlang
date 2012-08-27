@@ -3228,9 +3228,10 @@ ERL_FILE
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('options')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('include_dirs')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('include_dirs')
             PsiElement())(')')
         PsiElement(,)(',')
         ERL_FUNCTION_CALL_EXPRESSION
@@ -3250,9 +3251,10 @@ ERL_FILE
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('options')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('defines')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('defines')
             PsiElement())(')')
         PsiElement(,)(',')
         ERL_FUNCTION_CALL_EXPRESSION
@@ -3272,9 +3274,10 @@ ERL_FILE
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('options')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('files')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('files')
             PsiElement())(')')
         PsiElement(,)(',')
         ERL_FUNCTION_CALL_EXPRESSION
@@ -3322,9 +3325,10 @@ ERL_FILE
               ERL_RECORD_REF
                 ERL_Q_ATOM
                   PsiElement(atom)('options')
-              PsiElement(.)('.')
-              ERL_Q_ATOM
-                PsiElement(atom)('check_plt')
+              ERL_RECORD_FIELD
+                PsiElement(.)('.')
+                ERL_Q_ATOM
+                  PsiElement(atom)('check_plt')
             PsiElement())(')')
         PsiElement(,)(',')
         ERL_MAX_EXPRESSION

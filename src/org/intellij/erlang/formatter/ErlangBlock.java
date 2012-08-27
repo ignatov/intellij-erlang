@@ -37,7 +37,7 @@ import static org.intellij.erlang.ErlangTypes.*;
 public class ErlangBlock implements ASTBlock {
   public static final TokenSet BLOCKS_TOKEN_SET = TokenSet.create(
     ERL_CLAUSE_BODY,
-    ERL_TYPED_RECORD_FIELDS,
+//    ERL_TYPED_RECORD_FIELDS,
     ERL_ARGUMENT_LIST,
     ERL_TUPLE_EXPRESSION,
     ERL_LIST_EXPRESSION,

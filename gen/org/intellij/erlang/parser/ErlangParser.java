@@ -668,6 +668,34 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // q_atom '/' integer
+  public static boolean atom_with_arity_expression(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atom_with_arity_expression")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
+        && replaceVariants(builder_, 2, "<expression>")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    int start_ = builder_.getCurrentOffset();
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
+    result_ = q_atom(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_OP_AR_DIV);
+    result_ = result_ && consumeToken(builder_, ERL_INTEGER);
+    LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
+    if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_EXPRESSION)) {
+      marker_.drop();
+    }
+    else if (result_ || pinned_) {
+      marker_.done(ERL_EXPRESSION);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
   // char | integer | float | q_atom | string+
   static boolean atomic(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "atomic")) return false;
@@ -3392,6 +3420,72 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // '[' atom_with_arity_expression (',' atom_with_arity_expression)* ']'
+  public static boolean list_atom_with_arity_expression(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "list_atom_with_arity_expression")) return false;
+    if (!nextTokenIs(builder_, ERL_BRACKET_LEFT)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    int start_ = builder_.getCurrentOffset();
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_BRACKET_LEFT);
+    result_ = result_ && atom_with_arity_expression(builder_, level_ + 1);
+    result_ = result_ && list_atom_with_arity_expression_2(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_BRACKET_RIGHT);
+    LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
+    if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_LIST_EXPRESSION)) {
+      marker_.drop();
+    }
+    else if (result_ || pinned_) {
+      marker_.done(ERL_LIST_EXPRESSION);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // (',' atom_with_arity_expression)*
+  private static boolean list_atom_with_arity_expression_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "list_atom_with_arity_expression_2")) return false;
+    int offset_ = builder_.getCurrentOffset();
+    while (true) {
+      if (!list_atom_with_arity_expression_2_0(builder_, level_ + 1)) break;
+      int next_offset_ = builder_.getCurrentOffset();
+      if (offset_ == next_offset_) {
+        empty_element_parsed_guard_(builder_, offset_, "list_atom_with_arity_expression_2");
+        break;
+      }
+      offset_ = next_offset_;
+    }
+    return true;
+  }
+
+  // (',' atom_with_arity_expression)
+  private static boolean list_atom_with_arity_expression_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "list_atom_with_arity_expression_2_0")) return false;
+    return list_atom_with_arity_expression_2_0_0(builder_, level_ + 1);
+  }
+
+  // ',' atom_with_arity_expression
+  private static boolean list_atom_with_arity_expression_2_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "list_atom_with_arity_expression_2_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_COMMA);
+    result_ = result_ && atom_with_arity_expression(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
   // '[' expression '||' lc_exprs ']'
   public static boolean list_comprehension(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "list_comprehension")) return false;
@@ -3647,6 +3741,7 @@ public class ErlangParser implements PsiParser {
   // atomic
   //   | q_var
   //   | tuple_expression
+  //   | list_atom_with_arity_expression
   //   | list_expression
   //   | case_expression
   //   | if_expression
@@ -3668,6 +3763,7 @@ public class ErlangParser implements PsiParser {
     result_ = atomic(builder_, level_ + 1);
     if (!result_) result_ = q_var(builder_, level_ + 1);
     if (!result_) result_ = tuple_expression(builder_, level_ + 1);
+    if (!result_) result_ = list_atom_with_arity_expression(builder_, level_ + 1);
     if (!result_) result_ = list_expression(builder_, level_ + 1);
     if (!result_) result_ = case_expression(builder_, level_ + 1);
     if (!result_) result_ = if_expression(builder_, level_ + 1);

@@ -253,6 +253,7 @@ max_expression ::=
     atomic
   | q_var
   | tuple_expression
+  | list_atom_with_arity_expression
   | list_expression
   | case_expression
   | if_expression
@@ -265,6 +266,9 @@ max_expression ::=
   | parenthesized_expression
   | binary_expression
   | begin_end_expression
+
+list_atom_with_arity_expression ::= '[' atom_with_arity_expression (',' atom_with_arity_expression)* ']' {elementType="list_expression" pin=0}
+atom_with_arity_expression ::= q_atom '/' integer {elementType="expression" pin=0}
 
 begin_end_expression ::= begin begin_end_body end
 begin_end_body ::= exprs {name="expression"}

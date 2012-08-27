@@ -720,9 +720,10 @@ ERL_FILE
                             ERL_RECORD_REF
                               ERL_Q_ATOM
                                 PsiElement(atom)('state')
-                            PsiElement(.)('.')
-                            ERL_Q_ATOM
-                              PsiElement(atom)('opaques')
+                            ERL_RECORD_FIELD
+                              PsiElement(.)('.')
+                              ERL_Q_ATOM
+                                PsiElement(atom)('opaques')
                           PsiElement())(')')
                       PsiElement(of)('of')
                       ERL_CR_CLAUSES
@@ -1776,9 +1777,10 @@ ERL_FILE
                       ERL_RECORD_REF
                         ERL_Q_ATOM
                           PsiElement(atom)('state')
-                      PsiElement(.)('.')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('opaques')
+                      ERL_RECORD_FIELD
+                        PsiElement(.)('.')
+                        ERL_Q_ATOM
+                          PsiElement(atom)('opaques')
                   PsiElement(,)(',')
                   ERL_ASSIGNMENT_EXPRESSION
                     ERL_MAX_EXPRESSION
@@ -3677,9 +3679,10 @@ ERL_FILE
                           ERL_RECORD_REF
                             ERL_Q_ATOM
                               PsiElement(atom)('state')
-                          PsiElement(.)('.')
-                          ERL_Q_ATOM
-                            PsiElement(atom)('opaques')
+                          ERL_RECORD_FIELD
+                            PsiElement(.)('.')
+                            ERL_Q_ATOM
+                              PsiElement(atom)('opaques')
                         PsiElement())(')')
                   PsiElement(of)('of')
                   ERL_CR_CLAUSES
@@ -6026,9 +6029,10 @@ ERL_FILE
                             ERL_RECORD_REF
                               ERL_Q_ATOM
                                 PsiElement(atom)('state')
-                            PsiElement(.)('.')
-                            ERL_Q_ATOM
-                              PsiElement(atom)('opaques')
+                            ERL_RECORD_FIELD
+                              PsiElement(.)('.')
+                              ERL_Q_ATOM
+                                PsiElement(atom)('opaques')
                           PsiElement())(')')
                     PsiElement(of)('of')
                     ERL_CR_CLAUSES
@@ -7078,9 +7082,10 @@ ERL_FILE
                 ERL_RECORD_REF
                   ERL_Q_ATOM
                     PsiElement(atom)('state')
-                PsiElement(.)('.')
-                ERL_Q_ATOM
-                  PsiElement(atom)('opaques')
+                ERL_RECORD_FIELD
+                  PsiElement(.)('.')
+                  ERL_Q_ATOM
+                    PsiElement(atom)('opaques')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_CASE_EXPRESSION
@@ -9329,9 +9334,10 @@ ERL_FILE
                 ERL_RECORD_REF
                   ERL_Q_ATOM
                     PsiElement(atom)('state')
-                PsiElement(.)('.')
-                ERL_Q_ATOM
-                  PsiElement(atom)('opaques')
+                ERL_RECORD_FIELD
+                  PsiElement(.)('.')
+                  ERL_Q_ATOM
+                    PsiElement(atom)('opaques')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
@@ -9358,9 +9364,10 @@ ERL_FILE
                   ERL_RECORD_REF
                     ERL_Q_ATOM
                       PsiElement(atom)('state')
-                  PsiElement(.)('.')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('opaques')
+                  ERL_RECORD_FIELD
+                    PsiElement(.)('.')
+                    ERL_Q_ATOM
+                      PsiElement(atom)('opaques')
                 PsiElement())(')')
             PsiElement(of)('of')
             ERL_CR_CLAUSES

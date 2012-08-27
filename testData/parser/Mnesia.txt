@@ -1083,13 +1083,11 @@ ERL_FILE
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
-          ERL_MULTIPLICATIVE_EXPRESSION
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                PsiElement(atom)('verbose')
+          ERL_EXPRESSION
+            ERL_Q_ATOM
+              PsiElement(atom)('verbose')
             PsiElement(/)('/')
-            ERL_MAX_EXPRESSION
-              PsiElement(integer)('2')
+            PsiElement(integer)('2')
           PsiElement(])(']')
         PsiElement())(')')
   PsiElement(.)('.')
@@ -5172,9 +5170,10 @@ ERL_FILE
             ERL_RECORD_REF
               ERL_Q_ATOM
                 PsiElement(atom)('tidstore')
-            PsiElement(.)('.')
-            ERL_Q_ATOM
-              PsiElement(atom)('store')
+            ERL_RECORD_FIELD
+              PsiElement(.)('.')
+              ERL_Q_ATOM
+                PsiElement(atom)('store')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
@@ -5431,9 +5430,10 @@ ERL_FILE
             ERL_RECORD_REF
               ERL_Q_ATOM
                 PsiElement(atom)('tidstore')
-            PsiElement(.)('.')
-            ERL_Q_ATOM
-              PsiElement(atom)('store')
+            ERL_RECORD_FIELD
+              PsiElement(.)('.')
+              ERL_Q_ATOM
+                PsiElement(atom)('store')
         PsiElement(,)(',')
         ERL_CASE_EXPRESSION
           PsiElement(case)('case')
@@ -5697,9 +5697,10 @@ ERL_FILE
                     ERL_RECORD_REF
                       ERL_Q_ATOM
                         PsiElement(atom)('tidstore')
-                    PsiElement(.)('.')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('store')
+                    ERL_RECORD_FIELD
+                      PsiElement(.)('.')
+                      ERL_Q_ATOM
+                        PsiElement(atom)('store')
                 PsiElement(,)(',')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
@@ -6385,9 +6386,10 @@ ERL_FILE
                     ERL_RECORD_REF
                       ERL_Q_ATOM
                         PsiElement(atom)('tidstore')
-                    PsiElement(.)('.')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('store')
+                    ERL_RECORD_FIELD
+                      PsiElement(.)('.')
+                      ERL_Q_ATOM
+                        PsiElement(atom)('store')
                 PsiElement(,)(',')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
@@ -7274,9 +7276,10 @@ ERL_FILE
                     ERL_RECORD_REF
                       ERL_Q_ATOM
                         PsiElement(atom)('tidstore')
-                    PsiElement(.)('.')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('store')
+                    ERL_RECORD_FIELD
+                      PsiElement(.)('.')
+                      ERL_Q_ATOM
+                        PsiElement(atom)('store')
                 PsiElement(,)(',')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
@@ -8169,9 +8172,10 @@ ERL_FILE
                     ERL_RECORD_REF
                       ERL_Q_ATOM
                         PsiElement(atom)('tidstore')
-                    PsiElement(.)('.')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('store')
+                    ERL_RECORD_FIELD
+                      PsiElement(.)('.')
+                      ERL_Q_ATOM
+                        PsiElement(atom)('store')
                 PsiElement(,)(',')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
@@ -8995,9 +8999,10 @@ ERL_FILE
                     ERL_RECORD_REF
                       ERL_Q_ATOM
                         PsiElement(atom)('tidstore')
-                    PsiElement(.)('.')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('store')
+                    ERL_RECORD_FIELD
+                      PsiElement(.)('.')
+                      ERL_Q_ATOM
+                        PsiElement(atom)('store')
                 PsiElement(,)(',')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
@@ -10822,9 +10827,10 @@ ERL_FILE
                 ERL_RECORD_REF
                   ERL_Q_ATOM
                     PsiElement(atom)('tidstore')
-                PsiElement(.)('.')
-                ERL_Q_ATOM
-                  PsiElement(atom)('store')
+                ERL_RECORD_FIELD
+                  PsiElement(.)('.')
+                  ERL_Q_ATOM
+                    PsiElement(atom)('store')
               PsiElement(,)(',')
               ERL_EXPRESSION
                 ERL_Q_VAR
@@ -15564,9 +15570,10 @@ ERL_FILE
                 ERL_RECORD_REF
                   ERL_Q_ATOM
                     PsiElement(atom)('tidstore')
-                PsiElement(.)('.')
-                ERL_Q_ATOM
-                  PsiElement(atom)('store')
+                ERL_RECORD_FIELD
+                  PsiElement(.)('.')
+                  ERL_Q_ATOM
+                    PsiElement(atom)('store')
               PsiElement(,)(',')
               ERL_TUPLE_EXPRESSION
                 PsiElement({)('{')
@@ -16616,9 +16623,10 @@ ERL_FILE
                       ERL_RECORD_REF
                         ERL_Q_ATOM
                           PsiElement(atom)('tidstore')
-                      PsiElement(.)('.')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('store')
+                      ERL_RECORD_FIELD
+                        PsiElement(.)('.')
+                        ERL_Q_ATOM
+                          PsiElement(atom)('store')
                     PsiElement(,)(',')
                     ERL_EXPRESSION
                       ERL_Q_VAR
@@ -20230,9 +20238,10 @@ ERL_FILE
                     ERL_RECORD_REF
                       ERL_Q_ATOM
                         PsiElement(atom)('tidstore')
-                    PsiElement(.)('.')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('store')
+                    ERL_RECORD_FIELD
+                      PsiElement(.)('.')
+                      ERL_Q_ATOM
+                        PsiElement(atom)('store')
                 PsiElement(,)(',')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
@@ -21351,9 +21360,10 @@ ERL_FILE
                     ERL_RECORD_REF
                       ERL_Q_ATOM
                         PsiElement(atom)('tidstore')
-                    PsiElement(.)('.')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('store')
+                    ERL_RECORD_FIELD
+                      PsiElement(.)('.')
+                      ERL_Q_ATOM
+                        PsiElement(atom)('store')
                 PsiElement(,)(',')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
@@ -23388,9 +23398,10 @@ ERL_FILE
                                     ERL_RECORD_REF
                                       ERL_Q_ATOM
                                         PsiElement(atom)('tidstore')
-                                    PsiElement(.)('.')
-                                    ERL_Q_ATOM
-                                      PsiElement(atom)('store')
+                                    ERL_RECORD_FIELD
+                                      PsiElement(.)('.')
+                                      ERL_Q_ATOM
+                                        PsiElement(atom)('store')
                                 PsiElement(,)(',')
                                 ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                                   ERL_MODULE_REF
@@ -23937,9 +23948,10 @@ ERL_FILE
                                     ERL_RECORD_REF
                                       ERL_Q_ATOM
                                         PsiElement(atom)('tidstore')
-                                    PsiElement(.)('.')
-                                    ERL_Q_ATOM
-                                      PsiElement(atom)('store')
+                                    ERL_RECORD_FIELD
+                                      PsiElement(.)('.')
+                                      ERL_Q_ATOM
+                                        PsiElement(atom)('store')
                                 PsiElement(,)(',')
                                 ERL_ASSIGNMENT_EXPRESSION
                                   ERL_MAX_EXPRESSION
@@ -35916,9 +35928,10 @@ ERL_FILE
             ERL_RECORD_REF
               ERL_Q_ATOM
                 PsiElement(atom)('tidstore')
-            PsiElement(.)('.')
-            ERL_Q_ATOM
-              PsiElement(atom)('store')
+            ERL_RECORD_FIELD
+              PsiElement(.)('.')
+              ERL_Q_ATOM
+                PsiElement(atom)('store')
         PsiElement(,)(',')
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
           ERL_MODULE_REF
@@ -36785,9 +36798,10 @@ ERL_FILE
                       ERL_RECORD_REF
                         ERL_Q_ATOM
                           PsiElement(atom)('cstruct')
-                      PsiElement(.)('.')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('name')
+                      ERL_RECORD_FIELD
+                        PsiElement(.)('.')
+                        ERL_Q_ATOM
+                          PsiElement(atom)('name')
                     PsiElement(,)(',')
                     ERL_EXPRESSION
                       ERL_Q_VAR
@@ -38978,9 +38992,10 @@ ERL_FILE
                       ERL_RECORD_REF
                         ERL_Q_ATOM
                           PsiElement(atom)('tidstore')
-                      PsiElement(.)('.')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('store')
+                      ERL_RECORD_FIELD
+                        PsiElement(.)('.')
+                        ERL_Q_ATOM
+                          PsiElement(atom)('store')
                     PsiElement())(')')
             PsiElement(;)(';')
             ERL_CR_CLAUSE

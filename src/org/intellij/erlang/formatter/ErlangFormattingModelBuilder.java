@@ -22,7 +22,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
-import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,7 +46,11 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .before(ERL_COMMA).spaceIf(settings.SPACE_BEFORE_COMMA)
       .after(ERL_COMMA).spaceIf(settings.SPACE_AFTER_COMMA)
 
-      .aroundInside(ERL_OP_EQ, ERL_RECORD_FIELD).none()
+//      .betweenInside(ERL_OP_EQ, ERL_BINARY_EXPRESSION, ERL_RECORD_FIELD).spaces(1)
+//      .betweenInside(ERL_OP_EQ, ERL_BINARY_TYPE, ERL_RECORD_FIELD).spaces(1)
+//      .betweenInside(ERL_OP_EQ, ERL_LIST_COMPREHENSION, ERL_RECORD_FIELD).spaces(1)
+
+//      .aroundInside(ERL_OP_EQ, ERL_RECORD_FIELD).none()
       .aroundInside(ERL_OP_EQ, ERL_TYPED_EXPR).none()
       .around(ERL_OP_EQ).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
       .around(ERL_OP_LT_MINUS).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
