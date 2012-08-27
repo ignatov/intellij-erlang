@@ -51,7 +51,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
 //      .betweenInside(ERL_OP_EQ, ERL_LIST_COMPREHENSION, ERL_RECORD_FIELD).spaces(1)
 
 //      .aroundInside(ERL_OP_EQ, ERL_RECORD_FIELD).none()
-      .aroundInside(ERL_OP_EQ, ERL_TYPED_EXPR).none()
+//      .aroundInside(ERL_OP_EQ, ERL_TYPED_EXPR).none()
       .around(ERL_OP_EQ).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
       .around(ERL_OP_LT_MINUS).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
       .around(ERL_OP_EXL).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
