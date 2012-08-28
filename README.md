@@ -17,9 +17,8 @@ For further information please see [official plugin development page](http://con
 Also you can read some [tips and tricks](http://tomaszdziurko.pl/2011/09/developing-plugin-intellij-idea-some-tips-and-links/).
 
 ## Compilation and running
-The recent build supports compiling and running Erlang projects.
-
-You need to specify module name, function name and input parameters in run configuration setting. Enjoy!
+You need to specify module name, function name and input parameters in run configuration setting 
+or you might move the cursor on the function and press **Crtl + Shift + F10**.
 
 ![Compilation and run](https://github.com/ignatov/intellij-erlang/raw/master/images/hello-run-configuration.png)
 
