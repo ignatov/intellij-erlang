@@ -91,6 +91,8 @@
         <codeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangLanguageCodeStyleSettingsProvider"/>
 
+        <moduleConfigurationEditorProvider implementation="org.intellij.erlang.configuration.DefaultModuleEditorsProvider" order="first"/>
+
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnresolvedVariableInspection"
                          displayName="Unresolved variable"
