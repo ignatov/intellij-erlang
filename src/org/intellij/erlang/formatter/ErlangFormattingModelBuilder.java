@@ -22,7 +22,9 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
+import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.TokenSet;
+import org.intellij.erlang.ErlangLanguage;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.ErlangTypes.*;
@@ -34,15 +36,16 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   @NotNull
   @Override
   public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-    final ErlangBlock block = new ErlangBlock(element.getNode(), null, null, settings,
-      createSpacingBuilder(settings));
+    CommonCodeStyleSettings erlangSettings = settings.getCommonSettings(ErlangLanguage.INSTANCE);
+    final ErlangBlock block = new ErlangBlock(element.getNode(), null, null, erlangSettings,
+      createSpacingBuilder(erlangSettings));
     return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
   }
 
-  private static SpacingBuilder createSpacingBuilder(CodeStyleSettings settings) {
+  private static SpacingBuilder createSpacingBuilder(CommonCodeStyleSettings settings) {
     TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
 
-    return new SpacingBuilder(settings)
+    return new SpacingBuilder(settings.getRootSettings())
       .before(ERL_COMMA).spaceIf(settings.SPACE_BEFORE_COMMA)
       .after(ERL_COMMA).spaceIf(settings.SPACE_AFTER_COMMA)
 

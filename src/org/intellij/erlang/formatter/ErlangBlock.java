@@ -20,7 +20,7 @@ import com.intellij.formatting.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.TokenType;
-import com.intellij.psi.codeStyle.CodeStyleSettings;
+import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
@@ -56,11 +56,11 @@ public class ErlangBlock implements ASTBlock {
   private Alignment myAlignment;
   private Indent myIndent;
   private Wrap myWrap;
-  private CodeStyleSettings mySettings;
+  private CommonCodeStyleSettings mySettings;
   private final SpacingBuilder mySpacingBuilder;
   private List<Block> mySubBlocks;
 
-  public ErlangBlock(ASTNode node, Alignment alignment, Wrap wrap, CodeStyleSettings settings,
+  public ErlangBlock(ASTNode node, Alignment alignment, Wrap wrap, CommonCodeStyleSettings settings,
                      SpacingBuilder spacingBuilder) {
     myNode = node;
     myAlignment = alignment;
