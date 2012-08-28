@@ -78,13 +78,16 @@ public class ErlangIndentProcessor {
       return Indent.getContinuationIndent();
     }
     if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS) {
-      if (elementType == ERL_BRACKET_LEFT || elementType == ERL_BRACKET_RIGHT || elementType == ERL_BIN_START || elementType == ERL_BIN_END) {
+      if (elementType == ERL_BRACKET_LEFT || elementType == ERL_BRACKET_RIGHT || elementType == ERL_BIN_START || elementType == ERL_BIN_END || elementType == ERL_LC_EXPRS) {
         return Indent.getNoneIndent();
       }
       return Indent.getContinuationIndent();
     }
     if (parentType == ERL_GUARD || (parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN)) {
       return Indent.getNormalIndent();
+    }
+    if (parentType == ERL_LC_EXPRS) {
+      return Indent.getContinuationIndent();
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();
