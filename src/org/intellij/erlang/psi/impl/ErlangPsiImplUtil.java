@@ -38,6 +38,7 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
+import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
@@ -112,6 +113,26 @@ public class ErlangPsiImplUtil {
         @Override
         public PsiElement resolve() {
           return ContainerUtil.getFirstItem(filesFromInclude((ErlangInclude) parent));
+        }
+
+        @Override
+        public PsiElement handleElementRename(String newName) throws IncorrectOperationException {
+          PsiElement resolve = resolve();
+          if (resolve instanceof ErlangFile) {
+            PsiElement st;
+            try {
+              String fileName = ((ErlangFile) resolve).getName();
+              String newIncludeString = StringUtil.unquoteString(o.getString().getText()).replace(fileName, newName);
+              st = ErlangElementFactory.createStringFromText(o.getProject(), newIncludeString);
+            } catch (Exception e) {
+              st = null;
+            }
+
+            if (st != null) {
+              o.getString().replace(st);
+            }
+          }
+          return o;
         }
 
         @NotNull
@@ -219,7 +240,8 @@ public class ErlangPsiImplUtil {
         if (qAtom != null) {
           functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), qAtom.getText() + ".erl"));
         }
-      } else {
+      }
+      else {
         functions.addAll(((ErlangFile) containingFile).getFunctions());
       }
 
@@ -367,10 +389,10 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-    public static PsiReference getReference(@NotNull ErlangRecordRef o) {
-      ErlangQAtom atom = o.getQAtom();
-      return new ErlangRecordReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getMacros() == null ? atom.getTextLength() : 1), atom.getText());
-    }
+  public static PsiReference getReference(@NotNull ErlangRecordRef o) {
+    ErlangQAtom atom = o.getQAtom();
+    return new ErlangRecordReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getMacros() == null ? atom.getTextLength() : 1), atom.getText());
+  }
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangModuleRef o) {

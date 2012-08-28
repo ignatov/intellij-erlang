@@ -48,4 +48,10 @@ public class ErlangElementFactory {
     ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-define(" + text + ", 1).");
     return fileFromText.getMacroses().get(0).getMacrosName();
   }
+
+  @NotNull
+  public static PsiElement createStringFromText(Project project, String text) {
+    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-include(\"" + text + "\").");
+    return fileFromText.getIncludes().get(0).getIncludeString().getString();
+  }
 }
