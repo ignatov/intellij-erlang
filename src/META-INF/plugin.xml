@@ -87,6 +87,7 @@
         <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
         <programRunner implementation="org.intellij.erlang.runner.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.runner.ErlangRunConfigurationType"/>
+        <configurationProducer implementation="org.intellij.erlang.run.ErlangRunConfigurationProducer"/>
 
         <codeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangLanguageCodeStyleSettingsProvider"/>
