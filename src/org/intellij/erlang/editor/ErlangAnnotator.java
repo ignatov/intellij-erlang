@@ -22,10 +22,19 @@ import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.tree.IElementType;
+import org.intellij.erlang.ErlangDocumentationProvider;
+import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 /**
  * @author ignatov
@@ -37,6 +46,28 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
         setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+      }
+
+      @Override
+      public void visitComment(PsiComment comment) {
+        IElementType tokenType = comment.getTokenType();
+        if (tokenType != ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT
+          && tokenType != ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
+          return;
+        }
+
+        String commentText = comment.getText();
+        List<Pair<String, Integer>> wordsWithOffset = StringUtil.getWordsWithOffset(commentText);
+        for (Pair<String, Integer> pair : wordsWithOffset) {
+          Integer offset = pair.second;
+          String tag = pair.first;
+          if (ErlangDocumentationProvider.EDOC_TAGS.contains(tag)) {
+            TextRange range = TextRange.from(comment.getTextOffset() + offset, tag.length());
+            TextAttributesKey key = ErlangSyntaxHighlighter.DOC_COMMENT_TAG;
+            annotationHolder.createInfoAnnotation(range, null).setEnforcedTextAttributes(TextAttributes.ERASE_MARKER);
+            annotationHolder.createInfoAnnotation(range, null).setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key));
+          }
+        }
       }
 
       @Override

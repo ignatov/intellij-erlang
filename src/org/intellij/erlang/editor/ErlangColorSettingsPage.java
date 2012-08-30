@@ -49,6 +49,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("brackets", BRACKETS),
       new AttributesDescriptor("variable", VARIABLES),
       new AttributesDescriptor("operation sign", OP_SIGN),
+      new AttributesDescriptor("edoc tag", DOC_COMMENT_TAG),
     };
   }
 
@@ -84,7 +85,8 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "-<k>record</k>(state, {id, name}).\n" +
       "\n" +
-      "% Factorial implementation\n" +
+      "%% Factorial implementation\n" +
+      "%% <d>@doc</d> Documentation\n" +
       "fac(0) -> 1;\n" +
       "fac(N) when N > 0, is_integer(N) -> N * fac(N-1).\n" +
       "\n" +
@@ -99,6 +101,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     @NonNls
     final Map<String, TextAttributesKey> map = new THashMap<String, TextAttributesKey>();
     map.put("k", KEYWORD);
+    map.put("d", DOC_COMMENT_TAG);
     return map;
   }
 }
