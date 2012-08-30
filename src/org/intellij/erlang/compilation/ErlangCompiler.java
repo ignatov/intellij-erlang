@@ -217,7 +217,7 @@ class ErlangCompilerError {
     }
 
     boolean warning = StringUtil.equalsIgnoreCase(split.get(2).trim(), "warning");
-    String messageForUser = StringUtil.replaceIgnoreCase(erlcMessage, path + ":" + line + (warning ? " :warning: " : ": "), "");
+    String messageForUser = StringUtil.replaceIgnoreCase(erlcMessage, path + ":" + line + (warning ? ": warning: " : ": "), "");
     return new ErlangCompilerError(messageForUser, url, StringUtil.parseInt(split.get(1), -1),
       warning ? CompilerMessageCategory.WARNING : CompilerMessageCategory.ERROR);
   }
