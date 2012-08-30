@@ -51,7 +51,7 @@ public class ErlangUnresolvedVariableInspection extends ErlangBaseInspection {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         if ((inDefinition(o) && !inArgumentList(o))
-          || isLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o)
+          || inAssignment(o) || inAtomAttribute(o) || isMacros(o)
           || isForceSkipped(o) || inSpecification(o) || inDefine(o) || inCallback(o)) {
           return;
         }

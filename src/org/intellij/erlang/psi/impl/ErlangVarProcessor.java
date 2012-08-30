@@ -20,10 +20,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionClause;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
@@ -31,7 +36,7 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
  * @author ignatov
  */
 public class ErlangVarProcessor extends BaseScopeProcessor {
-  private ErlangQVar result = null;
+  private List<ErlangQVar> myVarList = new ArrayList<ErlangQVar>(0);
   private final String myRequestedName;
   private final PsiElement myOrigin;
 
@@ -42,14 +47,15 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
 
   @Override
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
+    if (psiElement instanceof ErlangFunction) return false;
     ErlangFunctionClause clause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
-      if ((PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || isLeftPartOfAssignment(psiElement)))
-          || isInModule(psiElement)) {
+      if ((PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || inAssignment(psiElement)))
+        || isInModule(psiElement)) {
         if (inArgumentList(psiElement)) return true;
 
-        result = (ErlangQVar) psiElement;
-        return false;
+        myVarList.add(0, (ErlangQVar) psiElement); // put all possible variables to list
+        return true;
       }
     }
     return true;
@@ -57,6 +63,6 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
 
   @Nullable
   public ErlangQVar getResult() {
-    return result;
+    return ContainerUtil.getFirstItem(myVarList); // return the topmost one
   }
 }

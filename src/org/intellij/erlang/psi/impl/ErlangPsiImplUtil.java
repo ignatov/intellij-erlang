@@ -216,10 +216,9 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangColonQualifiedExpression.class) != null;
   }
 
-  public static boolean isLeftPartOfAssignment(@NotNull PsiElement psiElement) {
+  public static boolean inAssignment(@NotNull PsiElement psiElement) {
     ErlangAssignmentExpression assignmentExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
-    if (assignmentExpression == null) return false;
-    return PsiTreeUtil.isAncestor(assignmentExpression.getLeft(), psiElement, false);
+    return assignmentExpression != null;
   }
 
   public static boolean isMacros(ErlangQVar o) {
