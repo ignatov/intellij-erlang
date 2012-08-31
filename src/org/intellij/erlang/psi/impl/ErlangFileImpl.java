@@ -28,12 +28,14 @@ import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.util.Processor;
 import gnu.trove.THashMap;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   private CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap;
   private CachedValue<List<ErlangMacrosDefinition>> myMacrosValue;
   private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap;
+  private CachedValue<List<ErlangBehaviour>> myBehavioursValue;
 
   @NotNull
   @Override
@@ -172,7 +175,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
     });
     return result;
   }
-  
+
   @Override
   public ErlangMacrosDefinition getMacros(String name) {
     if (myMacrosesMap == null) {
@@ -234,6 +237,34 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
       public boolean process(PsiElement psiElement) {
         if (psiElement instanceof ErlangInclude) {
           result.add((ErlangInclude) psiElement);
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
+  @NotNull
+  @Override
+  public List<ErlangBehaviour> getBehaviours() {
+    if (myBehavioursValue == null) {
+      myBehavioursValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangBehaviour>>() {
+        @Override
+        public Result<List<ErlangBehaviour>> compute() {
+          return Result.create(calcBehaviours(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myBehavioursValue.getValue();
+  }
+
+  private List<ErlangBehaviour> calcBehaviours() {
+    final List<ErlangBehaviour> result = new ArrayList<ErlangBehaviour>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangAttribute && ((ErlangAttribute) psiElement).getBehaviour() != null) {
+          result.add(((ErlangAttribute) psiElement).getBehaviour());
         }
         return true;
       }
@@ -319,5 +350,53 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
         return true;
       }
     }.process(element);
+  }
+
+  @Override
+  @Nullable
+  protected Icon getElementIcon(@IconFlags int flags) {
+    if (!this.isValid()) return null;
+    int elementFlags = (flags & ICON_FLAG_READ_STATUS) != 0 && !isWritable() ? FLAGS_LOCKED : 0;
+    ErlangModule module = ErlangPsiImplUtil.getModule(this);
+    Icon icon = module != null && StringUtil.endsWith(module.getName(), "_tests") ? ErlangIcons.EUNIT : getModuleType().icon;
+    return createLayeredIcon(this, icon, elementFlags);
+  }
+
+  @NotNull
+  public ModuleType getModuleType() {
+    ModuleType type = ModuleType.REGULAR;
+    for (ErlangBehaviour behaviour : this.getBehaviours()) {
+      type = ModuleType.getType(behaviour.getName());
+      if (type != ModuleType.REGULAR) break;
+    }
+    return type;
+  }
+
+  enum ModuleType {
+    REGULAR(),
+    OTP_APPLICATION("application", ErlangIcons.OTP_APPLICATION),
+    OTP_SUPERVISOR("supervisor", ErlangIcons.OTP_SUPERVISOR),
+    OTP_GEN_SERVER("gen_server", ErlangIcons.OTP_GEN_SERVER),
+    OTP_GEN_FSM("gen_fsm", ErlangIcons.OTP_GEN_FSM),
+    OTP_GEN_EVENT("gen_event", ErlangIcons.OTP_GEN_EVENT);
+    public final String behaviourName;
+    public final Icon icon;
+
+    ModuleType(String behaviourName, Icon icon) {
+      this.behaviourName = behaviourName;
+      this.icon = icon;
+    }
+
+    ModuleType() {
+      this.behaviourName = null;
+      this.icon = ErlangIcons.FILE;
+    }
+
+    @NotNull
+    public static ModuleType getType(@NotNull String behaviourName) {
+      for (ModuleType type : ModuleType.values())
+        if (StringUtil.equals(type.behaviourName, behaviourName)) return type;
+      return REGULAR;
+    }
   }
 }

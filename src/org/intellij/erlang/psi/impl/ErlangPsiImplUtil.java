@@ -156,8 +156,8 @@ public class ErlangPsiImplUtil {
     ErlangQAtom nameAtom = o.getQAtom();
 
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(
-      nameAtom, moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
-      nameAtom.getText(), o.getArgumentList().getExpressionList().size());
+        nameAtom, moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
+        nameAtom.getText(), o.getArgumentList().getExpressionList().size());
   }
 
   @Nullable
@@ -168,14 +168,14 @@ public class ErlangPsiImplUtil {
 
     PsiElement arity = o.getInteger();
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(nameAtom, moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
-      nameAtom.getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
+        nameAtom.getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
   }
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportFunction o) {
     PsiElement arity = o.getInteger();
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), null, TextRange.from(0, o.getQAtom().getTextLength()),
-      o.getQAtom().getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
+        o.getQAtom().getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
   }
 
   @Nullable
@@ -192,7 +192,7 @@ public class ErlangPsiImplUtil {
   @SuppressWarnings("unchecked")
   public static boolean inArgumentList(PsiElement psiElement) {
     ErlangArgumentList argList = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, true,
-      ErlangFunctionCallExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
+        ErlangFunctionCallExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
     return (argList != null ? argList.getParent() : null) instanceof ErlangFunctionCallExpression;
   }
 
@@ -239,8 +239,7 @@ public class ErlangPsiImplUtil {
         if (qAtom != null) {
           functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), qAtom.getText() + ".erl"));
         }
-      }
-      else {
+      } else {
         functions.addAll(((ErlangFile) containingFile).getFunctions());
       }
 
@@ -254,7 +253,7 @@ public class ErlangPsiImplUtil {
       if (!withArity && colonQualifier == null) {
         // todo: move to more appropriate place
         PsiFile[] erlInternals = FilenameIndex.getFilesByName(containingFile.getProject(), "erl_internal.erl",
-          GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
+            GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
 
         if (erlInternals.length == 1) {
           for (String line : StringUtil.splitByLines(erlInternals[0].getText())) {
@@ -276,30 +275,30 @@ public class ErlangPsiImplUtil {
 
   private static LookupElement createFunctionLookupElement(String name, int arity, boolean withArity) {
     return LookupElementBuilder.create(name)
-      .setIcon(ErlangIcons.FUNCTION).setTailText("/" + arity).
-        setInsertHandler(
-          getInsertHandler(arity, withArity)
-        );
+        .setIcon(ErlangIcons.FUNCTION).setTailText("/" + arity).
+            setInsertHandler(
+                getInsertHandler(arity, withArity)
+            );
   }
 
   private static InsertHandler<LookupElement> getInsertHandler(final int arity, boolean withArity) {
     return withArity ?
-      new BasicInsertHandler<LookupElement>() {
-        @Override
-        public void handleInsert(InsertionContext context, LookupElement item) {
-          final Editor editor = context.getEditor();
-          final Document document = editor.getDocument();
-          context.commitDocument();
-          document.insertString(context.getTailOffset(), "/" + arity);
-          editor.getCaretModel().moveToOffset(context.getTailOffset());
-        }
-      } :
-      new ParenthesesInsertHandler<LookupElement>() {
-        @Override
-        protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
-          return arity > 0;
-        }
-      };
+        new BasicInsertHandler<LookupElement>() {
+          @Override
+          public void handleInsert(InsertionContext context, LookupElement item) {
+            final Editor editor = context.getEditor();
+            final Document document = editor.getDocument();
+            context.commitDocument();
+            document.insertString(context.getTailOffset(), "/" + arity);
+            editor.getCaretModel().moveToOffset(context.getTailOffset());
+          }
+        } :
+        new ParenthesesInsertHandler<LookupElement>() {
+          @Override
+          protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
+            return arity > 0;
+          }
+        };
   }
 
   @NotNull
@@ -307,13 +306,13 @@ public class ErlangPsiImplUtil {
     if (containingFile instanceof ErlangFile) {
       List<ErlangMacrosDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getMacroses(), getErlangMacrosesFromIncludes((ErlangFile) containingFile, true, ""));
       return ContainerUtil.map(
-        concat,
-        new Function<ErlangMacrosDefinition, LookupElement>() {
-          @Override
-          public LookupElement fun(@NotNull ErlangMacrosDefinition md) {
-            return LookupElementBuilder.create(md).setIcon(ErlangIcons.MACROS);
-          }
-        });
+          concat,
+          new Function<ErlangMacrosDefinition, LookupElement>() {
+            @Override
+            public LookupElement fun(@NotNull ErlangMacrosDefinition md) {
+              return LookupElementBuilder.create(md).setIcon(ErlangIcons.MACROS);
+            }
+          });
     }
     return Collections.emptyList();
   }
@@ -323,13 +322,13 @@ public class ErlangPsiImplUtil {
     if (containingFile instanceof ErlangFile) {
       List<ErlangRecordDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getRecords(), getErlangRecordFromIncludes((ErlangFile) containingFile, true, ""));
       return ContainerUtil.map(
-        concat,
-        new Function<ErlangRecordDefinition, LookupElement>() {
-          @Override
-          public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
-            return LookupElementBuilder.create(rd).setIcon(ErlangIcons.RECORD);
-          }
-        });
+          concat,
+          new Function<ErlangRecordDefinition, LookupElement>() {
+            @Override
+            public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
+              return LookupElementBuilder.create(rd).setIcon(ErlangIcons.RECORD);
+            }
+          });
     }
     return Collections.emptyList();
   }
@@ -397,7 +396,7 @@ public class ErlangPsiImplUtil {
   public static PsiReference getReference(@NotNull ErlangModuleRef o) {
     ErlangQAtom atom = o.getQAtom();
     return new ErlangModuleReferenceImpl<ErlangQAtom>(atom,
-      TextRange.from(0, atom.getTextLength()), atom.getText() + ".erl");
+        TextRange.from(0, atom.getTextLength()), atom.getText() + ".erl");
   }
 
   @NotNull
@@ -534,8 +533,7 @@ public class ErlangPsiImplUtil {
           if (!forCompletion) {
             ErlangRecordDefinition recordFromIncludeFile = file.getRecord(name);
             fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangRecordDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
-          }
-          else {
+          } else {
             fromIncludes.addAll(file.getRecords());
           }
         }
@@ -574,8 +572,7 @@ public class ErlangPsiImplUtil {
           if (!forCompletion) {
             ErlangMacrosDefinition recordFromIncludeFile = file.getMacros(name);
             fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangMacrosDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
-          }
-          else {
+          } else {
             fromIncludes.addAll(file.getMacroses());
           }
         }
@@ -591,7 +588,7 @@ public class ErlangPsiImplUtil {
     String last = ContainerUtil.iterateAndGetLastItem(split);
     if (last != null) {
       PsiFile[] filesByName = FilenameIndex.getFilesByName(containingFile.getProject(), last,
-        GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.HRL, ErlangFileType.INSTANCE));
+          GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.HRL, ErlangFileType.INSTANCE));
       List<PsiFile> filter = ContainerUtil.filter(filesByName, new Condition<PsiFile>() {
         @Override
         public boolean value(PsiFile psiFile) {
@@ -651,6 +648,11 @@ public class ErlangPsiImplUtil {
       macrosName.replace(ErlangElementFactory.createMacrosFromText(o.getProject(), newName));
     }
     return o;
+  }
+
+  public static String getName(ErlangBehaviour o) {
+    ErlangQAtom atom = o.getQAtom();
+    return atom == null ? "" : atom.getText();
   }
 
   @Nullable

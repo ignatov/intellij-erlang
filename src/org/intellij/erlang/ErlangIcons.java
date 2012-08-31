@@ -25,7 +25,6 @@ import javax.swing.*;
  * @author ignatov
  */
 public interface ErlangIcons {
-  Icon FILE = IconLoader.getIcon("/icons/erlang-16-7-2.png");
   Icon FUNCTION = PlatformIcons.FUNCTION_ICON;
   Icon ATTRIBUTE = PlatformIcons.ANNOTATION_TYPE_ICON;
   Icon FUNCTION_CLAUSE = PlatformIcons.PACKAGE_LOCAL_ICON;
@@ -37,4 +36,14 @@ public interface ErlangIcons {
   Icon ERLANG_MODULE_NODE = IconLoader.getIcon("/icons/erlang-module-with-icon.png");
   Icon ERLANG_MODULE_NODE_OPEN = IconLoader.getIcon("/icons/erlang-module-with-icon-open.png");
   Icon ERLANG_BIG = IconLoader.getIcon("/icons/erlang-big.png");
+
+  Icon FILE = IconLoader.getIcon("/icons/erlang-module-16.png");
+  Icon OTP_SUPERVISOR = IconLoader.getIcon("/icons/otp-supervisor-16.png");
+  Icon OTP_APPLICATION = IconLoader.getIcon("/icons/otp-application-16.png");
+  Icon OTP_GEN_EVENT = IconLoader.getIcon("/icons/otp-gen-event-16.png");
+  Icon OTP_GEN_SERVER = IconLoader.getIcon("/icons/otp-gen-server-16.png");
+  Icon OTP_GEN_FSM = IconLoader.getIcon("/icons/otp-gen-fsm-16.png");
+  Icon OTP_APP_RESOURCE = IconLoader.getIcon("/icons/otp-app-16.png");
+  Icon EUNIT = IconLoader.getIcon("/icons/erlang-eunit-16.png");
+  Icon HEADER = IconLoader.getIcon("/icons/erlang-header-16.png");
 }

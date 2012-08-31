@@ -96,6 +96,11 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         }
       }
 
+      @Override
+      public void visitBehaviour(@NotNull ErlangBehaviour o) {
+        markFirstChildAsKeyword(o, annotationHolder);
+      }
+
       // todo: add export, import and other bundled attributes
     });
   }

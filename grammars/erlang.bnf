@@ -110,8 +110,8 @@
   name(".*type|.*_t")=type
   extends("atomic")=expression
 
-  implements("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("record_definition|function|q_var|module|macros_definition|typed_expr|behaviour")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("record_definition|function|q_var|module|macros_definition|typed_expr|behaviour")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
 forms ::= form ('.' form)*
@@ -149,6 +149,7 @@ attribute ::= '-' (
   | export_type_attribute
   | specification
   | callback_spec
+  | behaviour
   | atom_attribute
   ) {pin=1}
 callback_spec ::= 'callback' type_spec {pin=1}
@@ -158,6 +159,10 @@ export_type_attribute ::= 'export_type' '(' export_types ')' {pin=1}
 module ::= 'module' '(' q_atom (',' argument_definition)? ')' {
   pin=1
   methods = [getName setName getNameIdentifier getTextOffset processDeclarations]
+}
+behaviour ::= 'behaviour' '(' q_atom ')' {
+  pin=1
+  methods = [getName]
 }
 
 atom_attribute ::= q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]

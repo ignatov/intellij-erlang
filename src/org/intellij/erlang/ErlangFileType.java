@@ -16,6 +16,7 @@
 
 package org.intellij.erlang;
 
+import com.intellij.lang.Language;
 import com.intellij.openapi.fileTypes.LanguageFileType;
 import com.intellij.openapi.fileTypes.PlainTextLanguage;
 import org.jetbrains.annotations.NotNull;
@@ -27,8 +28,8 @@ import javax.swing.*;
  */
 public class ErlangFileType extends LanguageFileType {
   public static ErlangFileType INSTANCE = new ErlangFileType();
-  public static ErlangFileType HRL = new HrlFileType();
-  public static LanguageFileType APP = new AppFileType();
+  public static HrlFileType HRL = new HrlFileType();
+  public static AppFileType APP = new AppFileType();
 
   protected ErlangFileType() {
     super(ErlangLanguage.INSTANCE);
@@ -63,11 +64,38 @@ public class ErlangFileType extends LanguageFileType {
     return false;
   }
 
-  public static class HrlFileType extends ErlangFileType {
+  public static class HrlFileType extends LanguageFileType {
+    protected HrlFileType() {
+      super(ErlangLanguage.INSTANCE);
+    }
+
+    @NotNull
+    @Override
+    public String getName() {
+      return "Erlang Header";
+    }
+
+    @NotNull
+    @Override
+    public String getDescription() {
+      return "Erlang/OTP Header File";
+    }
+
     @NotNull
     @Override
     public String getDefaultExtension() {
       return "hrl";
+    }
+
+    @Override
+    public Icon getIcon() {
+      return ErlangIcons.HEADER;
+    }
+
+    @Override
+    public boolean isJVMDebuggingSupported() {
+      // turn off for now
+      return false;
     }
   }
 
@@ -96,7 +124,7 @@ public class ErlangFileType extends LanguageFileType {
 
 	@Override
 	public Icon getIcon() {
-	  return ErlangIcons.FILE;
+	  return ErlangIcons.OTP_APP_RESOURCE;
 	}
 
     @Override
