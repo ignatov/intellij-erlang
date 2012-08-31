@@ -68,6 +68,7 @@
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder" />
         <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
+        <iconProvider implementation="org.intellij.erlang.ErlangIconProvider"/>
         <lang.findUsagesProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangFindUsagesProvider"/>
         <elementDescriptionProvider implementation="org.intellij.erlang.ErlangDescriptionProvider"/>
         <lang.parserDefinition language="Erlang" implementationClass="org.intellij.erlang.ErlangParserDefinition"/>

@@ -653,6 +653,11 @@ public class ErlangPsiImplUtil {
     return o;
   }
 
+  public static String getName(ErlangBehaviour o) {
+    ErlangQAtom atom = o.getQAtom();
+    return atom == null ? "" : atom.getText();
+  }
+
   @Nullable
   public static List<ErlangFunction> getExternalFunctionForCompletion(Project project, @NotNull String moduleFileName) {
     PsiFile[] files = FilenameIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project));

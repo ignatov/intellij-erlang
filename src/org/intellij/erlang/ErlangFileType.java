@@ -27,8 +27,8 @@ import javax.swing.*;
  */
 public class ErlangFileType extends LanguageFileType {
   public static ErlangFileType INSTANCE = new ErlangFileType();
-  public static ErlangFileType HRL = new HrlFileType();
-  public static LanguageFileType APP = new AppFileType();
+  public static HrlFileType HRL = new HrlFileType();
+  public static AppFileType APP = new AppFileType();
 
   protected ErlangFileType() {
     super(ErlangLanguage.INSTANCE);
@@ -66,43 +66,60 @@ public class ErlangFileType extends LanguageFileType {
   public static class HrlFileType extends ErlangFileType {
     @NotNull
     @Override
+    public String getName() {
+      return "Erlang Header";
+    }
+
+    @NotNull
+    @Override
+    public String getDescription() {
+      return "Erlang/OTP Header File";
+    }
+
+    @NotNull
+    @Override
     public String getDefaultExtension() {
       return "hrl";
     }
+
+    @Override
+    public Icon getIcon() {
+      return ErlangIcons.HEADER;
+    }
   }
 
-  public static class AppFileType extends LanguageFileType  {
-    protected AppFileType( ) {
-	  super(PlainTextLanguage.INSTANCE);
-	}
+  public static class AppFileType extends LanguageFileType {
+    protected AppFileType() {
+      super(PlainTextLanguage.INSTANCE);
+    }
 
-	@NotNull
-	@Override
-	public String getName() {
-	  return "Erlang/OTP app";
-	}
+    @NotNull
+    @Override
+    public String getName() {
+      return "Erlang/OTP app";
+    }
 
-	@NotNull
-	@Override
-	public String getDescription() {
-	  return "Erlang/OTP Application Resource File";
-	}
+    @NotNull
+    @Override
+    public String getDescription() {
+      return "Erlang/OTP Application Resource File";
+    }
 
-	@NotNull
-	@Override
+    @NotNull
+    @Override
     public String getDefaultExtension() {
       return "app";
     }
 
-	@Override
-	public Icon getIcon() {
-	  return ErlangIcons.FILE;
-	}
+    @Override
+    public Icon getIcon() {
+      return ErlangIcons.OTP_APP_RESOURCE;
+    }
 
     @Override
-  	public boolean isJVMDebuggingSupported() {
+    public boolean isJVMDebuggingSupported() {
       // turn off for now
       return false;
-  	}
+    }
   }
 }

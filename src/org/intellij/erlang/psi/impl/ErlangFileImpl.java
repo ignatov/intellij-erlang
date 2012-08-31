@@ -55,6 +55,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   private CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap;
   private CachedValue<List<ErlangMacrosDefinition>> myMacrosValue;
   private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap;
+  private CachedValue<List<ErlangBehaviour>> myBehavioursValue;
 
   @NotNull
   @Override
@@ -172,7 +173,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
     });
     return result;
   }
-  
+
   @Override
   public ErlangMacrosDefinition getMacros(String name) {
     if (myMacrosesMap == null) {
@@ -234,6 +235,34 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
       public boolean process(PsiElement psiElement) {
         if (psiElement instanceof ErlangInclude) {
           result.add((ErlangInclude) psiElement);
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
+  @NotNull
+  @Override
+  public List<ErlangBehaviour> getBehaviours() {
+    if (myBehavioursValue == null) {
+      myBehavioursValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangBehaviour>>() {
+        @Override
+        public Result<List<ErlangBehaviour>> compute() {
+          return Result.create(calcBehaviours(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myBehavioursValue.getValue();
+  }
+
+  private List<ErlangBehaviour> calcBehaviours() {
+    final List<ErlangBehaviour> result = new ArrayList<ErlangBehaviour>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangAttribute && ((ErlangAttribute) psiElement).getBehaviour() != null) {
+          result.add(((ErlangAttribute) psiElement).getBehaviour());
         }
         return true;
       }
@@ -314,7 +343,8 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
         for (PsiElement child = psiElement.getFirstChild(); child != null; child = child.getNextSibling()) {
           if (child instanceof GeneratedParserUtilBase.DummyBlock) {
             if (!process(child)) return false;
-          } else if (!processor.process(child)) return false;
+          }
+          else if (!processor.process(child)) return false;
         }
         return true;
       }
