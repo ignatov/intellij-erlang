@@ -22,6 +22,9 @@ or you might move the cursor on the function and press **Crtl + Shift + F10**.
 
 ![Compilation and run](https://github.com/ignatov/intellij-erlang/raw/master/images/hello-run-configuration.png)
 
+## Donations
+If you would like to make a donation you can use a [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=C344TC8DDC5UN).
+
 ## Change log
 
 ### Version 0.3:
