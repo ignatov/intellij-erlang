@@ -110,8 +110,8 @@
   name(".*type|.*_t")=type
   extends("atomic")=expression
 
-  implements("record_definition|function|q_var|module|macros_definition|typed_expr|behaviour")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("record_definition|function|q_var|module|macros_definition|typed_expr|behaviour")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
 forms ::= form ('.' form)*
