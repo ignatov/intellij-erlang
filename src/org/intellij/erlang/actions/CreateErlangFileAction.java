@@ -42,14 +42,14 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
     builder.
       setTitle(NEW_ERLANG_FILE).
       addKind("Empty module", ErlangIcons.FILE, "Erlang Module").
-      addKind("Header file", ErlangIcons.FILE, "Erlang Header").
-      addKind("EUnit tests", ErlangIcons.FILE, "Erlang EUnit Tests").
-      addKind("OTP application", ErlangIcons.FILE, "Erlang Application").
-      addKind("OTP application resource file", ErlangIcons.FILE, "Erlang Application Resource File").
-      addKind("OTP supervisor", ErlangIcons.FILE, "Erlang Supervisor").
-      addKind("OTP gen_server", ErlangIcons.FILE, "Erlang Gen Server").
-      addKind("OTP gen_fsm", ErlangIcons.FILE, "Erlang Gen FSM").
-      addKind("OTP gen_event", ErlangIcons.FILE, "Erlang Gen Event").
+      addKind("Header file", ErlangIcons.HEADER, "Erlang Header").
+      addKind("EUnit tests", ErlangIcons.EUNIT, "Erlang EUnit Tests").
+      addKind("OTP application", ErlangIcons.OTP_APPLICATION, "Erlang Application").
+      addKind("OTP application resource file", ErlangIcons.OTP_APP_RESOURCE, "Erlang Application Resource File").
+      addKind("OTP supervisor", ErlangIcons.OTP_SUPERVISOR, "Erlang Supervisor").
+      addKind("OTP gen_server", ErlangIcons.OTP_GEN_SERVER, "Erlang Gen Server").
+      addKind("OTP gen_fsm", ErlangIcons.OTP_GEN_FSM, "Erlang Gen FSM").
+      addKind("OTP gen_event", ErlangIcons.OTP_GEN_EVENT, "Erlang Gen Event").
       setValidator(new InputValidatorEx() {
         @Override
         public boolean checkInput(String inputString) {

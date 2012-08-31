@@ -20,6 +20,7 @@ public interface ErlangTypes {
   IElementType ERL_ATTR_VAL = new ErlangCompositeElementType("ERL_ATTR_VAL");
   IElementType ERL_BEGIN_END_BODY = new ErlangCompositeElementType("ERL_BEGIN_END_BODY");
   IElementType ERL_BEGIN_END_EXPRESSION = new ErlangCompositeElementType("ERL_BEGIN_END_EXPRESSION");
+  IElementType ERL_BEHAVIOUR = new ErlangCompositeElementType("ERL_BEHAVIOUR");
   IElementType ERL_BINARY_EXPRESSION = new ErlangCompositeElementType("ERL_BINARY_EXPRESSION");
   IElementType ERL_BINARY_TYPE = new ErlangCompositeElementType("ERL_BINARY_TYPE");
   IElementType ERL_BIN_BASE_TYPE = new ErlangCompositeElementType("ERL_BIN_BASE_TYPE");
@@ -220,6 +221,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_BEGIN_END_EXPRESSION) {
         return new ErlangBeginEndExpressionImpl(node);
+      }
+      else if (type == ERL_BEHAVIOUR) {
+        return new ErlangBehaviourImpl(node);
       }
       else if (type == ERL_BINARY_EXPRESSION) {
         return new ErlangBinaryExpressionImpl(node);

@@ -46,6 +46,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitBehaviour(@NotNull ErlangBehaviour o) {
+    visitCompositeElement(o);
+  }
+
   public void visitBinBaseType(@NotNull ErlangBinBaseType o) {
     visitCompositeElement(o);
   }
