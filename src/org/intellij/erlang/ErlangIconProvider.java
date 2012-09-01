@@ -20,7 +20,6 @@ import com.intellij.ide.IconProvider;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.util.Iconable;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -40,13 +39,13 @@ public class ErlangIconProvider extends IconProvider implements DumbAware {
   public Icon getIcon(@NotNull PsiElement element, @Iconable.IconFlags int flags) {
     if (element instanceof ErlangFile) {
       if (!element.isValid()) return null;
-      VirtualFile virtualFile = ((ErlangFile) element).getVirtualFile();
-      FileType fileType = virtualFile != null ? virtualFile.getFileType() : null;
-      if (ErlangFileType.HRL == fileType && fileType != null) {
-        return fileType.getIcon();
+      VirtualFile virtualFile = ((ErlangFile) element).getViewProvider().getVirtualFile();
+      FileType fileType = virtualFile.getFileType();
+      if (ErlangFileType.INSTANCE == fileType) {
+        ErlangModule module = ErlangPsiImplUtil.getModule((ErlangFile) element);
+        return module != null && StringUtil.endsWith(module.getName(), "_tests") ? ErlangIcons.EUNIT : getModuleType(((ErlangFile) element)).icon;
       }
-      ErlangModule module = ErlangPsiImplUtil.getModule((ErlangFile) element);
-      return module != null && StringUtil.endsWith(module.getName(), "_tests") ? ErlangIcons.EUNIT : getModuleType(((ErlangFile) element)).icon;
+      return fileType.getIcon();
     }
     return null;
   }

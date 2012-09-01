@@ -16,5 +16,22 @@
 
 package org.intellij.erlang.parser;
 
+import com.intellij.lang.PsiBuilder;
+import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.impl.source.resolve.FileContextUtil;
+import org.intellij.erlang.ErlangFileType;
+
 public class ErlangParserUtil extends GeneratedParserUtilBase {
+  public static boolean isApplicationLanguage(PsiBuilder builder_, int level) {
+    FileType fileType = getFileType(builder_);
+    return fileType == ErlangFileType.APP || fileType == ErlangFileType.CONFIG;
+  }
+
+  private static FileType getFileType(PsiBuilder builder_) {
+    PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
+    assert file != null;
+    return file.getViewProvider().getVirtualFile().getFileType();
+  }
 }

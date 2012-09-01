@@ -2463,13 +2463,14 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // function | rule | record_definition | include | macros_definition | attribute
+  // (is_app_config tuple_expression) | function | rule | record_definition | include | macros_definition | attribute
   static boolean form(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "form")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_RECOVER_, null);
-    result_ = function(builder_, level_ + 1);
+    result_ = form_0(builder_, level_ + 1);
+    if (!result_) result_ = function(builder_, level_ + 1);
     if (!result_) result_ = rule(builder_, level_ + 1);
     if (!result_) result_ = record_definition(builder_, level_ + 1);
     if (!result_) result_ = include(builder_, level_ + 1);
@@ -2482,6 +2483,28 @@ public class ErlangParser implements PsiParser {
       marker_.drop();
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_RECOVER_, recoverer_parser_);
+    return result_;
+  }
+
+  // (is_app_config tuple_expression)
+  private static boolean form_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "form_0")) return false;
+    return form_0_0(builder_, level_ + 1);
+  }
+
+  // is_app_config tuple_expression
+  private static boolean form_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "form_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = isApplicationLanguage(builder_, level_ + 1);
+    result_ = result_ && tuple_expression(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
     return result_;
   }
 

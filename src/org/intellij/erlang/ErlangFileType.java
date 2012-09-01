@@ -17,7 +17,6 @@
 package org.intellij.erlang;
 
 import com.intellij.openapi.fileTypes.LanguageFileType;
-import com.intellij.openapi.fileTypes.PlainTextLanguage;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -29,6 +28,7 @@ public class ErlangFileType extends LanguageFileType {
   public static ErlangFileType INSTANCE = new ErlangFileType();
   public static HrlFileType HRL = new HrlFileType();
   public static AppFileType APP = new AppFileType();
+  public static ConfigFileType CONFIG = new ConfigFileType();
 
   protected ErlangFileType() {
     super(ErlangLanguage.INSTANCE);
@@ -88,11 +88,7 @@ public class ErlangFileType extends LanguageFileType {
     }
   }
 
-  public static class AppFileType extends LanguageFileType {
-    protected AppFileType() {
-      super(PlainTextLanguage.INSTANCE);
-    }
-
+  public static class AppFileType extends ErlangFileType {
     @NotNull
     @Override
     public String getName() {
@@ -115,11 +111,30 @@ public class ErlangFileType extends LanguageFileType {
     public Icon getIcon() {
       return ErlangIcons.OTP_APP_RESOURCE;
     }
+  }
+
+  public static class ConfigFileType extends ErlangFileType {
+    @NotNull
+    @Override
+    public String getName() {
+      return "Rebar config";
+    }
+
+    @NotNull
+    @Override
+    public String getDescription() {
+      return "Rebar Configuration File";
+    }
+
+    @NotNull
+    @Override
+    public String getDefaultExtension() {
+      return "config";
+    }
 
     @Override
-    public boolean isJVMDebuggingSupported() {
-      // turn off for now
-      return false;
+    public Icon getIcon() {
+      return ErlangIcons.CONFIG;
     }
   }
 }

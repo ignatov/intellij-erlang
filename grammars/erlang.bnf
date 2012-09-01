@@ -115,7 +115,10 @@
 }
 
 forms ::= form ('.' form)*
-private form ::= function | rule | record_definition | include | macros_definition | attribute {recoverUntil=recoverer}
+private form ::= (is_app_config tuple_expression) | function | rule | record_definition | include | macros_definition | attribute
+  {recoverUntil=recoverer}
+
+private external is_app_config ::= isApplicationLanguage
 
 q_atom ::= macros | atom
 q_var ::= '_' | var {
