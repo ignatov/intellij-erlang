@@ -62,10 +62,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
           Integer offset = pair.second;
           String tag = pair.first;
           if (ErlangDocumentationProvider.EDOC_TAGS.contains(tag)) {
-            TextRange range = TextRange.from(comment.getTextOffset() + offset, tag.length());
-            TextAttributesKey key = ErlangSyntaxHighlighter.DOC_COMMENT_TAG;
-            annotationHolder.createInfoAnnotation(range, null).setEnforcedTextAttributes(TextAttributes.ERASE_MARKER);
-            annotationHolder.createInfoAnnotation(range, null).setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key));
+            annotationHolder.createInfoAnnotation(TextRange.from(comment.getTextOffset() + offset, tag.length()), null).
+              setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(ErlangSyntaxHighlighter.DOC_COMMENT_TAG));
           }
         }
       }
