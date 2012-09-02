@@ -54,19 +54,22 @@
 
         <internalFileTemplate name="Erlang Module"/>
         <internalFileTemplate name="Erlang Header"/>
-				<internalFileTemplate name="Erlang EUnit Tests"/>
+        <internalFileTemplate name="Erlang EUnit Tests"/>
         <internalFileTemplate name="Erlang Application"/>
         <internalFileTemplate name="Erlang Application Resource File"/>
         <internalFileTemplate name="Erlang Supervisor"/>
         <internalFileTemplate name="Erlang Gen Server"/>
-				<internalFileTemplate name="Erlang Gen FSM"/>
+        <internalFileTemplate name="Erlang Gen FSM"/>
         <internalFileTemplate name="Erlang Gen Event"/>
 
+        <defaultLiveTemplatesProvider implementation="org.intellij.erlang.template.ErlangLiveTemplateProvider"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType"/>
+
         <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.editor.ErlangModuleType"/>
-        <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector" />
+        <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector"/>
 
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
-        <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder" />
+        <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder"/>
         <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
         <iconProvider implementation="org.intellij.erlang.ErlangIconProvider"/>
         <lang.findUsagesProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangFindUsagesProvider"/>
@@ -80,8 +83,8 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.ErlangCompletionContributor"/>
         <renameInputValidator implementation="org.intellij.erlang.ErlangRenameInputValidator"/>
-        <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler" />
-        <colorSettingsPage implementation="org.intellij.erlang.editor.ErlangColorSettingsPage" />
+        <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler"/>
+        <colorSettingsPage implementation="org.intellij.erlang.editor.ErlangColorSettingsPage"/>
         <lang.documentationProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangDocumentationProvider"/>
 
         <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
@@ -105,7 +108,7 @@
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordInspection"/>
         <localInspection language="Erlang" shortName="ErlangUnresolvedRecordFieldInspection" displayName="Unresolved record field"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
-                         implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordFieldInspection" />
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordFieldInspection"/>
         <localInspection language="Erlang" shortName="ErlangUnresolvedFunctionInspection"
                          displayName="Unresolved function"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
