@@ -108,11 +108,11 @@ public class ErlangSdkType extends SdkType {
       File firstItem = ContainerUtil.getFirstItem(FileUtil.findFilesOrDirsByMask(pattern, releases));
       if (firstItem == null) return null;
       return firstItem.getName();
-    }else
-    {
+    }
+    else {
       // releases dir did not exist, so let's see if we can parse the version by walking up the parents
       File current = releases.getParentFile();
-      while(current != null){
+      while (current != null) {
         if (pattern.matcher(current.getName()).matches()) {
           return current.getName();
         }
