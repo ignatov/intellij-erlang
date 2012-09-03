@@ -25,6 +25,7 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,7 +56,9 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
 
   @Override
   public void delete() throws IncorrectOperationException { // todo: move to more appropriate place
-    if (!(this instanceof ErlangFunction) && !(this instanceof ErlangRecordDefinition)) return;
+    if (!(this instanceof ErlangFunction) && !(this instanceof ErlangRecordDefinition) && !(this instanceof ErlangMacrosDefinition)) {
+      return;
+    }
 
     PsiElement nextSibling = getNextSibling();
     if (nextSibling instanceof LeafPsiElement && nextSibling.getNode().getElementType() == ERL_DOT) {
