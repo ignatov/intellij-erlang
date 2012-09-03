@@ -16,27 +16,27 @@
   -->
 
 <templateSet group="erlang">
-    <template name="def" value="-define($NAME$, $VALUE$).&#10;$END$" description="Define macro" toReformat="true" toShortenFQNames="true">
+    <template name="def" value="-define($NAME$, $VALUE$).$END$" description="Define macro" toReformat="true" toShortenFQNames="true">
       <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
         <option name="ERLANG_CODE" value="true" />
       </context>
     </template>
-    <template name="inc" value="-include(&quot;$FILE$.hrl&quot;).&#10;$END$" description="Include file" toReformat="true" toShortenFQNames="true">
+    <template name="inc" value="-include(&quot;$FILE$.hrl&quot;).$END$" description="Include file" toReformat="true" toShortenFQNames="true">
       <variable name="FILE" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
         <option name="ERLANG_CODE" value="true" />
       </context>
     </template>
-    <template name="incl" value="-include_lib(&quot;$LIB$/include/$FILE$.hrl&quot;).&#10;$END$" description="Include library" toReformat="true" toShortenFQNames="true">
+    <template name="incl" value="-include_lib(&quot;$LIB$/include/$FILE$.hrl&quot;).$END$" description="Include library" toReformat="true" toShortenFQNames="true">
       <variable name="LIB" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="FILE" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
         <option name="ERLANG_CODE" value="true" />
       </context>
     </template>
-    <template name="beh" value="-behaviour($BEHAVIOUR$).&#10;$END$" description="Define behaviour" toReformat="true" toShortenFQNames="true">
+    <template name="beh" value="-behaviour($BEHAVIOUR$).$END$" description="Define behaviour" toReformat="true" toShortenFQNames="true">
       <variable name="BEHAVIOUR" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
         <option name="ERLANG_CODE" value="true" />
@@ -66,7 +66,7 @@
         <option name="ERLANG_CODE" value="true" />
       </context>
     </template>
-    <template name="casc" value="$MATCH$ $GUARD$ -&gt; $END$&#10;" description="case clause" toReformat="true" toShortenFQNames="true">
+    <template name="casc" value="$MATCH$ $GUARD$ -&gt; $END$" description="case clause" toReformat="true" toShortenFQNames="true">
       <variable name="MATCH" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="GUARD" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
@@ -116,7 +116,7 @@
         <option name="ERLANG_CODE" value="true" />
       </context>
     </template>
-    <template name="iof" value="io:format(&quot;$PATTERN$&quot;, [$VALUES$]),$END$&#10;" description="io:format" toReformat="false" toShortenFQNames="true">
+    <template name="iof" value="io:format(&quot;$PATTERN$&quot;, [$VALUES$]),$END$" description="io:format" toReformat="false" toShortenFQNames="true">
       <variable name="PATTERN" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="VALUES" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
