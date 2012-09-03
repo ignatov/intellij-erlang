@@ -95,18 +95,29 @@ public class ErlangSdkType extends SdkType {
   @NotNull
   public String suggestSdkName(@Nullable final String currentSdkName, @NotNull final String sdkHome) {
     String version = getVersionString(sdkHome);
-    if (version == null) return "Unknown at " + sdkHome;
+    if (version == null) return "Unknown Erlang version at " + sdkHome;
     return "Erlang " + version;
   }
 
   @Nullable
   public String getVersionString(@NotNull final String sdkHome) {
+    Pattern pattern = Pattern.compile("R\\d+.*");
+    // determine the version from the 'releases' directory, if it exists
     File releases = new File(sdkHome, "releases");
     if (releases.isDirectory()) {
-      Pattern pattern = Pattern.compile("R\\d+.*");
       File firstItem = ContainerUtil.getFirstItem(FileUtil.findFilesOrDirsByMask(pattern, releases));
       if (firstItem == null) return null;
       return firstItem.getName();
+    }else
+    {
+      // releases dir did not exist, so let's see if we can parse the version by walking up the parents
+      File current = releases.getParentFile();
+      while(current != null){
+        if (pattern.matcher(current.getName()).matches()) {
+          return current.getName();
+        }
+        current = current.getParentFile();
+      }
     }
     return null;
   }
