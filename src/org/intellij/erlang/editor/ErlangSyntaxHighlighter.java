@@ -64,7 +64,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
     if (type == ERL_STRING) {
       return pack(STRING);
     }
-    if (type == ERL_INTEGER) {
+    if (type == ERL_INTEGER || type == ERL_FLOAT) {
       return pack(NUMBER);
     }
     if (type == ERL_OP_EQ) {
