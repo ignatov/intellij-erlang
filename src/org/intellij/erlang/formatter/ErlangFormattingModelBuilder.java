@@ -102,6 +102,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .before(ERL_DOT).none()
       .around(ERL_QMARK).none()
       .before(ERL_RECORD_TUPLE).none()
+      .before(ERL_END).spaces(1)
       ;
   }
 
