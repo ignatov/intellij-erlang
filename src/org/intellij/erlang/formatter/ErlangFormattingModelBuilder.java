@@ -97,6 +97,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .beforeInside(rules, ERL_PAR_LEFT).none()
 
       .aroundInside(ERL_COLON, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION).none()
+      .around(ERL_COLON_COLON).spaces(1)
       .aroundInside(ERL_DOT, ERL_RECORD_EXPRESSION).none()
       .aroundInside(ERL_RADIX, ERL_RECORD_EXPRESSION).none()
       .before(ERL_DOT).none()
