@@ -57,6 +57,8 @@ public class ErlangParserTest extends ParsingTestCase {
   public void testFailedRecord()      { doTest(true, true); }
   public void testRecords2()          { doTest(true, false); }
   public void testAtomWithArity()     { doTest(true, false); }
+  public void test77()                { doTest(true, false); }
+  public void test74()                { doTest(true, false); }
 
   protected void doTest(boolean checkResult, boolean suppressErrors) {
 //    OVERWRITE_TESTDATA = true;

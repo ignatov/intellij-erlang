@@ -120,10 +120,11 @@ private form ::= (is_app_config tuple_expression) | function | rule | record_def
 
 private external is_app_config ::= isApplicationLanguage
 
-q_atom ::= macros | atom
+q_atom ::= macros_arg | macros | atom
 q_var ::= '_' | var {
   methods = [getReference processDeclarations getName setName getNameIdentifier]
 }
+macros_arg ::= '?''?' macros_name
 macros ::= '?' macros_name {
   pin=1
   methods = [getReference]
@@ -318,7 +319,7 @@ record_ref ::= q_atom {methods = [getReference]}
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
 record_fields ::= record_field (',' record_field)*
-record_field ::= q_atom '=' (qualified_atom_expression | expression) {
+record_field ::= (q_atom | '_') '=' (qualified_atom_expression | expression) {
   pin=1
   methods = [
     getReference

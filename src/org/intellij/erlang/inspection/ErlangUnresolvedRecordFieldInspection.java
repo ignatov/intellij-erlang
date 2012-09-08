@@ -84,6 +84,7 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangBaseInspection 
         PsiReference reference = o.getReference();
         if (reference == null || reference.resolve() == null) {
           ErlangQAtom atom = o.getFieldNameAtom();
+          if (atom == null) return;
           problemsHolder.registerProblem(atom, "Unresolved record field " + "'" + atom.getText() + "'");
         }
       }

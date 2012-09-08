@@ -87,6 +87,7 @@ public class ErlangPsiImplUtil {
   @Nullable
   public static PsiReference getReference(@NotNull ErlangRecordField o) {
     final ErlangQAtom atom = o.getFieldNameAtom();
+    if (atom == null) return null;
     return new ErlangAtomBasedReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText()) {
       @Override
       public PsiElement resolve() {

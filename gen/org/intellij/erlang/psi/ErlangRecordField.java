@@ -17,7 +17,7 @@ public interface ErlangRecordField extends ErlangCompositeElement {
   @Nullable
   PsiReference getReference();
 
-  @NotNull
+  @Nullable
   ErlangQAtom getFieldNameAtom();
 
 }

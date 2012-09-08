@@ -40,10 +40,10 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangQAtom getFieldNameAtom() {
     List<ErlangQAtom> p1 = getQAtomList();
-    return p1.get(0);
+    return p1.size() < 1 ? null : p1.get(0);
   }
 
 }
