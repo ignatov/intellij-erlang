@@ -19,11 +19,14 @@ package org.intellij.erlang.formatter;
 import com.intellij.formatting.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
+import org.intellij.erlang.psi.ErlangFakeBinaryExpression;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,23 +110,44 @@ public class ErlangBlock implements ASTBlock {
 
   private List<Block> buildSubBlocks() {
     List<Block> blocks = new ArrayList<Block>();
-    for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
+    Alignment alignment = null;
+    Alignment baseAlignment = Alignment.createAlignment();
+    IElementType parentType = getNode().getElementType();
+    PsiElement psi = getNode().getPsi();
 
+    for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
       IElementType childType = child.getElementType();
 
-      if (child.getTextRange().getLength() == 0) continue;
+      if (child.getTextRange().getLength() == 0 || childType == TokenType.WHITE_SPACE) continue;
 
-      if (childType == TokenType.WHITE_SPACE) {
-        continue;
+      if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_LIST
+        || parentType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE) {
+        if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT) {
+          alignment = baseAlignment;
+        }
+      }
+      if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS) {
+        if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT) {
+          alignment = baseAlignment;
+        }
+      }
+      if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS) {
+        if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) {
+          alignment = baseAlignment;
+        }
+      }
+      if (psi instanceof ErlangFakeBinaryExpression) {
+        alignment = baseAlignment;
       }
 
-      blocks.add(buildSubBlock(child));
+      blocks.add(buildSubBlock(child, alignment));
+      alignment = null;
     }
     return Collections.unmodifiableList(blocks);
   }
 
-  private Block buildSubBlock(ASTNode child) {
-    return new ErlangBlock(child, null, null, mySettings, mySpacingBuilder);
+  private Block buildSubBlock(@NotNull ASTNode child, @Nullable Alignment alignment) {
+    return new ErlangBlock(child, alignment, null, mySettings, mySpacingBuilder);
   }
 
   @Override
