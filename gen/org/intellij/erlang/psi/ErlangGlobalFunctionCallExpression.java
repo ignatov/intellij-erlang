@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ErlangGlobalFunctionCallExpression extends ErlangExpression {
 
   @NotNull
-  ErlangExpression getExpression();
+  ErlangFunctionCallExpression getFunctionCallExpression();
 
   @NotNull
   ErlangModuleRef getModuleRef();

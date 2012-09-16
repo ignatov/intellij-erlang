@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangMultiplicativeExpressionImpl extends ErlangExpressionImpl implements ErlangMultiplicativeExpression {
+public class ErlangMultiplicativeExpressionImpl extends ErlangFakeBinaryExpressionImpl implements ErlangMultiplicativeExpression {
 
   public ErlangMultiplicativeExpressionImpl(ASTNode node) {
     super(node);

@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ErlangBinElement extends ErlangCompositeElement {
 
   @NotNull
-  List<ErlangExpression> getExpressionList();
+  List<ErlangMaxExpression> getMaxExpressionList();
 
   @Nullable
   ErlangOptBitTypeList getOptBitTypeList();

@@ -7,10 +7,10 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangQualifiedExpression extends ErlangExpression {
 
-  @Nullable
-  ErlangExpression getExpression();
-
   @NotNull
   List<ErlangQAtom> getQAtomList();
+
+  @Nullable
+  ErlangQualifiedExpression getQualifiedExpression();
 
 }

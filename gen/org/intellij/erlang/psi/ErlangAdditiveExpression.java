@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangAdditiveExpression extends ErlangExpression {
+public interface ErlangAdditiveExpression extends ErlangFakeBinaryExpression {
 
   @NotNull
   List<ErlangExpression> getExpressionList();

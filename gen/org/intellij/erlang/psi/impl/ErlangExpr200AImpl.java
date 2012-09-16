@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangExpr200AImpl extends ErlangExpressionImpl implements ErlangExpr200A {
+public class ErlangExpr200AImpl extends ErlangFakeBinaryExpressionImpl implements ErlangExpr200A {
 
   public ErlangExpr200AImpl(ASTNode node) {
     super(node);

@@ -18,8 +18,8 @@ public class ErlangPrefixExpressionImpl extends ErlangExpressionImpl implements 
 
   @Override
   @NotNull
-  public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+  public ErlangExpr700A getExpr700A() {
+    return findNotNullChildByClass(ErlangExpr700A.class);
   }
 
   @Override

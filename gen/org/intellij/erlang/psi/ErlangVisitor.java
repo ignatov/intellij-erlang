@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElementVisitor;
 public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitAdditiveExpression(@NotNull ErlangAdditiveExpression o) {
-    visitExpression(o);
+    visitFakeBinaryExpression(o);
   }
 
   public void visitArgumentDefinition(@NotNull ErlangArgumentDefinition o) {
@@ -135,19 +135,19 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitExpr150A(@NotNull ErlangExpr150A o) {
-    visitExpression(o);
+    visitFakeBinaryExpression(o);
   }
 
   public void visitExpr160A(@NotNull ErlangExpr160A o) {
-    visitExpression(o);
+    visitFakeBinaryExpression(o);
   }
 
   public void visitExpr200A(@NotNull ErlangExpr200A o) {
-    visitExpression(o);
+    visitFakeBinaryExpression(o);
   }
 
   public void visitExpr300A(@NotNull ErlangExpr300A o) {
-    visitExpression(o);
+    visitFakeBinaryExpression(o);
   }
 
   public void visitExpr400A(@NotNull ErlangExpr400A o) {
@@ -291,7 +291,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitMultiplicativeExpression(@NotNull ErlangMultiplicativeExpression o) {
-    visitExpression(o);
+    visitFakeBinaryExpression(o);
   }
 
   public void visitOptBitTypeList(@NotNull ErlangOptBitTypeList o) {
@@ -363,7 +363,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitSendExpression(@NotNull ErlangSendExpression o) {
-    visitExpression(o);
+    visitFakeBinaryExpression(o);
   }
 
   public void visitSpecFun(@NotNull ErlangSpecFun o) {

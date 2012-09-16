@@ -6354,13 +6354,13 @@ public class ErlangParser implements PsiParser {
   }
 
   final static Parser recoverer_parser_ = new Parser() {
-      public boolean parse(PsiBuilder builder_, int level_) {
-        return recoverer(builder_, level_ + 1);
-      }
-    };
+    public boolean parse(PsiBuilder builder_, int level_) {
+      return recoverer(builder_, level_ + 1);
+    }
+  };
   final static Parser tuple_recoverer_parser_ = new Parser() {
-      public boolean parse(PsiBuilder builder_, int level_) {
-        return tuple_recoverer(builder_, level_ + 1);
-      }
-    };
+    public boolean parse(PsiBuilder builder_, int level_) {
+      return tuple_recoverer(builder_, level_ + 1);
+    }
+  };
 }

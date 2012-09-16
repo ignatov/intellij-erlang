@@ -103,7 +103,7 @@
   
   pin(".*_expression")=1
   
-  extends("assignment_expression")=fake_binary_expression
+  extends("assignment_expression|send_expression|expr_150_a|expr_160_a|expr_200_a|expr_300_a|additive_expression|multiplicative_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal|a)")=expression
   name(".*_(expression|comprehension|literal|a)")=expression
   name(".*attribute")=attribute

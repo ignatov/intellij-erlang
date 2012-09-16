@@ -17,15 +17,15 @@ public class ErlangQualifiedExpressionImpl extends ErlangExpressionImpl implemen
   }
 
   @Override
-  @Nullable
-  public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
-  }
-
-  @Override
   @NotNull
   public List<ErlangQAtom> getQAtomList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangQualifiedExpression getQualifiedExpression() {
+    return findChildByClass(ErlangQualifiedExpression.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
