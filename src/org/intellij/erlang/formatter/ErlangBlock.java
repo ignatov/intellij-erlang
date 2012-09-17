@@ -144,7 +144,9 @@ public class ErlangBlock implements ASTBlock, BlockWithParent {
       if (psi instanceof ErlangFakeBinaryExpression) {
         alignment = baseAlignment;
       }
-      if (parentType == ERL_FUNCTION_CLAUSE && childType == ERL_CLAUSE_BODY) { // Emacs style alignment for function clauses
+      boolean isEmacsStyleFunctionAlignment = false;
+      //noinspection ConstantConditions
+      if (isEmacsStyleFunctionAlignment && parentType == ERL_FUNCTION_CLAUSE && childType == ERL_CLAUSE_BODY) { // Emacs style alignment for function clauses
         @Nullable BlockWithParent clause = getParent();
         List<Block> subBlocks = clause instanceof  ASTBlock ? ((ASTBlock) clause).getSubBlocks() : Collections.<Block>emptyList();
 
