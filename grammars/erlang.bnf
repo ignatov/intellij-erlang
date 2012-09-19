@@ -115,7 +115,7 @@
 }
 
 forms ::= form ('.' form)*
-private form ::= (is_app_config tuple_expression) | function | rule | record_definition | include | macros_definition | attribute
+private form ::= (is_app_config config_expression) | function | rule | record_definition | include | macros_definition | attribute
   {recoverUntil=recoverer}
 
 private external is_app_config ::= isApplicationLanguage
@@ -236,6 +236,22 @@ argument_definition_list ::= '(' argument_definition? (',' argument_definition)*
 
 clause_guard ::= when guard {pin=1}
 clause_body ::= '->' exprs {pin=1}
+
+config_expression ::=
+    config_tuple_expression
+  | config_list_expression
+  | config_bin_list_expression
+  | config_qualified_or_call_expression
+  | (prefix_op? atomic)
+  | q_var
+private config_qualified_or_call_expression ::= q_atom left_accessors?
+private left_accessors ::= config_call_expression | qualified_expression+
+left config_call_expression ::= config_argument_list {pin=0}
+config_argument_list ::= '(' config_exprs? ')' {elementType=argument_list}
+config_list_expression ::= '[' config_exprs? ']' {elementType=list_expression}
+config_bin_list_expression ::= '<<' config_exprs? '>>' {elementType=binary_expression}
+config_tuple_expression ::= '{' config_exprs? '}' {elementType=tuple_expression}
+private config_exprs ::= config_expression (',' config_expression)*
 
 expression ::= q_atom_or_var&(',' | ')' | '->' | '}' | ']' | ';') | catch_expression | expr_100_a
 catch_expression ::= catch expression

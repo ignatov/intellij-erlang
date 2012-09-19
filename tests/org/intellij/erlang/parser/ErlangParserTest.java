@@ -16,25 +16,14 @@
 
 package org.intellij.erlang.parser;
 
-import com.intellij.testFramework.ParsingTestCase;
 import org.intellij.erlang.ErlangParserDefinition;
 
 /**
  * @author ignatov
  */
-public class ErlangParserTest extends ParsingTestCase {
+public class ErlangParserTest extends ErlangParserTestBase {
   public ErlangParserTest() {
     super("parser", "erl", new ErlangParserDefinition());
-  }
-
-  @Override
-  protected String getTestDataPath() {
-    return "testData";
-  }
-
-  @Override
-  protected boolean skipSpaces() {
-    return true;
   }
 
   public void testHelloWorld()        { doTest(true, false); }

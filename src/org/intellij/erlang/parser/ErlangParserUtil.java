@@ -17,21 +17,23 @@
 package org.intellij.erlang.parser;
 
 import com.intellij.lang.PsiBuilder;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangParserUtil extends GeneratedParserUtilBase {
-  public static boolean isApplicationLanguage(PsiBuilder builder_, int level) {
-    FileType fileType = getFileType(builder_);
-    return fileType == ErlangFileType.APP || fileType == ErlangFileType.CONFIG;
-  }
-
-  private static FileType getFileType(PsiBuilder builder_) {
+  public static boolean isApplicationLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
     PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
     assert file != null;
-    return file.getViewProvider().getVirtualFile().getFileType();
+    return isApplicationConfigFileType(file);
+  }
+
+  public static boolean isApplicationConfigFileType(@NotNull PsiFile file) {
+    FileType fileType = file.getViewProvider().getVirtualFile().getFileType();
+    return fileType == ErlangFileType.APP || fileType == ErlangFileType.CONFIG ||
+      (ApplicationManager.getApplication().isUnitTestMode() && (fileType.getDefaultExtension().equals("app") || fileType.getDefaultExtension().equals("config")));
   }
 }

@@ -1,0 +1,186 @@
+%% -*- mode: erlang;erlang-indent-level: 4;indent-tabs-mode: nil -*-
+%% ex: ts=4 sw=4 ft=erlang et
+%% This is a sample rebar.conf file that shows examples of some of rebar's
+%% options.
+
+%% == Core ==
+
+%% Additional library directories to add to the code path
+{lib_dirs, []}.
+
+%% == Erlang Compiler ==
+
+%% Erlang files to compile before the rest. Rebar automatically compiles
+%% parse_transforms and custom behaviours before anything other than the files
+%% in this list.
+{erl_first_files, ["mymib1", "mymib2"]}.
+
+%% Erlang compiler options
+{erl_opts, [no_debug_info, {i, "myinclude"}, {src_dirs, ["src1", "src2"]},
+            {platform_define,
+             "(linux|solaris|freebsd|darwin)", 'HAVE_SENDFILE'},
+            {platform_define, "(linux|freebsd)", 'BACKLOG', 128},
+            {platform_define, "R13", 'old_inets'}]}.
+
+%% MIB Options?
+{mib_opts, []}.
+
+%% SNMP mibs to compile first?
+{mib_first_files, []}.
+
+%% == EDoc ==
+
+%% EDoc options
+{edoc_opts, []}.
+
+%% == Port Compiler ==
+
+%% Port compilation environment variables. See rebar_port_compiler.erl for
+%% more info. Default is `[]'
+{port_env, [{"CFLAGS", "$CFLAGS -Ifoo"},
+            {"freebsd", "LDFLAGS", "$LDFLAGS -lfoo"}]}.
+
+%% port_specs
+%% List of filenames or wildcards to be compiled. May also contain a tuple
+%% consisting of a regular expression to be applied against the system
+%% architecture as a filter.
+{port_specs, [{"priv/so_name.so", ["c_src/*.c"]},
+              {"linux", "priv/hello_linux", ["c_src/hello_linux.c"]},
+              {"linux", "priv/hello_linux", ["c_src/*.c"], [{env, []}]}]}.
+
+%% == LFE Compiler ==
+
+%% LFE files to compile before the rest
+{lfe_first_files, []}.
+
+%% Options for the LFE compiler: reuse {erl_opts, []}
+
+%% == ErlyDTL Compiler ==
+
+%% Options for the ErlyDTL compiler
+{erlydtl_opts, []}.
+
+%% == EUnit ==
+
+%% Options for eunit:test()
+{eunit_opts, []}.
+
+%% Additional compile options for eunit. erl_opts is also used
+{eunit_compile_opts, []}.
+
+%% Same as erl_first_files, but used only when running 'eunit'
+{eunit_first_files, []}.
+
+%% == Cover ==
+
+%% Whether to enable coverage reporting. Default is `false'
+{cover_enabled, false}.
+
+%% Whether to print coverage report to console. Default is `false'
+{cover_print_enabled, false}.
+
+%% Whether to export coverage report to file. Default is `false'
+{cover_export_enabled, false}.
+
+%% == Common Test ==
+
+%% Override the default "test" directory in which SUITEs are located
+{ct_dir, "itest"}.
+
+%% Override the default "logs" directory in which SUITEs are logged
+{ct_log_dir, "test/logs"}.
+
+%% Option to pass extra parameters when launching Common Test
+{ct_extra_params, "-boot start_sasl -s myapp"}.
+
+%% Option to use short names (i.e., -sname test) when starting ct
+{ct_use_short_names, true}.
+
+%% == QuickCheck ==
+
+%% If qc_mod is unspecified, rebar tries to detect Triq or EQC
+{qc_opts, [{qc_mod, module()}, Options]}.
+
+%% Additional compile options for qc. erl_opts is also used
+{qc_compile_opts, []}.
+
+%% Same as erl_first_files, but used only when running 'qc'
+{qc_first_files, []}.
+
+%% == Cleanup ==
+
+%% Which files to cleanup
+{clean_files, ["file", "file2"]}.
+
+%% == Reltool ==
+
+%% Target directory for the release
+{target, "target"}.
+
+%% == OTP Applications ==
+
+%% Binaries to link into the erlang path?
+{app_bin, []}.
+
+%% Enable validation of the OTP app module list. Default is 'true'
+{validate_app_modules, true}.
+
+%% == Dependencies ==
+
+%% Where to put any downloaded dependencies. Default is "deps"
+{deps_dir, "deps"}.
+
+%% What dependencies we have, dependencies can be of 3 forms, an application
+%% name as an atom, eg. mochiweb, a name and a version (from the .app file), or
+%% an application name, a version and the SCM details on how to fetch it (SCM
+%% type, location and revision). Rebar currently supports git, hg, bzr and svn.
+{deps, [application_name,
+        {application_name, "1.0.*"},
+        {application_name, "1.0.*",
+         {git, "git://github.com/basho/rebar.git", {branch, "master"}}}]}.
+
+%% == Subdirectories ==
+
+%% Subdirectories?
+{sub_dirs, ["dir1", "dir2"]}.
+
+%% == Plugins ==
+
+%% Plugins you wish to include.
+%% These can include any module on the code path, including deps.
+%% Alternatively, plugins can be placed as source files in the plugin_dir, in
+%% which case they will be compiled and loaded dynamically at runtime.
+{plugins, [plugin1, plugin2]}.
+
+%% Override the directory in which plugin sources can be found.
+%% Defaults to ./plugins
+{plugin_dir, "some_other_directory"}.
+
+
+%% == Pre/Post Command Hooks ==
+
+{pre_hooks, [{clean, "./prepare_package_files.sh"},
+             {"linux", compile, "c_src/build_linux.sh"},
+             {compile, "escript generate_headers"},
+             {compile, "escript check_headers"}]}.
+
+{post_hooks, [{clean, "touch file1.out"},
+              {"freebsd", compile, "c_src/freebsd_tweaks.sh"},
+              {eunit, "touch file2.out"},
+              {compile, "touch postcompile.out"}]}.
+
+%% == xref ==
+
+{xref_warnings, false}.
+
+%% xref checks to run
+{xref_checks, [exports_not_used, undefined_function_calls]}.
+
+%% Optional custom xref queries (xref manual has details) specified as
+%%     {xref_queries, [{query_string(), expected_query_result()},...]}
+%% The following for example removes all references to ejabberd:*_msg/4
+%% functions from undefined external function calls as those are in a
+%% generated module
+{xref_queries,
+ [{"(XC - UC) || (XU - X - B"
+   " - (\"ejabberd_logger\":\".*_msg\"/\"4\"))",[]}]}.

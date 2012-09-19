@@ -33,6 +33,8 @@ public interface ErlangTypes {
   IElementType ERL_CLAUSE_BODY = new ErlangCompositeElementType("ERL_CLAUSE_BODY");
   IElementType ERL_CLAUSE_GUARD = new ErlangCompositeElementType("ERL_CLAUSE_GUARD");
   IElementType ERL_COLON_QUALIFIED_EXPRESSION = new ErlangCompositeElementType("ERL_COLON_QUALIFIED_EXPRESSION");
+  IElementType ERL_CONFIG_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_CONFIG_CALL_EXPRESSION");
+  IElementType ERL_CONFIG_EXPRESSION = new ErlangCompositeElementType("ERL_CONFIG_EXPRESSION");
   IElementType ERL_CR_CLAUSE = new ErlangCompositeElementType("ERL_CR_CLAUSE");
   IElementType ERL_CR_CLAUSES = new ErlangCompositeElementType("ERL_CR_CLAUSES");
   IElementType ERL_EXPORT = new ErlangCompositeElementType("ERL_EXPORT");
@@ -261,6 +263,12 @@ public interface ErlangTypes {
       }
       else if (type == ERL_COLON_QUALIFIED_EXPRESSION) {
         return new ErlangColonQualifiedExpressionImpl(node);
+      }
+      else if (type == ERL_CONFIG_CALL_EXPRESSION) {
+        return new ErlangConfigCallExpressionImpl(node);
+      }
+      else if (type == ERL_CONFIG_EXPRESSION) {
+        return new ErlangConfigExpressionImpl(node);
       }
       else if (type == ERL_CR_CLAUSE) {
         return new ErlangCrClauseImpl(node);

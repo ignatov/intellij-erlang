@@ -98,6 +98,14 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitConfigCallExpression(@NotNull ErlangConfigCallExpression o) {
+    visitExpression(o);
+  }
+
+  public void visitConfigExpression(@NotNull ErlangConfigExpression o) {
+    visitExpression(o);
+  }
+
   public void visitCrClause(@NotNull ErlangCrClause o) {
     visitCompositeElement(o);
   }

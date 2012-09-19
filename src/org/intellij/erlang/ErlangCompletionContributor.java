@@ -39,6 +39,7 @@ import com.intellij.util.Function;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.parser.ErlangLexer;
+import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
@@ -57,7 +58,9 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
 public class ErlangCompletionContributor extends CompletionContributor {
   @Override
   public void beforeCompletion(@NotNull CompletionInitializationContext context) {
-    PsiElement elementAt = context.getFile().findElementAt(context.getStartOffset());
+    PsiFile file = context.getFile();
+    if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
+    PsiElement elementAt = file.findElementAt(context.getStartOffset());
     PsiElement parent = elementAt == null ? null : elementAt.getParent();
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
     ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
@@ -73,20 +76,23 @@ public class ErlangCompletionContributor extends CompletionContributor {
       protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
         // add completion for records on #<caret>
         PsiElement position = parameters.getPosition();
+        PsiFile file = position.getContainingFile();
+        if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
+
         PsiElement parent = position.getParent().getParent();
         PsiElement originalPosition = parameters.getOriginalPosition();
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
 
         if (originalParent instanceof ErlangRecordExpression) {
-          result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(position.getContainingFile()));
+          result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(file));
         }
         else if (originalParent instanceof ErlangExportFunctions) {
-          result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(position.getContainingFile(), true, null));
+          result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, true, null));
         }
         else {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
           if (colonQualified != null) {
-            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(position.getContainingFile(), false, colonQualified));
+            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, colonQualified));
           }
           else if (originalParent instanceof ErlangRecordFields || parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
             List<ErlangTypedExpr> fields = ErlangPsiImplUtil.getRecordFields(parent);
@@ -113,7 +119,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             }
           }
           if (colonQualified == null && parent instanceof ErlangExpression && ErlangPsiImplUtil.inFunction(position)) {
-            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(position.getContainingFile(), false, null));
+            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, null));
           }
         }
       }
