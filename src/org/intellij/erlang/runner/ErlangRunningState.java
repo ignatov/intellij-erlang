@@ -50,9 +50,10 @@ public class ErlangRunningState extends CommandLineState {
     commandLine.setWorkDirectory(canonicalPath);
 
     commandLine.setExePath(erl);
-    commandLine.addParameters("-s", "init", "stop", "-noshell", "-run");
+    commandLine.addParameters("-run");
     commandLine.addParameters(StringUtil.split(myConfiguration.getModuleAndFunction(), " "));
     commandLine.addParameters(StringUtil.split(myConfiguration.getParams(), " "));
+    commandLine.addParameters("-s", "init", "stop", "-noshell");
 
     final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(module.getProject());
     setConsoleBuilder(consoleBuilder);
