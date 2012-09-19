@@ -44,6 +44,41 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
 
   private static SpacingBuilder createSpacingBuilder(CommonCodeStyleSettings settings) {
     TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
+    TokenSet keywords = TokenSet.create(
+      ERL_AFTER
+      , ERL_WHEN
+      , ERL_BEGIN
+      , ERL_END
+      , ERL_OF
+      , ERL_CASE
+      , ERL_FUN
+      , ERL_QUERY
+      , ERL_CATCH
+      , ERL_IF
+      , ERL_RECEIVE
+      , ERL_TRY
+
+      , ERL_DIV
+      , ERL_REM
+      , ERL_OR
+      , ERL_XOR
+      , ERL_BOR
+      , ERL_BXOR
+      , ERL_BSL
+      , ERL_BSR
+      , ERL_AND
+      , ERL_BAND
+
+
+
+
+
+
+
+
+
+
+    );
 
     return new SpacingBuilder(settings.getRootSettings())
       .before(ERL_COMMA).spaceIf(settings.SPACE_BEFORE_COMMA)
@@ -95,6 +130,15 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .withinPair(ERL_BIN_START, ERL_BIN_END).spaceIf(true)
 
       .beforeInside(rules, ERL_PAR_LEFT).none()
+
+      .around(keywords).spaces(1)
+
+      .before(ERL_CLAUSE_GUARD).spaces(1)
+      .before(ERL_TYPE_SPEC).spaces(1)
+      .around(ERL_FUN_TYPE).spaces(1)
+      .around(ERL_TYPE_SIG).spaces(1)
+      .beforeInside(ERL_PAR_LEFT, ERL_FUN_TYPE).spaces(1)
+      .afterInside(ERL_PAR_RIGHT, ERL_FUN_TYPE).spaces(1)
 
       .aroundInside(ERL_COLON, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION).none()
       .around(ERL_COLON_COLON).spaces(1)
