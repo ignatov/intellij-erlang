@@ -58,11 +58,15 @@ public class ErlangCompletionContributor extends CompletionContributor {
   public void beforeCompletion(@NotNull CompletionInitializationContext context) {
     PsiFile file = context.getFile();
     if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
-    PsiElement elementAt = file.findElementAt(context.getStartOffset());
+    int startOffset = context.getStartOffset();
+    PsiElement elementAt = file.findElementAt(startOffset);
     PsiElement parent = elementAt == null ? null : elementAt.getParent();
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
     ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
+    PsiElement previousByOffset = startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
     if (parent instanceof ErlangExport || export != null || prevIsRadix(elementAt)
+      || (previousByOffset != null && previousByOffset.getNode().getElementType() == ErlangTypes.ERL_RADIX)
+      || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField)
       || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) {
       context.setDummyIdentifier("a");
     }
@@ -80,7 +84,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         PsiElement originalPosition = parameters.getOriginalPosition();
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
 
-        if (originalParent instanceof ErlangRecordExpression || prevIsRadix(originalPosition)) {
+        if (originalParent instanceof ErlangRecordExpression || prevIsRadix(originalPosition) || prevIsRadix(parent)) {
           result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(file));
         }
         else if (originalParent instanceof ErlangExportFunctions) {
