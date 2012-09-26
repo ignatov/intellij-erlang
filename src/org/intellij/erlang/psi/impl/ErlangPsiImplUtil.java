@@ -22,6 +22,7 @@ import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
@@ -32,6 +33,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.PsiManagerEx;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.FilenameIndex;
@@ -44,6 +46,7 @@ import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -292,9 +295,30 @@ public class ErlangPsiImplUtil {
           final Editor editor = context.getEditor();
           final Document document = editor.getDocument();
           context.commitDocument();
+          PsiElement next = findNextToken(context);
+          ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
+
+          if (next != null && "/".equals(next.getText())) {
+            next.delete();
+          }
+          if (intNode != null && intNode.getElementType() == ErlangTypes.ERL_INTEGER) {
+            intNode.getPsi().delete();
+          }
+          PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
           document.insertString(context.getTailOffset(), "/" + arity);
           editor.getCaretModel().moveToOffset(context.getTailOffset());
         }
+
+        @Nullable
+        private PsiElement findNextToken(final InsertionContext context) {
+          final PsiFile file = context.getFile();
+          PsiElement element = file.findElementAt(context.getTailOffset());
+          if (element instanceof PsiWhiteSpace) {
+            element = file.findElementAt(element.getTextRange().getEndOffset());
+          }
+          return element;
+        }
+
       } :
       new ParenthesesInsertHandler<LookupElement>() {
         @Override
