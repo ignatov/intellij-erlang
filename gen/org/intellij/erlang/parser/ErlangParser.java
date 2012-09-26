@@ -5585,34 +5585,20 @@ public class ErlangParser implements PsiParser {
   /* ********************************************************** */
   // Expression root: expression
   // Operator priority table:
-  // 0: UNARY(catch)
-  // 1: BINARY('=')
-  // 2: BINARY('!')
-  // 3: BINARY(orelse)
-  // 4: BINARY(andalso)
-  // 5: BINARY(comp_op)
-  // 6: BINARY(list_op)
-  // 7: BINARY(add_op)
-  // 8: BINARY(mult_op)
-  // 9: UNARY(prefix_op)
-  // 10: BINARY(':')
-  // 11: ATOM(q_atom argument_list) ATOM(module_ref ':' function_call_expression) ATOM((q_atom_or_var ':')? q_atom_or_var argument_list) UNARY_POSTFIX(argument_list) UNARY_POSTFIX(record_tail) ATOM(record_tail) ATOM(q_atom '.' q_atom&(!('(')))
-  // 12: ATOM(atomic
-  //   | q_var
-  //   | tuple_expression
-  //   | list_atom_with_arity_expression
-  //   | list_expression
-  //   | case_expression
-  //   | if_expression
-  //   | binary_comprehension
-  //   | list_comprehension
-  //   | receive_expression
-  //   | fun_expression
-  //   | try_expression
-  //   | query_expression
-  //   | binary_expression
-  //   | begin_end_expression)
-  // 13: UNARY('(' tail: ')')
+  // 0: PREFIX(catch_expression)
+  // 1: BINARY(assignment_expression)
+  // 2: BINARY(send_expression)
+  // 3: BINARY(orelse_expression)
+  // 4: BINARY(andalso_expression)
+  // 5: BINARY(comp_op_expression)
+  // 6: BINARY(list_op_expression)
+  // 7: BINARY(additive_expression)
+  // 8: BINARY(multiplicative_expression)
+  // 9: PREFIX(prefix_expression)
+  // 10: BINARY(colon_qualified_expression)
+  // 11: ATOM(function_call_expression) ATOM(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression) POSTFIX(record_expression) ATOM(record2_expression) ATOM(qualified_expression)
+  // 12: ATOM(max_expression)
+  // 13: PREFIX(parenthesized_expression)
   public static boolean expression(PsiBuilder builder_, int level_, int priority_) {
     if (!recursion_guard_(builder_, level_, "expression")) return false;
     Marker marker_ = builder_.mark();

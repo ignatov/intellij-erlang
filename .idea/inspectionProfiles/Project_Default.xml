@@ -20,7 +20,6 @@
     <inspection_tool class="AutoUnboxing" enabled="true" level="WARNING" enabled_by_default="false">
       <scope name="runtime.classes" level="WARNING" enabled="true" />
     </inspection_tool>
-    <inspection_tool class="BnfLeftRecursionInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="BooleanMethodIsAlwaysInverted" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="BusyWait" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="CStyleArrayDeclaration" enabled="true" level="WARNING" enabled_by_default="true" />

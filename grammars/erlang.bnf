@@ -263,7 +263,8 @@ expression ::=
   | prefix_expression
   | colon_qualified_expression
   | max_group
-  | max_expression | parenthesized_expression
+  | max_expression
+  | parenthesized_expression
 
 prefix_expression ::= prefix_op expression
 catch_expression ::= catch expression
