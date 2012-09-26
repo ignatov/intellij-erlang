@@ -20,7 +20,7 @@ ERL_FILE
           PsiElement(atom)('display')
         ERL_ARGUMENT_LIST
           PsiElement(()('(')
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_ATOM
               ERL_MACROS_ARG
                 PsiElement(?)('?')

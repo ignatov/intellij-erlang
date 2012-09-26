@@ -16,18 +16,6 @@ public class ErlangExpressionImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
-  @Override
-  @Nullable
-  public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangQVar getQVar() {
-    return findChildByClass(ErlangQVar.class);
-  }
-
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExpression(this);
     else super.accept(visitor);

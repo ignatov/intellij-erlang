@@ -10,20 +10,26 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangExpr200AImpl extends ErlangFakeBinaryExpressionImpl implements ErlangExpr200A {
+public class ErlangAnonymousCallExpressionImpl extends ErlangExpressionImpl implements ErlangAnonymousCallExpression {
 
-  public ErlangExpr200AImpl(ASTNode node) {
+  public ErlangAnonymousCallExpressionImpl(ASTNode node) {
     super(node);
   }
 
   @Override
   @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  public ErlangArgumentList getArgumentList() {
+    return findNotNullChildByClass(ErlangArgumentList.class);
+  }
+
+  @Override
+  @NotNull
+  public ErlangExpression getExpression() {
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExpr200A(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAnonymousCallExpression(this);
     else super.accept(visitor);
   }
 

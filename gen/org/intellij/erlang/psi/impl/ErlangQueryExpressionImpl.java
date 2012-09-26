@@ -17,15 +17,15 @@ public class ErlangQueryExpressionImpl extends ErlangExpressionImpl implements E
   }
 
   @Override
-  @Nullable
+  @NotNull
   public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   @Override
-  @Nullable
+  @NotNull
   public PsiElement getEnd() {
-    return findChildByType(ERL_END);
+    return findNotNullChildByType(ERL_END);
   }
 
   @Override

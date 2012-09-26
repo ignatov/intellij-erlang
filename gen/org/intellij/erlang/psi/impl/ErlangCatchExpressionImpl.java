@@ -17,9 +17,9 @@ public class ErlangCatchExpressionImpl extends ErlangExpressionImpl implements E
   }
 
   @Override
-  @Nullable
+  @NotNull
   public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   @Override

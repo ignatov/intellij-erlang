@@ -37,6 +37,7 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.PathUtil;
@@ -102,7 +103,7 @@ public class ErlangPsiImplUtil {
       @NotNull
       @Override
       public Object[] getVariants() {
-        return new Object[0];
+        return ArrayUtil.EMPTY_OBJECT_ARRAY;
       }
     };
   }
@@ -140,7 +141,7 @@ public class ErlangPsiImplUtil {
         @NotNull
         @Override
         public Object[] getVariants() {
-          return new Object[0];
+          return ArrayUtil.EMPTY_OBJECT_ARRAY;
         }
       };
     }
@@ -219,8 +220,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inAssignment(@NotNull PsiElement psiElement) {
-    ErlangAssignmentExpression assignmentExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
-    return assignmentExpression != null;
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class) != null;
   }
 
   public static boolean isMacros(ErlangQVar o) {
@@ -385,8 +385,7 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangRecordExpression o) {
-    ErlangRecordRef recordRef = o.getRecordRef();
-    return recordRef != null ? recordRef.getReference() : null;
+    return o.getRecordRef().getReference();
   }
 
   @Nullable
@@ -661,7 +660,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static List<ErlangFunction> getExternalFunctionForCompletion(Project project, @NotNull String moduleFileName) {
+  public static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project, @NotNull String moduleFileName) {
     PsiFile[] files = FilenameIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project));
     List<ErlangFunction> result = new ArrayList<ErlangFunction>();
     for (PsiFile file : files) {

@@ -5,12 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangExpr160A extends ErlangFakeBinaryExpression {
+public interface ErlangOrelseExpression extends ErlangFakeBinaryExpression {
 
   @NotNull
   List<ErlangExpression> getExpressionList();
 
-  @Nullable
-  PsiElement getAndalso();
+  @NotNull
+  PsiElement getOrelse();
 
 }

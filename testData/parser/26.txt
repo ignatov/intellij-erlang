@@ -106,20 +106,20 @@ ERL_FILE
           ERL_MAX_EXPRESSION
             PsiElement(string)('"nested0"')
           PsiElement(=)('=')
-          ERL_EXPR_700_A
+          ERL_RECORD_EXPRESSION
             ERL_RECORD_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('N2')
-              PsiElement(#)('#')
-              ERL_RECORD_REF
-                ERL_Q_ATOM
-                  PsiElement(atom)('nrec2')
-              ERL_RECORD_FIELD
-                PsiElement(.)('.')
-                ERL_Q_ATOM
-                  PsiElement(atom)('nrec1')
-            ERL_RECORD_EXPRESSION
+              ERL_RECORD_EXPRESSION
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('N2')
+                PsiElement(#)('#')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('nrec2')
+                ERL_RECORD_FIELD
+                  PsiElement(.)('.')
+                  ERL_Q_ATOM
+                    PsiElement(atom)('nrec1')
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
@@ -128,35 +128,34 @@ ERL_FILE
                 PsiElement(.)('.')
                 ERL_Q_ATOM
                   PsiElement(atom)('nrec0')
-            ERL_RECORD_EXPRESSION
-              PsiElement(#)('#')
-              ERL_RECORD_REF
-                ERL_Q_ATOM
-                  PsiElement(atom)('nrec0')
-              ERL_RECORD_FIELD
-                PsiElement(.)('.')
-                ERL_Q_ATOM
-                  PsiElement(atom)('name')
+            PsiElement(#)('#')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('nrec0')
+            ERL_RECORD_FIELD
+              PsiElement(.)('.')
+              ERL_Q_ATOM
+                PsiElement(atom)('name')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('N0n')
           PsiElement(=)('=')
-          ERL_EXPR_700_A
+          ERL_RECORD_EXPRESSION
             ERL_RECORD_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('N2')
-              PsiElement(#)('#')
-              ERL_RECORD_REF
-                ERL_Q_ATOM
-                  PsiElement(atom)('nrec2')
-              ERL_RECORD_FIELD
-                PsiElement(.)('.')
-                ERL_Q_ATOM
-                  PsiElement(atom)('nrec1')
-            ERL_RECORD_EXPRESSION
+              ERL_RECORD_EXPRESSION
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('N2')
+                PsiElement(#)('#')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('nrec2')
+                ERL_RECORD_FIELD
+                  PsiElement(.)('.')
+                  ERL_Q_ATOM
+                    PsiElement(atom)('nrec1')
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
@@ -165,19 +164,18 @@ ERL_FILE
                 PsiElement(.)('.')
                 ERL_Q_ATOM
                   PsiElement(atom)('nrec0')
-            ERL_RECORD_EXPRESSION
-              PsiElement(#)('#')
-              ERL_RECORD_REF
-                ERL_Q_ATOM
-                  PsiElement(atom)('nrec0')
-              ERL_RECORD_TUPLE
-                PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('name')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      PsiElement(string)('"nested0a"')
-                PsiElement(})('}')
+            PsiElement(#)('#')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('nrec0')
+            ERL_RECORD_TUPLE
+              PsiElement({)('{')
+              ERL_RECORD_FIELDS
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('name')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    PsiElement(string)('"nested0a"')
+              PsiElement(})('}')
   PsiElement(.)('.')

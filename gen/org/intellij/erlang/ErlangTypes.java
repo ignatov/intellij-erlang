@@ -11,6 +11,8 @@ import org.intellij.erlang.psi.impl.*;
 public interface ErlangTypes {
 
   IElementType ERL_ADDITIVE_EXPRESSION = new ErlangCompositeElementType("ERL_ADDITIVE_EXPRESSION");
+  IElementType ERL_ANDALSO_EXPRESSION = new ErlangCompositeElementType("ERL_ANDALSO_EXPRESSION");
+  IElementType ERL_ANONYMOUS_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_ANONYMOUS_CALL_EXPRESSION");
   IElementType ERL_ARGUMENT_DEFINITION = new ErlangCompositeElementType("ERL_ARGUMENT_DEFINITION");
   IElementType ERL_ARGUMENT_DEFINITION_LIST = new ErlangCompositeElementType("ERL_ARGUMENT_DEFINITION_LIST");
   IElementType ERL_ARGUMENT_LIST = new ErlangCompositeElementType("ERL_ARGUMENT_LIST");
@@ -33,6 +35,7 @@ public interface ErlangTypes {
   IElementType ERL_CLAUSE_BODY = new ErlangCompositeElementType("ERL_CLAUSE_BODY");
   IElementType ERL_CLAUSE_GUARD = new ErlangCompositeElementType("ERL_CLAUSE_GUARD");
   IElementType ERL_COLON_QUALIFIED_EXPRESSION = new ErlangCompositeElementType("ERL_COLON_QUALIFIED_EXPRESSION");
+  IElementType ERL_COMP_OP_EXPRESSION = new ErlangCompositeElementType("ERL_COMP_OP_EXPRESSION");
   IElementType ERL_CONFIG_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_CONFIG_CALL_EXPRESSION");
   IElementType ERL_CONFIG_EXPRESSION = new ErlangCompositeElementType("ERL_CONFIG_EXPRESSION");
   IElementType ERL_CR_CLAUSE = new ErlangCompositeElementType("ERL_CR_CLAUSE");
@@ -44,14 +47,6 @@ public interface ErlangTypes {
   IElementType ERL_EXPORT_TYPES = new ErlangCompositeElementType("ERL_EXPORT_TYPES");
   IElementType ERL_EXPORT_TYPE_ATTRIBUTE = new ErlangCompositeElementType("ERL_EXPORT_TYPE_ATTRIBUTE");
   IElementType ERL_EXPRESSION = new ErlangCompositeElementType("ERL_EXPRESSION");
-  IElementType ERL_EXPR_100_A = new ErlangCompositeElementType("ERL_EXPR_100_A");
-  IElementType ERL_EXPR_150_A = new ErlangCompositeElementType("ERL_EXPR_150_A");
-  IElementType ERL_EXPR_160_A = new ErlangCompositeElementType("ERL_EXPR_160_A");
-  IElementType ERL_EXPR_200_A = new ErlangCompositeElementType("ERL_EXPR_200_A");
-  IElementType ERL_EXPR_300_A = new ErlangCompositeElementType("ERL_EXPR_300_A");
-  IElementType ERL_EXPR_400_A = new ErlangCompositeElementType("ERL_EXPR_400_A");
-  IElementType ERL_EXPR_500_A = new ErlangCompositeElementType("ERL_EXPR_500_A");
-  IElementType ERL_EXPR_700_A = new ErlangCompositeElementType("ERL_EXPR_700_A");
   IElementType ERL_FIELD_TYPE = new ErlangCompositeElementType("ERL_FIELD_TYPE");
   IElementType ERL_FUNCTION = new ErlangCompositeElementType("ERL_FUNCTION");
   IElementType ERL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_FUNCTION_CALL_EXPRESSION");
@@ -75,6 +70,7 @@ public interface ErlangTypes {
   IElementType ERL_LC_EXPRS = new ErlangCompositeElementType("ERL_LC_EXPRS");
   IElementType ERL_LIST_COMPREHENSION = new ErlangCompositeElementType("ERL_LIST_COMPREHENSION");
   IElementType ERL_LIST_EXPRESSION = new ErlangCompositeElementType("ERL_LIST_EXPRESSION");
+  IElementType ERL_LIST_OP_EXPRESSION = new ErlangCompositeElementType("ERL_LIST_OP_EXPRESSION");
   IElementType ERL_MACROS = new ErlangCompositeElementType("ERL_MACROS");
   IElementType ERL_MACROS_ARG = new ErlangCompositeElementType("ERL_MACROS_ARG");
   IElementType ERL_MACROS_DEFINITION = new ErlangCompositeElementType("ERL_MACROS_DEFINITION");
@@ -84,6 +80,7 @@ public interface ErlangTypes {
   IElementType ERL_MODULE_REF = new ErlangCompositeElementType("ERL_MODULE_REF");
   IElementType ERL_MULTIPLICATIVE_EXPRESSION = new ErlangCompositeElementType("ERL_MULTIPLICATIVE_EXPRESSION");
   IElementType ERL_OPT_BIT_TYPE_LIST = new ErlangCompositeElementType("ERL_OPT_BIT_TYPE_LIST");
+  IElementType ERL_ORELSE_EXPRESSION = new ErlangCompositeElementType("ERL_ORELSE_EXPRESSION");
   IElementType ERL_PARENTHESIZED_EXPRESSION = new ErlangCompositeElementType("ERL_PARENTHESIZED_EXPRESSION");
   IElementType ERL_PREFIX_EXPRESSION = new ErlangCompositeElementType("ERL_PREFIX_EXPRESSION");
   IElementType ERL_QUALIFIED_EXPRESSION = new ErlangCompositeElementType("ERL_QUALIFIED_EXPRESSION");
@@ -198,6 +195,12 @@ public interface ErlangTypes {
        if (type == ERL_ADDITIVE_EXPRESSION) {
         return new ErlangAdditiveExpressionImpl(node);
       }
+      else if (type == ERL_ANDALSO_EXPRESSION) {
+        return new ErlangAndalsoExpressionImpl(node);
+      }
+      else if (type == ERL_ANONYMOUS_CALL_EXPRESSION) {
+        return new ErlangAnonymousCallExpressionImpl(node);
+      }
       else if (type == ERL_ARGUMENT_DEFINITION) {
         return new ErlangArgumentDefinitionImpl(node);
       }
@@ -264,6 +267,9 @@ public interface ErlangTypes {
       else if (type == ERL_COLON_QUALIFIED_EXPRESSION) {
         return new ErlangColonQualifiedExpressionImpl(node);
       }
+      else if (type == ERL_COMP_OP_EXPRESSION) {
+        return new ErlangCompOpExpressionImpl(node);
+      }
       else if (type == ERL_CONFIG_CALL_EXPRESSION) {
         return new ErlangConfigCallExpressionImpl(node);
       }
@@ -296,30 +302,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_EXPRESSION) {
         return new ErlangExpressionImpl(node);
-      }
-      else if (type == ERL_EXPR_100_A) {
-        return new ErlangExpr100AImpl(node);
-      }
-      else if (type == ERL_EXPR_150_A) {
-        return new ErlangExpr150AImpl(node);
-      }
-      else if (type == ERL_EXPR_160_A) {
-        return new ErlangExpr160AImpl(node);
-      }
-      else if (type == ERL_EXPR_200_A) {
-        return new ErlangExpr200AImpl(node);
-      }
-      else if (type == ERL_EXPR_300_A) {
-        return new ErlangExpr300AImpl(node);
-      }
-      else if (type == ERL_EXPR_400_A) {
-        return new ErlangExpr400AImpl(node);
-      }
-      else if (type == ERL_EXPR_500_A) {
-        return new ErlangExpr500AImpl(node);
-      }
-      else if (type == ERL_EXPR_700_A) {
-        return new ErlangExpr700AImpl(node);
       }
       else if (type == ERL_FIELD_TYPE) {
         return new ErlangFieldTypeImpl(node);
@@ -390,6 +372,9 @@ public interface ErlangTypes {
       else if (type == ERL_LIST_EXPRESSION) {
         return new ErlangListExpressionImpl(node);
       }
+      else if (type == ERL_LIST_OP_EXPRESSION) {
+        return new ErlangListOpExpressionImpl(node);
+      }
       else if (type == ERL_MACROS) {
         return new ErlangMacrosImpl(node);
       }
@@ -416,6 +401,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_OPT_BIT_TYPE_LIST) {
         return new ErlangOptBitTypeListImpl(node);
+      }
+      else if (type == ERL_ORELSE_EXPRESSION) {
+        return new ErlangOrelseExpressionImpl(node);
       }
       else if (type == ERL_PARENTHESIZED_EXPRESSION) {
         return new ErlangParenthesizedExpressionImpl(node);

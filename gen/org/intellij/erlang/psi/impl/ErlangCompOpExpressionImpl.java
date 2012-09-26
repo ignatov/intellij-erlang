@@ -10,14 +10,20 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangExpr500AImpl extends ErlangExpressionImpl implements ErlangExpr500A {
+public class ErlangCompOpExpressionImpl extends ErlangFakeBinaryExpressionImpl implements ErlangCompOpExpression {
 
-  public ErlangExpr500AImpl(ASTNode node) {
+  public ErlangCompOpExpressionImpl(ASTNode node) {
     super(node);
   }
 
+  @Override
+  @NotNull
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExpr500A(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCompOpExpression(this);
     else super.accept(visitor);
   }
 

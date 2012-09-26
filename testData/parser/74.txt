@@ -54,7 +54,7 @@ ERL_FILE
                 ERL_RECORD_FIELD
                   PsiElement(_)('_')
                   PsiElement(=)('=')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)(''abc'')
                 PsiElement(,)(',')

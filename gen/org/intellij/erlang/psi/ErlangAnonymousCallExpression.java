@@ -5,9 +5,12 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangExpr700A extends ErlangExpression {
+public interface ErlangAnonymousCallExpression extends ErlangExpression {
 
-  @Nullable
+  @NotNull
   ErlangArgumentList getArgumentList();
+
+  @NotNull
+  ErlangExpression getExpression();
 
 }

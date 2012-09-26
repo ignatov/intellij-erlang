@@ -10,6 +10,14 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitFakeBinaryExpression(o);
   }
 
+  public void visitAndalsoExpression(@NotNull ErlangAndalsoExpression o) {
+    visitFakeBinaryExpression(o);
+  }
+
+  public void visitAnonymousCallExpression(@NotNull ErlangAnonymousCallExpression o) {
+    visitExpression(o);
+  }
+
   public void visitArgumentDefinition(@NotNull ErlangArgumentDefinition o) {
     visitCompositeElement(o);
   }
@@ -98,6 +106,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitCompOpExpression(@NotNull ErlangCompOpExpression o) {
+    visitFakeBinaryExpression(o);
+  }
+
   public void visitConfigCallExpression(@NotNull ErlangConfigCallExpression o) {
     visitExpression(o);
   }
@@ -136,38 +148,6 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitExportTypes(@NotNull ErlangExportTypes o) {
     visitCompositeElement(o);
-  }
-
-  public void visitExpr100A(@NotNull ErlangExpr100A o) {
-    visitExpression(o);
-  }
-
-  public void visitExpr150A(@NotNull ErlangExpr150A o) {
-    visitFakeBinaryExpression(o);
-  }
-
-  public void visitExpr160A(@NotNull ErlangExpr160A o) {
-    visitFakeBinaryExpression(o);
-  }
-
-  public void visitExpr200A(@NotNull ErlangExpr200A o) {
-    visitFakeBinaryExpression(o);
-  }
-
-  public void visitExpr300A(@NotNull ErlangExpr300A o) {
-    visitFakeBinaryExpression(o);
-  }
-
-  public void visitExpr400A(@NotNull ErlangExpr400A o) {
-    visitExpression(o);
-  }
-
-  public void visitExpr500A(@NotNull ErlangExpr500A o) {
-    visitExpression(o);
-  }
-
-  public void visitExpr700A(@NotNull ErlangExpr700A o) {
-    visitExpression(o);
   }
 
   public void visitExpression(@NotNull ErlangExpression o) {
@@ -270,6 +250,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitListOpExpression(@NotNull ErlangListOpExpression o) {
+    visitFakeBinaryExpression(o);
+  }
+
   public void visitMacros(@NotNull ErlangMacros o) {
     visitCompositeElement(o);
   }
@@ -304,6 +288,10 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitOptBitTypeList(@NotNull ErlangOptBitTypeList o) {
     visitCompositeElement(o);
+  }
+
+  public void visitOrelseExpression(@NotNull ErlangOrelseExpression o) {
+    visitFakeBinaryExpression(o);
   }
 
   public void visitParenthesizedExpression(@NotNull ErlangParenthesizedExpression o) {

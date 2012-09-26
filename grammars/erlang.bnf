@@ -101,14 +101,11 @@
   FLOAT           = "float"
   CHAR            = "char"
   
-  pin(".*_expression")=1
-  
-  extends("assignment_expression|send_expression|expr_150_a|expr_160_a|expr_200_a|expr_300_a|additive_expression|multiplicative_expression")=fake_binary_expression
-  extends(".*_(expression|comprehension|literal|a)")=expression
-  name(".*_(expression|comprehension|literal|a)")=expression
+  extends("assignment_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
+  extends(".*_(expression|comprehension|literal|atomic|q_atom|q_var)")=expression
+  name(".*_(expression|comprehension|literal|atomic)")=expression
   name(".*attribute")=attribute
   name(".*type|.*_t")=type
-  extends("atomic")=expression
 
   implements("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
   extends("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
@@ -253,26 +250,45 @@ config_bin_list_expression ::= '<<' config_exprs? '>>' {elementType=binary_expre
 config_tuple_expression ::= '{' config_exprs? '}' {elementType=tuple_expression}
 private config_exprs ::= config_expression (',' config_expression)*
 
-expression ::= q_atom_or_var&(',' | ')' | '->' | '}' | ']' | ';') | catch_expression | expr_100_a
+expression ::=
+    catch_expression
+  | assignment_expression
+  | send_expression
+  | orelse_expression
+  | andalso_expression
+  | comp_op_expression
+  | list_op_expression
+  | additive_expression
+  | multiplicative_expression
+  | prefix_expression
+  | colon_qualified_expression
+  | max_group
+  | max_expression | parenthesized_expression
+
+prefix_expression ::= prefix_op expression
 catch_expression ::= catch expression
-expr_100_a ::= expr_150_a [assignment_expression|send_expression]
-left assignment_expression ::= '=' expr_100_a
-left send_expression ::= '!' expr_100_a
-expr_150_a ::= expr_160_a [orelse expr_150_a]
-expr_160_a ::= expr_200_a [andalso expr_160_a]
-expr_200_a ::= expr_300_a [comp_op expr_300_a]
-expr_300_a ::= expr_400_a [list_op expr_300_a]
-expr_400_a ::= expr_500_a additive_expression*
-left additive_expression ::= add_op expr_500_a {pin=1}
-expr_500_a ::= prefix_expression multiplicative_expression*
-left multiplicative_expression ::= mult_op prefix_expression {pin=1}
-prefix_expression ::= prefix_op? expr_700_a {pin=0}
-expr_700_a ::= global_function_call_expression | function_call_expression | generic_function_call_expression |
-  anonymous_call_expression | record_expression+ | colon_qualified_expression
-colon_qualified_expression ::= (max_expression | qualified_reference) colon_max_expression? {pin=0}
-private colon_max_expression ::= ':' max_expression
-private qualified_reference ::= q_atom qualified_expression*
-left qualified_expression ::= '.' q_atom {pin=0} //todo
+assignment_expression ::= expression '=' expression { rightAssociative=true }
+send_expression ::= expression '!' expression { rightAssociative=true }
+orelse_expression ::= expression orelse expression
+andalso_expression ::= expression andalso expression
+comp_op_expression ::= expression comp_op expression
+list_op_expression ::= expression list_op expression
+multiplicative_expression ::= expression mult_op expression
+additive_expression ::= expression add_op expression
+parenthesized_expression ::= '(' expression ')'
+
+private max_group ::=
+    function_call_expression
+  | global_function_call_expression
+  | generic_function_call_expression
+  | anonymous_call_expression
+  | record_expression
+  | record2_expression
+  | qualified_expression
+colon_qualified_expression ::= expression ':' expression
+qualified_expression ::= q_atom '.' q_atom&(!('('))
+
+record2_expression ::= record_tail {elementType=record_expression}
 
 max_expression ::=
     atomic
@@ -288,7 +304,6 @@ max_expression ::=
   | fun_expression
   | try_expression
   | query_expression
-  | parenthesized_expression
   | binary_expression
   | begin_end_expression
 
@@ -297,16 +312,13 @@ atom_with_arity_expression ::= q_atom '/' integer {elementType="expression" pin=
 
 begin_end_expression ::= begin begin_end_body end
 begin_end_body ::= exprs {name="expression"}
-parenthesized_expression ::= '(' expression ')'
-
-//list_expression ::= '[' expression? (',' expression)* ['|' expression] ']' {pin=0}
 
 list_expression ::= '[' (']' | (expression tail)) {pin=0} // todo: rewrite without tail
 private tail ::= ']' | ('|' expression ']') | (',' expression tail)
 
 binary_expression ::= '<<' bin_elements? '>>' {pin=1}
 private bin_elements ::= bin_element (',' bin_element)*
-bin_element ::= prefix_op? max_expression (colon_max_expression)? opt_bit_type_list? {name="binary element"}
+bin_element ::= prefix_op? expression (':' expression)? opt_bit_type_list? {name="binary element"}
 
 opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*
@@ -326,10 +338,11 @@ binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {
 
 tuple_expression ::= '{' exprs? '}' {pin=1}
 
-record_expression ::= max_expression? '#' record_ref (record_field_ref | record_tuple) {
+record_expression ::= expression record_tail {
   pin=2
   methods = [getReference]
 }
+private record_tail ::= '#' record_ref (record_field_ref | record_tuple) {pin=1}
 record_field_ref ::= '.' q_atom {pin=1 elementType="record_field"}
 record_ref ::= q_atom {methods = [getReference]}
 
@@ -355,7 +368,7 @@ function_call_expression ::= q_atom argument_list {
 generic_function_call_expression ::= (q_atom_or_var ':')? q_atom_or_var argument_list {pin=0}
 private q_atom_or_var ::= q_atom | q_var
 
-private anonymous_call_expression ::= (fun_expression|parenthesized_expression) argument_list {pin=0}
+anonymous_call_expression ::= expression argument_list
 
 if_expression ::= if if_clauses end
 if_clauses ::= if_clause (';' if_clause)*

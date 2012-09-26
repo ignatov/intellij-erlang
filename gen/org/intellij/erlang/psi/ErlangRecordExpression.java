@@ -8,8 +8,8 @@ import com.intellij.psi.PsiReference;
 
 public interface ErlangRecordExpression extends ErlangExpression {
 
-  @Nullable
-  ErlangMaxExpression getMaxExpression();
+  @NotNull
+  ErlangExpression getExpression();
 
   @Nullable
   ErlangRecordField getRecordField();

@@ -10,7 +10,4 @@ public interface ErlangQualifiedExpression extends ErlangExpression {
   @NotNull
   List<ErlangQAtom> getQAtomList();
 
-  @Nullable
-  ErlangQualifiedExpression getQualifiedExpression();
-
 }

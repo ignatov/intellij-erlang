@@ -24,12 +24,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
-import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -64,7 +62,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement parent = elementAt == null ? null : elementAt.getParent();
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
     ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
-    if (parent instanceof ErlangExport || export != null
+    if (parent instanceof ErlangExport || export != null || prevIsRadix(elementAt)
       || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) {
       context.setDummyIdentifier("a");
     }
@@ -74,7 +72,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
     extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFileImpl.class)), new CompletionProvider<CompletionParameters>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
-        // add completion for records on #<caret>
         PsiElement position = parameters.getPosition();
         PsiFile file = position.getContainingFile();
         if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
@@ -83,7 +80,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         PsiElement originalPosition = parameters.getOriginalPosition();
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
 
-        if (originalParent instanceof ErlangRecordExpression) {
+        if (originalParent instanceof ErlangRecordExpression || prevIsRadix(originalPosition)) {
           result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(file));
         }
         else if (originalParent instanceof ErlangExportFunctions) {
@@ -96,16 +93,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
           }
           else if (originalParent instanceof ErlangRecordFields || parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
             List<ErlangTypedExpr> fields = ErlangPsiImplUtil.getRecordFields(parent);
-            ASTNode prev = FormatterUtil.getPreviousNonWhitespaceSibling(originalPosition != null ? originalPosition.getNode() : null);
-            boolean isDotQualified = StringUtil.equals(prev != null ? prev.getText() : "", ".");
-            final SingleCharInsertHandler insertHandler = isDotQualified ? null : new SingleCharInsertHandler('=');
-
             result.addAllElements(ContainerUtil.map(fields, new Function<ErlangTypedExpr, LookupElement>() {
               @Override
               public LookupElement fun(ErlangTypedExpr a) {
                 return LookupElementBuilder.create(a.getName())
-                  .setIcon(ErlangIcons.FIELD)
-                  .setInsertHandler(insertHandler);
+                  .setIcon(ErlangIcons.FIELD);
               }
             }));
             return;
@@ -124,6 +116,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
       }
     });
+  }
+
+  private boolean prevIsRadix(PsiElement psiElement) {
+    PsiElement prevSibling = psiElement != null ? psiElement.getPrevSibling() : null;
+    ASTNode prevSiblingNode = prevSibling != null ? prevSibling.getNode() : null;
+    return (prevSiblingNode != null ? prevSiblingNode.getElementType() : null) == ErlangTypes.ERL_RADIX;
   }
 
   private static void suggestModules(CompletionResultSet result, PsiElement position) {

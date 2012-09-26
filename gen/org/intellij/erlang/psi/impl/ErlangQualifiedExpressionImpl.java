@@ -22,12 +22,6 @@ public class ErlangQualifiedExpressionImpl extends ErlangExpressionImpl implemen
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
   }
 
-  @Override
-  @Nullable
-  public ErlangQualifiedExpression getQualifiedExpression() {
-    return findChildByClass(ErlangQualifiedExpression.class);
-  }
-
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQualifiedExpression(this);
     else super.accept(visitor);

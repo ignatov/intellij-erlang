@@ -17,9 +17,9 @@ public class ErlangParenthesizedExpressionImpl extends ErlangExpressionImpl impl
   }
 
   @Override
-  @Nullable
+  @NotNull
   public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

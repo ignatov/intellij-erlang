@@ -276,7 +276,7 @@ ERL_FILE
                 PsiElement(atom)('cl')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Args')
                 PsiElement())(')')
@@ -292,11 +292,11 @@ ERL_FILE
                     PsiElement(:)(':')
                     ERL_TUPLE_EXPRESSION
                       PsiElement({)('{')
-                      ERL_EXPRESSION
+                      ERL_MAX_EXPRESSION
                         ERL_Q_ATOM
                           PsiElement(atom)('dialyzer_cl_parse_error')
                       PsiElement(,)(',')
-                      ERL_EXPRESSION
+                      ERL_MAX_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('Msg')
                       PsiElement(})('}')
@@ -304,11 +304,11 @@ ERL_FILE
                   PsiElement(->)('->')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('error')
                     PsiElement(,)(',')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Msg')
                     PsiElement(})('}')
@@ -345,7 +345,7 @@ ERL_FILE
                           PsiElement(,)(',')
                           ERL_LIST_EXPRESSION
                             PsiElement([)('[')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_VAR
                                 PsiElement(var)('R')
                             PsiElement(,)(',')
@@ -365,7 +365,7 @@ ERL_FILE
                   PsiElement(,)(',')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('error')
                     PsiElement(,)(',')
@@ -379,7 +379,7 @@ ERL_FILE
                           PsiElement(atom)('flatten')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Msg')
                           PsiElement())(')')
@@ -411,11 +411,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_analysis_type')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('plt_add')
             PsiElement())(')')
@@ -425,7 +425,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -459,7 +459,7 @@ ERL_FILE
               PsiElement(atom)('get_lib_dir')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('T')
               PsiElement())(')')
@@ -467,11 +467,11 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Args')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T2')
             PsiElement(})('}')
@@ -481,7 +481,7 @@ ERL_FILE
               PsiElement(atom)('collect_args')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('T1')
               PsiElement())(')')
@@ -491,11 +491,11 @@ ERL_FILE
             PsiElement(atom)('append_var')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_files_rec')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Args')
             PsiElement())(')')
@@ -505,7 +505,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T2')
             PsiElement())(')')
@@ -534,11 +534,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_analysis_type')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('plt_build')
             PsiElement())(')')
@@ -548,7 +548,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -577,11 +577,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_analysis_type')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('plt_check')
             PsiElement())(')')
@@ -591,7 +591,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -656,11 +656,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_check_plt')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('false')
             PsiElement())(')')
@@ -670,7 +670,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -735,11 +735,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_native')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('false')
             PsiElement())(')')
@@ -749,7 +749,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -778,11 +778,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_analysis_type')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('plt_info')
             PsiElement())(')')
@@ -792,7 +792,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -821,11 +821,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_get_warnings')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('true')
             PsiElement())(')')
@@ -835,7 +835,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -876,7 +876,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPR_300_A
+            ERL_LIST_OP_EXPRESSION
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"-D"')
               PsiElement(++)('++')
@@ -907,7 +907,7 @@ ERL_FILE
                 PsiElement(atom)('split')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Define')
                 PsiElement(,)(',')
@@ -918,11 +918,11 @@ ERL_FILE
                   PsiElement([)('[')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('return')
                     PsiElement(,)(',')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('list')
                     PsiElement(})('}')
@@ -934,7 +934,7 @@ ERL_FILE
             PsiElement(atom)('append_defines')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Def')
             PsiElement())(')')
@@ -944,7 +944,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1052,7 +1052,7 @@ ERL_FILE
             PsiElement(atom)('append_include')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Dir')
             PsiElement())(')')
@@ -1062,7 +1062,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1075,7 +1075,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPR_300_A
+            ERL_LIST_OP_EXPRESSION
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"-I"')
               PsiElement(++)('++')
@@ -1096,7 +1096,7 @@ ERL_FILE
             PsiElement(atom)('append_include')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Dir')
             PsiElement())(')')
@@ -1106,7 +1106,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1119,7 +1119,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPR_300_A
+            ERL_LIST_OP_EXPRESSION
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"-c"')
               PsiElement(++)('++')
@@ -1145,7 +1145,7 @@ ERL_FILE
               PsiElement(atom)('command_line')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('T')
               PsiElement())(')')
@@ -1155,7 +1155,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('NewTail')
             PsiElement())(')')
@@ -1168,7 +1168,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPR_300_A
+            ERL_LIST_OP_EXPRESSION
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"-r"')
               PsiElement(++)('++')
@@ -1187,11 +1187,11 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Args')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement(})('}')
@@ -1201,7 +1201,7 @@ ERL_FILE
               PsiElement(atom)('collect_args')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('T0')
               PsiElement())(')')
@@ -1211,11 +1211,11 @@ ERL_FILE
             PsiElement(atom)('append_var')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_files_rec')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Args')
             PsiElement())(')')
@@ -1225,7 +1225,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1254,11 +1254,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_analysis_type')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('plt_remove')
             PsiElement())(')')
@@ -1268,7 +1268,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1281,7 +1281,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPR_300_A
+            ERL_LIST_OP_EXPRESSION
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"--com"')
               PsiElement(++)('++')
@@ -1307,7 +1307,7 @@ ERL_FILE
               PsiElement(atom)('command_line')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('T')
               PsiElement())(')')
@@ -1317,7 +1317,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('NewTail')
             PsiElement())(')')
@@ -1396,11 +1396,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_output')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Output')
             PsiElement())(')')
@@ -1410,7 +1410,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1466,11 +1466,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_output_plt')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Output')
             PsiElement())(')')
@@ -1480,7 +1480,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1513,11 +1513,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_output')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Output')
             PsiElement())(')')
@@ -1527,7 +1527,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1540,7 +1540,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPR_300_A
+            ERL_LIST_OP_EXPRESSION
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"-o"')
               PsiElement(++)('++')
@@ -1561,11 +1561,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_output')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Output')
             PsiElement())(')')
@@ -1575,7 +1575,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1604,11 +1604,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_output_format')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('raw')
             PsiElement())(')')
@@ -1618,7 +1618,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1647,11 +1647,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_filename_opt')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('fullpath')
             PsiElement())(')')
@@ -1661,7 +1661,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1701,7 +1701,7 @@ ERL_FILE
                 PsiElement(atom)('add_patha')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Path')
                 PsiElement())(')')
@@ -1709,7 +1709,7 @@ ERL_FILE
           ERL_CR_CLAUSES
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('true')
               ERL_CLAUSE_BODY
@@ -1719,7 +1719,7 @@ ERL_FILE
                     PsiElement(atom)('cl')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('T')
                     PsiElement())(')')
@@ -1728,11 +1728,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(_)('_')
                   PsiElement(})('}')
@@ -1743,7 +1743,7 @@ ERL_FILE
                     PsiElement(atom)('cl_error')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPR_300_A
+                    ERL_LIST_OP_EXPRESSION
                       ERL_MAX_EXPRESSION
                         PsiElement(string)('"Bad directory for -pa: "')
                       PsiElement(++)('++')
@@ -1804,13 +1804,13 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_init_plts')
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('PLT')
               PsiElement(])(']')
@@ -1821,7 +1821,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1871,11 +1871,11 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('PLTs')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('NewT')
             PsiElement(})('}')
@@ -1885,7 +1885,7 @@ ERL_FILE
               PsiElement(atom)('get_plts')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('T')
               PsiElement(,)(',')
@@ -1899,11 +1899,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_init_plts')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('PLTs')
             PsiElement())(')')
@@ -1913,7 +1913,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('NewT')
             PsiElement())(')')
@@ -1942,11 +1942,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_report_mode')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('quiet')
             PsiElement())(')')
@@ -1956,7 +1956,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -1985,11 +1985,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_report_mode')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('quiet')
             PsiElement())(')')
@@ -1999,7 +1999,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -2028,11 +2028,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_from')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('src_code')
             PsiElement())(')')
@@ -2042,7 +2042,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -2071,11 +2071,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_use_contracts')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('false')
             PsiElement())(')')
@@ -2085,7 +2085,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -2119,20 +2119,20 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPR_300_A
-                ERL_MAX_EXPRESSION
-                  PsiElement(string)('"Dialyzer version "')
-                PsiElement(++)('++')
-                ERL_EXPR_300_A
+              ERL_LIST_OP_EXPRESSION
+                ERL_LIST_OP_EXPRESSION
+                  ERL_MAX_EXPRESSION
+                    PsiElement(string)('"Dialyzer version "')
+                  PsiElement(++)('++')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       ERL_MACROS
                         PsiElement(?)('?')
                         ERL_MACROS_NAME
                           PsiElement(var)('VSN')
-                  PsiElement(++)('++')
-                  ERL_MAX_EXPRESSION
-                    PsiElement(string)('"\n"')
+                PsiElement(++)('++')
+                ERL_MAX_EXPRESSION
+                  PsiElement(string)('"\n"')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -2145,7 +2145,7 @@ ERL_FILE
               PsiElement(atom)('halt')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   ERL_MACROS
                     PsiElement(?)('?')
@@ -2182,20 +2182,20 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPR_300_A
-                ERL_MAX_EXPRESSION
-                  PsiElement(string)('"Dialyzer version "')
-                PsiElement(++)('++')
-                ERL_EXPR_300_A
+              ERL_LIST_OP_EXPRESSION
+                ERL_LIST_OP_EXPRESSION
+                  ERL_MAX_EXPRESSION
+                    PsiElement(string)('"Dialyzer version "')
+                  PsiElement(++)('++')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       ERL_MACROS
                         PsiElement(?)('?')
                         ERL_MACROS_NAME
                           PsiElement(var)('VSN')
-                  PsiElement(++)('++')
-                  ERL_MAX_EXPRESSION
-                    PsiElement(string)('"\n"')
+                PsiElement(++)('++')
+                ERL_MAX_EXPRESSION
+                  PsiElement(string)('"\n"')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -2208,7 +2208,7 @@ ERL_FILE
               PsiElement(atom)('halt')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   ERL_MACROS
                     PsiElement(?)('?')
@@ -2240,11 +2240,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_report_mode')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('verbose')
             PsiElement())(')')
@@ -2254,7 +2254,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -2321,7 +2321,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPR_300_A
+            ERL_LIST_OP_EXPRESSION
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"-W"')
               PsiElement(++)('++')
@@ -2342,7 +2342,7 @@ ERL_FILE
             PsiElement(atom)('append_var')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_warnings')
             PsiElement(,)(',')
@@ -2353,7 +2353,7 @@ ERL_FILE
                   PsiElement(atom)('list_to_atom')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Warn')
                   PsiElement())(')')
@@ -2365,7 +2365,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -2421,11 +2421,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_callgraph_file')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('File')
             PsiElement())(')')
@@ -2435,7 +2435,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -2464,17 +2464,17 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_mode')
             PsiElement(,)(',')
             ERL_TUPLE_EXPRESSION
               PsiElement({)('{')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('gui')
               PsiElement(,)(',')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('gs')
               PsiElement(})('}')
@@ -2485,7 +2485,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -2514,17 +2514,17 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_mode')
             PsiElement(,)(',')
             ERL_TUPLE_EXPRESSION
               PsiElement({)('{')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('gui')
               PsiElement(,)(',')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('wx')
               PsiElement(})('}')
@@ -2535,7 +2535,7 @@ ERL_FILE
             PsiElement(atom)('cl')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement())(')')
@@ -2567,7 +2567,7 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_CASE_EXPRESSION
           PsiElement(case)('case')
-          ERL_EXPR_150_A
+          ERL_ORELSE_EXPRESSION
             ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
               ERL_MODULE_REF
                 ERL_Q_ATOM
@@ -2578,7 +2578,7 @@ ERL_FILE
                   PsiElement(atom)('is_file')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('H')
                   PsiElement())(')')
@@ -2593,7 +2593,7 @@ ERL_FILE
                   PsiElement(atom)('is_dir')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('H')
                   PsiElement())(')')
@@ -2601,7 +2601,7 @@ ERL_FILE
           ERL_CR_CLAUSES
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('true')
               ERL_CLAUSE_BODY
@@ -2616,7 +2616,7 @@ ERL_FILE
                       PsiElement(atom)('command_line')
                     ERL_ARGUMENT_LIST
                       PsiElement(()('(')
-                      ERL_EXPRESSION
+                      ERL_MAX_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('L')
                       PsiElement())(')')
@@ -2626,14 +2626,14 @@ ERL_FILE
                     PsiElement(atom)('cl')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('NewTail')
                     PsiElement())(')')
             PsiElement(;)(';')
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('false')
               ERL_CLAUSE_BODY
@@ -2643,7 +2643,7 @@ ERL_FILE
                     PsiElement(atom)('cl_error')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPR_300_A
+                    ERL_LIST_OP_EXPRESSION
                       ERL_MAX_EXPRESSION
                         PsiElement(string)('"Unknown option: "')
                       PsiElement(++)('++')
@@ -2668,24 +2668,24 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('RetTag')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Opts')
             PsiElement(})('}')
           PsiElement(=)('=')
           ERL_CASE_EXPRESSION
             PsiElement(case)('case')
-            ERL_EXPR_200_A
+            ERL_COMP_OP_EXPRESSION
               ERL_FUNCTION_CALL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('get')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('dialyzer_options_analysis_type')
                   PsiElement())(')')
@@ -2697,7 +2697,7 @@ ERL_FILE
             ERL_CR_CLAUSES
               ERL_CR_CLAUSE
                 ERL_ARGUMENT_DEFINITION
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('true')
                 ERL_CLAUSE_BODY
@@ -2707,18 +2707,18 @@ ERL_FILE
                       PsiElement(atom)('put')
                     ERL_ARGUMENT_LIST
                       PsiElement(()('(')
-                      ERL_EXPRESSION
+                      ERL_MAX_EXPRESSION
                         ERL_Q_ATOM
                           PsiElement(atom)('dialyzer_options_analysis_type')
                       PsiElement(,)(',')
-                      ERL_EXPRESSION
+                      ERL_MAX_EXPRESSION
                         ERL_Q_ATOM
                           PsiElement(atom)('plt_check')
                       PsiElement())(')')
                   PsiElement(,)(',')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('plt_info')
                     PsiElement(,)(',')
@@ -2732,7 +2732,7 @@ ERL_FILE
               PsiElement(;)(';')
               ERL_CR_CLAUSE
                 ERL_ARGUMENT_DEFINITION
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('false')
                 ERL_CLAUSE_BODY
@@ -2744,7 +2744,7 @@ ERL_FILE
                         PsiElement(atom)('get')
                       ERL_ARGUMENT_LIST
                         PsiElement(()('(')
-                        ERL_EXPRESSION
+                        ERL_MAX_EXPRESSION
                           ERL_Q_ATOM
                             PsiElement(atom)('dialyzer_options_mode')
                         PsiElement())(')')
@@ -2755,11 +2755,11 @@ ERL_FILE
                           ERL_ASSIGNMENT_EXPRESSION
                             ERL_TUPLE_EXPRESSION
                               PsiElement({)('{')
-                              ERL_EXPRESSION
+                              ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
                                   PsiElement(atom)('gui')
                               PsiElement(,)(',')
-                              ERL_EXPRESSION
+                              ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
                                   PsiElement(_)('_')
                               PsiElement(})('}')
@@ -2771,7 +2771,7 @@ ERL_FILE
                           PsiElement(->)('->')
                           ERL_TUPLE_EXPRESSION
                             PsiElement({)('{')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_VAR
                                 PsiElement(var)('GUI')
                             PsiElement(,)(',')
@@ -2785,20 +2785,20 @@ ERL_FILE
                       PsiElement(;)(';')
                       ERL_CR_CLAUSE
                         ERL_ARGUMENT_DEFINITION
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('cl')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
                           ERL_CASE_EXPRESSION
                             PsiElement(case)('case')
-                            ERL_EXPR_200_A
+                            ERL_COMP_OP_EXPRESSION
                               ERL_FUNCTION_CALL_EXPRESSION
                                 ERL_Q_ATOM
                                   PsiElement(atom)('get')
                                 ERL_ARGUMENT_LIST
                                   PsiElement(()('(')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('dialyzer_options_analysis_type')
                                   PsiElement())(')')
@@ -2810,14 +2810,14 @@ ERL_FILE
                             ERL_CR_CLAUSES
                               ERL_CR_CLAUSE
                                 ERL_ARGUMENT_DEFINITION
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('true')
                                 ERL_CLAUSE_BODY
                                   PsiElement(->)('->')
                                   ERL_TUPLE_EXPRESSION
                                     PsiElement({)('{')
-                                    ERL_EXPRESSION
+                                    ERL_MAX_EXPRESSION
                                       ERL_Q_ATOM
                                         PsiElement(atom)('check_init')
                                     PsiElement(,)(',')
@@ -2831,14 +2831,14 @@ ERL_FILE
                               PsiElement(;)(';')
                               ERL_CR_CLAUSE
                                 ERL_ARGUMENT_DEFINITION
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('false')
                                 ERL_CLAUSE_BODY
                                   PsiElement(->)('->')
                                   ERL_TUPLE_EXPRESSION
                                     PsiElement({)('{')
-                                    ERL_EXPRESSION
+                                    ERL_MAX_EXPRESSION
                                       ERL_Q_ATOM
                                         PsiElement(atom)('cl')
                                     PsiElement(,)(',')
@@ -2865,7 +2865,7 @@ ERL_FILE
                 PsiElement(atom)('build')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Opts')
                 PsiElement())(')')
@@ -2875,11 +2875,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Msg')
                   PsiElement(})('}')
@@ -2890,25 +2890,25 @@ ERL_FILE
                     PsiElement(atom)('cl_error')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Msg')
                     PsiElement())(')')
             PsiElement(;)(';')
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('OptsRecord')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('RetTag')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('OptsRecord')
                   PsiElement(})('}')
@@ -2922,7 +2922,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('T0')
         PsiElement())(')')
@@ -2931,11 +2931,11 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Args')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement(})('}')
@@ -2945,7 +2945,7 @@ ERL_FILE
               PsiElement(atom)('collect_args')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('T0')
               PsiElement())(')')
@@ -2955,11 +2955,11 @@ ERL_FILE
             PsiElement(atom)('append_var')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_files')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Args')
             PsiElement())(')')
@@ -2984,13 +2984,13 @@ ERL_FILE
                       ERL_ARGUMENT_DEFINITION_LIST
                         PsiElement(()('(')
                         ERL_ARGUMENT_DEFINITION
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('F')
                         PsiElement())(')')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
-                        ERL_EXPR_200_A
+                        ERL_COMP_OP_EXPRESSION
                           ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                             ERL_MODULE_REF
                               ERL_Q_ATOM
@@ -3001,7 +3001,7 @@ ERL_FILE
                                 PsiElement(atom)('extension')
                               ERL_ARGUMENT_LIST
                                 PsiElement(()('(')
-                                ERL_EXPRESSION
+                                ERL_MAX_EXPRESSION
                                   ERL_Q_VAR
                                     PsiElement(var)('F')
                                 PsiElement())(')')
@@ -3010,7 +3010,7 @@ ERL_FILE
                             PsiElement(string)('".erl"')
                   PsiElement(end)('end')
                 PsiElement(,)(',')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Args')
                 PsiElement())(')')
@@ -3018,7 +3018,7 @@ ERL_FILE
           ERL_CR_CLAUSES
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('true')
               ERL_CLAUSE_BODY
@@ -3028,18 +3028,18 @@ ERL_FILE
                     PsiElement(atom)('put')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('dialyzer_options_from')
                     PsiElement(,)(',')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('src_code')
                     PsiElement())(')')
             PsiElement(;)(';')
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('false')
               ERL_CLAUSE_BODY
@@ -3089,7 +3089,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Str')
         PsiElement())(')')
@@ -3110,7 +3110,7 @@ ERL_FILE
                 PsiElement(atom)('flatten')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Str')
                 PsiElement())(')')
@@ -3122,11 +3122,11 @@ ERL_FILE
             PsiElement(()('(')
             ERL_TUPLE_EXPRESSION
               PsiElement({)('{')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('dialyzer_cl_parse_error')
               PsiElement(,)(',')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('Msg')
               PsiElement(})('}')
@@ -3146,11 +3146,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_mode')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('cl')
             PsiElement())(')')
@@ -3160,7 +3160,7 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_files_rec')
             PsiElement(,)(',')
@@ -3174,11 +3174,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_report_mode')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('normal')
             PsiElement())(')')
@@ -3188,7 +3188,7 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_warnings')
             PsiElement(,)(',')
@@ -3216,7 +3216,7 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_include')
             PsiElement(,)(',')
@@ -3239,7 +3239,7 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_defines')
             PsiElement(,)(',')
@@ -3262,7 +3262,7 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_files')
             PsiElement(,)(',')
@@ -3285,11 +3285,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_output_format')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('formatted')
             PsiElement())(')')
@@ -3299,11 +3299,11 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_filename_opt')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('basename')
             PsiElement())(')')
@@ -3313,7 +3313,7 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_check_plt')
             PsiElement(,)(',')
@@ -3344,11 +3344,11 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Def')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Val')
             PsiElement(])(']')
@@ -3358,15 +3358,15 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('ok')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Tokens')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(_)('_')
             PsiElement(})('}')
@@ -3381,7 +3381,7 @@ ERL_FILE
                 PsiElement(atom)('string')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPR_300_A
+                ERL_LIST_OP_EXPRESSION
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Val')
@@ -3393,11 +3393,11 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('ok')
             PsiElement(,)(',')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('ErlVal')
             PsiElement(})('}')
@@ -3412,7 +3412,7 @@ ERL_FILE
                 PsiElement(atom)('parse_term')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Tokens')
                 PsiElement())(')')
@@ -3422,7 +3422,7 @@ ERL_FILE
             PsiElement(atom)('append_var')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_defines')
             PsiElement(,)(',')
@@ -3435,12 +3435,12 @@ ERL_FILE
                     PsiElement(atom)('list_to_atom')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Def')
                     PsiElement())(')')
                 PsiElement(,)(',')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('ErlVal')
                 PsiElement(})('}')
@@ -3455,7 +3455,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Def')
             PsiElement(])(']')
@@ -3467,7 +3467,7 @@ ERL_FILE
             PsiElement(atom)('append_var')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_options_defines')
             PsiElement(,)(',')
@@ -3480,12 +3480,12 @@ ERL_FILE
                     PsiElement(atom)('list_to_atom')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Def')
                     PsiElement())(')')
                 PsiElement(,)(',')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('true')
                 PsiElement(})('}')
@@ -3499,7 +3499,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Dir')
         PsiElement())(')')
@@ -3510,13 +3510,13 @@ ERL_FILE
             PsiElement(atom)('append_var')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('dialyzer_include')
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('Dir')
               PsiElement(])(']')
@@ -3529,12 +3529,12 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Var')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('List')
         PsiElement())(')')
@@ -3546,7 +3546,7 @@ ERL_FILE
               PsiElement(atom)('is_list')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('List')
               PsiElement())(')')
@@ -3557,17 +3557,17 @@ ERL_FILE
             PsiElement(atom)('put')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Var')
             PsiElement(,)(',')
-            ERL_EXPR_300_A
+            ERL_LIST_OP_EXPRESSION
               ERL_FUNCTION_CALL_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('get')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Var')
                   PsiElement())(')')
@@ -3646,7 +3646,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('List')
         PsiElement())(')')
@@ -3657,7 +3657,7 @@ ERL_FILE
             PsiElement(atom)('collect_args_1')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('List')
             PsiElement(,)(',')
@@ -3676,7 +3676,7 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_EXPR_300_A
+              ERL_LIST_OP_EXPRESSION
                 ERL_MAX_EXPRESSION
                   PsiElement(string)('"-"')
                 PsiElement(++)('++')
@@ -3695,7 +3695,7 @@ ERL_FILE
                 PsiElement(var)('L')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -3713,12 +3713,12 @@ ERL_FILE
                 PsiElement(atom)('reverse')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Acc')
                 PsiElement())(')')
           PsiElement(,)(',')
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('L')
           PsiElement(})('}')
@@ -3742,7 +3742,7 @@ ERL_FILE
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -3753,7 +3753,7 @@ ERL_FILE
             PsiElement(atom)('collect_args_1')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement(,)(',')
@@ -3781,7 +3781,7 @@ ERL_FILE
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -3799,7 +3799,7 @@ ERL_FILE
                 PsiElement(atom)('reverse')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Acc')
                 PsiElement())(')')
@@ -3823,7 +3823,7 @@ ERL_FILE
           PsiElement([)('[')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('files')
             PsiElement(,)(',')
@@ -3832,7 +3832,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_files')
                 PsiElement())(')')
@@ -3840,7 +3840,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('files_rec')
             PsiElement(,)(',')
@@ -3849,7 +3849,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_files_rec')
                 PsiElement())(')')
@@ -3857,7 +3857,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('output_file')
             PsiElement(,)(',')
@@ -3866,7 +3866,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_output')
                 PsiElement())(')')
@@ -3874,7 +3874,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('output_format')
             PsiElement(,)(',')
@@ -3883,7 +3883,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_output_format')
                 PsiElement())(')')
@@ -3891,7 +3891,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('filename_opt')
             PsiElement(,)(',')
@@ -3900,7 +3900,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_filename_opt')
                 PsiElement())(')')
@@ -3908,7 +3908,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('analysis_type')
             PsiElement(,)(',')
@@ -3917,7 +3917,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_analysis_type')
                 PsiElement())(')')
@@ -3925,7 +3925,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('get_warnings')
             PsiElement(,)(',')
@@ -3934,7 +3934,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_get_warnings')
                 PsiElement())(')')
@@ -3943,7 +3943,7 @@ ERL_FILE
           ERL_ADDITIVE_EXPRESSION
             ERL_TUPLE_EXPRESSION
               PsiElement({)('{')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('callgraph_file')
               PsiElement(,)(',')
@@ -3952,7 +3952,7 @@ ERL_FILE
                   PsiElement(atom)('get')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('dialyzer_callgraph_file')
                   PsiElement())(')')
@@ -3979,7 +3979,7 @@ ERL_FILE
           PsiElement([)('[')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('defines')
             PsiElement(,)(',')
@@ -3988,7 +3988,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_defines')
                 PsiElement())(')')
@@ -3996,7 +3996,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('from')
             PsiElement(,)(',')
@@ -4005,7 +4005,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_from')
                 PsiElement())(')')
@@ -4013,7 +4013,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('include_dirs')
             PsiElement(,)(',')
@@ -4022,7 +4022,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_include')
                 PsiElement())(')')
@@ -4030,7 +4030,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('plts')
             PsiElement(,)(',')
@@ -4039,7 +4039,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_init_plts')
                 PsiElement())(')')
@@ -4047,7 +4047,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('output_plt')
             PsiElement(,)(',')
@@ -4056,7 +4056,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_output_plt')
                 PsiElement())(')')
@@ -4064,7 +4064,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('report_mode')
             PsiElement(,)(',')
@@ -4073,7 +4073,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_report_mode')
                 PsiElement())(')')
@@ -4081,7 +4081,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('use_spec')
             PsiElement(,)(',')
@@ -4090,7 +4090,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_use_contracts')
                 PsiElement())(')')
@@ -4098,7 +4098,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('warnings')
             PsiElement(,)(',')
@@ -4107,7 +4107,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_warnings')
                 PsiElement())(')')
@@ -4115,7 +4115,7 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_ATOM
                 PsiElement(atom)('check_plt')
             PsiElement(,)(',')
@@ -4124,7 +4124,7 @@ ERL_FILE
                 PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('dialyzer_options_check_plt')
                 PsiElement())(')')
@@ -4178,7 +4178,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Apps')
         PsiElement())(')')
@@ -4189,7 +4189,7 @@ ERL_FILE
             PsiElement(atom)('get_lib_dir')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('Apps')
             PsiElement(,)(',')
@@ -4218,7 +4218,7 @@ ERL_FILE
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -4246,7 +4246,7 @@ ERL_FILE
                       PsiElement(atom)('list_to_atom')
                     ERL_ARGUMENT_LIST
                       PsiElement(()('(')
-                      ERL_EXPRESSION
+                      ERL_MAX_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('H')
                       PsiElement())(')')
@@ -4257,11 +4257,11 @@ ERL_FILE
                 ERL_ARGUMENT_DEFINITION
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('error')
                     PsiElement(,)(',')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('bad_name')
                     PsiElement(})('}')
@@ -4269,7 +4269,7 @@ ERL_FILE
                   PsiElement(->)('->')
                   ERL_CASE_EXPRESSION
                     PsiElement(case)('case')
-                    ERL_EXPR_200_A
+                    ERL_COMP_OP_EXPRESSION
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('H')
@@ -4281,7 +4281,7 @@ ERL_FILE
                     ERL_CR_CLAUSES
                       ERL_CR_CLAUSE
                         ERL_ARGUMENT_DEFINITION
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('true')
                         ERL_CLAUSE_BODY
@@ -4314,7 +4314,7 @@ ERL_FILE
                       PsiElement(;)(';')
                       ERL_CR_CLAUSE
                         ERL_ARGUMENT_DEFINITION
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('false')
                         ERL_CLAUSE_BODY
@@ -4326,12 +4326,12 @@ ERL_FILE
               PsiElement(;)(';')
               ERL_CR_CLAUSE
                 ERL_ARGUMENT_DEFINITION
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('LibDir')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
-                  ERL_EXPR_300_A
+                  ERL_LIST_OP_EXPRESSION
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('LibDir')
@@ -4345,7 +4345,7 @@ ERL_FILE
             PsiElement(atom)('get_lib_dir')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement(,)(',')
@@ -4373,7 +4373,7 @@ ERL_FILE
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -4389,7 +4389,7 @@ ERL_FILE
               PsiElement(atom)('reverse')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('Acc')
               PsiElement())(')')
@@ -4414,7 +4414,7 @@ ERL_FILE
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -4432,12 +4432,12 @@ ERL_FILE
                 PsiElement(atom)('reverse')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Acc')
                 PsiElement())(')')
           PsiElement(,)(',')
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('T')
           PsiElement(})('}')
@@ -4451,7 +4451,7 @@ ERL_FILE
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
             ERL_ASSIGNMENT_EXPRESSION
-              ERL_EXPR_300_A
+              ERL_LIST_OP_EXPRESSION
                 ERL_MAX_EXPRESSION
                   PsiElement(string)('"-"')
                 PsiElement(++)('++')
@@ -4470,7 +4470,7 @@ ERL_FILE
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -4488,7 +4488,7 @@ ERL_FILE
                 PsiElement(atom)('reverse')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Acc')
                 PsiElement())(')')
@@ -4525,7 +4525,7 @@ ERL_FILE
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -4536,7 +4536,7 @@ ERL_FILE
             PsiElement(atom)('get_plts')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_EXPRESSION
+            ERL_MAX_EXPRESSION
               ERL_Q_VAR
                 PsiElement(var)('T')
             PsiElement(,)(',')
@@ -4564,7 +4564,7 @@ ERL_FILE
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('Acc')
         PsiElement())(')')
@@ -4582,7 +4582,7 @@ ERL_FILE
                 PsiElement(atom)('reverse')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Acc')
                 PsiElement())(')')
@@ -4646,7 +4646,7 @@ ERL_FILE
               PsiElement(atom)('put_chars')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('S')
               PsiElement())(')')
@@ -4661,7 +4661,7 @@ ERL_FILE
               PsiElement(atom)('halt')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   ERL_MACROS
                     PsiElement(?)('?')

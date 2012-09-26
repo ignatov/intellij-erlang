@@ -18,9 +18,9 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
   }
 
   @Override
-  @Nullable
-  public ErlangMaxExpression getMaxExpression() {
-    return findChildByClass(ErlangMaxExpression.class);
+  @NotNull
+  public ErlangExpression getExpression() {
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   @Override

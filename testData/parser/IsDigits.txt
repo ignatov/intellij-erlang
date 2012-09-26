@@ -25,7 +25,7 @@ ERL_FILE
           ERL_IF_CLAUSES
             ERL_IF_CLAUSE
               ERL_GUARD
-                ERL_EXPR_200_A
+                ERL_COMP_OP_EXPRESSION
                   ERL_MAX_EXPRESSION
                     PsiElement(char)('$0')
                   PsiElement(=<)('=<')
@@ -33,7 +33,7 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('Dig')
                 PsiElement(,)(',')
-                ERL_EXPR_200_A
+                ERL_COMP_OP_EXPRESSION
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Dig')
@@ -47,14 +47,14 @@ ERL_FILE
                     PsiElement(atom)('is_digits')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Tail')
                     PsiElement())(')')
             PsiElement(;)(';')
             ERL_IF_CLAUSE
               ERL_GUARD
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('true')
               ERL_CLAUSE_BODY

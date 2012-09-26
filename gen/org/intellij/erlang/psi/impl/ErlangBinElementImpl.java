@@ -18,8 +18,8 @@ public class ErlangBinElementImpl extends ErlangCompositeElementImpl implements 
 
   @Override
   @NotNull
-  public List<ErlangMaxExpression> getMaxExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangMaxExpression.class);
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
   @Override

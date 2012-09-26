@@ -7,10 +7,4 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangExpression extends ErlangCompositeElement {
 
-  @Nullable
-  ErlangQAtom getQAtom();
-
-  @Nullable
-  ErlangQVar getQVar();
-
 }

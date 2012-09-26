@@ -10,9 +10,9 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangExpr160AImpl extends ErlangFakeBinaryExpressionImpl implements ErlangExpr160A {
+public class ErlangOrelseExpressionImpl extends ErlangFakeBinaryExpressionImpl implements ErlangOrelseExpression {
 
-  public ErlangExpr160AImpl(ASTNode node) {
+  public ErlangOrelseExpressionImpl(ASTNode node) {
     super(node);
   }
 
@@ -23,13 +23,13 @@ public class ErlangExpr160AImpl extends ErlangFakeBinaryExpressionImpl implement
   }
 
   @Override
-  @Nullable
-  public PsiElement getAndalso() {
-    return findChildByType(ERL_ANDALSO);
+  @NotNull
+  public PsiElement getOrelse() {
+    return findNotNullChildByType(ERL_ORELSE);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExpr160A(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitOrelseExpression(this);
     else super.accept(visitor);
   }
 

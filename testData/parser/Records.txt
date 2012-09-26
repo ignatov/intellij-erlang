@@ -104,7 +104,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('OpaqueData')
         PsiElement())(')')
@@ -136,7 +136,7 @@ ERL_FILE
                 PsiElement(()('(')
                 ERL_LIST_EXPRESSION
                   PsiElement([)('[')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('File')
                   PsiElement(,)(',')
@@ -155,7 +155,7 @@ ERL_FILE
               PsiElement(atom)('delete')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('Tmp')
               PsiElement())(')')
@@ -170,7 +170,7 @@ ERL_FILE
               PsiElement(atom)('delete')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('File')
               PsiElement())(')')
@@ -191,7 +191,7 @@ ERL_FILE
                   PsiElement([)('[')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('name')
                     PsiElement(,)(',')
@@ -205,29 +205,29 @@ ERL_FILE
                   PsiElement(,)(',')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('file')
                     PsiElement(,)(',')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Tmp')
                     PsiElement(})('}')
                   PsiElement(,)(',')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('repair')
                     PsiElement(,)(',')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('false')
                     PsiElement(})('}')
                   PsiElement(,)(',')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
                         PsiElement(atom)('linkto')
                     PsiElement(,)(',')
@@ -246,11 +246,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Fd')
                   PsiElement(})('}')
@@ -258,7 +258,7 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
                   PsiElement(,)(',')
@@ -274,7 +274,7 @@ ERL_FILE
                           ERL_Q_ATOM
                             PsiElement(atom)('tmp_file')
                           PsiElement(=)('=')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Tmp')
                         PsiElement(,)(',')
@@ -282,7 +282,7 @@ ERL_FILE
                           ERL_Q_ATOM
                             PsiElement(atom)('file')
                           PsiElement(=)('=')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('File')
                         PsiElement(,)(',')
@@ -290,7 +290,7 @@ ERL_FILE
                           ERL_Q_ATOM
                             PsiElement(atom)('file_desc')
                           PsiElement(=)('=')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Fd')
                       PsiElement(})('}')
@@ -300,11 +300,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -312,11 +312,11 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -330,12 +330,12 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('OpaqueData')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('BackupItems')
         PsiElement())(')')
@@ -375,7 +375,7 @@ ERL_FILE
                     ERL_Q_ATOM
                       PsiElement(atom)('file_desc')
                 PsiElement(,)(',')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('BackupItems')
                 PsiElement())(')')
@@ -383,18 +383,18 @@ ERL_FILE
           ERL_CR_CLAUSES
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('ok')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('B')
                   PsiElement(})('}')
@@ -403,11 +403,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -418,18 +418,18 @@ ERL_FILE
                     PsiElement(atom)('abort_write')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('B')
                     PsiElement())(')')
                 PsiElement(,)(',')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -443,7 +443,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('OpaqueData')
         PsiElement())(')')
@@ -487,7 +487,7 @@ ERL_FILE
           ERL_CR_CLAUSES
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('ok')
               ERL_CLAUSE_BODY
@@ -521,7 +521,7 @@ ERL_FILE
                   ERL_CR_CLAUSES
                     ERL_CR_CLAUSE
                       ERL_ARGUMENT_DEFINITION
-                        ERL_EXPRESSION
+                        ERL_MAX_EXPRESSION
                           ERL_Q_ATOM
                             PsiElement(atom)('ok')
                       ERL_CLAUSE_BODY
@@ -568,14 +568,14 @@ ERL_FILE
                           ERL_CR_CLAUSES
                             ERL_CR_CLAUSE
                               ERL_ARGUMENT_DEFINITION
-                                ERL_EXPRESSION
+                                ERL_MAX_EXPRESSION
                                   ERL_Q_ATOM
                                     PsiElement(atom)('ok')
                               ERL_CLAUSE_BODY
                                 PsiElement(->)('->')
                                 ERL_TUPLE_EXPRESSION
                                   PsiElement({)('{')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('ok')
                                   PsiElement(,)(',')
@@ -597,11 +597,11 @@ ERL_FILE
                               ERL_ARGUMENT_DEFINITION
                                 ERL_TUPLE_EXPRESSION
                                   PsiElement({)('{')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('error')
                                   PsiElement(,)(',')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('Reason')
                                   PsiElement(})('}')
@@ -609,11 +609,11 @@ ERL_FILE
                                 PsiElement(->)('->')
                                 ERL_TUPLE_EXPRESSION
                                   PsiElement({)('{')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('error')
                                   PsiElement(,)(',')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('Reason')
                                   PsiElement(})('}')
@@ -623,11 +623,11 @@ ERL_FILE
                       ERL_ARGUMENT_DEFINITION
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('error')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Reason')
                           PsiElement(})('}')
@@ -635,11 +635,11 @@ ERL_FILE
                         PsiElement(->)('->')
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('error')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Reason')
                           PsiElement(})('}')
@@ -649,11 +649,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -661,11 +661,11 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -679,7 +679,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('BackupRef')
         PsiElement())(')')
@@ -747,14 +747,14 @@ ERL_FILE
           ERL_CR_CLAUSES
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('ok')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
                   PsiElement(,)(',')
@@ -776,11 +776,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -788,11 +788,11 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -1336,7 +1336,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('OpaqueData')
         PsiElement())(')')
@@ -1363,7 +1363,7 @@ ERL_FILE
                 PsiElement(atom)('read_file_info')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('File')
                 PsiElement())(')')
@@ -1373,11 +1373,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -1385,18 +1385,18 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
             PsiElement(;)(';')
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('_FileInfo')
               ERL_CLAUSE_BODY
@@ -1418,18 +1418,18 @@ ERL_FILE
                           PsiElement([)('[')
                           ERL_TUPLE_EXPRESSION
                             PsiElement({)('{')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
                                 PsiElement(atom)('file')
                             PsiElement(,)(',')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_VAR
                                 PsiElement(var)('File')
                             PsiElement(})('}')
                           PsiElement(,)(',')
                           ERL_TUPLE_EXPRESSION
                             PsiElement({)('{')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
                                 PsiElement(atom)('name')
                             PsiElement(,)(',')
@@ -1443,29 +1443,29 @@ ERL_FILE
                           PsiElement(,)(',')
                           ERL_TUPLE_EXPRESSION
                             PsiElement({)('{')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
                                 PsiElement(atom)('repair')
                             PsiElement(,)(',')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
                                 PsiElement(atom)('false')
                             PsiElement(})('}')
                           PsiElement(,)(',')
                           ERL_TUPLE_EXPRESSION
                             PsiElement({)('{')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
                                 PsiElement(atom)('mode')
                             PsiElement(,)(',')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
                                 PsiElement(atom)('read_only')
                             PsiElement(})('}')
                           PsiElement(,)(',')
                           ERL_TUPLE_EXPRESSION
                             PsiElement({)('{')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
                                 PsiElement(atom)('linkto')
                             PsiElement(,)(',')
@@ -1484,11 +1484,11 @@ ERL_FILE
                       ERL_ARGUMENT_DEFINITION
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('ok')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Fd')
                           PsiElement(})('}')
@@ -1496,7 +1496,7 @@ ERL_FILE
                         PsiElement(->)('->')
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('ok')
                           PsiElement(,)(',')
@@ -1512,7 +1512,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('file')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('File')
                                 PsiElement(,)(',')
@@ -1520,7 +1520,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('file_desc')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('Fd')
                                 PsiElement(,)(',')
@@ -1528,7 +1528,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('cont')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('start')
                               PsiElement(})('}')
@@ -1538,21 +1538,21 @@ ERL_FILE
                       ERL_ARGUMENT_DEFINITION
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('repaired')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Fd')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(_)('_')
                           PsiElement(,)(',')
                           ERL_TUPLE_EXPRESSION
                             PsiElement({)('{')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
                                 PsiElement(atom)('badbytes')
                             PsiElement(,)(',')
@@ -1564,7 +1564,7 @@ ERL_FILE
                         PsiElement(->)('->')
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('ok')
                           PsiElement(,)(',')
@@ -1580,7 +1580,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('file')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('File')
                                 PsiElement(,)(',')
@@ -1588,7 +1588,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('file_desc')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('Fd')
                                 PsiElement(,)(',')
@@ -1596,7 +1596,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('cont')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('start')
                               PsiElement(})('}')
@@ -1606,19 +1606,19 @@ ERL_FILE
                       ERL_ARGUMENT_DEFINITION
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('repaired')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Fd')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(_)('_')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(_)('_')
                           PsiElement(})('}')
@@ -1626,7 +1626,7 @@ ERL_FILE
                         PsiElement(->)('->')
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('ok')
                           PsiElement(,)(',')
@@ -1642,7 +1642,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('file')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('File')
                                 PsiElement(,)(',')
@@ -1650,7 +1650,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('file_desc')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('Fd')
                                 PsiElement(,)(',')
@@ -1658,7 +1658,7 @@ ERL_FILE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('cont')
                                   PsiElement(=)('=')
-                                  ERL_EXPRESSION
+                                  ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
                                       PsiElement(atom)('start')
                               PsiElement(})('}')
@@ -1668,11 +1668,11 @@ ERL_FILE
                       ERL_ARGUMENT_DEFINITION
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('error')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Reason')
                           PsiElement(})('}')
@@ -1680,11 +1680,11 @@ ERL_FILE
                         PsiElement(->)('->')
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
                               PsiElement(atom)('error')
                           PsiElement(,)(',')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Reason')
                           PsiElement(})('}')
@@ -1699,7 +1699,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('OpaqueData')
         PsiElement())(')')
@@ -1744,7 +1744,7 @@ ERL_FILE
                 PsiElement(atom)('chunk')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_VAR
                     PsiElement(var)('Fd')
                 PsiElement(,)(',')
@@ -1767,11 +1767,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -1779,7 +1779,7 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
@@ -1788,7 +1788,7 @@ ERL_FILE
                     ERL_MAX_EXPRESSION
                       PsiElement(string)('"Possibly truncated"')
                     PsiElement(,)(',')
-                    ERL_EXPRESSION
+                    ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Reason')
                     PsiElement(})('}')
@@ -1796,18 +1796,18 @@ ERL_FILE
             PsiElement(;)(';')
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('eof')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('R')
                   PsiElement(,)(',')
@@ -1820,7 +1820,7 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Cont')
                   PsiElement(,)(',')
@@ -1850,7 +1850,7 @@ ERL_FILE
                             ERL_Q_ATOM
                               PsiElement(atom)('cont')
                             PsiElement(=)('=')
-                            ERL_EXPRESSION
+                            ERL_MAX_EXPRESSION
                               ERL_Q_VAR
                                 PsiElement(var)('Cont')
                         PsiElement(})('}')
@@ -1860,15 +1860,15 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Cont')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('BackupItems')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('_BadBytes')
                   PsiElement(})('}')
@@ -1876,7 +1876,7 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
                   PsiElement(,)(',')
@@ -1895,12 +1895,12 @@ ERL_FILE
                           ERL_Q_ATOM
                             PsiElement(atom)('cont')
                           PsiElement(=)('=')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Cont')
                       PsiElement(})('}')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('BackupItems')
                   PsiElement(})('}')
@@ -1909,11 +1909,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Cont')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('BackupItems')
                   PsiElement(})('}')
@@ -1921,7 +1921,7 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
                   PsiElement(,)(',')
@@ -1940,12 +1940,12 @@ ERL_FILE
                           ERL_Q_ATOM
                             PsiElement(atom)('cont')
                           PsiElement(=)('=')
-                          ERL_EXPRESSION
+                          ERL_MAX_EXPRESSION
                             ERL_Q_VAR
                               PsiElement(var)('Cont')
                       PsiElement(})('}')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('BackupItems')
                   PsiElement(})('}')
@@ -1959,7 +1959,7 @@ ERL_FILE
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
-          ERL_EXPRESSION
+          ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('OpaqueData')
         PsiElement())(')')
@@ -2003,14 +2003,14 @@ ERL_FILE
           ERL_CR_CLAUSES
             ERL_CR_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('ok')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
                   PsiElement(,)(',')
@@ -2032,11 +2032,11 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
@@ -2044,11 +2044,11 @@ ERL_FILE
                 PsiElement(->)('->')
                 ERL_TUPLE_EXPRESSION
                   PsiElement({)('{')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('error')
                   PsiElement(,)(',')
-                  ERL_EXPRESSION
+                  ERL_MAX_EXPRESSION
                     ERL_Q_VAR
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
