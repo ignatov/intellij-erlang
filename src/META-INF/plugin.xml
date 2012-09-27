@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.3</version>
+    <version>0.3.1</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="117.105" until-build="120.1"/>
     <depends>com.intellij.modules.lang</depends>
@@ -9,6 +9,15 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.3.1:</p>
+            <ul>
+              <li>New fast parsing</li>
+              <li>Highlighting for .config and .rebar files</li>
+              <li>Live templates</li>
+              <li>New icons</li>
+              <li>Formatter impovement</li>
+              <li>Bugfixes</li>
+            </ul>
             <p>0.3:</p>
             <ul>
               <li>Better completion</li>
