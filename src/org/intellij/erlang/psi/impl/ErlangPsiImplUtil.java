@@ -409,7 +409,8 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangRecordExpression o) {
-    return o.getRecordRef().getReference();
+    ErlangRecordRef recordRef = o.getRecordRef();
+    return recordRef != null ? recordRef.getReference() : null;
   }
 
   @Nullable
