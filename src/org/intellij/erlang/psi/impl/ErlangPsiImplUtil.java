@@ -543,27 +543,16 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangRecordDefinition> getErlangRecordFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
-    List<ErlangInclude> includes = containingFile.getIncludes();
-
     List<ErlangRecordDefinition> fromIncludes = new ArrayList<ErlangRecordDefinition>();
-    for (ErlangInclude include : includes) {
-      PsiElement string = include.getIncludeString();
-      if (string != null) {
-        String includeFilePath = string.getText().replaceAll("\"", "");
-
-        List<ErlangFile> justAppend = justAppend(containingFile, includeFilePath);
-        List<ErlangFile> byWildCard = findByWildCard(containingFile, includeFilePath);
-
-        List<ErlangFile> files = ContainerUtil.concat(justAppend, byWildCard);
-
-        for (ErlangFile file : files) {
-          if (!forCompletion) {
-            ErlangRecordDefinition recordFromIncludeFile = file.getRecord(name);
-            fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangRecordDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
-          }
-          else {
-            fromIncludes.addAll(file.getRecords());
-          }
+    for (ErlangInclude include : containingFile.getIncludes()) {
+      List<ErlangFile> files = filesFromInclude(include);
+      for (ErlangFile file : files) {
+        if (!forCompletion) {
+          ErlangRecordDefinition recordFromIncludeFile = file.getRecord(name);
+          fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangRecordDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
+        }
+        else {
+          fromIncludes.addAll(file.getRecords());
         }
       }
     }
@@ -572,38 +561,49 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangFile> filesFromInclude(@NotNull ErlangInclude include) {
+    return filesFromIncludeInner(include, new HashSet<ErlangFile>());
+  }
+
+  @NotNull
+  private static List<ErlangFile> filesFromIncludeInner(@NotNull ErlangInclude include, Set<ErlangFile> alreadyAdded) {
     PsiElement string = include.getIncludeString();
     PsiFile containingFile = include.getContainingFile();
+
     if (string != null) {
       String includeFilePath = string.getText().replaceAll("\"", "");
-      return ContainerUtil.concat(justAppend(containingFile, includeFilePath), findByWildCard(containingFile, includeFilePath));
+      List<ErlangFile> result = new ArrayList<ErlangFile>();
+      List<ErlangFile> concat = ContainerUtil.concat(justAppend(containingFile, includeFilePath), findByWildCard(containingFile, includeFilePath));
+      int beforeSize = alreadyAdded.size();
+      for (ErlangFile erlangFile : concat) {
+        if (!alreadyAdded.contains(erlangFile)) {
+          result.add(erlangFile);
+          alreadyAdded.add(erlangFile);
+        }
+      }
+      if (beforeSize == alreadyAdded.size()) return result;
+      for (ErlangFile erlangFile : concat) {
+        for (ErlangInclude i : erlangFile.getIncludes()) {
+          List<ErlangFile> erlangFiles = filesFromIncludeInner(i, alreadyAdded);
+          result.addAll(erlangFiles);
+        }
+      }
+      return result;
     }
     return Collections.emptyList();
   }
 
   @NotNull
   static List<ErlangMacrosDefinition> getErlangMacrosesFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
-    List<ErlangInclude> includes = containingFile.getIncludes();
-
     List<ErlangMacrosDefinition> fromIncludes = new ArrayList<ErlangMacrosDefinition>();
-    for (ErlangInclude include : includes) {
-      PsiElement string = include.getIncludeString();
-      if (string != null) {
-        String includeFilePath = string.getText().replaceAll("\"", "");
-
-        List<ErlangFile> justAppend = justAppend(containingFile, includeFilePath);
-        List<ErlangFile> byWildCard = findByWildCard(containingFile, includeFilePath);
-
-        List<ErlangFile> files = ContainerUtil.concat(justAppend, byWildCard);
-
-        for (ErlangFile file : files) {
-          if (!forCompletion) {
-            ErlangMacrosDefinition recordFromIncludeFile = file.getMacros(name);
-            fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangMacrosDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
-          }
-          else {
-            fromIncludes.addAll(file.getMacroses());
-          }
+    for (ErlangInclude include : containingFile.getIncludes()) {
+      List<ErlangFile> files = filesFromInclude(include);
+      for (ErlangFile file : files) {
+        if (!forCompletion) {
+          ErlangMacrosDefinition recordFromIncludeFile = file.getMacros(name);
+          fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangMacrosDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
+        }
+        else {
+          fromIncludes.addAll(file.getMacroses());
         }
       }
     }

@@ -106,6 +106,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
             }));
             return;
           }
+          else if (parent instanceof ErlangMacros) {
+            return;
+          }
           else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
             for (String keyword : suggestKeywords(position)) {
               result.addElement(LookupElementBuilder.create(keyword).setBold());
