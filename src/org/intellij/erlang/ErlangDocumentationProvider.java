@@ -79,6 +79,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
   }
 
   public static final Set<String> EDOC_TAGS = ContainerUtil.set(
-    "@author", "@copyright", "@since", "@see", "@reference", "@doc", "@since", "@title", "@version", "@end", "@spec", "@private"
+    "@author", "@copyright", "@since", "@see", "@reference", "@doc", "@since", "@title", "@version", "@end", "@spec",
+    "@private", "@hidden"
   );
 }
