@@ -27,6 +27,14 @@ If you would like to make a donation you can use a [PayPal](https://www.paypal.c
 
 ## Change log
 
+### Version 0.3.1           
+* New fast parsing
+* Highlighting for .config and .rebar files
+* Live templates (thanks to Volodymyr Kyrychenko)
+* New icons (thanks to Volodymyr Kyrychenko)
+* Formatter impovement
+* Bugfixes
+
 ### Version 0.3:
 * Better completion
 * Record fields support
