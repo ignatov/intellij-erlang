@@ -1,6 +1,6 @@
 # Erlang plugin
 Erlang language support for IntelliJ Platform (e.g. IntelliJ IDEA).
-## WORK IN PROGRESS
+## Work in progress
 You can manually set up the latest version of plugin from the [Erlang.zip](https://github.com/ignatov/intellij-erlang/raw/master/bin/Erlang.zip) file.
 
 ## Contributing
