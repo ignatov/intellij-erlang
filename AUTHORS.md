@@ -2,3 +2,5 @@ Erlang plugin for IntelliJ Platform is written by Sergey Ignatov (sergey.ignatov
 
 The following people have made contributions (in no particular order):
 * Volodymyr Kyrychenko (github @vladimirk)
+* Maxim Vladimirsky (github @horkhe)
+* Todd Greenwood-Geer (github @ToddG)
