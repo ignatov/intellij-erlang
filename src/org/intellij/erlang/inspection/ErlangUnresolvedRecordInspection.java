@@ -70,6 +70,7 @@ public class ErlangUnresolvedRecordInspection extends ErlangBaseInspection {
         if (reference == null || reference.resolve() == null) {
           problemsHolder.registerProblem(ref != null ? ref : o, "Unresolved record " + "'" + (ref != null ? ref.getText() : "") + "'");
         }
+        super.visitRecordExpression(o);
       }
     });
   }
