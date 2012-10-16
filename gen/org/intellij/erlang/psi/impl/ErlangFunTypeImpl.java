@@ -18,8 +18,8 @@ public class ErlangFunTypeImpl extends ErlangCompositeElementImpl implements Erl
 
   @Override
   @NotNull
-  public List<ErlangTopType> getTopTypeList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
+  public ErlangFunTypeArguments getFunTypeArguments() {
+    return findNotNullChildByClass(ErlangFunTypeArguments.class);
   }
 
   @Override

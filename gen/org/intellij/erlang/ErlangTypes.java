@@ -57,6 +57,8 @@ public interface ErlangTypes {
   IElementType ERL_FUN_EXPRESSION = new ErlangCompositeElementType("ERL_FUN_EXPRESSION");
   IElementType ERL_FUN_TYPE = new ErlangCompositeElementType("ERL_FUN_TYPE");
   IElementType ERL_FUN_TYPE_100_T = new ErlangCompositeElementType("ERL_FUN_TYPE_100_T");
+  IElementType ERL_FUN_TYPE_ARGUMENTS = new ErlangCompositeElementType("ERL_FUN_TYPE_ARGUMENTS");
+  IElementType ERL_FUN_TYPE_SIGS = new ErlangCompositeElementType("ERL_FUN_TYPE_SIGS");
   IElementType ERL_GENERIC_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GENERIC_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GLOBAL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GLOBAL_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GUARD = new ErlangCompositeElementType("ERL_GUARD");
@@ -332,6 +334,12 @@ public interface ErlangTypes {
       }
       else if (type == ERL_FUN_TYPE_100_T) {
         return new ErlangFunType100TImpl(node);
+      }
+      else if (type == ERL_FUN_TYPE_ARGUMENTS) {
+        return new ErlangFunTypeArgumentsImpl(node);
+      }
+      else if (type == ERL_FUN_TYPE_SIGS) {
+        return new ErlangFunTypeSigsImpl(node);
       }
       else if (type == ERL_GENERIC_FUNCTION_CALL_EXPRESSION) {
         return new ErlangGenericFunctionCallExpressionImpl(node);

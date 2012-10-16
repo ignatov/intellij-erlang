@@ -49,15 +49,20 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 /**
  * @author ignatov
@@ -111,7 +116,15 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
 
         if (usage.get() == null) {
           Query<PsiReference> search = ReferencesSearch.search(function, new LocalSearchScope(function.getContainingFile()));
-          if (search.findFirst() == null) {
+
+          List<PsiReference> refs = ContainerUtil.filter(search.findAll(), new Condition<PsiReference>() { // filtered specs out
+            @Override
+            public boolean value(PsiReference psiReference) {
+              return PsiTreeUtil.getParentOfType(psiReference.getElement(), ErlangSpecification.class) == null;
+            }
+          });
+
+          if (ContainerUtil.getFirstItem(refs) == null) {
             problemsHolder.registerProblem(function.getNameIdentifier(), "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'");
           }
         }

@@ -10,20 +10,20 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangTypeSpecImpl extends ErlangCompositeElementImpl implements ErlangTypeSpec {
+public class ErlangFunTypeArgumentsImpl extends ErlangCompositeElementImpl implements ErlangFunTypeArguments {
 
-  public ErlangTypeSpecImpl(ASTNode node) {
+  public ErlangFunTypeArgumentsImpl(ASTNode node) {
     super(node);
   }
 
   @Override
   @NotNull
-  public ErlangFunTypeSigs getFunTypeSigs() {
-    return findNotNullChildByClass(ErlangFunTypeSigs.class);
+  public List<ErlangTopType> getTopTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeSpec(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeArguments(this);
     else super.accept(visitor);
   }
 

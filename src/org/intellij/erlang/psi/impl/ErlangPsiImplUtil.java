@@ -720,4 +720,15 @@ public class ErlangPsiImplUtil {
   public static int getTextOffset(ErlangTypedExpr o) {
     return o.getNameIdentifier().getTextOffset();
   }
+
+  @Nullable
+  public static PsiReference getReference(ErlangFunTypeSigs o) {
+    ErlangQAtom atom = ContainerUtil.getFirstItem(o.getSpecFun().getQAtomList());
+    ErlangTypeSig sigs = ContainerUtil.getFirstItem(o.getTypeSigList());
+    if (sigs != null && atom != null) {
+      int argsCount = sigs.getFunType().getFunTypeArguments().getTopTypeList().size();
+      return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, null, TextRange.from(0, atom.getTextLength()), atom.getText(), argsCount);
+    }
+    return null;
+  }
 }
