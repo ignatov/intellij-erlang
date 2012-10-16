@@ -39,17 +39,18 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
 
   static {
     ATTRS = new AttributesDescriptor[]{
-      new AttributesDescriptor("illegal character", ILLEGAL),
-      new AttributesDescriptor("comment", COMMENT),
-      new AttributesDescriptor("string", STRING),
-      new AttributesDescriptor("number", NUMBER),
-      new AttributesDescriptor("keyword", KEYWORD),
-      new AttributesDescriptor("parenthesis", PARENTHS),
-      new AttributesDescriptor("braces", BRACES),
-      new AttributesDescriptor("brackets", BRACKETS),
-      new AttributesDescriptor("variable", VARIABLES),
-      new AttributesDescriptor("operation sign", OP_SIGN),
-      new AttributesDescriptor("edoc tag", DOC_COMMENT_TAG),
+      new AttributesDescriptor("Illegal character", ILLEGAL),
+      new AttributesDescriptor("Comment", COMMENT),
+      new AttributesDescriptor("String", STRING),
+      new AttributesDescriptor("Number", NUMBER),
+      new AttributesDescriptor("Keyword", KEYWORD),
+      new AttributesDescriptor("Parenthesis", PARENTHS),
+      new AttributesDescriptor("Braces", BRACES),
+      new AttributesDescriptor("Brackets", BRACKETS),
+      new AttributesDescriptor("Variable", VARIABLES),
+      new AttributesDescriptor("Records", RECORDS),
+      new AttributesDescriptor("Operation sign", OP_SIGN),
+      new AttributesDescriptor("Edoc tag", DOC_COMMENT_TAG),
     };
   }
 
@@ -93,7 +94,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "string_sample(A) -> \"string\n" +
       "  second line\".\n" +
       "\n" +
-      "update_state(State) -> State#state{id=10}."
+      "update_state(State) -> State#<r>state</r>{id=10}."
       ;
   }
 
@@ -102,6 +103,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     final Map<String, TextAttributesKey> map = new THashMap<String, TextAttributesKey>();
     map.put("k", KEYWORD);
     map.put("d", DOC_COMMENT_TAG);
+    map.put("r", RECORDS);
     return map;
   }
 }

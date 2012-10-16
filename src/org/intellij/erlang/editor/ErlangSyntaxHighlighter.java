@@ -43,6 +43,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey BRACES = createTextAttributesKey("ERL_BRACES", SyntaxHighlighterColors.BRACES.getDefaultAttributes());
   public static final TextAttributesKey BRACKETS = createTextAttributesKey("ERL_BRACKETS", SyntaxHighlighterColors.BRACKETS.getDefaultAttributes());
   public static final TextAttributesKey VARIABLES = createTextAttributesKey("ERL_VARIABLES", CodeInsightColors.IMPLICIT_ANONYMOUS_CLASS_PARAMETER_ATTRIBUTES.getDefaultAttributes());
+  public static final TextAttributesKey RECORDS = createTextAttributesKey("ERL_RECORDS", CodeInsightColors.INSTANCE_FIELD_ATTRIBUTES.getDefaultAttributes());
   public static final TextAttributesKey OP_SIGN = createTextAttributesKey("ERL_OP_SIGN", SyntaxHighlighterColors.OPERATION_SIGN.getDefaultAttributes());
   public static final TextAttributesKey DOC_COMMENT_TAG = createTextAttributesKey("ERL_BOLD", SyntaxHighlighterColors.DOC_COMMENT_TAG.getDefaultAttributes());
 

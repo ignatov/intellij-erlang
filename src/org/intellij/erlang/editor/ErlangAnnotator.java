@@ -130,6 +130,14 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         markFirstChildAsKeyword(o, annotationHolder);
       }
 
+      @Override
+      public void visitRecordRef(@NotNull ErlangRecordRef o) {
+        final PsiElement firstChild = o.getFirstChild();
+        if (firstChild != null) {
+          setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.RECORDS);
+        }
+      }
+
       // todo: add export, import and other bundled attributes
     });
   }
