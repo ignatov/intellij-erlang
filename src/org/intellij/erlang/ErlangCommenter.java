@@ -25,7 +25,7 @@ import com.intellij.psi.tree.IElementType;
  */
 public class ErlangCommenter implements CodeDocumentationAwareCommenter {
   public String getLineCommentPrefix() {
-    return "%";
+    return "%% ";
   }
 
   public String getBlockCommentPrefix() {
