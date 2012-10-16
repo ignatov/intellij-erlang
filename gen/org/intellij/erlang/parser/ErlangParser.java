@@ -4748,6 +4748,7 @@ public class ErlangParser implements PsiParser {
   //   | ( q_atom '(' top_types ')')
   //   | binary_type
   //   | q_var
+  //   | '['']'
   //   | ('[' top_type (',' '...')? ']')
   //   | ('{' top_types? '}')
   //   | ('#' q_atom '{' field_types? '}')
@@ -4766,6 +4767,7 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = type_7(builder_, level_ + 1);
     if (!result_) result_ = type_8(builder_, level_ + 1);
     if (!result_) result_ = type_9(builder_, level_ + 1);
+    if (!result_) result_ = type_10(builder_, level_ + 1);
     if (result_) {
       marker_.done(ERL_TYPE);
     }
@@ -4970,20 +4972,36 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // ('[' top_type (',' '...')? ']')
+  // '['']'
   private static boolean type_7(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "type_7")) return false;
-    return type_7_0(builder_, level_ + 1);
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_BRACKET_LEFT);
+    result_ = result_ && consumeToken(builder_, ERL_BRACKET_RIGHT);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // ('[' top_type (',' '...')? ']')
+  private static boolean type_8(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_8")) return false;
+    return type_8_0(builder_, level_ + 1);
   }
 
   // '[' top_type (',' '...')? ']'
-  private static boolean type_7_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_7_0")) return false;
+  private static boolean type_8_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_8_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_BRACKET_LEFT);
     result_ = result_ && top_type(builder_, level_ + 1);
-    result_ = result_ && type_7_0_2(builder_, level_ + 1);
+    result_ = result_ && type_8_0_2(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_BRACKET_RIGHT);
     if (!result_) {
       marker_.rollbackTo();
@@ -4995,21 +5013,21 @@ public class ErlangParser implements PsiParser {
   }
 
   // (',' '...')?
-  private static boolean type_7_0_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_7_0_2")) return false;
-    type_7_0_2_0(builder_, level_ + 1);
+  private static boolean type_8_0_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_8_0_2")) return false;
+    type_8_0_2_0(builder_, level_ + 1);
     return true;
   }
 
   // (',' '...')
-  private static boolean type_7_0_2_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_7_0_2_0")) return false;
-    return type_7_0_2_0_0(builder_, level_ + 1);
+  private static boolean type_8_0_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_8_0_2_0")) return false;
+    return type_8_0_2_0_0(builder_, level_ + 1);
   }
 
   // ',' '...'
-  private static boolean type_7_0_2_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_7_0_2_0_0")) return false;
+  private static boolean type_8_0_2_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_8_0_2_0_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_COMMA);
@@ -5024,18 +5042,18 @@ public class ErlangParser implements PsiParser {
   }
 
   // ('{' top_types? '}')
-  private static boolean type_8(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_8")) return false;
-    return type_8_0(builder_, level_ + 1);
+  private static boolean type_9(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_9")) return false;
+    return type_9_0(builder_, level_ + 1);
   }
 
   // '{' top_types? '}'
-  private static boolean type_8_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_8_0")) return false;
+  private static boolean type_9_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_9_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_CURLY_LEFT);
-    result_ = result_ && type_8_0_1(builder_, level_ + 1);
+    result_ = result_ && type_9_0_1(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_CURLY_RIGHT);
     if (!result_) {
       marker_.rollbackTo();
@@ -5047,27 +5065,27 @@ public class ErlangParser implements PsiParser {
   }
 
   // top_types?
-  private static boolean type_8_0_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_8_0_1")) return false;
+  private static boolean type_9_0_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_9_0_1")) return false;
     top_types(builder_, level_ + 1);
     return true;
   }
 
   // ('#' q_atom '{' field_types? '}')
-  private static boolean type_9(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_9")) return false;
-    return type_9_0(builder_, level_ + 1);
+  private static boolean type_10(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_10")) return false;
+    return type_10_0(builder_, level_ + 1);
   }
 
   // '#' q_atom '{' field_types? '}'
-  private static boolean type_9_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_9_0")) return false;
+  private static boolean type_10_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_10_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_RADIX);
     result_ = result_ && q_atom(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_CURLY_LEFT);
-    result_ = result_ && type_9_0_3(builder_, level_ + 1);
+    result_ = result_ && type_10_0_3(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_CURLY_RIGHT);
     if (!result_) {
       marker_.rollbackTo();
@@ -5079,8 +5097,8 @@ public class ErlangParser implements PsiParser {
   }
 
   // field_types?
-  private static boolean type_9_0_3(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_9_0_3")) return false;
+  private static boolean type_10_0_3(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_10_0_3")) return false;
     field_types(builder_, level_ + 1);
     return true;
   }

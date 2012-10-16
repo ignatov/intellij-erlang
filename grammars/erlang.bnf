@@ -200,6 +200,7 @@ type ::=
   | ( q_atom '(' top_types ')')
   | binary_type
   | q_var
+  | '['']'
   | ('[' top_type (',' '...')? ']')
   | ('{' top_types? '}')
   | ('#' q_atom '{' field_types? '}')
