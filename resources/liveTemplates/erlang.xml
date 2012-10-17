@@ -20,26 +20,30 @@
       <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_DECLARATION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="inc" value="-include(&quot;$FILE$.hrl&quot;).$END$" description="Include file" toReformat="true" toShortenFQNames="true">
       <variable name="FILE" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_DECLARATION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="incl" value="-include_lib(&quot;$LIB$/include/$FILE$.hrl&quot;).$END$" description="Include library" toReformat="true" toShortenFQNames="true">
       <variable name="LIB" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="FILE" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_DECLARATION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="beh" value="-behaviour($BEHAVIOUR$).$END$" description="Define behaviour" toReformat="true" toShortenFQNames="true">
       <variable name="BEHAVIOUR" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_DECLARATION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="if" value="if&#10;    $GUARD$ -&gt; $EXPR1$;&#10;    true -&gt; $EXPR2$&#10;end$END$" description="if statement" toReformat="true" toShortenFQNames="true">
@@ -47,7 +51,9 @@
       <variable name="EXPR1" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="EXPR2" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="case" value="case $EXPR$ of&#10;    $MATCH$ $GUARD$ -&gt; $END$;&#10;end" description="case statement" toReformat="true" toShortenFQNames="true">
@@ -55,22 +61,26 @@
       <variable name="MATCH" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="GUARD" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
-    <template name="fun" value="$NAME$($ARGUMENTS$) $GUARD$ -&gt;&#10;    $END$" description="Function clause" toReformat="true" toShortenFQNames="true">
+    <template name="func" value="$NAME$($ARGUMENTS$) $GUARD$ -&gt;&#10;    $END$" description="Function clause" toReformat="true" toShortenFQNames="true">
       <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="ARGUMENTS" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="GUARD" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_DECLARATION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="casc" value="$MATCH$ $GUARD$ -&gt; $END$" description="case clause" toReformat="true" toShortenFQNames="true">
       <variable name="MATCH" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="GUARD" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="T" value="try&#10;    $SELECTION$&#10;catch&#10;    $CLASS$:$PATTERN$ $GUARD$ -&gt; $END$&#10;end " description="surround with try...catch" toReformat="false" toShortenFQNames="true">
@@ -79,13 +89,17 @@
       <variable name="PATTERN" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="GUARD" expression="when $GUARD$" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="B" value="begin&#10;    $SELECTION$&#10;end" description="surround with begin...end" toReformat="false" toShortenFQNames="true">
       <variable name="SELECTION" expression="" defaultValue="" alwaysStopAt="false" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="tryo" value="try $EXPR$ of&#10;    $MATCH$ $GUARD1$ -&gt; $RESULT$&#10;catch&#10;    $CLASS$:$PATTERN$ $GUARD2$ -&gt; $END$&#10;end " description="try...of...catch" toReformat="false" toShortenFQNames="true">
@@ -97,7 +111,9 @@
       <variable name="PATTERN" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="GUARD2" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="spec" value="-spec $NAME$/$ARITY$ :: ($ARGUMENTS$) -&gt; $RESULT$.$END$" description="define spec" toReformat="false" toShortenFQNames="true">
@@ -106,21 +122,26 @@
       <variable name="ARGUMENTS" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="RESULT" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_DECLARATION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="ht" value="[$HEAD$ | $TAIL$]$END$" description="[H | T]" toReformat="false" toShortenFQNames="true">
       <variable name="HEAD" expression="" defaultValue="H" alwaysStopAt="true" />
       <variable name="TAIL" expression="" defaultValue="T" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
-    <template name="iof" value="io:format(&quot;$PATTERN$&quot;, [$VALUES$]),$END$" description="io:format" toReformat="false" toShortenFQNames="true">
+    <template name="sout" value="io:format(&quot;$PATTERN$&quot;, [$VALUES$]),$END$" description="io:format" toReformat="false" toShortenFQNames="true">
       <variable name="PATTERN" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="VALUES" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="lc" value="[ $RES$ || $VAR$ &lt;- $LIST$ ]$END$" description="list comprehension" toReformat="false" toShortenFQNames="true">
@@ -128,14 +149,17 @@
       <variable name="VAR" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="RES" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="funa" value="fun($ARGUMENTS$) -&gt; $EXPR$ end$END$ " description="Anonymous function" toReformat="true" toShortenFQNames="true">
       <variable name="ARGUMENTS" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="EXPR" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="try" value="try&#10;    $EXPR$&#10;catch&#10;    $CLASS$:$PATTERN$ $GUARD$ -&gt; $END$&#10;end " description="try...catch" toReformat="false" toShortenFQNames="true">
@@ -144,7 +168,9 @@
       <variable name="PATTERN" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="GUARD" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
     <template name="rec" value="-record($NAME$, {&#10;    $FIELD1$ :: $TYPE1$,&#10;    $FIELD2$ :: $TYPE2$&#10;})." description="define record" toReformat="false" toShortenFQNames="true">
@@ -154,7 +180,8 @@
       <variable name="FIELD2" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="TYPE2" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
-        <option name="ERLANG_CODE" value="true" />
+        <option name="ERLANG_DECLARATION" value="true" />
+        <option name="OTHER" value="false" />
       </context>
     </template>
 </templateSet>

@@ -29,6 +29,6 @@ public class ErlangFileTypeFactory extends FileTypeFactory {
     fileTypeConsumer.consume(ErlangFileType.INSTANCE);
     fileTypeConsumer.consume(ErlangFileType.HRL);
     fileTypeConsumer.consume(ErlangFileType.APP);
-    fileTypeConsumer.consume(ErlangFileType.CONFIG);
+    fileTypeConsumer.consume(ErlangFileType.TERMS);
   }
 }

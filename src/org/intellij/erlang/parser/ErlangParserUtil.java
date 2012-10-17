@@ -33,7 +33,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   public static boolean isApplicationConfigFileType(@NotNull PsiFile file) {
     FileType fileType = file.getViewProvider().getVirtualFile().getFileType();
-    return fileType == ErlangFileType.APP || fileType == ErlangFileType.CONFIG ||
+    return fileType == ErlangFileType.APP || fileType == ErlangFileType.TERMS ||
       (ApplicationManager.getApplication().isUnitTestMode() && (fileType.getDefaultExtension().equals("app") || fileType.getDefaultExtension().equals("config")));
   }
 }
