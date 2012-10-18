@@ -27,6 +27,7 @@ import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.psi.ErlangFakeBinaryExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -63,17 +64,19 @@ public class ErlangBlock implements ASTBlock, BlockWithParent {
   private Indent myIndent;
   private Wrap myWrap;
   private CommonCodeStyleSettings mySettings;
+  private ErlangCodeStyleSettings myErlangSettings;
   private final SpacingBuilder mySpacingBuilder;
   private List<Block> mySubBlocks;
   private BlockWithParent myParent;
 
   public ErlangBlock(BlockWithParent parent, ASTNode node, Alignment alignment, Wrap wrap, CommonCodeStyleSettings settings,
-                     SpacingBuilder spacingBuilder) {
+                     ErlangCodeStyleSettings erlangSettings, SpacingBuilder spacingBuilder) {
     myParent = parent;
     myNode = node;
     myAlignment = alignment;
     myWrap = wrap;
     mySettings = settings;
+    myErlangSettings = erlangSettings;
     mySpacingBuilder = spacingBuilder;
     myIndent = new ErlangIndentProcessor(mySettings).getChildIndent(node);
   }
@@ -125,24 +128,26 @@ public class ErlangBlock implements ASTBlock, BlockWithParent {
 
       if (child.getTextRange().getLength() == 0 || childType == TokenType.WHITE_SPACE) continue;
 
-      if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_LIST
-        || parentType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE) {
-        if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT) {
+      if (myErlangSettings.ALIGN_MULTILINE_BLOCK) {
+        if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_LIST
+          || parentType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE) {
+          if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT) {
+            alignment = baseAlignment;
+          }
+        }
+        if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS) {
+          if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT) {
+            alignment = baseAlignment;
+          }
+        }
+        if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS) {
+          if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) {
+            alignment = baseAlignment;
+          }
+        }
+        if (psi instanceof ErlangFakeBinaryExpression) {
           alignment = baseAlignment;
         }
-      }
-      if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS) {
-        if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT) {
-          alignment = baseAlignment;
-        }
-      }
-      if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS) {
-        if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) {
-          alignment = baseAlignment;
-        }
-      }
-      if (psi instanceof ErlangFakeBinaryExpression) {
-        alignment = baseAlignment;
       }
       boolean isEmacsStyleFunctionAlignment = false;
       //noinspection ConstantConditions
@@ -181,7 +186,7 @@ public class ErlangBlock implements ASTBlock, BlockWithParent {
   }
 
   private Block buildSubBlock(@NotNull ASTNode child, @Nullable Alignment alignment) {
-    return new ErlangBlock(this, child, alignment, null, mySettings, mySpacingBuilder);
+    return new ErlangBlock(this, child, alignment, null, mySettings, myErlangSettings, mySpacingBuilder);
   }
 
   @Override
