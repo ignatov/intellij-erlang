@@ -69,7 +69,7 @@ public class ErlangBlock implements ASTBlock, BlockWithParent {
   private List<Block> mySubBlocks;
   private BlockWithParent myParent;
 
-  public ErlangBlock(@NotNull BlockWithParent parent, // todo[ignatov]: remove parent, use AlignmentStrategy instead of
+  public ErlangBlock(@Nullable BlockWithParent parent, // todo[ignatov]: remove parent, use AlignmentStrategy instead of
                      @NotNull ASTNode node,
                      @Nullable Alignment alignment,
                      @Nullable Wrap wrap,
