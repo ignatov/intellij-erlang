@@ -112,6 +112,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 //        "PARENTHESES_EXPRESSION_LPAREN_WRAP",
 //        "PARENTHESES_EXPRESSION_RPAREN_WRAP"
       );
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_MULTILINE_BLOCK", "Align when multiple", "Blocks (fun...end, etc)");
     }
   }
 
@@ -144,14 +145,14 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       "    spawn(tut15, ping, [30, Pong_PID]).";
 
   public static final String WRAPPING_CODE_SAMPLE =
-    "%% ping comment" +
+    "%% ping comment\n" +
       "ping(0, Pong_PID) ->\n" +
       "    Pong_PID ! finished,\n" +
       "    tut15:pong(),\n" +
       "    io:format(\"Ping finished~n\", []);\n" +
       "\n" +
       "" +
-      "%% pong comment" +
+      "%% pong comment\n" +
       "ping(N, Pong_PID)->\n" +
       "    Pong_PID ! {ping, self()},\n" +
       "    receive\n" +

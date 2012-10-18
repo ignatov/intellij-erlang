@@ -25,6 +25,7 @@ import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.tree.TokenSet;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.ErlangTypes.*;
@@ -36,9 +37,10 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   @NotNull
   @Override
   public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
-    CommonCodeStyleSettings erlangSettings = settings.getCommonSettings(ErlangLanguage.INSTANCE);
-    final ErlangBlock block = new ErlangBlock(null, element.getNode(), null, null, erlangSettings,
-      createSpacingBuilder(erlangSettings));
+    CommonCodeStyleSettings commonSettings = settings.getCommonSettings(ErlangLanguage.INSTANCE);
+    ErlangCodeStyleSettings erlangSettings = settings.getCustomSettings(ErlangCodeStyleSettings.class);
+    final ErlangBlock block = new ErlangBlock(null, element.getNode(), null, null, commonSettings, erlangSettings,
+      createSpacingBuilder(commonSettings));
     return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
   }
 
