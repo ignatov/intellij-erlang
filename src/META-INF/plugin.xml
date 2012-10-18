@@ -72,7 +72,10 @@
         <internalFileTemplate name="Erlang Gen Event"/>
 
         <defaultLiveTemplatesProvider implementation="org.intellij.erlang.template.ErlangLiveTemplateProvider"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Generic"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Declaration"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Statement"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Expression"/>
 
         <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.editor.ErlangModuleType"/>
         <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector"/>

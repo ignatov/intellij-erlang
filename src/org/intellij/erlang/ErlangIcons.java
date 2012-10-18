@@ -40,7 +40,7 @@ public interface ErlangIcons {
   Icon FILE = IconLoader.getIcon("/icons/erlang-module-16.png");
   Icon OTP_SUPERVISOR = IconLoader.getIcon("/icons/otp-supervisor-16.png");
   Icon OTP_APPLICATION = IconLoader.getIcon("/icons/otp-application-16.png");
-  Icon CONFIG = IconLoader.getIcon("/icons/macro.png"); // todo: new icon for rebar
+  Icon TERMS = IconLoader.getIcon("/icons/erlang-terms-16.png");
   Icon OTP_GEN_EVENT = IconLoader.getIcon("/icons/otp-gen-event-16.png");
   Icon OTP_GEN_SERVER = IconLoader.getIcon("/icons/otp-gen-server-16.png");
   Icon OTP_GEN_FSM = IconLoader.getIcon("/icons/otp-gen-fsm-16.png");

@@ -17,22 +17,87 @@ package org.intellij.erlang.template;
 
 import com.intellij.codeInsight.template.EverywhereContextType;
 import com.intellij.codeInsight.template.TemplateContextType;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilBase;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.psi.ErlangClauseBody;
+import org.intellij.erlang.psi.ErlangExpression;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
  */
-public class ErlangContextType extends TemplateContextType {
-
-  protected ErlangContextType() {
-    super("ERLANG_CODE", "Erlang", EverywhereContextType.class);
+public abstract class ErlangContextType extends TemplateContextType {
+  protected ErlangContextType(@NotNull @NonNls String id, @NotNull String presentableName, @Nullable Class<? extends TemplateContextType> baseContextType) {
+    super(id, presentableName, baseContextType);
   }
 
   @Override
   public boolean isInContext(@NotNull PsiFile file, int offset) {
-    return PsiUtilBase.getLanguageAtOffset(file, offset).isKindOf(ErlangLanguage.INSTANCE);
+    if (!PsiUtilBase.getLanguageAtOffset(file, offset).isKindOf(ErlangLanguage.INSTANCE)) return false;
+    PsiElement element = file.findElementAt(offset);
+    if (element instanceof PsiWhiteSpace) {
+      return false;
+    }
+    return element != null && isInContext(element);
+  }
+
+  protected abstract boolean isInContext(PsiElement element);
+
+  public static class Generic extends ErlangContextType {
+
+    protected Generic() {
+      super("ERLANG_CODE", "Erlang", EverywhereContextType.class);
+    }
+
+    @Override
+    protected boolean isInContext(PsiElement element) {
+      return true;
+    }
+  }
+
+  public static class Declaration extends ErlangContextType {
+    protected Declaration() {
+      super("ERLANG_DECLARATION", "Declaration", Generic.class);
+    }
+
+    @Override
+    protected boolean isInContext(PsiElement element) {
+      //cant make it work for keywords at all
+      return element.getParent() instanceof ErlangFile;
+    }
+  }
+
+  public static class Statement extends ErlangContextType {
+    protected Statement() {
+      super("ERLANG_STATEMENT", "Statement", Generic.class);
+    }
+
+    @Override
+    protected boolean isInContext(PsiElement element) {
+      //somehow parent of keyword became Function while other types have ClauseBody
+      return PsiTreeUtil.getParentOfType(element, ErlangClauseBody.class) != null
+        || PsiTreeUtil.getParentOfType(element, ErlangFunction.class) != null;
+    }
+  }
+
+  public static class Expression extends ErlangContextType {
+    protected Expression() {
+      super("ERLANG_EXPRESSION", "Expression", Generic.class);
+    }
+
+    @Override
+    protected boolean isInContext(PsiElement element) {
+      //somehow parent of keyword became Function while other types have Expression
+      return PsiTreeUtil.getParentOfType(element, ErlangExpression.class) != null
+        || PsiTreeUtil.getParentOfType(element, ErlangFunction.class) != null;
+    }
   }
 }

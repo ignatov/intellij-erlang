@@ -28,7 +28,7 @@ public class ErlangFileType extends LanguageFileType {
   public static ErlangFileType INSTANCE = new ErlangFileType();
   public static HrlFileType HRL = new HrlFileType();
   public static AppFileType APP = new AppFileType();
-  public static ConfigFileType CONFIG = new ConfigFileType();
+  public static ErlangTermsFileType TERMS = new ErlangTermsFileType();
 
   protected ErlangFileType() {
     super(ErlangLanguage.INSTANCE);
@@ -113,17 +113,17 @@ public class ErlangFileType extends LanguageFileType {
     }
   }
 
-  public static class ConfigFileType extends ErlangFileType {
+  public static class ErlangTermsFileType extends ErlangFileType {
     @NotNull
     @Override
     public String getName() {
-      return "Rebar config";
+      return "Erlang Terms";
     }
 
     @NotNull
     @Override
     public String getDescription() {
-      return "Rebar Configuration File";
+      return "Erlang Terms File";
     }
 
     @NotNull
@@ -134,7 +134,7 @@ public class ErlangFileType extends LanguageFileType {
 
     @Override
     public Icon getIcon() {
-      return ErlangIcons.CONFIG;
+      return ErlangIcons.TERMS;
     }
   }
 }
