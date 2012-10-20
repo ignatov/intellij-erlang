@@ -157,9 +157,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
     //noinspection unchecked
     for (VirtualFile file : ContainerUtil.concat(files, standardModules)) {
       if (file.getFileType() == ErlangFileType.INSTANCE) {
-        result.addElement(LookupElementBuilder.create(file.getNameWithoutExtension()).
-          setIcon(ErlangIcons.MODULE).
-          setInsertHandler(new SingleCharInsertHandler(':')));
+        result.addElement(
+          PrioritizedLookupElement.withPriority(
+            LookupElementBuilder.create(file.getNameWithoutExtension()).
+              setIcon(ErlangIcons.MODULE).
+              setInsertHandler(new SingleCharInsertHandler(':')),
+            10));
       }
     }
   }
