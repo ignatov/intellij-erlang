@@ -20,6 +20,7 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
@@ -113,8 +114,14 @@ public class ErlangCompletionContributor extends CompletionContributor {
             for (String keyword : suggestKeywords(position)) {
               result.addElement(LookupElementBuilder.create(keyword).setBold());
             }
-            if (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null) {
+            int invocationCount = parameters.getInvocationCount();
+            boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;
+            if (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null && moduleCompletion) {
               suggestModules(result, position);
+            }
+            else {
+              String shortcut = getActionShortcut(IdeActions.ACTION_CODE_COMPLETION);
+              CompletionService.getCompletionService().setAdvertisementText(shortcut + " to activate module name completion");
             }
           }
           if (colonQualified == null && parent instanceof ErlangExpression && ErlangPsiImplUtil.inFunction(position)) {
@@ -125,7 +132,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     });
   }
 
-  private boolean prevIsRadix(PsiElement psiElement) {
+  private static boolean prevIsRadix(PsiElement psiElement) {
     PsiElement prevSibling = psiElement != null ? psiElement.getPrevSibling() : null;
     ASTNode prevSiblingNode = prevSibling != null ? prevSibling.getNode() : null;
     return (prevSiblingNode != null ? prevSiblingNode.getElementType() : null) == ErlangTypes.ERL_RADIX;
