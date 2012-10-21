@@ -112,7 +112,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           }
           else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
             for (String keyword : suggestKeywords(position)) {
-              result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword).setBold(), -1));
+              result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword).setBold(), -10));
             }
             int invocationCount = parameters.getInvocationCount();
             boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;

@@ -19,6 +19,7 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.codeInsight.completion.BasicInsertHandler;
 import com.intellij.codeInsight.completion.InsertHandler;
 import com.intellij.codeInsight.completion.InsertionContext;
+import com.intellij.codeInsight.completion.PrioritizedLookupElement;
 import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
@@ -252,7 +253,7 @@ public class ErlangPsiImplUtil {
       List<LookupElement> lookupElements = ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
         @Override
         public LookupElement fun(@NotNull final ErlangFunction function) {
-          return createFunctionLookupElement(function.getName(), function.getArity(), withArity);
+          return createFunctionLookupElement(function, withArity, -4);
         }
       });
 
@@ -268,7 +269,7 @@ public class ErlangPsiImplUtil {
             if (m.matches()) {
               String name = m.group(1);
               int arity = Integer.parseInt(m.group(2));
-              lookupElements.add(createFunctionLookupElement(name, arity, withArity));
+              lookupElements.add(createFunctionLookupElement(name, arity, withArity, -5));
             }
           }
         }
@@ -279,12 +280,16 @@ public class ErlangPsiImplUtil {
     return Collections.emptyList();
   }
 
-  private static LookupElement createFunctionLookupElement(String name, int arity, boolean withArity) {
-    return LookupElementBuilder.create(name)
+  private static LookupElement createFunctionLookupElement(ErlangFunction function, boolean withArity, double priority) {
+    return createFunctionLookupElement(function.getName(), function.getArity(), withArity, priority);
+  }
+
+  private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, double priority) {
+    return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name)
       .setIcon(ErlangIcons.FUNCTION).setTailText("/" + arity).
         setInsertHandler(
           getInsertHandler(arity, withArity)
-        );
+        ), priority);
   }
 
   private static InsertHandler<LookupElement> getInsertHandler(final int arity, boolean withArity) {
