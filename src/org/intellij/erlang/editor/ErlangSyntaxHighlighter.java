@@ -98,7 +98,19 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
         ERL_TRY == type ||
         ERL_DOT == type ||
         ERL_ANDALSO == type ||
-        ERL_ORELSE == type
+        ERL_ORELSE == type ||
+        ERL_DIV == type ||
+        ERL_REM == type ||
+        ERL_XOR == type ||
+        ERL_BXOR == type ||
+        ERL_BOR == type ||
+        ERL_BAND == type ||
+        ERL_BNOT == type ||
+        ERL_AND == type ||
+        ERL_OR == type ||
+        ERL_NOT == type ||
+        ERL_BSL == type ||
+        ERL_BSR == type
 //        ||
 //        ERL_ARROW == type
       ) {
