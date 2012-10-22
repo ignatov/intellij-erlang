@@ -77,7 +77,7 @@ public class ErlangIndentProcessor {
       }
       return Indent.getNormalIndent();
     }
-    if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS) {
+    if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS || parentType == ERL_EXPORT_TYPES) {
       if (elementType == ERL_BRACKET_LEFT || elementType == ERL_BRACKET_RIGHT || elementType == ERL_BIN_START || elementType == ERL_BIN_END || elementType == ERL_LC_EXPRS) {
         return Indent.getNoneIndent();
       }
