@@ -101,7 +101,6 @@ public interface ErlangTypes {
   IElementType ERL_RULE_CLAUSE = new ErlangCompositeElementType("ERL_RULE_CLAUSE");
   IElementType ERL_SEND_EXPRESSION = new ErlangCompositeElementType("ERL_SEND_EXPRESSION");
   IElementType ERL_SPECIFICATION = new ErlangCompositeElementType("ERL_SPECIFICATION");
-  IElementType ERL_SPEC_FUN = new ErlangCompositeElementType("ERL_SPEC_FUN");
   IElementType ERL_TOP_TYPE = new ErlangCompositeElementType("ERL_TOP_TYPE");
   IElementType ERL_TOP_TYPE_100_T = new ErlangCompositeElementType("ERL_TOP_TYPE_100_T");
   IElementType ERL_TOP_TYPE_CLAUSE = new ErlangCompositeElementType("ERL_TOP_TYPE_CLAUSE");
@@ -118,7 +117,6 @@ public interface ErlangTypes {
   IElementType ERL_TYPE_GUARD = new ErlangCompositeElementType("ERL_TYPE_GUARD");
   IElementType ERL_TYPE_SIG = new ErlangCompositeElementType("ERL_TYPE_SIG");
   IElementType ERL_TYPE_SIG_GUARD = new ErlangCompositeElementType("ERL_TYPE_SIG_GUARD");
-  IElementType ERL_TYPE_SPEC = new ErlangCompositeElementType("ERL_TYPE_SPEC");
 
   IElementType ERL_AFTER = new ErlangTokenType("after");
   IElementType ERL_AND = new ErlangTokenType("and");
@@ -467,9 +465,6 @@ public interface ErlangTypes {
       else if (type == ERL_SPECIFICATION) {
         return new ErlangSpecificationImpl(node);
       }
-      else if (type == ERL_SPEC_FUN) {
-        return new ErlangSpecFunImpl(node);
-      }
       else if (type == ERL_TOP_TYPE) {
         return new ErlangTopTypeImpl(node);
       }
@@ -517,9 +512,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_TYPE_SIG_GUARD) {
         return new ErlangTypeSigGuardImpl(node);
-      }
-      else if (type == ERL_TYPE_SPEC) {
-        return new ErlangTypeSpecImpl(node);
       }
       throw new AssertionError("Unknown element type: " + type);
     }

@@ -728,7 +728,7 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(ErlangFunTypeSigs o) {
-    ErlangQAtom atom = ContainerUtil.getFirstItem(o.getSpecFun().getQAtomList());
+    ErlangQAtom atom = ContainerUtil.getFirstItem(o.getQAtomList());
     ErlangTypeSig sigs = ContainerUtil.getFirstItem(o.getTypeSigList());
     if (sigs != null && atom != null) {
       int argsCount = sigs.getFunType().getFunTypeArguments().getTopTypeList().size();

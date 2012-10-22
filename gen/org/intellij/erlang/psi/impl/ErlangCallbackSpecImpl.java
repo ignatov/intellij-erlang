@@ -18,8 +18,8 @@ public class ErlangCallbackSpecImpl extends ErlangCompositeElementImpl implement
 
   @Override
   @Nullable
-  public ErlangTypeSpec getTypeSpec() {
-    return findChildByClass(ErlangTypeSpec.class);
+  public ErlangFunTypeSigs getFunTypeSigs() {
+    return findChildByClass(ErlangFunTypeSigs.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

@@ -45,7 +45,6 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   }
 
   private static SpacingBuilder createSpacingBuilder(CommonCodeStyleSettings settings) {
-    TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
     TokenSet keywords = TokenSet.create(
       ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_FUN, ERL_QUERY, ERL_CATCH, ERL_IF, ERL_RECEIVE,
       ERL_TRY, ERL_DIV, ERL_REM, ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND, ERL_BAND);
@@ -64,7 +63,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .around(ERL_OP_LT_MINUS).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
       .around(ERL_OP_EXL).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
 
-      .after(ERL_ARROW).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+      .around(ERL_ARROW).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
       .before(ERL_CLAUSE_BODY).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
 
       .around(ERL_OP_PLUS).spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
@@ -86,8 +85,6 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .around(ERL_OR_OR).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
       .around(ERL_OR).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
 
-      .between(ERL_SPEC_FUN, ERL_TYPE_SIG).none()
-
       .after(ERL_BRACKET_LEFT).none()
       .before(ERL_BRACKET_RIGHT).none()
       .after(ERL_CURLY_LEFT).none()
@@ -101,16 +98,30 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .withinPair(ERL_CURLY_LEFT, ERL_CURLY_RIGHT).spaceIf(true)
       .withinPair(ERL_BIN_START, ERL_BIN_END).spaceIf(true)
 
-      .beforeInside(rules, ERL_PAR_LEFT).none()
-
       .around(keywords).spaces(1)
-
       .before(ERL_CLAUSE_GUARD).spaces(1)
-      .before(ERL_TYPE_SPEC).spaces(1)
-      .around(ERL_FUN_TYPE).spaces(1)
-      .around(ERL_TYPE_SIG).spaces(1)
-      .beforeInside(ERL_PAR_LEFT, ERL_FUN_TYPE).spaces(1)
-      .afterInside(ERL_PAR_RIGHT, ERL_FUN_TYPE).spaces(1)
+
+      .beforeInside(ERL_PAR_LEFT, ERL_EXPORT).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_EXPORT_TYPE_ATTRIBUTE).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_INCLUDE).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_RECORD_DEFINITION).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_MODULE).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_MACROS_DEFINITION).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_BEHAVIOUR).none()
+      .afterInside(ERL_Q_ATOM, ERL_ATOM_ATTRIBUTE).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_SPECIFICATION).none()
+      .beforeInside(ERL_FUN_TYPE_SIGS, ERL_SPECIFICATION).spaces(1)
+      .beforeInside(ERL_PAR_LEFT, ERL_CALLBACK_SPEC).none()
+      .beforeInside(ERL_FUN_TYPE_SIGS, ERL_CALLBACK_SPEC).spaces(1)
+
+      .aroundInside(ERL_OP_AR_DIV, ERL_FUN_TYPE_SIGS).none()
+      .aroundInside(ERL_OP_AR_DIV, ERL_EXPORT_FUNCTION).none()
+      .aroundInside(ERL_OP_AR_DIV, ERL_EXPORT_TYPE).none()
+
+      .aroundInside(ERL_COLON_COLON, ERL_FUN_TYPE_SIGS).spaces(1)
+      .betweenInside(ERL_COLON_COLON, ERL_TYPE_SIG, ERL_FUN_TYPE_SIGS).spaces(1)
+      .between(ERL_FUN_TYPE_ARGUMENTS, ERL_TOP_TYPE_CLAUSE).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+      .betweenInside(ERL_Q_ATOM, ERL_PAR_LEFT, ERL_TYPE).none()
 
       .aroundInside(ERL_COLON, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION).none()
       .around(ERL_COLON_COLON).spaces(1)

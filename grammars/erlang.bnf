@@ -153,8 +153,8 @@ attribute ::= '-' (
   | behaviour
   | atom_attribute
   ) {pin=1}
-callback_spec ::= 'callback' type_spec {pin=1}
-specification ::= 'spec' type_spec {pin=1}
+callback_spec ::= 'callback' (('(' fun_type_sigs ')') | fun_type_sigs) {pin=1}
+specification ::= 'spec' (('(' fun_type_sigs ')') | fun_type_sigs) {pin=1}
 export ::= 'export' '(' export_functions ')' {pin=1}
 export_type_attribute ::= 'export_type' '(' export_types ')' {pin=1}
 module ::= 'module' '(' q_atom (',' argument_definition)? ')' {
@@ -175,11 +175,11 @@ export_function ::= q_atom '/' integer {
 export_types ::= '[' [export_type (',' export_type)*] ']' {pin=1}
 export_type ::= q_atom '/' integer {pin=1}
 
-type_spec ::= ('(' fun_type_sigs ')') | fun_type_sigs
-fun_type_sigs ::= spec_fun type_sig (';' type_sig)* {
+//type_spec ::= ('(' fun_type_sigs ')') | fun_type_sigs
+fun_type_sigs ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])] type_sig (';' type_sig)* {
   methods=[getReference]
 }
-spec_fun ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])]
+//spec_fun ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])]
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
 typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
 private typed_exprs ::= typed_expr (',' typed_expr)*

@@ -19,14 +19,20 @@ public class ErlangFunTypeSigsImpl extends ErlangCompositeElementImpl implements
 
   @Override
   @NotNull
-  public ErlangSpecFun getSpecFun() {
-    return findNotNullChildByClass(ErlangSpecFun.class);
+  public List<ErlangQAtom> getQAtomList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
   }
 
   @Override
   @NotNull
   public List<ErlangTypeSig> getTypeSigList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTypeSig.class);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getInteger() {
+    return findChildByType(ERL_INTEGER);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

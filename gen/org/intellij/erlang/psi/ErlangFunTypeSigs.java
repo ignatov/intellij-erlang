@@ -9,10 +9,13 @@ import com.intellij.psi.PsiReference;
 public interface ErlangFunTypeSigs extends ErlangCompositeElement {
 
   @NotNull
-  ErlangSpecFun getSpecFun();
+  List<ErlangQAtom> getQAtomList();
 
   @NotNull
   List<ErlangTypeSig> getTypeSigList();
+
+  @Nullable
+  PsiElement getInteger();
 
   @Nullable
   PsiReference getReference();

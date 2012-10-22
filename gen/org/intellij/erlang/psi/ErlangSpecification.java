@@ -8,6 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ErlangSpecification extends ErlangCompositeElement {
 
   @Nullable
-  ErlangTypeSpec getTypeSpec();
+  ErlangFunTypeSigs getFunTypeSigs();
 
 }
