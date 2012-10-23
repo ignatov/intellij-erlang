@@ -23,6 +23,7 @@ import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangExpression;
+import org.intellij.erlang.psi.ErlangPrefixExpression;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -38,9 +39,8 @@ public class ErlangIndentProcessor {
     ERL_OP_PLUS, ERL_OP_MINUS, ERL_OP_AR_MUL, ERL_OP_AR_DIV, ERL_REM,
     ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND,
     ERL_BAND, ERL_OP_EQ_EQ, ERL_OP_DIV_EQ, ERL_OP_EQ_COL_EQ, ERL_OP_EQ_DIV_EQ,
-    ERL_OP_LT, ERL_OP_EQ_LT, ERL_OP_GT, ERL_OP_GT_EQ, ERL_OP_LT_EQ, ERL_NOT,
-    ERL_BNOT, ERL_OP_PLUS_PLUS, ERL_OP_MINUS_MINUS, ERL_OP_EQ, ERL_OP_EXL,
-    ERL_OP_LT_MINUS, ERL_ANDALSO, ERL_ORELSE
+    ERL_OP_LT, ERL_OP_EQ_LT, ERL_OP_GT, ERL_OP_GT_EQ, ERL_OP_LT_EQ, ERL_OP_PLUS_PLUS,
+    ERL_OP_MINUS_MINUS, ERL_OP_EQ, ERL_OP_EXL, ERL_OP_LT_MINUS, ERL_ANDALSO, ERL_ORELSE
   );
   private final CommonCodeStyleSettings settings;
 
@@ -65,7 +65,7 @@ public class ErlangIndentProcessor {
 //      return Indent.getContinuationIndent();
 //    }
     if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_LIST
-      || parentType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE) {
+      || parentType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE || parentType == ERL_FUN_TYPE_ARGUMENTS) {
       if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) {
         return Indent.getNoneIndent();
       }
@@ -77,7 +77,7 @@ public class ErlangIndentProcessor {
       }
       return Indent.getNormalIndent();
     }
-    if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS) {
+    if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS || parentType == ERL_EXPORT_TYPES) {
       if (elementType == ERL_BRACKET_LEFT || elementType == ERL_BRACKET_RIGHT || elementType == ERL_BIN_START || elementType == ERL_BIN_END || elementType == ERL_LC_EXPRS) {
         return Indent.getNoneIndent();
       }
@@ -87,7 +87,7 @@ public class ErlangIndentProcessor {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_LC_EXPRS) {
-      return Indent.getContinuationIndent();
+      return Indent.getNormalIndent();
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();
