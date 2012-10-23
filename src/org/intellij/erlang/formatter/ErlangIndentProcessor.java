@@ -65,7 +65,7 @@ public class ErlangIndentProcessor {
 //      return Indent.getContinuationIndent();
 //    }
     if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_LIST
-      || parentType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE) {
+      || parentType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE || parentType == ERL_FUN_TYPE_ARGUMENTS) {
       if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) {
         return Indent.getNoneIndent();
       }
