@@ -5,9 +5,18 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangSpecification extends ErlangCompositeElement {
+public interface ErlangSpecification extends ErlangNamedElement {
 
   @Nullable
   ErlangFunTypeSigs getFunTypeSigs();
+
+  @NotNull
+  String getName();
+
+  @NotNull
+  PsiElement setName(String newName);
+
+  @NotNull
+  PsiElement getNameIdentifier();
 
 }
