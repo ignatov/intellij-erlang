@@ -87,7 +87,7 @@ public class ErlangIndentProcessor {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_LC_EXPRS) {
-      return Indent.getContinuationIndent();
+      return Indent.getNormalIndent();
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();
