@@ -176,10 +176,10 @@ export_types ::= '[' [export_type (',' export_type)*] ']' {pin=1}
 export_type ::= q_atom '/' integer {pin=1}
 
 type_spec ::= ('(' fun_type_sigs ')') | fun_type_sigs
-fun_type_sigs ::= spec_fun type_sig (';' type_sig)* {
+fun_type_sigs ::= spec_fun ['::'] type_sig (';' type_sig)* {
   methods=[getReference]
 }
-spec_fun ::= q_atom [('/' integer '::') | (':' q_atom ['/' integer '::'])]
+spec_fun ::= q_atom ['/' integer | ':' q_atom ['/' integer]]
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
 typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
 private typed_exprs ::= typed_expr (',' typed_expr)*
@@ -333,8 +333,8 @@ list_comprehension ::= '[' expression '||' lc_exprs ']' {
   pin=3
   methods=[processDeclarations]
 }
-lc_exprs ::= lc_expression (',' lc_expression)*
-lc_expression ::= (argument_definition (('<-' | '<=') expression)?) {pin=0}
+lc_exprs ::= lc_expression (',' lc_expression)* {pin=1}
+lc_expression ::= argument_definition [('<-' | '<=') expression] {pin(".*")=1}
 
 binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {
   pin=3
