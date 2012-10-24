@@ -684,6 +684,32 @@ public class ErlangPsiImplUtil {
     return o;
   }
 
+  public static String getName(ErlangSpecification o) {
+    ErlangFunTypeSigs sigs = o.getFunTypeSigs();
+    if (sigs != null) {
+      ErlangQAtom atom = ContainerUtil.getFirstItem(sigs.getQAtomList());
+      if (atom != null) {
+        return atom.getText();
+      }
+    }
+    return "";
+  }
+
+  public static PsiElement setName(ErlangSpecification o, String newName) {
+    ErlangFunTypeSigs sigs = o.getFunTypeSigs();
+    if (sigs != null) {
+      ErlangQAtom atom = ContainerUtil.getFirstItem(sigs.getQAtomList());
+      if (atom != null) {
+        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+      }
+    }
+    return o;
+  }
+
+  public static PsiElement getNameIdentifier(ErlangSpecification o) {
+    return ContainerUtil.getFirstItem(o.getFunTypeSigs().getQAtomList());
+  }
+
   public static String getName(ErlangBehaviour o) {
     ErlangQAtom atom = o.getQAtom();
     return atom == null ? "" : atom.getText();
@@ -728,7 +754,7 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(ErlangFunTypeSigs o) {
-    ErlangQAtom atom = ContainerUtil.getFirstItem(o.getSpecFun().getQAtomList());
+    ErlangQAtom atom = ContainerUtil.getFirstItem(o.getQAtomList());
     ErlangTypeSig sigs = ContainerUtil.getFirstItem(o.getTypeSigList());
     if (sigs != null && atom != null) {
       int argsCount = sigs.getFunType().getFunTypeArguments().getTopTypeList().size();
@@ -736,4 +762,5 @@ public class ErlangPsiImplUtil {
     }
     return null;
   }
+
 }

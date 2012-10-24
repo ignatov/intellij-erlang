@@ -85,7 +85,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
         "SPACE_AFTER_COMMA",
         "SPACE_BEFORE_COMMA"
       );
-      consumer.renameStandardOption("SPACE_AROUND_ASSIGNMENT_OPERATORS", "Assignment and receive operators");
+      consumer.renameStandardOption("SPACE_AROUND_ASSIGNMENT_OPERATORS", "Assignment and send operators");
       consumer.renameStandardOption("SPACE_AROUND_LOGICAL_OPERATORS", "Logical operators");
       consumer.renameStandardOption("SPACE_AROUND_EQUALITY_OPERATORS", "Equality operators");
       consumer.renameStandardOption("SPACE_AROUND_ADDITIVE_OPERATORS", "Additive operators");

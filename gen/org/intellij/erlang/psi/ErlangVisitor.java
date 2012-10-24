@@ -370,12 +370,8 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitFakeBinaryExpression(o);
   }
 
-  public void visitSpecFun(@NotNull ErlangSpecFun o) {
-    visitCompositeElement(o);
-  }
-
   public void visitSpecification(@NotNull ErlangSpecification o) {
-    visitCompositeElement(o);
+    visitNamedElement(o);
   }
 
   public void visitTopType(@NotNull ErlangTopType o) {
@@ -427,10 +423,6 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitTypeSigGuard(@NotNull ErlangTypeSigGuard o) {
-    visitCompositeElement(o);
-  }
-
-  public void visitTypeSpec(@NotNull ErlangTypeSpec o) {
     visitCompositeElement(o);
   }
 
