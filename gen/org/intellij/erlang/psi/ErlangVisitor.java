@@ -190,6 +190,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitFunTypeSigsBraces(@NotNull ErlangFunTypeSigsBraces o) {
+    visitCompositeElement(o);
+  }
+
   public void visitFunction(@NotNull ErlangFunction o) {
     visitNamedElement(o);
   }
@@ -427,10 +431,6 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitTypeSigGuard(@NotNull ErlangTypeSigGuard o) {
-    visitCompositeElement(o);
-  }
-
-  public void visitTypeSpec(@NotNull ErlangTypeSpec o) {
     visitCompositeElement(o);
   }
 

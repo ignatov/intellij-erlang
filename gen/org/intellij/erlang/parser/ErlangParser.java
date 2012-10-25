@@ -158,6 +158,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_FUN_TYPE_SIGS) {
       result_ = fun_type_sigs(builder_, level_ + 1);
     }
+    else if (root_ == ERL_FUN_TYPE_SIGS_BRACES) {
+      result_ = fun_type_sigs_braces(builder_, level_ + 1);
+    }
     else if (root_ == ERL_FUNCTION) {
       result_ = function(builder_, level_ + 1);
     }
@@ -337,9 +340,6 @@ public class ErlangParser implements PsiParser {
     }
     else if (root_ == ERL_TYPE_SIG_GUARD) {
       result_ = type_sig_guard(builder_, level_ + 1);
-    }
-    else if (root_ == ERL_TYPE_SPEC) {
-      result_ = type_spec(builder_, level_ + 1);
     }
     else if (root_ == ERL_TYPED_ATTR_VAL) {
       result_ = typed_attr_val(builder_, level_ + 1);
@@ -2517,6 +2517,25 @@ public class ErlangParser implements PsiParser {
     }
     else {
       marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // '(' fun_type_sigs ')'
+  public static boolean fun_type_sigs_braces(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "fun_type_sigs_braces")) return false;
+    if (!nextTokenIs(builder_, ERL_PAR_LEFT)) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_PAR_LEFT);
+    result_ = result_ && fun_type_sigs(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
+    if (result_) {
+      marker_.done(ERL_FUN_TYPE_SIGS_BRACES);
+    }
+    else {
+      marker_.rollbackTo();
     }
     return result_;
   }
@@ -5317,38 +5336,13 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // ('(' fun_type_sigs ')') | fun_type_sigs
-  public static boolean type_spec(PsiBuilder builder_, int level_) {
+  // fun_type_sigs_braces | fun_type_sigs
+  static boolean type_spec(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "type_spec")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<type spec>");
-    result_ = type_spec_0(builder_, level_ + 1);
+    result_ = fun_type_sigs_braces(builder_, level_ + 1);
     if (!result_) result_ = fun_type_sigs(builder_, level_ + 1);
-    if (result_) {
-      marker_.done(ERL_TYPE_SPEC);
-    }
-    else {
-      marker_.rollbackTo();
-    }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
-    return result_;
-  }
-
-  // ('(' fun_type_sigs ')')
-  private static boolean type_spec_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_spec_0")) return false;
-    return type_spec_0_0(builder_, level_ + 1);
-  }
-
-  // '(' fun_type_sigs ')'
-  private static boolean type_spec_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_spec_0_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
-    result_ = consumeToken(builder_, ERL_PAR_LEFT);
-    result_ = result_ && fun_type_sigs(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
     if (!result_) {
       marker_.rollbackTo();
     }

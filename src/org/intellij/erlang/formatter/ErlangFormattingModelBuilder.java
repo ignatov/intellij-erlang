@@ -86,9 +86,6 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .around(ERL_OR_OR).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
       .around(ERL_OR).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
 
-      .between(ERL_SPEC_FUN, ERL_TYPE_SIG).none()
-      .between(ERL_FUN_TYPE_ARGUMENTS, ERL_TOP_TYPE_CLAUSE).spaces(1)
-      .aroundInside(ERL_OP_AR_DIV, ERL_SPEC_FUN).none()
 
       .after(ERL_BRACKET_LEFT).none()
       .before(ERL_BRACKET_RIGHT).none()
@@ -107,8 +104,35 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
 
       .around(keywords).spaces(1)
 
+      .before(ERL_FUN_TYPE_SIGS_BRACES).none()
+      .between(ERL_SPEC_FUN, ERL_TYPE_SIG).none()
+      .aroundInside(ERL_OP_AR_DIV, ERL_SPEC_FUN).none()
+
+      .beforeInside(ERL_PAR_LEFT, ERL_EXPORT).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_EXPORT_TYPE_ATTRIBUTE).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_INCLUDE).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_RECORD_DEFINITION).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_MODULE).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_MACROS_DEFINITION).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_BEHAVIOUR).none()
+      .afterInside(ERL_Q_ATOM, ERL_ATOM_ATTRIBUTE).none()
+      .beforeInside(ERL_PAR_LEFT, ERL_SPECIFICATION).none()
+      .beforeInside(ERL_FUN_TYPE_SIGS, ERL_SPECIFICATION).spaces(1)
+      .beforeInside(ERL_PAR_LEFT, ERL_CALLBACK_SPEC).none()
+      .beforeInside(ERL_FUN_TYPE_SIGS, ERL_CALLBACK_SPEC).spaces(1)
+
+      .aroundInside(ERL_OP_AR_DIV, ERL_FUN_TYPE_SIGS).none()
+      .aroundInside(ERL_OP_AR_DIV, ERL_EXPORT_FUNCTION).none()
+      .aroundInside(ERL_OP_AR_DIV, ERL_EXPORT_TYPE).none()
+
+      .aroundInside(ERL_COLON_COLON, ERL_FUN_TYPE_SIGS).spaces(1)
+      .betweenInside(ERL_COLON_COLON, ERL_TYPE_SIG, ERL_FUN_TYPE_SIGS).spaces(1)
+      .between(ERL_FUN_TYPE_ARGUMENTS, ERL_TOP_TYPE_CLAUSE).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+      .betweenInside(ERL_Q_ATOM, ERL_PAR_LEFT, ERL_TYPE).none()
+
+
       .before(ERL_CLAUSE_GUARD).spaces(1)
-      .before(ERL_TYPE_SPEC).spaces(1)
+      .before(ERL_FUN_TYPE_SIGS).spaces(1)
       .around(ERL_FUN_TYPE).spaces(1)
       .around(ERL_TYPE_SIG).spaces(1)
       .beforeInside(ERL_PAR_LEFT, ERL_FUN_TYPE).spaces(1)

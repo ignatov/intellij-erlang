@@ -10,26 +10,20 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangCallbackSpecImpl extends ErlangCompositeElementImpl implements ErlangCallbackSpec {
+public class ErlangFunTypeSigsBracesImpl extends ErlangCompositeElementImpl implements ErlangFunTypeSigsBraces {
 
-  public ErlangCallbackSpecImpl(ASTNode node) {
+  public ErlangFunTypeSigsBracesImpl(ASTNode node) {
     super(node);
   }
 
   @Override
-  @Nullable
+  @NotNull
   public ErlangFunTypeSigs getFunTypeSigs() {
-    return findChildByClass(ErlangFunTypeSigs.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangFunTypeSigsBraces getFunTypeSigsBraces() {
-    return findChildByClass(ErlangFunTypeSigsBraces.class);
+    return findNotNullChildByClass(ErlangFunTypeSigs.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCallbackSpec(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeSigsBraces(this);
     else super.accept(visitor);
   }
 

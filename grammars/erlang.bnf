@@ -175,7 +175,8 @@ export_function ::= q_atom '/' integer {
 export_types ::= '[' [export_type (',' export_type)*] ']' {pin=1}
 export_type ::= q_atom '/' integer {pin=1}
 
-type_spec ::= ('(' fun_type_sigs ')') | fun_type_sigs
+private type_spec ::= fun_type_sigs_braces | fun_type_sigs
+fun_type_sigs_braces ::= '(' fun_type_sigs ')'
 fun_type_sigs ::= spec_fun ['::'] type_sig (';' type_sig)* {
   methods=[getReference]
 }

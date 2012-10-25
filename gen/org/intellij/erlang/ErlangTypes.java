@@ -59,6 +59,7 @@ public interface ErlangTypes {
   IElementType ERL_FUN_TYPE_100_T = new ErlangCompositeElementType("ERL_FUN_TYPE_100_T");
   IElementType ERL_FUN_TYPE_ARGUMENTS = new ErlangCompositeElementType("ERL_FUN_TYPE_ARGUMENTS");
   IElementType ERL_FUN_TYPE_SIGS = new ErlangCompositeElementType("ERL_FUN_TYPE_SIGS");
+  IElementType ERL_FUN_TYPE_SIGS_BRACES = new ErlangCompositeElementType("ERL_FUN_TYPE_SIGS_BRACES");
   IElementType ERL_GENERIC_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GENERIC_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GLOBAL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GLOBAL_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GUARD = new ErlangCompositeElementType("ERL_GUARD");
@@ -118,7 +119,6 @@ public interface ErlangTypes {
   IElementType ERL_TYPE_GUARD = new ErlangCompositeElementType("ERL_TYPE_GUARD");
   IElementType ERL_TYPE_SIG = new ErlangCompositeElementType("ERL_TYPE_SIG");
   IElementType ERL_TYPE_SIG_GUARD = new ErlangCompositeElementType("ERL_TYPE_SIG_GUARD");
-  IElementType ERL_TYPE_SPEC = new ErlangCompositeElementType("ERL_TYPE_SPEC");
 
   IElementType ERL_AFTER = new ErlangTokenType("after");
   IElementType ERL_AND = new ErlangTokenType("and");
@@ -341,6 +341,9 @@ public interface ErlangTypes {
       else if (type == ERL_FUN_TYPE_SIGS) {
         return new ErlangFunTypeSigsImpl(node);
       }
+      else if (type == ERL_FUN_TYPE_SIGS_BRACES) {
+        return new ErlangFunTypeSigsBracesImpl(node);
+      }
       else if (type == ERL_GENERIC_FUNCTION_CALL_EXPRESSION) {
         return new ErlangGenericFunctionCallExpressionImpl(node);
       }
@@ -517,9 +520,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_TYPE_SIG_GUARD) {
         return new ErlangTypeSigGuardImpl(node);
-      }
-      else if (type == ERL_TYPE_SPEC) {
-        return new ErlangTypeSpecImpl(node);
       }
       throw new AssertionError("Unknown element type: " + type);
     }
