@@ -41,7 +41,7 @@ public class ErlangIconProvider extends IconProvider implements DumbAware {
       if (!element.isValid()) return null;
       VirtualFile virtualFile = ((ErlangFile) element).getViewProvider().getVirtualFile();
       FileType fileType = virtualFile.getFileType();
-      if (ErlangFileType.INSTANCE == fileType) {
+      if (ErlangFileType.MODULE == fileType) {
         ErlangModule module = ErlangPsiImplUtil.getModule((ErlangFile) element);
         return module != null && StringUtil.endsWith(module.getName(), "_tests") ? ErlangIcons.EUNIT : getModuleType(((ErlangFile) element)).icon;
       }

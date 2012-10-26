@@ -30,7 +30,7 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
     myFixture.configureByFile(getTestName(false) + ".erl");
     //noinspection unchecked
     myFixture.enableInspections(
-      ErlangUnresolvedVariableInspection.class,
+      ErlangUnboundVariableInspection.class,
       ErlangUnresolvedRecordInspection.class,
       ErlangUnresolvedRecordFieldInspection.class,
       ErlangUnresolvedFunctionInspection.class,

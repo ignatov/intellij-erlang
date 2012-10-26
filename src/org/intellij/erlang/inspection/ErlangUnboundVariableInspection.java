@@ -30,18 +30,18 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 /**
  * @author ignatov
  */
-public class ErlangUnresolvedVariableInspection extends ErlangBaseInspection {
+public class ErlangUnboundVariableInspection extends ErlangBaseInspection {
   @Nls
   @NotNull
   @Override
   public String getDisplayName() {
-    return "Unresolved variable";
+    return "Unbound variable";
   }
 
   @NotNull
   @Override
   public String getShortName() {
-    return "ErlangUnresolvedVariableInspection";
+    return "ErlangUnboundVariableInspection";
   }
 
   @Override
@@ -57,7 +57,7 @@ public class ErlangUnresolvedVariableInspection extends ErlangBaseInspection {
         }
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(o, "Unresolved variable " + "'" + o.getText() + "'");
+          problemsHolder.registerProblem(o, "Variable " + "'" + o.getText() + "' is unbound");
         }
       }
     });

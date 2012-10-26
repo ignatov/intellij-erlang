@@ -26,8 +26,8 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangFileTypeFactory extends FileTypeFactory {
   @Override
   public void createFileTypes(@NotNull FileTypeConsumer fileTypeConsumer) {
-    fileTypeConsumer.consume(ErlangFileType.INSTANCE);
-    fileTypeConsumer.consume(ErlangFileType.HRL);
+    fileTypeConsumer.consume(ErlangFileType.MODULE);
+    fileTypeConsumer.consume(ErlangFileType.HEADER);
     fileTypeConsumer.consume(ErlangFileType.APP);
     fileTypeConsumer.consume(ErlangFileType.TERMS);
   }
