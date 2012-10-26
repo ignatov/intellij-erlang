@@ -25,8 +25,8 @@ import javax.swing.*;
  * @author ignatov
  */
 public class ErlangFileType extends LanguageFileType {
-  public static ErlangFileType INSTANCE = new ErlangFileType();
-  public static HrlFileType HRL = new HrlFileType();
+  public static ErlangFileType MODULE = new ErlangFileType();
+  public static HrlFileType HEADER = new HrlFileType();
   public static AppFileType APP = new AppFileType();
   public static ErlangTermsFileType TERMS = new ErlangTermsFileType();
 

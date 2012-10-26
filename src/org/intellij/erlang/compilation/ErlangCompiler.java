@@ -79,7 +79,7 @@ public class ErlangCompiler implements TranslatingCompiler {
   public boolean isCompilableFile(VirtualFile file, CompileContext context) {
     String extension = file.getExtension();
     if (extension == null) return false;
-    return extension.equals("erl") && file.getFileType() == ErlangFileType.INSTANCE;
+    return extension.equals("erl") && file.getFileType() == ErlangFileType.MODULE;
   }
 
   @Override

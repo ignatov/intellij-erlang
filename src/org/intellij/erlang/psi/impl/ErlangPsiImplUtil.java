@@ -260,7 +260,7 @@ public class ErlangPsiImplUtil {
       if (!withArity && colonQualifier == null) {
         // todo: move to more appropriate place
         PsiFile[] erlInternals = FilenameIndex.getFilesByName(containingFile.getProject(), "erl_internal.erl",
-          GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.INSTANCE));
+          GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.MODULE));
 
         if (erlInternals.length == 1) {
           for (String line : StringUtil.splitByLines(erlInternals[0].getText())) {
@@ -622,7 +622,7 @@ public class ErlangPsiImplUtil {
     String last = ContainerUtil.iterateAndGetLastItem(split);
     if (last != null) {
       PsiFile[] filesByName = FilenameIndex.getFilesByName(containingFile.getProject(), last,
-        GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.HRL, ErlangFileType.INSTANCE));
+        GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.HEADER, ErlangFileType.MODULE));
       List<PsiFile> filter = ContainerUtil.filter(filesByName, new Condition<PsiFile>() {
         @Override
         public boolean value(PsiFile psiFile) {
@@ -735,5 +735,14 @@ public class ErlangPsiImplUtil {
       return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, null, TextRange.from(0, atom.getTextLength()), atom.getText(), argsCount);
     }
     return null;
+  }
+
+  @Nullable
+  public static ErlangFunTypeSigs getSignature(@NotNull ErlangSpecification o) {
+    ErlangFunTypeSigsBraces sigsBraces = o.getFunTypeSigsBraces();
+    if (sigsBraces != null) {
+      return sigsBraces.getFunTypeSigs();
+    }
+    return o.getFunTypeSigs();
   }
 }

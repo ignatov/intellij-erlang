@@ -33,4 +33,9 @@ public class ErlangSpecificationImpl extends ErlangCompositeElementImpl implemen
     else super.accept(visitor);
   }
 
+  @Nullable
+  public ErlangFunTypeSigs getSignature() {
+    return ErlangPsiImplUtil.getSignature(this);
+  }
+
 }

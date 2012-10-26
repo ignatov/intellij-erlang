@@ -13,4 +13,7 @@ public interface ErlangSpecification extends ErlangCompositeElement {
   @Nullable
   ErlangFunTypeSigsBraces getFunTypeSigsBraces();
 
+  @Nullable
+  ErlangFunTypeSigs getSignature();
+
 }
