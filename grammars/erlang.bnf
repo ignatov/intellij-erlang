@@ -154,7 +154,10 @@ attribute ::= '-' (
   | atom_attribute
   ) {pin=1}
 callback_spec ::= 'callback' type_spec {pin=1}
-specification ::= 'spec' type_spec {pin=1}
+specification ::= 'spec' type_spec {
+  pin=1
+  methods = [getSignature]
+}
 export ::= 'export' '(' export_functions ')' {pin=1}
 export_type_attribute ::= 'export_type' '(' export_types ')' {pin=1}
 module ::= 'module' '(' q_atom (',' argument_definition)? ')' {

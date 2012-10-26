@@ -113,10 +113,10 @@
         <moduleConfigurationEditorProvider implementation="org.intellij.erlang.configuration.DefaultModuleEditorsProvider" order="first"/>
 
         <!--errors-->
-        <localInspection language="Erlang" shortName="ErlangUnresolvedVariableInspection"
-                         displayName="Unresolved variable"
+        <localInspection language="Erlang" shortName="ErlangUnboundVariableInspection"
+                         displayName="Unbound variable"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
-                         implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedVariableInspection"/>
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnboundVariableInspection"/>
         <localInspection language="Erlang" shortName="ErlangUnresolvedRecordInspection" displayName="Unresolved record"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordInspection"/>
@@ -141,6 +141,14 @@
                          displayName="Duplicate function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangDuplicateFunctionInspection"/>
+        <localInspection language="Erlang" shortName="ErlangIncorrectAritySpecificationInspection"
+                         displayName="Incorrect arity in specification"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangIncorrectAritySpecificationInspection"/>
+        <localInspection language="Erlang" shortName="ErlangSpecificationForUndefinedFunctionInspection"
+                         displayName="Specification for undefined function"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangSpecificationForUndefinedFunctionInspection"/>
     </extensions>
     <project-components>
 

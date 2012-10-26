@@ -50,5 +50,8 @@ public interface ErlangFile extends PsiFile {
   @NotNull
   List<ErlangBehaviour> getBehaviours();
 
+  @NotNull
+  List<ErlangSpecification> getSpecifications();
+
   ErlangMacrosDefinition getMacros(String name);
 }

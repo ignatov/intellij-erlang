@@ -42,6 +42,7 @@ import java.util.Map;
  * @author ignatov
  */
 public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
+
   public ErlangFileImpl(@NotNull FileViewProvider viewProvider) {
     super(viewProvider, ErlangLanguage.INSTANCE);
   }
@@ -56,11 +57,12 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   private CachedValue<List<ErlangMacrosDefinition>> myMacrosValue;
   private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap;
   private CachedValue<List<ErlangBehaviour>> myBehavioursValue;
+  private CachedValue<List<ErlangSpecification>> mySpecificationsValue;
 
   @NotNull
   @Override
   public FileType getFileType() {
-    return ErlangFileType.INSTANCE;
+    return ErlangFileType.MODULE;
   }
 
   @NotNull
@@ -263,6 +265,34 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
       public boolean process(PsiElement psiElement) {
         if (psiElement instanceof ErlangAttribute && ((ErlangAttribute) psiElement).getBehaviour() != null) {
           result.add(((ErlangAttribute) psiElement).getBehaviour());
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
+  @NotNull
+  @Override
+  public List<ErlangSpecification> getSpecifications() {
+      if (mySpecificationsValue == null) {
+        mySpecificationsValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangSpecification>>() {
+          @Override
+          public Result<List<ErlangSpecification>> compute() {
+            return Result.create(calcSpecifications(), ErlangFileImpl.this);
+          }
+        }, false);
+      }
+      return mySpecificationsValue.getValue();
+  }
+
+  private List<ErlangSpecification> calcSpecifications() {
+    final ArrayList<ErlangSpecification> result = new ArrayList<ErlangSpecification>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangAttribute && ((ErlangAttribute) psiElement).getSpecification() != null) {
+          result.add(((ErlangAttribute) psiElement).getSpecification());
         }
         return true;
       }
