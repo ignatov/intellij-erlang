@@ -19,12 +19,14 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.Processor;
 import gnu.trove.THashMap;
 import org.intellij.erlang.ErlangFileType;
@@ -45,6 +47,20 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
 
   public ErlangFileImpl(@NotNull FileViewProvider viewProvider) {
     super(viewProvider, ErlangLanguage.INSTANCE);
+  }
+
+  @Override
+  public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+    String nameWithoutExtension = FileUtil.getNameWithoutExtension(name);
+
+    for (ErlangAttribute moduleAttributes : getAttributes()) {
+      ErlangModule module = moduleAttributes.getModule();
+      if (module != null) {
+        module.setName(nameWithoutExtension);
+      }
+    }
+
+    return super.setName(name);
   }
 
   private CachedValue<List<ErlangRule>> myRulesValue;
