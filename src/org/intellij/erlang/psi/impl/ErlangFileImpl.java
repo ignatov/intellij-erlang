@@ -18,7 +18,7 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.FileViewProvider;
@@ -28,6 +28,8 @@ import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.Processor;
+import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.containers.MultiMap;
 import gnu.trove.THashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
@@ -37,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +71,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
   private CachedValue<List<ErlangAttribute>> myAttributeValue;
   private CachedValue<List<ErlangRecordDefinition>> myRecordValue;
   private CachedValue<List<ErlangInclude>> myIncludeValue;
-  private CachedValue<Map<Pair<String, Integer>, ErlangFunction>> myFunctionsMap;
+  private CachedValue<MultiMap<String, ErlangFunction>> myFunctionsMap;
   private CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap;
   private CachedValue<List<ErlangMacrosDefinition>> myMacrosValue;
   private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap;
@@ -125,29 +128,47 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
 
   @Nullable
   @Override
-  public ErlangFunction getFunction(String name, int argsCount) {
+  public ErlangFunction getFunction(@NotNull String name, final int argsCount) {
+    initFunctionsMap();
+    MultiMap<String, ErlangFunction> value = myFunctionsMap.getValue();
+    ErlangFunction byName = getFunctionFromMap(value, name, argsCount);
+    ErlangFunction byUnquote = byName == null ? getFunctionFromMap(value, StringUtil.unquoteString(name), argsCount) : byName;
+    return byUnquote == null ? getFunctionFromMap(value, "'" + name + "'", argsCount) : byUnquote;
+  }
+
+  private void initFunctionsMap() {
     if (myFunctionsMap == null) {
-      myFunctionsMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<Pair<String, Integer>, ErlangFunction>>() {
+      myFunctionsMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<MultiMap<String, ErlangFunction>>() {
         @Override
-        public Result<Map<Pair<String, Integer>, ErlangFunction>> compute() {
-          Map<Pair<String, Integer>, ErlangFunction> map = new THashMap<Pair<String, Integer>, ErlangFunction>();
+        public Result<MultiMap<String, ErlangFunction>> compute() {
+          MultiMap<String, ErlangFunction> map = new MultiMap<String, ErlangFunction>();
           for (ErlangFunction function : getFunctions()) {
-            String name = function.getName();
-            int argsCount = function.getFunctionClauseList().get(0).getArgumentDefinitionList().getArgumentDefinitionList().size();
-            Pair<String, Integer> key = Pair.create(name, argsCount);
-            if (!map.containsKey(key)) {
-              map.put(key, function);
-            }
+            map.putValue(function.getName(), function);
           }
           return Result.create(map, ErlangFileImpl.this);
         }
       }, false);
     }
-    // todo: cleanup
-    Map<Pair<String, Integer>, ErlangFunction> value = myFunctionsMap.getValue();
-    ErlangFunction byName = value.get(Pair.create(name, argsCount));
-    ErlangFunction byUnquote = byName == null ? value.get(Pair.create(StringUtil.unquoteString(name), argsCount)) : byName;
-    return byUnquote == null ? value.get(Pair.create("'" + name + "'", argsCount)) : byUnquote;
+  }
+
+  @Override
+  @NotNull
+  public Collection<ErlangFunction> getFunctionsByName(@NotNull String name) {
+    initFunctionsMap();
+    // todo: quotation
+    return myFunctionsMap.getValue().get(name);
+  }
+
+  @Nullable
+  private static ErlangFunction getFunctionFromMap(MultiMap<String, ErlangFunction> value, String name, final int argsCount) {
+    Collection<ErlangFunction> candidates = value.get(name);
+
+    return ContainerUtil.getFirstItem(ContainerUtil.filter(candidates, new Condition<ErlangFunction>() {
+      @Override
+      public boolean value(ErlangFunction erlangFunction) {
+        return erlangFunction.getArity() == argsCount;
+      }
+    }));
   }
 
   @NotNull

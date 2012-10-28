@@ -233,6 +233,7 @@ function ::= function_clause (';' function_clause)* {
     setName
     getArity
     getNameIdentifier
+    getPresentation
   ]
 }
 

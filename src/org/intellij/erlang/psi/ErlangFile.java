@@ -20,6 +20,7 @@ import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ErlangFile extends PsiFile {
@@ -33,7 +34,10 @@ public interface ErlangFile extends PsiFile {
   List<ErlangFunction> getFunctions();
 
   @Nullable
-  ErlangFunction getFunction(String name, int argsCount);
+  ErlangFunction getFunction(@NotNull String name, final int argsCount);
+
+  @NotNull
+  Collection<ErlangFunction> getFunctionsByName(@NotNull String name);
 
   @NotNull
   List<ErlangRecordDefinition> getRecords();

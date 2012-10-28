@@ -24,6 +24,7 @@ import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
+import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
@@ -53,6 +54,7 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -744,5 +746,28 @@ public class ErlangPsiImplUtil {
       return sigsBraces.getFunTypeSigs();
     }
     return o.getFunTypeSigs();
+  }
+
+  @NotNull
+  public static ItemPresentation getPresentation(final ErlangFunction o) {
+    return new ItemPresentation() {
+      @Nullable
+      @Override
+      public String getPresentableText() {
+        return o.getName() + "/" + o.getArity();
+      }
+
+      @Nullable
+      @Override
+      public String getLocationString() {
+        return null;
+      }
+
+      @Nullable
+      @Override
+      public Icon getIcon(boolean b) {
+        return ErlangIcons.FUNCTION;
+      }
+    };
   }
 }

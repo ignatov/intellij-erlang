@@ -18,11 +18,11 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
+import com.intellij.psi.*;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -31,18 +31,21 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * @author ignatov
  */
-public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBasedReferenceImpl<T> {
+public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyVariantReferenceBase<T> {
   @Nullable
   private final ErlangQAtom myModuleAtom;
+  protected final String myReferenceName;
   private final int myArity;
 
   public ErlangFunctionReferenceImpl(@NotNull T element, @Nullable ErlangQAtom moduleAtom, TextRange range, String name, int arity) {
-    super(element, range, name);
+    super(element, range);
+    myReferenceName = name;
     myModuleAtom = moduleAtom;
     myArity = arity;
   }
@@ -50,17 +53,48 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends ErlangAt
   @Override
   public PsiElement resolve() {
     if (myModuleAtom != null) {
-      return getExternalFunction(myModuleAtom.getText() + ".erl");
+      return getExternalFunction(getModuleFileName());
     }
 
-    PsiFile containingFile = myElement.getContainingFile();
+    PsiFile containingFile = getElement().getContainingFile();
     return containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunction(myReferenceName, myArity) : null;
+  }
+
+  @NotNull
+  @Override
+  public ResolveResult[] multiResolve(boolean incompleteCode) {
+    // todo: use incompleteCode
+
+    Collection<ErlangFunction> result;
+    if (myModuleAtom != null) {
+      PsiFile[] files = FilenameIndex.getFilesByName(getElement().getProject(), getModuleFileName(),
+        GlobalSearchScope.allScope(getElement().getProject()));
+      result = new ArrayList<ErlangFunction>();
+      for (PsiFile file : files) {
+        if (file instanceof ErlangFile) {
+          result.addAll(((ErlangFile) file).getFunctionsByName(myReferenceName));
+        }
+      }
+    }
+    else {
+      PsiFile containingFile = getElement().getContainingFile();
+      result = containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunctionsByName(myReferenceName) : ContainerUtil.<ErlangFunction>emptyList();
+    }
+    return PsiElementResolveResult.createResults(result);
+  }
+
+  @NotNull
+  private String getModuleFileName() {
+    if (myModuleAtom != null) {
+      return myModuleAtom.getText() + ".erl";
+    }
+    return ".erl";
   }
 
   @Nullable
   private ErlangFunction getExternalFunction(@NotNull String moduleFileName) {
-    PsiFile[] files = FilenameIndex.getFilesByName(myElement.getProject(), moduleFileName,
-      GlobalSearchScope.allScope(myElement.getProject())); // todo: use module scope
+    PsiFile[] files = FilenameIndex.getFilesByName(getElement().getProject(), moduleFileName,
+      GlobalSearchScope.allScope(getElement().getProject())); // todo: use module scope
     List<ErlangFunction> result = new ArrayList<ErlangFunction>();
     for (PsiFile file : files) {
       if (file instanceof ErlangFile) {
@@ -73,7 +107,16 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends ErlangAt
   @NotNull
   @Override
   public Object[] getVariants() {
-    List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), true, null);
+    List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(getElement().getContainingFile(), true, null);
     return ArrayUtil.toObjectArray(lookupElements);
+  }
+
+  @Override
+  public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+    PsiElement atom = getElement().getAtom();
+    if (atom != null) {
+      atom.replace(ErlangElementFactory.createQAtomFromText(getElement().getProject(), newElementName));
+    }
+    return getElement();
   }
 }

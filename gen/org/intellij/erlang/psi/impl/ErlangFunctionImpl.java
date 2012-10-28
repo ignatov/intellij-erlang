@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.navigation.ItemPresentation;
 
 public class ErlangFunctionImpl extends ErlangNamedElementImpl implements ErlangFunction {
 
@@ -52,6 +53,11 @@ public class ErlangFunctionImpl extends ErlangNamedElementImpl implements Erlang
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
+  }
+
+  @NotNull
+  public ItemPresentation getPresentation() {
+    return ErlangPsiImplUtil.getPresentation(this);
   }
 
 }
