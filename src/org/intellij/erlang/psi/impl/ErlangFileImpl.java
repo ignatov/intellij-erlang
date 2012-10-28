@@ -23,11 +23,15 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.Processor;
+import com.intellij.util.Query;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
 import gnu.trove.THashMap;
@@ -59,6 +63,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
     for (ErlangAttribute moduleAttributes : getAttributes()) {
       ErlangModule module = moduleAttributes.getModule();
       if (module != null) {
+        // todo: use module with dependencies scope
+        Query<PsiReference> search = ReferencesSearch.search(module, GlobalSearchScope.allScope(module.getProject()));
+        for (PsiReference psiReference : search) {
+          psiReference.handleElementRename(nameWithoutExtension);
+        }
         module.setName(nameWithoutExtension);
       }
     }
