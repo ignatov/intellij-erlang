@@ -46,7 +46,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
         commentText += spec.getText().replaceFirst("spec", "<b>Specification:</b><br/>") + "<br/><br/>";
       }
       if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT && notFromPreviousFunction(comment, prevFunction)) {
-        commentText += "<b>Comment:</b><br/>" + getCommentText(comment, "%%");
+        commentText += "<b>Comment:</b><br/>" + getCommentText(comment, "%%", EDOC_FUNCTION_TAGS);
         return commentText;
       }
     }
@@ -54,7 +54,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
       PsiElement parent = element.getParent();
       PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(parent, PsiComment.class);
       if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
-        return getCommentText(comment, "%%%");
+        return getCommentText(comment, "%%%", EDOC_MODULE_TAGS);
       }
     }
     return null;
@@ -64,13 +64,13 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
     return (prevFunction == null || (spec.getTextOffset() > prevFunction.getTextOffset()));
   }
 
-  private static String getCommentText(PsiComment comment, final String commentStartsWith) {
+  private static String getCommentText(PsiComment comment, final String commentStartsWith, final Set<String> contextTags) {
     String[] lines = StringUtil.splitByLines(comment.getText());
     return StringUtil.join(ContainerUtil.map(lines, new Function<String, String>() {
       @Override
       public String fun(String s) {
         String replace = StringUtil.replace(s, commentStartsWith, "");
-        for (String tag : EDOC_TAGS) {
+        for (String tag : contextTags) {
           replace = replace.replaceAll(tag, "<b>" + tag + "</b>");
         }
         return replace;
@@ -78,8 +78,29 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
     }), "<br/>");
   }
 
-  public static final Set<String> EDOC_TAGS = ContainerUtil.set(
-    "@author", "@copyright", "@since", "@see", "@reference", "@doc", "@since", "@title", "@version", "@end", "@spec",
-    "@private", "@hidden"
+  /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id59379">Overview tags</a> */
+  public static final Set<String> EDOC_OVERVIEW_TAGS = ContainerUtil.set(
+    "@author", "@copyright", "@doc", "@reference", "@see", "@since", "@title", "@version"
   );
+
+  /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id60723">Module tags</a> */
+  public static final Set<String> EDOC_MODULE_TAGS = ContainerUtil.set(
+    "@author", "@copyright", "@deprecated", "@doc", "@hidden", "@private", "@reference", "@see", "@since", "@version"
+  );
+
+  /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id56868">Function tags</a> */
+  public static final Set<String> EDOC_FUNCTION_TAGS = ContainerUtil.set(
+    "@deprecated", "@doc", "@equiv", "@hidden", "@private", "@see", "@since", "@spec", "@throws"
+  );
+
+  /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id64336">Generic tags</a> */
+  private static final Set<String> EDOC_GENERIC_TAGS = ContainerUtil.set(
+    "@clear", "@docfile", "@end", "@headerfile", "@todo", "@TODO", "@type"
+  );
+
+  static {
+    EDOC_OVERVIEW_TAGS.addAll(EDOC_GENERIC_TAGS);
+    EDOC_MODULE_TAGS.addAll(EDOC_GENERIC_TAGS);
+    EDOC_FUNCTION_TAGS.addAll(EDOC_GENERIC_TAGS);
+  }
 }
