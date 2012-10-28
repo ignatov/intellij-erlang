@@ -64,6 +64,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   @Override
   public ResolveResult[] multiResolve(boolean incompleteCode) {
     // todo: use incompleteCode
+    if (resolve() != null) return ResolveResult.EMPTY_ARRAY;
 
     Collection<ErlangFunction> result;
     if (myModuleAtom != null) {
