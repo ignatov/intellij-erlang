@@ -17,13 +17,13 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangFunTypeSigs;
+import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.ErlangSpecification;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
