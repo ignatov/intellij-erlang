@@ -35,6 +35,7 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author ignatov
@@ -51,8 +52,14 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitComment(PsiComment comment) {
         IElementType tokenType = comment.getTokenType();
-        if (tokenType != ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT
-          && tokenType != ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
+        final Set<String> edocTags;
+        if (tokenType == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT) {
+          edocTags = ErlangDocumentationProvider.EDOC_FUNCTION_TAGS;
+        }
+        else if (tokenType == ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
+          edocTags = ErlangDocumentationProvider.EDOC_MODULE_TAGS;
+        }
+        else {
           return;
         }
 
@@ -61,7 +68,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         for (Pair<String, Integer> pair : wordsWithOffset) {
           Integer offset = pair.second;
           String tag = pair.first;
-          if (ErlangDocumentationProvider.EDOC_TAGS.contains(tag)) {
+          if (edocTags.contains(tag)) {
             annotationHolder.createInfoAnnotation(TextRange.from(comment.getTextOffset() + offset, tag.length()), null).
               setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(ErlangSyntaxHighlighter.DOC_COMMENT_TAG));
           }
