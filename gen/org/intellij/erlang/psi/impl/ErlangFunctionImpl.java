@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 import com.intellij.navigation.ItemPresentation;
+import javax.swing.Icon;
 
 public class ErlangFunctionImpl extends ErlangNamedElementImpl implements ErlangFunction {
 
@@ -58,6 +59,11 @@ public class ErlangFunctionImpl extends ErlangNamedElementImpl implements Erlang
   @NotNull
   public ItemPresentation getPresentation() {
     return ErlangPsiImplUtil.getPresentation(this);
+  }
+
+  @NotNull
+  public Icon getIcon(int flags) {
+    return ErlangPsiImplUtil.getIcon(this, flags);
   }
 
 }

@@ -234,6 +234,7 @@ function ::= function_clause (';' function_clause)* {
     getArity
     getNameIdentifier
     getPresentation
+    getIcon
   ]
 }
 

@@ -760,13 +760,13 @@ public class ErlangPsiImplUtil {
       @Nullable
       @Override
       public String getLocationString() {
-        return null;
+        return o.getContainingFile().getName();
       }
 
       @Nullable
       @Override
       public Icon getIcon(boolean b) {
-        return ErlangIcons.FUNCTION;
+        return o.getIcon(0);
       }
     };
   }
@@ -774,5 +774,11 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static String createFunctionPresentation(@NotNull ErlangFunction function) {
     return function.getName() + "/" + function.getArity();
+  }
+
+  @NotNull
+  @SuppressWarnings("UnusedParameters")
+  public static Icon getIcon(@NotNull ErlangFunction o, int flags) {
+    return ErlangIcons.FUNCTION;
   }
 }

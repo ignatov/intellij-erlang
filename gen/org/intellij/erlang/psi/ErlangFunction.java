@@ -5,6 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.navigation.ItemPresentation;
+import javax.swing.Icon;
 
 public interface ErlangFunction extends ErlangNamedElement {
 
@@ -27,5 +28,8 @@ public interface ErlangFunction extends ErlangNamedElement {
 
   @NotNull
   ItemPresentation getPresentation();
+
+  @NotNull
+  Icon getIcon(int flags);
 
 }
