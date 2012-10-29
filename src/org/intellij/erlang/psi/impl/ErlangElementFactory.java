@@ -56,4 +56,16 @@ public class ErlangElementFactory {
     ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-include(\"" + text + "\").");
     return fileFromText.getIncludes().get(0).getIncludeString().getString();
   }
+
+  @NotNull
+  public static PsiElement createExportFromText(Project project, String text) {
+    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-export([" + text + "]).");
+    return fileFromText.getAttributes().get(0);
+  }
+
+  @NotNull
+  public static PsiElement createLeafFromText(Project project, String text) {
+    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, text);
+    return fileFromText.getFirstChild();
+  }
 }

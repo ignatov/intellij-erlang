@@ -754,7 +754,7 @@ public class ErlangPsiImplUtil {
       @Nullable
       @Override
       public String getPresentableText() {
-        return o.getName() + "/" + o.getArity();
+        return createFunctionPresentation(o);
       }
 
       @Nullable
@@ -769,5 +769,10 @@ public class ErlangPsiImplUtil {
         return ErlangIcons.FUNCTION;
       }
     };
+  }
+
+  @NotNull
+  public static String createFunctionPresentation(@NotNull ErlangFunction function) {
+    return function.getName() + "/" + function.getArity();
   }
 }

@@ -59,6 +59,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
+import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
@@ -125,10 +127,15 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
           });
 
           if (ContainerUtil.getFirstItem(refs) == null) {
-            problemsHolder.registerProblem(function.getNameIdentifier(), "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'");
+            problemsHolder.registerProblem(function.getNameIdentifier(),
+              "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",
+              new ErlangRemoveFunctionFix(),
+              new ErlangExportFunctionFix());
           }
         }
       }
     });
   }
+
+
 }
