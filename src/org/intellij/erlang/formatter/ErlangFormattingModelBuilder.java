@@ -115,6 +115,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .beforeInside(ERL_PAR_LEFT, ERL_MODULE).none()
       .beforeInside(ERL_PAR_LEFT, ERL_MACROS_DEFINITION).none()
       .beforeInside(ERL_PAR_LEFT, ERL_BEHAVIOUR).none()
+      .beforeInside(ERL_TYPED_ATTR_VAL, ERL_ATOM_ATTRIBUTE).spaces(1)
       .afterInside(ERL_Q_ATOM, ERL_ATOM_ATTRIBUTE).none()
       .beforeInside(ERL_PAR_LEFT, ERL_SPECIFICATION).none()
       .beforeInside(ERL_FUN_TYPE_SIGS, ERL_SPECIFICATION).spaces(1)
@@ -146,6 +147,8 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .before(ERL_DOT).none()
       .around(ERL_QMARK).none()
       .before(ERL_RECORD_TUPLE).none()
+      .between(ERL_FUN, ERL_MODULE_REF).spaces(1)
+      .between(ERL_FUN, ERL_FUNCTION_WITH_ARITY).spaces(1)
       .after(ERL_FUN).none()
       .before(ERL_END).spaces(1)
       ;
