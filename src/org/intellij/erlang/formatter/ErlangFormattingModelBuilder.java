@@ -147,6 +147,8 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .before(ERL_DOT).none()
       .around(ERL_QMARK).none()
       .before(ERL_RECORD_TUPLE).none()
+      .between(ERL_FUN, ERL_MODULE_REF).spaces(1)
+      .between(ERL_FUN, ERL_FUNCTION_WITH_ARITY).spaces(1)
       .after(ERL_FUN).none()
       .before(ERL_END).spaces(1)
       ;
