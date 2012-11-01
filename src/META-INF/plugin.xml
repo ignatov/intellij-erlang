@@ -5,6 +5,8 @@
     <idea-version since-build="117.105" until-build="120.1"/>
     <depends>com.intellij.modules.lang</depends>
 
+    <depends optional="true" config-file="erlang-copyright.xml">com.intellij.copyright</depends>
+
     <name>Erlang</name>
     <description>Erlang plugin</description>
     <change-notes>
