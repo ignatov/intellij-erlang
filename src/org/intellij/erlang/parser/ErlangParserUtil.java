@@ -36,4 +36,8 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return fileType == ErlangFileType.APP || fileType == ErlangFileType.TERMS ||
       (ApplicationManager.getApplication().isUnitTestMode() && (fileType.getDefaultExtension().equals("app") || fileType.getDefaultExtension().equals("config")));
   }
+
+  public static boolean eofBuilder(PsiBuilder builder, @SuppressWarnings("UnusedParameters") int level) {
+    return builder.eof();
+  }
 }

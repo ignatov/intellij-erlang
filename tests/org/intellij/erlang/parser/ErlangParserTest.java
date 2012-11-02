@@ -51,6 +51,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testErrors()            { doTest(true, true); }
   public void test51()                { doTest(true, false); } // performance
   public void test96()                { doTest(true, false); }
+  public void test30()                { doTest(true, true); }
 
   protected void doTest(boolean checkResult, boolean suppressErrors) {
 //    OVERWRITE_TESTDATA = true;
