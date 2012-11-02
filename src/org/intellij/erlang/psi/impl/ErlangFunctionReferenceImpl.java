@@ -92,6 +92,11 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     return ".erl";
   }
 
+  @Override
+  public boolean isReferenceTo(PsiElement element) {
+    return getElement().getManager().areElementsEquivalent(resolve(), element);
+  }
+
   @Nullable
   private ErlangFunction getExternalFunction(@NotNull String moduleFileName) {
     PsiFile[] files = FilenameIndex.getFilesByName(getElement().getProject(), moduleFileName,
