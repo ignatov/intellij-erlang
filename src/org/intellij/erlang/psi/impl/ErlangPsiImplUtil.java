@@ -691,7 +691,7 @@ public class ErlangPsiImplUtil {
     return atom == null ? "" : atom.getText();
   }
 
-  @Nullable
+  @NotNull
   public static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project, @NotNull String moduleFileName) {
     PsiFile[] files = FilenameIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project));
     List<ErlangFunction> result = new ArrayList<ErlangFunction>();
