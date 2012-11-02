@@ -44,6 +44,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunctionClause;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.quickfixes.ErlangRenameVariableFix;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
@@ -79,7 +80,7 @@ public class ErlangUnusedVariableInspection extends ErlangBaseInspection {
           if (functionClause == null) return;
           Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
           if (search.findFirst() == null) {
-            problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'");
+            problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'", new ErlangRenameVariableFix());
           }
         }
       }
