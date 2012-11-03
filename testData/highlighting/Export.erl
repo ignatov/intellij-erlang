@@ -31,7 +31,7 @@ log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning) ->
     Fun = fun(Cs) ->
 		  Copies = mnesia_lib:copy_holders(Cs),
 		  Valid = mnesia_lib:intersect(Nodes, Copies),
-		  {Cs#<warning>cstruct</warning>.<warning>name</warning>, Valid}
+		  {Cs#<warning>cstruct</warning>.name, Valid}
 	  end,
     Args = lists:map(Fun, Cstructs),
     mnesia_recover:log_master_nodes(Args, UseDir, IsRunning).
