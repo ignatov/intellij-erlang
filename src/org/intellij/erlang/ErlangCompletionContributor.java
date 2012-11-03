@@ -44,6 +44,7 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -132,7 +133,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     });
   }
 
-  private static boolean prevIsRadix(PsiElement psiElement) {
+  private static boolean prevIsRadix(@Nullable PsiElement psiElement) {
     PsiElement prevSibling = psiElement != null ? psiElement.getPrevSibling() : null;
     ASTNode prevSiblingNode = prevSibling != null ? prevSibling.getNode() : null;
     return (prevSiblingNode != null ? prevSiblingNode.getElementType() : null) == ErlangTypes.ERL_RADIX;

@@ -339,7 +339,7 @@ public class ErlangPsiImplUtil {
   public static List<LookupElement> getMacrosLookupElements(@NotNull PsiFile containingFile) {
     if (containingFile instanceof ErlangFile) {
       List<ErlangMacrosDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getMacroses(), getErlangMacrosesFromIncludes((ErlangFile) containingFile, true, ""));
-      return ContainerUtil.map(
+      List<LookupElement> fromFile = ContainerUtil.map(
         concat,
         new Function<ErlangMacrosDefinition, LookupElement>() {
           @Override
@@ -347,6 +347,11 @@ public class ErlangPsiImplUtil {
             return LookupElementBuilder.create(md).setIcon(ErlangIcons.MACROS);
           }
         });
+      List<LookupElement> stdMacros = new ArrayList<LookupElement>();
+      for (String m : new String[] {"MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE"}) {
+        stdMacros.add(LookupElementBuilder.create(m).setIcon(ErlangIcons.MACROS));
+      }
+      return ContainerUtil.concat(fromFile, stdMacros);
     }
     return Collections.emptyList();
   }
