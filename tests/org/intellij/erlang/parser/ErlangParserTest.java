@@ -39,7 +39,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testComments()          { doTest(true, false); }
   public void testMultiline()         { doTest(true, false); }
   public void testRecordExpression()  { doTest(true, false); }
-//  public void testPeriods()           { doTest(true, true); }
+  public void testPeriods()           { doTest(true, true); }
   public void test19()                { doTest(true, true); }
   public void test25()                { doTest(true, false); }
   public void test26()                { doTest(true, false); }
