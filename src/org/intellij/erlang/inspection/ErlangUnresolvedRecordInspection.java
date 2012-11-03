@@ -39,6 +39,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangRecordExpression;
 import org.intellij.erlang.psi.ErlangRecordRef;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFix;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
@@ -68,7 +69,9 @@ public class ErlangUnresolvedRecordInspection extends ErlangBaseInspection {
         ErlangRecordRef ref = o.getRecordRef();
         PsiReference reference = ref != null ? ref.getReference() : null;
         if (reference == null || reference.resolve() == null) {
-          problemsHolder.registerProblem(ref != null ? ref : o, "Unresolved record " + "'" + (ref != null ? ref.getText() : "") + "'");
+          problemsHolder.registerProblem(ref != null ? ref : o,
+            "Unresolved record " + "'" + (ref != null ? ref.getText() : "") + "'",
+            new ErlangIntroduceRecordFix());
         }
         super.visitRecordExpression(o);
       }

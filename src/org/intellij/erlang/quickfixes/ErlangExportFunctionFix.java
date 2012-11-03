@@ -16,13 +16,12 @@
 
 package org.intellij.erlang.quickfixes;
 
-import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -33,13 +32,7 @@ import java.util.List;
 /**
  * @author ignatov
  */
-public class ErlangExportFunctionFix implements LocalQuickFix {
-  @NotNull
-  @Override
-  public String getName() {
-    return getFamilyName();
-  }
-
+public class ErlangExportFunctionFix extends ErlangQuickFixBase {
   @NotNull
   @Override
   public String getFamilyName() {
@@ -62,7 +55,8 @@ public class ErlangExportFunctionFix implements LocalQuickFix {
             ErlangExportFunctions exportFunctions = export.getExportFunctions();
 
             if (exportFunctions != null) {
-              String s = exportFunctions.getText().replace("[", "").replace("]", "") + ", " + exportText;
+              String replace = exportFunctions.getText().replace("[", "").replace("]", "");
+              String s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") + exportText;
               PsiElement newExportFunctions = ErlangElementFactory.createExportFromText(project, s);
 
               attribute.replace(newExportFunctions);
@@ -70,13 +64,7 @@ public class ErlangExportFunctionFix implements LocalQuickFix {
             return;
           }
         }
-        List<ErlangRecordDefinition> records = ((ErlangFile) containingFile).getRecords();
-        List<ErlangFunction> functions = ((ErlangFile) containingFile).getFunctions();
-
-        ErlangRecordDefinition firstRecord = ContainerUtil.getFirstItem(records);
-        ErlangFunction firstFunction = ContainerUtil.getFirstItem(functions);
-
-        ErlangNamedElement elementBefore = firstRecord != null ? firstRecord : firstFunction;
+        ErlangNamedElement elementBefore = getAnchorElement((ErlangFile) containingFile);
 
         if (elementBefore != null) {
           containingFile.addBefore(ErlangElementFactory.createExportFromText(project, exportText), elementBefore);

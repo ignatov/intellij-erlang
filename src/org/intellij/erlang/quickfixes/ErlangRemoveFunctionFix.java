@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.quickfixes;
 
-import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -26,13 +25,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author ignatov
  */
-public class ErlangRemoveFunctionFix implements LocalQuickFix {
-  @NotNull
-  @Override
-  public String getName() {
-    return getFamilyName();
-  }
-
+public class ErlangRemoveFunctionFix extends ErlangQuickFixBase {
   @NotNull
   @Override
   public String getFamilyName() {
