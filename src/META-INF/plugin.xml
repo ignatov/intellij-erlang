@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.3.1</version>
+    <version>0.3.2</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="117.105" until-build="120.1"/>
     <depends>com.intellij.modules.lang</depends>
@@ -9,6 +9,13 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.3.2:</p>
+            <ul>
+              <li>New quickfixes: export function, introduce record, introduce record field</li>
+              <li>Multi-reference for functions: ability to go to the function definition with mismatched arity</li>
+              <li>Better parsing, highlighting, completion and formatting</li>
+              <li>Bugfixes</li>
+            </ul>
             <p>0.3.1:</p>
             <ul>
               <li>New fast parsing</li>
