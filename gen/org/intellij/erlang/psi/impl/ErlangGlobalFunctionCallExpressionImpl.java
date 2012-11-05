@@ -23,9 +23,15 @@ public class ErlangGlobalFunctionCallExpressionImpl extends ErlangExpressionImpl
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangModuleRef getModuleRef() {
-    return findNotNullChildByClass(ErlangModuleRef.class);
+    return findChildByClass(ErlangModuleRef.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangQAtom getQAtom() {
+    return findChildByClass(ErlangQAtom.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

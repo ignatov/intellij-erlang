@@ -3337,6 +3337,39 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // '.' q_atom | module_ref
+  static boolean module_ref_or_dot_atom(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "module_ref_or_dot_atom")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = module_ref_or_dot_atom_0(builder_, level_ + 1);
+    if (!result_) result_ = module_ref(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // '.' q_atom
+  private static boolean module_ref_or_dot_atom_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "module_ref_or_dot_atom_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_DOT);
+    result_ = result_ && q_atom(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
   // '/' |'*' | div | rem  | band | and
   static boolean mult_op(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "mult_op")) return false;
@@ -5624,15 +5657,14 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // '.'? module_ref ':' function_call_expression
+  // module_ref_or_dot_atom ':' function_call_expression
   public static boolean global_function_call_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "global_function_call_expression")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
-    result_ = global_function_call_expression_0(builder_, level_ + 1);
-    result_ = result_ && module_ref(builder_, level_ + 1);
+    result_ = module_ref_or_dot_atom(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON);
     result_ = result_ && function_call_expression(builder_, level_ + 1);
     if (result_ || pinned_) {
@@ -5643,13 +5675,6 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
-  }
-
-  // '.'?
-  private static boolean global_function_call_expression_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "global_function_call_expression_0")) return false;
-    consumeToken(builder_, ERL_DOT);
-    return true;
   }
 
   // (q_atom_or_var ':')? q_atom_or_var argument_list

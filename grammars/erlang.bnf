@@ -376,7 +376,8 @@ private qualified_atom_expression ::= q_atom '.' q_atom {pin=0}
 module_ref ::= q_atom {
   methods = [getReference]
 }
-global_function_call_expression ::= '.'? module_ref ':' function_call_expression {pin=0}
+global_function_call_expression ::= module_ref_or_dot_atom ':' function_call_expression {pin=0}
+private module_ref_or_dot_atom ::= '.' q_atom | module_ref
 function_call_expression ::= q_atom argument_list {
   pin=0
   methods = [getReference getNameIdentifier getTextOffset]

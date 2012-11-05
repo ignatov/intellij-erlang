@@ -10,7 +10,10 @@ public interface ErlangGlobalFunctionCallExpression extends ErlangExpression {
   @NotNull
   ErlangFunctionCallExpression getFunctionCallExpression();
 
-  @NotNull
+  @Nullable
   ErlangModuleRef getModuleRef();
+
+  @Nullable
+  ErlangQAtom getQAtom();
 
 }
