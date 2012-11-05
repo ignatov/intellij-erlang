@@ -31,7 +31,7 @@ import org.intellij.erlang.psi.impl.ErlangElementFactory;
  * @author ignatov
  */
 public class CreateErlangFileAction extends CreateFileFromTemplateAction implements DumbAware {
-  public static final String NEW_ERLANG_FILE = "New Erlang File";
+  private static final String NEW_ERLANG_FILE = "New Erlang File";
 
   public CreateErlangFileAction() {
     super(NEW_ERLANG_FILE, "", ErlangIcons.FILE);

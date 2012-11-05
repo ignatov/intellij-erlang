@@ -42,7 +42,7 @@ public class ErlangRunningState extends CommandLineState {
     return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
   }
 
-  private GeneralCommandLine getCommand(Sdk sdk) throws ExecutionException {
+  private GeneralCommandLine getCommand(Sdk sdk) {
     final GeneralCommandLine commandLine = new GeneralCommandLine();
     VirtualFile moduleOutputDirectory = CompilerPaths.getModuleOutputDirectory(module, false);
     String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(sdk.getHomePath()).getAbsolutePath());

@@ -198,7 +198,7 @@ public class ErlangSdkType extends SdkType {
     return true;
   }
 
-  private boolean isStandardLibraryDir(@NotNull final File dir) {
+  private static boolean isStandardLibraryDir(@NotNull final File dir) {
     return dir.isDirectory();
   }
 

@@ -147,7 +147,7 @@ public class ErlangCompiler implements TranslatingCompiler {
     }
   }
 
-  public static void fillContext(Module module, CompileContext context, List<String> errors) {
+  private static void fillContext(Module module, CompileContext context, List<String> errors) {
     for (String error : errors) {
       addErrorToContext(module, error, context);
     }
@@ -171,7 +171,7 @@ class ErlangCompilerError {
   private final int line;
   private final CompilerMessageCategory category;
 
-  public ErlangCompilerError(String errorMessage, String url, int line, CompilerMessageCategory category) {
+  private ErlangCompilerError(String errorMessage, String url, int line, CompilerMessageCategory category) {
     this.errorMessage = errorMessage;
     this.url = url;
     this.line = line;

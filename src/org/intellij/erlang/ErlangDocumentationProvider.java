@@ -27,6 +27,8 @@ import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangSpecification;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
@@ -60,7 +62,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
     return null;
   }
 
-  private static boolean notFromPreviousFunction(PsiElement spec, ErlangFunction prevFunction) {
+  private static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {
     return (prevFunction == null || (spec.getTextOffset() > prevFunction.getTextOffset()));
   }
 

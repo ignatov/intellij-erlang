@@ -116,7 +116,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
     }
   }
 
-  public static final String SPACING_CODE_SAMPLE =
+  private static final String SPACING_CODE_SAMPLE =
     "ping(0, Pong_PID) ->\n" +
       "    Pong_PID ! finished,\n" +
       "    tut15:pong(),\n" +
@@ -144,7 +144,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       "    Pong_PID = spawn(tut15, pong, []),\n" +
       "    spawn(tut15, ping, [30, Pong_PID]).";
 
-  public static final String WRAPPING_CODE_SAMPLE =
+  private static final String WRAPPING_CODE_SAMPLE =
     "%% ping comment\n" +
       "ping(0, Pong_PID) ->\n" +
       "    Pong_PID ! finished,\n" +
@@ -175,13 +175,13 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       "    Pong_PID = spawn(tut15, pong, []),\n" +
       "    spawn(tut15, ping, [30, Pong_PID]).";
 
-  public static final String BLANK_LINES_CODE_SAMPLE =
+  private static final String BLANK_LINES_CODE_SAMPLE =
     "hello(Name) ->\n" +
       "    io:format(\"Hello, \" ++ Name).\n" +
       "\n" +
       "hello() -> hello(\"IntelliJ\").\n" +
       "\n";
-  public static final String INDENT_CODE_SAMPLE =
+  private static final String INDENT_CODE_SAMPLE =
     "foo() ->\n" +
       "    io:format(\"Hello\"),\n" +
       "    List = [\n" +
