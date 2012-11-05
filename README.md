@@ -19,7 +19,7 @@ Also you can read some [tips and tricks](http://tomaszdziurko.pl/2011/09/develop
 
 ## Compilation and running
 You need to specify module name, function name and input parameters in run configuration setting 
-or you might move the cursor on the function and press **Crtl + Shift + F10**.
+or you might move the cursor on the function and press **Ctrl + Shift + F10**.
 
 ![Compilation and run](https://github.com/ignatov/intellij-erlang/raw/master/images/hello-run-configuration.png)
 
@@ -28,18 +28,24 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.3.2
+* New quick-fixes: export function, introduce record, introduce record field
+* Multi-reference for functions: ability to go to the function definition with mismatched arity
+* Better parsing, highlighting, completion and formatting
+* Bugfixes
+
 ### Version 0.3.1           
 * New fast parsing
 * Highlighting for .config and .rebar files
 * Live templates (thanks to Volodymyr Kyrychenko)
 * New icons (thanks to Volodymyr Kyrychenko)
-* Formatter impovement
+* Formatter improvements
 * Bugfixes
 
 ### Version 0.3:
 * Better completion
 * Record fields support
-* Formatter impovement
+* Formatter improvements
 * New file templates for 'New File' action
 * Bugfixes
 
