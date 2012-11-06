@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.3.2</version>
+    <version>0.3.3</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="117.105" until-build="120.1"/>
     <depends>com.intellij.modules.lang</depends>
@@ -9,6 +9,10 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.3.3:</p>
+            <ul>
+              <li>Rebuild with Java 1.6</li>
+            </ul>
             <p>0.3.2:</p>
             <ul>
               <li>New quickfixes: export function, introduce record, introduce record field</li>

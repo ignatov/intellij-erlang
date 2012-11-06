@@ -28,6 +28,9 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.3.3
+* Rebuild with Java 1.6
+
 ### Version 0.3.2
 * New quick-fixes: export function, introduce record, introduce record field
 * Multi-reference for functions: ability to go to the function definition with mismatched arity
