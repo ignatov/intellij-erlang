@@ -11,8 +11,8 @@ If you want to help but doesn't know how, you may check out issues [for collabor
 1. Checkout plugin repo and open the project
 1. Setup [IDEA SDK](http://confluence.jetbrains.net/display/IDEADEV/Getting+Started+with+Plugin+Development#GettingStartedwithPluginDevelopment-anchor2):
 select the IDEA installation directory as SDK root
-1. Setup [Grammar-Kit](https://github.com/JetBrains/Grammar-Kit) plugin
-1. Run the Erlang run configuration
+1. Setup the latest version of [Grammar-Kit](https://github.com/JetBrains/Grammar-Kit) plugin
+1. Run the **Erlang** run configuration
 
 For further information please see [official plugin development page](http://confluence.jetbrains.net/display/IDEADEV/PluginDevelopment).
 Also you can read some [tips and tricks](http://tomaszdziurko.pl/2011/09/developing-plugin-intellij-idea-some-tips-and-links/). Happy hacking!
