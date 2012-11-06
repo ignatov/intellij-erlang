@@ -7,8 +7,8 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangMacrosDefinition extends ErlangNamedElement {
 
-  @Nullable
-  ErlangExpression getExpression();
+  @NotNull
+  List<ErlangExpression> getExpressionList();
 
   @Nullable
   ErlangMacrosName getMacrosName();

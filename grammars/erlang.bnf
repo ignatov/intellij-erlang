@@ -140,10 +140,11 @@ record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   methods = [getName setName getNameIdentifier getTextOffset]
 }
 
-macros_definition ::= '-' 'define' '(' macros_name ['(' q_atom_or_var (',' q_atom_or_var)* ')']',' expression ')' {
+macros_definition ::= '-' 'define' '(' macros_name ['(' q_atom_or_var (',' q_atom_or_var)* ')']',' macros_body ')' {
   pin = 2
   methods = [getName setName getNameIdentifier getTextOffset]
 }
+private macros_body ::= expression ((',' | ';') expression)*
 
 include ::= '-' ('include' | 'include_lib') '(' include_string ')' {pin=2}
 include_string ::= string {methods = [getReference]}

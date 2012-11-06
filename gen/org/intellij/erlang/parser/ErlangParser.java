@@ -3164,7 +3164,72 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '-' 'define' '(' macros_name ['(' q_atom_or_var (',' q_atom_or_var)* ')']',' expression ')'
+  // expression ((',' | ';') expression)*
+  static boolean macros_body(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_body")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = expression(builder_, level_ + 1, -1);
+    result_ = result_ && macros_body_1(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // ((',' | ';') expression)*
+  private static boolean macros_body_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_body_1")) return false;
+    int offset_ = builder_.getCurrentOffset();
+    while (true) {
+      if (!macros_body_1_0(builder_, level_ + 1)) break;
+      int next_offset_ = builder_.getCurrentOffset();
+      if (offset_ == next_offset_) {
+        empty_element_parsed_guard_(builder_, offset_, "macros_body_1");
+        break;
+      }
+      offset_ = next_offset_;
+    }
+    return true;
+  }
+
+  // (',' | ';') expression
+  private static boolean macros_body_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_body_1_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = macros_body_1_0_0(builder_, level_ + 1);
+    result_ = result_ && expression(builder_, level_ + 1, -1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // ',' | ';'
+  private static boolean macros_body_1_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "macros_body_1_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_COMMA);
+    if (!result_) result_ = consumeToken(builder_, ERL_SEMI);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // '-' 'define' '(' macros_name ['(' q_atom_or_var (',' q_atom_or_var)* ')']',' macros_body ')'
   public static boolean macros_definition(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "macros_definition")) return false;
     if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
@@ -3179,7 +3244,7 @@ public class ErlangParser implements PsiParser {
     result_ = pinned_ && report_error_(builder_, macros_name(builder_, level_ + 1)) && result_;
     result_ = pinned_ && report_error_(builder_, macros_definition_4(builder_, level_ + 1)) && result_;
     result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_COMMA)) && result_;
-    result_ = pinned_ && report_error_(builder_, expression(builder_, level_ + 1, -1)) && result_;
+    result_ = pinned_ && report_error_(builder_, macros_body(builder_, level_ + 1)) && result_;
     result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
     if (result_ || pinned_) {
       marker_.done(ERL_MACROS_DEFINITION);
@@ -5599,7 +5664,6 @@ public class ErlangParser implements PsiParser {
 
   public static boolean catch_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "catch_expression")) return false;
-    if (!nextTokenIs(builder_, ERL_CATCH) && replaceVariants(builder_, 1, "<expression>")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
@@ -5849,7 +5913,6 @@ public class ErlangParser implements PsiParser {
 
   public static boolean parenthesized_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "parenthesized_expression")) return false;
-    if (!nextTokenIs(builder_, ERL_PAR_LEFT) && replaceVariants(builder_, 1, "<expression>")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();

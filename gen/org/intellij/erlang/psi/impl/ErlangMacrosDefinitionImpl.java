@@ -17,9 +17,9 @@ public class ErlangMacrosDefinitionImpl extends ErlangNamedElementImpl implement
   }
 
   @Override
-  @Nullable
-  public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+  @NotNull
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
   @Override
