@@ -49,9 +49,11 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
@@ -115,7 +117,7 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
             @Override
             public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
               PsiReference reference = o.getReference();
-              if (reference != null && function.equals(reference.resolve())) {
+              if (reference != null && function.equals(reference.resolve()) && !isRecursiveCall(o, function)) {
                 usage.set(o);
               }
             }
@@ -127,7 +129,8 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
           List<PsiReference> refs = ContainerUtil.filter(search.findAll(), new Condition<PsiReference>() { // filtered specs out
             @Override
             public boolean value(PsiReference psiReference) {
-              return PsiTreeUtil.getParentOfType(psiReference.getElement(), ErlangSpecification.class) == null;
+              PsiElement element = psiReference.getElement();
+              return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !isRecursiveCall(element, function);
             }
           });
 
@@ -140,6 +143,10 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
         }
       }
     });
+  }
+
+  private static boolean isRecursiveCall(PsiElement element, ErlangFunction function) {
+    return Comparing.equal(PsiTreeUtil.getParentOfType(element, ErlangFunction.class), function);
   }
 
   private static boolean isEunitImported(ErlangFile file) {

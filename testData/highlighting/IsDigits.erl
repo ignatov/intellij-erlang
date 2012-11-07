@@ -1,4 +1,4 @@
-is_digits([Dig | Tail]) ->
+<warning>is_digits</warning>([Dig | Tail]) ->
     if
 	$0 =< Dig, Dig =< $9 ->
 	    is_digits(Tail);

@@ -70,4 +70,5 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
   public void test34()                { doTest(); }
+  public void test124()               { doTest(); }
 }
