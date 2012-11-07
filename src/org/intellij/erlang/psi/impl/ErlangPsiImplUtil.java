@@ -28,6 +28,7 @@ import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
@@ -46,6 +47,7 @@ import com.intellij.util.Function;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.ErlangTypes;
@@ -785,5 +787,22 @@ public class ErlangPsiImplUtil {
   @SuppressWarnings("UnusedParameters")
   public static Icon getIcon(@NotNull ErlangFunction o, int flags) {
     return ErlangIcons.FUNCTION;
+  }
+
+  public static boolean isRecursiveCall(PsiElement element, ErlangFunction function) {
+    return Comparing.equal(PsiTreeUtil.getParentOfType(element, ErlangFunction.class), function);
+  }
+
+  public static boolean isEunitImported(ErlangFile file) {
+    List<ErlangInclude> includes = file.getIncludes();
+    for (ErlangInclude include : includes) {
+      ErlangIncludeString string = include.getIncludeString();
+      if (string != null) {
+        String includeFilePath = StringUtil.unquoteString(string.getText());
+        boolean isEunit = StringUtils.equals(includeFilePath, "eunit/include/eunit.hrl") || StringUtils.equals(includeFilePath, "eunit.hrl");
+        if (isEunit) return true;
+      }
+    }
+    return false;
   }
 }

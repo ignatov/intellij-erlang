@@ -49,7 +49,6 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
@@ -61,8 +60,8 @@ import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import com.intellij.util.containers.ContainerUtil;
-import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
 import org.jetbrains.annotations.Nls;
@@ -90,7 +89,7 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
-    final boolean isEunitImported = isEunitImported((ErlangFile) file);
+    final boolean isEunitImported = ErlangPsiImplUtil.isEunitImported((ErlangFile) file);
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitFunction(@NotNull final ErlangFunction function) {
@@ -117,7 +116,7 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
             @Override
             public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
               PsiReference reference = o.getReference();
-              if (reference != null && function.equals(reference.resolve()) && !isRecursiveCall(o, function)) {
+              if (reference != null && function.equals(reference.resolve()) && !ErlangPsiImplUtil.isRecursiveCall(o, function)) {
                 usage.set(o);
               }
             }
@@ -130,7 +129,7 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
             @Override
             public boolean value(PsiReference psiReference) {
               PsiElement element = psiReference.getElement();
-              return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !isRecursiveCall(element, function);
+              return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !ErlangPsiImplUtil.isRecursiveCall(element, function);
             }
           });
 
@@ -145,20 +144,4 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
     });
   }
 
-  private static boolean isRecursiveCall(PsiElement element, ErlangFunction function) {
-    return Comparing.equal(PsiTreeUtil.getParentOfType(element, ErlangFunction.class), function);
-  }
-
-  private static boolean isEunitImported(ErlangFile file) {
-    List<ErlangInclude> includes = file.getIncludes();
-    for (ErlangInclude include : includes) {
-      ErlangIncludeString string = include.getIncludeString();
-      if (string != null) {
-        String includeFilePath = StringUtil.unquoteString(string.getText());
-        boolean isEunit = StringUtils.equals(includeFilePath, "eunit/include/eunit.hrl") || StringUtils.equals(includeFilePath, "eunit.hrl");
-        if (isEunit) return true;
-      }
-    }
-    return false;
-  }
 }

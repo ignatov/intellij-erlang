@@ -36,6 +36,7 @@ public interface ErlangIcons {
   Icon ERLANG_MODULE_NODE = IconLoader.getIcon("/icons/erlang-module-with-icon.png");
   Icon ERLANG_MODULE_NODE_OPEN = IconLoader.getIcon("/icons/erlang-module-with-icon-open.png");
   Icon ERLANG_BIG = IconLoader.getIcon("/icons/erlang-big.png");
+  Icon RECURSIVE_CALL = IconLoader.getIcon("/icons/recursiveMethod.png"); // todo: use AllIcons.Gutter.RecursiveMethod after LEDA migration
 
   Icon FILE = IconLoader.getIcon("/icons/erlang-module-16.png");
   Icon OTP_SUPERVISOR = IconLoader.getIcon("/icons/otp-supervisor-16.png");

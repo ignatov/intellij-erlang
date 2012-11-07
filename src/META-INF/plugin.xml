@@ -123,6 +123,8 @@
 
         <moduleConfigurationEditorProvider implementation="org.intellij.erlang.configuration.DefaultModuleEditorsProvider" order="first"/>
 
+        <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangRecursiveCallLineMarkerProvider"/>
+
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariableInspection"
                          displayName="Unbound variable"
