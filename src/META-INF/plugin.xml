@@ -114,9 +114,16 @@
 
         <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
         <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
+        <!-- run -->
         <programRunner implementation="org.intellij.erlang.runner.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.runner.ErlangRunConfigurationType"/>
-        <configurationProducer implementation="org.intellij.erlang.run.ErlangRunConfigurationProducer"/>
+        <configurationProducer implementation="org.intellij.erlang.runner.ErlangRunConfigurationProducer"/>
+
+        <!--eunit -->
+        <testFinder implementation="org.intellij.erlang.ErlangTestFinder"/>
+        <configurationProducer implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer"/>
+        <configurationType implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationType"/>
+
 
         <codeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangLanguageCodeStyleSettingsProvider"/>

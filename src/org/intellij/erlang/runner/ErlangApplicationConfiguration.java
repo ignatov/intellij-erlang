@@ -18,6 +18,7 @@ package org.intellij.erlang.runner;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.ModuleBasedConfiguration;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
@@ -45,7 +46,7 @@ public class ErlangApplicationConfiguration extends ModuleBasedConfiguration<Erl
   private String myParams = "";
   private String myModuleAndFunction = "";
 
-  public ErlangApplicationConfiguration(String name, Project project, ErlangRunConfigurationType configurationType) {
+  public ErlangApplicationConfiguration(Project project, String name, ConfigurationType configurationType) {
     super(name, new ErlangApplicationModuleBasedConfiguration(project), configurationType.getConfigurationFactories()[0]);
   }
 
@@ -57,7 +58,7 @@ public class ErlangApplicationConfiguration extends ModuleBasedConfiguration<Erl
 
   @Override
   protected ModuleBasedConfiguration createInstance() {
-    return new ErlangApplicationConfiguration(getName(), getProject(), ErlangRunConfigurationType.getInstance());
+    return new ErlangApplicationConfiguration(getProject(), getName(), ErlangRunConfigurationType.getInstance());
   }
 
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {

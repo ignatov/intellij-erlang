@@ -32,6 +32,8 @@ import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
+import org.intellij.erlang.eunit.ErlangUnitRunningState;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -78,21 +80,19 @@ public class ErlangRunner extends DefaultProgramRunner {
       throw new ExecutionException("No Erlang module for run configuration: " + configuration.getName());
     }
 
-
-    final ErlangRunningState compile = new ErlangRunningState(env, module, configuration);
+    final ErlangRunningState runningState =
+      configuration instanceof ErlangUnitRunConfiguration ?
+      new ErlangUnitRunningState(env, module, configuration) :
+      new ErlangRunningState(env, module, configuration);
 
     FileDocumentManager.getInstance().saveAllDocuments();
 
-    ExecutionResult executionResult = compile.execute(executor, this);
+    ExecutionResult executionResult = runningState.execute(executor, this);
     if (executionResult == null) return null;
-
 
     final RunContentBuilder contentBuilder = new RunContentBuilder(project, this, executor);
     contentBuilder.setExecutionResult(executionResult);
     contentBuilder.setEnvironment(env);
     return contentBuilder.showRunContent(contentToReuse);
-
   }
-
-
 }

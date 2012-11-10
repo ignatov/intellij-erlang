@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.run;
+package org.intellij.erlang.runner;
 
 import com.intellij.execution.Location;
 import com.intellij.execution.RunnerAndConfigurationSettings;
@@ -28,8 +28,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.runner.ErlangApplicationConfiguration;
-import org.intellij.erlang.runner.ErlangRunConfigurationType;
 
 /**
  * @author ignatov

@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ErlangRunningState extends CommandLineState {
   private final Module module;
-  private final ErlangApplicationConfiguration myConfiguration;
+  protected final ErlangApplicationConfiguration myConfiguration;
 
   public ErlangRunningState(ExecutionEnvironment env, Module module, ErlangApplicationConfiguration configuration) {
     super(env);
@@ -50,13 +50,17 @@ public class ErlangRunningState extends CommandLineState {
     commandLine.setWorkDirectory(canonicalPath);
 
     commandLine.setExePath(erl);
-    commandLine.addParameters("-run");
-    commandLine.addParameters(StringUtil.split(myConfiguration.getModuleAndFunction(), " "));
-    commandLine.addParameters(StringUtil.split(myConfiguration.getParams(), " "));
-    commandLine.addParameters("-s", "init", "stop", "-noshell");
+    setUpParameters(commandLine);
 
     final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(module.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
+  }
+
+  protected void setUpParameters(GeneralCommandLine commandLine) {
+    commandLine.addParameters("-run");
+    commandLine.addParameters(StringUtil.split(myConfiguration.getModuleAndFunction(), " "));
+    commandLine.addParameters(StringUtil.split(myConfiguration.getParams(), " "));
+    commandLine.addParameters("-s", "init", "stop", "-noshell");
   }
 }

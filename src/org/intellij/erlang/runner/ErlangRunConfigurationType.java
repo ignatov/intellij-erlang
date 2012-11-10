@@ -67,8 +67,7 @@ public class ErlangRunConfigurationType implements ConfigurationType {
     }
 
     public RunConfiguration createTemplateConfiguration(Project project) {
-      final String name = ERLANG_APPLICATION;
-      return new ErlangApplicationConfiguration(name, project, getInstance());
+      return new ErlangApplicationConfiguration(project, ERLANG_APPLICATION, getInstance());
     }
   }
 }
