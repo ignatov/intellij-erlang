@@ -283,7 +283,7 @@ expression ::=
   | parenthesized_expression
 
 prefix_expression ::= prefix_op expression
-catch_expression ::= catch expression
+catch_expression ::= catch expression {pin=1}
 assignment_expression ::= expression '=' expression { rightAssociative=true }
 send_expression ::= expression '!' expression { rightAssociative=true }
 orelse_expression ::= expression orelse expression
@@ -327,7 +327,7 @@ max_expression ::=
 list_atom_with_arity_expression ::= '[' atom_with_arity_expression (',' atom_with_arity_expression)* ']' {elementType="list_expression" pin=0}
 atom_with_arity_expression ::= q_atom '/' integer {elementType="expression" pin=0}
 
-begin_end_expression ::= begin begin_end_body end
+begin_end_expression ::= begin begin_end_body end {pin=1}
 begin_end_body ::= exprs {name="expression"}
 
 list_expression ::= '[' (']' | (expression tail)) {pin=0} // todo: rewrite without tail
@@ -388,16 +388,16 @@ private q_atom_or_var ::= q_atom | q_var
 
 anonymous_call_expression ::= expression argument_list
 
-if_expression ::= if if_clauses end
+if_expression ::= if if_clauses end {pin=1}
 if_clauses ::= if_clause (';' if_clause)*
 if_clause ::= guard clause_body
 
-case_expression ::= case expression of cr_clauses end
+case_expression ::= case expression of cr_clauses end {pin=1}
 cr_clauses ::= cr_clause (';' cr_clause)*
 cr_clause ::= argument_definition clause_guard? clause_body
 argument_definition ::= expression
 
-receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end))
+receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end)) {pin=1}
 fun_expression ::= fun ((fun_clauses end) | ([module_ref ':'] function_with_arity)) {pin=1}
 function_with_arity ::= q_atom '/' integer {
   pin= 1
@@ -405,13 +405,13 @@ function_with_arity ::= q_atom '/' integer {
 }
 fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body
-try_expression ::= try try_expressions_clause (of cr_clauses)? try_catch
+try_expression ::= try try_expressions_clause (of cr_clauses)? try_catch {pin=1}
 try_catch ::= (catch try_clauses [after try_expressions_clause] end) | (after try_expressions_clause end) {pin(".*")="catch|after"}
 try_expressions_clause ::= exprs
 try_clauses ::= try_clause (';' try_clause)*
 try_clause ::= [argument_definition ':'] argument_definition clause_guard? clause_body
 
-query_expression ::= query list_comprehension end
+query_expression ::= query list_comprehension end {pin=1}
 argument_list ::= '(' exprs? ')'
 
 fake fake_binary_expression ::= expression + {

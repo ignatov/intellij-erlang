@@ -10,10 +10,10 @@ public interface ErlangTryExpression extends ErlangExpression {
   @Nullable
   ErlangCrClauses getCrClauses();
 
-  @NotNull
+  @Nullable
   ErlangTryCatch getTryCatch();
 
-  @NotNull
+  @Nullable
   ErlangTryExpressionsClause getTryExpressionsClause();
 
   @Nullable

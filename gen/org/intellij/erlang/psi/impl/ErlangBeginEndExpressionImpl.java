@@ -17,9 +17,9 @@ public class ErlangBeginEndExpressionImpl extends ErlangExpressionImpl implement
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangBeginEndBody getBeginEndBody() {
-    return findNotNullChildByClass(ErlangBeginEndBody.class);
+    return findChildByClass(ErlangBeginEndBody.class);
   }
 
   @Override
@@ -29,9 +29,9 @@ public class ErlangBeginEndExpressionImpl extends ErlangExpressionImpl implement
   }
 
   @Override
-  @NotNull
+  @Nullable
   public PsiElement getEnd() {
-    return findNotNullChildByType(ERL_END);
+    return findChildByType(ERL_END);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

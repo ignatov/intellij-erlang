@@ -17,15 +17,15 @@ public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements Er
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangCrClauses getCrClauses() {
-    return findNotNullChildByClass(ErlangCrClauses.class);
+    return findChildByClass(ErlangCrClauses.class);
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+    return findChildByClass(ErlangExpression.class);
   }
 
   @Override
@@ -35,15 +35,15 @@ public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements Er
   }
 
   @Override
-  @NotNull
+  @Nullable
   public PsiElement getEnd() {
-    return findNotNullChildByType(ERL_END);
+    return findChildByType(ERL_END);
   }
 
   @Override
-  @NotNull
+  @Nullable
   public PsiElement getOf() {
-    return findNotNullChildByType(ERL_OF);
+    return findChildByType(ERL_OF);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

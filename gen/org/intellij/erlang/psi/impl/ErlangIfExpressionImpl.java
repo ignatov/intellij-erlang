@@ -17,15 +17,15 @@ public class ErlangIfExpressionImpl extends ErlangExpressionImpl implements Erla
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangIfClauses getIfClauses() {
-    return findNotNullChildByClass(ErlangIfClauses.class);
+    return findChildByClass(ErlangIfClauses.class);
   }
 
   @Override
-  @NotNull
+  @Nullable
   public PsiElement getEnd() {
-    return findNotNullChildByType(ERL_END);
+    return findChildByType(ERL_END);
   }
 
   @Override

@@ -23,15 +23,15 @@ public class ErlangTryExpressionImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangTryCatch getTryCatch() {
-    return findNotNullChildByClass(ErlangTryCatch.class);
+    return findChildByClass(ErlangTryCatch.class);
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangTryExpressionsClause getTryExpressionsClause() {
-    return findNotNullChildByClass(ErlangTryExpressionsClause.class);
+    return findChildByClass(ErlangTryExpressionsClause.class);
   }
 
   @Override

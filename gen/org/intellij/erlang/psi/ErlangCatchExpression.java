@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangCatchExpression extends ErlangExpression {
 
-  @NotNull
+  @Nullable
   ErlangExpression getExpression();
 
   @NotNull

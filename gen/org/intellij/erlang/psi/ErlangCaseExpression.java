@@ -7,19 +7,19 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangCaseExpression extends ErlangExpression {
 
-  @NotNull
+  @Nullable
   ErlangCrClauses getCrClauses();
 
-  @NotNull
+  @Nullable
   ErlangExpression getExpression();
 
   @NotNull
   PsiElement getCase();
 
-  @NotNull
+  @Nullable
   PsiElement getEnd();
 
-  @NotNull
+  @Nullable
   PsiElement getOf();
 
 }

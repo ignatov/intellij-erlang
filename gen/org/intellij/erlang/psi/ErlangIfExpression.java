@@ -7,10 +7,10 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangIfExpression extends ErlangExpression {
 
-  @NotNull
+  @Nullable
   ErlangIfClauses getIfClauses();
 
-  @NotNull
+  @Nullable
   PsiElement getEnd();
 
   @NotNull
