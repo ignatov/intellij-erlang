@@ -18,6 +18,7 @@ package org.intellij.erlang;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.intellij.erlang.formatter.ErlangFormattingTest;
 import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
@@ -32,6 +33,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangParserTest.class);
     suite.addTestSuite(ErlangAppParserTest.class);
     suite.addTestSuite(ErlangHighlightingTest.class);
+    suite.addTestSuite(ErlangFormattingTest.class);
     return suite;
   }
 }
