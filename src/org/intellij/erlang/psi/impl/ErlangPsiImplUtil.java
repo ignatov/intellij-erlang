@@ -793,6 +793,12 @@ public class ErlangPsiImplUtil {
     return Comparing.equal(PsiTreeUtil.getParentOfType(element, ErlangFunction.class), function);
   }
 
+  public static boolean isEunitTestFile(ErlangFile file) {
+    VirtualFile virtualFile = file.getVirtualFile();
+    String withoutExtension = virtualFile != null ? virtualFile.getNameWithoutExtension() : "";
+    return (StringUtil.endsWith(withoutExtension, "_test") || StringUtil.endsWith(withoutExtension, "_tests")) && isEunitImported(file);
+  }
+
   public static boolean isEunitImported(ErlangFile file) {
     List<ErlangInclude> includes = file.getIncludes();
     for (ErlangInclude include : includes) {
