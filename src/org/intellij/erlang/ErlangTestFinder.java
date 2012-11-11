@@ -9,6 +9,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testIntegration.TestFinder;
 import gnu.trove.THashSet;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -57,8 +58,7 @@ public class ErlangTestFinder implements TestFinder {
     if (virtualFile == null) return result;
     String name = virtualFile.getNameWithoutExtension();
     int length = name.length();
-    String[] suffixes = {"_test", "_tests"};
-    for (String suffix : suffixes) {
+    for (String suffix : SUFFIXES) {
       if (name.endsWith(suffix)) {
         Collections.addAll(result, FilenameIndex.getFilesByName(project, name.substring(0, length - suffix.length()) + "." + ErlangFileType.MODULE.getDefaultExtension(), searchScope));
       }
@@ -73,6 +73,7 @@ public class ErlangTestFinder implements TestFinder {
     VirtualFile virtualFile = containingFile.getVirtualFile();
     if (virtualFile == null) return false;
     final String className = virtualFile.getNameWithoutExtension();
-    return className.endsWith("_test") || className.endsWith("_tests");
+    boolean endsWithTest = className.endsWith("_test") || className.endsWith("_tests");
+    return endsWithTest && ErlangPsiImplUtil.isEunitImported((ErlangFile) containingFile);
   }
 }
