@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface ErlangArgumentList extends ErlangCompositeElement {
 
   @NotNull
+  List<ErlangClauseGuard> getClauseGuardList();
+
+  @NotNull
   List<ErlangExpression> getExpressionList();
 
 }

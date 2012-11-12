@@ -492,7 +492,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '(' exprs? ')'
+  // '(' call_exprs? ')'
   public static boolean argument_list(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "argument_list")) return false;
     if (!nextTokenIs(builder_, ERL_PAR_LEFT)) return false;
@@ -514,10 +514,10 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // exprs?
+  // call_exprs?
   private static boolean argument_list_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "argument_list_1")) return false;
-    exprs(builder_, level_ + 1);
+    call_exprs(builder_, level_ + 1);
     return true;
   }
 
@@ -1197,6 +1197,63 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // expr_with_guard (',' expr_with_guard)*
+  static boolean call_exprs(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "call_exprs")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = expr_with_guard(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && call_exprs_1(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // (',' expr_with_guard)*
+  private static boolean call_exprs_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "call_exprs_1")) return false;
+    int offset_ = builder_.getCurrentOffset();
+    while (true) {
+      if (!call_exprs_1_0(builder_, level_ + 1)) break;
+      int next_offset_ = builder_.getCurrentOffset();
+      if (offset_ == next_offset_) {
+        empty_element_parsed_guard_(builder_, offset_, "call_exprs_1");
+        break;
+      }
+      offset_ = next_offset_;
+    }
+    return true;
+  }
+
+  // ',' expr_with_guard
+  private static boolean call_exprs_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "call_exprs_1_0")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_COMMA);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && expr_with_guard(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
   // 'callback' type_spec
   public static boolean callback_spec(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "callback_spec")) return false;
@@ -1586,19 +1643,21 @@ public class ErlangParser implements PsiParser {
   public static boolean cr_clause(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "cr_clause")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<cr clause>");
     result_ = argument_definition(builder_, level_ + 1);
-    result_ = result_ && cr_clause_1(builder_, level_ + 1);
-    result_ = result_ && clause_body(builder_, level_ + 1);
-    if (result_) {
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, cr_clause_1(builder_, level_ + 1));
+    result_ = pinned_ && clause_body(builder_, level_ + 1) && result_;
+    if (result_ || pinned_) {
       marker_.done(ERL_CR_CLAUSE);
     }
     else {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   // clause_guard?
@@ -1913,6 +1972,34 @@ public class ErlangParser implements PsiParser {
       marker_.drop();
     }
     return result_;
+  }
+
+  /* ********************************************************** */
+  // expression clause_guard?
+  static boolean expr_with_guard(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "expr_with_guard")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = expression(builder_, level_ + 1, -1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && expr_with_guard_1(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // clause_guard?
+  private static boolean expr_with_guard_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "expr_with_guard_1")) return false;
+    clause_guard(builder_, level_ + 1);
+    return true;
   }
 
   /* ********************************************************** */
@@ -4428,16 +4515,20 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "top_type_clause")) return false;
     if (!nextTokenIs(builder_, ERL_ARROW)) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = consumeToken(builder_, ERL_ARROW);
+    pinned_ = result_; // pin = 1
     result_ = result_ && top_type(builder_, level_ + 1);
-    if (result_) {
+    if (result_ || pinned_) {
       marker_.done(ERL_TOP_TYPE_CLAUSE);
     }
     else {
       marker_.rollbackTo();
     }
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */

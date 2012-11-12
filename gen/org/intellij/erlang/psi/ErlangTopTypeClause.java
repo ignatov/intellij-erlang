@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangTopTypeClause extends ErlangCompositeElement {
 
-  @NotNull
+  @Nullable
   ErlangTopType getTopType();
 
 }

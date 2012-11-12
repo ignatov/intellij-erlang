@@ -18,6 +18,12 @@ public class ErlangArgumentListImpl extends ErlangCompositeElementImpl implement
 
   @Override
   @NotNull
+  public List<ErlangClauseGuard> getClauseGuardList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangClauseGuard.class);
+  }
+
+  @Override
+  @NotNull
   public List<ErlangExpression> getExpressionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }

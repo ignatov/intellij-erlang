@@ -17,9 +17,9 @@ public class ErlangTopTypeClauseImpl extends ErlangCompositeElementImpl implemen
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangTopType getTopType() {
-    return findNotNullChildByClass(ErlangTopType.class);
+    return findChildByClass(ErlangTopType.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
