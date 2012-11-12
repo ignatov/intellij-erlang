@@ -27,7 +27,9 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 /**
  * @author ignatov
@@ -51,14 +53,16 @@ public class ErlangRunConfigurationProducer extends RuntimeConfigurationProducer
     if (myFunction == null) return null;
 
     Project project = psiElement.getProject();
-    PsiFile mySourceFile = psiElement.getContainingFile();
+    PsiFile containingFile = psiElement.getContainingFile();
+
+    if (containingFile instanceof ErlangFile && ErlangPsiImplUtil.isEunitTestFile((ErlangFile) containingFile)) return null;
 
     RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(project, context);
     ErlangApplicationConfiguration configuration = (ErlangApplicationConfiguration) settings.getConfiguration();
 
     Module module = ModuleUtil.findModuleForPsiElement(psiElement);
 
-    final VirtualFile vFile = mySourceFile.getVirtualFile();
+    final VirtualFile vFile = containingFile.getVirtualFile();
     if (vFile == null) return null;
     String moduleName = vFile.getNameWithoutExtension();
     String functionName = myFunction.getName();

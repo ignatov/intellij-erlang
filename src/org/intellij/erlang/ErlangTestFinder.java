@@ -70,10 +70,6 @@ public class ErlangTestFinder implements TestFinder {
   public boolean isTest(@NotNull PsiElement element) {
     PsiFile containingFile = findSourceElement(element);
     if (!(containingFile instanceof ErlangFile)) return false;
-    VirtualFile virtualFile = containingFile.getVirtualFile();
-    if (virtualFile == null) return false;
-    final String className = virtualFile.getNameWithoutExtension();
-    boolean endsWithTest = className.endsWith("_test") || className.endsWith("_tests");
-    return endsWithTest && ErlangPsiImplUtil.isEunitImported((ErlangFile) containingFile);
+    return ErlangPsiImplUtil.isEunitTestFile((ErlangFile) containingFile);
   }
 }
