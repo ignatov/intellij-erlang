@@ -5,6 +5,7 @@ You can manually set up the latest version of plugin from the [Erlang.zip](https
 
 ## Contributing
 If you want to help but doesn't know how, you may check out issues [for collaboration](https://github.com/ignatov/intellij-erlang/issues?labels=for+collaboration&state=open).
+Before sending a pull request please check that the **Erlang TestCase** is successfully passed. Moreover, new tests will be gladly accepted.
 
 ## Getting started with plugin development
 1. [Download](http://www.jetbrains.com/idea/download/) the 11.1.4 IntelliJ IDEA build and install it
