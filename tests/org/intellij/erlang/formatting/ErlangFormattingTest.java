@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.formatter;
+package org.intellij.erlang.formatting;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.io.FileUtil;
