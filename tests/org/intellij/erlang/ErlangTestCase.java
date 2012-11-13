@@ -22,7 +22,7 @@ import org.intellij.erlang.formatting.ErlangFormattingTest;
 import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
-import org.intellij.erlang.quickfix.ErlangExportFunctionFixTest;
+import org.intellij.erlang.quickfixes.ErlangExportFunctionFixTest;
 
 /**
  * @author ignatov

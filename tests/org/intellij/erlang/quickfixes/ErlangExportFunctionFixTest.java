@@ -1,4 +1,4 @@
-package org.intellij.erlang.quickfix;
+package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
