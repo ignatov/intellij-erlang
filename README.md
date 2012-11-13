@@ -11,6 +11,7 @@ If you want to help but doesn't know how, you may check out issues [for collabor
 1. Checkout plugin repo and open the project
 1. Setup [IDEA SDK](http://confluence.jetbrains.net/display/IDEADEV/Getting+Started+with+Plugin+Development#GettingStartedwithPluginDevelopment-anchor2):
 select the IDEA installation directory as SDK root
+1. **Manually add ```$IDEA_SDK_PATH$/plugins/copyright/lib/copyright.jar``` to IDEA SDK classpath**
 1. Setup the latest version of [Grammar-Kit](https://github.com/JetBrains/Grammar-Kit) plugin
 1. Run the **Erlang** run configuration
 
