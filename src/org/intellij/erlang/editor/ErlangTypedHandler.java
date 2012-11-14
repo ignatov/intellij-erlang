@@ -25,9 +25,10 @@ import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
-import org.intellij.erlang.psi.ErlangBinaryType;
+import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -37,6 +38,8 @@ public class ErlangTypedHandler extends TypedHandlerDelegate {
 
   @Override
   public Result charTyped(char c, Project project, Editor editor, @NotNull PsiFile file) {
+    if (!(file instanceof ErlangFile)) return super.charTyped(c, project, editor, file);
+
     if (c != '<' || !CodeInsightSettings.getInstance().AUTOINSERT_PAIR_BRACKET) {
       return Result.CONTINUE;
     }
@@ -52,6 +55,8 @@ public class ErlangTypedHandler extends TypedHandlerDelegate {
    * @see BraceMatchingUtil
    */
   private static void insertMatchedBinaryBraces(Project project, Editor editor, PsiFile file) {
+    if (!(file instanceof ErlangFile)) return;
+
     PsiDocumentManager.getInstance(project).commitAllDocuments();
 
     FileType fileType = file.getFileType();
