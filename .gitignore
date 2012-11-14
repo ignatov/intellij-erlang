@@ -1,3 +1,5 @@
 .idea/workspace.xml
 out/
-.bin/
+bin/
+system-test/
+config-test/
