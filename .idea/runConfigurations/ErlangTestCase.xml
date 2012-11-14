@@ -8,7 +8,7 @@
     <option name="MAIN_CLASS_NAME" value="org.intellij.erlang.ErlangTestCase" />
     <option name="METHOD_NAME" value="" />
     <option name="TEST_OBJECT" value="class" />
-    <option name="VM_PARAMETERS" value="-ea -Didea.system.path=system-test -Didea.config.path=config-test" />
+    <option name="VM_PARAMETERS" value="-ea -Didea.system.path=system-test -Didea.config.path=config-test -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5017" />
     <option name="PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
     <option name="ENV_VARIABLES" />
@@ -19,7 +19,7 @@
     <envs />
     <patterns />
     <RunnerSettings RunnerId="Profile ">
-      <option name="myExternalizedOptions" />
+      <option name="myExternalizedOptions" value="&#10;use-64-bit=false&#10;additional-options2=onexit\=snapshot&#10;" />
     </RunnerSettings>
     <RunnerSettings RunnerId="Run" />
     <ConfigurationWrapper RunnerId="Run" />
