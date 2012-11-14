@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/resources" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/bin" />
       <excludeFolder url="file://$MODULE_DIR$/config-test" />
       <excludeFolder url="file://$MODULE_DIR$/system-test" />
     </content>
