@@ -704,7 +704,7 @@ public class ErlangPsiImplUtil {
     List<ErlangFunction> result = new ArrayList<ErlangFunction>();
     for (PsiFile file : files) {
       if (file instanceof ErlangFile) {
-        result.addAll(((ErlangFile) file).getFunctions());
+        result.addAll(((ErlangFile) file).getExportedFunctions());
       }
     }
     return result;

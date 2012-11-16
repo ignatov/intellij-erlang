@@ -25,10 +25,12 @@ import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.Processor;
 import com.intellij.util.Query;
@@ -77,6 +79,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
 
   private CachedValue<List<ErlangRule>> myRulesValue;
   private CachedValue<List<ErlangFunction>> myFunctionValue;
+  private CachedValue<List<ErlangFunction>> myExportedFunctionValue;
   private CachedValue<List<ErlangAttribute>> myAttributeValue;
   private CachedValue<List<ErlangRecordDefinition>> myRecordValue;
   private CachedValue<List<ErlangInclude>> myIncludeValue;
@@ -133,6 +136,46 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
       }, false);
     }
     return myFunctionValue.getValue();
+  }
+
+  @NotNull
+  @Override
+  public List<ErlangFunction> getExportedFunctions() {
+    if (myExportedFunctionValue == null) {
+      myExportedFunctionValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangFunction>>() {
+        @Override
+        public Result<List<ErlangFunction>> compute() {
+          ErlangFileImpl erlangFile = ErlangFileImpl.this;
+          return Result.create(calcExportedFunctions(erlangFile), erlangFile);
+        }
+      }, false);
+    }
+    return myExportedFunctionValue.getValue();
+  }
+
+  private List<ErlangFunction> calcExportedFunctions(final ErlangFileImpl erlangFile) {
+    final List<ErlangFunction> result = new ArrayList<ErlangFunction>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangFunction) {
+          Query<PsiReference> search = ReferencesSearch.search(psiElement, new LocalSearchScope(erlangFile));
+
+          List<PsiReference> exports = ContainerUtil.filter(search.findAll(), new Condition<PsiReference>() { // filtered specs out
+            @Override
+            public boolean value(PsiReference psiReference) {
+              PsiElement element = psiReference.getElement();
+              return PsiTreeUtil.getParentOfType(element, ErlangExport.class) != null;
+            }
+          });
+          if (!exports.isEmpty()) {
+            result.add((ErlangFunction) psiElement);
+          }
+        }
+        return true;
+      }
+    });
+    return result;
   }
 
   @Nullable
