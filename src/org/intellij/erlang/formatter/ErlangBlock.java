@@ -24,6 +24,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.containers.ContainerUtil;
@@ -203,8 +204,10 @@ public class ErlangBlock implements ASTBlock, BlockWithParent {
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
     Indent childIndent = Indent.getNoneIndent();
-    if (BLOCKS_TOKEN_SET.contains(myNode.getElementType())) {
-      childIndent = Indent.getNormalIndent();
+    IElementType type = myNode.getElementType();
+    ASTNode sibling = FormatterUtil.getNextNonWhitespaceSibling(myNode);
+    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_IF_EXPRESSION) {
+      childIndent = Indent.getNormalIndent(true);
     }
     return new ChildAttributes(childIndent, null);
   }

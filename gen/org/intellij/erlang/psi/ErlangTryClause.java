@@ -10,7 +10,7 @@ public interface ErlangTryClause extends ErlangCompositeElement {
   @NotNull
   List<ErlangArgumentDefinition> getArgumentDefinitionList();
 
-  @NotNull
+  @Nullable
   ErlangClauseBody getClauseBody();
 
   @Nullable

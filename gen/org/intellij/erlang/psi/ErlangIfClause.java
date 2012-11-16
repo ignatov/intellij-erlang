@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangIfClause extends ErlangCompositeElement {
 
-  @NotNull
+  @Nullable
   ErlangClauseBody getClauseBody();
 
   @NotNull

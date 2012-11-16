@@ -2238,17 +2238,21 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "fun_clause")) return false;
     if (!nextTokenIs(builder_, ERL_PAR_LEFT)) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = argument_definition_list(builder_, level_ + 1);
-    result_ = result_ && fun_clause_1(builder_, level_ + 1);
-    result_ = result_ && clause_body(builder_, level_ + 1);
-    if (result_) {
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, fun_clause_1(builder_, level_ + 1));
+    result_ = pinned_ && clause_body(builder_, level_ + 1) && result_;
+    if (result_ || pinned_) {
       marker_.done(ERL_FUN_CLAUSE);
     }
     else {
       marker_.rollbackTo();
     }
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   // clause_guard?
@@ -2713,18 +2717,20 @@ public class ErlangParser implements PsiParser {
   public static boolean if_clause(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "if_clause")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<if clause>");
     result_ = guard(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
     result_ = result_ && clause_body(builder_, level_ + 1);
-    if (result_) {
+    if (result_ || pinned_) {
       marker_.done(ERL_IF_CLAUSE);
     }
     else {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */
@@ -4684,20 +4690,22 @@ public class ErlangParser implements PsiParser {
   public static boolean try_clause(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "try_clause")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<try clause>");
     result_ = try_clause_0(builder_, level_ + 1);
     result_ = result_ && argument_definition(builder_, level_ + 1);
-    result_ = result_ && try_clause_2(builder_, level_ + 1);
-    result_ = result_ && clause_body(builder_, level_ + 1);
-    if (result_) {
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, try_clause_2(builder_, level_ + 1));
+    result_ = pinned_ && clause_body(builder_, level_ + 1) && result_;
+    if (result_ || pinned_) {
       marker_.done(ERL_TRY_CLAUSE);
     }
     else {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   // [argument_definition ':']
@@ -6030,6 +6038,7 @@ public class ErlangParser implements PsiParser {
 
   public static boolean parenthesized_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "parenthesized_expression")) return false;
+    if (!nextTokenIs(builder_, ERL_PAR_LEFT) && replaceVariants(builder_, 1, "<expression>")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();

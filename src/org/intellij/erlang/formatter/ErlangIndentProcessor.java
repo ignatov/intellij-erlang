@@ -51,6 +51,8 @@ public class ErlangIndentProcessor {
     IElementType elementType = node.getElementType();
     ASTNode parent = node.getTreeParent();
     IElementType parentType = parent != null ? parent.getElementType() : null;
+    ASTNode grandfather = parent != null ? parent.getTreeParent() : null;
+    IElementType grandfatherType = grandfather != null ? grandfather.getElementType() : null;
     ASTNode prevSibling = FormatterUtil.getPreviousNonWhitespaceSibling(node);
     IElementType prevSiblingElementType = prevSibling != null ? prevSibling.getElementType() : null;
 
@@ -93,7 +95,7 @@ public class ErlangIndentProcessor {
       }
       return Indent.getNormalIndent();
     }
-    if (parentType == ERL_GUARD || (parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN)) {
+    if ((parentType == ERL_GUARD || (parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN)) && grandfatherType != ERL_IF_CLAUSE) {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_LC_EXPRS) {

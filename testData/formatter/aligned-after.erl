@@ -15,8 +15,8 @@ is_digits(
     [Dig | Tail],
     Options) ->
   if
-      $0 =< Dig, Dig =< $9 -> is_digits(Tail);
-      true -> false
+    $0 =< Dig, Dig =< $9 -> is_digits(Tail);
+    true -> false
   end;
 is_digits([]) ->
   L = [a,
@@ -29,8 +29,8 @@ is_digits([]) ->
 
 f(N) ->
   if
-      N == 42 -> true;
-      true -> false
+    N == 42 -> true;
+    true -> false
   end.
 
 foo(L) ->

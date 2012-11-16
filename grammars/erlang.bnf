@@ -393,7 +393,7 @@ private call_exprs ::= expr_with_guard (',' expr_with_guard)*
 
 if_expression ::= if if_clauses end {pin=1}
 if_clauses ::= if_clause (';' if_clause)*
-if_clause ::= guard clause_body
+if_clause ::= guard clause_body {pin=1}
 
 case_expression ::= case expression of cr_clauses end {pin=1}
 cr_clauses ::= cr_clause (';' cr_clause)*
@@ -407,12 +407,12 @@ function_with_arity ::= q_atom '/' integer {
   methods = [getReference]
 }
 fun_clauses ::= fun_clause (';' fun_clause)*
-fun_clause ::= argument_definition_list clause_guard? clause_body
+fun_clause ::= argument_definition_list clause_guard? clause_body {pin=1}
 try_expression ::= try try_expressions_clause (of cr_clauses)? try_catch {pin=1}
 try_catch ::= (catch try_clauses [after try_expressions_clause] end) | (after try_expressions_clause end) {pin(".*")="catch|after"}
 try_expressions_clause ::= exprs
 try_clauses ::= try_clause (';' try_clause)*
-try_clause ::= [argument_definition ':'] argument_definition clause_guard? clause_body
+try_clause ::= [argument_definition ':'] argument_definition clause_guard? clause_body {pin=2}
 
 query_expression ::= query list_comprehension end {pin=1}
 argument_list ::= '(' call_exprs? ')'
