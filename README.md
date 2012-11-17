@@ -1,5 +1,5 @@
 # Erlang plugin
-Erlang language support for IntelliJ Platform (e.g. IntelliJ IDEA).
+Erlang Plugin turns IntelliJ IDEA to a convenient Erlang IDE.
 
 ## Contributing
 If you want to help but doesn't know how, you may check out issues [for collaboration](https://github.com/ignatov/intellij-erlang/issues?labels=for+collaboration&state=open).
