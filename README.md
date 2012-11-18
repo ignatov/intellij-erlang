@@ -30,7 +30,7 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ### Version 0.3.4
 * Eunit test runner
-* Tests/sources switcher (**Ctrl + Shift + T**)
+* Tests/sources switcher **Ctrl + Shift + T**
 * Copyright plugin support (thanks to Maxim Vladimirsky)
 * Recursive icon on the gutter
 * Better completion
