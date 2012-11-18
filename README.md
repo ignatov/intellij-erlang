@@ -28,6 +28,14 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.3.4
+* Eunit test runner
+* Tests/sources switcher (**Ctrl + Shift + T**)
+* Copyright plugin support (thanks to Maxim Vladimirsky)
+* Recursive icon on the gutter
+* Better completion
+* Bugfixes
+
 ### Version 0.3.3
 * Rebuild with Java 1.6
 

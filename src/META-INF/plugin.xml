@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.3.3</version>
+    <version>0.3.4</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="117.105" until-build="120.1"/>
     <depends>com.intellij.modules.lang</depends>
@@ -11,6 +11,15 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.3.4:</p>
+            <ul>
+              <li>Eunit test runner</li>
+              <li>Tests/sources switcher (Ctrl + Shift + T)</li>
+              <li>Copyright plugin support (thanks to Maxim Vladimirsky)</li>
+              <li>Recursive icon on the gutter</li>
+              <li>Better completion</li>
+              <li>Bugfixes</li>
+            </ul>
             <p>0.3.3:</p>
             <ul>
               <li>Rebuild with Java 1.6</li>
