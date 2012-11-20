@@ -23,18 +23,29 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
 
 /**
  * @author ignatov
  */
 public class ErlangModuleBuilder extends JavaModuleBuilder implements SourcePathsBuilder, ModuleBuilderListener {
+  private static final String EBIN_DIR = "ebin";
+  private static final String EUNIT_DIR = ".eunit";
+
   @Override
-  public void setupRootModel(ModifiableRootModel modifiableRootModel) throws ConfigurationException {
+  public void setupRootModel(ModifiableRootModel rootModel) throws ConfigurationException {
     addListener(this);
-    super.setupRootModel(modifiableRootModel);
+    super.setupRootModel(rootModel);
+    final String moduleHome = getContentEntryPath();
+    final CompilerModuleExtension compilerModuleExt = rootModel.getModuleExtension(CompilerModuleExtension.class);
+    compilerModuleExt.inheritCompilerOutputPath(false);
+    compilerModuleExt.setCompilerOutputPath(moduleHome + File.separator + EBIN_DIR);
+    compilerModuleExt.setCompilerOutputPathForTests(moduleHome + File.separator + EUNIT_DIR);
   }
 
   @Override
