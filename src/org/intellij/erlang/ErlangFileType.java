@@ -28,7 +28,6 @@ public class ErlangFileType extends LanguageFileType {
   public static ErlangFileType MODULE = new ErlangFileType();
   public static HrlFileType HEADER = new HrlFileType();
   public static AppFileType APP = new AppFileType();
-  public static ErlangTermsFileType TERMS = new ErlangTermsFileType();
 
   protected ErlangFileType() {
     super(ErlangLanguage.INSTANCE);
@@ -110,31 +109,6 @@ public class ErlangFileType extends LanguageFileType {
     @Override
     public Icon getIcon() {
       return ErlangIcons.OTP_APP_RESOURCE;
-    }
-  }
-
-  public static class ErlangTermsFileType extends ErlangFileType {
-    @NotNull
-    @Override
-    public String getName() {
-      return "Erlang Terms";
-    }
-
-    @NotNull
-    @Override
-    public String getDescription() {
-      return "Erlang Terms File";
-    }
-
-    @NotNull
-    @Override
-    public String getDefaultExtension() {
-      return "config";
-    }
-
-    @Override
-    public Icon getIcon() {
-      return ErlangIcons.TERMS;
     }
   }
 }

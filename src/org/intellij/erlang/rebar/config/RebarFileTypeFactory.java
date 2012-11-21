@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.rebar.config;
 
 import com.intellij.openapi.fileTypes.FileTypeConsumer;
 import com.intellij.openapi.fileTypes.FileTypeFactory;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
-public class ErlangFileTypeFactory extends FileTypeFactory {
-  @Override
-  public void createFileTypes(@NotNull FileTypeConsumer fileTypeConsumer) {
-    fileTypeConsumer.consume(ErlangFileType.MODULE);
-    fileTypeConsumer.consume(ErlangFileType.HEADER);
-    fileTypeConsumer.consume(ErlangFileType.APP);
+public class RebarFileTypeFactory extends FileTypeFactory {
+  public void createFileTypes(final @NotNull FileTypeConsumer consumer) {
+    consumer.consume(RebarFileType.INSTANCE, RebarFileType.getFileNameMatcher());
   }
 }

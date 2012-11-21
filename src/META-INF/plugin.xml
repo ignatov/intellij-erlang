@@ -81,6 +81,11 @@
         ]]>
     </change-notes>
 
+    <!--Rebar related extensions -->
+    <extensions defaultExtensionNs="com.intellij">
+        <fileTypeFactory implementation="org.intellij.erlang.rebar.config.RebarFileTypeFactory"/>
+    </extensions>
+
     <extensions defaultExtensionNs="com.intellij">
 
         <internalFileTemplate name="Erlang Module"/>
