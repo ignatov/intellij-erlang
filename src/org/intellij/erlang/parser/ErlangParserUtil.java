@@ -22,6 +22,7 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.rebar.config.RebarFileType;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangParserUtil extends GeneratedParserUtilBase {
@@ -33,8 +34,9 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   public static boolean isApplicationConfigFileType(@NotNull PsiFile file) {
     FileType fileType = file.getViewProvider().getVirtualFile().getFileType();
-    return fileType == ErlangFileType.APP || fileType == ErlangFileType.TERMS ||
-      (ApplicationManager.getApplication().isUnitTestMode() && (fileType.getDefaultExtension().equals("app") || fileType.getDefaultExtension().equals("config")));
+    return fileType == ErlangFileType.APP || fileType == RebarFileType.INSTANCE ||
+      (ApplicationManager.getApplication().isUnitTestMode() && (fileType.getDefaultExtension().equals("app") ||
+        fileType.getDefaultExtension().equals("config")));
   }
 
   public static boolean eofBuilder(PsiBuilder builder, @SuppressWarnings("UnusedParameters") int level) {
