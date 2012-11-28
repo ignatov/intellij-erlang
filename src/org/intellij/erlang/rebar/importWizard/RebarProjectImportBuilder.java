@@ -161,6 +161,8 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       createdModules.add(module);
       if (importedOtpApp.getIdeaModuleFile() == null) {
         final ModifiableRootModel rootModel = ModuleRootManager.getInstance(module).getModifiableModel();
+        // Make it inherit SDK from the project.
+        rootModel.inheritSdk();
         // Initialize source and test paths.
         final ContentEntry content = rootModel.addContentEntry(importedOtpApp.getRoot());
         addSourceDirToContent(content, ideaModuleDir, "src", false);
