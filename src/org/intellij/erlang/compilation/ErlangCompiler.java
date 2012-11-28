@@ -92,7 +92,16 @@ public class ErlangCompiler implements TranslatingCompiler {
     commandLine.setPassParentEnvs(true);
 
     for (Module module : moduleChunk.getNodes()) {
-//      commandLine.addParameter("-I../include");
+      final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
+
+      for (VirtualFile sourceRoot : moduleRootManager.getSourceRoots()) {
+        commandLine.addParameter("-I");
+        String path = sourceRoot.getCanonicalPath();
+        if (path != null) {
+          commandLine.addParameter(path);
+        }
+      }
+
       VirtualFile outDir = context.getModuleOutputDirectory(module);
       if (outDir == null) {
         context.addMessage(CompilerMessageCategory.ERROR, "No output dir for module: " + module.getName(), null, -1, -1);
@@ -108,7 +117,6 @@ public class ErlangCompiler implements TranslatingCompiler {
 
 //      commandLine.addParameters("+warn_unused_vars", "+nowarn_shadow_vars", "+warn_unused_import");
 
-      final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
       final Sdk sdk = moduleRootManager.getSdk();
 
       if (sdk == null) {
