@@ -290,10 +290,8 @@ public class ErlangPsiImplUtil {
 
   private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, double priority) {
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name)
-      .setIcon(ErlangIcons.FUNCTION).setTailText("/" + arity).
-        setInsertHandler(
-          getInsertHandler(arity, withArity)
-        ), priority);
+      .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
+      .withInsertHandler(getInsertHandler(arity, withArity)), priority);
   }
 
   private static InsertHandler<LookupElement> getInsertHandler(final int arity, boolean withArity) {
@@ -346,12 +344,12 @@ public class ErlangPsiImplUtil {
         new Function<ErlangMacrosDefinition, LookupElement>() {
           @Override
           public LookupElement fun(@NotNull ErlangMacrosDefinition md) {
-            return LookupElementBuilder.create(md).setIcon(ErlangIcons.MACROS);
+            return LookupElementBuilder.create(md).withIcon(ErlangIcons.MACROS);
           }
         });
       List<LookupElement> stdMacros = new ArrayList<LookupElement>();
       for (String m : new String[] {"MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE"}) {
-        stdMacros.add(LookupElementBuilder.create(m).setIcon(ErlangIcons.MACROS));
+        stdMacros.add(LookupElementBuilder.create(m).withIcon(ErlangIcons.MACROS));
       }
       return ContainerUtil.concat(fromFile, stdMacros);
     }
@@ -367,7 +365,7 @@ public class ErlangPsiImplUtil {
         new Function<ErlangRecordDefinition, LookupElement>() {
           @Override
           public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
-            return LookupElementBuilder.create(rd).setIcon(ErlangIcons.RECORD);
+            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD);
           }
         });
     }

@@ -102,8 +102,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             result.addAllElements(ContainerUtil.map(fields, new Function<ErlangTypedExpr, LookupElement>() {
               @Override
               public LookupElement fun(ErlangTypedExpr a) {
-                return LookupElementBuilder.create(a.getName())
-                  .setIcon(ErlangIcons.FIELD);
+                return LookupElementBuilder.create(a.getName()).withIcon(ErlangIcons.FIELD);
               }
             }));
             return;
@@ -113,7 +112,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           }
           else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
             for (String keyword : suggestKeywords(position)) {
-              result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword).setBold(), -10));
+              result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword).bold(), -10));
             }
             int invocationCount = parameters.getInvocationCount();
             boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;
@@ -160,9 +159,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
       if (file.getFileType() == ErlangFileType.MODULE) {
         result.addElement(
           PrioritizedLookupElement.withPriority(
-            LookupElementBuilder.create(file.getNameWithoutExtension()).
-              setIcon(ErlangIcons.MODULE).
-              setInsertHandler(new SingleCharInsertHandler(':')),
+            LookupElementBuilder.create(file.getNameWithoutExtension())
+              .withIcon(ErlangIcons.MODULE)
+              .withInsertHandler(new SingleCharInsertHandler(':')),
             10));
       }
     }
