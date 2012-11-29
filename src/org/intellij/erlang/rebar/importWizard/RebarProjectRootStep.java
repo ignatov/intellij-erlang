@@ -36,6 +36,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
     super(context);
     myProjectRootComponent.addBrowseFolderListener("Select rebar.config of the project to import", "", null,
       FileChooserDescriptorFactory.createSingleFolderDescriptor());
+    myProjectRootComponent.setText(context.getProjectFileDirectory()); // provide project path
   }
 
   @Override

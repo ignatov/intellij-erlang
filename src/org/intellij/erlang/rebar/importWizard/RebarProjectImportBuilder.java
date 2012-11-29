@@ -147,17 +147,17 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
   @Override
   public List<Module> commit(@NotNull Project project,
-                             @Nullable ModifiableModuleModel modifiableModuleModel,
+                             @Nullable ModifiableModuleModel moduleModel,
                              @NotNull ModulesProvider modulesProvider,
                              @Nullable ModifiableArtifactModel modifiableArtifactModel) {
     final List<Module> createdModules = new ArrayList<Module>();
-    final ModifiableModuleModel moduleModel = modifiableModuleModel != null
-      ? modifiableModuleModel
-      : ModuleManager.getInstance(project).getModifiableModel();
+    final List<ModifiableRootModel> createdRootModels = new ArrayList<ModifiableRootModel>();
+    final ModifiableModuleModel obtainedModuleModel =
+      (moduleModel != null ? moduleModel : ModuleManager.getInstance(project).getModifiableModel());
     for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
       final VirtualFile ideaModuleDir = importedOtpApp.getRoot();
       final String ideaModuleFile = ideaModuleDir.getCanonicalPath() + File.separator + importedOtpApp.getName() + ".iml";
-      final Module module = moduleModel.newModule(ideaModuleFile, ErlangModuleType.getInstance());
+      final Module module = obtainedModuleModel.newModule(ideaModuleFile, ErlangModuleType.getInstance());
       createdModules.add(module);
       if (importedOtpApp.getIdeaModuleFile() == null) {
         final ModifiableRootModel rootModel = ModuleRootManager.getInstance(module).getModifiableModel();
@@ -173,20 +173,28 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         compilerModuleExt.inheritCompilerOutputPath(false);
         compilerModuleExt.setCompilerOutputPath(ideaModuleDir + File.separator + "ebin");
         compilerModuleExt.setCompilerOutputPathForTests(ideaModuleDir + File.separator + ".eunit");
-        ApplicationManager.getApplication().runWriteAction(new Runnable() {
-          public void run() {
-            rootModel.commit();
-          }
-        });
-        ourLogger.info("rootModel: " + rootModel);
+        createdRootModels.add(rootModel);
+        if (moduleModel != null) {
+          ApplicationManager.getApplication().runWriteAction(new Runnable() {
+            public void run() {
+              rootModel.commit();
+            }
+          });
+        }
       }
+    }
+    // Commit project structure.
+    ourLogger.info("Commit project structure");
+    if (moduleModel == null) {
       ApplicationManager.getApplication().runWriteAction(new Runnable() {
         public void run() {
-          moduleModel.commit();
+          for (ModifiableRootModel rootModel : createdRootModels) {
+            rootModel.commit();
+          }
+          obtainedModuleModel.commit();
         }
       });
     }
-    ourLogger.info("commit: " + createdModules);
     return createdModules;
   }
 
