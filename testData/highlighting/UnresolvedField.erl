@@ -3,7 +3,7 @@
 -record(tid, {kkk, id}).
 
 f() ->
-    #tid{kkk=10, <warning>kkk1</warning>=1}.
+    #tid{kkk=10, <error>kkk1</error>=1}.
 
 f(A) ->
-    A#tid.kkk, A#tid.<warning>kkk1</warning>.
+    A#tid.kkk, A#tid.<error>kkk1</error>.

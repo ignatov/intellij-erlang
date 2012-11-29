@@ -1,5 +1,5 @@
 %% Copyright
--module(<warning>e_tests</warning>).
+-module(<error>e_tests</error>).
 -author("ignatov").
 
 -include_lib("eunit/include/eunit.hrl").

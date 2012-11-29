@@ -3,13 +3,13 @@
 -export([perform/2, perform1/2, run/2, stsz_size/1]).
 
 perform1(X, Y) ->
-    <warning>A</warning>,
+    <error>A</error>,
     Z = X ++ "X",
-    [error_m || f(Z, <warning>EbinProdDir</warning>, Y), m:f(Z, m:v(Y), <warning>EbinProdDir</warning>)].
+    [error_m || f(Z, <error>EbinProdDir</error>, Y), m:f(Z, m:v(Y), <error>EbinProdDir</error>)].
 
 perform(X, Y) ->
     Z = X ++ "X",
-    [error_m || f(Z, <warning>EbinProdDir</warning>, Y) ].
+    [error_m || f(Z, <error>EbinProdDir</error>, Y) ].
 
 run(_, _) ->
     lists:map(fun(Spec) ->

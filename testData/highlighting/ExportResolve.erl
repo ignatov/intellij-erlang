@@ -1,2 +1,2 @@
--export([<warning>f/1</warning>, f/0, <warning>fasd/2</warning>]).
+-export([<error>f/1</error>, f/0, <error>fasd/2</error>]).
 f() -> ok.
