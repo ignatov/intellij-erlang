@@ -31,7 +31,7 @@ import javax.swing.*;
  * @author ignatov
  */
 public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
-  private static final String MODULE_TYPE_ID = "ERLANG_MODULE";
+  public static final String MODULE_TYPE_ID = "ERLANG_MODULE";
 
   public ErlangModuleType() {
     super(MODULE_TYPE_ID);
@@ -63,7 +63,7 @@ public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
 
   @Override
   public Icon getNodeIcon(boolean isOpened) {
-    return isOpened ? ErlangIcons.ERLANG_MODULE_NODE_OPEN : ErlangIcons.ERLANG_MODULE_NODE;
+    return ErlangIcons.ERLANG_MODULE_NODE;
   }
 
   @Override

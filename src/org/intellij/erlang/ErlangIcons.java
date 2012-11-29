@@ -16,7 +16,9 @@
 
 package org.intellij.erlang;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
+import com.intellij.ui.LayeredIcon;
 import com.intellij.util.PlatformIcons;
 
 import javax.swing.*;
@@ -33,10 +35,10 @@ public interface ErlangIcons {
   Icon MODULE = PlatformIcons.PACKAGE_ICON;
   Icon VARIABLE = PlatformIcons.VARIABLE_ICON;
   Icon FIELD = PlatformIcons.FIELD_ICON;
-  Icon ERLANG_MODULE_NODE = IconLoader.getIcon("/icons/erlang-module-with-icon.png");
-  Icon ERLANG_MODULE_NODE_OPEN = IconLoader.getIcon("/icons/erlang-module-with-icon-open.png");
+  Icon ERLANG_MARK = IconLoader.getIcon("/icons/erlang-mark.png");
+  Icon ERLANG_MODULE_NODE = new LayeredIcon(PlatformIcons.FOLDER_ICON, ERLANG_MARK);
   Icon ERLANG_BIG = IconLoader.getIcon("/icons/erlang-big.png");
-  Icon RECURSIVE_CALL = IconLoader.getIcon("/icons/recursiveMethod.png"); // todo: use AllIcons.Gutter.RecursiveMethod after LEDA migration
+  Icon RECURSIVE_CALL = AllIcons.Gutter.RecursiveMethod;
 
   Icon FILE = IconLoader.getIcon("/icons/erlang-module-16.png");
   Icon OTP_SUPERVISOR = IconLoader.getIcon("/icons/otp-supervisor-16.png");
@@ -46,6 +48,6 @@ public interface ErlangIcons {
   Icon OTP_GEN_SERVER = IconLoader.getIcon("/icons/otp-gen-server-16.png");
   Icon OTP_GEN_FSM = IconLoader.getIcon("/icons/otp-gen-fsm-16.png");
   Icon OTP_APP_RESOURCE = IconLoader.getIcon("/icons/otp-app-16.png");
-  Icon EUNIT = IconLoader.getIcon("/icons/erlang-eunit-16.png");
+  Icon EUNIT = new LayeredIcon(FILE, AllIcons.Nodes.JunitTestMark);
   Icon HEADER = IconLoader.getIcon("/icons/erlang-header-16.png");
 }
