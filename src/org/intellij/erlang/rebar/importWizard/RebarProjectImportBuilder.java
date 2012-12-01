@@ -26,6 +26,7 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.SdkTypeId;
 import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -40,6 +41,7 @@ import com.intellij.util.Function;
 import org.apache.log4j.Logger;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.editor.ErlangModuleType;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,9 +54,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpApp> {
-  static final Pattern APPLICATION_NAME_PATTERN = Pattern.compile("\\{\\s*application\\s*,\\s*(.*?)\\s*,");
-  static final Pattern DIRS_LIST_PATTERN = Pattern.compile("\\{\\s*sub_dirs\\s*,\\s*\\[(.*?)\\]");
-  static final Pattern SPLIT_DIR_LIST_PATTERN = Pattern.compile("\"\\s*(,\\s*\")?");
+  private static final Pattern APPLICATION_NAME_PATTERN = Pattern.compile("\\{\\s*application\\s*,\\s*(.*?)\\s*,");
+  private static final Pattern DIRS_LIST_PATTERN = Pattern.compile("\\{\\s*sub_dirs\\s*,\\s*\\[(.*?)\\]");
+  private static final Pattern SPLIT_DIR_LIST_PATTERN = Pattern.compile("\"\\s*(,\\s*\")?");
 
   private static final Logger ourLogger = Logger.getLogger(RebarProjectImportBuilder.class);
 
@@ -76,6 +78,11 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   @Override
   public Icon getIcon() {
     return ErlangIcons.REBAR;
+  }
+
+  @Override
+  public boolean isSuitableSdkType(@NotNull SdkTypeId sdkType) {
+    return sdkType == ErlangSdkType.getInstance();
   }
 
   @Override
@@ -157,7 +164,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
       final VirtualFile ideaModuleDir = importedOtpApp.getRoot();
       final String ideaModuleFile = ideaModuleDir.getCanonicalPath() + File.separator + importedOtpApp.getName() + ".iml";
-      final Module module = obtainedModuleModel.newModule(ideaModuleFile, ErlangModuleType.getInstance());
+      final Module module = obtainedModuleModel.newModule(ideaModuleFile, ErlangModuleType.getInstance().getName());
       createdModules.add(module);
       if (importedOtpApp.getIdeaModuleFile() == null) {
         final ModifiableRootModel rootModel = ModuleRootManager.getInstance(module).getModifiableModel();
@@ -168,12 +175,15 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         addSourceDirToContent(content, ideaModuleDir, "src", false);
         addSourceDirToContent(content, ideaModuleDir, "include", false);
         addSourceDirToContent(content, ideaModuleDir, "test", true);
-        // Initialize output paths.
+        // Exclude standard folders
+        excludeDirFromContent(content, ideaModuleDir, "doc");
+        // Initialize output paths according to Rebar conventions.
         final CompilerModuleExtension compilerModuleExt = rootModel.getModuleExtension(CompilerModuleExtension.class);
         compilerModuleExt.inheritCompilerOutputPath(false);
         compilerModuleExt.setCompilerOutputPath(ideaModuleDir + File.separator + "ebin");
         compilerModuleExt.setCompilerOutputPathForTests(ideaModuleDir + File.separator + ".eunit");
         createdRootModels.add(rootModel);
+        // Commit module if model is given.
         if (moduleModel != null) {
           ApplicationManager.getApplication().runWriteAction(new Runnable() {
             public void run() {
@@ -202,6 +212,13 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     final VirtualFile sourceDirFile = root.findChild(sourceDir);
     if (sourceDirFile != null) {
       content.addSourceFolder(sourceDirFile, test);
+    }
+  }
+
+  private static void excludeDirFromContent(ContentEntry content, VirtualFile root, String excludeDir) {
+    final VirtualFile excludeDirFile = root.findChild(excludeDir);
+    if (excludeDirFile != null) {
+      content.addExcludeFolder(excludeDirFile);
     }
   }
 

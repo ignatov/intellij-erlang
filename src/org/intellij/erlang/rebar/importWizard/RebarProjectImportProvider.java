@@ -18,21 +18,37 @@ package org.intellij.erlang.rebar.importWizard;
 
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.ProjectJdkForModuleStep;
-import com.intellij.ide.util.projectWizard.ProjectWizardStepFactory;
 import com.intellij.ide.util.projectWizard.WizardContext;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectImportProvider;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.jetbrains.annotations.NotNull;
 
 public class RebarProjectImportProvider extends ProjectImportProvider {
-  public RebarProjectImportProvider(final RebarProjectImportBuilder builder) {
+  public RebarProjectImportProvider(@NotNull RebarProjectImportBuilder builder) {
     super(builder);
   }
 
-  public ModuleWizardStep[] createSteps(final WizardContext context) {
-    final ProjectWizardStepFactory stepFactory = ProjectWizardStepFactory.getInstance();
+  public ModuleWizardStep[] createSteps(@NotNull WizardContext context) {
     return new ModuleWizardStep[]{
       new RebarProjectRootStep(context),
       new SelectImportedOtpAppsStep(context),
       new ProjectJdkForModuleStep(context, ErlangSdkType.getInstance())};
+  }
+
+  @Override
+  protected boolean canImportFromFile(@NotNull VirtualFile file) {
+    return "rebar.config".equals(file.getExtension());
+  }
+
+  @Override
+  public String getPathToBeImported(@NotNull VirtualFile file) {
+    return file.getPath();
+  }
+
+  @NotNull
+  @Override
+  public String getFileSample() {
+    return "<b>Rebar</b> configuration file (rebar.config)";
   }
 }
