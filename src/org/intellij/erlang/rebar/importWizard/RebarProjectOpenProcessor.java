@@ -19,11 +19,8 @@ package org.intellij.erlang.rebar.importWizard;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectOpenProcessorBase;
-import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 
 public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarProjectImportBuilder> {
@@ -38,6 +35,7 @@ public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarPro
 
   public boolean doQuickImport(@NotNull VirtualFile configFile, @NotNull WizardContext wizardContext) {
     final VirtualFile projectRoot = configFile.getParent();
+    wizardContext.setProjectName(projectRoot.getName());
     getBuilder().setProjectRoot(projectRoot);
     return true;
   }
