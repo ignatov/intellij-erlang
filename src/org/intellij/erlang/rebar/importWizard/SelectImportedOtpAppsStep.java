@@ -52,6 +52,19 @@ final class SelectImportedOtpAppsStep extends SelectImportedProjectsStep<Importe
     return super.validate() && myDuplicateModuleNames.isEmpty();
   }
 
+  public void autoResolveConflicts() {
+    // NOTE: It is assumed that elements are sorted by names, therefore conflicting names a grouped together.
+    String previousAppName = null;
+    for (ImportedOtpApp selectedOtpApp : fileChooser.getMarkedElements()) {
+      if (selectedOtpApp.getName().equals(previousAppName)) {
+        fileChooser.setElementMarked(selectedOtpApp, false);
+      }
+      else {
+        previousAppName = selectedOtpApp.getName();
+      }
+    }
+  }
+
   @Override
   protected String getElementText(@NotNull ImportedOtpApp importedOtpApp) {
     return importedOtpApp.toString();

@@ -23,6 +23,7 @@ import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFixTest;
+import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
 
 /**
  * @author ignatov
@@ -36,6 +37,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangHighlightingTest.class);
     suite.addTestSuite(ErlangFormattingTest.class);
     suite.addTestSuite(ErlangExportFunctionFixTest.class);
+    suite.addTestSuite(RebarProjectImportBuilderTest.class);
     return suite;
   }
 }
