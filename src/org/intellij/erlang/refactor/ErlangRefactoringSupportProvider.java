@@ -18,9 +18,12 @@ package org.intellij.erlang.refactor;
 
 import com.intellij.lang.refactoring.RefactoringSupportProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.refactoring.RefactoringActionHandler;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
+import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author ignatov
@@ -29,5 +32,11 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
   @Override
   public boolean isSafeDeleteAvailable(PsiElement element) {
     return element instanceof ErlangFunction || element instanceof ErlangRecordDefinition || element instanceof ErlangMacrosDefinition;
+  }
+
+  @Nullable
+  @Override
+  public RefactoringActionHandler getIntroduceVariableHandler() {
+    return new ErlangIntroduceVariableHandler();
   }
 }

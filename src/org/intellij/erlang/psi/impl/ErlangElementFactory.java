@@ -20,6 +20,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFileFactory;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMaxExpression;
 import org.jetbrains.annotations.NotNull;
@@ -40,9 +41,13 @@ public class ErlangElementFactory {
 
   @NotNull
   public static PsiElement createQVarFromText(Project project, String text) {
+    return ((ErlangMaxExpression) createExpressionFromText(project, text)).getQVar();
+  }
+
+  @NotNull
+  public static ErlangExpression createExpressionFromText(Project project, String text) {
     ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "f(" + text + ") -> " + text + ".");
-    ErlangMaxExpression expression = ((ErlangMaxExpression) fileFromText.getFunctions().get(0).getFunctionClauseList().get(0).getClauseBody().getExpressionList().get(0));
-    return expression.getQVar();
+    return fileFromText.getFunctions().get(0).getFunctionClauseList().get(0).getClauseBody().getExpressionList().get(0);
   }
 
   @NotNull
