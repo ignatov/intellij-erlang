@@ -50,4 +50,7 @@ public interface ErlangIcons {
   Icon OTP_APP_RESOURCE = IconLoader.getIcon("/icons/otp-app-16.png");
   Icon EUNIT = new LayeredIcon(FILE, AllIcons.Nodes.JunitTestMark);
   Icon HEADER = IconLoader.getIcon("/icons/erlang-header-16.png");
+
+  Icon REBAR = IconLoader.getIcon("/icons/rebar-16.png");
+  Icon REBAR_MODULE_CONFLICT = IconLoader.getIcon("/icons/rebar-module-conflict-16.png");
 }
