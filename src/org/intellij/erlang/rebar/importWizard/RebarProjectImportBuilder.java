@@ -26,8 +26,9 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.projectRoots.SdkTypeId;
+import com.intellij.openapi.projectRoots.*;
 import com.intellij.openapi.roots.*;
+import com.intellij.openapi.roots.ex.ProjectRootManagerEx;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
@@ -184,6 +185,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
                              @Nullable ModifiableModuleModel moduleModel,
                              @NotNull ModulesProvider modulesProvider,
                              @Nullable ModifiableArtifactModel modifiableArtifactModel) {
+    fixProjectSdk(project);
     final List<Module> createdModules = new ArrayList<Module>();
     final List<ModifiableRootModel> createdRootModels = new ArrayList<ModifiableRootModel>();
     final ModifiableModuleModel obtainedModuleModel =
@@ -233,6 +235,15 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       });
     }
     return createdModules;
+  }
+
+  private static void fixProjectSdk(@NotNull Project project) {
+    final ProjectRootManagerEx projectRootMgr = ProjectRootManagerEx.getInstanceEx(project);
+    final Sdk selectedSdk = projectRootMgr.getProjectSdk();
+    if (selectedSdk == null || selectedSdk.getSdkType() != ErlangSdkType.getInstance()) {
+      final Sdk defaultSdk = ProjectJdkTable.getInstance().findMostRecentSdkOfType(ErlangSdkType.getInstance());
+      projectRootMgr.setProjectSdk(defaultSdk);
+    }
   }
 
   private static void addSourceDirToContent(ContentEntry content, VirtualFile root, String sourceDir, boolean test) {
