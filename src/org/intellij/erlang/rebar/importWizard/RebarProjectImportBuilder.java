@@ -193,7 +193,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
       final VirtualFile ideaModuleDir = importedOtpApp.getRoot();
       final String ideaModuleFile = ideaModuleDir.getCanonicalPath() + File.separator + importedOtpApp.getName() + ".iml";
-      final Module module = obtainedModuleModel.newModule(ideaModuleFile, ErlangModuleType.getInstance().getName());
+      final Module module = obtainedModuleModel.newModule(ideaModuleFile, ErlangModuleType.getInstance().getId());
       createdModules.add(module);
       if (importedOtpApp.getIdeaModuleFile() == null) {
         final ModifiableRootModel rootModel = ModuleRootManager.getInstance(module).getModifiableModel();
