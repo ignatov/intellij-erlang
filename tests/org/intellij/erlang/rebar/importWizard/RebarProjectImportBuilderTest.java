@@ -69,35 +69,35 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     super.tearDown();
   }
 
-  public void test1_fromEbinAppFile() throws Exception {
+  public void testFromEbinAppFile() throws Exception {
     doTest(null);
   }
 
-  public void test2_fromSrcAppSrcFile() throws Exception {
+  public void testFromSrcAppSrcFile() throws Exception {
     doTest(null);
   }
 
-  public void test3_contentIncludesAndExcludes() throws Exception {
+  public void testContentIncludesAndExcludes() throws Exception {
     doTest(null);
   }
 
-  public void test4_rebarSubDirs() throws Exception {
+  public void testRebarSubDirs() throws Exception {
     doTest(null);
   }
 
-  public void test5_missingSubDir() throws Exception {
+  public void testMissingSubDir() throws Exception {
     doTest(null);
   }
 
-  public void test6_extraSubDir() throws Exception {
+  public void testExtraSubDir() throws Exception {
     doTest(null);
   }
 
-  public void test7_multipleRebarConfigs() throws Exception {
+  public void testMultipleRebarConfigs() throws Exception {
     doTest(null);
   }
 
-  public void test8_moduleNameConflict() throws Exception {
+  public void testModuleNameConflict() throws Exception {
     doTest(new Consumer<ModuleWizardStep>() {
       @Override
       public void consume(@NotNull ModuleWizardStep moduleWizardStep) {
