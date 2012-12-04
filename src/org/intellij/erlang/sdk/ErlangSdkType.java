@@ -32,6 +32,8 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.jps.model.JpsErlangModelSerializerExtension;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -45,13 +47,14 @@ import java.util.regex.Pattern;
  * @author ignatov
  */
 public class ErlangSdkType extends SdkType {
+
   @NotNull
   public static ErlangSdkType getInstance() {
     return SdkType.findInstance(ErlangSdkType.class);
   }
 
   public ErlangSdkType() {
-    super("Erlang SDK");
+    super(JpsErlangModelSerializerExtension.ERLANG_SDK_TYPE_ID);
   }
 
   @NotNull
@@ -78,18 +81,13 @@ public class ErlangSdkType extends SdkType {
 
   public boolean isValidSdkHome(@NotNull final String path) {
     final File erl = getTopLevelExecutable(path);
-    final File erlc = getByteCodeCompilerExecutable(path);
+    final File erlc = JpsErlangSdkType.getByteCodeCompilerExecutable(path);
     return erl.canExecute() && erlc.canExecute();
   }
 
   @NotNull
   public static File getTopLevelExecutable(@NotNull final String sdkHome) {
-    return getExecutable(new File(sdkHome, "bin").getAbsolutePath(), "erl");
-  }
-
-  @NotNull
-  public static File getByteCodeCompilerExecutable(@NotNull final String sdkHome) {
-    return getExecutable(new File(sdkHome, "bin").getAbsolutePath(), "erlc");
+    return JpsErlangSdkType.getExecutable(new File(sdkHome, "bin").getAbsolutePath(), "erl");
   }
 
   @NotNull
@@ -164,7 +162,7 @@ public class ErlangSdkType extends SdkType {
     }
 
     try {
-      final String exePath = getByteCodeCompilerExecutable(sdkHome).getAbsolutePath();
+      final String exePath = JpsErlangSdkType.getByteCodeCompilerExecutable(sdkHome).getAbsolutePath();
       final ProcessOutput processOutput = ErlangSystemUtil.getProcessOutput(sdkHome, exePath, "-where");
       if (processOutput.getExitCode() == 0) {
         final String stdout = processOutput.getStdout().trim();
@@ -202,8 +200,4 @@ public class ErlangSdkType extends SdkType {
     return dir.isDirectory();
   }
 
-  @NotNull
-  private static File getExecutable(@NotNull final String path, @NotNull final String command) {
-    return new File(path, SystemInfo.isWindows ? command + ".exe" : command);
-  }
 }

@@ -132,6 +132,7 @@
 
         <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
         <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
+        <compileServer.plugin classpath="jps-plugin.jar"/>
         <!-- run -->
         <programRunner implementation="org.intellij.erlang.runner.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.runner.ErlangRunConfigurationType"/>
@@ -188,9 +189,6 @@
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangSpecificationForUndefinedFunctionInspection"/>
     </extensions>
-    <project-components>
-
-    </project-components>
     <actions>
         <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
                 text="Erlang File" description="Create new Erlang file">

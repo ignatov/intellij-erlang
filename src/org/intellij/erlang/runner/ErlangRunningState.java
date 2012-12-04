@@ -50,6 +50,17 @@ public class ErlangRunningState extends CommandLineState {
     commandLine.setWorkDirectory(canonicalPath);
 
     commandLine.setExePath(erl);
+    
+    commandLine.addParameter("-pa");
+    Module[] dependencies = ModuleRootManager.getInstance(module).getDependencies();
+    for (Module dependency : dependencies) {
+      VirtualFile outputDir = CompilerPaths.getModuleOutputDirectory(dependency, false);
+      String cp = outputDir != null ? outputDir.getCanonicalPath() : null;
+      if (cp != null) {
+        commandLine.addParameter(cp);
+      }
+    }
+    
     setUpParameters(commandLine);
 
     final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(module.getProject());
