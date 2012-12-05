@@ -140,7 +140,11 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     Collections.sort(myFoundOtpApps, new Comparator<ImportedOtpApp>() {
       @Override
       public int compare(ImportedOtpApp o1, ImportedOtpApp o2) {
-        return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+        final int nameCompareResult = String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+        if (nameCompareResult == 0) {
+          return String.CASE_INSENSITIVE_ORDER.compare(o1.getRoot().getPath(), o2.getRoot().getPath());
+        }
+        return nameCompareResult;
       }
     });
 
