@@ -162,10 +162,12 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     Project project = expression.getProject();
     PsiElement declaration = null;
     try {
-      declaration = ErlangElementFactory.createExpressionFromText(project, newText);
-    } catch (Exception e) {
-      System.out.println(newText);
-      e.printStackTrace();
+      try {
+        declaration = ErlangElementFactory.createExpressionFromText(project, newText);
+      } catch (Exception e) {
+        declaration = ErlangElementFactory.createExpressionFromText(project, "PlaceHolder" + " = " + expression.getText());
+      }
+    } catch (Exception e) { //
     }
 
     if (declaration == null) {
@@ -321,6 +323,18 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
         if (expression != null) {
           InitializerTextBuilder b = new InitializerTextBuilder();
           expression.accept(b);
+          myResult.append(b.result());
+        }
+        return;
+      }
+      else if (element instanceof ErlangFunExpression) {
+        myResult.append("Fun");
+        ErlangFunClauses funClauses1 = ((ErlangFunExpression) element).getFunClauses();
+        List<ErlangFunClause> funClauses = funClauses1 != null ? funClauses1.getFunClauseList() : ContainerUtil.<ErlangFunClause>emptyList();
+        ErlangFunClause firstItem = ContainerUtil.getFirstItem(funClauses);
+        if (firstItem != null) {
+          InitializerTextBuilder b = new InitializerTextBuilder();
+          firstItem.getArgumentDefinitionList().accept(b);
           myResult.append(b.result());
         }
         return;
