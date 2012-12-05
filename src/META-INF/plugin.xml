@@ -1,6 +1,6 @@
 <idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.3.4</version>
+    <version>0.3.5</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="123.1" until-build="123.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -11,6 +11,13 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.3.5:</p>
+            <ul>
+              <li>Extract variable refactoring</li>
+              <li>New compiler mode (thanks to Nikolay Chashnikov)</li>
+              <li>Rebar importer (thanks to Maxim Vladimirsky)</li>
+              <li>IntelliJ IDEA 12 compatibility</li>
+            </ul>
             <p>0.3.4:</p>
             <ul>
               <li>Eunit test runner</li>

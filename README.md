@@ -28,6 +28,12 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.3.5
+* Extract variable refactoring
+* New compiler mode (thanks to Nikolay Chashnikov)
+* Rebar importer (thanks to Maxim Vladimirsky)
+* IntelliJ IDEA 12 compatibility
+
 ### Version 0.3.4
 * Eunit test runner
 * Tests/sources switcher **Ctrl + Shift + T**
