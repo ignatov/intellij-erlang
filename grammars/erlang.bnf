@@ -123,7 +123,7 @@ external eof ::= eofBuilder
 
 q_atom ::= macros_arg | macros | atom
 q_var ::= '_' | var {
-  methods = [getReference processDeclarations getName setName getNameIdentifier]
+  methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
 }
 macros_arg ::= '?''?' macros_name
 macros ::= '?' macros_name {

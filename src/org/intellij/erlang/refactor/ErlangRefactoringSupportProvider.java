@@ -18,9 +18,11 @@ package org.intellij.erlang.refactor;
 
 import com.intellij.lang.refactoring.RefactoringSupportProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.refactoring.RefactoringActionHandler;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.intellij.erlang.psi.ErlangNamedElement;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
 import org.jetbrains.annotations.Nullable;
@@ -38,5 +40,10 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
   @Override
   public RefactoringActionHandler getIntroduceVariableHandler() {
     return new ErlangIntroduceVariableHandler();
+  }
+
+  @Override
+  public boolean isInplaceRenameAvailable(PsiElement element, PsiElement context) {
+    return element instanceof ErlangNamedElement && element.getUseScope() instanceof LocalSearchScope;
   }
 }

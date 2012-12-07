@@ -7,6 +7,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.ResolveState;
+import com.intellij.psi.search.SearchScope;
+import org.intellij.erlang.psi.impl.ErlangQVarImpl;
 
 public interface ErlangQVar extends ErlangNamedElement {
 
@@ -26,5 +28,8 @@ public interface ErlangQVar extends ErlangNamedElement {
 
   @NotNull
   PsiElement getNameIdentifier();
+
+  @NotNull
+  SearchScope getUseScope();
 
 }

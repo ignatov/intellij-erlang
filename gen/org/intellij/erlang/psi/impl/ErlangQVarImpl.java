@@ -12,6 +12,7 @@ import org.intellij.erlang.psi.*;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.ResolveState;
+import com.intellij.psi.search.SearchScope;
 
 public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar {
 
@@ -52,6 +53,11 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
+  }
+
+  @NotNull
+  public SearchScope getUseScope() {
+    return ErlangPsiImplUtil.getUseScope(this);
   }
 
 }

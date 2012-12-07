@@ -41,6 +41,8 @@ import com.intellij.psi.impl.PsiManagerEx;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.LocalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
@@ -808,5 +810,14 @@ public class ErlangPsiImplUtil {
       }
     }
     return false;
+  }
+
+  @NotNull
+  public static SearchScope getUseScope(ErlangQVarImpl o) {
+    ErlangFunction function = PsiTreeUtil.getParentOfType(o, ErlangFunction.class, true);
+    if (function != null) {
+      return new LocalSearchScope(function);
+    }
+    return o.getUseScope();
   }
 }
