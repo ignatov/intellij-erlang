@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.rebar.importWizard;
 
+import com.google.common.collect.Sets;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationInfoEx;
 import com.intellij.openapi.module.ModifiableModuleModel;
@@ -26,7 +27,9 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.projectRoots.*;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SdkTypeId;
 import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.ex.ProjectRootManagerEx;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
@@ -55,8 +58,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpApp> {
-  private static final Pattern APPLICATION_NAME_PATTERN = Pattern.compile("\\{\\s*application\\s*,\\s*(.*?)\\s*,");
-  private static final Pattern DIRS_LIST_PATTERN = Pattern.compile("\\{\\s*sub_dirs\\s*,\\s*\\[(.*?)\\]");
+  private static final Pattern APP_NAME_PATTERN = Pattern.compile("\\{\\s*application\\s*,\\s*(.*?)\\s*,");
+  private static final Pattern APP_DEPS_LIST_PATTERN = Pattern.compile(
+    "\\{\\s*applications\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
+  private static final Pattern DIRS_LIST_PATTERN = Pattern.compile(
+    "\\{\\s*sub_dirs\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
   private static final Pattern SPLIT_DIR_LIST_PATTERN = Pattern.compile("\"\\s*(,\\s*\")?");
 
   private static final Logger ourLogger = Logger.getLogger(RebarProjectImportBuilder.class);
@@ -152,6 +158,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     return !myFoundOtpApps.isEmpty();
   }
 
+  @SuppressWarnings("DialogTitleCapitalization")
   @Override
   public boolean validate(Project current, Project dest) {
     if (!findIdeaModuleFiles(mySelectedOtpApps)) {
@@ -189,7 +196,11 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
                              @Nullable ModifiableModuleModel moduleModel,
                              @NotNull ModulesProvider modulesProvider,
                              @Nullable ModifiableArtifactModel modifiableArtifactModel) {
-    fixProjectSdk(project);
+    final Set<String> selectedAppNames = Sets.newHashSet();
+    for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
+      selectedAppNames.add(importedOtpApp.getName());
+    }
+    final Sdk projectSdk = fixProjectSdk(project);
     final List<Module> createdModules = new ArrayList<Module>();
     final List<ModifiableRootModel> createdRootModels = new ArrayList<ModifiableRootModel>();
     final ModifiableModuleModel obtainedModuleModel =
@@ -216,6 +227,8 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         compilerModuleExt.setCompilerOutputPath(ideaModuleDir + File.separator + "ebin");
         compilerModuleExt.setCompilerOutputPathForTests(ideaModuleDir + File.separator + ".eunit");
         createdRootModels.add(rootModel);
+        // Set inter-module dependencies
+        resolveModuleDeps(rootModel, importedOtpApp, projectSdk, selectedAppNames);
         // Commit module if model is given.
         if (moduleModel != null) {
           ApplicationManager.getApplication().runWriteAction(new Runnable() {
@@ -241,16 +254,22 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     return createdModules;
   }
 
-  private static void fixProjectSdk(@NotNull Project project) {
+  @Nullable
+  private static Sdk fixProjectSdk(@NotNull Project project) {
     final ProjectRootManagerEx projectRootMgr = ProjectRootManagerEx.getInstanceEx(project);
     final Sdk selectedSdk = projectRootMgr.getProjectSdk();
     if (selectedSdk == null || selectedSdk.getSdkType() != ErlangSdkType.getInstance()) {
-      final Sdk defaultSdk = ProjectJdkTable.getInstance().findMostRecentSdkOfType(ErlangSdkType.getInstance());
-      projectRootMgr.setProjectSdk(defaultSdk);
+      final Sdk moreSuitableSdk = ProjectJdkTable.getInstance().findMostRecentSdkOfType(ErlangSdkType.getInstance());
+      projectRootMgr.setProjectSdk(moreSuitableSdk);
+      return moreSuitableSdk;
     }
+    return selectedSdk;
   }
 
-  private static void addSourceDirToContent(ContentEntry content, VirtualFile root, String sourceDir, boolean test) {
+  private static void addSourceDirToContent(@NotNull ContentEntry content,
+                                            @NotNull VirtualFile root,
+                                            @NotNull String sourceDir,
+                                            boolean test) {
     final VirtualFile sourceDirFile = root.findChild(sourceDir);
     if (sourceDirFile != null) {
       content.addSourceFolder(sourceDirFile, test);
@@ -318,23 +337,32 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   }
 
   @Nullable
-  private static ImportedOtpApp createImportedOtpApp(@NotNull VirtualFile applicationRoot) {
-    final VirtualFile appResourceFile = findAppResourceFile(applicationRoot);
+  private static ImportedOtpApp createImportedOtpApp(@NotNull VirtualFile appRoot) {
+    final VirtualFile appResourceFile = findAppResourceFile(appRoot);
     if (appResourceFile == null) {
       return null;
     }
-    String applicationName;
+    final String content;
     try {
-      final String content = new String(appResourceFile.contentsToByteArray());
-      final Matcher matcher = APPLICATION_NAME_PATTERN.matcher(content);
-      if (!matcher.find()) {
-        return null;
-      }
-      applicationName = matcher.group(1);
+      content = new String(appResourceFile.contentsToByteArray());
     } catch (IOException e) {
-      applicationName = applicationRoot.getName().split("\\.")[0];
+      return null;
     }
-    return new ImportedOtpApp(applicationName, applicationRoot);
+    final Matcher appNameMatcher = APP_NAME_PATTERN.matcher(content);
+    if (!appNameMatcher.find()) {
+      return null;
+    }
+    final String appName = appNameMatcher.group(1);
+    final Matcher appDepsMatcher = APP_DEPS_LIST_PATTERN.matcher(content);
+    final Set<String> appDeps = new HashSet<String>();
+    if (appDepsMatcher.find()) {
+      for (String appDepName : appDepsMatcher.group(1).trim().split("\\s*,\\s*")) {
+        if (!appDepName.isEmpty()) {
+          appDeps.add(appDepName);
+        }
+      }
+    }
+    return new ImportedOtpApp(appName, appRoot, appDeps);
   }
 
   @Nullable
@@ -406,5 +434,38 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       }
     }
     return ideaModuleFileExists;
+  }
+
+  @NotNull
+  private static Set<String> resolveModuleDeps(@NotNull ModifiableRootModel rootModel,
+                                                @NotNull ImportedOtpApp importedOtpApp,
+                                                @Nullable Sdk projectSdk,
+                                                @NotNull Set<String> allImportedAppNames) {
+    final HashSet<String> unresolvedAppNames = Sets.newHashSet();
+    for (String depAppName : importedOtpApp.getDeps()) {
+      if (allImportedAppNames.contains(depAppName)) {
+        rootModel.addInvalidModuleEntry(depAppName);
+      }
+      else if (projectSdk != null && isSdkOtpApp(depAppName, projectSdk)) {
+        // SDK is already a dependency
+      }
+      else {
+        rootModel.addInvalidModuleEntry(depAppName);
+        unresolvedAppNames.add(depAppName);
+      }
+    }
+    return unresolvedAppNames;
+  }
+
+  private static boolean isSdkOtpApp(@NotNull String otpAppName, @NotNull Sdk sdk) {
+    final Pattern appDirNamePattern = Pattern.compile(otpAppName + "-.*");
+    for (VirtualFile srcSdkDir : sdk.getRootProvider().getFiles(OrderRootType.SOURCES)) {
+      for (VirtualFile child : srcSdkDir.getChildren()) {
+        if (child.isDirectory() && appDirNamePattern.matcher(child.getName()).find()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

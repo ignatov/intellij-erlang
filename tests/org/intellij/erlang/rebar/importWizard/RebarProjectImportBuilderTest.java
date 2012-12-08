@@ -25,12 +25,14 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.impl.ModuleRootManagerImpl;
-import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.util.Consumer;
 import junit.framework.Assert;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -43,29 +45,20 @@ import java.io.File;
 
 public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   private static final String MODULE_DIR = "MODULE_DIR";
-  private static final String TEST_ROOT = "testData/rebar/import";
-
-  private Project myCreatedProject;
+  private static final String TEST_DATA = "testData/rebar/";
+  private static final String TEST_DATA_IMPORT = TEST_DATA + "import";
+  private static final String MOCK_SDK_SRC = TEST_DATA + "mockSdk/src";
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     createMockSdk();
-    final File currentTestRoot = new File(TEST_ROOT, getTestName(true));
+    final File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
     FileUtil.copyDir(currentTestRoot, new File(getProject().getBaseDir().getPath()));
   }
 
   @Override
   public void tearDown() throws Exception {
-    if (myCreatedProject != null) {
-      myProjectManager.closeProject(myCreatedProject);
-      ApplicationManager.getApplication().runWriteAction(new Runnable() {
-        @Override
-        public void run() {
-          Disposer.dispose(myCreatedProject);
-        }
-      });
-    }
     super.tearDown();
   }
 
@@ -97,6 +90,18 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     doTest(null);
   }
 
+  public void testDepsOnOtherApps() throws Exception {
+    doTest(null);
+  }
+
+  public void testDepsOnSdkApps() throws Exception {
+    doTest(null);
+  }
+
+  public void testDepsOnMissingApps() throws Exception {
+    doTest(null);
+  }
+
   public void testModuleNameConflict() throws Exception {
     doTest(new Consumer<ModuleWizardStep>() {
       @Override
@@ -111,9 +116,14 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
   private static void createMockSdk() {
     final ProjectJdkImpl mockSdk = new ProjectJdkImpl("Mock", ErlangSdkType.getInstance());
+    final SdkModificator sdkModificator = mockSdk.getSdkModificator();
+    sdkModificator.addRoot(
+      LocalFileSystem.getInstance().findFileByPath(MOCK_SDK_SRC),
+      OrderRootType.SOURCES);
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {
+        sdkModificator.commitChanges();
         ProjectJdkTable.getInstance().addJdk(mockSdk);
       }
     });
