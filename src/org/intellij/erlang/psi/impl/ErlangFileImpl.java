@@ -23,6 +23,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
@@ -52,7 +53,7 @@ import java.util.Map;
 /**
  * @author ignatov
  */
-public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
+public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
 
   public ErlangFileImpl(@NotNull FileViewProvider viewProvider) {
     super(viewProvider, ErlangLanguage.INSTANCE);
@@ -468,5 +469,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile {
         return true;
       }
     }.process(element);
+  }
+
+  @Nullable
+  @Override
+  public PsiElement getNameIdentifier() {
+    return this; // hack for inplace rename: InplaceRefactoring#getVariable()
   }
 }

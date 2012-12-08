@@ -46,4 +46,9 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
   public boolean isInplaceRenameAvailable(PsiElement element, PsiElement context) {
     return element instanceof ErlangNamedElement && element.getUseScope() instanceof LocalSearchScope;
   }
+
+  @Override
+  public boolean isMemberInplaceRenameAvailable(PsiElement element, PsiElement context) {
+    return element instanceof ErlangNamedElement;
+  }
 }
