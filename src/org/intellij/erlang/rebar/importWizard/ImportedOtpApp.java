@@ -16,21 +16,27 @@
 
 package org.intellij.erlang.rebar.importWizard;
 
+import com.google.common.collect.ImmutableSet;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 
 final class ImportedOtpApp {
   @NotNull
   private final String myName;
   @NotNull
   private final VirtualFile myRoot;
+  @NotNull
+  private final ImmutableSet<String> myDeps;
   @Nullable
   private VirtualFile myIdeaModuleFile;
 
-  public ImportedOtpApp(@NotNull String name, @NotNull VirtualFile root) {
+  public ImportedOtpApp(@NotNull String name, @NotNull VirtualFile root, @NotNull Set<String> deps) {
     myName = name;
     myRoot = root;
+    myDeps = ImmutableSet.copyOf(deps);
   }
 
   @NotNull
@@ -43,6 +49,11 @@ final class ImportedOtpApp {
     return myRoot;
   }
 
+  @NotNull
+  public ImmutableSet<String> getDeps() {
+    return myDeps;
+  }
+
   public void setIdeaModuleFile(@Nullable VirtualFile ideaModuleFile) {
     myIdeaModuleFile = ideaModuleFile;
   }
@@ -50,10 +61,6 @@ final class ImportedOtpApp {
   @Nullable
   public VirtualFile getIdeaModuleFile() {
     return myIdeaModuleFile;
-  }
-
-  public boolean hasIdeaModuleFile() {
-    return myIdeaModuleFile != null;
   }
 
   @Override
@@ -80,5 +87,4 @@ final class ImportedOtpApp {
     result = 31 * result + myRoot.hashCode();
     return result;
   }
-
 }

@@ -1,0 +1,2 @@
+{application, app1,
+ [{applications, [stdlib, app2, kernel]}]}.
