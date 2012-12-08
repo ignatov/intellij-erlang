@@ -38,6 +38,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.PsiManagerEx;
+import com.intellij.psi.impl.ResolveScopeManager;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -818,6 +819,6 @@ public class ErlangPsiImplUtil {
     if (function != null) {
       return new LocalSearchScope(function);
     }
-    return o.getUseScope();
+    return ResolveScopeManager.getElementUseScope(o);
   }
 }
