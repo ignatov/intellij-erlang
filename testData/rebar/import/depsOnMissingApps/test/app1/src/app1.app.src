@@ -1,0 +1,2 @@
+{application, app1,
+ [{applications, [app2, app3]}]}.
