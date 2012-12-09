@@ -199,6 +199,13 @@ public class ErlangPsiImplUtil {
     return new ErlangMacrosReferenceImpl<ErlangMacrosName>(macrosName, TextRange.from(0, macrosName.getTextLength()), macrosName.getText());
   }
 
+  @Nullable
+  public static PsiReference getReference(@NotNull ErlangTypeRef o) {
+    ErlangQAtom atom = o.getQAtom();
+    ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
+    return new ErlangTypeReferenceImpl<ErlangQAtom>(atom, moduleRef, TextRange.from(0, atom.getTextLength()), atom.getText());
+  }
+
   public static boolean inDefinition(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
   }
@@ -218,8 +225,13 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangCallbackSpec.class) != null;
   }
 
+  public static boolean inRecordDefinition(PsiElement psiElement) {
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangRecordDefinition.class) != null;
+  }
+
   public static boolean inAtomAttribute(PsiElement psiElement) {
-    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class) != null;
+    //noinspection unchecked
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangTypeDefinition.class) != null;
   }
 
   public static boolean inSpecification(PsiElement psiElement) {
@@ -351,7 +363,7 @@ public class ErlangPsiImplUtil {
           }
         });
       List<LookupElement> stdMacros = new ArrayList<LookupElement>();
-      for (String m : new String[] {"MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE"}) {
+      for (String m : new String[]{"MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE"}) {
         stdMacros.add(LookupElementBuilder.create(m).withIcon(ErlangIcons.MACROS));
       }
       return ContainerUtil.concat(fromFile, stdMacros);
@@ -374,6 +386,23 @@ public class ErlangPsiImplUtil {
     }
     return Collections.emptyList();
   }
+
+  @NotNull
+  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile) {
+    if (containingFile instanceof ErlangFile) {
+      List<ErlangTypeDefinition> types = ((ErlangFile) containingFile).getTypes();
+      return ContainerUtil.map(
+        types,
+        new Function<ErlangTypeDefinition, LookupElement>() {
+          @Override
+          public LookupElement fun(@NotNull ErlangTypeDefinition rd) {
+            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE);
+          }
+        });
+    }
+    return Collections.emptyList();
+  }
+
 
   @NotNull
   public static String getName(@NotNull ErlangFunction o) {
@@ -460,6 +489,18 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangRecordDefinition o, @NotNull String newName) {
+    ErlangQAtom qAtom = o.getQAtom();
+    if (qAtom != null) {
+      PsiElement atom = qAtom.getAtom();
+      if (atom != null) {
+        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+      }
+    }
+    return o;
+  }
+
+  @NotNull
+  public static PsiElement setName(@NotNull ErlangTypeDefinition o, @NotNull String newName) {
     ErlangQAtom qAtom = o.getQAtom();
     if (qAtom != null) {
       PsiElement atom = qAtom.getAtom();
@@ -677,6 +718,17 @@ public class ErlangPsiImplUtil {
     return macrosName;
   }
 
+  public static PsiElement getNameIdentifier(ErlangTypeDefinition o) {
+    ErlangQAtom atom = o.getQAtom();
+    if (atom == null) return o;
+    return atom;
+  }
+
+  public static int getTextOffset(ErlangTypeDefinition o) {
+    if (o.getQAtom() == null) return 0;
+    return getNameIdentifier(o).getTextOffset();
+  }
+
   public static int getTextOffset(ErlangMacrosDefinition o) {
     if (o.getMacrosName() == null) return 0;
     return getNameIdentifier(o).getTextOffset();
@@ -820,5 +872,10 @@ public class ErlangPsiImplUtil {
       return new LocalSearchScope(function);
     }
     return ResolveScopeManager.getElementUseScope(o);
+  }
+
+  @NotNull
+  public static String getName(ErlangTypeDefinition o) {
+    return o.getNameIdentifier().getText();
   }
 }

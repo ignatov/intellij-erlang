@@ -422,7 +422,15 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitTypeDefinition(@NotNull ErlangTypeDefinition o) {
+    visitNamedElement(o);
+  }
+
   public void visitTypeGuard(@NotNull ErlangTypeGuard o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitTypeRef(@NotNull ErlangTypeRef o) {
     visitCompositeElement(o);
   }
 

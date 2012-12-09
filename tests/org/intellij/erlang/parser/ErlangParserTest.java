@@ -39,20 +39,20 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testComments()          { doTest(true, false); }
   public void testMultiline()         { doTest(true, false); }
   public void testRecordExpression()  { doTest(true, false); }
-  public void testPeriods()           { doTest(true, true); }
-  public void test19()                { doTest(true, true); }
+  public void testPeriods()           { doTest(true, true);  }
+  public void test19()                { doTest(true, true);  }
   public void test25()                { doTest(true, false); }
   public void test26()                { doTest(true, false); }
-  public void testFailedRecord()      { doTest(true, true); }
+  public void testFailedRecord()      { doTest(true, true);  }
   public void testRecords2()          { doTest(true, false); }
   public void testAtomWithArity()     { doTest(true, false); }
   public void test77()                { doTest(true, false); }
   public void test74()                { doTest(true, false); }
-  public void testErrors()            { doTest(true, true); }
+  public void testErrors()            { doTest(true, true);  }
   public void test51()                { doTest(true, false); } // performance
   public void test96()                { doTest(true, false); }
-  public void test30()                { doTest(true, true); }
-  public void test127()               { doTest(true, true); }
+  public void test30()                { doTest(true, true);  }
+  public void test127()               { doTest(true, true);  }
   public void testEunit()             { doTest(true, false); }
   public void testMeck()              { doTest(true, false); }
 

@@ -55,28 +55,65 @@ ERL_FILE
     PsiElement())(')')
   PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
-  ERL_ATTRIBUTE
+  ERL_TYPE_DEFINITION
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        PsiElement(atom)('type')
-      ERL_TYPED_ATTR_VAL
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_Q_ATOM
-            PsiElement(atom)('dial_cl_parse_ret')
-          ERL_ARGUMENT_LIST
-            PsiElement(()('(')
-            PsiElement())(')')
-        PsiElement(::)('::')
-        ERL_TOP_TYPE
+    PsiElement(atom)('type')
+    ERL_Q_ATOM
+      PsiElement(atom)('dial_cl_parse_ret')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_TOP_TYPE
+      ERL_TOP_TYPE_100_T
+        ERL_TYPE
+          PsiElement({)('{')
+          ERL_TOP_TYPE
+            ERL_TOP_TYPE_100_T
+              ERL_TYPE
+                ERL_TYPE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)(''check_init'')
+          PsiElement(,)(',')
+          ERL_TOP_TYPE
+            ERL_TOP_TYPE_100_T
+              ERL_TYPE
+                PsiElement(#)('#')
+                ERL_Q_ATOM
+                  PsiElement(atom)('options')
+                PsiElement({)('{')
+                PsiElement(})('}')
+          PsiElement(})('}')
+        PsiElement(|)('|')
+        ERL_TOP_TYPE_100_T
+          ERL_TYPE
+            PsiElement({)('{')
+            ERL_TOP_TYPE
+              ERL_TOP_TYPE_100_T
+                ERL_TYPE
+                  ERL_TYPE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)(''plt_info'')
+            PsiElement(,)(',')
+            ERL_TOP_TYPE
+              ERL_TOP_TYPE_100_T
+                ERL_TYPE
+                  PsiElement(#)('#')
+                  ERL_Q_ATOM
+                    PsiElement(atom)('options')
+                  PsiElement({)('{')
+                  PsiElement(})('}')
+            PsiElement(})('}')
+          PsiElement(|)('|')
           ERL_TOP_TYPE_100_T
             ERL_TYPE
               PsiElement({)('{')
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
-                    ERL_Q_ATOM
-                      PsiElement(atom)(''check_init'')
+                    ERL_TYPE_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)(''cl'')
               PsiElement(,)(',')
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
@@ -94,8 +131,27 @@ ERL_FILE
                 ERL_TOP_TYPE
                   ERL_TOP_TYPE_100_T
                     ERL_TYPE
-                      ERL_Q_ATOM
-                        PsiElement(atom)(''plt_info'')
+                      PsiElement({)('{')
+                      ERL_TOP_TYPE
+                        ERL_TOP_TYPE_100_T
+                          ERL_TYPE
+                            ERL_TYPE_REF
+                              ERL_Q_ATOM
+                                PsiElement(atom)(''gui'')
+                      PsiElement(,)(',')
+                      ERL_TOP_TYPE
+                        ERL_TOP_TYPE_100_T
+                          ERL_TYPE
+                            ERL_TYPE_REF
+                              ERL_Q_ATOM
+                                PsiElement(atom)(''gs'')
+                          PsiElement(|)('|')
+                          ERL_TOP_TYPE_100_T
+                            ERL_TYPE
+                              ERL_TYPE_REF
+                                ERL_Q_ATOM
+                                  PsiElement(atom)(''wx'')
+                      PsiElement(})('}')
                 PsiElement(,)(',')
                 ERL_TOP_TYPE
                   ERL_TOP_TYPE_100_T
@@ -113,104 +169,50 @@ ERL_FILE
                   ERL_TOP_TYPE
                     ERL_TOP_TYPE_100_T
                       ERL_TYPE
-                        ERL_Q_ATOM
-                          PsiElement(atom)(''cl'')
+                        ERL_TYPE_REF
+                          ERL_Q_ATOM
+                            PsiElement(atom)(''error'')
                   PsiElement(,)(',')
                   ERL_TOP_TYPE
                     ERL_TOP_TYPE_100_T
                       ERL_TYPE
-                        PsiElement(#)('#')
-                        ERL_Q_ATOM
-                          PsiElement(atom)('options')
-                        PsiElement({)('{')
-                        PsiElement(})('}')
-                  PsiElement(})('}')
-                PsiElement(|)('|')
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    PsiElement({)('{')
-                    ERL_TOP_TYPE
-                      ERL_TOP_TYPE_100_T
-                        ERL_TYPE
-                          PsiElement({)('{')
-                          ERL_TOP_TYPE
-                            ERL_TOP_TYPE_100_T
-                              ERL_TYPE
-                                ERL_Q_ATOM
-                                  PsiElement(atom)(''gui'')
-                          PsiElement(,)(',')
-                          ERL_TOP_TYPE
-                            ERL_TOP_TYPE_100_T
-                              ERL_TYPE
-                                ERL_Q_ATOM
-                                  PsiElement(atom)(''gs'')
-                              PsiElement(|)('|')
-                              ERL_TOP_TYPE_100_T
-                                ERL_TYPE
-                                  ERL_Q_ATOM
-                                    PsiElement(atom)(''wx'')
-                          PsiElement(})('}')
-                    PsiElement(,)(',')
-                    ERL_TOP_TYPE
-                      ERL_TOP_TYPE_100_T
-                        ERL_TYPE
-                          PsiElement(#)('#')
+                        ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)('options')
-                          PsiElement({)('{')
-                          PsiElement(})('}')
-                    PsiElement(})('}')
-                  PsiElement(|)('|')
-                  ERL_TOP_TYPE_100_T
-                    ERL_TYPE
-                      PsiElement({)('{')
-                      ERL_TOP_TYPE
-                        ERL_TOP_TYPE_100_T
-                          ERL_TYPE
-                            ERL_Q_ATOM
-                              PsiElement(atom)(''error'')
-                      PsiElement(,)(',')
-                      ERL_TOP_TYPE
-                        ERL_TOP_TYPE_100_T
-                          ERL_TYPE
-                            ERL_Q_ATOM
-                              PsiElement(atom)('string')
-                            PsiElement(()('(')
-                            PsiElement())(')')
-                      PsiElement(})('}')
+                            PsiElement(atom)('string')
+                        PsiElement(()('(')
+                        PsiElement())(')')
+                  PsiElement(})('}')
   PsiElement(.)('.')
-  ERL_ATTRIBUTE
+  ERL_TYPE_DEFINITION
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        PsiElement(atom)('type')
-      ERL_TYPED_ATTR_VAL
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_Q_ATOM
-            PsiElement(atom)('deep_string')
-          ERL_ARGUMENT_LIST
-            PsiElement(()('(')
-            PsiElement())(')')
-        PsiElement(::)('::')
-        ERL_TOP_TYPE
-          ERL_TOP_TYPE_100_T
-            ERL_TYPE
-              ERL_Q_ATOM
-                PsiElement(atom)('string')
-              PsiElement(()('(')
-              PsiElement())(')')
-            PsiElement(|)('|')
-            ERL_TOP_TYPE_100_T
-              ERL_TYPE
-                PsiElement([)('[')
-                ERL_TOP_TYPE
-                  ERL_TOP_TYPE_100_T
-                    ERL_TYPE
-                      ERL_Q_ATOM
-                        PsiElement(atom)('deep_string')
-                      PsiElement(()('(')
-                      PsiElement())(')')
-                PsiElement(])(']')
+    PsiElement(atom)('type')
+    ERL_Q_ATOM
+      PsiElement(atom)('deep_string')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_TOP_TYPE
+      ERL_TOP_TYPE_100_T
+        ERL_TYPE
+          ERL_TYPE_REF
+            ERL_Q_ATOM
+              PsiElement(atom)('string')
+          PsiElement(()('(')
+          PsiElement())(')')
+        PsiElement(|)('|')
+        ERL_TOP_TYPE_100_T
+          ERL_TYPE
+            PsiElement([)('[')
+            ERL_TOP_TYPE
+              ERL_TOP_TYPE_100_T
+                ERL_TYPE
+                  ERL_TYPE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('deep_string')
+                  PsiElement(()('(')
+                  PsiElement())(')')
+            PsiElement(])(']')
   PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%-----------------------------------------------------------------------')
   ERL_ATTRIBUTE
@@ -231,8 +233,9 @@ ERL_FILE
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dial_cl_parse_ret')
+                    ERL_TYPE_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('dial_cl_parse_ret')
                     PsiElement(()('(')
                     PsiElement())(')')
   PsiElement(.)('.')
@@ -3069,8 +3072,9 @@ ERL_FILE
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
-                    ERL_Q_ATOM
-                      PsiElement(atom)('deep_string')
+                    ERL_TYPE_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('deep_string')
                     PsiElement(()('(')
                     PsiElement())(')')
               PsiElement())(')')
@@ -3079,8 +3083,9 @@ ERL_FILE
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
-                    ERL_Q_ATOM
-                      PsiElement(atom)('no_return')
+                    ERL_TYPE_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('no_return')
                     PsiElement(()('(')
                     PsiElement())(')')
   PsiElement(.)('.')
@@ -3603,8 +3608,9 @@ ERL_FILE
                     ERL_TOP_TYPE
                       ERL_TOP_TYPE_100_T
                         ERL_TYPE
-                          ERL_Q_ATOM
-                            PsiElement(atom)('string')
+                          ERL_TYPE_REF
+                            ERL_Q_ATOM
+                              PsiElement(atom)('string')
                           PsiElement(()('(')
                           PsiElement())(')')
                     PsiElement(])(']')
@@ -3622,8 +3628,9 @@ ERL_FILE
                           ERL_TOP_TYPE
                             ERL_TOP_TYPE_100_T
                               ERL_TYPE
-                                ERL_Q_ATOM
-                                  PsiElement(atom)('string')
+                                ERL_TYPE_REF
+                                  ERL_Q_ATOM
+                                    PsiElement(atom)('string')
                                 PsiElement(()('(')
                                 PsiElement())(')')
                           PsiElement(])(']')
@@ -3635,8 +3642,9 @@ ERL_FILE
                           ERL_TOP_TYPE
                             ERL_TOP_TYPE_100_T
                               ERL_TYPE
-                                ERL_Q_ATOM
-                                  PsiElement(atom)('string')
+                                ERL_TYPE_REF
+                                  ERL_Q_ATOM
+                                    PsiElement(atom)('string')
                                 PsiElement(()('(')
                                 PsiElement())(')')
                           PsiElement(])(']')
@@ -4154,8 +4162,9 @@ ERL_FILE
                     ERL_TOP_TYPE
                       ERL_TOP_TYPE_100_T
                         ERL_TYPE
-                          ERL_Q_ATOM
-                            PsiElement(atom)('string')
+                          ERL_TYPE_REF
+                            ERL_Q_ATOM
+                              PsiElement(atom)('string')
                           PsiElement(()('(')
                           PsiElement())(')')
                     PsiElement(])(']')
@@ -4169,8 +4178,9 @@ ERL_FILE
                     ERL_TOP_TYPE
                       ERL_TOP_TYPE_100_T
                         ERL_TYPE
-                          ERL_Q_ATOM
-                            PsiElement(atom)('string')
+                          ERL_TYPE_REF
+                            ERL_Q_ATOM
+                              PsiElement(atom)('string')
                           PsiElement(()('(')
                           PsiElement())(')')
                     PsiElement(])(']')
@@ -4615,8 +4625,9 @@ ERL_FILE
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
-                    ERL_Q_ATOM
-                      PsiElement(atom)('no_return')
+                    ERL_TYPE_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('no_return')
                     PsiElement(()('(')
                     PsiElement())(')')
   PsiElement(.)('.')
@@ -4692,8 +4703,9 @@ ERL_FILE
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
-                    ERL_Q_ATOM
-                      PsiElement(atom)('no_return')
+                    ERL_TYPE_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('no_return')
                     PsiElement(()('(')
                     PsiElement())(')')
   PsiElement(.)('.')

@@ -108,14 +108,20 @@
   name(".*type|.*_t")=type
   pin(".*(clauses|exprs|list)(?:_\d.*)?")=1
 
-  implements("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("record_definition|function|q_var|module|macros_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
-
-
 forms ::= form ('.' form)* {pin=1}
-private form ::= (is_app_config config_expression) | function | rule | record_definition | include | macros_definition | attribute
+private form ::=
+    (is_app_config config_expression)
+  | function
+  | rule
+  | record_definition
+  | include
+  | macros_definition
+  | type_definition
+  | attribute
   {recoverUntil=recoverer}
 
 private external is_app_config ::= isApplicationLanguage
@@ -174,6 +180,17 @@ behaviour ::= 'behaviour' '(' q_atom ')' {
   methods = [getName]
 }
 
+type_definition ::= '-' ('type'|'opaque') q_atom argument_definition_list '::' top_type {
+  pin = 2
+  methods = [getName setName getNameIdentifier getTextOffset]
+}
+
+private type_ref_with_module ::= [module_ref ':'] type_ref
+
+type_ref ::= q_atom {
+  methods = [getReference]
+}
+
 atom_attribute ::= q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
 export_functions ::= '[' [export_function (',' export_function)*] ']' {pin=1}
 export_function ::= q_atom '/' integer {
@@ -208,8 +225,7 @@ type ::=
   ('(' top_type ')')
   | (int_type ['..' int_type])
   | (fun '(' fun_type_100_t? ')')
-  | [q_atom ':'] q_atom ['(' top_type_list? ')']
-  | ( q_atom '(' top_type_list ')')
+  | type_ref_with_module ['(' top_type_list? ')']
   | binary_type
   | q_var
   | '['']'

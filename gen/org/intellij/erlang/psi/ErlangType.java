@@ -19,14 +19,20 @@ public interface ErlangType extends ErlangCompositeElement {
   @NotNull
   List<ErlangIntType> getIntTypeList();
 
-  @NotNull
-  List<ErlangQAtom> getQAtomList();
+  @Nullable
+  ErlangModuleRef getModuleRef();
+
+  @Nullable
+  ErlangQAtom getQAtom();
 
   @Nullable
   ErlangQVar getQVar();
 
   @Nullable
   ErlangTopType getTopType();
+
+  @Nullable
+  ErlangTypeRef getTypeRef();
 
   @Nullable
   PsiElement getFun();

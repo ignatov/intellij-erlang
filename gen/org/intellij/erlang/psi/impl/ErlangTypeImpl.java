@@ -41,9 +41,15 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
   }
 
   @Override
-  @NotNull
-  public List<ErlangQAtom> getQAtomList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
+  @Nullable
+  public ErlangModuleRef getModuleRef() {
+    return findChildByClass(ErlangModuleRef.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangQAtom getQAtom() {
+    return findChildByClass(ErlangQAtom.class);
   }
 
   @Override
@@ -56,6 +62,12 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
   @Nullable
   public ErlangTopType getTopType() {
     return findChildByClass(ErlangTopType.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangTypeRef getTypeRef() {
+    return findChildByClass(ErlangTypeRef.class);
   }
 
   @Override

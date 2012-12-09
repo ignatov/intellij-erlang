@@ -46,6 +46,15 @@ public interface ErlangFile extends PsiFile {
   List<ErlangMacrosDefinition> getMacroses();
 
   @Nullable
+  ErlangMacrosDefinition getMacros(@NotNull String name);
+
+  @NotNull
+  List<ErlangTypeDefinition> getTypes();
+
+  @Nullable
+  ErlangTypeDefinition getType(@NotNull String name);
+
+  @Nullable
   ErlangRecordDefinition getRecord(String name);
 
   @NotNull
@@ -56,8 +65,6 @@ public interface ErlangFile extends PsiFile {
 
   @NotNull
   List<ErlangSpecification> getSpecifications();
-
-  ErlangMacrosDefinition getMacros(String name);
 
   @NotNull
   List<ErlangFunction> getExportedFunctions();

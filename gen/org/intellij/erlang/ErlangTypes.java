@@ -116,7 +116,9 @@ public interface ErlangTypes {
   IElementType ERL_TYPED_ATTR_VAL = new ErlangCompositeElementType("ERL_TYPED_ATTR_VAL");
   IElementType ERL_TYPED_EXPR = new ErlangCompositeElementType("ERL_TYPED_EXPR");
   IElementType ERL_TYPED_RECORD_FIELDS = new ErlangCompositeElementType("ERL_TYPED_RECORD_FIELDS");
+  IElementType ERL_TYPE_DEFINITION = new ErlangCompositeElementType("ERL_TYPE_DEFINITION");
   IElementType ERL_TYPE_GUARD = new ErlangCompositeElementType("ERL_TYPE_GUARD");
+  IElementType ERL_TYPE_REF = new ErlangCompositeElementType("ERL_TYPE_REF");
   IElementType ERL_TYPE_SIG = new ErlangCompositeElementType("ERL_TYPE_SIG");
   IElementType ERL_TYPE_SIG_GUARD = new ErlangCompositeElementType("ERL_TYPE_SIG_GUARD");
 
@@ -512,8 +514,14 @@ public interface ErlangTypes {
       else if (type == ERL_TYPED_RECORD_FIELDS) {
         return new ErlangTypedRecordFieldsImpl(node);
       }
+      else if (type == ERL_TYPE_DEFINITION) {
+        return new ErlangTypeDefinitionImpl(node);
+      }
       else if (type == ERL_TYPE_GUARD) {
         return new ErlangTypeGuardImpl(node);
+      }
+      else if (type == ERL_TYPE_REF) {
+        return new ErlangTypeRefImpl(node);
       }
       else if (type == ERL_TYPE_SIG) {
         return new ErlangTypeSigImpl(node);

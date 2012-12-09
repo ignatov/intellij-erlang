@@ -88,6 +88,8 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   private CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap;
   private CachedValue<List<ErlangMacrosDefinition>> myMacrosValue;
   private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap;
+  private CachedValue<List<ErlangTypeDefinition>> myTypeValue;
+  private CachedValue<Map<String, ErlangTypeDefinition>> myTypeMap;
   private CachedValue<List<ErlangBehaviour>> myBehavioursValue;
   private CachedValue<List<ErlangSpecification>> mySpecificationsValue;
 
@@ -240,6 +242,58 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   @Override
+  public List<ErlangTypeDefinition> getTypes() {
+    if (myTypeValue == null) {
+      myTypeValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangTypeDefinition>>() {
+        @Override
+        public Result<List<ErlangTypeDefinition>> compute() {
+          return Result.create(calcTypes(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myTypeValue.getValue();
+  }
+
+  private List<ErlangTypeDefinition> calcTypes() {
+    final List<ErlangTypeDefinition> result = new ArrayList<ErlangTypeDefinition>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangTypeDefinition) {
+          result.add((ErlangTypeDefinition) psiElement);
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
+  @Override
+  public ErlangTypeDefinition getType(@NotNull String name) {
+    if (myTypeMap == null) {
+      myTypeMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangTypeDefinition>>() {
+        @Override
+        public Result<Map<String, ErlangTypeDefinition>> compute() {
+          Map<String, ErlangTypeDefinition> map = new THashMap<String, ErlangTypeDefinition>();
+          for (ErlangTypeDefinition macros : getTypes()) {
+            String mName = macros.getName();
+            if (!map.containsKey(mName)) {
+              map.put(mName, macros);
+            }
+          }
+          return Result.create(map, ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    // todo: cleanup
+    Map<String, ErlangTypeDefinition> value = myTypeMap.getValue();
+    ErlangTypeDefinition byName = value.get(name);
+    ErlangTypeDefinition byUnquote = byName == null ? value.get(StringUtil.unquoteString(name)) : byName;
+    return byUnquote == null ? value.get("'" + name + "'") : byUnquote;
+  }
+
+  @NotNull
+  @Override
   public List<ErlangMacrosDefinition> getMacroses() {
     if (myMacrosValue == null) {
       myMacrosValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangMacrosDefinition>>() {
@@ -267,7 +321,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   @Override
-  public ErlangMacrosDefinition getMacros(String name) {
+  public ErlangMacrosDefinition getMacros(@NotNull String name) {
     if (myMacrosesMap == null) {
       myMacrosesMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangMacrosDefinition>>() {
         @Override

@@ -52,7 +52,8 @@ public class ErlangUnboundVariableInspection extends ErlangBaseInspection {
       public void visitQVar(@NotNull ErlangQVar o) {
         if ((inDefinition(o) && !inArgumentList(o))
           || inAssignment(o) || inAtomAttribute(o) || isMacros(o)
-          || isForceSkipped(o) || inSpecification(o) || inDefine(o) || inCallback(o)) {
+          || isForceSkipped(o) || inSpecification(o) || inDefine(o)
+          || inCallback(o) || inRecordDefinition(o)) {
           return;
         }
         PsiReference reference = o.getReference();
