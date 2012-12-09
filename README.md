@@ -17,12 +17,6 @@ select the IDEA installation directory as SDK root
 For further information please see [the official plugin development page](http://confluence.jetbrains.net/display/IDEADEV/PluginDevelopment).
 Also you can read some [tips and tricks](http://tomaszdziurko.pl/2011/09/developing-plugin-intellij-idea-some-tips-and-links/). Happy hacking!
 
-## Compilation and running
-You need to specify module name, function name and input parameters in run configuration setting 
-or you might move the cursor on the function and press **Ctrl + Shift + F10**.
-
-![Compilation and run](https://github.com/ignatov/intellij-erlang/raw/master/images/hello-run-configuration.png)
-
 ## Donations
 If you would like to make a donation you can use [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=C344TC8DDC5UN).
 
