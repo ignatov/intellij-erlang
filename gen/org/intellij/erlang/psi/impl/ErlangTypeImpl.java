@@ -48,14 +48,14 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
 
   @Override
   @Nullable
-  public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+  public ErlangQVar getQVar() {
+    return findChildByClass(ErlangQVar.class);
   }
 
   @Override
   @Nullable
-  public ErlangQVar getQVar() {
-    return findChildByClass(ErlangQVar.class);
+  public ErlangRecordRef getRecordRef() {
+    return findChildByClass(ErlangRecordRef.class);
   }
 
   @Override

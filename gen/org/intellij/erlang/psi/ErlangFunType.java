@@ -10,7 +10,7 @@ public interface ErlangFunType extends ErlangCompositeElement {
   @NotNull
   ErlangFunTypeArguments getFunTypeArguments();
 
-  @NotNull
+  @Nullable
   ErlangTopTypeClause getTopTypeClause();
 
 }

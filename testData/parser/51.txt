@@ -15681,8 +15681,9 @@ ERL_FILE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('context')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('context')
                     PsiElement({)('{')
                     PsiElement(})('}')
               PsiElement())(')')

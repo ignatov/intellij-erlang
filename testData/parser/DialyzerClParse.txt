@@ -79,8 +79,9 @@ ERL_FILE
             ERL_TOP_TYPE_100_T
               ERL_TYPE
                 PsiElement(#)('#')
-                ERL_Q_ATOM
-                  PsiElement(atom)('options')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('options')
                 PsiElement({)('{')
                 PsiElement(})('}')
           PsiElement(})('}')
@@ -99,8 +100,9 @@ ERL_FILE
               ERL_TOP_TYPE_100_T
                 ERL_TYPE
                   PsiElement(#)('#')
-                  ERL_Q_ATOM
-                    PsiElement(atom)('options')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('options')
                   PsiElement({)('{')
                   PsiElement(})('}')
             PsiElement(})('}')
@@ -119,8 +121,9 @@ ERL_FILE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('options')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('options')
                     PsiElement({)('{')
                     PsiElement(})('}')
               PsiElement(})('}')
@@ -157,8 +160,9 @@ ERL_FILE
                   ERL_TOP_TYPE_100_T
                     ERL_TYPE
                       PsiElement(#)('#')
-                      ERL_Q_ATOM
-                        PsiElement(atom)('options')
+                      ERL_RECORD_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('options')
                       PsiElement({)('{')
                       PsiElement(})('}')
                 PsiElement(})('}')

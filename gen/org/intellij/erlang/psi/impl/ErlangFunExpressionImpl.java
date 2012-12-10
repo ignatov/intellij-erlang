@@ -30,6 +30,12 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
 
   @Override
   @Nullable
+  public ErlangFunctionWithArityVariables getFunctionWithArityVariables() {
+    return findChildByClass(ErlangFunctionWithArityVariables.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangModuleRef getModuleRef() {
     return findChildByClass(ErlangModuleRef.class);
   }

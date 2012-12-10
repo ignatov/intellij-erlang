@@ -951,8 +951,9 @@ ERL_FILE
                 ERL_TOP_TYPE_100_T
                   ERL_TYPE
                     PsiElement(#)('#')
-                    ERL_Q_ATOM
-                      PsiElement(atom)('end_clause')
+                    ERL_RECORD_REF
+                      ERL_Q_ATOM
+                        PsiElement(atom)('end_clause')
                     PsiElement({)('{')
                     PsiElement(})('}')
               PsiElement(])(']')

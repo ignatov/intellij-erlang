@@ -14,6 +14,9 @@ public interface ErlangFunExpression extends ErlangExpression {
   ErlangFunctionWithArity getFunctionWithArity();
 
   @Nullable
+  ErlangFunctionWithArityVariables getFunctionWithArityVariables();
+
+  @Nullable
   ErlangModuleRef getModuleRef();
 
   @Nullable

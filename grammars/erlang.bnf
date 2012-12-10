@@ -180,10 +180,11 @@ behaviour ::= 'behaviour' '(' q_atom ')' {
   methods = [getName]
 }
 
-type_definition ::= '-' ('type'|'opaque') q_atom argument_definition_list '::' top_type {
+type_definition ::= '-' ('type'|'opaque') (type_body | '(' type_body ')') {
   pin = 2
   methods = [getName setName getNameIdentifier getTextOffset]
 }
+private type_body ::= q_atom argument_definition_list '::' top_type {pin=1}
 
 private type_ref_with_module ::= [module_ref ':'] type_ref
 
@@ -220,7 +221,7 @@ private type_guard_list ::= type_guard (',' type_guard)*
 type_guard ::= (q_atom '(' top_type_list ')') | top_type
 private top_type_list ::= top_type (',' top_type)*
 top_type ::= [q_var '::'] top_type_100_t
-top_type_100_t ::= type ['|' top_type_100_t]
+top_type_100_t ::= type ['|' top_type_100_t] {pin=1}
 type ::=
   ('(' top_type ')')
   | (int_type ['..' int_type])
@@ -231,15 +232,18 @@ type ::=
   | '['']'
   | ('[' top_type (',' '...')? ']')
   | ('{' top_type_list? '}')
-  | ('#' q_atom '{' field_type_list? '}')
+  | ('#' record_ref '{' field_type_list? '}')
 
 int_type ::= '-'? (integer | macros)
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause
 top_type_clause ::= '->' top_type {pin=1}
-fun_type ::= fun_type_arguments top_type_clause
-fun_type_arguments ::= '(' top_type_list? ')'
+fun_type ::= fun_type_arguments top_type_clause {pin=1}
+fun_type_arguments ::= '(' top_type_list? ')' {pin=1}
 private field_type_list ::= field_type (',' field_type)*
-field_type ::= q_atom '::' top_type
+field_type ::= q_atom '::' top_type {
+  pin = 1
+  methods = [getReference]
+}
 
 binary_type ::= '<<' [bin_base_type | bin_unit_type | bin_base_type_list] '>>' {pin=1}
 private bin_base_type_list ::= bin_base_type ',' bin_unit_type
@@ -249,6 +253,7 @@ bin_unit_type ::= q_var ':' q_var '*' integer
 attr_val ::= ('(' exprs ')') | exprs {name="attribute value"}
 
 function ::= function_clause (';' function_clause)* {
+  pin(".*") = 1
   methods = [
     atom_name = "function_clause[0]/q_atom"
     getName
@@ -417,11 +422,12 @@ cr_clause ::= argument_definition clause_guard? clause_body {pin=1}
 argument_definition ::= expression
 
 receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end)) {pin=1}
-fun_expression ::= fun ((fun_clauses end) | ([module_ref ':'] function_with_arity)) {pin=1}
+fun_expression ::= fun ((fun_clauses end) | ([module_ref ':'] (function_with_arity|function_with_arity_variables))) {pin=1}
 function_with_arity ::= q_atom '/' integer {
   pin= 1
   methods = [getReference]
 }
+function_with_arity_variables ::= q_var '/' (integer|q_var) {pin=1}
 fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body {pin=1}
 try_expression ::= try try_expressions_clause (of cr_clauses)? try_catch {pin=1}

@@ -37,6 +37,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModuleRef;
 import org.intellij.erlang.psi.ErlangQAtom;
@@ -62,6 +63,7 @@ public class ErlangTypeReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBa
     if (containingFile instanceof ErlangFile) {
       ErlangTypeDefinition type = ((ErlangFile) containingFile).getType(myReferenceName);
       if (type != null) return type;
+      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangTypeFromIncludes((ErlangFile) containingFile, false, myReferenceName));
     }
     return null;
   }

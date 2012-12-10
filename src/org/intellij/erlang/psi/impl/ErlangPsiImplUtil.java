@@ -99,7 +99,16 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangRecordField o) {
-    final ErlangQAtom atom = o.getFieldNameAtom();
+    return getRecordFieldReference(o.getFieldNameAtom());
+  }
+  
+  @Nullable
+  public static PsiReference getReference(@NotNull ErlangFieldType o) {
+    return getRecordFieldReference(o.getQAtom());
+  }
+
+  @Nullable
+  private static PsiReference getRecordFieldReference(@Nullable ErlangQAtom atom) {
     if (atom == null) return null;
     return new ErlangAtomBasedReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText()) {
       @Override
@@ -660,6 +669,24 @@ public class ErlangPsiImplUtil {
         }
         else {
           fromIncludes.addAll(file.getMacroses());
+        }
+      }
+    }
+    return fromIncludes;
+  }
+  
+  @NotNull
+  static List<ErlangTypeDefinition> getErlangTypeFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
+    List<ErlangTypeDefinition> fromIncludes = new ArrayList<ErlangTypeDefinition>();
+    for (ErlangInclude include : containingFile.getIncludes()) {
+      List<ErlangFile> files = filesFromInclude(include);
+      for (ErlangFile file : files) {
+        if (!forCompletion) {
+          ErlangTypeDefinition recordFromIncludeFile = file.getType(name);
+          fromIncludes.addAll(recordFromIncludeFile == null ? ContainerUtil.<ErlangTypeDefinition>emptyList() : ContainerUtil.list(recordFromIncludeFile));
+        }
+        else {
+          fromIncludes.addAll(file.getTypes());
         }
       }
     }

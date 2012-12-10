@@ -66,10 +66,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
     ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
     PsiElement previousByOffset = startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
+    ErlangTypeSig typeSig = PsiTreeUtil.getParentOfType(elementAt, ErlangTypeSig.class);
     if (parent instanceof ErlangExport || export != null || prevIsRadix(elementAt)
       || (previousByOffset != null && previousByOffset.getNode().getElementType() == ErlangTypes.ERL_RADIX)
       || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField)
-      || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) {
+      || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField
+      || typeSig != null) {
       context.setDummyIdentifier("a");
     }
   }

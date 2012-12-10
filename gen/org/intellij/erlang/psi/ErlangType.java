@@ -23,10 +23,10 @@ public interface ErlangType extends ErlangCompositeElement {
   ErlangModuleRef getModuleRef();
 
   @Nullable
-  ErlangQAtom getQAtom();
+  ErlangQVar getQVar();
 
   @Nullable
-  ErlangQVar getQVar();
+  ErlangRecordRef getRecordRef();
 
   @Nullable
   ErlangTopType getTopType();
