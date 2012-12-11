@@ -93,6 +93,8 @@
         <projectImportProvider implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportProvider"/>
         <projectImportBuilder implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilder"/>
         <projectOpenProcessor implementation="org.intellij.erlang.rebar.importWizard.RebarProjectOpenProcessor"/>
+        <projectConfigurable instance="org.intellij.erlang.rebar.settings.RebarConfigurable"/>
+        <projectService serviceImplementation="org.intellij.erlang.rebar.settings.RebarSettings"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
