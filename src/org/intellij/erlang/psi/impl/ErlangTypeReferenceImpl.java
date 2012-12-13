@@ -79,6 +79,6 @@ public class ErlangTypeReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBa
   @NotNull
   @Override
   public Object[] getVariants() {
-    return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile()));
+    return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile(), myModuleRef == null));
   }
 }

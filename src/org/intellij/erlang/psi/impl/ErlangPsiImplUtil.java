@@ -397,17 +397,38 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile) {
+  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes) {
     if (containingFile instanceof ErlangFile) {
       List<ErlangTypeDefinition> types = ((ErlangFile) containingFile).getTypes();
-      return ContainerUtil.map(
+      List<String> builtInTypeNames = ContainerUtil.list("term", "boolean", "byte", "char",
+        "non_neg_integer", "pos_integer", "neg_integer", "number", "integer", "float",
+        "list", "any", "maybe_improper_list", "string", "char", "nonempty_string",
+        "iolist", "module", "atom", "mfa", "node", "timeout", "no_return", "none"
+      );
+
+      final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<LookupElement>() {
+        @Override
+        protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
+          return false;
+        }
+      };
+
+      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(builtInTypeNames, new Function<String, LookupElement>() {
+        @Override
+        public LookupElement fun(String s) {
+          return LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler);
+        }
+      }) : ContainerUtil.<LookupElement>emptyList();
+
+      List<LookupElement> foundedTypes = ContainerUtil.map(
         types,
         new Function<ErlangTypeDefinition, LookupElement>() {
           @Override
           public LookupElement fun(@NotNull ErlangTypeDefinition rd) {
-            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE);
+            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(handler); // todo: improve handler
           }
         });
+      return ContainerUtil.concat(foundedTypes, builtInTypes);
     }
     return Collections.emptyList();
   }
