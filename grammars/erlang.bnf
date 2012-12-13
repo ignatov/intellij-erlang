@@ -193,12 +193,14 @@ type_ref ::= q_atom {
 }
 
 atom_attribute ::= q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
-export_functions ::= '[' [export_function (',' export_function)*] ']' {pin=1}
+export_functions ::= '[' export_function_list? ']' {pin=1}
+private export_function_list ::= export_function (',' export_function)*
 export_function ::= q_atom '/' integer {
   pin= 1
   methods = [getReference]
 }
-export_types ::= '[' [export_type (',' export_type)*] ']' {pin=1}
+export_types ::= '[' export_type_list? ']' {pin=1}
+private export_type_list ::= export_type (',' export_type)*
 export_type ::= q_atom '/' integer {pin=1}
 
 private type_spec ::= fun_type_sigs_braces | fun_type_sigs
@@ -223,16 +225,15 @@ private top_type_list ::= top_type (',' top_type)*
 top_type ::= [q_var '::'] top_type_100_t
 top_type_100_t ::= type ['|' top_type_100_t] {pin=1}
 type ::=
-  ('(' top_type ')')
-  | (int_type ['..' int_type])
-  | (fun '(' fun_type_100_t? ')')
+  '(' top_type ')'
+  | int_type ['..' int_type]
+  | fun '(' fun_type_100_t? ')'
   | type_ref_with_module ['(' top_type_list? ')']
   | binary_type
   | q_var
-  | '['']'
-  | ('[' top_type (',' '...')? ']')
-  | ('{' top_type_list? '}')
-  | ('#' record_ref '{' field_type_list? '}')
+  | '[' [top_type (',' '...')?] ']'
+  | '{' top_type_list? '}'
+  | '#' record_ref '{' field_type_list? '}' {pin(".*") = 1}
 
 int_type ::= '-'? (integer | macros)
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause

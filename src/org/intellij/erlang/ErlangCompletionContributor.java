@@ -96,7 +96,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
         else {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
-          if (colonQualified != null) {
+          if (colonQualified != null && PsiTreeUtil.getParentOfType(position, ErlangFunTypeSigs.class) == null) {
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, colonQualified));
           }
           else if (originalParent instanceof ErlangRecordFields || parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
@@ -118,7 +118,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
             }
             int invocationCount = parameters.getInvocationCount();
             boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;
-            if (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null && moduleCompletion) {
+            //noinspection unchecked
+            if (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class) != null && moduleCompletion) {
               suggestModules(result, position);
             }
             else {
