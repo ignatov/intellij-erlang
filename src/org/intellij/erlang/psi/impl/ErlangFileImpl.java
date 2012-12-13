@@ -528,6 +528,6 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @Nullable
   @Override
   public PsiElement getNameIdentifier() {
-    return this; // hack for inplace rename: InplaceRefactoring#getVariable()
+    return null; // hack for inplace rename: InplaceRefactoring#getVariable()
   }
 }
