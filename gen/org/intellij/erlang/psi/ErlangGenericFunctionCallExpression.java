@@ -10,6 +10,9 @@ public interface ErlangGenericFunctionCallExpression extends ErlangExpression {
   @NotNull
   ErlangArgumentList getArgumentList();
 
+  @Nullable
+  ErlangMacros getMacros();
+
   @NotNull
   List<ErlangQAtom> getQAtomList();
 

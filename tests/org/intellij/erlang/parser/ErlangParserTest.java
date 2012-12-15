@@ -55,6 +55,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void test127()               { doTest(true, true);  }
   public void testEunit()             { doTest(true, false); }
   public void testMeck()              { doTest(true, false); }
+  public void test145()               { doTest(true, false); }
 
   protected void doTest(boolean checkResult, boolean suppressErrors) {
 //    OVERWRITE_TESTDATA = true;

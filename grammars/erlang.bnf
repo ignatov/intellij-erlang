@@ -211,7 +211,7 @@ fun_type_sigs ::= spec_fun ['::'] type_sigs_list {
 private type_sigs_list ::= type_sig (';' type_sig)*
 spec_fun ::= q_atom ['/' integer | ':' q_atom ['/' integer]]
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
-typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
+typed_record_fields ::= '{' [generic_function_call_expression | typed_exprs] '}' {pin=1} // todo: hack #145
 private typed_exprs ::= typed_expr (',' typed_expr)*
 typed_expr ::= q_atom ['=' expression] ['::' top_type] {
   pin=1
@@ -405,7 +405,7 @@ function_call_expression ::= q_atom argument_list {
   pin=0
   methods = [getReference getNameIdentifier getTextOffset]
 }
-generic_function_call_expression ::= (q_atom_or_var ':')? q_atom_or_var argument_list {pin=0}
+generic_function_call_expression ::= (q_atom_or_var ':')? (q_atom_or_var | macros) argument_list {pin=0}
 private q_atom_or_var ::= q_atom | q_var
 
 anonymous_call_expression ::= expression argument_list

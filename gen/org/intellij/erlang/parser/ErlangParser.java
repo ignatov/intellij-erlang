@@ -5914,7 +5914,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '{' typed_exprs? '}'
+  // '{' [generic_function_call_expression | typed_exprs] '}'
   public static boolean typed_record_fields(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_record_fields")) return false;
     if (!nextTokenIs(builder_, ERL_CURLY_LEFT)) return false;
@@ -5936,11 +5936,27 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // typed_exprs?
+  // [generic_function_call_expression | typed_exprs]
   private static boolean typed_record_fields_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_record_fields_1")) return false;
-    typed_exprs(builder_, level_ + 1);
+    typed_record_fields_1_0(builder_, level_ + 1);
     return true;
+  }
+
+  // generic_function_call_expression | typed_exprs
+  private static boolean typed_record_fields_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "typed_record_fields_1_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = generic_function_call_expression(builder_, level_ + 1);
+    if (!result_) result_ = typed_exprs(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
   }
 
   /* ********************************************************** */
@@ -6138,7 +6154,7 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // (q_atom_or_var ':')? q_atom_or_var argument_list
+  // (q_atom_or_var ':')? (q_atom_or_var | macros) argument_list
   public static boolean generic_function_call_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "generic_function_call_expression")) return false;
     boolean result_ = false;
@@ -6146,7 +6162,7 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
     result_ = generic_function_call_expression_0(builder_, level_ + 1);
-    result_ = result_ && q_atom_or_var(builder_, level_ + 1);
+    result_ = result_ && generic_function_call_expression_1(builder_, level_ + 1);
     result_ = result_ && argument_list(builder_, level_ + 1);
     if (result_ || pinned_) {
       marker_.done(ERL_GENERIC_FUNCTION_CALL_EXPRESSION);
@@ -6172,6 +6188,22 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = builder_.mark();
     result_ = q_atom_or_var(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // q_atom_or_var | macros
+  private static boolean generic_function_call_expression_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "generic_function_call_expression_1")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = q_atom_or_var(builder_, level_ + 1);
+    if (!result_) result_ = macros(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }

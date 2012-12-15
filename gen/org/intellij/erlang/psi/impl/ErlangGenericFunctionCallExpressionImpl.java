@@ -23,6 +23,12 @@ public class ErlangGenericFunctionCallExpressionImpl extends ErlangExpressionImp
   }
 
   @Override
+  @Nullable
+  public ErlangMacros getMacros() {
+    return findChildByClass(ErlangMacros.class);
+  }
+
+  @Override
   @NotNull
   public List<ErlangQAtom> getQAtomList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
