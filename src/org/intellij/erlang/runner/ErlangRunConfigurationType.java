@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 
 public class ErlangRunConfigurationType implements ConfigurationType {
-  public static final String ERLANG_APPLICATION = "Erlang application";
+  public static final String ERLANG_APPLICATION = "Erlang Application";
   private final ErlangFactory configurationFactory;
 
   public ErlangRunConfigurationType() {

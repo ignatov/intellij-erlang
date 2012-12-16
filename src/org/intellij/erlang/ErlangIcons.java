@@ -53,5 +53,6 @@ public interface ErlangIcons {
   Icon HEADER = IconLoader.getIcon("/icons/erlang-header-16.png");
 
   Icon REBAR = IconLoader.getIcon("/icons/rebar-16.png");
+  Icon REBAR_EUNIT = new LayeredIcon(REBAR, AllIcons.Nodes.JunitTestMark);
   Icon REBAR_MODULE_CONFLICT = IconLoader.getIcon("/icons/rebar-module-conflict-16.png");
 }

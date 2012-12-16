@@ -15,6 +15,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="jps-plugin" />
+    <orderEntry type="library" name="copyright" level="project" />
   </component>
 </module>
 
