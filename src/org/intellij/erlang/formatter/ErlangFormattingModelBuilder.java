@@ -85,7 +85,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .around(ERL_OP_GT_EQ).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
       .around(ERL_OR_OR).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
       .around(ERL_OR).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
-
+      .around(ERL_ANDALSO).spaceIf(settings.SPACE_AROUND_LOGICAL_OPERATORS)
 
       .after(ERL_BRACKET_LEFT).none()
       .before(ERL_BRACKET_RIGHT).none()

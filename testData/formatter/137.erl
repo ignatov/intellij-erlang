@@ -1,0 +1,2 @@
+f() ->
+    true    andalso        false.
