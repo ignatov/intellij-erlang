@@ -1962,30 +1962,30 @@ ERL_FILE
                 PsiElement(integer)('64')
           PsiElement(,)(',')
           ERL_BIN_ELEMENT
-            ERL_MULTIPLICATIVE_EXPRESSION
-              ERL_COLON_QUALIFIED_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Matrix')
-                PsiElement(:)(':')
-                ERL_MAX_EXPRESSION
-                  PsiElement(integer)('36')
-              PsiElement(/)('/')
+            ERL_COLON_QUALIFIED_EXPRESSION
               ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Matrix')
+              PsiElement(:)(':')
+              ERL_MAX_EXPRESSION
+                PsiElement(integer)('36')
+            ERL_OPT_BIT_TYPE_LIST
+              PsiElement(/)('/')
+              ERL_BIT_TYPE
                 ERL_Q_ATOM
                   PsiElement(atom)('binary')
           PsiElement(,)(',')
           ERL_BIN_ELEMENT
-            ERL_MULTIPLICATIVE_EXPRESSION
-              ERL_COLON_QUALIFIED_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Reserved2')
-                PsiElement(:)(':')
-                ERL_MAX_EXPRESSION
-                  PsiElement(integer)('24')
-              PsiElement(/)('/')
+            ERL_COLON_QUALIFIED_EXPRESSION
               ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Reserved2')
+              PsiElement(:)(':')
+              ERL_MAX_EXPRESSION
+                PsiElement(integer)('24')
+            ERL_OPT_BIT_TYPE_LIST
+              PsiElement(/)('/')
+              ERL_BIT_TYPE
                 ERL_Q_ATOM
                   PsiElement(atom)('binary')
           PsiElement(,)(',')
@@ -2736,12 +2736,12 @@ ERL_FILE
                           PsiElement(integer)('32')
                     PsiElement(,)(',')
                     ERL_BIN_ELEMENT
-                      ERL_MULTIPLICATIVE_EXPRESSION
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('STSC')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('STSC')
+                      ERL_OPT_BIT_TYPE_LIST
                         PsiElement(/)('/')
-                        ERL_MAX_EXPRESSION
+                        ERL_BIT_TYPE
                           ERL_Q_ATOM
                             PsiElement(atom)('binary')
                     PsiElement(>>)('>>')
@@ -3658,16 +3658,16 @@ ERL_FILE
                   PsiElement(integer)('32')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_COLON_QUALIFIED_EXPRESSION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('AtomName')
-                  PsiElement(:)(':')
-                  ERL_MAX_EXPRESSION
-                    PsiElement(integer)('4')
-                PsiElement(/)('/')
+              ERL_COLON_QUALIFIED_EXPRESSION
                 ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('AtomName')
+                PsiElement(:)(':')
+                ERL_MAX_EXPRESSION
+                  PsiElement(integer)('4')
+              ERL_OPT_BIT_TYPE_LIST
+                PsiElement(/)('/')
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(,)(',')
@@ -3681,12 +3681,12 @@ ERL_FILE
                   PsiElement(integer)('64')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Bin')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Bin')
+              ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
-                ERL_MAX_EXPRESSION
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(>>)('>>')
@@ -3715,27 +3715,27 @@ ERL_FILE
           ERL_BINARY_EXPRESSION
             PsiElement(<<)('<<')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_COLON_QUALIFIED_EXPRESSION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Atom')
-                  PsiElement(:)(':')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Size')
-                PsiElement(/)('/')
+              ERL_COLON_QUALIFIED_EXPRESSION
                 ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Atom')
+                PsiElement(:)(':')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Size')
+              ERL_OPT_BIT_TYPE_LIST
+                PsiElement(/)('/')
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Rest')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Rest')
+              ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
-                ERL_MAX_EXPRESSION
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(>>)('>>')
@@ -3809,26 +3809,26 @@ ERL_FILE
                   PsiElement(integer)('32')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_COLON_QUALIFIED_EXPRESSION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('AtomName')
-                  PsiElement(:)(':')
-                  ERL_MAX_EXPRESSION
-                    PsiElement(integer)('4')
-                PsiElement(/)('/')
+              ERL_COLON_QUALIFIED_EXPRESSION
                 ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('AtomName')
+                PsiElement(:)(':')
+                ERL_MAX_EXPRESSION
+                  PsiElement(integer)('4')
+              ERL_OPT_BIT_TYPE_LIST
+                PsiElement(/)('/')
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Bin')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Bin')
+              ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
-                ERL_MAX_EXPRESSION
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(>>)('>>')
@@ -3857,27 +3857,27 @@ ERL_FILE
           ERL_BINARY_EXPRESSION
             PsiElement(<<)('<<')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_COLON_QUALIFIED_EXPRESSION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Atom')
-                  PsiElement(:)(':')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Size')
-                PsiElement(/)('/')
+              ERL_COLON_QUALIFIED_EXPRESSION
                 ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Atom')
+                PsiElement(:)(':')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Size')
+              ERL_OPT_BIT_TYPE_LIST
+                PsiElement(/)('/')
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Rest')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Rest')
+              ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
-                ERL_MAX_EXPRESSION
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(>>)('>>')
@@ -4022,12 +4022,12 @@ ERL_FILE
                           PsiElement(integer)('32')
                     PsiElement(,)(',')
                     ERL_BIN_ELEMENT
-                      ERL_MULTIPLICATIVE_EXPRESSION
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('AtomName')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('AtomName')
+                      ERL_OPT_BIT_TYPE_LIST
                         PsiElement(/)('/')
-                        ERL_MAX_EXPRESSION
+                        ERL_BIT_TYPE
                           ERL_Q_ATOM
                             PsiElement(atom)('binary')
                     PsiElement(>>)('>>')
@@ -4086,12 +4086,12 @@ ERL_FILE
                           PsiElement(integer)('32')
                     PsiElement(,)(',')
                     ERL_BIN_ELEMENT
-                      ERL_MULTIPLICATIVE_EXPRESSION
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('AtomName')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('AtomName')
+                      ERL_OPT_BIT_TYPE_LIST
                         PsiElement(/)('/')
-                        ERL_MAX_EXPRESSION
+                        ERL_BIT_TYPE
                           ERL_Q_ATOM
                             PsiElement(atom)('binary')
                     PsiElement(>>)('>>')
@@ -4136,16 +4136,16 @@ ERL_FILE
                           ERL_BINARY_EXPRESSION
                             PsiElement(<<)('<<')
                             ERL_BIN_ELEMENT
-                              ERL_MULTIPLICATIVE_EXPRESSION
-                                ERL_COLON_QUALIFIED_EXPRESSION
-                                  ERL_MAX_EXPRESSION
-                                    ERL_Q_VAR
-                                      PsiElement(var)('AtomName')
-                                  PsiElement(:)(':')
-                                  ERL_MAX_EXPRESSION
-                                    PsiElement(integer)('4')
-                                PsiElement(/)('/')
+                              ERL_COLON_QUALIFIED_EXPRESSION
                                 ERL_MAX_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('AtomName')
+                                PsiElement(:)(':')
+                                ERL_MAX_EXPRESSION
+                                  PsiElement(integer)('4')
+                              ERL_OPT_BIT_TYPE_LIST
+                                PsiElement(/)('/')
+                                ERL_BIT_TYPE
                                   ERL_Q_ATOM
                                     PsiElement(atom)('binary')
                             PsiElement(,)(',')
@@ -4317,12 +4317,12 @@ ERL_FILE
                           PsiElement(integer)('32')
                     PsiElement(,)(',')
                     ERL_BIN_ELEMENT
-                      ERL_MULTIPLICATIVE_EXPRESSION
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('AtomName')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('AtomName')
+                      ERL_OPT_BIT_TYPE_LIST
                         PsiElement(/)('/')
-                        ERL_MAX_EXPRESSION
+                        ERL_BIT_TYPE
                           ERL_Q_ATOM
                             PsiElement(atom)('binary')
                     PsiElement(>>)('>>')
@@ -5526,16 +5526,16 @@ ERL_FILE
           ERL_BINARY_EXPRESSION
             PsiElement(<<)('<<')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_COLON_QUALIFIED_EXPRESSION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(_)('_')
-                  PsiElement(:)(':')
-                  ERL_MAX_EXPRESSION
-                    PsiElement(integer)('12')
-                PsiElement(/)('/')
+              ERL_COLON_QUALIFIED_EXPRESSION
                 ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(_)('_')
+                PsiElement(:)(':')
+                ERL_MAX_EXPRESSION
+                  PsiElement(integer)('12')
+              ERL_OPT_BIT_TYPE_LIST
+                PsiElement(/)('/')
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(,)(',')
@@ -5558,12 +5558,12 @@ ERL_FILE
                   PsiElement(integer)('32')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(_)('_')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(_)('_')
+              ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
-                ERL_MAX_EXPRESSION
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(>>)('>>')
@@ -6419,12 +6419,12 @@ ERL_FILE
                     PsiElement(integer)('32')
               PsiElement(,)(',')
               ERL_BIN_ELEMENT
-                ERL_MULTIPLICATIVE_EXPRESSION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('SampleSizeData')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('SampleSizeData')
+                ERL_OPT_BIT_TYPE_LIST
                   PsiElement(/)('/')
-                  ERL_MAX_EXPRESSION
+                  ERL_BIT_TYPE
                     ERL_Q_ATOM
                       PsiElement(atom)('binary')
               PsiElement(>>)('>>')
@@ -6990,12 +6990,12 @@ ERL_FILE
                   PsiElement(integer)('32')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('STCO')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('STCO')
+              ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
-                ERL_MAX_EXPRESSION
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(>>)('>>')
@@ -7500,27 +7500,27 @@ ERL_FILE
           ERL_BINARY_EXPRESSION
             PsiElement(<<)('<<')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_COLON_QUALIFIED_EXPRESSION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('SampleSizes')
-                  PsiElement(:)(':')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Bitsize')
-                PsiElement(/)('/')
+              ERL_COLON_QUALIFIED_EXPRESSION
                 ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('SampleSizes')
+                PsiElement(:)(':')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Bitsize')
+              ERL_OPT_BIT_TYPE_LIST
+                PsiElement(/)('/')
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
-              ERL_MULTIPLICATIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Rest')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Rest')
+              ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
-                ERL_MAX_EXPRESSION
+                ERL_BIT_TYPE
                   ERL_Q_ATOM
                     PsiElement(atom)('binary')
             PsiElement(>>)('>>')

@@ -6045,7 +6045,7 @@ public class ErlangParser implements PsiParser {
         marker_.drop();
         left_marker_.precede().done(ERL_ADDITIVE_EXPRESSION);
       }
-      else if (priority_ < 8 && mult_op(builder_, level_ + 1)) {
+      else if (priority_ < 8 && multiplicative_expression_0(builder_, level_ + 1)) {
         result_ = report_error_(builder_, expression(builder_, level_, 8));
         marker_.drop();
         left_marker_.precede().done(ERL_MULTIPLICATIVE_EXPRESSION);
@@ -6092,6 +6092,46 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
+  }
+
+  // mult_op &(!atom)
+  private static boolean multiplicative_expression_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "multiplicative_expression_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = mult_op(builder_, level_ + 1);
+    result_ = result_ && multiplicative_expression_0_1(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // &(!atom)
+  private static boolean multiplicative_expression_0_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "multiplicative_expression_0_1")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_AND_, null);
+    result_ = multiplicative_expression_0_1_0(builder_, level_ + 1);
+    marker_.rollbackTo();
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_AND_, null);
+    return result_;
+  }
+
+  // !atom
+  private static boolean multiplicative_expression_0_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "multiplicative_expression_0_1_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_NOT_, null);
+    result_ = !consumeToken(builder_, ERL_ATOM);
+    marker_.rollbackTo();
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_NOT_, null);
+    return result_;
   }
 
   public static boolean prefix_expression(PsiBuilder builder_, int level_) {

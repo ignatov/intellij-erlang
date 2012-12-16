@@ -152,6 +152,9 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .between(ERL_FUN, ERL_FUNCTION_WITH_ARITY).spaces(1)
       .after(ERL_FUN).none()
       .before(ERL_END).spaces(1)
+
+      .before(ERL_OPT_BIT_TYPE_LIST).none()
+      .betweenInside(ERL_OP_AR_DIV ,ERL_BIT_TYPE, ERL_OPT_BIT_TYPE_LIST).none()
       ;
   }
 
