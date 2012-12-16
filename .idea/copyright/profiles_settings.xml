@@ -1,5 +1,10 @@
 <component name="CopyrightManager">
   <settings default="apache">
     <module2copyright />
+    <LanguageOptions name="Erlang">
+      <option name="fileTypeOverride" value="3" />
+      <option name="block" value="false" />
+      <option name="filler" value="=" />
+    </LanguageOptions>
   </settings>
 </component>
