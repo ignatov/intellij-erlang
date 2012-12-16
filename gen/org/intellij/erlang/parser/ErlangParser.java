@@ -5682,20 +5682,18 @@ public class ErlangParser implements PsiParser {
   public static boolean typed_attr_val(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_attr_val")) return false;
     boolean result_ = false;
-    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<typed attr val>");
     result_ = expression(builder_, level_ + 1, -1);
-    pinned_ = result_; // pin = 1
     result_ = result_ && typed_attr_val_1(builder_, level_ + 1);
-    if (result_ || pinned_) {
+    if (result_) {
       marker_.done(ERL_TYPED_ATTR_VAL);
     }
     else {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
-    return result_ || pinned_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
+    return result_;
   }
 
   // (',' typed_record_fields) | ('::' top_type)
@@ -5718,40 +5716,32 @@ public class ErlangParser implements PsiParser {
   private static boolean typed_attr_val_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_attr_val_1_0")) return false;
     boolean result_ = false;
-    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = consumeToken(builder_, ERL_COMMA);
-    pinned_ = result_; // pin = 1
     result_ = result_ && typed_record_fields(builder_, level_ + 1);
-    if (!result_ && !pinned_) {
+    if (!result_) {
       marker_.rollbackTo();
     }
     else {
       marker_.drop();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
-    return result_ || pinned_;
+    return result_;
   }
 
   // '::' top_type
   private static boolean typed_attr_val_1_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_attr_val_1_1")) return false;
     boolean result_ = false;
-    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = consumeToken(builder_, ERL_COLON_COLON);
-    pinned_ = result_; // pin = 1
     result_ = result_ && top_type(builder_, level_ + 1);
-    if (!result_ && !pinned_) {
+    if (!result_) {
       marker_.rollbackTo();
     }
     else {
       marker_.drop();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
-    return result_ || pinned_;
+    return result_;
   }
 
   /* ********************************************************** */
