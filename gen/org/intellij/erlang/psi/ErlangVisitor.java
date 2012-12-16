@@ -278,6 +278,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitMacrosBody(@NotNull ErlangMacrosBody o) {
+    visitCompositeElement(o);
+  }
+
   public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
     visitNamedElement(o);
   }

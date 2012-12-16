@@ -77,6 +77,7 @@ public interface ErlangTypes {
   IElementType ERL_LIST_OP_EXPRESSION = new ErlangCompositeElementType("ERL_LIST_OP_EXPRESSION");
   IElementType ERL_MACROS = new ErlangCompositeElementType("ERL_MACROS");
   IElementType ERL_MACROS_ARG = new ErlangCompositeElementType("ERL_MACROS_ARG");
+  IElementType ERL_MACROS_BODY = new ErlangCompositeElementType("ERL_MACROS_BODY");
   IElementType ERL_MACROS_DEFINITION = new ErlangCompositeElementType("ERL_MACROS_DEFINITION");
   IElementType ERL_MACROS_NAME = new ErlangCompositeElementType("ERL_MACROS_NAME");
   IElementType ERL_MAX_EXPRESSION = new ErlangCompositeElementType("ERL_MAX_EXPRESSION");
@@ -397,6 +398,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_MACROS_ARG) {
         return new ErlangMacrosArgImpl(node);
+      }
+      else if (type == ERL_MACROS_BODY) {
+        return new ErlangMacrosBodyImpl(node);
       }
       else if (type == ERL_MACROS_DEFINITION) {
         return new ErlangMacrosDefinitionImpl(node);

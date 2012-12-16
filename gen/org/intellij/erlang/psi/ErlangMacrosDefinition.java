@@ -7,17 +7,14 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangMacrosDefinition extends ErlangNamedElement {
 
-  @NotNull
-  List<ErlangExpression> getExpressionList();
+  @Nullable
+  ErlangArgumentDefinitionList getArgumentDefinitionList();
+
+  @Nullable
+  ErlangMacrosBody getMacrosBody();
 
   @Nullable
   ErlangMacrosName getMacrosName();
-
-  @NotNull
-  List<ErlangQAtom> getQAtomList();
-
-  @NotNull
-  List<ErlangQVar> getQVarList();
 
   @NotNull
   String getName();

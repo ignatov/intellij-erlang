@@ -17,27 +17,21 @@ public class ErlangMacrosDefinitionImpl extends ErlangNamedElementImpl implement
   }
 
   @Override
-  @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  @Nullable
+  public ErlangArgumentDefinitionList getArgumentDefinitionList() {
+    return findChildByClass(ErlangArgumentDefinitionList.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangMacrosBody getMacrosBody() {
+    return findChildByClass(ErlangMacrosBody.class);
   }
 
   @Override
   @Nullable
   public ErlangMacrosName getMacrosName() {
     return findChildByClass(ErlangMacrosName.class);
-  }
-
-  @Override
-  @NotNull
-  public List<ErlangQAtom> getQAtomList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
-  }
-
-  @Override
-  @NotNull
-  public List<ErlangQVar> getQVarList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQVar.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

@@ -224,6 +224,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_MACROS_ARG) {
       result_ = macros_arg(builder_, level_ + 1);
     }
+    else if (root_ == ERL_MACROS_BODY) {
+      result_ = macros_body(builder_, level_ + 1);
+    }
     else if (root_ == ERL_MACROS_DEFINITION) {
       result_ = macros_definition(builder_, level_ + 1);
     }
@@ -3379,18 +3382,20 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // expression ((',' | ';') expression)*
-  static boolean macros_body(PsiBuilder builder_, int level_) {
+  public static boolean macros_body(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "macros_body")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<macros body>");
     result_ = expression(builder_, level_ + 1, -1);
     result_ = result_ && macros_body_1(builder_, level_ + 1);
-    if (!result_) {
-      marker_.rollbackTo();
+    if (result_) {
+      marker_.done(ERL_MACROS_BODY);
     }
     else {
-      marker_.drop();
+      marker_.rollbackTo();
     }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
     return result_;
   }
 
@@ -3443,7 +3448,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '-' 'define' '(' macros_name ['(' q_atom_or_var (',' q_atom_or_var)* ')']',' macros_body ')'
+  // '-' 'define' '(' macros_name argument_definition_list? ',' macros_body ')'
   public static boolean macros_definition(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "macros_definition")) return false;
     if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
@@ -3470,61 +3475,11 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // ['(' q_atom_or_var (',' q_atom_or_var)* ')']
+  // argument_definition_list?
   private static boolean macros_definition_4(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "macros_definition_4")) return false;
-    macros_definition_4_0(builder_, level_ + 1);
+    argument_definition_list(builder_, level_ + 1);
     return true;
-  }
-
-  // '(' q_atom_or_var (',' q_atom_or_var)* ')'
-  private static boolean macros_definition_4_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "macros_definition_4_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
-    result_ = consumeToken(builder_, ERL_PAR_LEFT);
-    result_ = result_ && q_atom_or_var(builder_, level_ + 1);
-    result_ = result_ && macros_definition_4_0_2(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
-    }
-    return result_;
-  }
-
-  // (',' q_atom_or_var)*
-  private static boolean macros_definition_4_0_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "macros_definition_4_0_2")) return false;
-    int offset_ = builder_.getCurrentOffset();
-    while (true) {
-      if (!macros_definition_4_0_2_0(builder_, level_ + 1)) break;
-      int next_offset_ = builder_.getCurrentOffset();
-      if (offset_ == next_offset_) {
-        empty_element_parsed_guard_(builder_, offset_, "macros_definition_4_0_2");
-        break;
-      }
-      offset_ = next_offset_;
-    }
-    return true;
-  }
-
-  // ',' q_atom_or_var
-  private static boolean macros_definition_4_0_2_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "macros_definition_4_0_2_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
-    result_ = consumeToken(builder_, ERL_COMMA);
-    result_ = result_ && q_atom_or_var(builder_, level_ + 1);
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
-    }
-    return result_;
   }
 
   /* ********************************************************** */

@@ -45,12 +45,13 @@ ERL_FILE
     ERL_MACROS_NAME
       PsiElement(atom)('mmmm')
     PsiElement(,)(',')
-    ERL_TUPLE_EXPRESSION
-      PsiElement({)('{')
-      ERL_MAX_EXPRESSION
-        ERL_Q_ATOM
-          PsiElement(atom)('id')
-      PsiElement(})('}')
+    ERL_MACROS_BODY
+      ERL_TUPLE_EXPRESSION
+        PsiElement({)('{')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('id')
+        PsiElement(})('}')
     PsiElement())(')')
   PsiElement(.)('.')
   ERL_FUNCTION
