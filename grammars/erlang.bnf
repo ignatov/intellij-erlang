@@ -214,7 +214,7 @@ typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
 typed_record_fields ::= '{' [generic_function_call_expression | typed_exprs] '}' {pin=1} // todo: hack #145
 private typed_exprs ::= typed_expr (',' typed_expr)*
 typed_expr ::= q_atom ['=' expression] ['::' top_type] {
-  pin=1
+  pin(".*")=1
   methods=[getName setName getNameIdentifier getTextOffset]
 }
 type_sig ::= fun_type [type_sig_guard]
