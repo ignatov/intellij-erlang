@@ -23,9 +23,9 @@ public class ErlangFunType100TImpl extends ErlangCompositeElementImpl implements
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangTopTypeClause getTopTypeClause() {
-    return findNotNullChildByClass(ErlangTopTypeClause.class);
+    return findChildByClass(ErlangTopTypeClause.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

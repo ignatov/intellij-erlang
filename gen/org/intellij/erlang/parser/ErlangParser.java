@@ -2499,18 +2499,22 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "fun_type_100_t")) return false;
     if (!nextTokenIs(builder_, ERL_PAR_LEFT)) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = consumeToken(builder_, ERL_PAR_LEFT);
-    result_ = result_ && fun_type_100_t_1(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
-    result_ = result_ && top_type_clause(builder_, level_ + 1);
-    if (result_) {
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, fun_type_100_t_1(builder_, level_ + 1));
+    result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_RIGHT)) && result_;
+    result_ = pinned_ && top_type_clause(builder_, level_ + 1) && result_;
+    if (result_ || pinned_) {
       marker_.done(ERL_FUN_TYPE_100_T);
     }
     else {
       marker_.rollbackTo();
     }
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   // '...' | top_type_list?
@@ -5678,18 +5682,20 @@ public class ErlangParser implements PsiParser {
   public static boolean typed_attr_val(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_attr_val")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<typed attr val>");
     result_ = expression(builder_, level_ + 1, -1);
+    pinned_ = result_; // pin = 1
     result_ = result_ && typed_attr_val_1(builder_, level_ + 1);
-    if (result_) {
+    if (result_ || pinned_) {
       marker_.done(ERL_TYPED_ATTR_VAL);
     }
     else {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   // (',' typed_record_fields) | ('::' top_type)
@@ -5712,32 +5718,40 @@ public class ErlangParser implements PsiParser {
   private static boolean typed_attr_val_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_attr_val_1_0")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = consumeToken(builder_, ERL_COMMA);
+    pinned_ = result_; // pin = 1
     result_ = result_ && typed_record_fields(builder_, level_ + 1);
-    if (!result_) {
+    if (!result_ && !pinned_) {
       marker_.rollbackTo();
     }
     else {
       marker_.drop();
     }
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   // '::' top_type
   private static boolean typed_attr_val_1_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_attr_val_1_1")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = consumeToken(builder_, ERL_COLON_COLON);
+    pinned_ = result_; // pin = 1
     result_ = result_ && top_type(builder_, level_ + 1);
-    if (!result_) {
+    if (!result_ && !pinned_) {
       marker_.rollbackTo();
     }
     else {
       marker_.drop();
     }
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */

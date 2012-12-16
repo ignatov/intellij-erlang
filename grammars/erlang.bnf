@@ -210,7 +210,7 @@ fun_type_sigs ::= spec_fun ['::'] type_sigs_list {
 }
 private type_sigs_list ::= type_sig (';' type_sig)*
 spec_fun ::= q_atom ['/' integer | ':' q_atom ['/' integer]]
-typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
+typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type)) {pin(".*")=1}
 typed_record_fields ::= '{' [generic_function_call_expression | typed_exprs] '}' {pin=1} // todo: hack #145
 private typed_exprs ::= typed_expr (',' typed_expr)*
 typed_expr ::= q_atom ['=' expression] ['::' top_type] {
@@ -236,7 +236,7 @@ type ::=
   | '#' record_ref '{' field_type_list? '}' {pin(".*") = 1}
 
 int_type ::= '-'? (integer | macros)
-fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause
+fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {pin(".*")=1}
 top_type_clause ::= '->' top_type {pin=1}
 fun_type ::= fun_type_arguments top_type_clause {pin=1}
 fun_type_arguments ::= '(' top_type_list? ')' {pin=1}
