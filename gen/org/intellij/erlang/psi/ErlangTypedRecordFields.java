@@ -7,8 +7,8 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangTypedRecordFields extends ErlangCompositeElement {
 
-  @Nullable
-  ErlangGenericFunctionCallExpression getGenericFunctionCallExpression();
+  @NotNull
+  List<ErlangGenericFunctionCallExpression> getGenericFunctionCallExpressionList();
 
   @NotNull
   List<ErlangTypedExpr> getTypedExprList();

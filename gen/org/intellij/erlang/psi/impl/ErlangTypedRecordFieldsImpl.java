@@ -17,9 +17,9 @@ public class ErlangTypedRecordFieldsImpl extends ErlangCompositeElementImpl impl
   }
 
   @Override
-  @Nullable
-  public ErlangGenericFunctionCallExpression getGenericFunctionCallExpression() {
-    return findChildByClass(ErlangGenericFunctionCallExpression.class);
+  @NotNull
+  public List<ErlangGenericFunctionCallExpression> getGenericFunctionCallExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangGenericFunctionCallExpression.class);
   }
 
   @Override
