@@ -71,12 +71,6 @@ public class ErlangFormattingTest extends LightPlatformCodeInsightFixtureTestCas
   }
 
   @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
-  @Override
   protected String getTestDataPath() {
     return "testData/formatter/";
   }

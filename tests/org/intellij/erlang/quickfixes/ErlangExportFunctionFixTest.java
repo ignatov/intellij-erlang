@@ -10,7 +10,6 @@ import java.util.List;
 public class ErlangExportFunctionFixTest extends LightPlatformCodeInsightFixtureTestCase {
   @Override
   protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     myFixture.enableInspections(ErlangUnusedFunctionInspection.class);
   }

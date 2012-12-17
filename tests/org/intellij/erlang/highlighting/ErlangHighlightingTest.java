@@ -20,12 +20,6 @@ import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCa
 import org.intellij.erlang.inspection.*;
 
 public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestCase {
-  @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
   protected void doTest() {
     myFixture.configureByFile(getTestName(false) + ".erl");
     //noinspection unchecked

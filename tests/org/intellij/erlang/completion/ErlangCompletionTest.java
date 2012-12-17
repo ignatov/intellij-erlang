@@ -115,5 +115,4 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
       assertTrue("Unexpected variants: "+varList, varList.isEmpty());
     }
   }
-
 }
