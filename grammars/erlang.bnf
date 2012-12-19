@@ -424,7 +424,7 @@ cr_clause ::= argument_definition clause_guard? clause_body {pin=1}
 argument_definition ::= expression
 
 receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end)) {pin=1}
-fun_expression ::= fun ((fun_clauses end) | ([module_ref ':'] (function_with_arity|function_with_arity_variables))) {pin=1}
+fun_expression ::= fun ((fun_clauses end) | ([(module_ref | q_var) ':'] (function_with_arity|function_with_arity_variables))) {pin=1}
 function_with_arity ::= q_atom '/' integer {
   pin= 1
   methods = [getReference]

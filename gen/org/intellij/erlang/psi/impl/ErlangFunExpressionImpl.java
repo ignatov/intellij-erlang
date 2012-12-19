@@ -42,6 +42,12 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
 
   @Override
   @Nullable
+  public ErlangQVar getQVar() {
+    return findChildByClass(ErlangQVar.class);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getEnd() {
     return findChildByType(ERL_END);
   }

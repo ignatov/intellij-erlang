@@ -2363,7 +2363,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // fun ((fun_clauses end) | ([module_ref ':'] (function_with_arity|function_with_arity_variables)))
+  // fun ((fun_clauses end) | ([(module_ref | q_var) ':'] (function_with_arity|function_with_arity_variables)))
   public static boolean fun_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression")) return false;
     if (!nextTokenIs(builder_, ERL_FUN)) return false;
@@ -2384,7 +2384,7 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // (fun_clauses end) | ([module_ref ':'] (function_with_arity|function_with_arity_variables))
+  // (fun_clauses end) | ([(module_ref | q_var) ':'] (function_with_arity|function_with_arity_variables))
   private static boolean fun_expression_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression_1")) return false;
     boolean result_ = false;
@@ -2416,7 +2416,7 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // [module_ref ':'] (function_with_arity|function_with_arity_variables)
+  // [(module_ref | q_var) ':'] (function_with_arity|function_with_arity_variables)
   private static boolean fun_expression_1_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression_1_1")) return false;
     boolean result_ = false;
@@ -2432,20 +2432,36 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // [module_ref ':']
+  // [(module_ref | q_var) ':']
   private static boolean fun_expression_1_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression_1_1_0")) return false;
     fun_expression_1_1_0_0(builder_, level_ + 1);
     return true;
   }
 
-  // module_ref ':'
+  // (module_ref | q_var) ':'
   private static boolean fun_expression_1_1_0_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_expression_1_1_0_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    result_ = module_ref(builder_, level_ + 1);
+    result_ = fun_expression_1_1_0_0_0(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // module_ref | q_var
+  private static boolean fun_expression_1_1_0_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "fun_expression_1_1_0_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = module_ref(builder_, level_ + 1);
+    if (!result_) result_ = q_var(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }
