@@ -19,20 +19,49 @@ package org.intellij.erlang.rebar.runner;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.filters.HyperlinkInfo;
+import com.intellij.execution.filters.RegexpFilter;
+import com.intellij.execution.filters.TextConsoleBuilder;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
 
 final class RebarRunningState extends CommandLineState {
-  private final RebarRunConfig myConfig;
+  private final RebarRunConfiguration myConfig;
 
-  public RebarRunningState(@NotNull ExecutionEnvironment env, @NotNull RebarRunConfig config) {
+  public RebarRunningState(@NotNull final ExecutionEnvironment env, @NotNull final RebarRunConfiguration config) {
     super(env);
     myConfig = config;
-    setConsoleBuilder(TextConsoleBuilderFactory.getInstance().createBuilder(myConfig.getProject()));
+    TextConsoleBuilder builder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfig.getProject());
+    builder.addFilter(new RegexpFilter(config.getProject(), "$FILE_PATH$:$LINE$:\\.*") {
+      @Nullable
+      @Override
+      protected HyperlinkInfo createOpenFileHyperlink(String fileName, int line, int column) {
+        HyperlinkInfo res = super.createOpenFileHyperlink(fileName, line, column);
+        if (res == null) {
+          Project project = config.getProject();
+          RebarSettings rebarSettings = RebarSettings.getInstance(project);
+          File parentFile = new File(rebarSettings.getRebarPath()).getParentFile();
+          String absolutePath = new File(parentFile, fileName).getAbsolutePath();
+          res = super.createOpenFileHyperlink(absolutePath, line, column);
+        }
+        return res;
+      }
+    });
+    setConsoleBuilder(builder);
   }
 
   @NotNull

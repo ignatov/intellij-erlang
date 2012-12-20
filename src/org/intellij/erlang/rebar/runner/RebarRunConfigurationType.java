@@ -25,10 +25,10 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public final class RebarRunConfigType implements ConfigurationType {
+public final class RebarRunConfigurationType implements ConfigurationType {
 
-  public static RebarRunConfigType getInstance() {
-    return Extensions.findExtension(CONFIGURATION_TYPE_EP, RebarRunConfigType.class);
+  public static RebarRunConfigurationType getInstance() {
+    return Extensions.findExtension(CONFIGURATION_TYPE_EP, RebarRunConfigurationType.class);
   }
 
   @NotNull
@@ -55,7 +55,7 @@ public final class RebarRunConfigType implements ConfigurationType {
   @NonNls
   @Override
   public String getId() {
-    return "RebarRunConfigType";
+    return "RebarRunConfigurationType";
   }
 
   @NotNull

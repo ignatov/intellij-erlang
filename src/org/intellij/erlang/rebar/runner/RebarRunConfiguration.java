@@ -32,17 +32,17 @@ import com.intellij.util.xmlb.XmlSerializer;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 
-public final class RebarRunConfig extends RuntimeConfiguration implements RunConfigurationWithSuppressedDefaultRunAction {
+public final class RebarRunConfiguration extends RuntimeConfiguration implements RunConfigurationWithSuppressedDefaultRunAction {
   @NotNull private String myCommand = "";
 
-  public RebarRunConfig(@NotNull String name, @NotNull Project project) {
+  public RebarRunConfiguration(@NotNull String name, @NotNull Project project) {
     super(name, project, RebarRunConfigFactory.getInstance());
   }
 
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new RebarRunConfigEditorForm();
+    return new RebarRunConfigurationEditorForm();
   }
 
   @NotNull

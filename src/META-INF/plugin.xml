@@ -95,7 +95,7 @@
         <projectOpenProcessor implementation="org.intellij.erlang.rebar.importWizard.RebarProjectOpenProcessor"/>
         <projectConfigurable instance="org.intellij.erlang.rebar.settings.RebarConfigurable"/>
         <projectService serviceImplementation="org.intellij.erlang.rebar.settings.RebarSettings"/>
-        <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigType"/>
+        <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
         <programRunner implementation="org.intellij.erlang.rebar.runner.RebarRunner"/>
     </extensions>
 

@@ -22,18 +22,18 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-final class RebarRunConfigEditorForm extends SettingsEditor<RebarRunConfig> {
+final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfiguration> {
   private JPanel myComponent;
   private JTextField myCommandText;
 
   @Override
-  protected void resetEditorFrom(@NotNull RebarRunConfig rebarRunConfig) {
-    myCommandText.setText(rebarRunConfig.getCommand());
+  protected void resetEditorFrom(@NotNull RebarRunConfiguration rebarRunConfiguration) {
+    myCommandText.setText(rebarRunConfiguration.getCommand());
   }
 
   @Override
-  protected void applyEditorTo(@NotNull RebarRunConfig rebarRunConfig) throws ConfigurationException {
-    rebarRunConfig.setCommand(myCommandText.getText());
+  protected void applyEditorTo(@NotNull RebarRunConfiguration rebarRunConfiguration) throws ConfigurationException {
+    rebarRunConfiguration.setCommand(myCommandText.getText());
   }
 
   @NotNull
