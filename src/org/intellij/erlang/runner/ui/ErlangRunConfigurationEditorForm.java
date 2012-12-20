@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.runner.ui;
 
-import com.intellij.ide.ui.ListCellRendererWrapper;
+import com.intellij.ui.ListCellRendererWrapper;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
@@ -45,8 +45,13 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
       }
     }
     myComboModules.setSelectedItem(configuration.getConfigurationModule().getModule());
-
-    myComboModules.setRenderer(new ListCellRendererWrapper(myComboModules.getRenderer()) {
+    myComboModules.setRenderer(getListCellRendererWrapper());
+    myParamsField.setText(configuration.getParams());
+    myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
+  }
+  
+  public static ListCellRendererWrapper getListCellRendererWrapper() {
+    return new ListCellRendererWrapper() {
       @Override
       public void customize(JList list, Object value, int index, boolean selected, boolean hasFocus) {
         if (value instanceof Module) {
@@ -54,10 +59,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
           setText(module.getName());
         }
       }
-    });
-
-    myParamsField.setText(configuration.getParams());
-    myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
+    };
   }
 
   @Override
