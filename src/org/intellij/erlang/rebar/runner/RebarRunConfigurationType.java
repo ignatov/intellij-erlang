@@ -61,6 +61,6 @@ public final class RebarRunConfigurationType implements ConfigurationType {
   @NotNull
   @Override
   public ConfigurationFactory[] getConfigurationFactories() {
-    return new ConfigurationFactory[]{RebarRunConfigFactory.getInstance()};
+    return new ConfigurationFactory[]{RebarRunConfigurationFactory.getInstance()};
   }
 }
