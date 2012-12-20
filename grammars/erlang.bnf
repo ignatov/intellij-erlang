@@ -313,7 +313,7 @@ orelse_expression ::= expression orelse expression
 andalso_expression ::= expression andalso expression
 comp_op_expression ::= expression comp_op expression
 list_op_expression ::= expression list_op expression
-multiplicative_expression ::= expression mult_op &(!atom) expression // for #141
+multiplicative_expression ::= expression mult_op &(!(atom (',' | '>>'))) expression // for #141
 additive_expression ::= expression add_op expression
 parenthesized_expression ::= '(' expression ')'
 

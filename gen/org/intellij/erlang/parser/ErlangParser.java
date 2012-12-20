@@ -6070,7 +6070,7 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // mult_op &(!atom)
+  // mult_op &(!(atom (',' | '>>')))
   private static boolean multiplicative_expression_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "multiplicative_expression_0")) return false;
     boolean result_ = false;
@@ -6086,7 +6086,7 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // &(!atom)
+  // &(!(atom (',' | '>>')))
   private static boolean multiplicative_expression_0_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "multiplicative_expression_0_1")) return false;
     boolean result_ = false;
@@ -6098,15 +6098,47 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // !atom
+  // !(atom (',' | '>>'))
   private static boolean multiplicative_expression_0_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "multiplicative_expression_0_1_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_NOT_, null);
-    result_ = !consumeToken(builder_, ERL_ATOM);
+    result_ = !multiplicative_expression_0_1_0_0(builder_, level_ + 1);
     marker_.rollbackTo();
     result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_NOT_, null);
+    return result_;
+  }
+
+  // atom (',' | '>>')
+  private static boolean multiplicative_expression_0_1_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "multiplicative_expression_0_1_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_ATOM);
+    result_ = result_ && multiplicative_expression_0_1_0_0_1(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // ',' | '>>'
+  private static boolean multiplicative_expression_0_1_0_0_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "multiplicative_expression_0_1_0_0_1")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_COMMA);
+    if (!result_) result_ = consumeToken(builder_, ERL_BIN_END);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
     return result_;
   }
 
