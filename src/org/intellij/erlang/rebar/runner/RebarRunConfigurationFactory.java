@@ -24,10 +24,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import org.jetbrains.annotations.NotNull;
 
-final class RebarRunConfigFactory extends ConfigurationFactory {
-  private static final RebarRunConfigFactory ourInstance = new RebarRunConfigFactory();
+final class RebarRunConfigurationFactory extends ConfigurationFactory {
+  private static final RebarRunConfigurationFactory ourInstance = new RebarRunConfigurationFactory();
 
-  private RebarRunConfigFactory() {
+  private RebarRunConfigurationFactory() {
     super(RebarRunConfigurationType.getInstance());
   }
 
@@ -39,7 +39,7 @@ final class RebarRunConfigFactory extends ConfigurationFactory {
   }
 
   @NotNull
-  public static RebarRunConfigFactory getInstance() {
+  public static RebarRunConfigurationFactory getInstance() {
     return ourInstance;
   }
 

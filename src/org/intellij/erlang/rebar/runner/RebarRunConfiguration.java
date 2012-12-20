@@ -36,7 +36,7 @@ public final class RebarRunConfiguration extends RuntimeConfiguration implements
   @NotNull private String myCommand = "";
 
   public RebarRunConfiguration(@NotNull String name, @NotNull Project project) {
-    super(name, project, RebarRunConfigFactory.getInstance());
+    super(name, project, RebarRunConfigurationFactory.getInstance());
   }
 
   @NotNull

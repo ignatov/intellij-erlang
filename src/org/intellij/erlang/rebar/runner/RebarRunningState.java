@@ -46,16 +46,13 @@ final class RebarRunningState extends CommandLineState {
     super(env);
     myConfig = config;
     TextConsoleBuilder builder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfig.getProject());
-    builder.addFilter(new RegexpFilter(config.getProject(), "$FILE_PATH$:$LINE$:\\.*") {
+    builder.addFilter(new RegexpFilter(myConfig.getProject(), "$FILE_PATH$:$LINE$:\\.*") {
       @Nullable
       @Override
       protected HyperlinkInfo createOpenFileHyperlink(String fileName, int line, int column) {
         HyperlinkInfo res = super.createOpenFileHyperlink(fileName, line, column);
         if (res == null) {
-          Project project = config.getProject();
-          RebarSettings rebarSettings = RebarSettings.getInstance(project);
-          File parentFile = new File(rebarSettings.getRebarPath()).getParentFile();
-          String absolutePath = new File(parentFile, fileName).getAbsolutePath();
+          String absolutePath = new File(myConfig.getProject().getBasePath(), fileName).getAbsolutePath();
           res = super.createOpenFileHyperlink(absolutePath, line, column);
         }
         return res;
