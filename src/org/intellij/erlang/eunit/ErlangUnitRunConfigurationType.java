@@ -15,7 +15,7 @@ public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
 
   protected ErlangUnitRunConfigurationType() {
     super("ErlangUnitRunConfigurationType",
-          "Eunit",
+          "Erlang Eunit",
           "Eunit run configuration",
       ErlangIcons.EUNIT);
     addFactory(new ErlangUnitConfigurationFactory(this));
