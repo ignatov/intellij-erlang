@@ -59,14 +59,15 @@ body {
   box-sizing: border-box;
   color:#373737;
   background: #212121;
-  font-size: 16px;
-  font-family: 'Myriad Pro', Calibri, Helvetica, Arial, sans-serif;
+  /*font-size: 18px;*/
+  font:16px/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /*font-family: 'Myriad Pro', Calibri, Helvetica, Arial, sans-serif;*/
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  margin: 10px 0;
+  margin: 0 0;
   font-weight: 700;
   color:#222222;
   font-family: 'Lucida Grande', 'Calibri', Helvetica, Arial, sans-serif;
@@ -79,7 +80,7 @@ h1 {
 }
 
 h2 {
-  padding-bottom: 10px;
+  /*padding-bottom: 10px;*/
   font-size: 32px;
   background: url('../images/bg_hr.png') repeat-x bottom;
 }
@@ -272,7 +273,7 @@ Full-Width Styles
 
 .inner {
   position: relative;
-  max-width: 640px;
+  max-width: 840px;
   padding: 20px 10px;
   margin: 0 auto;
 }
@@ -302,7 +303,7 @@ Full-Width Styles
 }
 
 #header_wrap .inner {
-  padding: 50px 10px 30px 10px;
+  /*padding: 50px 10px 30px 10px;*/
 }
 
 #project_title {
@@ -367,7 +368,7 @@ Full-Width Styles
 }
 
 #main_content {
-  padding-top: 40px;
+  /*padding-top: 40px;*/
 }
 
 #footer_wrap {
