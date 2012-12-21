@@ -38,7 +38,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     ProcessHandler processHandler = startProcess();
     setConsoleBuilder(getConsoleBuilder());
 
-    ConsoleView consoleView = createConsole1(executor);
+    ConsoleView consoleView = createConsoleView(executor);
     if (consoleView != null) {
       consoleView.attachToProcess(processHandler);
     }
@@ -48,7 +48,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return executionResult;
   }
 
-  private ConsoleView createConsole1(Executor executor) throws ExecutionException {
+  private ConsoleView createConsoleView(Executor executor) throws ExecutionException {
     final ErlangUnitRunConfiguration runConfiguration = (ErlangUnitRunConfiguration) getRunnerSettings().getRunProfile();
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(
       "Erlang",
