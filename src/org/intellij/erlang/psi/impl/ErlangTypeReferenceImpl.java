@@ -36,12 +36,10 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangModuleRef;
-import org.intellij.erlang.psi.ErlangQAtom;
-import org.intellij.erlang.psi.ErlangTypeDefinition;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,6 +77,7 @@ public class ErlangTypeReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBa
   @NotNull
   @Override
   public Object[] getVariants() {
-    return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile(), myModuleRef == null));
+    ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myElement, ErlangExportTypeAttribute.class);
+    return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile(), myModuleRef == null && exportTypeAttribute == null, exportTypeAttribute != null));
   }
 }

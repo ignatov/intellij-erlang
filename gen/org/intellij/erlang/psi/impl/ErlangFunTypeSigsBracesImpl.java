@@ -17,9 +17,9 @@ public class ErlangFunTypeSigsBracesImpl extends ErlangCompositeElementImpl impl
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangFunTypeSigs getFunTypeSigs() {
-    return findNotNullChildByClass(ErlangFunTypeSigs.class);
+    return findChildByClass(ErlangFunTypeSigs.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

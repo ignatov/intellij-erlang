@@ -187,6 +187,9 @@
         <localInspection language="Erlang" shortName="ErlangUnusedFunctionInspection" displayName="Unused function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnusedFunctionInspection"/>
+        <localInspection language="Erlang" shortName="ErlangUnusedTypeInspection" displayName="Unused type"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnusedTypeInspection"/>
         <localInspection language="Erlang" shortName="ErlangDuplicateFunctionInspection"
                          displayName="Duplicate function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"

@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangFunTypeSigsBraces extends ErlangCompositeElement {
 
-  @NotNull
+  @Nullable
   ErlangFunTypeSigs getFunTypeSigs();
 
 }

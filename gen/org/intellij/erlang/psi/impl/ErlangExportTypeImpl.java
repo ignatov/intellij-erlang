@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class ErlangExportTypeImpl extends ErlangCompositeElementImpl implements ErlangExportType {
 
@@ -31,6 +32,11 @@ public class ErlangExportTypeImpl extends ErlangCompositeElementImpl implements 
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExportType(this);
     else super.accept(visitor);
+  }
+
+  @Nullable
+  public PsiReference getReference() {
+    return ErlangPsiImplUtil.getReference(this);
   }
 
 }

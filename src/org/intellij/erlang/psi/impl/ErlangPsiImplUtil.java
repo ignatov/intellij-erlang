@@ -215,6 +215,13 @@ public class ErlangPsiImplUtil {
     return new ErlangTypeReferenceImpl<ErlangQAtom>(atom, moduleRef, TextRange.from(0, atom.getTextLength()), atom.getText());
   }
 
+  @Nullable
+  public static PsiReference getReference(@NotNull ErlangExportType o) {
+    ErlangQAtom atom = o.getQAtom();
+    ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
+    return new ErlangTypeReferenceImpl<ErlangQAtom>(atom, moduleRef, TextRange.from(0, atom.getTextLength()), atom.getText());
+  }
+
   public static boolean inDefinition(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
   }
@@ -397,7 +404,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes) {
+  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity) {
     if (containingFile instanceof ErlangFile) {
       List<ErlangTypeDefinition> types = ((ErlangFile) containingFile).getTypes();
       List<String> builtInTypeNames = ContainerUtil.list("term", "boolean", "byte", "char",
@@ -424,8 +431,8 @@ public class ErlangPsiImplUtil {
         types,
         new Function<ErlangTypeDefinition, LookupElement>() {
           @Override
-          public LookupElement fun(@NotNull ErlangTypeDefinition rd) {
-            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(handler); // todo: improve handler
+          public LookupElement fun(@NotNull final ErlangTypeDefinition rd) {
+            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(calculateTypeArity(rd), withArity));
           }
         });
       return ContainerUtil.concat(foundedTypes, builtInTypes);
@@ -433,6 +440,11 @@ public class ErlangPsiImplUtil {
     return Collections.emptyList();
   }
 
+  private static int calculateTypeArity(ErlangTypeDefinition rd) {
+    ErlangArgumentDefinitionList argumentDefinitionList = rd.getArgumentDefinitionList();
+    if (argumentDefinitionList == null) return 0;
+    return argumentDefinitionList.getArgumentDefinitionList().size();
+  }
 
   @NotNull
   public static String getName(@NotNull ErlangFunction o) {
@@ -882,6 +894,11 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static String createFunctionPresentation(@NotNull ErlangFunction function) {
     return function.getName() + "/" + function.getArity();
+  }
+
+  @NotNull
+  public static String createTypePresentation(@NotNull ErlangTypeDefinition type) {
+    return type.getName() + "/" + calculateTypeArity(type);
   }
 
   @NotNull
