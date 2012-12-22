@@ -19,25 +19,13 @@ package org.intellij.erlang.rebar.runner;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.filters.HyperlinkInfo;
-import com.intellij.execution.filters.RegexpFilter;
 import com.intellij.execution.filters.TextConsoleBuilder;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.util.SystemInfo;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
 
 final class RebarRunningState extends CommandLineState {
   private final RebarRunConfiguration myConfig;
@@ -46,18 +34,12 @@ final class RebarRunningState extends CommandLineState {
     super(env);
     myConfig = config;
     TextConsoleBuilder builder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfig.getProject());
-    builder.addFilter(new RegexpFilter(myConfig.getProject(), "$FILE_PATH$:$LINE$:\\.*") {
-      @Nullable
-      @Override
-      protected HyperlinkInfo createOpenFileHyperlink(String fileName, int line, int column) {
-        HyperlinkInfo res = super.createOpenFileHyperlink(fileName, line, column);
-        if (res == null) {
-          String absolutePath = new File(myConfig.getProject().getBasePath(), fileName).getAbsolutePath();
-          res = super.createOpenFileHyperlink(absolutePath, line, column);
-        }
-        return res;
-      }
-    });
+    builder.addFilter(new FileReferenceFilter(myConfig.getProject(),
+      FileReferenceFilter.PATH_MACROS + ":" + FileReferenceFilter.LINE_MACROS));
+    builder.addFilter(new FileReferenceFilter(myConfig.getProject(),
+      "\\(" + FileReferenceFilter.PATH_MACROS + ", line " + FileReferenceFilter.LINE_MACROS + "\\)"));
+    builder.addFilter(new FileReferenceFilter(myConfig.getProject(),
+      "\\[\\{file,\"" + FileReferenceFilter.PATH_MACROS + "\"\\},\\{line," + FileReferenceFilter.LINE_MACROS + "\\}\\]"));
     setConsoleBuilder(builder);
   }
 
