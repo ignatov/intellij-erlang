@@ -108,8 +108,8 @@
   name(".*type|.*_t")=type
   pin(".*(clauses|exprs|list)(?:_\d.*)?")=1
 
-  implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("record_definition|function|q_var|q_atom|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
+  extends("record_definition|function|q_var|q_atom|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
 forms ::= form ('.' form)* {pin=1}
@@ -127,7 +127,9 @@ private form ::=
 private external is_app_config ::= isApplicationLanguage
 external eof ::= eofBuilder
 
-q_atom ::= macros_arg | macros | atom
+q_atom ::= macros_arg | macros | atom {
+  methods = [getName setName getNameIdentifier]
+}
 q_var ::= '_' | var {
   methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
 }

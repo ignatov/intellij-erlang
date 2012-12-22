@@ -31,22 +31,23 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   @Override
-  public String getElementDescription(@NotNull PsiElement psiElement, @NotNull ElementDescriptionLocation location) {
-    if (location == UsageViewNodeTextLocation.INSTANCE && psiElement instanceof ErlangNamedElement) {
-      return getElementDescription(psiElement, UsageViewTypeLocation.INSTANCE) + " " +
-        "'" + getElementDescription(psiElement, UsageViewShortNameLocation.INSTANCE) + "'";
+  public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
+    if (location == UsageViewNodeTextLocation.INSTANCE && o instanceof ErlangNamedElement) {
+      return getElementDescription(o, UsageViewTypeLocation.INSTANCE) + " " +
+        "'" + getElementDescription(o, UsageViewShortNameLocation.INSTANCE) + "'";
     }
-    if ((location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) && psiElement instanceof ErlangNamedElement) {
-      return ((ErlangNamedElement) psiElement).getName();
+    if ((location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) && o instanceof ErlangNamedElement) {
+      return ((ErlangNamedElement) o).getName();
     }
     if (location == UsageViewTypeLocation.INSTANCE) {
-      if (psiElement instanceof ErlangModule) return "Module";
-      if (psiElement instanceof ErlangFunction) return "Function";
-      if (psiElement instanceof ErlangRecordDefinition) return "Record";
-      if (psiElement instanceof ErlangQVar) return "Variable";
-      if (psiElement instanceof ErlangMacrosDefinition) return "Macros";
-      if (psiElement instanceof ErlangTypedExpr) return "Record field";
-      if (psiElement instanceof ErlangTypeDefinition) return "Type";
+      if (o instanceof ErlangModule) return "Module";
+      if (o instanceof ErlangFunction) return "Function";
+      if (o instanceof ErlangRecordDefinition) return "Record";
+      if (o instanceof ErlangQVar) return "Variable";
+      if (o instanceof ErlangQAtom) return "Atom";
+      if (o instanceof ErlangMacrosDefinition) return "Macros";
+      if (o instanceof ErlangTypedExpr) return "Record field";
+      if (o instanceof ErlangTypeDefinition) return "Type";
     }
     return null;
   }

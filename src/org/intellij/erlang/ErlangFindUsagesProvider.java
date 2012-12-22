@@ -38,11 +38,11 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
   }
 
   @Override
-  public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
-    return psiElement instanceof ErlangFunction || psiElement instanceof ErlangQVar
-      || psiElement instanceof ErlangRecordDefinition || psiElement instanceof ErlangModule
-      || psiElement instanceof ErlangMacrosDefinition || psiElement instanceof ErlangTypedExpr
-      || psiElement instanceof ErlangTypeDefinition
+  public boolean canFindUsagesFor(@NotNull PsiElement o) {
+    return o instanceof ErlangFunction || o instanceof ErlangQVar
+      || o instanceof ErlangRecordDefinition || o instanceof ErlangModule
+      || o instanceof ErlangMacrosDefinition || o instanceof ErlangTypedExpr
+      || o instanceof ErlangTypeDefinition || o instanceof ErlangQAtom
       ;
   }
 

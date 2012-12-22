@@ -30,6 +30,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Condition;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -79,8 +80,9 @@ public class ErlangPsiImplUtil {
     return new ErlangVariableReferenceImpl(o, TextRange.from(0, o.getTextLength()));
   }
 
-  public static List<ErlangTypedExpr> getRecordFields(PsiElement element) {
+  public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
     List<ErlangTypedExpr> result = new ArrayList<ErlangTypedExpr>(0);
+    List<ErlangQAtom> atoms = new ArrayList<ErlangQAtom>(0);
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     PsiReference reference = recordExpression != null ? recordExpression.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
@@ -89,12 +91,36 @@ public class ErlangPsiImplUtil {
       ErlangTypedRecordFields typedRecordFields = ((ErlangRecordDefinition) resolve).getTypedRecordFields();
       if (typedRecordFields != null) {
         for (ErlangTypedExpr e : typedRecordFields.getTypedExprList()) {
-          result.add(e);
+          ErlangMacros macros = e.getQAtom().getMacros();
+          if (macros == null) {
+            result.add(e);
+          }
+          else { // for #149: Nitrogen support
+            PsiReference psiReference = macros.getReference();
+            PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
+            if (macrosDefinition instanceof ErlangMacrosDefinition) {
+              ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
+              List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
+              for (ErlangExpression ee : expressionList) {
+                if (ee instanceof ErlangMaxExpression){
+                  ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
+                  ContainerUtil.addIfNotNull(atoms, qAtom);
+                }
+                else if (ee instanceof ErlangAssignmentExpression) {
+                  ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
+                  if (left instanceof ErlangMaxExpression){
+                    ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
+                    ContainerUtil.addIfNotNull(atoms, qAtom);
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
 
-    return result;
+    return Pair.create(result, atoms);
   }
 
   @Nullable
@@ -113,9 +139,15 @@ public class ErlangPsiImplUtil {
     return new ErlangAtomBasedReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText()) {
       @Override
       public PsiElement resolve() {
-        List<ErlangTypedExpr> fields = getRecordFields(myElement);
-        for (ErlangTypedExpr field : fields) {
+        Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(myElement);
+        for (ErlangTypedExpr field : recordFields.first) {
           if (field.getName().equals(myReferenceName)) return field;
+        }
+        for (ErlangQAtom qAtom : recordFields.second) {
+          PsiElement aa = qAtom.getAtom();
+          if (aa != null) {
+            if (myReferenceName.equals(aa.getText())) return qAtom;
+          }
         }
         return null;
       }
@@ -942,5 +974,26 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static String getName(ErlangTypeDefinition o) {
     return o.getNameIdentifier().getText();
+  }
+
+  @NotNull
+  public static PsiElement getNameIdentifier(@NotNull ErlangQAtomImpl o) {
+    PsiElement atom = o.getAtom();
+    if (atom != null) return atom;
+    return o;
+  }
+
+  @NotNull
+  public static String getName(@NotNull ErlangQAtomImpl o) {
+    return o.getNameIdentifier().getText();
+  }
+
+  @NotNull
+  public static PsiElement setName(@NotNull ErlangQAtomImpl o, @NotNull String newName) {
+    PsiElement atom = o.getAtom();
+    if (atom != null) {
+      atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
+    }
+    return o;
   }
 }
