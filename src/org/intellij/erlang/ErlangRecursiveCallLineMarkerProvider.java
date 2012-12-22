@@ -42,6 +42,7 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
             PsiDocumentManager instance = PsiDocumentManager.getInstance(element.getProject());
             Document document = instance.getDocument(element.getContainingFile());
             int textOffset = element.getTextOffset();
+            if (document == null) continue;
             int lineNumber = document.getLineNumber(textOffset);
             if (!lines.contains(lineNumber)) {
               result.add(new RecursiveMethodCallMarkerInfo(element));
