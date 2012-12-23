@@ -142,7 +142,7 @@ public class ErlangBlock implements ASTBlock, BlockWithParent {
             alignment = baseAlignment;
           }
         }
-        if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS) {
+        if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS || parentType == ERL_RECORD_FIELDS) {
           if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT) {
             alignment = baseAlignment;
           }
