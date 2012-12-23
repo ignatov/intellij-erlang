@@ -28,18 +28,19 @@ import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.jetbrains.annotations.NotNull;
 
 final class RebarRunningState extends CommandLineState {
+  static final String COMPILATION_ERROR_PATH = FileReferenceFilter.PATH_MACROS + ":" + FileReferenceFilter.LINE_MACROS;
+  static final String EUNIT_ERROR_PATH = "\\(" + FileReferenceFilter.PATH_MACROS + ", line " + FileReferenceFilter.LINE_MACROS + "\\)";
+  static final String EUNIT_FAILURE_PATH = "\\[\\{file,\"" + FileReferenceFilter.PATH_MACROS + "\"\\},\\{line," + FileReferenceFilter.LINE_MACROS + "\\}\\]";
+
   private final RebarRunConfiguration myConfig;
 
   public RebarRunningState(@NotNull final ExecutionEnvironment env, @NotNull final RebarRunConfiguration config) {
     super(env);
     myConfig = config;
     TextConsoleBuilder builder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfig.getProject());
-    builder.addFilter(new FileReferenceFilter(myConfig.getProject(),
-      FileReferenceFilter.PATH_MACROS + ":" + FileReferenceFilter.LINE_MACROS));
-    builder.addFilter(new FileReferenceFilter(myConfig.getProject(),
-      "\\(" + FileReferenceFilter.PATH_MACROS + ", line " + FileReferenceFilter.LINE_MACROS + "\\)"));
-    builder.addFilter(new FileReferenceFilter(myConfig.getProject(),
-      "\\[\\{file,\"" + FileReferenceFilter.PATH_MACROS + "\"\\},\\{line," + FileReferenceFilter.LINE_MACROS + "\\}\\]"));
+    builder.addFilter(new FileReferenceFilter(myConfig.getProject(), COMPILATION_ERROR_PATH));
+    builder.addFilter(new FileReferenceFilter(myConfig.getProject(), EUNIT_ERROR_PATH));
+    builder.addFilter(new FileReferenceFilter(myConfig.getProject(), EUNIT_FAILURE_PATH));
     setConsoleBuilder(builder);
   }
 

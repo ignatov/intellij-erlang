@@ -25,6 +25,7 @@ import org.intellij.erlang.parser.ErlangAppParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFixTest;
 import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
+import org.intellij.erlang.rebar.runner.FileReferenceFilterTest;
 
 /**
  * @author ignatov
@@ -40,6 +41,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangExportFunctionFixTest.class);
     suite.addTestSuite(ErlangCompletionTest.class);
     suite.addTestSuite(RebarProjectImportBuilderTest.class);
+    suite.addTestSuite(FileReferenceFilterTest.class);
     return suite;
   }
 }
