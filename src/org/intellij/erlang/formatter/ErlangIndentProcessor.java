@@ -101,6 +101,9 @@ public class ErlangIndentProcessor {
     if (parentType == ERL_LC_EXPRS) {
       return Indent.getNormalIndent();
     }
+    if (parentType == ERL_RECORD_FIELDS) {
+      return Indent.getContinuationIndent();
+    }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();
     }
