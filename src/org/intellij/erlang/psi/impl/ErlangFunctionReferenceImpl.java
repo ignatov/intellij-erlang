@@ -21,9 +21,11 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.ErlangCallbackSpec;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangQAtom;
@@ -52,6 +54,8 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
   @Override
   public PsiElement resolve() {
+    if (suppressResolve()) return null; // for #132
+
     if (myModuleAtom != null) {
       return getExternalFunction(getModuleFileName());
     }
@@ -63,6 +67,8 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   @NotNull
   @Override
   public ResolveResult[] multiResolve(boolean incompleteCode) {
+    if (suppressResolve()) return ResolveResult.EMPTY_ARRAY; // for #132
+
     // todo: use incompleteCode
     if (resolve() != null) return ResolveResult.EMPTY_ARRAY;
 
@@ -82,6 +88,10 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
       result = containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunctionsByName(myReferenceName) : ContainerUtil.<ErlangFunction>emptyList();
     }
     return PsiElementResolveResult.createResults(result);
+  }
+
+  private boolean suppressResolve() {
+    return PsiTreeUtil.getParentOfType(myElement, ErlangCallbackSpec.class) != null;
   }
 
   @NotNull
