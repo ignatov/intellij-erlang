@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangQAtom extends ErlangNamedElement {
+public interface ErlangQAtom extends ErlangCompositeElement {
 
   @Nullable
   ErlangMacros getMacros();
@@ -15,14 +15,5 @@ public interface ErlangQAtom extends ErlangNamedElement {
 
   @Nullable
   PsiElement getAtom();
-
-  @NotNull
-  String getName();
-
-  @NotNull
-  PsiElement setName(String newName);
-
-  @NotNull
-  PsiElement getNameIdentifier();
 
 }

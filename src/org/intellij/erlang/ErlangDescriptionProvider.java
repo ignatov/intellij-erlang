@@ -32,6 +32,9 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
+    if (o instanceof ErlangQAtom) {
+      return "Atom '" + o.getText() + "'";
+    }
     if (location == UsageViewNodeTextLocation.INSTANCE && o instanceof ErlangNamedElement) {
       return getElementDescription(o, UsageViewTypeLocation.INSTANCE) + " " +
         "'" + getElementDescription(o, UsageViewShortNameLocation.INSTANCE) + "'";

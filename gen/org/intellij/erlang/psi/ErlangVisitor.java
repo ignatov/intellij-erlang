@@ -323,7 +323,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitQAtom(@NotNull ErlangQAtom o) {
-    visitNamedElement(o);
+    visitCompositeElement(o);
   }
 
   public void visitQVar(@NotNull ErlangQVar o) {

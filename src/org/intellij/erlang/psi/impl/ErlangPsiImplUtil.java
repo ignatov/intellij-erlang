@@ -975,25 +975,4 @@ public class ErlangPsiImplUtil {
   public static String getName(ErlangTypeDefinition o) {
     return o.getNameIdentifier().getText();
   }
-
-  @NotNull
-  public static PsiElement getNameIdentifier(@NotNull ErlangQAtomImpl o) {
-    PsiElement atom = o.getAtom();
-    if (atom != null) return atom;
-    return o;
-  }
-
-  @NotNull
-  public static String getName(@NotNull ErlangQAtomImpl o) {
-    return o.getNameIdentifier().getText();
-  }
-
-  @NotNull
-  public static PsiElement setName(@NotNull ErlangQAtomImpl o, @NotNull String newName) {
-    PsiElement atom = o.getAtom();
-    if (atom != null) {
-      atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
-    }
-    return o;
-  }
 }
