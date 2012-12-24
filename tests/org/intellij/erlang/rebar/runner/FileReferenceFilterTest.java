@@ -54,7 +54,7 @@ public class FileReferenceFilterTest extends PlatformTestCase {
   public void testCompilationErrorMissingPath() {
     final FileReferenceFilter compilationErrorFilter =
       new FileReferenceFilter(getProject(), RebarRunningState.COMPILATION_ERROR_PATH);
-    final String consoleOutput = "some text||src/A_module.erl:123: more text here";
+    final String consoleOutput = "some text||src/B_module.erl:123: more text here"; // may be case insensitive
     final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(11, result.highlightStartOffset);
     assertEquals(31, result.highlightEndOffset);
