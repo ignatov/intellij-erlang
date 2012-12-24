@@ -1,4 +1,4 @@
-<idea-plugin url="https://github.com/ignatov/intellij-erlang" version="2">
+<idea-plugin url="https://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
     <version>0.3.5</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
@@ -202,6 +202,11 @@
                          displayName="Specification for undefined function"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangSpecificationForUndefinedFunctionInspection"/>
+      
+        <intentionAction>
+          <className>org.intellij.erlang.intention.ErlangExportFunctionIntention</className>
+          <category>Erlang</category>
+        </intentionAction>
     </extensions>
     <actions>
         <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
