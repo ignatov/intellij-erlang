@@ -1,4 +1,4 @@
-<idea-plugin url="https://ignatov.github.com/intellij-erlang" version="2">
+<idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
     <version>0.3.5</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
