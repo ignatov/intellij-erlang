@@ -1,0 +1,13 @@
+ERL_FILE
+  ERL_RECORD_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom)('record')
+    PsiElement(()('(')
+    ERL_Q_ATOM
+      PsiElement(atom)('abc')
+    PsiElement(,)(',')
+    ERL_TYPED_RECORD_FIELDS
+      PsiElement({)('{')
+      PsiElement(})('}')
+    PsiElement())(')')
+  PsiElement(.)('.')
