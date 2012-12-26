@@ -34,6 +34,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class RebarRunConfiguration extends RuntimeConfiguration implements RunConfigurationWithSuppressedDefaultRunAction {
   @NotNull private String myCommand = "";
+  private boolean myUseTestConsole = false;
+  private boolean mySkipDependencies = false;
 
   public RebarRunConfiguration(@NotNull String name, @NotNull Project project) {
     super(name, project, RebarRunConfigurationFactory.getInstance());
@@ -72,5 +74,21 @@ public final class RebarRunConfiguration extends RuntimeConfiguration implements
 
   public void setCommand(@NotNull String command) {
     myCommand = command;
+  }
+
+  public boolean isUseTestConsole() {
+    return myUseTestConsole;
+  }
+
+  public void setUseTestConsole(boolean useTestConsole) {
+    myUseTestConsole = useTestConsole;
+  }
+
+  public boolean isSkipDependencies() {
+    return mySkipDependencies;
+  }
+
+  public void setSkipDependencies(boolean skipDeps) {
+    mySkipDependencies = skipDeps;
   }
 }

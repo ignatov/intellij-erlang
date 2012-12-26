@@ -7,6 +7,7 @@ import com.intellij.execution.testframework.TestConsoleProperties;
 import com.intellij.execution.testframework.sm.SMCustomMessagesParsing;
 import com.intellij.execution.testframework.sm.ServiceMessageBuilder;
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
+import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
@@ -23,13 +24,15 @@ import static com.intellij.execution.testframework.sm.ServiceMessageBuilder.*;
 /**
  * @author ignatov
  */
-public class ErlangUnitConsoleProperties extends TestConsoleProperties implements SMCustomMessagesParsing {
+public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties implements SMCustomMessagesParsing {
 
+  private final boolean myEunit;
   private RuntimeConfiguration myConfig;
 
-  public ErlangUnitConsoleProperties(final ErlangUnitRunConfiguration config, final Executor executor) {
-    super(new Storage.PropertiesComponentStorage("ErlangUnitSupport.", PropertiesComponent.getInstance()), config.getProject(), executor);
-    myConfig = new RuntimeConfigurationProducer.DelegatingRuntimeConfiguration<ErlangUnitRunConfiguration>(config);
+  public ErlangUnitConsoleProperties(final RuntimeConfiguration config, final Executor executor, boolean isEunit) {
+    super(config, "Erlang", executor);
+    myEunit = isEunit;
+    myConfig = new RuntimeConfigurationProducer.DelegatingRuntimeConfiguration<RuntimeConfiguration>(config);
   }
 
   @Override
@@ -50,10 +53,10 @@ public class ErlangUnitConsoleProperties extends TestConsoleProperties implement
       protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) throws ParseException {
         Matcher m;
 
-        Pattern OK = Pattern.compile("  (\\w+): (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
-        Pattern FAILED = Pattern.compile("  (\\w+): (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
+        Pattern OK = Pattern.compile("  (\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
+        Pattern FAILED = Pattern.compile("  (\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
 
-        if (StringUtil.startsWith(text, "module")) {
+        if (StringUtil.startsWith(text, (myEunit ? "" : "  ") + "module")) {
           String module = StringUtil.unquoteString(StringUtil.getWordsIn(text).get(1));
           myCurrentModule = module;
           return super.processServiceMessages(ServiceMessageBuilder.testSuiteStarted(module).toString(), outputType, visitor);
@@ -86,6 +89,9 @@ public class ErlangUnitConsoleProperties extends TestConsoleProperties implement
             return super.processServiceMessages(testFailed(myCurrentTest).addAttribute("message", myStdOut).toString(), outputType, visitor)
               && super.processServiceMessages(testFinished(myCurrentTest).toString(), outputType, visitor);
           }
+        }
+        else if (text.startsWith("=======================================================")){
+          return super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), outputType, visitor);
         }
         return true;
       }

@@ -18,9 +18,15 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.filters.Filter;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.PlatformTestCase;
+import com.intellij.util.containers.ContainerUtil;
 
 import java.io.File;
+import java.util.regex.Pattern;
+
+import static org.intellij.erlang.rebar.runner.FileReferenceFilter.*;
 
 @SuppressWarnings("ConstantConditions")
 public class FileReferenceFilterTest extends PlatformTestCase {
@@ -32,8 +38,7 @@ public class FileReferenceFilterTest extends PlatformTestCase {
   }
 
   public void testCompilationErrorRelativePath() {
-    final FileReferenceFilter compilationErrorFilter =
-      new FileReferenceFilter(getProject(), RebarRunningState.COMPILATION_ERROR_PATH);
+    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), COMPILATION_ERROR_PATH);
     final String consoleOutput = "some text||src/a_module.erl:123: more text here";
     final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(11, result.highlightStartOffset);
@@ -42,8 +47,7 @@ public class FileReferenceFilterTest extends PlatformTestCase {
   }
 
   public void testCompilationErrorAbsolutePath() {
-    final FileReferenceFilter compilationErrorFilter =
-      new FileReferenceFilter(getProject(), RebarRunningState.COMPILATION_ERROR_PATH);
+    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), COMPILATION_ERROR_PATH);
     final String consoleOutput = "some text||" + getProject().getBasePath() + "/src/a_module.erl:123: more text here";
     final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(11, result.highlightStartOffset);
@@ -52,8 +56,7 @@ public class FileReferenceFilterTest extends PlatformTestCase {
   }
 
   public void testCompilationErrorMissingPath() {
-    final FileReferenceFilter compilationErrorFilter =
-      new FileReferenceFilter(getProject(), RebarRunningState.COMPILATION_ERROR_PATH);
+    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), COMPILATION_ERROR_PATH);
     final String consoleOutput = "some text||src/B_module.erl:123: more text here"; // may be case insensitive
     final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(11, result.highlightStartOffset);
@@ -62,18 +65,28 @@ public class FileReferenceFilterTest extends PlatformTestCase {
   }
 
   public void testEunitErrorPath() {
-    final FileReferenceFilter compilationErrorFilter =
-      new FileReferenceFilter(getProject(), RebarRunningState.EUNIT_ERROR_PATH);
+    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), EUNIT_ERROR_PATH);
     final String consoleOutput = "some text (src/a_module.erl, line 123) more text here";
     final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
-    assertEquals(10, result.highlightStartOffset);
-    assertEquals(38, result.highlightEndOffset);
+    assertEquals(11, result.highlightStartOffset);
+    assertEquals(37, result.highlightEndOffset);
+    assertNotNull(result.hyperlinkInfo);
+  }
+  
+  public void testEunitFullErrorPath() {
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), EUNIT_ERROR_PATH);
+    File base = new File(getProject().getBaseDir().getPath());
+    File file = ContainerUtil.getFirstItem(FileUtil.findFilesByMask(Pattern.compile(".*\\.erl"), base));
+    VirtualFile vFile = LocalFileSystem.getInstance().findFileByIoFile(file);
+    assertNotNull(vFile);
+    String canonicalPath = vFile.getCanonicalPath();
+    final String consoleOutput = "in function bisect_server_test:'-false_test/0-fun-0-'/0 (" + canonicalPath + ", line 14)";
+    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertNotNull(result.hyperlinkInfo);
   }
 
   public void testEunitFailurePath() {
-    final FileReferenceFilter compilationErrorFilter =
-      new FileReferenceFilter(getProject(), RebarRunningState.EUNIT_FAILURE_PATH);
+    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), EUNIT_FAILURE_PATH);
     final String consoleOutput = "some text [{file,\"src/a_module.erl\"},{line,123}] more text here";
     final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(10, result.highlightStartOffset);

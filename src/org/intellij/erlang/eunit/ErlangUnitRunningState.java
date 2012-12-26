@@ -12,6 +12,7 @@ import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
+import org.intellij.erlang.rebar.runner.FileReferenceFilter;
 import org.intellij.erlang.runner.ErlangApplicationConfiguration;
 import org.intellij.erlang.runner.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +42,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     ConsoleView consoleView = createConsoleView(executor);
     if (consoleView != null) {
       consoleView.attachToProcess(processHandler);
+      consoleView.addMessageFilter(new FileReferenceFilter(myConfiguration.getProject(), FileReferenceFilter.COMPILATION_ERROR_PATH));
+      consoleView.addMessageFilter(new FileReferenceFilter(myConfiguration.getProject(), FileReferenceFilter.EUNIT_ERROR_PATH));
+      consoleView.addMessageFilter(new FileReferenceFilter(myConfiguration.getProject(), FileReferenceFilter.EUNIT_FAILURE_PATH));
     }
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
@@ -52,7 +56,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     final ErlangUnitRunConfiguration runConfiguration = (ErlangUnitRunConfiguration) getRunnerSettings().getRunProfile();
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(
       "Erlang",
-      new ErlangUnitConsoleProperties(runConfiguration, executor),
+      new ErlangUnitConsoleProperties(runConfiguration, executor, true),
       getRunnerSettings(),
       getConfigurationSettings(),
       new ErlangTestLocationProvider()

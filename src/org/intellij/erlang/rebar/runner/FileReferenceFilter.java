@@ -36,6 +36,10 @@ public final class FileReferenceFilter implements Filter {
   public static final String PATH_MACROS = "$FILE_PATH$";
   public static final String LINE_MACROS = "$LINE$";
   public static final String COLUMN_MACROS = "$COLUMN$";
+  
+  public static final String EUNIT_FAILURE_PATH = "\\[\\{file,\"" + PATH_MACROS + "\"\\},\\{line," + LINE_MACROS + "\\}\\]";
+  public static final String EUNIT_ERROR_PATH = PATH_MACROS + ", line " + LINE_MACROS;
+  public static final String COMPILATION_ERROR_PATH = PATH_MACROS + ":" + LINE_MACROS;
 
   private static final String FILE_PATH_REGEXP = "((?:\\p{Alpha}\\:)?[0-9 a-z_A-Z\\-\\\\./]+)";
   private static final String NUMBER_REGEXP = "([0-9]+)";
@@ -124,7 +128,7 @@ public final class FileReferenceFilter implements Filter {
   private HyperlinkInfo createOpenFileHyperlink(@NotNull String path, int line, int column) {
     HyperlinkInfo res = createAbsolutePathHyperlink(path, line, column);
     if (res == null) {
-      final String absolutePath = new File(myProject.getBasePath(), path).getAbsolutePath();
+      String absolutePath = path.startsWith(myProject.getBasePath()) ? path : new File(myProject.getBasePath(), path).getAbsolutePath();
       res = createAbsolutePathHyperlink(absolutePath, line, column);
     }
     return res;
