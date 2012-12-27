@@ -8,10 +8,8 @@ import com.intellij.execution.testframework.sm.SMCustomMessagesParsing;
 import com.intellij.execution.testframework.sm.ServiceMessageBuilder;
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
-import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.config.Storage;
 import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.jetbrains.annotations.NotNull;
 

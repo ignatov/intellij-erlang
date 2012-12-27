@@ -31,7 +31,6 @@ import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.ui.ConsoleView;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.eunit.ErlangTestLocationProvider;
 import org.intellij.erlang.eunit.ErlangUnitConsoleProperties;
