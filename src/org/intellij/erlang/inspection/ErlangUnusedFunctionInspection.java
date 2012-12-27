@@ -48,6 +48,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Ref;
@@ -136,6 +137,7 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
           if (ContainerUtil.getFirstItem(refs) == null) {
             problemsHolder.registerProblem(function.getNameIdentifier(),
               "Unused function " + "'" + name + "/" + function.getArity() + "'",
+              ProblemHighlightType.LIKE_UNUSED_SYMBOL,
               new ErlangRemoveFunctionFix(),
               new ErlangExportFunctionFix());
           }

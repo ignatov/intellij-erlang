@@ -32,6 +32,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -80,7 +81,7 @@ public class ErlangUnusedVariableInspection extends ErlangBaseInspection {
           if (functionClause == null) return;
           Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
           if (search.findFirst() == null) {
-            problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'", new ErlangRenameVariableFix());
+            problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'", ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());
           }
         }
       }

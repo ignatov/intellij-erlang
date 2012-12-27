@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -57,6 +58,7 @@ public class ErlangUnusedTypeInspection extends ErlangBaseInspection {
         if (search.findFirst() == null) {
           problemsHolder.registerProblem(o.getNameIdentifier(),
             "Unused function " + "'" + o.getName() + "'",
+            ProblemHighlightType.LIKE_UNUSED_SYMBOL,
             new ErlangRemoveTypeFix(),
             new ErlangExportTypeFix());
         }
