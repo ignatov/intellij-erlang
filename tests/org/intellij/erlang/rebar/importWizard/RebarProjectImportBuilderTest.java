@@ -25,14 +25,11 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
-import com.intellij.openapi.projectRoots.SdkModificator;
-import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl;
+import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.impl.ModuleRootManagerImpl;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.util.Consumer;
 import junit.framework.Assert;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -45,9 +42,9 @@ import java.io.File;
 
 public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   private static final String MODULE_DIR = "MODULE_DIR";
-  private static final String TEST_DATA = "testData/rebar/";
-  private static final String TEST_DATA_IMPORT = TEST_DATA + "import";
-  private static final String MOCK_SDK_SRC = TEST_DATA + "mockSdk/src";
+  private static final String TEST_DATA = "testData/";
+  private static final String TEST_DATA_IMPORT = TEST_DATA + "rebar/import/";
+  private static final String MOCK_SDK_DIR = TEST_DATA + "mockSdk-R15B02/";
 
   @Override
   public void setUp() throws Exception {
@@ -115,15 +112,10 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   private static void createMockSdk() {
-    final ProjectJdkImpl mockSdk = new ProjectJdkImpl("Mock", ErlangSdkType.getInstance());
-    final SdkModificator sdkModificator = mockSdk.getSdkModificator();
-    sdkModificator.addRoot(
-      LocalFileSystem.getInstance().findFileByPath(MOCK_SDK_SRC),
-      OrderRootType.SOURCES);
+    final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR);
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {
-        sdkModificator.commitChanges();
         ProjectJdkTable.getInstance().addJdk(mockSdk);
       }
     });

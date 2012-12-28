@@ -16,20 +16,18 @@
 
 package org.intellij.erlang.sdk;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
-import com.intellij.ide.DataManager;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.progress.Task;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.*;
+import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl;
+import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.jps.model.JpsErlangModelSerializerExtension;
@@ -58,17 +56,19 @@ public class ErlangSdkType extends SdkType {
   }
 
   @NotNull
+  @Override
   public Icon getIcon() {
     return ErlangIcons.FILE;
   }
 
-  @Override
   @NotNull
+  @Override
   public Icon getIconForAddAction() {
     return getIcon();
   }
 
   @Nullable
+  @Override
   public String suggestHomePath() {
     if (SystemInfo.isWindows) {
       return "C:\\cygwin\\bin";
@@ -79,6 +79,7 @@ public class ErlangSdkType extends SdkType {
     return null;
   }
 
+  @Override
   public boolean isValidSdkHome(@NotNull final String path) {
     final File erl = getTopLevelExecutable(path);
     final File erlc = JpsErlangSdkType.getByteCodeCompilerExecutable(path);
@@ -91,6 +92,7 @@ public class ErlangSdkType extends SdkType {
   }
 
   @NotNull
+  @Override
   public String suggestSdkName(@Nullable final String currentSdkName, @NotNull final String sdkHome) {
     String version = getVersionString(sdkHome);
     if (version == null) return "Unknown Erlang version at " + sdkHome;
@@ -98,7 +100,71 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Nullable
+  @Override
   public String getVersionString(@NotNull final String sdkHome) {
+    return getReleaseString(sdkHome);
+  }
+
+  @Nullable
+  @Override
+  public String getDefaultDocumentationUrl(@NotNull Sdk sdk) {
+    return getDefaultDocumentationUrl(getRelease(sdk));
+  }
+
+  @Nullable
+  @Override
+  public AdditionalDataConfigurable createAdditionalDataConfigurable(@NotNull final SdkModel sdkModel, @NotNull final SdkModificator sdkModificator) {
+    return null;
+  }
+
+  @Override
+  public void saveAdditionalData(@NotNull final SdkAdditionalData additionalData, @NotNull final Element additional) {
+  }
+
+  @NonNls
+  @Override
+  public String getPresentableName() {
+    return "Erlang SDK";
+  }
+
+  @Override
+  public void setupSdkPaths(@NotNull final Sdk sdk) {
+    configureSdkPaths(sdk);
+  }
+
+  @VisibleForTesting
+  @NotNull
+  public static Sdk createMockSdk(@NotNull final String sdkHome) {
+    final String release = getReleaseString(sdkHome);
+    final Sdk sdk = new ProjectJdkImpl(release, getInstance());
+    final SdkModificator sdkModificator = sdk.getSdkModificator();
+    sdkModificator.setHomePath(sdkHome);
+    sdkModificator.setVersionString(release); // must be set after home path, otherwise setting home path clears the version string
+    sdkModificator.commitChanges();
+    configureSdkPaths(sdk);
+    return sdk;
+  }
+
+  private static void configureSdkPaths(@NotNull final Sdk sdk) {
+    final SdkModificator sdkModificator = sdk.getSdkModificator();
+    setupLocalSdkPaths(sdkModificator);
+
+    final String externalDocUrl = getDefaultDocumentationUrl(getRelease(sdk));
+    if (externalDocUrl != null) {
+      final VirtualFile fileByUrl = VirtualFileManager.getInstance().findFileByUrl(externalDocUrl);
+      sdkModificator.addRoot(fileByUrl, JavadocOrderRootType.getInstance());
+    }
+    sdkModificator.commitChanges();
+  }
+
+  @Nullable
+  private static ErlangSdkRelease getRelease(@NotNull final Sdk sdk) {
+    final String versionString = sdk.getVersionString();
+    return versionString == null ? null : ErlangSdkRelease.valueOf(versionString);
+  }
+
+  @Nullable
+  private static String getReleaseString(@NotNull final String sdkHome) {
     Pattern pattern = Pattern.compile("R\\d+.*");
     // determine the version from the 'releases' directory, if it exists
     File releases = new File(sdkHome, "releases");
@@ -121,39 +187,11 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Nullable
-  public AdditionalDataConfigurable createAdditionalDataConfigurable(@NotNull final SdkModel sdkModel, @NotNull final SdkModificator sdkModificator) {
-    return null;
+  private static String getDefaultDocumentationUrl(@Nullable final ErlangSdkRelease release) {
+    return release == null ? null : "http://www.erlang.org/documentation/doc-" + release.getVersion();
   }
 
-  public void saveAdditionalData(@NotNull final SdkAdditionalData additionalData, @NotNull final Element additional) {
-  }
-
-  @NonNls
-  public String getPresentableName() {
-    return "Erlang SDK";
-  }
-
-  public void setupSdkPaths(@NotNull final Sdk sdk) {
-    final SdkModificator[] sdkModificatorHolder = new SdkModificator[]{null};
-    final ProgressManager progressManager = ProgressManager.getInstance();
-    final Project project = PlatformDataKeys.PROJECT.getData(DataManager.getInstance().getDataContext());
-    final Task.Modal setupTask = new Task.Modal(project, "Setting up library files", false) {
-      public void run(@NotNull final ProgressIndicator indicator) {
-        sdkModificatorHolder[0] = setupSdkPathsUnderProgress(sdk);
-      }
-    };
-    progressManager.run(setupTask);
-    if (sdkModificatorHolder[0] != null) sdkModificatorHolder[0].commitChanges();
-  }
-
-  @NotNull
-  protected SdkModificator setupSdkPathsUnderProgress(@NotNull final Sdk sdk) {
-    final SdkModificator sdkModificator = sdk.getSdkModificator();
-    doSetupSdkPaths(sdkModificator);
-    return sdkModificator;
-  }
-
-  public void doSetupSdkPaths(@NotNull final SdkModificator sdkModificator) {
+  private static void setupLocalSdkPaths(@NotNull final SdkModificator sdkModificator) {
     final String sdkHome = sdkModificator.getHomePath();
 
     {
@@ -186,7 +224,7 @@ public class ErlangSdkType extends SdkType {
     tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir);
   }
 
-  private boolean tryToProcessAsStandardLibraryDir(@NotNull final SdkModificator sdkModificator, @NotNull final File stdLibDir) {
+  private static boolean tryToProcessAsStandardLibraryDir(@NotNull final SdkModificator sdkModificator, @NotNull final File stdLibDir) {
     if (!isStandardLibraryDir(stdLibDir)) return false;
     final VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(stdLibDir);
     if (dir != null) {
@@ -199,5 +237,4 @@ public class ErlangSdkType extends SdkType {
   private static boolean isStandardLibraryDir(@NotNull final File dir) {
     return dir.isDirectory();
   }
-
 }
