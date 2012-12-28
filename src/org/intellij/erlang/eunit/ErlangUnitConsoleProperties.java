@@ -57,7 +57,8 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
         if (StringUtil.startsWith(text, (myEunit ? "" : "  ") + "module")) {
           String module = StringUtil.unquoteString(StringUtil.getWordsIn(text).get(1));
           myCurrentModule = module;
-          return super.processServiceMessages(ServiceMessageBuilder.testSuiteStarted(module).toString(), outputType, visitor);
+          ServiceMessageBuilder builder = setLocation(ServiceMessageBuilder.testSuiteStarted(module), module);
+          return super.processServiceMessages(builder.toString(), outputType, visitor);
         }
         else if (StringUtil.startsWith(text, "  [done")) {
           return super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), outputType, visitor);
@@ -69,9 +70,10 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
           return super.processServiceMessages(serviceMessageBuilder.toString(), outputType, visitor)
             && super.processServiceMessages(testFinished(test).toString(), outputType, visitor);
         }
-        else if ((m = FAILED.matcher(text)).find()) {
-          String module = m.group(1);
-          String test = m.group(2);
+        else if ((m = FAILED.matcher(text)).find() || text.trim().equals("undefined")) {
+          boolean matches = FAILED.matcher(text).find();
+          String module = matches ? m.group(1) : myCurrentModule;
+          String test = matches ? m.group(2) : "undefined";
           myFailed = true;
           myStdOut = "";
           myCurrentTest = test;
@@ -96,6 +98,10 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
 
       private ServiceMessageBuilder setLocation(ServiceMessageBuilder builder, String module, String test) {
         return builder.addAttribute("locationHint", ErlangUnitRunConfigurationType.PROTOCOL + "://" + module + ":" + test);
+      }
+      
+      private ServiceMessageBuilder setLocation(ServiceMessageBuilder builder, String module) {
+        return builder.addAttribute("locationHint", ErlangUnitRunConfigurationType.PROTOCOL + "://" + module);
       }
     };
   }
