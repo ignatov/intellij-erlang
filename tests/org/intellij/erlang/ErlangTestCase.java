@@ -42,6 +42,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangCompletionTest.class);
     suite.addTestSuite(RebarProjectImportBuilderTest.class);
     suite.addTestSuite(FileReferenceFilterTest.class);
+    suite.addTestSuite(ErlangDocumentationProviderTest.class);
     return suite;
   }
 }
