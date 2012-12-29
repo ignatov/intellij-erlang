@@ -3,7 +3,12 @@
 -author("ignatov").
 
 %% API
--export([]).
+-export([new/1,
+              match/2]).
+
+-export_type([args_spec/0,
+                  opt_args_spec/0,
+                args_matcher/0]).
 
 
 -record(abd, {a = 1, c=1,

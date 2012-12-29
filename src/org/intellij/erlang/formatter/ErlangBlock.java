@@ -147,7 +147,7 @@ public class ErlangBlock implements ASTBlock, BlockWithParent {
             alignment = baseAlignment;
           }
         }
-        if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS) {
+        if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS || parentType == ERL_EXPORT_TYPES) {
           if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) {
             alignment = baseAlignment;
           }
