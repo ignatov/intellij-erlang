@@ -67,6 +67,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ErlangPsiImplUtil {
+  public static final Set<String> KNOWN_ATOMS = ContainerUtil.set("ok", "true", "false", "error");
+
   private ErlangPsiImplUtil() {
   }
 

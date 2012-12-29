@@ -40,7 +40,6 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributes KEYWORD_DEFAULTS = SyntaxHighlighterColors.KEYWORD.getDefaultAttributes();
   public static final TextAttributes RECORD_DEFAULTS = CodeInsightColors.INSTANCE_FIELD_ATTRIBUTES.getDefaultAttributes();
   
-  
   public static final TextAttributesKey ILLEGAL = createTextAttributesKey("ERL_ILLEGAL", SyntaxHighlighterColors.INVALID_STRING_ESCAPE.getDefaultAttributes());
   public static final TextAttributesKey COMMENT = createTextAttributesKey("ERL_COMMENT", SyntaxHighlighterColors.LINE_COMMENT.getDefaultAttributes());
   public static final TextAttributesKey STRING = createTextAttributesKey("ERL_STRING", SyntaxHighlighterColors.STRING.getDefaultAttributes());
@@ -53,6 +52,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey RECORDS = createTextAttributesKey("ERL_RECORDS", new TextAttributes(RECORD_DEFAULTS.getForegroundColor(), RECORD_DEFAULTS.getBackgroundColor(), null, null, Font.BOLD));
   public static final TextAttributesKey OP_SIGN = createTextAttributesKey("ERL_OP_SIGN", SyntaxHighlighterColors.OPERATION_SIGN.getDefaultAttributes());
   public static final TextAttributesKey DOC_COMMENT_TAG = createTextAttributesKey("ERL_BOLD", SyntaxHighlighterColors.DOC_COMMENT_TAG.getDefaultAttributes());
+  public static final TextAttributesKey KNOWN_ATOM = createTextAttributesKey("ERL_KNOWN_ATOM", new TextAttributes(null, null, null, null, Font.BOLD));
 
   @NotNull
   @Override

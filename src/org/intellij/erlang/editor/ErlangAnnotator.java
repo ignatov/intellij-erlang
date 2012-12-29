@@ -32,6 +32,7 @@ import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.ErlangDocumentationProvider;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -152,7 +153,13 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         }
       }
 
-      // todo: add export, import and other bundled attributes
+      @Override
+      public void visitQAtom(@NotNull ErlangQAtom o) {
+        PsiElement atom = o.getAtom();
+        if (atom != null && ErlangPsiImplUtil.KNOWN_ATOMS.contains(atom.getText())) {
+          setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.KNOWN_ATOM);
+        }
+      }
     });
   }
 
