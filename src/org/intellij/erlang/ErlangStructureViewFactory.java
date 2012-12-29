@@ -27,6 +27,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -129,12 +130,14 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         };
         List<ErlangMacrosDefinition> macroses = ((ErlangFile) myElement).getMacroses();
         List<ErlangRecordDefinition> records = ((ErlangFile) myElement).getRecords();
+        List<ErlangTypeDefinition> types = ((ErlangFile) myElement).getTypes();
         List<ErlangFunction> functions = ((ErlangFile) myElement).getFunctions();
         Collections.sort(macroses, comparator);
         Collections.sort(records, comparator);
         Collections.sort(functions, comparator);
         for (ErlangMacrosDefinition o : macroses) result.add(new Element(o));
         for (ErlangRecordDefinition o : records) result.add(new Element(o));
+        for (ErlangTypeDefinition o : types) result.add(new Element(o));
         for (ErlangFunction o : functions) result.add(new Element(o));
       }
 
@@ -156,8 +159,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         return res + "(" + StringUtil.join(strings, ", ") + ")";
       }
       if (myElement instanceof ErlangFunction) {
-        final int argCount = ((ErlangFunction) myElement).getArity();
-        return ((ErlangFunction) myElement).getName() + "/" + argCount;
+        return ErlangPsiImplUtil.createFunctionPresentation((ErlangFunction) myElement);
       }
       else if (myElement instanceof ErlangFile) {
         return ((ErlangFile) myElement).getName();
@@ -167,6 +169,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       }
       else if (myElement instanceof ErlangMacrosDefinition) {
         return ((ErlangMacrosDefinition) myElement).getName();
+      }
+      else if (myElement instanceof ErlangTypeDefinition) {
+        return ErlangPsiImplUtil.createTypePresentation((ErlangTypeDefinition) myElement);
       }
       throw new AssertionError(myElement.getClass().getName());
     }
@@ -193,6 +198,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       }
       else if (myElement instanceof ErlangMacrosDefinition) {
         return ErlangIcons.MACROS;
+      }
+      else if (myElement instanceof ErlangTypeDefinition) {
+        return ErlangIcons.TYPE;
       }
       return myElement.getIcon(0);
     }

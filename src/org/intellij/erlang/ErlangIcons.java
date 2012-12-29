@@ -35,7 +35,7 @@ public interface ErlangIcons {
   Icon MODULE = PlatformIcons.PACKAGE_ICON;
   Icon VARIABLE = PlatformIcons.VARIABLE_ICON;
   Icon FIELD = PlatformIcons.FIELD_ICON;
-  Icon TYPE = AllIcons.Nodes.Annotationtype;
+  Icon TYPE = IconLoader.getIcon("/icons/type.png");
   Icon ERLANG_MARK = IconLoader.getIcon("/icons/erlang-mark.png");
   Icon ERLANG_MODULE_NODE = new LayeredIcon(PlatformIcons.FOLDER_ICON, ERLANG_MARK);
   Icon ERLANG_BIG = IconLoader.getIcon("/icons/erlang-big.png");
@@ -53,6 +53,7 @@ public interface ErlangIcons {
   Icon HEADER = IconLoader.getIcon("/icons/erlang-header-16.png");
 
   Icon REBAR = IconLoader.getIcon("/icons/rebar-16.png");
-  Icon REBAR_EUNIT = new LayeredIcon(REBAR, AllIcons.Nodes.JunitTestMark);
   Icon REBAR_MODULE_CONFLICT = IconLoader.getIcon("/icons/rebar-module-conflict-16.png");
+
+//  Icon REBAR_EUNIT = new LayeredIcon(REBAR, AllIcons.Nodes.JunitTestMark);
 }
