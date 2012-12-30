@@ -66,4 +66,12 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void test34()                { doTest(); }
   public void test124()               { doTest(); }
   public void test149()               { doTest(); }
+
+  public void testUnresolvedMacros()  {
+    //noinspection unchecked
+    myFixture.enableInspections(
+      ErlangUnresolvedMacrosInspection.class
+    );
+    doTest();
+  }
 }

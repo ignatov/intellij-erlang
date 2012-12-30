@@ -68,6 +68,7 @@ import java.util.regex.Pattern;
 
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_ATOMS = ContainerUtil.set("ok", "true", "false", "error");
+  public static final Set<String> KNOWN_MACROS = ContainerUtil.set("MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE");
 
   private ErlangPsiImplUtil() {
   }
@@ -413,7 +414,7 @@ public class ErlangPsiImplUtil {
           }
         });
       List<LookupElement> stdMacros = new ArrayList<LookupElement>();
-      for (String m : new String[]{"MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE"}) {
+      for (String m : KNOWN_MACROS) {
         stdMacros.add(LookupElementBuilder.create(m).withIcon(ErlangIcons.MACROS));
       }
       return ContainerUtil.concat(fromFile, stdMacros);

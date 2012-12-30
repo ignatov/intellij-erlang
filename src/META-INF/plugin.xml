@@ -180,6 +180,9 @@
         <localInspection language="Erlang" shortName="ErlangIncorrectModuleName" displayName="Incorrect module name"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangIncorrectModuleName"/>
+        <localInspection language="Erlang" shortName="ErlangUnresolvedMacrosInspection" displayName="Unresolved macros"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection"/>
         <!--warnings-->
         <localInspection language="Erlang" shortName="ErlangUnusedVariableInspection" displayName="Unused variable"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
