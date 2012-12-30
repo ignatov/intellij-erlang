@@ -59,6 +59,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void test145_2()             { doTest(true, false); }
   public void test29()                { doTest(true, false); }
   public void testEmptyRecord()       { doTest(true, false); }
+  public void testTypeAgain()         { doTest(true, false); }
 
   protected void doTest(boolean checkResult, boolean suppressErrors) {
 //    OVERWRITE_TESTDATA = true;

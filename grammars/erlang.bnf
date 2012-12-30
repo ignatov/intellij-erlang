@@ -235,7 +235,7 @@ type ::=
   | fun '(' fun_type_100_t? ')'
   | type_ref_with_module ['(' top_type_list? ')']
   | binary_type
-  | q_var
+  | q_var ['::' top_type]
   | '[' [top_type (',' '...')?] ']'
   | '{' top_type_list? '}'
   | '#' record_ref '{' field_type_list? '}' {pin(".*") = 1}

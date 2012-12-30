@@ -5021,7 +5021,7 @@ public class ErlangParser implements PsiParser {
   //   | fun '(' fun_type_100_t? ')'
   //   | type_ref_with_module ['(' top_type_list? ')']
   //   | binary_type
-  //   | q_var
+  //   | q_var ['::' top_type]
   //   | '[' [top_type (',' '...')?] ']'
   //   | '{' top_type_list? '}'
   //   | '#' record_ref '{' field_type_list? '}'
@@ -5035,7 +5035,7 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = type_2(builder_, level_ + 1);
     if (!result_) result_ = type_3(builder_, level_ + 1);
     if (!result_) result_ = binary_type(builder_, level_ + 1);
-    if (!result_) result_ = q_var(builder_, level_ + 1);
+    if (!result_) result_ = type_5(builder_, level_ + 1);
     if (!result_) result_ = type_6(builder_, level_ + 1);
     if (!result_) result_ = type_7(builder_, level_ + 1);
     if (!result_) result_ = type_8(builder_, level_ + 1);
@@ -5199,6 +5199,53 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "type_3_1_0_1")) return false;
     top_type_list(builder_, level_ + 1);
     return true;
+  }
+
+  // q_var ['::' top_type]
+  private static boolean type_5(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_5")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = q_var(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && type_5_1(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // ['::' top_type]
+  private static boolean type_5_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_5_1")) return false;
+    type_5_1_0(builder_, level_ + 1);
+    return true;
+  }
+
+  // '::' top_type
+  private static boolean type_5_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "type_5_1_0")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_COLON_COLON);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && top_type(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   // '[' [top_type (',' '...')?] ']'
