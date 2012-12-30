@@ -161,6 +161,7 @@
         <moduleConfigurationEditorProvider implementation="org.intellij.erlang.configuration.DefaultModuleEditorsProvider" order="first"/>
 
         <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangRecursiveCallLineMarkerProvider"/>
+        <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
 
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariableInspection"
