@@ -19,11 +19,14 @@ package org.intellij.erlang;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.parameterInfo.*;
+import com.intellij.openapi.util.Ref;
 import com.intellij.psi.*;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,7 +82,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
         clauses.addAll(clauseList);
       }
-      else if (reference instanceof PsiPolyVariantReference){
+      else if (reference instanceof PsiPolyVariantReference) {
         ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
 
         for (ResolveResult result : resolveResults) {
@@ -155,17 +158,68 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
 
     int index = context.getCurrentParameterIndex();
 
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
 
     int start = 0;
     int end = 0;
 
     if (p instanceof ErlangFunctionClause) {
+      final Ref<ErlangFunTypeArguments> argsRef = Ref.create();
+
+      PsiElement parent = ((ErlangFunctionClause) p).getParent();
+      ErlangSpecification specification = parent instanceof ErlangFunction ? ErlangPsiImplUtil.getSpecification((ErlangFunction) parent) : null;
+      ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangFunction.class);
+
+      if (specification != null && ErlangPsiImplUtil.notFromPreviousFunction(specification, prevFunction)) {
+        specification.accept(new ErlangRecursiveVisitor() {
+          @Override
+          public void visitFunTypeArguments(@NotNull ErlangFunTypeArguments o) {
+            argsRef.setIfNull(o);
+          }
+        });
+      }
+
       List<ErlangArgumentDefinition> args = ((ErlangFunctionClause) p).getArgumentDefinitionList().getArgumentDefinitionList();
+
+      @Nullable ErlangFunTypeArguments arguments = argsRef.get();
+      List<ErlangTopType> topTypeList = arguments == null ? ContainerUtil.<ErlangTopType>emptyList() : arguments.getTopTypeList();
+      boolean typesAvailable = topTypeList.size() == args.size();
+
       for (int i = 0; i < args.size(); i++) {
         if (i != 0) builder.append(", ");
         if (index == i) start = builder.length();
         builder.append(args.get(i).getExpression().getText().replaceAll(" ", "").trim());
+        if (typesAvailable) {
+
+          ErlangTopType topType = topTypeList.get(i);
+          ErlangType type = topType.getTopType100T().getType();
+          final ErlangQVar var = type.getQVar();
+          if (var != null) {
+            if (specification != null) {
+              final Ref<ErlangType> itemTypeRef = Ref.create();
+              specification.accept(new ErlangRecursiveVisitor() {
+                @Override
+                public void visitTypeGuard(@NotNull ErlangTypeGuard o) {
+                  ErlangTopType item = ContainerUtil.getFirstItem(o.getTopTypeList());
+                  ErlangQVar qVar = item == null ? null : item.getQVar();
+                  PsiReference reference = qVar == null ? null : qVar.getReference();
+                  PsiElement resolve = reference == null ? null : reference.resolve();
+                  if (var.equals(resolve)) {
+                    itemTypeRef.setIfNull(item.getTopType100T().getType());
+                  }
+                }
+              });
+              if (!itemTypeRef.isNull()) {
+                builder.append(" :: ");
+                builder.append(itemTypeRef.get().getText());
+              }
+            }
+          }
+          else {
+            builder.append(" :: ");
+            builder.append(type.getText());
+          }
+        }
         if (index == i) end = builder.length();
       }
     }

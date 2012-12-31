@@ -978,4 +978,13 @@ public class ErlangPsiImplUtil {
   public static String getName(ErlangTypeDefinition o) {
     return o.getNameIdentifier().getText();
   }
+
+  @Nullable
+  public static ErlangSpecification getSpecification(@Nullable ErlangFunction erlangFunction) { // todo: use ref search
+    return PsiTreeUtil.getChildOfType(PsiTreeUtil.getPrevSiblingOfType(erlangFunction, ErlangAttribute.class), ErlangSpecification.class);
+  }
+
+  public static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {
+    return (prevFunction == null || (spec.getTextOffset() > prevFunction.getTextOffset()));
+  }
 }

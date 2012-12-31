@@ -21,9 +21,7 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangFunctionClause;
-import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,10 +46,14 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   @Override
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
     if (psiElement instanceof ErlangFunction) return false;
+    if (psiElement instanceof ErlangSpecification) return false;
     ErlangFunctionClause clause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
+    ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
-      if ((PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || inAssignment(psiElement)))
-        || isInModule(psiElement)) {
+      if (
+        (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || inAssignment(psiElement)))
+        || isInModule(psiElement)
+        || PsiTreeUtil.isAncestor(spec, psiElement, false)) {
         if (inArgumentList(psiElement)) return true;
 
         myVarList.add(0, (ErlangQVar) psiElement); // put all possible variables to list

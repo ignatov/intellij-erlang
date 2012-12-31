@@ -33,10 +33,10 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangSpecification;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -129,14 +129,13 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Nullable
   private static String generateFunctionDoc(@NotNull ErlangFunction erlangFunction) {
     ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(erlangFunction, ErlangFunction.class);
+    ErlangSpecification spec = ErlangPsiImplUtil.getSpecification(erlangFunction);
     PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(erlangFunction, PsiComment.class);
-    ErlangAttribute attribute = PsiTreeUtil.getPrevSiblingOfType(erlangFunction, ErlangAttribute.class);
-    PsiElement spec = attribute != null ? PsiTreeUtil.getChildOfType(attribute, ErlangSpecification.class) : null;
     String commentText = "";
-    if (spec instanceof ErlangSpecification && notFromPreviousFunction(spec, prevFunction)) {
+    if (spec != null && ErlangPsiImplUtil.notFromPreviousFunction(spec, prevFunction)) {
       commentText += spec.getText().replaceFirst("spec", "<b>Specification:</b><br/>") + "<br/><br/>";
     }
-    if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT && notFromPreviousFunction(comment, prevFunction)) {
+    if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT && ErlangPsiImplUtil.notFromPreviousFunction(comment, prevFunction)) {
       commentText += "<b>Comment:</b><br/>" + getCommentText(comment, "%%", EDOC_FUNCTION_TAGS);
     }
     return commentText;
@@ -150,10 +149,6 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
       return getCommentText(comment, "%%%", EDOC_MODULE_TAGS);
     }
     return null;
-  }
-
-  private static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {
-    return (prevFunction == null || (spec.getTextOffset() > prevFunction.getTextOffset()));
   }
 
   private static String getCommentText(PsiComment comment, final String commentStartsWith, final Set<String> contextTags) {
