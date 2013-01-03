@@ -46,15 +46,13 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.ArrayUtil;
-import com.intellij.util.Function;
-import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.PathUtil;
+import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -63,8 +61,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.io.IOException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_ATOMS = ContainerUtil.set("ok", "true", "false", "error");
@@ -310,38 +306,35 @@ public class ErlangPsiImplUtil {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
       List<ErlangFunction> functions = new ArrayList<ErlangFunction>();
 
+      String moduleName = null;
       if (colonQualifier != null) {
         ErlangExpression qAtom = ContainerUtil.getFirstItem(colonQualifier.getExpressionList());
         if (qAtom != null) {
-          functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), qAtom.getText() + ".erl"));
+          moduleName = qAtom.getText();
+          functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
         }
       }
       else {
         functions.addAll(((ErlangFile) containingFile).getFunctions());
       }
 
+      final int moduleFunctionsPriority = -4;
       List<LookupElement> lookupElements = ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
         @Override
         public LookupElement fun(@NotNull final ErlangFunction function) {
-          return createFunctionLookupElement(function, withArity, -4);
+          return createFunctionLookupElement(function, withArity, moduleFunctionsPriority);
         }
       });
 
-      if (!withArity && colonQualifier == null) {
-        // todo: move to more appropriate place
-        PsiFile[] erlInternals = FilenameIndex.getFilesByName(containingFile.getProject(), "erl_internal.erl",
-          GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.MODULE));
+      if (!withArity) {
+        for (ErlangBifDescriptor bif : ErlangBifDescriptor.getBifDescriptorsMap().get("erlang")) {
+          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, -5));
+        }
+      }
 
-        if (erlInternals.length == 1) {
-          for (String line : StringUtil.splitByLines(erlInternals[0].getText())) {
-            Pattern bifPattern = Pattern.compile("bif\\((\\w+), (\\d+)\\) -> true;");
-            Matcher m = bifPattern.matcher(line);
-            if (m.matches()) {
-              String name = m.group(1);
-              int arity = Integer.parseInt(m.group(2));
-              lookupElements.add(createFunctionLookupElement(name, arity, withArity, -5));
-            }
-          }
+      if (moduleName != null) {
+        for (ErlangBifDescriptor bif : ErlangBifDescriptor.getBifDescriptorsMap().get(moduleName)) {
+          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, moduleFunctionsPriority));
         }
       }
 

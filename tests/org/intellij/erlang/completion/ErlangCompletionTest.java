@@ -87,7 +87,15 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
         "-type foo() :: <caret>atom().\n" +
         "-type buz() :: string().\n" +
         "-type tes() :: <caret>)", "foo", "buz", "atom", "no_return");
-    }
+  }
+
+  public void testBif() throws Throwable {
+    doTestInclude("foo() -> <caret>", "is_function", "is_record", "universaltime_to_posixtime");
+  }
+
+  public void testBifFromModules() throws Throwable {
+    doTestInclude("foo() -> lists:<caret>", "member", "reverse", "keysearch");
+  }
 
   private void doTestInclude(String txt, String... variants) throws Throwable {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
