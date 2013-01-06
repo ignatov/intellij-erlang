@@ -39,8 +39,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
     CommonCodeStyleSettings commonSettings = settings.getCommonSettings(ErlangLanguage.INSTANCE);
     ErlangCodeStyleSettings erlangSettings = settings.getCustomSettings(ErlangCodeStyleSettings.class);
-    final ErlangBlock block = new ErlangBlock(null, element.getNode(), null, null, commonSettings, erlangSettings,
-      createSpacingBuilder(commonSettings));
+    final ErlangFormattingBlock block = new ErlangFormattingBlock(element.getNode(), null, null, null, commonSettings, erlangSettings, createSpacingBuilder(commonSettings));
     return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
   }
 

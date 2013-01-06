@@ -67,6 +67,11 @@ public class ErlangFormattingTest extends LightPlatformCodeInsightFixtureTestCas
     doTest();
   }
 
+  public void testFunctionClausesAligned() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    doTest();
+  }
+
   private ErlangCodeStyleSettings getErlangSettings() {
     return CodeStyleSettingsManager.getSettings(getProject()).getCustomSettings(ErlangCodeStyleSettings.class);
   }

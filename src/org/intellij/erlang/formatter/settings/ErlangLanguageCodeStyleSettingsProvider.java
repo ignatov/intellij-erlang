@@ -107,7 +107,8 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 //        "PARENTHESES_EXPRESSION_LPAREN_WRAP",
 //        "PARENTHESES_EXPRESSION_RPAREN_WRAP"
       );
-      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_MULTILINE_BLOCK", "Align when multiple", "Blocks (fun...end, etc)");
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_MULTILINE_BLOCK", "Blocks (fun...end, etc)", "Alignment");
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_FUNCTION_CLAUSES", "Function clauses", "Alignment");
     }
   }
 

@@ -117,6 +117,6 @@ public class ErlangIndentProcessor {
     if (type == null) {
       return false;
     }
-    return ErlangBlock.BLOCKS_TOKEN_SET.contains(type);
+    return ErlangFormattingBlock.BLOCKS_TOKEN_SET.contains(type);
   }
 }
