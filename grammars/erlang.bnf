@@ -122,6 +122,7 @@ private form ::=
   | macros_definition
   | type_definition
   | attribute
+  | generic_function_call_expression // macros support
   {recoverUntil=recoverer}
 
 private external is_app_config ::= isApplicationLanguage
@@ -150,7 +151,7 @@ macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ','
   pin = 2
   methods = [getName setName getNameIdentifier getTextOffset]
 }
-macros_body ::= expression ((',' | ';') expression)*
+macros_body ::= expression ((',' | ';' | '->') expression)* {pin(".*")=1}
 
 include ::= '-' ('include' | 'include_lib') '(' include_string ')' {pin=2}
 include_string ::= string {methods = [getReference]}

@@ -1,5 +1,5 @@
 ERL_FILE
-  PsiErrorElement:'-', <function> or <rule> expected, got '.'
+  PsiErrorElement:'-', <expression>, <function> or <rule> expected, got '.'
     PsiElement(.)('.')
   PsiElement(.)('.')
   PsiElement(.)('.')

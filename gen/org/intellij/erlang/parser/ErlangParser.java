@@ -2182,6 +2182,7 @@ public class ErlangParser implements PsiParser {
   //   | macros_definition
   //   | type_definition
   //   | attribute
+  //   | generic_function_call_expression
   static boolean form(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "form")) return false;
     boolean result_ = false;
@@ -2195,6 +2196,7 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = macros_definition(builder_, level_ + 1);
     if (!result_) result_ = type_definition(builder_, level_ + 1);
     if (!result_) result_ = attribute(builder_, level_ + 1);
+    if (!result_) result_ = generic_function_call_expression(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }
@@ -3407,25 +3409,27 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // expression ((',' | ';') expression)*
+  // expression ((',' | ';' | '->') expression)*
   public static boolean macros_body(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "macros_body")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<macros body>");
     result_ = expression(builder_, level_ + 1, -1);
+    pinned_ = result_; // pin = 1
     result_ = result_ && macros_body_1(builder_, level_ + 1);
-    if (result_) {
+    if (result_ || pinned_) {
       marker_.done(ERL_MACROS_BODY);
     }
     else {
       marker_.rollbackTo();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_GENERAL_, null);
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
-  // ((',' | ';') expression)*
+  // ((',' | ';' | '->') expression)*
   private static boolean macros_body_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "macros_body_1")) return false;
     int offset_ = builder_.getCurrentOffset();
@@ -3441,29 +3445,34 @@ public class ErlangParser implements PsiParser {
     return true;
   }
 
-  // (',' | ';') expression
+  // (',' | ';' | '->') expression
   private static boolean macros_body_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "macros_body_1_0")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = macros_body_1_0_0(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
     result_ = result_ && expression(builder_, level_ + 1, -1);
-    if (!result_) {
+    if (!result_ && !pinned_) {
       marker_.rollbackTo();
     }
     else {
       marker_.drop();
     }
-    return result_;
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
-  // ',' | ';'
+  // ',' | ';' | '->'
   private static boolean macros_body_1_0_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "macros_body_1_0_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_COMMA);
     if (!result_) result_ = consumeToken(builder_, ERL_SEMI);
+    if (!result_) result_ = consumeToken(builder_, ERL_ARROW);
     if (!result_) {
       marker_.rollbackTo();
     }

@@ -18,3 +18,8 @@
 -opaque state() :: #state{}.
 
 -record(mnesia_select, {tab,tid,node,storage,cont,written=[],spec,type,orig}).
+
+-define(CHECK(X), X() -> test_file(X), ok).
+
+?CHECK(h264_aac_1_flv_test).
+?CHECK(h264_aac_1_flv_test_2).
