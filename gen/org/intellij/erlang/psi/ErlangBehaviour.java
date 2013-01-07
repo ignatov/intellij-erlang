@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ErlangBehaviour extends ErlangCompositeElement {
 
   @Nullable
-  ErlangQAtom getQAtom();
+  ErlangModuleRef getModuleRef();
 
   @NotNull
   String getName();

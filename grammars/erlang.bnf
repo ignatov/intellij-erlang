@@ -176,7 +176,7 @@ module ::= 'module' '(' q_atom (',' argument_definition)? ')' {
   pin=1
   methods = [getName setName getNameIdentifier getTextOffset processDeclarations]
 }
-behaviour ::= 'behaviour' '(' q_atom ')' {
+behaviour ::= 'behaviour' '(' module_ref ')' {
   pin=1
   methods = [getName]
 }

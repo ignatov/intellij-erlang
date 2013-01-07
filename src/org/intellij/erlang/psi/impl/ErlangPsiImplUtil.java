@@ -842,7 +842,8 @@ public class ErlangPsiImplUtil {
   }
 
   public static String getName(ErlangBehaviour o) {
-    ErlangQAtom atom = o.getQAtom();
+    ErlangModuleRef moduleRef = o.getModuleRef();
+    ErlangQAtom atom = moduleRef != null ? moduleRef.getQAtom() : null;
     return atom == null ? "" : atom.getText();
   }
 

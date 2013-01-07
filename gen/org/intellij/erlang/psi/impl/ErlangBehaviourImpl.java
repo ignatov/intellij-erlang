@@ -18,8 +18,8 @@ public class ErlangBehaviourImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @Nullable
-  public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+  public ErlangModuleRef getModuleRef() {
+    return findChildByClass(ErlangModuleRef.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

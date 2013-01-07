@@ -798,7 +798,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // 'behaviour' '(' q_atom ')'
+  // 'behaviour' '(' module_ref ')'
   public static boolean behaviour(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "behaviour")) return false;
     boolean result_ = false;
@@ -808,7 +808,7 @@ public class ErlangParser implements PsiParser {
     result_ = consumeToken(builder_, "behaviour");
     pinned_ = result_; // pin = 1
     result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
-    result_ = pinned_ && report_error_(builder_, q_atom(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && report_error_(builder_, module_ref(builder_, level_ + 1)) && result_;
     result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
     if (result_ || pinned_) {
       marker_.done(ERL_BEHAVIOUR);
