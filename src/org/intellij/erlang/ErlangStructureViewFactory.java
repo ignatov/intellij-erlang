@@ -25,7 +25,9 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.ui.RowIcon;
 import com.intellij.util.Function;
+import com.intellij.util.PlatformIcons;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -43,7 +45,7 @@ import java.util.List;
  */
 public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   @Override
-  public StructureViewBuilder getStructureViewBuilder(final PsiFile psiFile) {
+  public StructureViewBuilder getStructureViewBuilder(@NotNull final PsiFile psiFile) {
     return new TreeBasedStructureViewBuilder() {
       @NotNull
       public StructureViewModel createStructureViewModel() {
@@ -58,7 +60,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   }
 
   public static class Model extends StructureViewModelBase implements StructureViewModel.ElementInfoProvider {
-    public Model(PsiFile psiFile) {
+    public Model(@NotNull PsiFile psiFile) {
       super(psiFile, new Element(psiFile));
       withSuitableClasses(ErlangFile.class, ErlangFunction.class, ErlangFunctionClause.class);
     }
@@ -130,7 +132,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       else if (myElement instanceof ErlangFile) {
         Comparator<ErlangNamedElement> comparator = new Comparator<ErlangNamedElement>() {
           @Override
-          public int compare(ErlangNamedElement o1, ErlangNamedElement o2) {
+          public int compare(@NotNull ErlangNamedElement o1, @NotNull ErlangNamedElement o2) {
             String name = o1.getName();
             if (name == null) return -1;
             return name.compareToIgnoreCase(o2.getName());
@@ -159,7 +161,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         String res = ((ErlangFunctionClause) myElement).getQAtom().getText();
         final List<String> strings = ContainerUtil.map(exprs, new Function<ErlangArgumentDefinition, String>() {
           @Override
-          public String fun(ErlangArgumentDefinition o) {
+          public String fun(@NotNull ErlangArgumentDefinition o) {
             return o.getText();
           }
         });
@@ -185,6 +187,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     }
 
 
+    @Nullable
     @Override
     public String getLocationString() {
       return null;
@@ -193,7 +196,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     @Override
     public Icon getIcon(boolean open) {
       if (myElement instanceof ErlangFunction) {
-        return ErlangIcons.FUNCTION;
+        PsiFile file = myElement.getContainingFile();
+        boolean isPrivate = file instanceof ErlangFile && !((ErlangFile) file).getExportedFunctions().contains(myElement);
+        return buildRowIcon(ErlangIcons.FUNCTION, isPrivate ? PlatformIcons.PRIVATE_ICON : PlatformIcons.PUBLIC_ICON);
       }
       else if (myElement instanceof ErlangFunctionClause) {
         return ErlangIcons.FUNCTION_CLAUSE;
@@ -212,5 +217,13 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       }
       return myElement.getIcon(0);
     }
+  }
+
+  @NotNull
+  private static Icon buildRowIcon(Icon first, Icon second) {
+    RowIcon rowIcon = new RowIcon(2);
+    rowIcon.setIcon(first, 0);
+    rowIcon.setIcon(second, 1);
+    return rowIcon;
   }
 }
