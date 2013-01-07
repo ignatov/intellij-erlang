@@ -20,6 +20,7 @@ import com.intellij.ide.structureView.*;
 import com.intellij.ide.util.treeView.smartTree.TreeElement;
 import com.intellij.lang.PsiStructureViewFactory;
 import com.intellij.navigation.ItemPresentation;
+import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiElement;
@@ -29,6 +30,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -72,7 +74,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     }
   }
 
-  public static class Element implements StructureViewTreeElement, ItemPresentation {
+  public static class Element implements StructureViewTreeElement, ItemPresentation, NavigationItem {
 
     private final PsiElement myElement;
 
@@ -98,6 +100,12 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     @Override
     public boolean canNavigateToSource() {
       return ((Navigatable) myElement).canNavigateToSource();
+    }
+
+    @Nullable
+    @Override
+    public String getName() {
+      return myElement instanceof ErlangNamedElement ? ((ErlangNamedElement) myElement).getName() : null;
     }
 
     @Override

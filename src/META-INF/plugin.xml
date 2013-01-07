@@ -163,6 +163,10 @@
         <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangRecursiveCallLineMarkerProvider"/>
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
 
+        <fileBasedIndex implementation="org.intellij.erlang.ErlangSymbolIndex"/>
+
+        <gotoSymbolContributor implementation="org.intellij.erlang.go.ErlangSymbolContributor"/>
+
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariableInspection"
                          displayName="Unbound variable"
