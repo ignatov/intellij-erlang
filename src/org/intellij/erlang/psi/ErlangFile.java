@@ -67,5 +67,5 @@ public interface ErlangFile extends PsiFile {
   List<ErlangSpecification> getSpecifications();
 
   @NotNull
-  List<ErlangFunction> getExportedFunctions();
+  Collection<ErlangFunction> getExportedFunctions();
 }

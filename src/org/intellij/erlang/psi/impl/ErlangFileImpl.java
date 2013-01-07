@@ -45,10 +45,7 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author ignatov
@@ -80,7 +77,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   private CachedValue<List<ErlangRule>> myRulesValue;
   private CachedValue<List<ErlangFunction>> myFunctionValue;
-  private CachedValue<List<ErlangFunction>> myExportedFunctionValue;
+  private CachedValue<Set<ErlangFunction>> myExportedFunctionValue;
   private CachedValue<List<ErlangAttribute>> myAttributeValue;
   private CachedValue<List<ErlangRecordDefinition>> myRecordValue;
   private CachedValue<List<ErlangInclude>> myIncludeValue;
@@ -143,11 +140,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   @Override
-  public List<ErlangFunction> getExportedFunctions() {
+  public Collection<ErlangFunction> getExportedFunctions() {
     if (myExportedFunctionValue == null) {
-      myExportedFunctionValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangFunction>>() {
+      myExportedFunctionValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<ErlangFunction>>() {
         @Override
-        public Result<List<ErlangFunction>> compute() {
+        public Result<Set<ErlangFunction>> compute() {
           ErlangFileImpl erlangFile = ErlangFileImpl.this;
           return Result.create(calcExportedFunctions(erlangFile), erlangFile);
         }
@@ -156,15 +153,16 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return myExportedFunctionValue.getValue();
   }
 
-  private List<ErlangFunction> calcExportedFunctions(final ErlangFileImpl erlangFile) {
-    final List<ErlangFunction> result = new ArrayList<ErlangFunction>();
+  private Set<ErlangFunction> calcExportedFunctions(final ErlangFileImpl erlangFile) {
+    final Set<ErlangFunction> result = new HashSet<ErlangFunction>();
     processChildrenDummyAware(this, new Processor<PsiElement>() {
       @Override
       public boolean process(PsiElement psiElement) {
         if (psiElement instanceof ErlangFunction) {
-          Query<PsiReference> search = ReferencesSearch.search(psiElement, new LocalSearchScope(erlangFile));
+          List<ErlangAttribute> attributes = erlangFile.getAttributes();
+          Query<PsiReference> search = ReferencesSearch.search(psiElement, new LocalSearchScope(attributes.toArray(new PsiElement[attributes.size()])));
 
-          List<PsiReference> exports = ContainerUtil.filter(search.findAll(), new Condition<PsiReference>() { // filtered specs out
+          List<PsiReference> exports = ContainerUtil.filter(search.findAll(), new Condition<PsiReference>() {
             @Override
             public boolean value(PsiReference psiReference) {
               PsiElement element = psiReference.getElement();
