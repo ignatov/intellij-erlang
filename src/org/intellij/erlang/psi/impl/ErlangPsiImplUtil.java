@@ -49,6 +49,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.lang.StringUtils;
+import org.intellij.erlang.ErlangCompletionContributor;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.ErlangTypes;
@@ -65,6 +66,11 @@ import java.util.*;
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_ATOMS = ContainerUtil.set("ok", "true", "false", "error");
   public static final Set<String> KNOWN_MACROS = ContainerUtil.set("MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE");
+  public static final Set<String> BUILT_IN_TYPES = ContainerUtil.set("term", "boolean", "byte", "char",
+    "non_neg_integer", "pos_integer", "neg_integer", "number", "integer", "float",
+    "list", "any", "maybe_improper_list", "string", "char", "nonempty_string",
+    "iolist", "module", "atom", "mfa", "node", "timeout", "no_return", "none"
+  );
 
   private ErlangPsiImplUtil() {
   }
@@ -222,14 +228,18 @@ public class ErlangPsiImplUtil {
 
     PsiElement arity = o.getInteger();
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(nameAtom, moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
-      nameAtom.getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
+      nameAtom.getText(), getArity(arity));
   }
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportFunction o) {
     PsiElement arity = o.getInteger();
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), null, TextRange.from(0, o.getQAtom().getTextLength()),
-      o.getQAtom().getText(), StringUtil.parseInt(arity == null ? "" : arity.getText(), -1));
+      o.getQAtom().getText(), getArity(arity));
+  }
+
+  private static int getArity(@Nullable PsiElement arity) {
+    return StringUtil.parseInt(arity == null ? "" : arity.getText(), -1);
   }
 
   @Nullable
@@ -318,23 +328,22 @@ public class ErlangPsiImplUtil {
         functions.addAll(((ErlangFile) containingFile).getFunctions());
       }
 
-      final int moduleFunctionsPriority = -4;
       List<LookupElement> lookupElements = ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
         @Override
         public LookupElement fun(@NotNull final ErlangFunction function) {
-          return createFunctionLookupElement(function, withArity, moduleFunctionsPriority);
+          return createFunctionLookupElement(function, withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY);
         }
       });
 
       if (!withArity) {
         for (ErlangBifDescriptor bif : ErlangBifDescriptor.getBifDescriptorsMap().get("erlang")) {
-          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, -5));
+          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.BIF_PRIORITY));
         }
       }
 
       if (moduleName != null) {
         for (ErlangBifDescriptor bif : ErlangBifDescriptor.getBifDescriptorsMap().get(moduleName)) {
-          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, moduleFunctionsPriority));
+          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
         }
       }
 
@@ -344,13 +353,16 @@ public class ErlangPsiImplUtil {
   }
 
   private static LookupElement createFunctionLookupElement(ErlangFunction function, boolean withArity, double priority) {
-    return createFunctionLookupElement(function.getName(), function.getArity(), withArity, priority);
-  }
-
-  private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, double priority) {
-    return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name)
+    int arity = function.getArity();
+    return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(function)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
       .withInsertHandler(getInsertHandler(arity, withArity)), priority);
+  }
+
+  private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
+    return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name)
+      .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
+      .withInsertHandler(getInsertHandler(arity, withArity)), (double) priority);
   }
 
   private static InsertHandler<LookupElement> getInsertHandler(final int arity, boolean withArity) {
@@ -435,11 +447,6 @@ public class ErlangPsiImplUtil {
   public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity) {
     if (containingFile instanceof ErlangFile) {
       List<ErlangTypeDefinition> types = ((ErlangFile) containingFile).getTypes();
-      List<String> builtInTypeNames = ContainerUtil.list("term", "boolean", "byte", "char",
-        "non_neg_integer", "pos_integer", "neg_integer", "number", "integer", "float",
-        "list", "any", "maybe_improper_list", "string", "char", "nonempty_string",
-        "iolist", "module", "atom", "mfa", "node", "timeout", "no_return", "none"
-      );
 
       final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<LookupElement>() {
         @Override
@@ -448,7 +455,7 @@ public class ErlangPsiImplUtil {
         }
       };
 
-      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(builtInTypeNames, new Function<String, LookupElement>() {
+      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(BUILT_IN_TYPES, new Function<String, LookupElement>() {
         @Override
         public LookupElement fun(String s) {
           return LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler);

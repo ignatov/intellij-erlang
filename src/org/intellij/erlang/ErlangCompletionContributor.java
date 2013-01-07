@@ -57,6 +57,11 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
  * @author ignatov
  */
 public class ErlangCompletionContributor extends CompletionContributor {
+  public static final int MODULE_PRIORITY = 10;
+  public static final int KEYWORD_PRIORITY = -10;
+  public static final int MODULE_FUNCTIONS_PRIORITY = -4;
+  public static final int BIF_PRIORITY = -5;
+
   @Override
   public void beforeCompletion(@NotNull CompletionInitializationContext context) {
     PsiFile file = context.getFile();
@@ -127,7 +132,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           }
           else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
             for (String keyword : suggestKeywords(position)) {
-              result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword).bold(), -10));
+              result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword).bold(), KEYWORD_PRIORITY));
             }
             int invocationCount = parameters.getInvocationCount();
             boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;
@@ -178,7 +183,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             LookupElementBuilder.create(file.getNameWithoutExtension())
               .withIcon(ErlangIcons.MODULE)
               .withInsertHandler(new SingleCharInsertHandler(':')),
-            10));
+            MODULE_PRIORITY));
       }
     }
   }
