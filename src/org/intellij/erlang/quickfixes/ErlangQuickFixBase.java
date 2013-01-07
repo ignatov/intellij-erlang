@@ -17,29 +17,19 @@
 package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInspection.LocalQuickFix;
-import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangNamedElement;
-import org.intellij.erlang.psi.ErlangRecordDefinition;
+import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 /**
  * @author ignatov
  */
 public abstract class ErlangQuickFixBase implements LocalQuickFix {
   @Nullable
-  static ErlangNamedElement getAnchorElement(ErlangFile containingFile) {
-    List<ErlangRecordDefinition> records = containingFile.getRecords();
-    List<ErlangFunction> functions = containingFile.getFunctions();
-
-    ErlangRecordDefinition firstRecord = ContainerUtil.getFirstItem(records);
-    ErlangFunction firstFunction = ContainerUtil.getFirstItem(functions);
-
-    return firstRecord != null ? firstRecord : firstFunction;
+  static ErlangCompositeElement getAnchorElement(ErlangFile containingFile) {
+    return PsiTreeUtil.getChildOfAnyType(containingFile,
+      ErlangRecordDefinition.class, ErlangFunction.class, ErlangSpecification.class);
   }
 
   @NotNull

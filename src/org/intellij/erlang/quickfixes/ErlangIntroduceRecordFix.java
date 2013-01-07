@@ -20,10 +20,7 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangNamedElement;
-import org.intellij.erlang.psi.ErlangRecordDefinition;
-import org.intellij.erlang.psi.ErlangRecordRef;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +42,7 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
       PsiElement record = ErlangElementFactory.createRecordFromText(project, element.getText());
       PsiFile file = element.getContainingFile();
       if (file instanceof ErlangFile) {
-        ErlangNamedElement elementBefore = getAnchorElement((ErlangFile) file);
+        ErlangCompositeElement elementBefore = getAnchorElement((ErlangFile) file);
 
         if (elementBefore != null) {
           file.addBefore(record, elementBefore);

@@ -60,33 +60,37 @@ public class ErlangExportTypeFix extends ErlangQuickFixBase {
     ErlangTypeDefinition type = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangTypeDefinition.class);
 
     if (type != null) {
-      PsiFile containingFile = type.getContainingFile();
-      if (containingFile instanceof ErlangFile) {
-        String exportText = ErlangPsiImplUtil.createTypePresentation(type);
+      processType(project, type);
+    }
+  }
 
-        List<ErlangAttribute> attributes = ((ErlangFile) containingFile).getAttributes();
-        for (ErlangAttribute attribute : attributes) {
-          ErlangExportTypeAttribute export = attribute.getExportTypeAttribute();
-          if (export != null) {
-            ErlangExportTypes exportTypes = export.getExportTypes();
+  public static void processType(Project project, ErlangTypeDefinition type) {
+    PsiFile containingFile = type.getContainingFile();
+    if (containingFile instanceof ErlangFile) {
+      String exportText = ErlangPsiImplUtil.createTypePresentation(type);
 
-            if (exportTypes != null) {
-              String replace = exportTypes.getText().replace("[", "").replace("]", "");
-              String s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") + exportText;
-              PsiElement newExportFunctions = ErlangElementFactory.createExportTypeFromText(project, s);
+      List<ErlangAttribute> attributes = ((ErlangFile) containingFile).getAttributes();
+      for (ErlangAttribute attribute : attributes) {
+        ErlangExportTypeAttribute export = attribute.getExportTypeAttribute();
+        if (export != null) {
+          ErlangExportTypes exportTypes = export.getExportTypes();
 
-              attribute.replace(newExportFunctions);
-            }
-            return;
+          if (exportTypes != null) {
+            String replace = exportTypes.getText().replace("[", "").replace("]", "");
+            String s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") + exportText;
+            PsiElement newExportFunctions = ErlangElementFactory.createExportTypeFromText(project, s);
+
+            attribute.replace(newExportFunctions);
           }
+          return;
         }
-        ErlangNamedElement elementBefore = getAnchorElement((ErlangFile) containingFile);
+      }
+      ErlangCompositeElement elementBefore = getAnchorElement((ErlangFile) containingFile);
 
-        if (elementBefore != null) {
-          containingFile.addBefore(ErlangElementFactory.createExportFromText(project, exportText), elementBefore);
-          containingFile.addBefore(ErlangElementFactory.createLeafFromText(project, "."), elementBefore);
-          containingFile.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
-        }
+      if (elementBefore != null) {
+        containingFile.addBefore(ErlangElementFactory.createExportTypeFromText(project, exportText), elementBefore);
+        containingFile.addBefore(ErlangElementFactory.createLeafFromText(project, "."), elementBefore);
+        containingFile.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
       }
     }
   }

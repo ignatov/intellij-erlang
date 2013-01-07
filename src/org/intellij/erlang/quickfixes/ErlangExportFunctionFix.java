@@ -69,7 +69,7 @@ public class ErlangExportFunctionFix extends ErlangQuickFixBase {
           return;
         }
       }
-      ErlangNamedElement elementBefore = getAnchorElement((ErlangFile) containingFile);
+      ErlangCompositeElement elementBefore = getAnchorElement((ErlangFile) containingFile);
 
       if (elementBefore != null) {
         containingFile.addBefore(ErlangElementFactory.createExportFromText(project, exportText), elementBefore);

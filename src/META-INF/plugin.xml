@@ -211,6 +211,10 @@
           <className>org.intellij.erlang.intention.ErlangExportFunctionIntention</className>
           <category>Erlang</category>
         </intentionAction>
+        <intentionAction>
+          <className>org.intellij.erlang.intention.ErlangExportTypeIntention</className>
+          <category>Erlang</category>
+        </intentionAction>
     </extensions>
     <actions>
         <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
