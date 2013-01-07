@@ -19,6 +19,7 @@ package org.intellij.erlang;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.intellij.erlang.completion.ErlangCompletionTest;
+import org.intellij.erlang.documentation.ErlangDocumentationProviderTest;
 import org.intellij.erlang.formatting.ErlangFormattingTest;
 import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
