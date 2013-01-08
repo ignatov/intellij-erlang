@@ -28,26 +28,12 @@ import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveTypeFix;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
 public class ErlangUnusedTypeInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Unused type";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangUnusedTypeInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

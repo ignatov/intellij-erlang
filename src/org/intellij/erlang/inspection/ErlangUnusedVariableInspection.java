@@ -46,7 +46,6 @@ import org.intellij.erlang.psi.ErlangFunctionClause;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.quickfixes.ErlangRenameVariableFix;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
@@ -55,19 +54,6 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
  * @author ignatov
  */
 public class ErlangUnusedVariableInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Unused variable";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangUnusedVariableInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

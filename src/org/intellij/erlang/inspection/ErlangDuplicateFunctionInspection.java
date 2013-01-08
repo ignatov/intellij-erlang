@@ -70,8 +70,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.MultiMap;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
@@ -80,19 +78,6 @@ import java.util.List;
  * @author ignatov
  */
 public class ErlangDuplicateFunctionInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Duplicate function";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangDuplicateFunctionInspection";
-  }
-
   @Override
   protected void checkFile(final PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

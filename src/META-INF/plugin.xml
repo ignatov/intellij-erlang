@@ -168,52 +168,47 @@
         <gotoSymbolContributor implementation="org.intellij.erlang.go.ErlangSymbolContributor"/>
 
         <!--errors-->
-        <localInspection language="Erlang" shortName="ErlangUnboundVariableInspection"
-                         displayName="Unbound variable"
+        <localInspection language="Erlang" shortName="ErlangUnboundVariable" displayName="Unbound variable"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnboundVariableInspection"/>
-        <localInspection language="Erlang" shortName="ErlangUnresolvedRecordInspection" displayName="Unresolved record"
+        <localInspection language="Erlang" shortName="ErlangUnresolvedRecord" displayName="Unresolved record"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordInspection"/>
-        <localInspection language="Erlang" shortName="ErlangUnresolvedRecordFieldInspection" displayName="Unresolved record field"
+        <localInspection language="Erlang" shortName="ErlangUnresolvedRecordField" displayName="Unresolved record field"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedRecordFieldInspection"/>
-        <localInspection language="Erlang" shortName="ErlangUnresolvedFunctionInspection"
-                         displayName="Unresolved function"
+        <localInspection language="Erlang" shortName="ErlangUnresolvedFunction" displayName="Unresolved function"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection"/>
         <localInspection language="Erlang" shortName="ErlangIncorrectModuleName" displayName="Incorrect module name"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
-                         implementationClass="org.intellij.erlang.inspection.ErlangIncorrectModuleName"/>
-        <localInspection language="Erlang" shortName="ErlangUnresolvedMacrosInspection" displayName="Unresolved macros"
+                         implementationClass="org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection"/>
+        <localInspection language="Erlang" shortName="ErlangUnresolvedMacros" displayName="Unresolved macros"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection"/>
         <localInspection language="Erlang" shortName="ErlangHeadMismatch" displayName="Head mismatch"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangHeadMismatchInspection"/>
-        <!--warnings-->
-        <localInspection language="Erlang" shortName="ErlangUnusedVariableInspection" displayName="Unused variable"
-                         groupName="Erlang" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.intellij.erlang.inspection.ErlangUnusedVariableInspection"/>
-        <localInspection language="Erlang" shortName="ErlangUnusedFunctionInspection" displayName="Unused function"
-                         groupName="Erlang" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.intellij.erlang.inspection.ErlangUnusedFunctionInspection"/>
-        <localInspection language="Erlang" shortName="ErlangUnusedTypeInspection" displayName="Unused type"
-                         groupName="Erlang" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.intellij.erlang.inspection.ErlangUnusedTypeInspection"/>
-        <localInspection language="Erlang" shortName="ErlangDuplicateFunctionInspection"
-                         displayName="Duplicate function"
-                         groupName="Erlang" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.intellij.erlang.inspection.ErlangDuplicateFunctionInspection"/>
-        <localInspection language="Erlang" shortName="ErlangIncorrectAritySpecificationInspection"
-                         displayName="Incorrect arity in specification"
+        <localInspection language="Erlang" shortName="ErlangIncorrectAritySpecification" displayName="Incorrect arity in specification"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangIncorrectAritySpecificationInspection"/>
-        <localInspection language="Erlang" shortName="ErlangSpecificationForUndefinedFunctionInspection"
-                         displayName="Specification for undefined function"
+        <localInspection language="Erlang" shortName="ErlangSpecificationForUndefinedFunction" displayName="Specification for undefined function"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangSpecificationForUndefinedFunctionInspection"/>
-      
+
+        <!--warnings-->
+        <localInspection language="Erlang" shortName="ErlangUnusedVariable" displayName="Unused variable"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnusedVariableInspection"/>
+        <localInspection language="Erlang" shortName="ErlangUnusedFunction" displayName="Unused function"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnusedFunctionInspection"/>
+        <localInspection language="Erlang" shortName="ErlangUnusedType" displayName="Unused type"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnusedTypeInspection"/>
+        <localInspection language="Erlang" shortName="ErlangDuplicateFunction" displayName="Duplicate function"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangDuplicateFunctionInspection"/>
         <intentionAction>
           <className>org.intellij.erlang.intention.ErlangExportFunctionIntention</className>
           <category>Erlang</category>

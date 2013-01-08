@@ -54,26 +54,12 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFieldFix;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
 public class ErlangUnresolvedRecordFieldInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Unresolved record field";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangUnresolvedRecordFieldInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

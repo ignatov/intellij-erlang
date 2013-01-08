@@ -79,7 +79,6 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -87,20 +86,7 @@ import java.io.IOException;
 /**
  * @author ignatov
  */
-public class ErlangIncorrectModuleName extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Incorrect module name";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangIncorrectModuleName";
-  }
-
+public class ErlangIncorrectModuleNameInspection extends ErlangBaseInspection {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

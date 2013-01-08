@@ -65,7 +65,6 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -74,19 +73,6 @@ import java.util.List;
  * @author ignatov
  */
 public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Unused function";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangUnusedFunctionInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

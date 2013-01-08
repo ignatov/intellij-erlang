@@ -67,28 +67,17 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangMacros;
+import org.intellij.erlang.psi.ErlangMacrosName;
+import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
 public class ErlangUnresolvedMacrosInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Unresolved macros";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangUnresolvedMacrosInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

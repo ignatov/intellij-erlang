@@ -22,7 +22,6 @@ import com.intellij.psi.PsiReference;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
@@ -31,19 +30,6 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
  * @author ignatov
  */
 public class ErlangUnboundVariableInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Unbound variable";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangUnboundVariableInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

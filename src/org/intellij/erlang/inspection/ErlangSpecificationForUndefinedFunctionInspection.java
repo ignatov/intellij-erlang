@@ -24,23 +24,9 @@ import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFunTypeSigs;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.ErlangSpecification;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangSpecificationForUndefinedFunctionInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Incorrect specification arity";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangSpecificationForUndefinedFunctionInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!StringUtils.endsWith(file.getName(), ErlangFileType.MODULE.getDefaultExtension())) return;

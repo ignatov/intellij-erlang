@@ -40,26 +40,12 @@ import org.intellij.erlang.psi.ErlangRecordExpression;
 import org.intellij.erlang.psi.ErlangRecordRef;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFix;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
 public class ErlangUnresolvedRecordInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Unresolved record";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangUnresolvedRecordInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

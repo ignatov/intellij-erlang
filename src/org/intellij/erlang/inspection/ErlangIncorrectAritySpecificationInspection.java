@@ -22,26 +22,11 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunTypeSigs;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.ErlangTypeSig;
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
  */
 public class ErlangIncorrectAritySpecificationInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Incorrect specification arity";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangIncorrectAritySpecificationInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

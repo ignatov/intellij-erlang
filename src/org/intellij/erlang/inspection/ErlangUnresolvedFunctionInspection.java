@@ -54,26 +54,12 @@ import com.intellij.psi.PsiReference;
 import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
 public class ErlangUnresolvedFunctionInspection extends ErlangBaseInspection {
-  @Nls
-  @NotNull
-  @Override
-  public String getDisplayName() {
-    return "Unresolved function";
-  }
-
-  @NotNull
-  @Override
-  public String getShortName() {
-    return "ErlangUnresolvedFunctionInspection";
-  }
-
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
