@@ -188,6 +188,9 @@
         <localInspection language="Erlang" shortName="ErlangUnresolvedMacrosInspection" displayName="Unresolved macros"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection"/>
+        <localInspection language="Erlang" shortName="ErlangHeadMismatch" displayName="Head mismatch"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangHeadMismatchInspection"/>
         <!--warnings-->
         <localInspection language="Erlang" shortName="ErlangUnusedVariableInspection" displayName="Unused variable"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"

@@ -26,6 +26,8 @@ import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFixTest;
+import org.intellij.erlang.quickfixes.ErlangExportTypeFixTest;
+import org.intellij.erlang.quickfixes.ErlangHeadMismatchFixTest;
 import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
 import org.intellij.erlang.rebar.runner.FileReferenceFilterTest;
 
@@ -40,12 +42,16 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangAppParserTest.class);
     suite.addTestSuite(ErlangHighlightingTest.class);
     suite.addTestSuite(ErlangFormattingTest.class);
-    suite.addTestSuite(ErlangExportFunctionFixTest.class);
     suite.addTestSuite(ErlangCompletionTest.class);
     suite.addTestSuite(RebarProjectImportBuilderTest.class);
     suite.addTestSuite(FileReferenceFilterTest.class);
     suite.addTestSuite(ErlangDocumentationProviderTest.class);
     suite.addTestSuite(ErlangParameterInfoHandlerTest.class);
+
+    suite.addTestSuite(ErlangExportFunctionFixTest.class);
+    suite.addTestSuite(ErlangExportTypeFixTest.class);
+    suite.addTestSuite(ErlangHeadMismatchFixTest.class);
+
     return suite;
   }
 }

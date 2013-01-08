@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * @author ignatov
  */
-public class ErlangQuickFixTestBase extends LightPlatformCodeInsightFixtureTestCase {
+public abstract class ErlangQuickFixTestBase extends LightPlatformCodeInsightFixtureTestCase {
   @Override
   protected boolean isWriteActionRequired() {
     return false;
