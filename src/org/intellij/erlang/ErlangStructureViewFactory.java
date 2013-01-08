@@ -157,16 +157,19 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     @Override
     public String getPresentableText() {
       if (myElement instanceof ErlangFunctionClause) {
-        final List<ErlangArgumentDefinition> exprs = ((ErlangFunctionClause) myElement).getArgumentDefinitionList().getArgumentDefinitionList();
-        String res = ((ErlangFunctionClause) myElement).getQAtom().getText();
-        final List<String> strings = ContainerUtil.map(exprs, new Function<ErlangArgumentDefinition, String>() {
+        List<ErlangArgumentDefinition> exprs = ((ErlangFunctionClause) myElement).getArgumentDefinitionList().getArgumentDefinitionList();
+        String name = ((ErlangFunctionClause) myElement).getQAtom().getText();
+        List<String> expressionStrings = ContainerUtil.map(exprs, new Function<ErlangArgumentDefinition, String>() {
           @Override
           public String fun(@NotNull ErlangArgumentDefinition o) {
             return o.getText();
           }
         });
 
-        return res + "(" + StringUtil.join(strings, ", ") + ")";
+        ErlangClauseGuard guard = ((ErlangFunctionClause) myElement).getClauseGuard();
+        String guardText = guard != null ? " " + guard.getText() : "";
+
+        return name + "(" + StringUtil.join(expressionStrings, ", ") + ")" + guardText;
       }
       if (myElement instanceof ErlangFunction) {
         return ErlangPsiImplUtil.createFunctionPresentation((ErlangFunction) myElement);
