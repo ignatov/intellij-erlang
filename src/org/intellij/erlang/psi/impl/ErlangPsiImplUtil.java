@@ -64,7 +64,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class ErlangPsiImplUtil {
-  public static final Set<String> KNOWN_ATOMS = ContainerUtil.set("ok", "true", "false", "error");
   public static final Set<String> KNOWN_MACROS = ContainerUtil.set("MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE");
   public static final Set<String> BUILT_IN_TYPES = ContainerUtil.set("term", "boolean", "byte", "char",
     "non_neg_integer", "pos_integer", "neg_integer", "number", "integer", "float",

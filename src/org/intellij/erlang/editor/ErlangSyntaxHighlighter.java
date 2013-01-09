@@ -48,11 +48,11 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey PARENTHS = createTextAttributesKey("ERL_PARENTHS", SyntaxHighlighterColors.PARENTHS.getDefaultAttributes());
   public static final TextAttributesKey BRACES = createTextAttributesKey("ERL_BRACES", SyntaxHighlighterColors.BRACES.getDefaultAttributes());
   public static final TextAttributesKey BRACKETS = createTextAttributesKey("ERL_BRACKETS", SyntaxHighlighterColors.BRACKETS.getDefaultAttributes());
+  public static final TextAttributesKey ATOM = createTextAttributesKey("ERL_ATOM", new TextAttributes(null, null, null, null, Font.BOLD));
   public static final TextAttributesKey VARIABLES = createTextAttributesKey("ERL_VARIABLES", new TextAttributes(RECORD_DEFAULTS.getForegroundColor(), RECORD_DEFAULTS.getBackgroundColor(), null, null, Font.PLAIN));
   public static final TextAttributesKey RECORDS = createTextAttributesKey("ERL_RECORDS", new TextAttributes(RECORD_DEFAULTS.getForegroundColor(), RECORD_DEFAULTS.getBackgroundColor(), null, null, Font.BOLD));
   public static final TextAttributesKey OP_SIGN = createTextAttributesKey("ERL_OP_SIGN", SyntaxHighlighterColors.OPERATION_SIGN.getDefaultAttributes());
   public static final TextAttributesKey DOC_COMMENT_TAG = createTextAttributesKey("ERL_BOLD", SyntaxHighlighterColors.DOC_COMMENT_TAG.getDefaultAttributes());
-  public static final TextAttributesKey KNOWN_ATOM = createTextAttributesKey("ERL_KNOWN_ATOM", new TextAttributes(null, null, null, null, Font.BOLD));
 
   @NotNull
   @Override

@@ -47,11 +47,11 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Parenthesis", PARENTHS),
       new AttributesDescriptor("Braces", BRACES),
       new AttributesDescriptor("Brackets", BRACKETS),
+      new AttributesDescriptor("Atom", ATOM),
       new AttributesDescriptor("Variable", VARIABLES),
       new AttributesDescriptor("Records", RECORDS),
       new AttributesDescriptor("Operation sign", OP_SIGN),
       new AttributesDescriptor("Edoc tag", DOC_COMMENT_TAG),
-      new AttributesDescriptor("Known atom", KNOWN_ATOM),
     };
   }
 
@@ -97,7 +97,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "update_state(State) -> State#<r>state</r>{id=10}.\n" +
       "\n" +
-      "simple() -> <a>ok</a>."
+      "simple(<a>ok</a>) -> <a>ok</a>."
       ;
   }
 
@@ -106,7 +106,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     final Map<String, TextAttributesKey> map = new THashMap<String, TextAttributesKey>();
     map.put("k", KEYWORD);
     map.put("d", DOC_COMMENT_TAG);
-    map.put("a", KNOWN_ATOM);
+    map.put("a", ATOM);
     map.put("r", RECORDS);
     return map;
   }
