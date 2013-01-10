@@ -154,14 +154,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       @Override
       public void visitQAtom(@NotNull ErlangQAtom o) {
-        PsiElement parent = o.getParent();
-        boolean highlight =
-          !(parent instanceof ErlangFunctionCallExpression) &&
-          !(parent instanceof ErlangGenericFunctionCallExpression) &&
-          !(parent instanceof ErlangGlobalFunctionCallExpression) &&
-            parent instanceof ErlangExpression;
         PsiElement atom = o.getAtom();
-        if (atom != null && highlight) {
+        if (atom != null && o.getParent() instanceof ErlangMaxExpression) {
           setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.ATOM);
         }
       }
