@@ -42,10 +42,10 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
   public OutputToGeneralTestEventsConverter createTestEventsConverter(@NotNull final String testFrameworkName, @NotNull final TestConsoleProperties consoleProperties) {
     return new OutputToGeneralTestEventsConverter(testFrameworkName, consoleProperties) {
 
-      String myCurrentModule;
-      String myCurrentTest;
-      boolean myFailed;
-      String myStdOut;
+      String myCurrentModule = "";
+      String myCurrentTest = "";
+      boolean myFailed = false;
+      String myStdOut = "";
 
       @Override
       protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) throws ParseException {
@@ -80,6 +80,11 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
           ServiceMessageBuilder serviceMessageBuilder = setLocation(testStarted(test), module, test);
           return super.processServiceMessages(serviceMessageBuilder.toString(), outputType, visitor);
         }
+        else if (text.startsWith("ERROR:")) {
+          myStdOut += text;
+          return super.processServiceMessages(testFailed(myCurrentTest).addAttribute("message", myStdOut).toString(), outputType, visitor)
+            && super.processServiceMessages(testFinished(myCurrentTest).toString(), outputType, visitor);
+        }
         else if (myFailed) {
           if (!StringUtil.isEmptyOrSpaces(text)) {
             myStdOut += text;
@@ -93,6 +98,7 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
         else if (text.startsWith("=======================================================")){
           return super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), outputType, visitor);
         }
+        myStdOut += text;
         return true;
       }
 
