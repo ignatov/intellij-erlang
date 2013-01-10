@@ -46,8 +46,16 @@ public class ErlangBifParsing {
         "import org.jetbrains.annotations.NotNull;\n" +
         "import com.intellij.util.containers.MultiMap;\n" +
         "\n" +
+        "import java.util.Collection;\n" +
+        "import java.util.HashSet;\n" +
+        "\n" +
         "public final class ErlangBifDescriptor {\n" +
-        "  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>();\n" +
+        "  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {\n" +
+        "    @Override\n" +
+        "    protected Collection<ErlangBifDescriptor> createCollection() {\n" +
+        "      return new HashSet<ErlangBifDescriptor>();\n" +
+        "    }\n" +
+        "  };\n" +
         "\n" +
         "  private final String myModule;\n" +
         "  private final String myName;\n" +

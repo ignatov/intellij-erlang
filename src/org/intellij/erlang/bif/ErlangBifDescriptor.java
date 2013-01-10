@@ -3,8 +3,16 @@ package org.intellij.erlang.bif;
 import org.jetbrains.annotations.NotNull;
 import com.intellij.util.containers.MultiMap;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 public final class ErlangBifDescriptor {
-  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>();
+  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {
+    @Override
+    protected Collection<ErlangBifDescriptor> createCollection() {
+      return new HashSet<ErlangBifDescriptor>();
+    }
+  };
 
   private final String myModule;
   private final String myName;
