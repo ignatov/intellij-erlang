@@ -48,6 +48,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Braces", BRACES),
       new AttributesDescriptor("Brackets", BRACKETS),
       new AttributesDescriptor("Atom", ATOM),
+      new AttributesDescriptor("Macro", MACRO),
       new AttributesDescriptor("Variable", VARIABLES),
       new AttributesDescriptor("Records", RECORDS),
       new AttributesDescriptor("Operation sign", OP_SIGN),
