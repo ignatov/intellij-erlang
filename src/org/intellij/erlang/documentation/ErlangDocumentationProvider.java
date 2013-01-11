@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.documentation;
 
 import com.intellij.codeInsight.documentation.PlatformDocumentationUtil;
 import com.intellij.lang.documentation.AbstractDocumentationProvider;
@@ -30,12 +30,14 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangModule;
-import org.intellij.erlang.psi.ErlangSpecification;
+import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.bif.ErlangBifTable;
+import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangModuleImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,24 +58,45 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
     else if (element instanceof ErlangFunction) {
       return findUrlForFunction((ErlangFunction) element);
     }
+    else {
+      final PsiElement parent = element.getParent();
+      if (parent instanceof ErlangFunctionCallExpression) {
+        return findUrlForBif((ErlangFunctionCallExpression) parent);
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  private static List<String> findUrlForBif(@NotNull ErlangFunctionCallExpression bifCall) {
+    final String bifName = bifCall.getNameIdentifier().getText();
+    final int bifArity = bifCall.getArgumentList().getExpressionList().size();
+    final PsiElement callExpressionParent = bifCall.getParent();
+    if (callExpressionParent instanceof ErlangGlobalFunctionCallExpression) {
+      final ErlangModuleRef moduleRef = ((ErlangGlobalFunctionCallExpression) callExpressionParent).getModuleRef();
+      final PsiReference psiReference = moduleRef != null ? moduleRef.getReference() : null;
+      final PsiElement psiElement = psiReference != null ? psiReference.resolve() : null;
+      if (psiElement instanceof ErlangModuleImpl) {
+        final ErlangModuleImpl bifPsiModule = (ErlangModuleImpl) psiElement;
+        final String bifModuleName = bifPsiModule.getName();
+        if (ErlangBifTable.isBif(bifModuleName, bifName, bifArity)) {
+          final String inDocRef = "#" + bifName + "-" + bifArity;
+          return findUrlForVirtualFile(bifPsiModule.getProject(), getVirtualFile(bifPsiModule), inDocRef);
+        }
+      }
+    }
     return null;
   }
 
   @Nullable
   private static List<String> findUrlForModule(@NotNull ErlangModule erlModule) {
     final VirtualFile virtualFile = getVirtualFile(erlModule);
-    if (virtualFile == null) {
-      return null;
-    }
     return findUrlForVirtualFile(erlModule.getProject(), virtualFile, "");
   }
 
   @Nullable
   private static List<String> findUrlForFunction(@NotNull ErlangFunction erlFunction) {
     final VirtualFile virtualFile = getVirtualFile(erlFunction);
-    if (virtualFile == null) {
-      return null;
-    }
     final String inDocRef = "#" + erlFunction.getName() + "-" + erlFunction.getArity();
     return findUrlForVirtualFile(erlFunction.getProject(), virtualFile, inDocRef);
   }
@@ -86,8 +109,11 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
 
   @Nullable
   private static List<String> findUrlForVirtualFile(@NotNull Project project,
-                                                    @NotNull VirtualFile virtualFile,
+                                                    @Nullable VirtualFile virtualFile,
                                                     @NotNull String inDocRef) {
+    if (virtualFile == null) {
+      return null;
+    }
     final ProjectFileIndex fileIndex = ProjectRootManager.getInstance(project).getFileIndex();
     final List<OrderEntry> orderEntries = fileIndex.getOrderEntriesForFile(virtualFile);
     for (OrderEntry orderEntry : orderEntries) {

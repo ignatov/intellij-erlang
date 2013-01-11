@@ -25,6 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.ErlangCallbackSpec;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -57,7 +58,13 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     if (suppressResolve()) return null; // for #132
 
     if (myModuleAtom != null) {
-      return getExternalFunction(getModuleFileName());
+      final ErlangFunction explicitFunction = getExternalFunction(getModuleFileName());
+      if (explicitFunction != null) {
+        return explicitFunction;
+      }
+      if (ErlangBifTable.isBif(myModuleAtom.getText(), myReferenceName, myArity)) {
+        return getElement();
+      }
     }
 
     PsiFile containingFile = getElement().getContainingFile();
