@@ -29,7 +29,7 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
-import org.intellij.erlang.ErlangDocumentationProvider;
+import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
