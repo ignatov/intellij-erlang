@@ -68,4 +68,6 @@ public interface ErlangFile extends PsiFile {
 
   @NotNull
   Collection<ErlangFunction> getExportedFunctions();
+
+  boolean isExportedAll();
 }

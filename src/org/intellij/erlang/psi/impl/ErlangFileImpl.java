@@ -21,10 +21,7 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.FileViewProvider;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNameIdentifierOwner;
-import com.intellij.psi.PsiReference;
+import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -89,11 +86,47 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   private CachedValue<Map<String, ErlangTypeDefinition>> myTypeMap;
   private CachedValue<List<ErlangBehaviour>> myBehavioursValue;
   private CachedValue<List<ErlangSpecification>> mySpecificationsValue;
+  private CachedValue<Boolean> myExportAll;
 
   @NotNull
   @Override
   public FileType getFileType() {
     return ErlangFileType.MODULE;
+  }
+
+  @Override
+  public boolean isExportedAll() {
+    if (myExportAll == null) {
+      myExportAll = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Boolean>() {
+        @Override
+        public Result<Boolean> compute() {
+          return Result.create(calcExportAll(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myExportAll.getValue();
+  }
+
+  private Boolean calcExportAll() {
+    for (ErlangAttribute attribute : getAttributes()) {
+      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+      if (atomAttribute != null) {
+        if ("compile".equals(atomAttribute.getQAtom().getText())) {
+          ErlangAttrVal attrVal = atomAttribute.getAttrVal();
+          if (attrVal != null) {
+            List<ErlangExpression> expressionList = attrVal.getExpressionList();
+            for (ErlangExpression expression : expressionList) {
+              if (expression instanceof ErlangListExpression) {
+                for (ErlangExpression e : ((ErlangListExpression) expression).getExpressionList()) {
+                  if (e instanceof ErlangMaxExpression && e.getText().equals("export_all")) return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   @NotNull
@@ -154,6 +187,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private Set<ErlangFunction> calcExportedFunctions(final ErlangFileImpl erlangFile) {
+    if (isExportedAll()) {
+      return new HashSet<ErlangFunction>(getFunctions());
+    }
     final Set<ErlangFunction> result = new HashSet<ErlangFunction>();
     processChildrenDummyAware(this, new Processor<PsiElement>() {
       @Override

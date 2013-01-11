@@ -68,6 +68,7 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void test124()               { doTest(); }
   public void test149()               { doTest(); }
   public void testMismatchedHead()    { doTest(); }
+  public void test154()               { doTest(); }
   public void test155()               { doTest(); }
 
   public void testUnresolvedMacros()  {

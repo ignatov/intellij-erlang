@@ -76,6 +76,7 @@ public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
+    if (((ErlangFile) file).isExportedAll()) return;
     final boolean isEunitImported = ErlangPsiImplUtil.isEunitImported((ErlangFile) file);
     file.accept(new ErlangRecursiveVisitor() {
       @Override
