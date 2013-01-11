@@ -54,6 +54,7 @@ import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
+import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -335,13 +336,13 @@ public class ErlangPsiImplUtil {
       });
 
       if (!withArity) {
-        for (ErlangBifDescriptor bif : ErlangBifDescriptor.getBifDescriptorsMap().get("erlang")) {
+        for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs("erlang")) {
           lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.BIF_PRIORITY));
         }
       }
 
       if (moduleName != null) {
-        for (ErlangBifDescriptor bif : ErlangBifDescriptor.getBifDescriptorsMap().get(moduleName)) {
+        for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs(moduleName)) {
           lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
         }
       }

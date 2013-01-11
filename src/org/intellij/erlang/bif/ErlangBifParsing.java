@@ -38,7 +38,7 @@ public class ErlangBifParsing {
 
     String[] strings = StringUtil.splitByLines(FileUtilRt.loadFile(file));
 
-    PrintStream g = new PrintStream(new File("src/org/intellij/erlang/bif/ErlangBifDescriptor.java"));
+    PrintStream g = new PrintStream(new File("src/org/intellij/erlang/bif/ErlangBifTable.java"));
 
     try {
       g.append("package org.intellij.erlang.bif;\n" +
@@ -49,23 +49,13 @@ public class ErlangBifParsing {
         "import java.util.Collection;\n" +
         "import java.util.HashSet;\n" +
         "\n" +
-        "public final class ErlangBifDescriptor {\n" +
+        "public final class ErlangBifTable {\n" +
         "  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {\n" +
         "    @Override\n" +
         "    protected Collection<ErlangBifDescriptor> createCollection() {\n" +
         "      return new HashSet<ErlangBifDescriptor>();\n" +
         "    }\n" +
         "  };\n" +
-        "\n" +
-        "  private final String myModule;\n" +
-        "  private final String myName;\n" +
-        "  private final int myArity;\n" +
-        "\n" +
-        "  private ErlangBifDescriptor(@NotNull String module, @NotNull String name, int arity) {\n" +
-        "    myModule = module;\n" +
-        "    myName = name;\n" +
-        "    myArity = arity;\n" +
-        "  }\n" +
         "\n" +
         "  static {\n");
 
@@ -82,26 +72,18 @@ public class ErlangBifParsing {
           g.append("    // Since ").append(version).append("\n");
         }
       }
-      g.append(
+      g.append("  }\n" +
+        "\n" +
+        "  private ErlangBifTable() {\n" +
         "  }\n" +
         "\n" +
         "  @NotNull\n" +
-        "  public static MultiMap<String, ErlangBifDescriptor> getBifDescriptorsMap() {\n" +
-        "    return bifMap;\n" +
+        "  public static Collection<ErlangBifDescriptor> getModuleBifs(@NotNull String module) {\n" +
+        "    return bifMap.get(module);\n" +
         "  }\n" +
         "\n" +
-        "  @NotNull\n" +
-        "  public String getModule() {\n" +
-        "    return myModule;\n" +
-        "  }\n" +
-        "\n" +
-        "  @NotNull\n" +
-        "  public String getName() {\n" +
-        "    return myName;\n" +
-        "  }\n" +
-        "\n" +
-        "  public int getArity() {\n" +
-        "    return myArity;\n" +
+        "  public static boolean isBif(@NotNull String module, @NotNull String function, int arity) {\n" +
+        "    return bifMap.get(module).contains(new ErlangBifDescriptor(module, function, arity));\n" +
         "  }\n" +
         "}\n");
     } finally {

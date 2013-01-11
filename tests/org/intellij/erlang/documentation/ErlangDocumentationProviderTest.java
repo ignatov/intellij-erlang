@@ -22,7 +22,6 @@ import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
-import org.intellij.erlang.ErlangDocumentationProvider;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
@@ -59,14 +58,21 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
   public void testFunctionExternalUrl() throws Exception {
     doTest("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#foreach-2",
       "-module(test).\n" +
-      "test() ->\n" +
-      "    lists:for<caret>each(foo, bar).\n");
+        "test() ->\n" +
+        "    lists:for<caret>each(foo, bar).\n");
+  }
+
+  public void testBifExternalUrl() throws Exception {
+    doTest("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#member-2",
+      "-module(test).\n" +
+        "test() ->\n" +
+        "    lists:mem<caret>ber(foo, bar).\n");
   }
 
   public void testModuleExternalUrl() throws Exception {
     doTest("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html",
       "-module(test).\n" +
-      "test() ->\n" +
-      "    lis<caret>ts:foreach(foo, bar).\n");
+        "test() ->\n" +
+        "    lis<caret>ts:foreach(foo, bar).\n");
   }
 }
