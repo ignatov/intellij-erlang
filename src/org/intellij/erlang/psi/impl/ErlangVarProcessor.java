@@ -54,7 +54,8 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
         (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || inAssignment(psiElement)))
         || isInModule(psiElement)
         || PsiTreeUtil.isAncestor(spec, psiElement, false)) {
-        if (inArgumentList(psiElement)) return true;
+        //noinspection unchecked
+        if (inArgumentList(psiElement) && PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList) return true;
 
         myVarList.add(0, (ErlangQVar) psiElement); // put all possible variables to list
         return true;
