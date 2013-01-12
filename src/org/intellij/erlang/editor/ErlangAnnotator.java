@@ -136,7 +136,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       public void visitMacrosName(@NotNull ErlangMacrosName o) {
         final PsiElement firstChild = o.getFirstChild();
         if (firstChild != null) {
-          setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.VARIABLES);
+          setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.MACRO);
         }
       }
 
