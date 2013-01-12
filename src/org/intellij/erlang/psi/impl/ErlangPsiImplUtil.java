@@ -271,7 +271,8 @@ public class ErlangPsiImplUtil {
   public static boolean inArgumentList(PsiElement psiElement) {
     ErlangArgumentList argList = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, true,
       ErlangFunctionCallExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
-    return (argList != null ? argList.getParent() : null) instanceof ErlangFunctionCallExpression;
+    PsiElement parent = argList != null ? argList.getParent() : null;
+    return parent instanceof ErlangFunctionCallExpression && ((ErlangFunctionCallExpression) parent).getQAtom().getMacros() == null;
   }
 
   public static boolean inDefine(PsiElement psiElement) {
