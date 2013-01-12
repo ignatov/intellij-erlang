@@ -198,6 +198,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
 
     @Override
     public Icon getIcon(boolean open) {
+      if (!myElement.isValid()) return null;
       if (myElement instanceof ErlangFunction) {
         PsiFile file = myElement.getContainingFile();
         boolean isPrivate = file instanceof ErlangFile && !((ErlangFile) file).getExportedFunctions().contains(myElement);
