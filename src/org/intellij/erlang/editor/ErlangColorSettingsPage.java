@@ -88,6 +88,8 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "-<k>record</k>(state, {id, name}).\n" +
       "\n" +
+      "-<k>define</k>(<m>MACRO</m>, macro_value).\n" +
+      "\n" +
       "%% Factorial implementation\n" +
       "%% <d>@doc</d> Documentation\n" +
       "fac(0) -> 1;\n" +
@@ -98,16 +100,19 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "update_state(State) -> State#<r>state</r>{id=10}.\n" +
       "\n" +
-      "simple(<a>ok</a>) -> <a>ok</a>."
+      "simple(<a>ok</a>) -> <a>ok</a>.\n" +
+      "\n" +
+      "use_macro() -> ?<m>MACRO</m>."
       ;
   }
 
   public Map<String, TextAttributesKey> getAdditionalHighlightingTagToDescriptorMap() {
     @NonNls
     final Map<String, TextAttributesKey> map = new THashMap<String, TextAttributesKey>();
-    map.put("k", KEYWORD);
-    map.put("d", DOC_COMMENT_TAG);
     map.put("a", ATOM);
+    map.put("d", DOC_COMMENT_TAG);
+    map.put("k", KEYWORD);
+    map.put("m", MACRO);
     map.put("r", RECORDS);
     return map;
   }
