@@ -1,0 +1,6 @@
+andalso
+bnot
+bxor
+cond
+orelse
+noreply
