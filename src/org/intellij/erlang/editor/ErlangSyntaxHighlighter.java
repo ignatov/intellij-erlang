@@ -39,7 +39,8 @@ import static org.intellij.erlang.ErlangTypes.*;
 public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributes KEYWORD_DEFAULTS = SyntaxHighlighterColors.KEYWORD.getDefaultAttributes();
   public static final TextAttributes RECORD_DEFAULTS = CodeInsightColors.INSTANCE_FIELD_ATTRIBUTES.getDefaultAttributes();
-  
+  public static final TextAttributes MACRO_DEFAULTS = CodeInsightColors.STATIC_FINAL_FIELD_ATTRIBUTES.getDefaultAttributes();
+
   public static final TextAttributesKey ILLEGAL = createTextAttributesKey("ERL_ILLEGAL", SyntaxHighlighterColors.INVALID_STRING_ESCAPE.getDefaultAttributes());
   public static final TextAttributesKey COMMENT = createTextAttributesKey("ERL_COMMENT", SyntaxHighlighterColors.LINE_COMMENT.getDefaultAttributes());
   public static final TextAttributesKey STRING = createTextAttributesKey("ERL_STRING", SyntaxHighlighterColors.STRING.getDefaultAttributes());
@@ -49,7 +50,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey BRACES = createTextAttributesKey("ERL_BRACES", SyntaxHighlighterColors.BRACES.getDefaultAttributes());
   public static final TextAttributesKey BRACKETS = createTextAttributesKey("ERL_BRACKETS", SyntaxHighlighterColors.BRACKETS.getDefaultAttributes());
   public static final TextAttributesKey ATOM = createTextAttributesKey("ERL_ATOM", new TextAttributes(null, null, null, null, Font.BOLD));
-  public static final TextAttributesKey MACRO = createTextAttributesKey("ERL_MACRO", SyntaxHighlighterColors.STRING.getDefaultAttributes());
+  public static final TextAttributesKey MACRO = createTextAttributesKey("ERL_MACRO", new TextAttributes(MACRO_DEFAULTS.getForegroundColor(), MACRO_DEFAULTS.getBackgroundColor(), null, null, Font.ITALIC));
   public static final TextAttributesKey VARIABLES = createTextAttributesKey("ERL_VARIABLES", new TextAttributes(RECORD_DEFAULTS.getForegroundColor(), RECORD_DEFAULTS.getBackgroundColor(), null, null, Font.PLAIN));
   public static final TextAttributesKey RECORDS = createTextAttributesKey("ERL_RECORDS", new TextAttributes(RECORD_DEFAULTS.getForegroundColor(), RECORD_DEFAULTS.getBackgroundColor(), null, null, Font.BOLD));
   public static final TextAttributesKey OP_SIGN = createTextAttributesKey("ERL_OP_SIGN", SyntaxHighlighterColors.OPERATION_SIGN.getDefaultAttributes());
