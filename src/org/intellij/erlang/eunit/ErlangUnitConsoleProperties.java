@@ -14,6 +14,8 @@ import jetbrains.buildServer.messages.serviceMessages.ServiceMessageVisitor;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.ParseException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +48,7 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
       String myCurrentTest = "";
       boolean myFailed = false;
       String myStdOut = "";
+      Set<String> myFailedTests = new HashSet<String>();
 
       @Override
       protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) throws ParseException {
@@ -80,7 +83,7 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
           ServiceMessageBuilder serviceMessageBuilder = setLocation(testStarted(test), module, test);
           return super.processServiceMessages(serviceMessageBuilder.toString(), outputType, visitor);
         }
-        else if (text.startsWith("ERROR:")) {
+        else if (text.startsWith("ERROR:") && !myFailedTests.contains(myCurrentTest)) {
           myStdOut += text;
           return super.processServiceMessages(testFailed(myCurrentTest).addAttribute("message", myStdOut).toString(), outputType, visitor)
             && super.processServiceMessages(testFinished(myCurrentTest).toString(), outputType, visitor);
@@ -91,6 +94,7 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
           }
           else {
             myFailed = false;
+            myFailedTests.add(myCurrentTest);
             return super.processServiceMessages(testFailed(myCurrentTest).addAttribute("message", myStdOut).toString(), outputType, visitor)
               && super.processServiceMessages(testFinished(myCurrentTest).toString(), outputType, visitor);
           }
