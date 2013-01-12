@@ -209,6 +209,9 @@
         <localInspection language="Erlang" shortName="ErlangDuplicateFunction" displayName="Duplicate function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangDuplicateFunctionInspection"/>
+
+        <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
+
         <intentionAction>
           <className>org.intellij.erlang.intention.ErlangExportFunctionIntention</className>
           <category>Erlang</category>
