@@ -30,8 +30,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.ErlangTypes;
-import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.documentation.ErlangDocUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,10 +55,10 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         IElementType tokenType = comment.getTokenType();
         final Set<String> edocTags;
         if (tokenType == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT) {
-          edocTags = ErlangDocumentationProvider.EDOC_FUNCTION_TAGS;
+          edocTags = ErlangDocUtil.EDOC_FUNCTION_TAGS;
         }
         else if (tokenType == ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
-          edocTags = ErlangDocumentationProvider.EDOC_MODULE_TAGS;
+          edocTags = ErlangDocUtil.EDOC_MODULE_TAGS;
         }
         else {
           return;

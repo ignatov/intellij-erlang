@@ -1,0 +1,1781 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html xmlns:fn="http://www.w3.org/2005/02/xpath-functions">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../../../doc/otp_doc.css" type="text/css">
+<title>Erlang -- io_lib</title>
+</head>
+<body bgcolor="white" text="#000000" link="#0000ff" vlink="#ff00ff" alink="#ff0000"><div id="container">
+<script id="js" type="text/javascript" language="JavaScript" src="../../../../doc/js/flipmenu/flipmenu.js"></script><script id="js2" type="text/javascript" src="../../../../doc/js/erlresolvelinks.js"></script><script language="JavaScript" type="text/javascript">
+            <!--
+              function getWinHeight() {
+                var myHeight = 0;
+                if( typeof( window.innerHeight ) == 'number' ) {
+                  //Non-IE
+                  myHeight = window.innerHeight;
+                } else if( document.documentElement && ( document.documentElement.clientWidth ||
+                                                         document.documentElement.clientHeight ) ) {
+                  //IE 6+ in 'standards compliant mode'
+                  myHeight = document.documentElement.clientHeight;
+                } else if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) {
+                  //IE 4 compatible
+                  myHeight = document.body.clientHeight;
+                }
+                return myHeight;
+              }
+
+              function setscrollpos() {
+                var objf=document.getElementById('loadscrollpos');
+                 document.getElementById("leftnav").scrollTop = objf.offsetTop - getWinHeight()/2;
+              }
+
+              function addEvent(obj, evType, fn){
+                if (obj.addEventListener){
+                obj.addEventListener(evType, fn, true);
+                return true;
+              } else if (obj.attachEvent){
+                var r = obj.attachEvent("on"+evType, fn);
+                return r;
+              } else {
+                return false;
+              }
+             }
+
+             addEvent(window, 'load', setscrollpos);
+
+             //--></script><div id="leftnav"><div class="innertube">
+<img alt="Erlang logo" src="../../../../doc/erlang-logo.png"><br><small><a href="users_guide.html">User's Guide</a><br><a href="index.html">Reference Manual</a><br><a href="release_notes.html">Release Notes</a><br><a href="../pdf/stdlib-1.18.2.pdf">PDF</a><br><a href="../../../../doc/index.html">Top</a></small><p><strong>STDLIB</strong><br><strong>Reference Manual</strong><br><small>Version 1.18.2</small></p>
+<br><a href="javascript:openAllFlips()">Expand All</a><br><a href="javascript:closeAllFlips()">Contract All</a><p><small><strong>Table of Contents</strong></small></p>
+<ul class="flipMenu">
+<li title="STDLIB (App)"><a href="STDLIB_app.html">STDLIB (App)
+                </a></li>
+<li id="no" title="array " expanded="false">array<ul>
+<li><a href="array.html">
+                  Top of manual page
+                </a></li>
+<li title="default-1"><a href="array.html#default-1">default/1</a></li>
+<li title="fix-1"><a href="array.html#fix-1">fix/1</a></li>
+<li title="foldl-3"><a href="array.html#foldl-3">foldl/3</a></li>
+<li title="foldr-3"><a href="array.html#foldr-3">foldr/3</a></li>
+<li title="from_list-1"><a href="array.html#from_list-1">from_list/1</a></li>
+<li title="from_list-2"><a href="array.html#from_list-2">from_list/2</a></li>
+<li title="from_orddict-1"><a href="array.html#from_orddict-1">from_orddict/1</a></li>
+<li title="from_orddict-2"><a href="array.html#from_orddict-2">from_orddict/2</a></li>
+<li title="get-2"><a href="array.html#get-2">get/2</a></li>
+<li title="is_array-1"><a href="array.html#is_array-1">is_array/1</a></li>
+<li title="is_fix-1"><a href="array.html#is_fix-1">is_fix/1</a></li>
+<li title="map-2"><a href="array.html#map-2">map/2</a></li>
+<li title="new-0"><a href="array.html#new-0">new/0</a></li>
+<li title="new-1"><a href="array.html#new-1">new/1</a></li>
+<li title="new-2"><a href="array.html#new-2">new/2</a></li>
+<li title="relax-1"><a href="array.html#relax-1">relax/1</a></li>
+<li title="reset-2"><a href="array.html#reset-2">reset/2</a></li>
+<li title="resize-1"><a href="array.html#resize-1">resize/1</a></li>
+<li title="resize-2"><a href="array.html#resize-2">resize/2</a></li>
+<li title="set-3"><a href="array.html#set-3">set/3</a></li>
+<li title="size-1"><a href="array.html#size-1">size/1</a></li>
+<li title="sparse_foldl-3"><a href="array.html#sparse_foldl-3">sparse_foldl/3</a></li>
+<li title="sparse_foldr-3"><a href="array.html#sparse_foldr-3">sparse_foldr/3</a></li>
+<li title="sparse_map-2"><a href="array.html#sparse_map-2">sparse_map/2</a></li>
+<li title="sparse_size-1"><a href="array.html#sparse_size-1">sparse_size/1</a></li>
+<li title="sparse_to_list-1"><a href="array.html#sparse_to_list-1">sparse_to_list/1</a></li>
+<li title="sparse_to_orddict-1"><a href="array.html#sparse_to_orddict-1">sparse_to_orddict/1</a></li>
+<li title="to_list-1"><a href="array.html#to_list-1">to_list/1</a></li>
+<li title="to_orddict-1"><a href="array.html#to_orddict-1">to_orddict/1</a></li>
+</ul>
+</li>
+<li id="no" title="base64 " expanded="false">base64<ul>
+<li><a href="base64.html">
+                  Top of manual page
+                </a></li>
+<li title="encode-1"><a href="base64.html#encode-1">encode/1</a></li>
+<li title="encode_to_string-1"><a href="base64.html#encode_to_string-1">encode_to_string/1</a></li>
+<li title="decode-1"><a href="base64.html#decode-1">decode/1</a></li>
+<li title="decode_to_string-1"><a href="base64.html#decode_to_string-1">decode_to_string/1</a></li>
+<li title="mime_decode-1"><a href="base64.html#mime_decode-1">mime_decode/1</a></li>
+<li title="mime_decode_to_string-1"><a href="base64.html#mime_decode_to_string-1">mime_decode_to_string/1</a></li>
+</ul>
+</li>
+<li id="no" title="beam_lib " expanded="false">beam_lib<ul>
+<li><a href="beam_lib.html">
+                  Top of manual page
+                </a></li>
+<li title="chunks-2"><a href="beam_lib.html#chunks-2">chunks/2</a></li>
+<li title="chunks-3"><a href="beam_lib.html#chunks-3">chunks/3</a></li>
+<li title="version-1"><a href="beam_lib.html#version-1">version/1</a></li>
+<li title="md5-1"><a href="beam_lib.html#md5-1">md5/1</a></li>
+<li title="info-1"><a href="beam_lib.html#info-1">info/1</a></li>
+<li title="cmp-2"><a href="beam_lib.html#cmp-2">cmp/2</a></li>
+<li title="cmp_dirs-2"><a href="beam_lib.html#cmp_dirs-2">cmp_dirs/2</a></li>
+<li title="diff_dirs-2"><a href="beam_lib.html#diff_dirs-2">diff_dirs/2</a></li>
+<li title="strip-1"><a href="beam_lib.html#strip-1">strip/1</a></li>
+<li title="strip_files-1"><a href="beam_lib.html#strip_files-1">strip_files/1</a></li>
+<li title="strip_release-1"><a href="beam_lib.html#strip_release-1">strip_release/1</a></li>
+<li title="format_error-1"><a href="beam_lib.html#format_error-1">format_error/1</a></li>
+<li title="crypto_key_fun-1"><a href="beam_lib.html#crypto_key_fun-1">crypto_key_fun/1</a></li>
+<li title="clear_crypto_key_fun-0"><a href="beam_lib.html#clear_crypto_key_fun-0">clear_crypto_key_fun/0</a></li>
+</ul>
+</li>
+<li id="no" title="binary " expanded="false">binary<ul>
+<li><a href="binary.html">
+                  Top of manual page
+                </a></li>
+<li title="at-2"><a href="binary.html#at-2">at/2</a></li>
+<li title="bin_to_list-1"><a href="binary.html#bin_to_list-1">bin_to_list/1</a></li>
+<li title="bin_to_list-2"><a href="binary.html#bin_to_list-2">bin_to_list/2</a></li>
+<li title="bin_to_list-3"><a href="binary.html#bin_to_list-3">bin_to_list/3</a></li>
+<li title="compile_pattern-1"><a href="binary.html#compile_pattern-1">compile_pattern/1</a></li>
+<li title="copy-1"><a href="binary.html#copy-1">copy/1</a></li>
+<li title="copy-2"><a href="binary.html#copy-2">copy/2</a></li>
+<li title="decode_unsigned-1"><a href="binary.html#decode_unsigned-1">decode_unsigned/1</a></li>
+<li title="decode_unsigned-2"><a href="binary.html#decode_unsigned-2">decode_unsigned/2</a></li>
+<li title="encode_unsigned-1"><a href="binary.html#encode_unsigned-1">encode_unsigned/1</a></li>
+<li title="encode_unsigned-2"><a href="binary.html#encode_unsigned-2">encode_unsigned/2</a></li>
+<li title="first-1"><a href="binary.html#first-1">first/1</a></li>
+<li title="last-1"><a href="binary.html#last-1">last/1</a></li>
+<li title="list_to_bin-1"><a href="binary.html#list_to_bin-1">list_to_bin/1</a></li>
+<li title="longest_common_prefix-1"><a href="binary.html#longest_common_prefix-1">longest_common_prefix/1</a></li>
+<li title="longest_common_suffix-1"><a href="binary.html#longest_common_suffix-1">longest_common_suffix/1</a></li>
+<li title="match-2"><a href="binary.html#match-2">match/2</a></li>
+<li title="match-3"><a href="binary.html#match-3">match/3</a></li>
+<li title="matches-2"><a href="binary.html#matches-2">matches/2</a></li>
+<li title="matches-3"><a href="binary.html#matches-3">matches/3</a></li>
+<li title="part-2"><a href="binary.html#part-2">part/2</a></li>
+<li title="part-3"><a href="binary.html#part-3">part/3</a></li>
+<li title="referenced_byte_size-1"><a href="binary.html#referenced_byte_size-1">referenced_byte_size/1</a></li>
+<li title="replace-3"><a href="binary.html#replace-3">replace/3</a></li>
+<li title="replace-4"><a href="binary.html#replace-4">replace/4</a></li>
+<li title="split-2"><a href="binary.html#split-2">split/2</a></li>
+<li title="split-3"><a href="binary.html#split-3">split/3</a></li>
+</ul>
+</li>
+<li id="no" title="c " expanded="false">c<ul>
+<li><a href="c.html">
+                  Top of manual page
+                </a></li>
+<li title="bt-1"><a href="c.html#bt-1">bt/1</a></li>
+<li title="c-1"><a href="c.html#c-1">c/1</a></li>
+<li title="c-2"><a href="c.html#c-2">c/2</a></li>
+<li title="cd-1"><a href="c.html#cd-1">cd/1</a></li>
+<li title="flush-0"><a href="c.html#flush-0">flush/0</a></li>
+<li title="help-0"><a href="c.html#help-0">help/0</a></li>
+<li title="i-0"><a href="c.html#i-0">i/0</a></li>
+<li title="ni-0"><a href="c.html#ni-0">ni/0</a></li>
+<li title="i-3"><a href="c.html#i-3">i/3</a></li>
+<li title="l-1"><a href="c.html#l-1">l/1</a></li>
+<li title="lc-1"><a href="c.html#lc-1">lc/1</a></li>
+<li title="ls-0"><a href="c.html#ls-0">ls/0</a></li>
+<li title="ls-1"><a href="c.html#ls-1">ls/1</a></li>
+<li title="m-0"><a href="c.html#m-0">m/0</a></li>
+<li title="m-1"><a href="c.html#m-1">m/1</a></li>
+<li title="memory-0"><a href="c.html#memory-0">memory/0</a></li>
+<li title="memory-1"><a href="c.html#memory-1">memory/1</a></li>
+<li title="nc-1"><a href="c.html#nc-1">nc/1</a></li>
+<li title="nc-2"><a href="c.html#nc-2">nc/2</a></li>
+<li title="nl-1"><a href="c.html#nl-1">nl/1</a></li>
+<li title="pid-3"><a href="c.html#pid-3">pid/3</a></li>
+<li title="pwd-0"><a href="c.html#pwd-0">pwd/0</a></li>
+<li title="q-0"><a href="c.html#q-0">q/0</a></li>
+<li title="regs-0"><a href="c.html#regs-0">regs/0</a></li>
+<li title="nregs-0"><a href="c.html#nregs-0">nregs/0</a></li>
+<li title="xm-1"><a href="c.html#xm-1">xm/1</a></li>
+<li title="y-1"><a href="c.html#y-1">y/1</a></li>
+<li title="y-2"><a href="c.html#y-2">y/2</a></li>
+</ul>
+</li>
+<li id="no" title="calendar " expanded="false">calendar<ul>
+<li><a href="calendar.html">
+                  Top of manual page
+                </a></li>
+<li title="date_to_gregorian_days-1"><a href="calendar.html#date_to_gregorian_days-1">date_to_gregorian_days/1</a></li>
+<li title="date_to_gregorian_days-3"><a href="calendar.html#date_to_gregorian_days-3">date_to_gregorian_days/3</a></li>
+<li title="datetime_to_gregorian_seconds-1"><a href="calendar.html#datetime_to_gregorian_seconds-1">datetime_to_gregorian_seconds/1</a></li>
+<li title="day_of_the_week-1"><a href="calendar.html#day_of_the_week-1">day_of_the_week/1</a></li>
+<li title="day_of_the_week-3"><a href="calendar.html#day_of_the_week-3">day_of_the_week/3</a></li>
+<li title="gregorian_days_to_date-1"><a href="calendar.html#gregorian_days_to_date-1">gregorian_days_to_date/1</a></li>
+<li title="gregorian_seconds_to_datetime-1"><a href="calendar.html#gregorian_seconds_to_datetime-1">gregorian_seconds_to_datetime/1</a></li>
+<li title="is_leap_year-1"><a href="calendar.html#is_leap_year-1">is_leap_year/1</a></li>
+<li title="iso_week_number-0"><a href="calendar.html#iso_week_number-0">iso_week_number/0</a></li>
+<li title="iso_week_number-1"><a href="calendar.html#iso_week_number-1">iso_week_number/1</a></li>
+<li title="last_day_of_the_month-2"><a href="calendar.html#last_day_of_the_month-2">last_day_of_the_month/2</a></li>
+<li title="local_time-0"><a href="calendar.html#local_time-0">local_time/0</a></li>
+<li title="local_time_to_universal_time-1"><a href="calendar.html#local_time_to_universal_time-1">local_time_to_universal_time/1</a></li>
+<li title="local_time_to_universal_time_dst-1"><a href="calendar.html#local_time_to_universal_time_dst-1">local_time_to_universal_time_dst/1</a></li>
+<li title="now_to_local_time-1"><a href="calendar.html#now_to_local_time-1">now_to_local_time/1</a></li>
+<li title="now_to_universal_time-1"><a href="calendar.html#now_to_universal_time-1">now_to_universal_time/1</a></li>
+<li title="now_to_datetime-1"><a href="calendar.html#now_to_datetime-1">now_to_datetime/1</a></li>
+<li title="seconds_to_daystime-1"><a href="calendar.html#seconds_to_daystime-1">seconds_to_daystime/1</a></li>
+<li title="seconds_to_time-1"><a href="calendar.html#seconds_to_time-1">seconds_to_time/1</a></li>
+<li title="time_difference-2"><a href="calendar.html#time_difference-2">time_difference/2</a></li>
+<li title="time_to_seconds-1"><a href="calendar.html#time_to_seconds-1">time_to_seconds/1</a></li>
+<li title="universal_time-0"><a href="calendar.html#universal_time-0">universal_time/0</a></li>
+<li title="universal_time_to_local_time-1"><a href="calendar.html#universal_time_to_local_time-1">universal_time_to_local_time/1</a></li>
+<li title="valid_date-1"><a href="calendar.html#valid_date-1">valid_date/1</a></li>
+<li title="valid_date-3"><a href="calendar.html#valid_date-3">valid_date/3</a></li>
+</ul>
+</li>
+<li id="no" title="dets " expanded="false">dets<ul>
+<li><a href="dets.html">
+                  Top of manual page
+                </a></li>
+<li title="all-0"><a href="dets.html#all-0">all/0</a></li>
+<li title="bchunk-2"><a href="dets.html#bchunk-2">bchunk/2</a></li>
+<li title="close-1"><a href="dets.html#close-1">close/1</a></li>
+<li title="delete-2"><a href="dets.html#delete-2">delete/2</a></li>
+<li title="delete_all_objects-1"><a href="dets.html#delete_all_objects-1">delete_all_objects/1</a></li>
+<li title="delete_object-2"><a href="dets.html#delete_object-2">delete_object/2</a></li>
+<li title="first-1"><a href="dets.html#first-1">first/1</a></li>
+<li title="foldl-3"><a href="dets.html#foldl-3">foldl/3</a></li>
+<li title="foldr-3"><a href="dets.html#foldr-3">foldr/3</a></li>
+<li title="from_ets-2"><a href="dets.html#from_ets-2">from_ets/2</a></li>
+<li title="info-1"><a href="dets.html#info-1">info/1</a></li>
+<li title="info-2"><a href="dets.html#info-2">info/2</a></li>
+<li title="init_table-2"><a href="dets.html#init_table-2">init_table/2</a></li>
+<li title="init_table-3"><a href="dets.html#init_table-3">init_table/3</a></li>
+<li title="insert-2"><a href="dets.html#insert-2">insert/2</a></li>
+<li title="insert_new-2"><a href="dets.html#insert_new-2">insert_new/2</a></li>
+<li title="is_compatible_bchunk_format-2"><a href="dets.html#is_compatible_bchunk_format-2">is_compatible_bchunk_format/2</a></li>
+<li title="is_dets_file-1"><a href="dets.html#is_dets_file-1">is_dets_file/1</a></li>
+<li title="lookup-2"><a href="dets.html#lookup-2">lookup/2</a></li>
+<li title="match-1"><a href="dets.html#match-1">match/1</a></li>
+<li title="match-2"><a href="dets.html#match-2">match/2</a></li>
+<li title="match-3"><a href="dets.html#match-3">match/3</a></li>
+<li title="match_delete-2"><a href="dets.html#match_delete-2">match_delete/2</a></li>
+<li title="match_object-1"><a href="dets.html#match_object-1">match_object/1</a></li>
+<li title="match_object-2"><a href="dets.html#match_object-2">match_object/2</a></li>
+<li title="match_object-3"><a href="dets.html#match_object-3">match_object/3</a></li>
+<li title="member-2"><a href="dets.html#member-2">member/2</a></li>
+<li title="next-2"><a href="dets.html#next-2">next/2</a></li>
+<li title="open_file-1"><a href="dets.html#open_file-1">open_file/1</a></li>
+<li title="open_file-2"><a href="dets.html#open_file-2">open_file/2</a></li>
+<li title="pid2name-1"><a href="dets.html#pid2name-1">pid2name/1</a></li>
+<li title="repair_continuation-2"><a href="dets.html#repair_continuation-2">repair_continuation/2</a></li>
+<li title="safe_fixtable-2"><a href="dets.html#safe_fixtable-2">safe_fixtable/2</a></li>
+<li title="select-1"><a href="dets.html#select-1">select/1</a></li>
+<li title="select-2"><a href="dets.html#select-2">select/2</a></li>
+<li title="select-3"><a href="dets.html#select-3">select/3</a></li>
+<li title="select_delete-2"><a href="dets.html#select_delete-2">select_delete/2</a></li>
+<li title="slot-2"><a href="dets.html#slot-2">slot/2</a></li>
+<li title="sync-1"><a href="dets.html#sync-1">sync/1</a></li>
+<li title="table-1"><a href="dets.html#table-1">table/1</a></li>
+<li title="table-2"><a href="dets.html#table-2">table/2</a></li>
+<li title="to_ets-2"><a href="dets.html#to_ets-2">to_ets/2</a></li>
+<li title="traverse-2"><a href="dets.html#traverse-2">traverse/2</a></li>
+<li title="update_counter-3"><a href="dets.html#update_counter-3">update_counter/3</a></li>
+</ul>
+</li>
+<li id="no" title="dict " expanded="false">dict<ul>
+<li><a href="dict.html">
+                  Top of manual page
+                </a></li>
+<li title="append-3"><a href="dict.html#append-3">append/3</a></li>
+<li title="append_list-3"><a href="dict.html#append_list-3">append_list/3</a></li>
+<li title="erase-2"><a href="dict.html#erase-2">erase/2</a></li>
+<li title="fetch-2"><a href="dict.html#fetch-2">fetch/2</a></li>
+<li title="fetch_keys-1"><a href="dict.html#fetch_keys-1">fetch_keys/1</a></li>
+<li title="filter-2"><a href="dict.html#filter-2">filter/2</a></li>
+<li title="find-2"><a href="dict.html#find-2">find/2</a></li>
+<li title="fold-3"><a href="dict.html#fold-3">fold/3</a></li>
+<li title="from_list-1"><a href="dict.html#from_list-1">from_list/1</a></li>
+<li title="is_key-2"><a href="dict.html#is_key-2">is_key/2</a></li>
+<li title="map-2"><a href="dict.html#map-2">map/2</a></li>
+<li title="merge-3"><a href="dict.html#merge-3">merge/3</a></li>
+<li title="new-0"><a href="dict.html#new-0">new/0</a></li>
+<li title="size-1"><a href="dict.html#size-1">size/1</a></li>
+<li title="store-3"><a href="dict.html#store-3">store/3</a></li>
+<li title="to_list-1"><a href="dict.html#to_list-1">to_list/1</a></li>
+<li title="update-3"><a href="dict.html#update-3">update/3</a></li>
+<li title="update-4"><a href="dict.html#update-4">update/4</a></li>
+<li title="update_counter-3"><a href="dict.html#update_counter-3">update_counter/3</a></li>
+</ul>
+</li>
+<li id="no" title="digraph " expanded="false">digraph<ul>
+<li><a href="digraph.html">
+                  Top of manual page
+                </a></li>
+<li title="add_edge-3"><a href="digraph.html#add_edge-3">add_edge/3</a></li>
+<li title="add_edge-4"><a href="digraph.html#add_edge-4">add_edge/4</a></li>
+<li title="add_edge-5"><a href="digraph.html#add_edge-5">add_edge/5</a></li>
+<li title="add_vertex-1"><a href="digraph.html#add_vertex-1">add_vertex/1</a></li>
+<li title="add_vertex-2"><a href="digraph.html#add_vertex-2">add_vertex/2</a></li>
+<li title="add_vertex-3"><a href="digraph.html#add_vertex-3">add_vertex/3</a></li>
+<li title="del_edge-2"><a href="digraph.html#del_edge-2">del_edge/2</a></li>
+<li title="del_edges-2"><a href="digraph.html#del_edges-2">del_edges/2</a></li>
+<li title="del_path-3"><a href="digraph.html#del_path-3">del_path/3</a></li>
+<li title="del_vertex-2"><a href="digraph.html#del_vertex-2">del_vertex/2</a></li>
+<li title="del_vertices-2"><a href="digraph.html#del_vertices-2">del_vertices/2</a></li>
+<li title="delete-1"><a href="digraph.html#delete-1">delete/1</a></li>
+<li title="edge-2"><a href="digraph.html#edge-2">edge/2</a></li>
+<li title="edges-1"><a href="digraph.html#edges-1">edges/1</a></li>
+<li title="edges-2"><a href="digraph.html#edges-2">edges/2</a></li>
+<li title="get_cycle-2"><a href="digraph.html#get_cycle-2">get_cycle/2</a></li>
+<li title="get_path-3"><a href="digraph.html#get_path-3">get_path/3</a></li>
+<li title="get_short_cycle-2"><a href="digraph.html#get_short_cycle-2">get_short_cycle/2</a></li>
+<li title="get_short_path-3"><a href="digraph.html#get_short_path-3">get_short_path/3</a></li>
+<li title="in_degree-2"><a href="digraph.html#in_degree-2">in_degree/2</a></li>
+<li title="in_edges-2"><a href="digraph.html#in_edges-2">in_edges/2</a></li>
+<li title="in_neighbours-2"><a href="digraph.html#in_neighbours-2">in_neighbours/2</a></li>
+<li title="info-1"><a href="digraph.html#info-1">info/1</a></li>
+<li title="new-0"><a href="digraph.html#new-0">new/0</a></li>
+<li title="new-1"><a href="digraph.html#new-1">new/1</a></li>
+<li title="no_edges-1"><a href="digraph.html#no_edges-1">no_edges/1</a></li>
+<li title="no_vertices-1"><a href="digraph.html#no_vertices-1">no_vertices/1</a></li>
+<li title="out_degree-2"><a href="digraph.html#out_degree-2">out_degree/2</a></li>
+<li title="out_edges-2"><a href="digraph.html#out_edges-2">out_edges/2</a></li>
+<li title="out_neighbours-2"><a href="digraph.html#out_neighbours-2">out_neighbours/2</a></li>
+<li title="vertex-2"><a href="digraph.html#vertex-2">vertex/2</a></li>
+<li title="vertices-1"><a href="digraph.html#vertices-1">vertices/1</a></li>
+</ul>
+</li>
+<li id="no" title="digraph_utils " expanded="false">digraph_utils<ul>
+<li><a href="digraph_utils.html">
+                  Top of manual page
+                </a></li>
+<li title="arborescence_root-1"><a href="digraph_utils.html#arborescence_root-1">arborescence_root/1</a></li>
+<li title="components-1"><a href="digraph_utils.html#components-1">components/1</a></li>
+<li title="condensation-1"><a href="digraph_utils.html#condensation-1">condensation/1</a></li>
+<li title="cyclic_strong_components-1"><a href="digraph_utils.html#cyclic_strong_components-1">cyclic_strong_components/1</a></li>
+<li title="is_acyclic-1"><a href="digraph_utils.html#is_acyclic-1">is_acyclic/1</a></li>
+<li title="is_arborescence-1"><a href="digraph_utils.html#is_arborescence-1">is_arborescence/1</a></li>
+<li title="is_tree-1"><a href="digraph_utils.html#is_tree-1">is_tree/1</a></li>
+<li title="loop_vertices-1"><a href="digraph_utils.html#loop_vertices-1">loop_vertices/1</a></li>
+<li title="postorder-1"><a href="digraph_utils.html#postorder-1">postorder/1</a></li>
+<li title="preorder-1"><a href="digraph_utils.html#preorder-1">preorder/1</a></li>
+<li title="reachable-2"><a href="digraph_utils.html#reachable-2">reachable/2</a></li>
+<li title="reachable_neighbours-2"><a href="digraph_utils.html#reachable_neighbours-2">reachable_neighbours/2</a></li>
+<li title="reaching-2"><a href="digraph_utils.html#reaching-2">reaching/2</a></li>
+<li title="reaching_neighbours-2"><a href="digraph_utils.html#reaching_neighbours-2">reaching_neighbours/2</a></li>
+<li title="strong_components-1"><a href="digraph_utils.html#strong_components-1">strong_components/1</a></li>
+<li title="subgraph-2"><a href="digraph_utils.html#subgraph-2">subgraph/2</a></li>
+<li title="subgraph-3"><a href="digraph_utils.html#subgraph-3">subgraph/3</a></li>
+<li title="topsort-1"><a href="digraph_utils.html#topsort-1">topsort/1</a></li>
+</ul>
+</li>
+<li id="no" title="epp " expanded="false">epp<ul>
+<li><a href="epp.html">
+                  Top of manual page
+                </a></li>
+<li title="open-2"><a href="epp.html#open-2">open/2</a></li>
+<li title="open-3"><a href="epp.html#open-3">open/3</a></li>
+<li title="close-1"><a href="epp.html#close-1">close/1</a></li>
+<li title="parse_erl_form-1"><a href="epp.html#parse_erl_form-1">parse_erl_form/1</a></li>
+<li title="parse_file-3"><a href="epp.html#parse_file-3">parse_file/3</a></li>
+<li title="format_error-1"><a href="epp.html#format_error-1">format_error/1</a></li>
+</ul>
+</li>
+<li id="no" title="erl_eval " expanded="false">erl_eval<ul>
+<li><a href="erl_eval.html">
+                  Top of manual page
+                </a></li>
+<li title="exprs-2"><a href="erl_eval.html#exprs-2">exprs/2</a></li>
+<li title="exprs-3"><a href="erl_eval.html#exprs-3">exprs/3</a></li>
+<li title="exprs-4"><a href="erl_eval.html#exprs-4">exprs/4</a></li>
+<li title="expr-2"><a href="erl_eval.html#expr-2">expr/2</a></li>
+<li title="expr-3"><a href="erl_eval.html#expr-3">expr/3</a></li>
+<li title="expr-4"><a href="erl_eval.html#expr-4">expr/4</a></li>
+<li title="expr-5"><a href="erl_eval.html#expr-5">expr/5</a></li>
+<li title="expr_list-2"><a href="erl_eval.html#expr_list-2">expr_list/2</a></li>
+<li title="expr_list-3"><a href="erl_eval.html#expr_list-3">expr_list/3</a></li>
+<li title="expr_list-4"><a href="erl_eval.html#expr_list-4">expr_list/4</a></li>
+<li title="new_bindings-0"><a href="erl_eval.html#new_bindings-0">new_bindings/0</a></li>
+<li title="bindings-1"><a href="erl_eval.html#bindings-1">bindings/1</a></li>
+<li title="binding-2"><a href="erl_eval.html#binding-2">binding/2</a></li>
+<li title="add_binding-3"><a href="erl_eval.html#add_binding-3">add_binding/3</a></li>
+<li title="del_binding-2"><a href="erl_eval.html#del_binding-2">del_binding/2</a></li>
+</ul>
+</li>
+<li id="no" title="erl_expand_records " expanded="false">erl_expand_records<ul>
+<li><a href="erl_expand_records.html">
+                  Top of manual page
+                </a></li>
+<li title="module-2"><a href="erl_expand_records.html#module-2">module/2</a></li>
+</ul>
+</li>
+<li id="no" title="erl_id_trans " expanded="false">erl_id_trans<ul>
+<li><a href="erl_id_trans.html">
+                  Top of manual page
+                </a></li>
+<li title="parse_transform-2"><a href="erl_id_trans.html#parse_transform-2">parse_transform/2</a></li>
+</ul>
+</li>
+<li id="no" title="erl_internal " expanded="false">erl_internal<ul>
+<li><a href="erl_internal.html">
+                  Top of manual page
+                </a></li>
+<li title="bif-2"><a href="erl_internal.html#bif-2">bif/2</a></li>
+<li title="guard_bif-2"><a href="erl_internal.html#guard_bif-2">guard_bif/2</a></li>
+<li title="type_test-2"><a href="erl_internal.html#type_test-2">type_test/2</a></li>
+<li title="arith_op-2"><a href="erl_internal.html#arith_op-2">arith_op/2</a></li>
+<li title="bool_op-2"><a href="erl_internal.html#bool_op-2">bool_op/2</a></li>
+<li title="comp_op-2"><a href="erl_internal.html#comp_op-2">comp_op/2</a></li>
+<li title="list_op-2"><a href="erl_internal.html#list_op-2">list_op/2</a></li>
+<li title="send_op-2"><a href="erl_internal.html#send_op-2">send_op/2</a></li>
+<li title="op_type-2"><a href="erl_internal.html#op_type-2">op_type/2</a></li>
+</ul>
+</li>
+<li id="no" title="erl_lint " expanded="false">erl_lint<ul>
+<li><a href="erl_lint.html">
+                  Top of manual page
+                </a></li>
+<li title="module-1"><a href="erl_lint.html#module-1">module/1</a></li>
+<li title="module-2"><a href="erl_lint.html#module-2">module/2</a></li>
+<li title="module-3"><a href="erl_lint.html#module-3">module/3</a></li>
+<li title="is_guard_test-1"><a href="erl_lint.html#is_guard_test-1">is_guard_test/1</a></li>
+<li title="format_error-1"><a href="erl_lint.html#format_error-1">format_error/1</a></li>
+</ul>
+</li>
+<li id="no" title="erl_parse " expanded="false">erl_parse<ul>
+<li><a href="erl_parse.html">
+                  Top of manual page
+                </a></li>
+<li title="parse_form-1"><a href="erl_parse.html#parse_form-1">parse_form/1</a></li>
+<li title="parse_exprs-1"><a href="erl_parse.html#parse_exprs-1">parse_exprs/1</a></li>
+<li title="parse_term-1"><a href="erl_parse.html#parse_term-1">parse_term/1</a></li>
+<li title="format_error-1"><a href="erl_parse.html#format_error-1">format_error/1</a></li>
+<li title="tokens-1"><a href="erl_parse.html#tokens-1">tokens/1</a></li>
+<li title="tokens-2"><a href="erl_parse.html#tokens-2">tokens/2</a></li>
+<li title="normalise-1"><a href="erl_parse.html#normalise-1">normalise/1</a></li>
+<li title="abstract-1"><a href="erl_parse.html#abstract-1">abstract/1</a></li>
+</ul>
+</li>
+<li id="no" title="erl_pp " expanded="false">erl_pp<ul>
+<li><a href="erl_pp.html">
+                  Top of manual page
+                </a></li>
+<li title="form-1"><a href="erl_pp.html#form-1">form/1</a></li>
+<li title="form-2"><a href="erl_pp.html#form-2">form/2</a></li>
+<li title="attribute-1"><a href="erl_pp.html#attribute-1">attribute/1</a></li>
+<li title="attribute-2"><a href="erl_pp.html#attribute-2">attribute/2</a></li>
+<li title="function-1"><a href="erl_pp.html#function-1">function/1</a></li>
+<li title="function-2"><a href="erl_pp.html#function-2">function/2</a></li>
+<li title="guard-1"><a href="erl_pp.html#guard-1">guard/1</a></li>
+<li title="guard-2"><a href="erl_pp.html#guard-2">guard/2</a></li>
+<li title="exprs-1"><a href="erl_pp.html#exprs-1">exprs/1</a></li>
+<li title="exprs-2"><a href="erl_pp.html#exprs-2">exprs/2</a></li>
+<li title="exprs-3"><a href="erl_pp.html#exprs-3">exprs/3</a></li>
+<li title="expr-1"><a href="erl_pp.html#expr-1">expr/1</a></li>
+<li title="expr-2"><a href="erl_pp.html#expr-2">expr/2</a></li>
+<li title="expr-3"><a href="erl_pp.html#expr-3">expr/3</a></li>
+<li title="expr-4"><a href="erl_pp.html#expr-4">expr/4</a></li>
+</ul>
+</li>
+<li id="no" title="erl_scan " expanded="false">erl_scan<ul>
+<li><a href="erl_scan.html">
+                  Top of manual page
+                </a></li>
+<li title="string-1"><a href="erl_scan.html#string-1">string/1</a></li>
+<li title="string-2"><a href="erl_scan.html#string-2">string/2</a></li>
+<li title="string-3"><a href="erl_scan.html#string-3">string/3</a></li>
+<li title="tokens-3"><a href="erl_scan.html#tokens-3">tokens/3</a></li>
+<li title="tokens-4"><a href="erl_scan.html#tokens-4">tokens/4</a></li>
+<li title="reserved_word-1"><a href="erl_scan.html#reserved_word-1">reserved_word/1</a></li>
+<li title="token_info-1"><a href="erl_scan.html#token_info-1">token_info/1</a></li>
+<li title="token_info-2"><a href="erl_scan.html#token_info-2">token_info/2</a></li>
+<li title="attributes_info-1"><a href="erl_scan.html#attributes_info-1">attributes_info/1</a></li>
+<li title="attributes_info-2"><a href="erl_scan.html#attributes_info-2">attributes_info/2</a></li>
+<li title="set_attribute-3"><a href="erl_scan.html#set_attribute-3">set_attribute/3</a></li>
+<li title="format_error-1"><a href="erl_scan.html#format_error-1">format_error/1</a></li>
+</ul>
+</li>
+<li id="no" title="erl_tar " expanded="false">erl_tar<ul>
+<li><a href="erl_tar.html">
+                  Top of manual page
+                </a></li>
+<li title="add-3"><a href="erl_tar.html#add-3">add/3</a></li>
+<li title="add-4"><a href="erl_tar.html#add-4">add/4</a></li>
+<li title="close-1"><a href="erl_tar.html#close-1">close/1</a></li>
+<li title="create-2"><a href="erl_tar.html#create-2">create/2</a></li>
+<li title="create-3"><a href="erl_tar.html#create-3">create/3</a></li>
+<li title="extract-1"><a href="erl_tar.html#extract-1">extract/1</a></li>
+<li title="extract-2"><a href="erl_tar.html#extract-2">extract/2</a></li>
+<li title="format_error-1"><a href="erl_tar.html#format_error-1">format_error/1</a></li>
+<li title="open-2"><a href="erl_tar.html#open-2">open/2</a></li>
+<li title="table-1"><a href="erl_tar.html#table-1">table/1</a></li>
+<li title="table-2"><a href="erl_tar.html#table-2">table/2</a></li>
+<li title="t-1"><a href="erl_tar.html#t-1">t/1</a></li>
+<li title="tt-1"><a href="erl_tar.html#tt-1">tt/1</a></li>
+</ul>
+</li>
+<li id="no" title="ets " expanded="false">ets<ul>
+<li><a href="ets.html">
+                  Top of manual page
+                </a></li>
+<li title="all-0"><a href="ets.html#all-0">all/0</a></li>
+<li title="delete-1"><a href="ets.html#delete-1">delete/1</a></li>
+<li title="delete-2"><a href="ets.html#delete-2">delete/2</a></li>
+<li title="delete_all_objects-1"><a href="ets.html#delete_all_objects-1">delete_all_objects/1</a></li>
+<li title="delete_object-2"><a href="ets.html#delete_object-2">delete_object/2</a></li>
+<li title="file2tab-1"><a href="ets.html#file2tab-1">file2tab/1</a></li>
+<li title="file2tab-2"><a href="ets.html#file2tab-2">file2tab/2</a></li>
+<li title="first-1"><a href="ets.html#first-1">first/1</a></li>
+<li title="foldl-3"><a href="ets.html#foldl-3">foldl/3</a></li>
+<li title="foldr-3"><a href="ets.html#foldr-3">foldr/3</a></li>
+<li title="from_dets-2"><a href="ets.html#from_dets-2">from_dets/2</a></li>
+<li title="fun2ms-1"><a href="ets.html#fun2ms-1">fun2ms/1</a></li>
+<li title="give_away-3"><a href="ets.html#give_away-3">give_away/3</a></li>
+<li title="i-0"><a href="ets.html#i-0">i/0</a></li>
+<li title="i-1"><a href="ets.html#i-1">i/1</a></li>
+<li title="info-1"><a href="ets.html#info-1">info/1</a></li>
+<li title="info-2"><a href="ets.html#info-2">info/2</a></li>
+<li title="init_table-2"><a href="ets.html#init_table-2">init_table/2</a></li>
+<li title="insert-2"><a href="ets.html#insert-2">insert/2</a></li>
+<li title="insert_new-2"><a href="ets.html#insert_new-2">insert_new/2</a></li>
+<li title="is_compiled_ms-1"><a href="ets.html#is_compiled_ms-1">is_compiled_ms/1</a></li>
+<li title="last-1"><a href="ets.html#last-1">last/1</a></li>
+<li title="lookup-2"><a href="ets.html#lookup-2">lookup/2</a></li>
+<li title="lookup_element-3"><a href="ets.html#lookup_element-3">lookup_element/3</a></li>
+<li title="match-2"><a href="ets.html#match-2">match/2</a></li>
+<li title="match-3"><a href="ets.html#match-3">match/3</a></li>
+<li title="match-1"><a href="ets.html#match-1">match/1</a></li>
+<li title="match_delete-2"><a href="ets.html#match_delete-2">match_delete/2</a></li>
+<li title="match_object-2"><a href="ets.html#match_object-2">match_object/2</a></li>
+<li title="match_object-3"><a href="ets.html#match_object-3">match_object/3</a></li>
+<li title="match_object-1"><a href="ets.html#match_object-1">match_object/1</a></li>
+<li title="match_spec_compile-1"><a href="ets.html#match_spec_compile-1">match_spec_compile/1</a></li>
+<li title="match_spec_run-2"><a href="ets.html#match_spec_run-2">match_spec_run/2</a></li>
+<li title="member-2"><a href="ets.html#member-2">member/2</a></li>
+<li title="new-2"><a href="ets.html#new-2">new/2</a></li>
+<li title="next-2"><a href="ets.html#next-2">next/2</a></li>
+<li title="prev-2"><a href="ets.html#prev-2">prev/2</a></li>
+<li title="rename-2"><a href="ets.html#rename-2">rename/2</a></li>
+<li title="repair_continuation-2"><a href="ets.html#repair_continuation-2">repair_continuation/2</a></li>
+<li title="safe_fixtable-2"><a href="ets.html#safe_fixtable-2">safe_fixtable/2</a></li>
+<li title="select-2"><a href="ets.html#select-2">select/2</a></li>
+<li title="select-3"><a href="ets.html#select-3">select/3</a></li>
+<li title="select-1"><a href="ets.html#select-1">select/1</a></li>
+<li title="select_count-2"><a href="ets.html#select_count-2">select_count/2</a></li>
+<li title="select_delete-2"><a href="ets.html#select_delete-2">select_delete/2</a></li>
+<li title="select_reverse-2"><a href="ets.html#select_reverse-2">select_reverse/2</a></li>
+<li title="select_reverse-3"><a href="ets.html#select_reverse-3">select_reverse/3</a></li>
+<li title="select_reverse-1"><a href="ets.html#select_reverse-1">select_reverse/1</a></li>
+<li title="setopts-2"><a href="ets.html#setopts-2">setopts/2</a></li>
+<li title="slot-2"><a href="ets.html#slot-2">slot/2</a></li>
+<li title="tab2file-2"><a href="ets.html#tab2file-2">tab2file/2</a></li>
+<li title="tab2file-3"><a href="ets.html#tab2file-3">tab2file/3</a></li>
+<li title="tab2list-1"><a href="ets.html#tab2list-1">tab2list/1</a></li>
+<li title="tabfile_info-1"><a href="ets.html#tabfile_info-1">tabfile_info/1</a></li>
+<li title="table-1"><a href="ets.html#table-1">table/1</a></li>
+<li title="table-2"><a href="ets.html#table-2">table/2</a></li>
+<li title="test_ms-2"><a href="ets.html#test_ms-2">test_ms/2</a></li>
+<li title="to_dets-2"><a href="ets.html#to_dets-2">to_dets/2</a></li>
+<li title="update_counter-3"><a href="ets.html#update_counter-3">update_counter/3</a></li>
+<li title="update_counter-3"><a href="ets.html#update_counter-3">update_counter/3</a></li>
+<li title="update_counter-3"><a href="ets.html#update_counter-3">update_counter/3</a></li>
+<li title="update_element-3"><a href="ets.html#update_element-3">update_element/3</a></li>
+<li title="update_element-3"><a href="ets.html#update_element-3">update_element/3</a></li>
+</ul>
+</li>
+<li id="no" title="file_sorter " expanded="false">file_sorter<ul>
+<li><a href="file_sorter.html">
+                  Top of manual page
+                </a></li>
+<li title="sort-1"><a href="file_sorter.html#sort-1">sort/1</a></li>
+<li title="sort-2"><a href="file_sorter.html#sort-2">sort/2</a></li>
+<li title="sort-3"><a href="file_sorter.html#sort-3">sort/3</a></li>
+<li title="keysort-2"><a href="file_sorter.html#keysort-2">keysort/2</a></li>
+<li title="keysort-3"><a href="file_sorter.html#keysort-3">keysort/3</a></li>
+<li title="keysort-4"><a href="file_sorter.html#keysort-4">keysort/4</a></li>
+<li title="merge-2"><a href="file_sorter.html#merge-2">merge/2</a></li>
+<li title="merge-3"><a href="file_sorter.html#merge-3">merge/3</a></li>
+<li title="keymerge-3"><a href="file_sorter.html#keymerge-3">keymerge/3</a></li>
+<li title="keymerge-4"><a href="file_sorter.html#keymerge-4">keymerge/4</a></li>
+<li title="check-1"><a href="file_sorter.html#check-1">check/1</a></li>
+<li title="check-2"><a href="file_sorter.html#check-2">check/2</a></li>
+<li title="keycheck-2"><a href="file_sorter.html#keycheck-2">keycheck/2</a></li>
+<li title="keycheck-3"><a href="file_sorter.html#keycheck-3">keycheck/3</a></li>
+</ul>
+</li>
+<li id="no" title="filelib " expanded="false">filelib<ul>
+<li><a href="filelib.html">
+                  Top of manual page
+                </a></li>
+<li title="ensure_dir-1"><a href="filelib.html#ensure_dir-1">ensure_dir/1</a></li>
+<li title="file_size-1"><a href="filelib.html#file_size-1">file_size/1</a></li>
+<li title="fold_files-5"><a href="filelib.html#fold_files-5">fold_files/5</a></li>
+<li title="is_dir-1"><a href="filelib.html#is_dir-1">is_dir/1</a></li>
+<li title="is_file-1"><a href="filelib.html#is_file-1">is_file/1</a></li>
+<li title="is_regular-1"><a href="filelib.html#is_regular-1">is_regular/1</a></li>
+<li title="last_modified-1"><a href="filelib.html#last_modified-1">last_modified/1</a></li>
+<li title="wildcard-1"><a href="filelib.html#wildcard-1">wildcard/1</a></li>
+<li title="wildcard-2"><a href="filelib.html#wildcard-2">wildcard/2</a></li>
+</ul>
+</li>
+<li id="no" title="filename " expanded="false">filename<ul>
+<li><a href="filename.html">
+                  Top of manual page
+                </a></li>
+<li title="absname-1"><a href="filename.html#absname-1">absname/1</a></li>
+<li title="absname-2"><a href="filename.html#absname-2">absname/2</a></li>
+<li title="absname_join-2"><a href="filename.html#absname_join-2">absname_join/2</a></li>
+<li title="basename-1"><a href="filename.html#basename-1">basename/1</a></li>
+<li title="basename-2"><a href="filename.html#basename-2">basename/2</a></li>
+<li title="dirname-1"><a href="filename.html#dirname-1">dirname/1</a></li>
+<li title="extension-1"><a href="filename.html#extension-1">extension/1</a></li>
+<li title="flatten-1"><a href="filename.html#flatten-1">flatten/1</a></li>
+<li title="join-1"><a href="filename.html#join-1">join/1</a></li>
+<li title="join-2"><a href="filename.html#join-2">join/2</a></li>
+<li title="nativename-1"><a href="filename.html#nativename-1">nativename/1</a></li>
+<li title="pathtype-1"><a href="filename.html#pathtype-1">pathtype/1</a></li>
+<li title="rootname-1"><a href="filename.html#rootname-1">rootname/1</a></li>
+<li title="rootname-2"><a href="filename.html#rootname-2">rootname/2</a></li>
+<li title="split-1"><a href="filename.html#split-1">split/1</a></li>
+<li title="find_src-1"><a href="filename.html#find_src-1">find_src/1</a></li>
+<li title="find_src-2"><a href="filename.html#find_src-2">find_src/2</a></li>
+</ul>
+</li>
+<li id="no" title="gb_sets " expanded="false">gb_sets<ul>
+<li><a href="gb_sets.html">
+                  Top of manual page
+                </a></li>
+<li title="add-2"><a href="gb_sets.html#add-2">add/2</a></li>
+<li title="add_element-2"><a href="gb_sets.html#add_element-2">add_element/2</a></li>
+<li title="balance-1"><a href="gb_sets.html#balance-1">balance/1</a></li>
+<li title="delete-2"><a href="gb_sets.html#delete-2">delete/2</a></li>
+<li title="delete_any-2"><a href="gb_sets.html#delete_any-2">delete_any/2</a></li>
+<li title="del_element-2"><a href="gb_sets.html#del_element-2">del_element/2</a></li>
+<li title="difference-2"><a href="gb_sets.html#difference-2">difference/2</a></li>
+<li title="subtract-2"><a href="gb_sets.html#subtract-2">subtract/2</a></li>
+<li title="empty-0"><a href="gb_sets.html#empty-0">empty/0</a></li>
+<li title="new-0"><a href="gb_sets.html#new-0">new/0</a></li>
+<li title="filter-2"><a href="gb_sets.html#filter-2">filter/2</a></li>
+<li title="fold-3"><a href="gb_sets.html#fold-3">fold/3</a></li>
+<li title="from_list-1"><a href="gb_sets.html#from_list-1">from_list/1</a></li>
+<li title="from_ordset-1"><a href="gb_sets.html#from_ordset-1">from_ordset/1</a></li>
+<li title="insert-2"><a href="gb_sets.html#insert-2">insert/2</a></li>
+<li title="intersection-2"><a href="gb_sets.html#intersection-2">intersection/2</a></li>
+<li title="intersection-1"><a href="gb_sets.html#intersection-1">intersection/1</a></li>
+<li title="is_disjoint-2"><a href="gb_sets.html#is_disjoint-2">is_disjoint/2</a></li>
+<li title="is_empty-1"><a href="gb_sets.html#is_empty-1">is_empty/1</a></li>
+<li title="is_member-2"><a href="gb_sets.html#is_member-2">is_member/2</a></li>
+<li title="is_element-2"><a href="gb_sets.html#is_element-2">is_element/2</a></li>
+<li title="is_set-1"><a href="gb_sets.html#is_set-1">is_set/1</a></li>
+<li title="is_subset-2"><a href="gb_sets.html#is_subset-2">is_subset/2</a></li>
+<li title="iterator-1"><a href="gb_sets.html#iterator-1">iterator/1</a></li>
+<li title="largest-1"><a href="gb_sets.html#largest-1">largest/1</a></li>
+<li title="next-1"><a href="gb_sets.html#next-1">next/1</a></li>
+<li title="singleton-1"><a href="gb_sets.html#singleton-1">singleton/1</a></li>
+<li title="size-1"><a href="gb_sets.html#size-1">size/1</a></li>
+<li title="smallest-1"><a href="gb_sets.html#smallest-1">smallest/1</a></li>
+<li title="take_largest-1"><a href="gb_sets.html#take_largest-1">take_largest/1</a></li>
+<li title="take_smallest-1"><a href="gb_sets.html#take_smallest-1">take_smallest/1</a></li>
+<li title="to_list-1"><a href="gb_sets.html#to_list-1">to_list/1</a></li>
+<li title="union-2"><a href="gb_sets.html#union-2">union/2</a></li>
+<li title="union-1"><a href="gb_sets.html#union-1">union/1</a></li>
+</ul>
+</li>
+<li id="no" title="gb_trees " expanded="false">gb_trees<ul>
+<li><a href="gb_trees.html">
+                  Top of manual page
+                </a></li>
+<li title="balance-1"><a href="gb_trees.html#balance-1">balance/1</a></li>
+<li title="delete-2"><a href="gb_trees.html#delete-2">delete/2</a></li>
+<li title="delete_any-2"><a href="gb_trees.html#delete_any-2">delete_any/2</a></li>
+<li title="empty-0"><a href="gb_trees.html#empty-0">empty/0</a></li>
+<li title="enter-3"><a href="gb_trees.html#enter-3">enter/3</a></li>
+<li title="from_orddict-1"><a href="gb_trees.html#from_orddict-1">from_orddict/1</a></li>
+<li title="get-2"><a href="gb_trees.html#get-2">get/2</a></li>
+<li title="insert-3"><a href="gb_trees.html#insert-3">insert/3</a></li>
+<li title="is_defined-2"><a href="gb_trees.html#is_defined-2">is_defined/2</a></li>
+<li title="is_empty-1"><a href="gb_trees.html#is_empty-1">is_empty/1</a></li>
+<li title="iterator-1"><a href="gb_trees.html#iterator-1">iterator/1</a></li>
+<li title="keys-1"><a href="gb_trees.html#keys-1">keys/1</a></li>
+<li title="largest-1"><a href="gb_trees.html#largest-1">largest/1</a></li>
+<li title="lookup-2"><a href="gb_trees.html#lookup-2">lookup/2</a></li>
+<li title="map-2"><a href="gb_trees.html#map-2">map/2</a></li>
+<li title="next-1"><a href="gb_trees.html#next-1">next/1</a></li>
+<li title="size-1"><a href="gb_trees.html#size-1">size/1</a></li>
+<li title="smallest-1"><a href="gb_trees.html#smallest-1">smallest/1</a></li>
+<li title="take_largest-1"><a href="gb_trees.html#take_largest-1">take_largest/1</a></li>
+<li title="take_smallest-1"><a href="gb_trees.html#take_smallest-1">take_smallest/1</a></li>
+<li title="to_list-1"><a href="gb_trees.html#to_list-1">to_list/1</a></li>
+<li title="update-3"><a href="gb_trees.html#update-3">update/3</a></li>
+<li title="values-1"><a href="gb_trees.html#values-1">values/1</a></li>
+</ul>
+</li>
+<li id="no" title="gen_event " expanded="false">gen_event<ul>
+<li><a href="gen_event.html">
+                  Top of manual page
+                </a></li>
+<li title="start_link-0"><a href="gen_event.html#start_link-0">start_link/0</a></li>
+<li title="start_link-1"><a href="gen_event.html#start_link-1">start_link/1</a></li>
+<li title="start-0"><a href="gen_event.html#start-0">start/0</a></li>
+<li title="start-1"><a href="gen_event.html#start-1">start/1</a></li>
+<li title="add_handler-3"><a href="gen_event.html#add_handler-3">add_handler/3</a></li>
+<li title="add_sup_handler-3"><a href="gen_event.html#add_sup_handler-3">add_sup_handler/3</a></li>
+<li title="notify-2"><a href="gen_event.html#notify-2">notify/2</a></li>
+<li title="sync_notify-2"><a href="gen_event.html#sync_notify-2">sync_notify/2</a></li>
+<li title="call-3"><a href="gen_event.html#call-3">call/3</a></li>
+<li title="call-4"><a href="gen_event.html#call-4">call/4</a></li>
+<li title="delete_handler-3"><a href="gen_event.html#delete_handler-3">delete_handler/3</a></li>
+<li title="swap_handler-3"><a href="gen_event.html#swap_handler-3">swap_handler/3</a></li>
+<li title="swap_sup_handler-3"><a href="gen_event.html#swap_sup_handler-3">swap_sup_handler/3</a></li>
+<li title="which_handlers-1"><a href="gen_event.html#which_handlers-1">which_handlers/1</a></li>
+<li title="stop-1"><a href="gen_event.html#stop-1">stop/1</a></li>
+<li title="Module:init-1"><a href="gen_event.html#Module:init-1">Module:init/1</a></li>
+<li title="Module:handle_event-2"><a href="gen_event.html#Module:handle_event-2">Module:handle_event/2</a></li>
+<li title="Module:handle_call-2"><a href="gen_event.html#Module:handle_call-2">Module:handle_call/2</a></li>
+<li title="Module:handle_info-2"><a href="gen_event.html#Module:handle_info-2">Module:handle_info/2</a></li>
+<li title="Module:terminate-2"><a href="gen_event.html#Module:terminate-2">Module:terminate/2</a></li>
+<li title="Module:code_change-3"><a href="gen_event.html#Module:code_change-3">Module:code_change/3</a></li>
+<li title="Module:format_status-2"><a href="gen_event.html#Module:format_status-2">Module:format_status/2</a></li>
+</ul>
+</li>
+<li id="no" title="gen_fsm " expanded="false">gen_fsm<ul>
+<li><a href="gen_fsm.html">
+                  Top of manual page
+                </a></li>
+<li title="start_link-3"><a href="gen_fsm.html#start_link-3">start_link/3</a></li>
+<li title="start_link-4"><a href="gen_fsm.html#start_link-4">start_link/4</a></li>
+<li title="start-3"><a href="gen_fsm.html#start-3">start/3</a></li>
+<li title="start-4"><a href="gen_fsm.html#start-4">start/4</a></li>
+<li title="send_event-2"><a href="gen_fsm.html#send_event-2">send_event/2</a></li>
+<li title="send_all_state_event-2"><a href="gen_fsm.html#send_all_state_event-2">send_all_state_event/2</a></li>
+<li title="sync_send_event-2"><a href="gen_fsm.html#sync_send_event-2">sync_send_event/2</a></li>
+<li title="sync_send_event-3"><a href="gen_fsm.html#sync_send_event-3">sync_send_event/3</a></li>
+<li title="sync_send_all_state_event-2"><a href="gen_fsm.html#sync_send_all_state_event-2">sync_send_all_state_event/2</a></li>
+<li title="sync_send_all_state_event-3"><a href="gen_fsm.html#sync_send_all_state_event-3">sync_send_all_state_event/3</a></li>
+<li title="reply-2"><a href="gen_fsm.html#reply-2">reply/2</a></li>
+<li title="send_event_after-2"><a href="gen_fsm.html#send_event_after-2">send_event_after/2</a></li>
+<li title="start_timer-2"><a href="gen_fsm.html#start_timer-2">start_timer/2</a></li>
+<li title="cancel_timer-1"><a href="gen_fsm.html#cancel_timer-1">cancel_timer/1</a></li>
+<li title="enter_loop-4"><a href="gen_fsm.html#enter_loop-4">enter_loop/4</a></li>
+<li title="enter_loop-5"><a href="gen_fsm.html#enter_loop-5">enter_loop/5</a></li>
+<li title="enter_loop-5"><a href="gen_fsm.html#enter_loop-5">enter_loop/5</a></li>
+<li title="enter_loop-6"><a href="gen_fsm.html#enter_loop-6">enter_loop/6</a></li>
+<li title="Module:init-1"><a href="gen_fsm.html#Module:init-1">Module:init/1</a></li>
+<li title="Module:StateName-2"><a href="gen_fsm.html#Module:StateName-2">Module:StateName/2</a></li>
+<li title="Module:handle_event-3"><a href="gen_fsm.html#Module:handle_event-3">Module:handle_event/3</a></li>
+<li title="Module:StateName-3"><a href="gen_fsm.html#Module:StateName-3">Module:StateName/3</a></li>
+<li title="Module:handle_sync_event-4"><a href="gen_fsm.html#Module:handle_sync_event-4">Module:handle_sync_event/4</a></li>
+<li title="Module:handle_info-3"><a href="gen_fsm.html#Module:handle_info-3">Module:handle_info/3</a></li>
+<li title="Module:terminate-3"><a href="gen_fsm.html#Module:terminate-3">Module:terminate/3</a></li>
+<li title="Module:code_change-4"><a href="gen_fsm.html#Module:code_change-4">Module:code_change/4</a></li>
+<li title="Module:format_status-2"><a href="gen_fsm.html#Module:format_status-2">Module:format_status/2</a></li>
+</ul>
+</li>
+<li id="no" title="gen_server " expanded="false">gen_server<ul>
+<li><a href="gen_server.html">
+                  Top of manual page
+                </a></li>
+<li title="start_link-3"><a href="gen_server.html#start_link-3">start_link/3</a></li>
+<li title="start_link-4"><a href="gen_server.html#start_link-4">start_link/4</a></li>
+<li title="start-3"><a href="gen_server.html#start-3">start/3</a></li>
+<li title="start-4"><a href="gen_server.html#start-4">start/4</a></li>
+<li title="call-2"><a href="gen_server.html#call-2">call/2</a></li>
+<li title="call-3"><a href="gen_server.html#call-3">call/3</a></li>
+<li title="multi_call-2"><a href="gen_server.html#multi_call-2">multi_call/2</a></li>
+<li title="multi_call-3"><a href="gen_server.html#multi_call-3">multi_call/3</a></li>
+<li title="multi_call-4"><a href="gen_server.html#multi_call-4">multi_call/4</a></li>
+<li title="cast-2"><a href="gen_server.html#cast-2">cast/2</a></li>
+<li title="abcast-2"><a href="gen_server.html#abcast-2">abcast/2</a></li>
+<li title="abcast-3"><a href="gen_server.html#abcast-3">abcast/3</a></li>
+<li title="reply-2"><a href="gen_server.html#reply-2">reply/2</a></li>
+<li title="enter_loop-3"><a href="gen_server.html#enter_loop-3">enter_loop/3</a></li>
+<li title="enter_loop-4"><a href="gen_server.html#enter_loop-4">enter_loop/4</a></li>
+<li title="enter_loop-4"><a href="gen_server.html#enter_loop-4">enter_loop/4</a></li>
+<li title="enter_loop-5"><a href="gen_server.html#enter_loop-5">enter_loop/5</a></li>
+<li title="Module:init-1"><a href="gen_server.html#Module:init-1">Module:init/1</a></li>
+<li title="Module:handle_call-3"><a href="gen_server.html#Module:handle_call-3">Module:handle_call/3</a></li>
+<li title="Module:handle_cast-2"><a href="gen_server.html#Module:handle_cast-2">Module:handle_cast/2</a></li>
+<li title="Module:handle_info-2"><a href="gen_server.html#Module:handle_info-2">Module:handle_info/2</a></li>
+<li title="Module:terminate-2"><a href="gen_server.html#Module:terminate-2">Module:terminate/2</a></li>
+<li title="Module:code_change-3"><a href="gen_server.html#Module:code_change-3">Module:code_change/3</a></li>
+<li title="Module:format_status-2"><a href="gen_server.html#Module:format_status-2">Module:format_status/2</a></li>
+</ul>
+</li>
+<li id="no" title="io " expanded="false">io<ul>
+<li><a href="io.html">
+                  Top of manual page
+                </a></li>
+<li title="columns-0"><a href="io.html#columns-0">columns/0</a></li>
+<li title="columns-1"><a href="io.html#columns-1">columns/1</a></li>
+<li title="put_chars-1"><a href="io.html#put_chars-1">put_chars/1</a></li>
+<li title="put_chars-2"><a href="io.html#put_chars-2">put_chars/2</a></li>
+<li title="nl-0"><a href="io.html#nl-0">nl/0</a></li>
+<li title="nl-1"><a href="io.html#nl-1">nl/1</a></li>
+<li title="get_chars-2"><a href="io.html#get_chars-2">get_chars/2</a></li>
+<li title="get_chars-3"><a href="io.html#get_chars-3">get_chars/3</a></li>
+<li title="get_line-1"><a href="io.html#get_line-1">get_line/1</a></li>
+<li title="get_line-2"><a href="io.html#get_line-2">get_line/2</a></li>
+<li title="getopts-0"><a href="io.html#getopts-0">getopts/0</a></li>
+<li title="getopts-1"><a href="io.html#getopts-1">getopts/1</a></li>
+<li title="setopts-1"><a href="io.html#setopts-1">setopts/1</a></li>
+<li title="setopts-2"><a href="io.html#setopts-2">setopts/2</a></li>
+<li title="write-1"><a href="io.html#write-1">write/1</a></li>
+<li title="write-2"><a href="io.html#write-2">write/2</a></li>
+<li title="read-1"><a href="io.html#read-1">read/1</a></li>
+<li title="read-2"><a href="io.html#read-2">read/2</a></li>
+<li title="read-3"><a href="io.html#read-3">read/3</a></li>
+<li title="fwrite-1"><a href="io.html#fwrite-1">fwrite/1</a></li>
+<li title="fwrite-2"><a href="io.html#fwrite-2">fwrite/2</a></li>
+<li title="fwrite-3"><a href="io.html#fwrite-3">fwrite/3</a></li>
+<li title="format-1"><a href="io.html#format-1">format/1</a></li>
+<li title="format-2"><a href="io.html#format-2">format/2</a></li>
+<li title="format-3"><a href="io.html#format-3">format/3</a></li>
+<li title="fread-2"><a href="io.html#fread-2">fread/2</a></li>
+<li title="fread-3"><a href="io.html#fread-3">fread/3</a></li>
+<li title="rows-0"><a href="io.html#rows-0">rows/0</a></li>
+<li title="rows-1"><a href="io.html#rows-1">rows/1</a></li>
+<li title="scan_erl_exprs-1"><a href="io.html#scan_erl_exprs-1">scan_erl_exprs/1</a></li>
+<li title="scan_erl_exprs-2"><a href="io.html#scan_erl_exprs-2">scan_erl_exprs/2</a></li>
+<li title="scan_erl_exprs-3"><a href="io.html#scan_erl_exprs-3">scan_erl_exprs/3</a></li>
+<li title="scan_erl_form-1"><a href="io.html#scan_erl_form-1">scan_erl_form/1</a></li>
+<li title="scan_erl_form-2"><a href="io.html#scan_erl_form-2">scan_erl_form/2</a></li>
+<li title="scan_erl_form-3"><a href="io.html#scan_erl_form-3">scan_erl_form/3</a></li>
+<li title="parse_erl_exprs-1"><a href="io.html#parse_erl_exprs-1">parse_erl_exprs/1</a></li>
+<li title="parse_erl_exprs-2"><a href="io.html#parse_erl_exprs-2">parse_erl_exprs/2</a></li>
+<li title="parse_erl_exprs-3"><a href="io.html#parse_erl_exprs-3">parse_erl_exprs/3</a></li>
+<li title="parse_erl_form-1"><a href="io.html#parse_erl_form-1">parse_erl_form/1</a></li>
+<li title="parse_erl_form-2"><a href="io.html#parse_erl_form-2">parse_erl_form/2</a></li>
+<li title="parse_erl_form-3"><a href="io.html#parse_erl_form-3">parse_erl_form/3</a></li>
+</ul>
+</li>
+<li id="loadscrollpos" title="io_lib " expanded="true">io_lib<ul>
+<li><a href="io_lib.html">
+                  Top of manual page
+                </a></li>
+<li title="nl-0"><a href="io_lib.html#nl-0">nl/0</a></li>
+<li title="write-1"><a href="io_lib.html#write-1">write/1</a></li>
+<li title="write-2"><a href="io_lib.html#write-2">write/2</a></li>
+<li title="print-1"><a href="io_lib.html#print-1">print/1</a></li>
+<li title="print-4"><a href="io_lib.html#print-4">print/4</a></li>
+<li title="fwrite-2"><a href="io_lib.html#fwrite-2">fwrite/2</a></li>
+<li title="format-2"><a href="io_lib.html#format-2">format/2</a></li>
+<li title="fread-2"><a href="io_lib.html#fread-2">fread/2</a></li>
+<li title="fread-3"><a href="io_lib.html#fread-3">fread/3</a></li>
+<li title="write_atom-1"><a href="io_lib.html#write_atom-1">write_atom/1</a></li>
+<li title="write_string-1"><a href="io_lib.html#write_string-1">write_string/1</a></li>
+<li title="write_char-1"><a href="io_lib.html#write_char-1">write_char/1</a></li>
+<li title="indentation-2"><a href="io_lib.html#indentation-2">indentation/2</a></li>
+<li title="char_list-1"><a href="io_lib.html#char_list-1">char_list/1</a></li>
+<li title="deep_char_list-1"><a href="io_lib.html#deep_char_list-1">deep_char_list/1</a></li>
+<li title="printable_list-1"><a href="io_lib.html#printable_list-1">printable_list/1</a></li>
+</ul>
+</li>
+<li id="no" title="lib " expanded="false">lib<ul>
+<li><a href="lib.html">
+                  Top of manual page
+                </a></li>
+<li title="flush_receive-0"><a href="lib.html#flush_receive-0">flush_receive/0</a></li>
+<li title="error_message-2"><a href="lib.html#error_message-2">error_message/2</a></li>
+<li title="progname-0"><a href="lib.html#progname-0">progname/0</a></li>
+<li title="nonl-1"><a href="lib.html#nonl-1">nonl/1</a></li>
+<li title="send-2"><a href="lib.html#send-2">send/2</a></li>
+<li title="sendw-2"><a href="lib.html#sendw-2">sendw/2</a></li>
+</ul>
+</li>
+<li id="no" title="lists " expanded="false">lists<ul>
+<li><a href="lists.html">
+                  Top of manual page
+                </a></li>
+<li title="all-2"><a href="lists.html#all-2">all/2</a></li>
+<li title="any-2"><a href="lists.html#any-2">any/2</a></li>
+<li title="append-1"><a href="lists.html#append-1">append/1</a></li>
+<li title="append-2"><a href="lists.html#append-2">append/2</a></li>
+<li title="concat-1"><a href="lists.html#concat-1">concat/1</a></li>
+<li title="delete-2"><a href="lists.html#delete-2">delete/2</a></li>
+<li title="dropwhile-2"><a href="lists.html#dropwhile-2">dropwhile/2</a></li>
+<li title="duplicate-2"><a href="lists.html#duplicate-2">duplicate/2</a></li>
+<li title="filter-2"><a href="lists.html#filter-2">filter/2</a></li>
+<li title="flatlength-1"><a href="lists.html#flatlength-1">flatlength/1</a></li>
+<li title="flatmap-2"><a href="lists.html#flatmap-2">flatmap/2</a></li>
+<li title="flatten-1"><a href="lists.html#flatten-1">flatten/1</a></li>
+<li title="flatten-2"><a href="lists.html#flatten-2">flatten/2</a></li>
+<li title="foldl-3"><a href="lists.html#foldl-3">foldl/3</a></li>
+<li title="foldr-3"><a href="lists.html#foldr-3">foldr/3</a></li>
+<li title="foreach-2"><a href="lists.html#foreach-2">foreach/2</a></li>
+<li title="keydelete-3"><a href="lists.html#keydelete-3">keydelete/3</a></li>
+<li title="keyfind-3"><a href="lists.html#keyfind-3">keyfind/3</a></li>
+<li title="keymap-3"><a href="lists.html#keymap-3">keymap/3</a></li>
+<li title="keymember-3"><a href="lists.html#keymember-3">keymember/3</a></li>
+<li title="keymerge-3"><a href="lists.html#keymerge-3">keymerge/3</a></li>
+<li title="keyreplace-4"><a href="lists.html#keyreplace-4">keyreplace/4</a></li>
+<li title="keysearch-3"><a href="lists.html#keysearch-3">keysearch/3</a></li>
+<li title="keysort-2"><a href="lists.html#keysort-2">keysort/2</a></li>
+<li title="keystore-4"><a href="lists.html#keystore-4">keystore/4</a></li>
+<li title="keytake-3"><a href="lists.html#keytake-3">keytake/3</a></li>
+<li title="last-1"><a href="lists.html#last-1">last/1</a></li>
+<li title="map-2"><a href="lists.html#map-2">map/2</a></li>
+<li title="mapfoldl-3"><a href="lists.html#mapfoldl-3">mapfoldl/3</a></li>
+<li title="mapfoldr-3"><a href="lists.html#mapfoldr-3">mapfoldr/3</a></li>
+<li title="max-1"><a href="lists.html#max-1">max/1</a></li>
+<li title="member-2"><a href="lists.html#member-2">member/2</a></li>
+<li title="merge-1"><a href="lists.html#merge-1">merge/1</a></li>
+<li title="merge-2"><a href="lists.html#merge-2">merge/2</a></li>
+<li title="merge-3"><a href="lists.html#merge-3">merge/3</a></li>
+<li title="merge3-3"><a href="lists.html#merge3-3">merge3/3</a></li>
+<li title="min-1"><a href="lists.html#min-1">min/1</a></li>
+<li title="nth-2"><a href="lists.html#nth-2">nth/2</a></li>
+<li title="nthtail-2"><a href="lists.html#nthtail-2">nthtail/2</a></li>
+<li title="partition-2"><a href="lists.html#partition-2">partition/2</a></li>
+<li title="prefix-2"><a href="lists.html#prefix-2">prefix/2</a></li>
+<li title="reverse-1"><a href="lists.html#reverse-1">reverse/1</a></li>
+<li title="reverse-2"><a href="lists.html#reverse-2">reverse/2</a></li>
+<li title="seq-2"><a href="lists.html#seq-2">seq/2</a></li>
+<li title="seq-3"><a href="lists.html#seq-3">seq/3</a></li>
+<li title="sort-1"><a href="lists.html#sort-1">sort/1</a></li>
+<li title="sort-2"><a href="lists.html#sort-2">sort/2</a></li>
+<li title="split-2"><a href="lists.html#split-2">split/2</a></li>
+<li title="splitwith-2"><a href="lists.html#splitwith-2">splitwith/2</a></li>
+<li title="sublist-2"><a href="lists.html#sublist-2">sublist/2</a></li>
+<li title="sublist-3"><a href="lists.html#sublist-3">sublist/3</a></li>
+<li title="subtract-2"><a href="lists.html#subtract-2">subtract/2</a></li>
+<li title="suffix-2"><a href="lists.html#suffix-2">suffix/2</a></li>
+<li title="sum-1"><a href="lists.html#sum-1">sum/1</a></li>
+<li title="takewhile-2"><a href="lists.html#takewhile-2">takewhile/2</a></li>
+<li title="ukeymerge-3"><a href="lists.html#ukeymerge-3">ukeymerge/3</a></li>
+<li title="ukeysort-2"><a href="lists.html#ukeysort-2">ukeysort/2</a></li>
+<li title="umerge-1"><a href="lists.html#umerge-1">umerge/1</a></li>
+<li title="umerge-2"><a href="lists.html#umerge-2">umerge/2</a></li>
+<li title="umerge-3"><a href="lists.html#umerge-3">umerge/3</a></li>
+<li title="umerge3-3"><a href="lists.html#umerge3-3">umerge3/3</a></li>
+<li title="unzip-1"><a href="lists.html#unzip-1">unzip/1</a></li>
+<li title="unzip3-1"><a href="lists.html#unzip3-1">unzip3/1</a></li>
+<li title="usort-1"><a href="lists.html#usort-1">usort/1</a></li>
+<li title="usort-2"><a href="lists.html#usort-2">usort/2</a></li>
+<li title="zip-2"><a href="lists.html#zip-2">zip/2</a></li>
+<li title="zip3-3"><a href="lists.html#zip3-3">zip3/3</a></li>
+<li title="zipwith-3"><a href="lists.html#zipwith-3">zipwith/3</a></li>
+<li title="zipwith3-4"><a href="lists.html#zipwith3-4">zipwith3/4</a></li>
+</ul>
+</li>
+<li id="no" title="log_mf_h " expanded="false">log_mf_h<ul>
+<li><a href="log_mf_h.html">
+                  Top of manual page
+                </a></li>
+<li title="init-3"><a href="log_mf_h.html#init-3">init/3</a></li>
+<li title="init-4"><a href="log_mf_h.html#init-4">init/4</a></li>
+</ul>
+</li>
+<li id="no" title="math " expanded="false">math<ul>
+<li><a href="math.html">
+                  Top of manual page
+                </a></li>
+<li title="pi-0"><a href="math.html#pi-0">pi/0</a></li>
+<li title="sin-1"><a href="math.html#sin-1">sin/1</a></li>
+<li title="cos-1"><a href="math.html#cos-1">cos/1</a></li>
+<li title="tan-1"><a href="math.html#tan-1">tan/1</a></li>
+<li title="asin-1"><a href="math.html#asin-1">asin/1</a></li>
+<li title="acos-1"><a href="math.html#acos-1">acos/1</a></li>
+<li title="atan-1"><a href="math.html#atan-1">atan/1</a></li>
+<li title="atan2-2"><a href="math.html#atan2-2">atan2/2</a></li>
+<li title="sinh-1"><a href="math.html#sinh-1">sinh/1</a></li>
+<li title="cosh-1"><a href="math.html#cosh-1">cosh/1</a></li>
+<li title="tanh-1"><a href="math.html#tanh-1">tanh/1</a></li>
+<li title="asinh-1"><a href="math.html#asinh-1">asinh/1</a></li>
+<li title="acosh-1"><a href="math.html#acosh-1">acosh/1</a></li>
+<li title="atanh-1"><a href="math.html#atanh-1">atanh/1</a></li>
+<li title="exp-1"><a href="math.html#exp-1">exp/1</a></li>
+<li title="log-1"><a href="math.html#log-1">log/1</a></li>
+<li title="log10-1"><a href="math.html#log10-1">log10/1</a></li>
+<li title="pow-2"><a href="math.html#pow-2">pow/2</a></li>
+<li title="sqrt-1"><a href="math.html#sqrt-1">sqrt/1</a></li>
+<li title="erf-1"><a href="math.html#erf-1">erf/1</a></li>
+<li title="erfc-1"><a href="math.html#erfc-1">erfc/1</a></li>
+</ul>
+</li>
+<li id="no" title="ms_transform " expanded="false">ms_transform<ul>
+<li><a href="ms_transform.html">
+                  Top of manual page
+                </a></li>
+<li title="parse_transform-2"><a href="ms_transform.html#parse_transform-2">parse_transform/2</a></li>
+<li title="transform_from_shell-3"><a href="ms_transform.html#transform_from_shell-3">transform_from_shell/3</a></li>
+<li title="format_error-1"><a href="ms_transform.html#format_error-1">format_error/1</a></li>
+</ul>
+</li>
+<li id="no" title="orddict " expanded="false">orddict<ul>
+<li><a href="orddict.html">
+                  Top of manual page
+                </a></li>
+<li title="append-3"><a href="orddict.html#append-3">append/3</a></li>
+<li title="append_list-3"><a href="orddict.html#append_list-3">append_list/3</a></li>
+<li title="erase-2"><a href="orddict.html#erase-2">erase/2</a></li>
+<li title="fetch-2"><a href="orddict.html#fetch-2">fetch/2</a></li>
+<li title="fetch_keys-1"><a href="orddict.html#fetch_keys-1">fetch_keys/1</a></li>
+<li title="filter-2"><a href="orddict.html#filter-2">filter/2</a></li>
+<li title="find-2"><a href="orddict.html#find-2">find/2</a></li>
+<li title="fold-3"><a href="orddict.html#fold-3">fold/3</a></li>
+<li title="from_list-1"><a href="orddict.html#from_list-1">from_list/1</a></li>
+<li title="is_key-2"><a href="orddict.html#is_key-2">is_key/2</a></li>
+<li title="map-2"><a href="orddict.html#map-2">map/2</a></li>
+<li title="merge-3"><a href="orddict.html#merge-3">merge/3</a></li>
+<li title="new-0"><a href="orddict.html#new-0">new/0</a></li>
+<li title="size-1"><a href="orddict.html#size-1">size/1</a></li>
+<li title="store-3"><a href="orddict.html#store-3">store/3</a></li>
+<li title="to_list-1"><a href="orddict.html#to_list-1">to_list/1</a></li>
+<li title="update-3"><a href="orddict.html#update-3">update/3</a></li>
+<li title="update-4"><a href="orddict.html#update-4">update/4</a></li>
+<li title="update_counter-3"><a href="orddict.html#update_counter-3">update_counter/3</a></li>
+</ul>
+</li>
+<li id="no" title="ordsets " expanded="false">ordsets<ul>
+<li><a href="ordsets.html">
+                  Top of manual page
+                </a></li>
+<li title="new-0"><a href="ordsets.html#new-0">new/0</a></li>
+<li title="is_set-1"><a href="ordsets.html#is_set-1">is_set/1</a></li>
+<li title="size-1"><a href="ordsets.html#size-1">size/1</a></li>
+<li title="to_list-1"><a href="ordsets.html#to_list-1">to_list/1</a></li>
+<li title="from_list-1"><a href="ordsets.html#from_list-1">from_list/1</a></li>
+<li title="is_element-2"><a href="ordsets.html#is_element-2">is_element/2</a></li>
+<li title="add_element-2"><a href="ordsets.html#add_element-2">add_element/2</a></li>
+<li title="del_element-2"><a href="ordsets.html#del_element-2">del_element/2</a></li>
+<li title="union-2"><a href="ordsets.html#union-2">union/2</a></li>
+<li title="union-1"><a href="ordsets.html#union-1">union/1</a></li>
+<li title="intersection-2"><a href="ordsets.html#intersection-2">intersection/2</a></li>
+<li title="intersection-1"><a href="ordsets.html#intersection-1">intersection/1</a></li>
+<li title="is_disjoint-2"><a href="ordsets.html#is_disjoint-2">is_disjoint/2</a></li>
+<li title="subtract-2"><a href="ordsets.html#subtract-2">subtract/2</a></li>
+<li title="is_subset-2"><a href="ordsets.html#is_subset-2">is_subset/2</a></li>
+<li title="fold-3"><a href="ordsets.html#fold-3">fold/3</a></li>
+<li title="filter-2"><a href="ordsets.html#filter-2">filter/2</a></li>
+</ul>
+</li>
+<li id="no" title="pg " expanded="false">pg<ul>
+<li><a href="pg.html">
+                  Top of manual page
+                </a></li>
+<li title="create-1"><a href="pg.html#create-1">create/1</a></li>
+<li title="create-2"><a href="pg.html#create-2">create/2</a></li>
+<li title="join-2"><a href="pg.html#join-2">join/2</a></li>
+<li title="send-2"><a href="pg.html#send-2">send/2</a></li>
+<li title="esend-2"><a href="pg.html#esend-2">esend/2</a></li>
+<li title="members-1"><a href="pg.html#members-1">members/1</a></li>
+</ul>
+</li>
+<li id="no" title="pool " expanded="false">pool<ul>
+<li><a href="pool.html">
+                  Top of manual page
+                </a></li>
+<li title="start-1"><a href="pool.html#start-1">start/1</a></li>
+<li title="start-2"><a href="pool.html#start-2">start/2</a></li>
+<li title="attach-1"><a href="pool.html#attach-1">attach/1</a></li>
+<li title="stop-0"><a href="pool.html#stop-0">stop/0</a></li>
+<li title="get_nodes-0"><a href="pool.html#get_nodes-0">get_nodes/0</a></li>
+<li title="pspawn-3"><a href="pool.html#pspawn-3">pspawn/3</a></li>
+<li title="pspawn_link-3"><a href="pool.html#pspawn_link-3">pspawn_link/3</a></li>
+<li title="get_node-0"><a href="pool.html#get_node-0">get_node/0</a></li>
+</ul>
+</li>
+<li id="no" title="proc_lib " expanded="false">proc_lib<ul>
+<li><a href="proc_lib.html">
+                  Top of manual page
+                </a></li>
+<li title="spawn-1"><a href="proc_lib.html#spawn-1">spawn/1</a></li>
+<li title="spawn-2"><a href="proc_lib.html#spawn-2">spawn/2</a></li>
+<li title="spawn-3"><a href="proc_lib.html#spawn-3">spawn/3</a></li>
+<li title="spawn-4"><a href="proc_lib.html#spawn-4">spawn/4</a></li>
+<li title="spawn_link-1"><a href="proc_lib.html#spawn_link-1">spawn_link/1</a></li>
+<li title="spawn_link-2"><a href="proc_lib.html#spawn_link-2">spawn_link/2</a></li>
+<li title="spawn_link-3"><a href="proc_lib.html#spawn_link-3">spawn_link/3</a></li>
+<li title="spawn_link-4"><a href="proc_lib.html#spawn_link-4">spawn_link/4</a></li>
+<li title="spawn_opt-2"><a href="proc_lib.html#spawn_opt-2">spawn_opt/2</a></li>
+<li title="spawn_opt-3"><a href="proc_lib.html#spawn_opt-3">spawn_opt/3</a></li>
+<li title="spawn_opt-4"><a href="proc_lib.html#spawn_opt-4">spawn_opt/4</a></li>
+<li title="spawn_opt-5"><a href="proc_lib.html#spawn_opt-5">spawn_opt/5</a></li>
+<li title="start-3"><a href="proc_lib.html#start-3">start/3</a></li>
+<li title="start-4"><a href="proc_lib.html#start-4">start/4</a></li>
+<li title="start-5"><a href="proc_lib.html#start-5">start/5</a></li>
+<li title="start_link-3"><a href="proc_lib.html#start_link-3">start_link/3</a></li>
+<li title="start_link-4"><a href="proc_lib.html#start_link-4">start_link/4</a></li>
+<li title="start_link-5"><a href="proc_lib.html#start_link-5">start_link/5</a></li>
+<li title="init_ack-1"><a href="proc_lib.html#init_ack-1">init_ack/1</a></li>
+<li title="init_ack-2"><a href="proc_lib.html#init_ack-2">init_ack/2</a></li>
+<li title="format-1"><a href="proc_lib.html#format-1">format/1</a></li>
+<li title="initial_call-1"><a href="proc_lib.html#initial_call-1">initial_call/1</a></li>
+<li title="translate_initial_call-1"><a href="proc_lib.html#translate_initial_call-1">translate_initial_call/1</a></li>
+<li title="hibernate-3"><a href="proc_lib.html#hibernate-3">hibernate/3</a></li>
+</ul>
+</li>
+<li id="no" title="proplists " expanded="false">proplists<ul>
+<li><a href="proplists.html">
+                  Top of manual page
+                </a></li>
+<li title="append_values-2"><a href="proplists.html#append_values-2">append_values/2</a></li>
+<li title="compact-1"><a href="proplists.html#compact-1">compact/1</a></li>
+<li title="delete-2"><a href="proplists.html#delete-2">delete/2</a></li>
+<li title="expand-2"><a href="proplists.html#expand-2">expand/2</a></li>
+<li title="get_all_values-2"><a href="proplists.html#get_all_values-2">get_all_values/2</a></li>
+<li title="get_bool-2"><a href="proplists.html#get_bool-2">get_bool/2</a></li>
+<li title="get_keys-1"><a href="proplists.html#get_keys-1">get_keys/1</a></li>
+<li title="get_value-2"><a href="proplists.html#get_value-2">get_value/2</a></li>
+<li title="get_value-3"><a href="proplists.html#get_value-3">get_value/3</a></li>
+<li title="is_defined-2"><a href="proplists.html#is_defined-2">is_defined/2</a></li>
+<li title="lookup-2"><a href="proplists.html#lookup-2">lookup/2</a></li>
+<li title="lookup_all-2"><a href="proplists.html#lookup_all-2">lookup_all/2</a></li>
+<li title="normalize-2"><a href="proplists.html#normalize-2">normalize/2</a></li>
+<li title="property-1"><a href="proplists.html#property-1">property/1</a></li>
+<li title="property-2"><a href="proplists.html#property-2">property/2</a></li>
+<li title="split-2"><a href="proplists.html#split-2">split/2</a></li>
+<li title="substitute_aliases-2"><a href="proplists.html#substitute_aliases-2">substitute_aliases/2</a></li>
+<li title="substitute_negations-2"><a href="proplists.html#substitute_negations-2">substitute_negations/2</a></li>
+<li title="unfold-1"><a href="proplists.html#unfold-1">unfold/1</a></li>
+</ul>
+</li>
+<li id="no" title="qlc " expanded="false">qlc<ul>
+<li><a href="qlc.html">
+                  Top of manual page
+                </a></li>
+<li title="append-1"><a href="qlc.html#append-1">append/1</a></li>
+<li title="append-2"><a href="qlc.html#append-2">append/2</a></li>
+<li title="cursor-1"><a href="qlc.html#cursor-1">cursor/1</a></li>
+<li title="cursor-2"><a href="qlc.html#cursor-2">cursor/2</a></li>
+<li title="delete_cursor-1"><a href="qlc.html#delete_cursor-1">delete_cursor/1</a></li>
+<li title="eval-1"><a href="qlc.html#eval-1">eval/1</a></li>
+<li title="eval-2"><a href="qlc.html#eval-2">eval/2</a></li>
+<li title="e-1"><a href="qlc.html#e-1">e/1</a></li>
+<li title="e-2"><a href="qlc.html#e-2">e/2</a></li>
+<li title="fold-3"><a href="qlc.html#fold-3">fold/3</a></li>
+<li title="fold-4"><a href="qlc.html#fold-4">fold/4</a></li>
+<li title="format_error-1"><a href="qlc.html#format_error-1">format_error/1</a></li>
+<li title="info-1"><a href="qlc.html#info-1">info/1</a></li>
+<li title="info-2"><a href="qlc.html#info-2">info/2</a></li>
+<li title="keysort-2"><a href="qlc.html#keysort-2">keysort/2</a></li>
+<li title="keysort-3"><a href="qlc.html#keysort-3">keysort/3</a></li>
+<li title="next_answers-1"><a href="qlc.html#next_answers-1">next_answers/1</a></li>
+<li title="next_answers-2"><a href="qlc.html#next_answers-2">next_answers/2</a></li>
+<li title="q-1"><a href="qlc.html#q-1">q/1</a></li>
+<li title="q-2"><a href="qlc.html#q-2">q/2</a></li>
+<li title="sort-1"><a href="qlc.html#sort-1">sort/1</a></li>
+<li title="sort-2"><a href="qlc.html#sort-2">sort/2</a></li>
+<li title="string_to_handle-1"><a href="qlc.html#string_to_handle-1">string_to_handle/1</a></li>
+<li title="string_to_handle-2"><a href="qlc.html#string_to_handle-2">string_to_handle/2</a></li>
+<li title="string_to_handle-3"><a href="qlc.html#string_to_handle-3">string_to_handle/3</a></li>
+<li title="table-2"><a href="qlc.html#table-2">table/2</a></li>
+</ul>
+</li>
+<li id="no" title="queue " expanded="false">queue<ul>
+<li><a href="queue.html">
+                  Top of manual page
+                </a></li>
+<li title="new-0"><a href="queue.html#new-0">new/0</a></li>
+<li title="is_queue-1"><a href="queue.html#is_queue-1">is_queue/1</a></li>
+<li title="is_empty-1"><a href="queue.html#is_empty-1">is_empty/1</a></li>
+<li title="len-1"><a href="queue.html#len-1">len/1</a></li>
+<li title="in-2"><a href="queue.html#in-2">in/2</a></li>
+<li title="in_r-2"><a href="queue.html#in_r-2">in_r/2</a></li>
+<li title="out-1"><a href="queue.html#out-1">out/1</a></li>
+<li title="out_r-1"><a href="queue.html#out_r-1">out_r/1</a></li>
+<li title="from_list-1"><a href="queue.html#from_list-1">from_list/1</a></li>
+<li title="to_list-1"><a href="queue.html#to_list-1">to_list/1</a></li>
+<li title="reverse-1"><a href="queue.html#reverse-1">reverse/1</a></li>
+<li title="split-2"><a href="queue.html#split-2">split/2</a></li>
+<li title="join-2"><a href="queue.html#join-2">join/2</a></li>
+<li title="filter-2"><a href="queue.html#filter-2">filter/2</a></li>
+<li title="member-2"><a href="queue.html#member-2">member/2</a></li>
+<li title="get-1"><a href="queue.html#get-1">get/1</a></li>
+<li title="get_r-1"><a href="queue.html#get_r-1">get_r/1</a></li>
+<li title="drop-1"><a href="queue.html#drop-1">drop/1</a></li>
+<li title="drop_r-1"><a href="queue.html#drop_r-1">drop_r/1</a></li>
+<li title="peek-1"><a href="queue.html#peek-1">peek/1</a></li>
+<li title="peek_r-1"><a href="queue.html#peek_r-1">peek_r/1</a></li>
+<li title="cons-2"><a href="queue.html#cons-2">cons/2</a></li>
+<li title="head-1"><a href="queue.html#head-1">head/1</a></li>
+<li title="tail-1"><a href="queue.html#tail-1">tail/1</a></li>
+<li title="snoc-2"><a href="queue.html#snoc-2">snoc/2</a></li>
+<li title="daeh-1"><a href="queue.html#daeh-1">daeh/1</a></li>
+<li title="last-1"><a href="queue.html#last-1">last/1</a></li>
+<li title="liat-1"><a href="queue.html#liat-1">liat/1</a></li>
+<li title="init-1"><a href="queue.html#init-1">init/1</a></li>
+<li title="lait-1"><a href="queue.html#lait-1">lait/1</a></li>
+</ul>
+</li>
+<li id="no" title="random " expanded="false">random<ul>
+<li><a href="random.html">
+                  Top of manual page
+                </a></li>
+<li title="seed-0"><a href="random.html#seed-0">seed/0</a></li>
+<li title="seed-3"><a href="random.html#seed-3">seed/3</a></li>
+<li title="seed-1"><a href="random.html#seed-1">seed/1</a></li>
+<li title="seed0-0"><a href="random.html#seed0-0">seed0/0</a></li>
+<li title="uniform-0"><a href="random.html#uniform-0">uniform/0</a></li>
+<li title="uniform-1"><a href="random.html#uniform-1">uniform/1</a></li>
+<li title="uniform_s-1"><a href="random.html#uniform_s-1">uniform_s/1</a></li>
+<li title="uniform_s-2"><a href="random.html#uniform_s-2">uniform_s/2</a></li>
+</ul>
+</li>
+<li id="no" title="re " expanded="false">re<ul>
+<li><a href="re.html">
+                  Top of manual page
+                </a></li>
+<li title="compile-1"><a href="re.html#compile-1">compile/1</a></li>
+<li title="compile-2"><a href="re.html#compile-2">compile/2</a></li>
+<li title="run-2"><a href="re.html#run-2">run/2</a></li>
+<li title="run-3"><a href="re.html#run-3">run/3</a></li>
+<li title="replace-3"><a href="re.html#replace-3">replace/3</a></li>
+<li title="replace-4"><a href="re.html#replace-4">replace/4</a></li>
+<li title="split-2"><a href="re.html#split-2">split/2</a></li>
+<li title="split-3"><a href="re.html#split-3">split/3</a></li>
+</ul>
+</li>
+<li id="no" title="sets " expanded="false">sets<ul>
+<li><a href="sets.html">
+                  Top of manual page
+                </a></li>
+<li title="new-0"><a href="sets.html#new-0">new/0</a></li>
+<li title="is_set-1"><a href="sets.html#is_set-1">is_set/1</a></li>
+<li title="size-1"><a href="sets.html#size-1">size/1</a></li>
+<li title="to_list-1"><a href="sets.html#to_list-1">to_list/1</a></li>
+<li title="from_list-1"><a href="sets.html#from_list-1">from_list/1</a></li>
+<li title="is_element-2"><a href="sets.html#is_element-2">is_element/2</a></li>
+<li title="add_element-2"><a href="sets.html#add_element-2">add_element/2</a></li>
+<li title="del_element-2"><a href="sets.html#del_element-2">del_element/2</a></li>
+<li title="union-2"><a href="sets.html#union-2">union/2</a></li>
+<li title="union-1"><a href="sets.html#union-1">union/1</a></li>
+<li title="intersection-2"><a href="sets.html#intersection-2">intersection/2</a></li>
+<li title="intersection-1"><a href="sets.html#intersection-1">intersection/1</a></li>
+<li title="is_disjoint-2"><a href="sets.html#is_disjoint-2">is_disjoint/2</a></li>
+<li title="subtract-2"><a href="sets.html#subtract-2">subtract/2</a></li>
+<li title="is_subset-2"><a href="sets.html#is_subset-2">is_subset/2</a></li>
+<li title="fold-3"><a href="sets.html#fold-3">fold/3</a></li>
+<li title="filter-2"><a href="sets.html#filter-2">filter/2</a></li>
+</ul>
+</li>
+<li id="no" title="shell " expanded="false">shell<ul>
+<li><a href="shell.html">
+                  Top of manual page
+                </a></li>
+<li title="history-1"><a href="shell.html#history-1">history/1</a></li>
+<li title="results-1"><a href="shell.html#results-1">results/1</a></li>
+<li title="catch_exception-1"><a href="shell.html#catch_exception-1">catch_exception/1</a></li>
+<li title="prompt_func-1"><a href="shell.html#prompt_func-1">prompt_func/1</a></li>
+<li title="start_restricted-1"><a href="shell.html#start_restricted-1">start_restricted/1</a></li>
+<li title="stop_restricted-0"><a href="shell.html#stop_restricted-0">stop_restricted/0</a></li>
+</ul>
+</li>
+<li title="shell_default"><a href="shell_default.html">shell_default</a></li>
+<li id="no" title="slave " expanded="false">slave<ul>
+<li><a href="slave.html">
+                  Top of manual page
+                </a></li>
+<li title="start-1"><a href="slave.html#start-1">start/1</a></li>
+<li title="start-2"><a href="slave.html#start-2">start/2</a></li>
+<li title="start-3"><a href="slave.html#start-3">start/3</a></li>
+<li title="start_link-1"><a href="slave.html#start_link-1">start_link/1</a></li>
+<li title="start_link-2"><a href="slave.html#start_link-2">start_link/2</a></li>
+<li title="start_link-3"><a href="slave.html#start_link-3">start_link/3</a></li>
+<li title="stop-1"><a href="slave.html#stop-1">stop/1</a></li>
+<li title="pseudo-1"><a href="slave.html#pseudo-1">pseudo/1</a></li>
+<li title="pseudo-2"><a href="slave.html#pseudo-2">pseudo/2</a></li>
+<li title="relay-1"><a href="slave.html#relay-1">relay/1</a></li>
+</ul>
+</li>
+<li id="no" title="sofs " expanded="false">sofs<ul>
+<li><a href="sofs.html">
+                  Top of manual page
+                </a></li>
+<li title="a_function-1"><a href="sofs.html#a_function-1">a_function/1</a></li>
+<li title="a_function-2"><a href="sofs.html#a_function-2">a_function/2</a></li>
+<li title="canonical_relation-1"><a href="sofs.html#canonical_relation-1">canonical_relation/1</a></li>
+<li title="composite-2"><a href="sofs.html#composite-2">composite/2</a></li>
+<li title="constant_function-2"><a href="sofs.html#constant_function-2">constant_function/2</a></li>
+<li title="converse-1"><a href="sofs.html#converse-1">converse/1</a></li>
+<li title="difference-2"><a href="sofs.html#difference-2">difference/2</a></li>
+<li title="digraph_to_family-1"><a href="sofs.html#digraph_to_family-1">digraph_to_family/1</a></li>
+<li title="digraph_to_family-2"><a href="sofs.html#digraph_to_family-2">digraph_to_family/2</a></li>
+<li title="domain-1"><a href="sofs.html#domain-1">domain/1</a></li>
+<li title="drestriction-2"><a href="sofs.html#drestriction-2">drestriction/2</a></li>
+<li title="drestriction-3"><a href="sofs.html#drestriction-3">drestriction/3</a></li>
+<li title="empty_set-0"><a href="sofs.html#empty_set-0">empty_set/0</a></li>
+<li title="extension-3"><a href="sofs.html#extension-3">extension/3</a></li>
+<li title="family-1"><a href="sofs.html#family-1">family/1</a></li>
+<li title="family-2"><a href="sofs.html#family-2">family/2</a></li>
+<li title="family_difference-2"><a href="sofs.html#family_difference-2">family_difference/2</a></li>
+<li title="family_domain-1"><a href="sofs.html#family_domain-1">family_domain/1</a></li>
+<li title="family_field-1"><a href="sofs.html#family_field-1">family_field/1</a></li>
+<li title="family_intersection-1"><a href="sofs.html#family_intersection-1">family_intersection/1</a></li>
+<li title="family_intersection-2"><a href="sofs.html#family_intersection-2">family_intersection/2</a></li>
+<li title="family_projection-2"><a href="sofs.html#family_projection-2">family_projection/2</a></li>
+<li title="family_range-1"><a href="sofs.html#family_range-1">family_range/1</a></li>
+<li title="family_specification-2"><a href="sofs.html#family_specification-2">family_specification/2</a></li>
+<li title="family_to_digraph-1"><a href="sofs.html#family_to_digraph-1">family_to_digraph/1</a></li>
+<li title="family_to_digraph-2"><a href="sofs.html#family_to_digraph-2">family_to_digraph/2</a></li>
+<li title="family_to_relation-1"><a href="sofs.html#family_to_relation-1">family_to_relation/1</a></li>
+<li title="family_union-1"><a href="sofs.html#family_union-1">family_union/1</a></li>
+<li title="family_union-2"><a href="sofs.html#family_union-2">family_union/2</a></li>
+<li title="field-1"><a href="sofs.html#field-1">field/1</a></li>
+<li title="from_external-2"><a href="sofs.html#from_external-2">from_external/2</a></li>
+<li title="from_sets-1"><a href="sofs.html#from_sets-1">from_sets/1</a></li>
+<li title="from_term-1"><a href="sofs.html#from_term-1">from_term/1</a></li>
+<li title="from_term-2"><a href="sofs.html#from_term-2">from_term/2</a></li>
+<li title="image-2"><a href="sofs.html#image-2">image/2</a></li>
+<li title="intersection-1"><a href="sofs.html#intersection-1">intersection/1</a></li>
+<li title="intersection-2"><a href="sofs.html#intersection-2">intersection/2</a></li>
+<li title="intersection_of_family-1"><a href="sofs.html#intersection_of_family-1">intersection_of_family/1</a></li>
+<li title="inverse-1"><a href="sofs.html#inverse-1">inverse/1</a></li>
+<li title="inverse_image-2"><a href="sofs.html#inverse_image-2">inverse_image/2</a></li>
+<li title="is_a_function-1"><a href="sofs.html#is_a_function-1">is_a_function/1</a></li>
+<li title="is_disjoint-2"><a href="sofs.html#is_disjoint-2">is_disjoint/2</a></li>
+<li title="is_empty_set-1"><a href="sofs.html#is_empty_set-1">is_empty_set/1</a></li>
+<li title="is_equal-2"><a href="sofs.html#is_equal-2">is_equal/2</a></li>
+<li title="is_set-1"><a href="sofs.html#is_set-1">is_set/1</a></li>
+<li title="is_sofs_set-1"><a href="sofs.html#is_sofs_set-1">is_sofs_set/1</a></li>
+<li title="is_subset-2"><a href="sofs.html#is_subset-2">is_subset/2</a></li>
+<li title="is_type-1"><a href="sofs.html#is_type-1">is_type/1</a></li>
+<li title="join-4"><a href="sofs.html#join-4">join/4</a></li>
+<li title="multiple_relative_product-2"><a href="sofs.html#multiple_relative_product-2">multiple_relative_product/2</a></li>
+<li title="no_elements-1"><a href="sofs.html#no_elements-1">no_elements/1</a></li>
+<li title="partition-1"><a href="sofs.html#partition-1">partition/1</a></li>
+<li title="partition-2"><a href="sofs.html#partition-2">partition/2</a></li>
+<li title="partition-3"><a href="sofs.html#partition-3">partition/3</a></li>
+<li title="partition_family-2"><a href="sofs.html#partition_family-2">partition_family/2</a></li>
+<li title="product-1"><a href="sofs.html#product-1">product/1</a></li>
+<li title="product-2"><a href="sofs.html#product-2">product/2</a></li>
+<li title="projection-2"><a href="sofs.html#projection-2">projection/2</a></li>
+<li title="range-1"><a href="sofs.html#range-1">range/1</a></li>
+<li title="relation-1"><a href="sofs.html#relation-1">relation/1</a></li>
+<li title="relation-2"><a href="sofs.html#relation-2">relation/2</a></li>
+<li title="relation_to_family-1"><a href="sofs.html#relation_to_family-1">relation_to_family/1</a></li>
+<li title="relative_product-1"><a href="sofs.html#relative_product-1">relative_product/1</a></li>
+<li title="relative_product-2"><a href="sofs.html#relative_product-2">relative_product/2</a></li>
+<li title="relative_product1-2"><a href="sofs.html#relative_product1-2">relative_product1/2</a></li>
+<li title="restriction-2"><a href="sofs.html#restriction-2">restriction/2</a></li>
+<li title="restriction-3"><a href="sofs.html#restriction-3">restriction/3</a></li>
+<li title="set-1"><a href="sofs.html#set-1">set/1</a></li>
+<li title="set-2"><a href="sofs.html#set-2">set/2</a></li>
+<li title="specification-2"><a href="sofs.html#specification-2">specification/2</a></li>
+<li title="strict_relation-1"><a href="sofs.html#strict_relation-1">strict_relation/1</a></li>
+<li title="substitution-2"><a href="sofs.html#substitution-2">substitution/2</a></li>
+<li title="symdiff-2"><a href="sofs.html#symdiff-2">symdiff/2</a></li>
+<li title="symmetric_partition-2"><a href="sofs.html#symmetric_partition-2">symmetric_partition/2</a></li>
+<li title="to_external-1"><a href="sofs.html#to_external-1">to_external/1</a></li>
+<li title="to_sets-1"><a href="sofs.html#to_sets-1">to_sets/1</a></li>
+<li title="type-1"><a href="sofs.html#type-1">type/1</a></li>
+<li title="union-1"><a href="sofs.html#union-1">union/1</a></li>
+<li title="union-2"><a href="sofs.html#union-2">union/2</a></li>
+<li title="union_of_family-1"><a href="sofs.html#union_of_family-1">union_of_family/1</a></li>
+<li title="weak_relation-1"><a href="sofs.html#weak_relation-1">weak_relation/1</a></li>
+</ul>
+</li>
+<li id="no" title="string " expanded="false">string<ul>
+<li><a href="string.html">
+                  Top of manual page
+                </a></li>
+<li title="len-1"><a href="string.html#len-1">len/1</a></li>
+<li title="equal-2"><a href="string.html#equal-2">equal/2</a></li>
+<li title="concat-2"><a href="string.html#concat-2">concat/2</a></li>
+<li title="chr-2"><a href="string.html#chr-2">chr/2</a></li>
+<li title="rchr-2"><a href="string.html#rchr-2">rchr/2</a></li>
+<li title="str-2"><a href="string.html#str-2">str/2</a></li>
+<li title="rstr-2"><a href="string.html#rstr-2">rstr/2</a></li>
+<li title="span-2"><a href="string.html#span-2">span/2</a></li>
+<li title="cspan-2"><a href="string.html#cspan-2">cspan/2</a></li>
+<li title="substr-2"><a href="string.html#substr-2">substr/2</a></li>
+<li title="substr-3"><a href="string.html#substr-3">substr/3</a></li>
+<li title="tokens-2"><a href="string.html#tokens-2">tokens/2</a></li>
+<li title="join-2"><a href="string.html#join-2">join/2</a></li>
+<li title="chars-2"><a href="string.html#chars-2">chars/2</a></li>
+<li title="chars-3"><a href="string.html#chars-3">chars/3</a></li>
+<li title="copies-2"><a href="string.html#copies-2">copies/2</a></li>
+<li title="words-1"><a href="string.html#words-1">words/1</a></li>
+<li title="words-2"><a href="string.html#words-2">words/2</a></li>
+<li title="sub_word-2"><a href="string.html#sub_word-2">sub_word/2</a></li>
+<li title="sub_word-3"><a href="string.html#sub_word-3">sub_word/3</a></li>
+<li title="strip-1"><a href="string.html#strip-1">strip/1</a></li>
+<li title="strip-2"><a href="string.html#strip-2">strip/2</a></li>
+<li title="strip-3"><a href="string.html#strip-3">strip/3</a></li>
+<li title="left-2"><a href="string.html#left-2">left/2</a></li>
+<li title="left-3"><a href="string.html#left-3">left/3</a></li>
+<li title="right-2"><a href="string.html#right-2">right/2</a></li>
+<li title="right-3"><a href="string.html#right-3">right/3</a></li>
+<li title="centre-2"><a href="string.html#centre-2">centre/2</a></li>
+<li title="centre-3"><a href="string.html#centre-3">centre/3</a></li>
+<li title="sub_string-2"><a href="string.html#sub_string-2">sub_string/2</a></li>
+<li title="sub_string-3"><a href="string.html#sub_string-3">sub_string/3</a></li>
+<li title="to_float-1"><a href="string.html#to_float-1">to_float/1</a></li>
+<li title="to_integer-1"><a href="string.html#to_integer-1">to_integer/1</a></li>
+<li title="to_lower-1"><a href="string.html#to_lower-1">to_lower/1</a></li>
+<li title="to_upper-1"><a href="string.html#to_upper-1">to_upper/1</a></li>
+</ul>
+</li>
+<li id="no" title="supervisor " expanded="false">supervisor<ul>
+<li><a href="supervisor.html">
+                  Top of manual page
+                </a></li>
+<li title="start_link-2"><a href="supervisor.html#start_link-2">start_link/2</a></li>
+<li title="start_link-3"><a href="supervisor.html#start_link-3">start_link/3</a></li>
+<li title="start_child-2"><a href="supervisor.html#start_child-2">start_child/2</a></li>
+<li title="terminate_child-2"><a href="supervisor.html#terminate_child-2">terminate_child/2</a></li>
+<li title="delete_child-2"><a href="supervisor.html#delete_child-2">delete_child/2</a></li>
+<li title="restart_child-2"><a href="supervisor.html#restart_child-2">restart_child/2</a></li>
+<li title="which_children-1"><a href="supervisor.html#which_children-1">which_children/1</a></li>
+<li title="count_children-1"><a href="supervisor.html#count_children-1">count_children/1</a></li>
+<li title="check_childspecs-1"><a href="supervisor.html#check_childspecs-1">check_childspecs/1</a></li>
+<li title="Module:init-1"><a href="supervisor.html#Module:init-1">Module:init/1</a></li>
+</ul>
+</li>
+<li id="no" title="supervisor_bridge " expanded="false">supervisor_bridge<ul>
+<li><a href="supervisor_bridge.html">
+                  Top of manual page
+                </a></li>
+<li title="start_link-2"><a href="supervisor_bridge.html#start_link-2">start_link/2</a></li>
+<li title="start_link-3"><a href="supervisor_bridge.html#start_link-3">start_link/3</a></li>
+<li title="Module:init-1"><a href="supervisor_bridge.html#Module:init-1">Module:init/1</a></li>
+<li title="Module:terminate-2"><a href="supervisor_bridge.html#Module:terminate-2">Module:terminate/2</a></li>
+</ul>
+</li>
+<li id="no" title="sys " expanded="false">sys<ul>
+<li><a href="sys.html">
+                  Top of manual page
+                </a></li>
+<li title="log-2"><a href="sys.html#log-2">log/2</a></li>
+<li title="log-3"><a href="sys.html#log-3">log/3</a></li>
+<li title="log_to_file-2"><a href="sys.html#log_to_file-2">log_to_file/2</a></li>
+<li title="log_to_file-3"><a href="sys.html#log_to_file-3">log_to_file/3</a></li>
+<li title="statistics-2"><a href="sys.html#statistics-2">statistics/2</a></li>
+<li title="statistics-3"><a href="sys.html#statistics-3">statistics/3</a></li>
+<li title="trace-2"><a href="sys.html#trace-2">trace/2</a></li>
+<li title="trace-3"><a href="sys.html#trace-3">trace/3</a></li>
+<li title="no_debug-1"><a href="sys.html#no_debug-1">no_debug/1</a></li>
+<li title="no_debug-2"><a href="sys.html#no_debug-2">no_debug/2</a></li>
+<li title="suspend-1"><a href="sys.html#suspend-1">suspend/1</a></li>
+<li title="suspend-2"><a href="sys.html#suspend-2">suspend/2</a></li>
+<li title="resume-1"><a href="sys.html#resume-1">resume/1</a></li>
+<li title="resume-2"><a href="sys.html#resume-2">resume/2</a></li>
+<li title="change_code-4"><a href="sys.html#change_code-4">change_code/4</a></li>
+<li title="change_code-5"><a href="sys.html#change_code-5">change_code/5</a></li>
+<li title="get_status-1"><a href="sys.html#get_status-1">get_status/1</a></li>
+<li title="get_status-2"><a href="sys.html#get_status-2">get_status/2</a></li>
+<li title="install-2"><a href="sys.html#install-2">install/2</a></li>
+<li title="install-3"><a href="sys.html#install-3">install/3</a></li>
+<li title="remove-2"><a href="sys.html#remove-2">remove/2</a></li>
+<li title="remove-3"><a href="sys.html#remove-3">remove/3</a></li>
+<li title="debug_options-1"><a href="sys.html#debug_options-1">debug_options/1</a></li>
+<li title="get_debug-3"><a href="sys.html#get_debug-3">get_debug/3</a></li>
+<li title="handle_debug-4"><a href="sys.html#handle_debug-4">handle_debug/4</a></li>
+<li title="handle_system_msg-6"><a href="sys.html#handle_system_msg-6">handle_system_msg/6</a></li>
+<li title="print_log-1"><a href="sys.html#print_log-1">print_log/1</a></li>
+<li title="Mod:system_continue-3"><a href="sys.html#Mod:system_continue-3">Mod:system_continue/3</a></li>
+<li title="Mod:system_terminate-4"><a href="sys.html#Mod:system_terminate-4">Mod:system_terminate/4</a></li>
+<li title="Mod:system_code_change-4"><a href="sys.html#Mod:system_code_change-4">Mod:system_code_change/4</a></li>
+</ul>
+</li>
+<li id="no" title="timer " expanded="false">timer<ul>
+<li><a href="timer.html">
+                  Top of manual page
+                </a></li>
+<li title="start-0"><a href="timer.html#start-0">start/0</a></li>
+<li title="apply_after-4"><a href="timer.html#apply_after-4">apply_after/4</a></li>
+<li title="send_after-2"><a href="timer.html#send_after-2">send_after/2</a></li>
+<li title="send_after-3"><a href="timer.html#send_after-3">send_after/3</a></li>
+<li title="kill_after-1"><a href="timer.html#kill_after-1">kill_after/1</a></li>
+<li title="kill_after-2"><a href="timer.html#kill_after-2">kill_after/2</a></li>
+<li title="exit_after-2"><a href="timer.html#exit_after-2">exit_after/2</a></li>
+<li title="exit_after-3"><a href="timer.html#exit_after-3">exit_after/3</a></li>
+<li title="apply_interval-4"><a href="timer.html#apply_interval-4">apply_interval/4</a></li>
+<li title="send_interval-2"><a href="timer.html#send_interval-2">send_interval/2</a></li>
+<li title="send_interval-3"><a href="timer.html#send_interval-3">send_interval/3</a></li>
+<li title="cancel-1"><a href="timer.html#cancel-1">cancel/1</a></li>
+<li title="sleep-1"><a href="timer.html#sleep-1">sleep/1</a></li>
+<li title="tc-1"><a href="timer.html#tc-1">tc/1</a></li>
+<li title="tc-2"><a href="timer.html#tc-2">tc/2</a></li>
+<li title="tc-3"><a href="timer.html#tc-3">tc/3</a></li>
+<li title="now_diff-2"><a href="timer.html#now_diff-2">now_diff/2</a></li>
+<li title="seconds-1"><a href="timer.html#seconds-1">seconds/1</a></li>
+<li title="minutes-1"><a href="timer.html#minutes-1">minutes/1</a></li>
+<li title="hours-1"><a href="timer.html#hours-1">hours/1</a></li>
+<li title="hms-3"><a href="timer.html#hms-3">hms/3</a></li>
+</ul>
+</li>
+<li id="no" title="unicode " expanded="false">unicode<ul>
+<li><a href="unicode.html">
+                  Top of manual page
+                </a></li>
+<li title="bom_to_encoding-1"><a href="unicode.html#bom_to_encoding-1">bom_to_encoding/1</a></li>
+<li title="characters_to_list-1"><a href="unicode.html#characters_to_list-1">characters_to_list/1</a></li>
+<li title="characters_to_list-2"><a href="unicode.html#characters_to_list-2">characters_to_list/2</a></li>
+<li title="characters_to_binary-1"><a href="unicode.html#characters_to_binary-1">characters_to_binary/1</a></li>
+<li title="characters_to_binary-2"><a href="unicode.html#characters_to_binary-2">characters_to_binary/2</a></li>
+<li title="characters_to_binary-3"><a href="unicode.html#characters_to_binary-3">characters_to_binary/3</a></li>
+<li title="encoding_to_bom-1"><a href="unicode.html#encoding_to_bom-1">encoding_to_bom/1</a></li>
+</ul>
+</li>
+<li id="no" title="win32reg " expanded="false">win32reg<ul>
+<li><a href="win32reg.html">
+                  Top of manual page
+                </a></li>
+<li title="change_key-2"><a href="win32reg.html#change_key-2">change_key/2</a></li>
+<li title="change_key_create-2"><a href="win32reg.html#change_key_create-2">change_key_create/2</a></li>
+<li title="close-1"><a href="win32reg.html#close-1">close/1</a></li>
+<li title="current_key-1"><a href="win32reg.html#current_key-1">current_key/1</a></li>
+<li title="delete_key-1"><a href="win32reg.html#delete_key-1">delete_key/1</a></li>
+<li title="delete_value-2"><a href="win32reg.html#delete_value-2">delete_value/2</a></li>
+<li title="expand-1"><a href="win32reg.html#expand-1">expand/1</a></li>
+<li title="format_error-1"><a href="win32reg.html#format_error-1">format_error/1</a></li>
+<li title="open-1"><a href="win32reg.html#open-1">open/1</a></li>
+<li title="set_value-3"><a href="win32reg.html#set_value-3">set_value/3</a></li>
+<li title="sub_keys-1"><a href="win32reg.html#sub_keys-1">sub_keys/1</a></li>
+<li title="value-2"><a href="win32reg.html#value-2">value/2</a></li>
+<li title="values-1"><a href="win32reg.html#values-1">values/1</a></li>
+</ul>
+</li>
+<li id="no" title="zip " expanded="false">zip<ul>
+<li><a href="zip.html">
+                  Top of manual page
+                </a></li>
+<li title="zip-2"><a href="zip.html#zip-2">zip/2</a></li>
+<li title="zip-3"><a href="zip.html#zip-3">zip/3</a></li>
+<li title="create-2"><a href="zip.html#create-2">create/2</a></li>
+<li title="create-3"><a href="zip.html#create-3">create/3</a></li>
+<li title="unzip-1"><a href="zip.html#unzip-1">unzip/1</a></li>
+<li title="unzip-2"><a href="zip.html#unzip-2">unzip/2</a></li>
+<li title="extract-1"><a href="zip.html#extract-1">extract/1</a></li>
+<li title="extract-2"><a href="zip.html#extract-2">extract/2</a></li>
+<li title="foldl-3"><a href="zip.html#foldl-3">foldl/3</a></li>
+<li title="list_dir-1"><a href="zip.html#list_dir-1">list_dir/1</a></li>
+<li title="list_dir-2"><a href="zip.html#list_dir-2">list_dir/2</a></li>
+<li title="table-1"><a href="zip.html#table-1">table/1</a></li>
+<li title="table-2"><a href="zip.html#table-2">table/2</a></li>
+<li title="t-1"><a href="zip.html#t-1">t/1</a></li>
+<li title="tt-1"><a href="zip.html#tt-1">tt/1</a></li>
+<li title="zip_open-1"><a href="zip.html#zip_open-1">zip_open/1</a></li>
+<li title="zip_open-2"><a href="zip.html#zip_open-2">zip_open/2</a></li>
+<li title="zip_list_dir-1"><a href="zip.html#zip_list_dir-1">zip_list_dir/1</a></li>
+<li title="zip_get-1"><a href="zip.html#zip_get-1">zip_get/1</a></li>
+<li title="zip_get-2"><a href="zip.html#zip_get-2">zip_get/2</a></li>
+<li title="zip_close-1"><a href="zip.html#zip_close-1">zip_close/1</a></li>
+</ul>
+</li>
+</ul>
+</div></div>
+<div id="content">
+<div class="innertube">
+<!-- refpage --><center><h1>io_lib</h1></center>
+  
+  <h3>MODULE</h3>
+<div class="REFBODY">io_lib</div>
+  <h3>MODULE SUMMARY</h3>
+<div class="REFBODY">IO Library Functions</div>
+  <h3>DESCRIPTION</h3>
+<div class="REFBODY"><p>
+    <p>This module contains functions for converting to and from
+      strings (lists of characters). They are used for implementing the
+      functions in the <span class="code">io</span> module. There is no guarantee that the
+      character lists returned from some of the functions are flat,
+      they can be deep lists. <span class="code">lists:flatten/1</span> can be used for
+      flattening deep lists.</p>
+  </p></div>
+
+  <h3>DATA TYPES</h3>
+    <p>
+      <span class="bold_code"><a name="type-chars">chars()</a> = [char() | <span class="bold_code"><a href="#type-chars">chars()</a></span>]</span><br></p>
+    <p>
+      <span class="bold_code"><a name="type-continuation">continuation()</a></span><br></p>
+<div class="REFBODY"><p><p>A continuation as returned by <span class="bold_code"><a href="#fread-3"><span class="code">fread/3</span></a></span>.</p>
+      </p></div>
+    <p>
+      <span class="bold_code"><a name="type-depth">depth()</a> = -1 | integer() &gt;= 0</span><br></p>
+  
+  <h3>EXPORTS</h3>
+    <p><a name="nl-0"></a><span class="bold_code">nl() -&gt; string()</span><br></p>
+<div class="REFBODY"><p>
+        <p>Returns a character list which represents a new line
+          character.</p>
+      </p></div>
+    <p><a name="write-1"></a><span class="bold_code">write(Term) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span></span><br><a name="write-2"></a><span class="bold_code">write(Term, Depth) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span></span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Term = term()</span></div>
+<div class="REFTYPES"><span class="bold_code">Depth = <span class="bold_code"><a href="#type-depth">depth()</a></span></span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns a character list which represents <span class="code">Term</span>. The
+          <span class="code">Depth</span> (-1) argument controls the depth of the
+          structures written. When the specified depth is reached,
+          everything below this level is replaced by "...". For
+          example:</p>
+        <div class="example"><pre>
+1&gt; <span class="bold_code">lists:flatten(io_lib:write({1,[2],[3],[4,5],6,7,8,9})).</span>
+"{1,[2],[3],[4,5],6,7,8,9}"
+2&gt; <span class="bold_code">lists:flatten(io_lib:write({1,[2],[3],[4,5],6,7,8,9}, 5)).</span>
+"{1,[2],[3],[...],...}"</pre></div>
+      </p></div>
+    <p><a name="print-1"></a><span class="bold_code">print(Term) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span></span><br><a name="print-4"></a><span class="bold_code">print(Term, Column, LineLength, Depth) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span></span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Term = term()</span></div>
+<div class="REFTYPES"><span class="bold_code">Column = LineLength = integer() &gt;= 0</span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Depth = <span class="bold_code"><a href="#type-depth">depth()</a></span></span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Also returns a list of characters which represents
+          <span class="code">Term</span>, but breaks representations which are longer than
+          one line into many lines and indents each line sensibly. It
+          also tries to detect and output lists of printable characters 
+          as strings. <span class="code">Column</span> is the starting column (1),
+          <span class="code">LineLength</span> the maximum line length (80), and
+          <span class="code">Depth</span> (-1) the maximum print depth.</p>
+      </p></div>
+    <p><a name="fwrite-2"></a><span class="bold_code">fwrite(Format, Data) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span> | UnicodeList</span><br><a name="format-2"></a><span class="bold_code">format(Format, Data) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span> | UnicodeList</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Format = <span class="bold_code"><a href="io.html#type-format">io:format()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Data = [term()]</span></div>
+<div class="REFTYPES"><span class="bold_code">UnicodeList = [<span class="bold_code"><a href="unicode.html#type-unicode_char">unicode:unicode_char()</a></span>]</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns a character list which represents <span class="code">Data</span>
+          formatted in accordance with <span class="code">Format</span>. See
+          <span class="bold_code"><a href="io.html#fwrite-1">io:fwrite/1,2,3</a></span> for a detailed
+          description of the available formatting options. A fault is
+          generated if there is an error in the format string or
+          argument list.</p>
+
+	  <p>If (and only if) the Unicode translation modifier is used
+	  in the format string (i.e. ~ts or ~tc), the resulting list
+	  may contain characters beyond the ISO-latin-1 character
+	  range (in other words, numbers larger than 255). If so, the
+	  result is not an ordinary Erlang string(), but can well be
+	  used in any context where Unicode data is allowed.</p>
+	  
+      </p></div>
+    <p><a name="fread-2"></a><span class="bold_code">fread(Format, String) -&gt; Result</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Format = String = string()</span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Result = {ok, InputList :: [term()], LeftOverChars :: string()}<br>       | {more,<br>          RestFormat :: string(),<br>          Nchars :: integer() &gt;= 0,<br>          InputStack :: <span class="bold_code"><a href="#type-chars">chars()</a></span>}<br>       | {error, What :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Tries to read <span class="code">String</span> in accordance with the control
+          sequences in <span class="code">Format</span>. See
+          <span class="bold_code"><a href="io.html#fread-3">io:fread/3</a></span> for a detailed
+          description of the available formatting options. It is
+          assumed that <span class="code">String</span> contains whole lines. It returns:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, InputList, LeftOverChars}</span></strong></dt>
+          <dd>
+            <p>The string was read. <span class="code">InputList</span> is the list of
+              successfully matched and read items, and
+              <span class="code">LeftOverChars</span> are the input characters not used.</p>
+          </dd>
+          <dt><strong><span class="code">{more, RestFormat, Nchars, InputStack}</span></strong></dt>
+          <dd>
+            <p>The string was read, but more input is needed in order
+              to complete the original format string. <span class="code">RestFormat</span>
+              is the remaining format string, <span class="code">Nchars</span> the number
+              of characters scanned, and <span class="code">InputStack</span> is the
+              reversed list of inputs matched up to that point.</p>
+          </dd>
+          <dt><strong><span class="code">{error, What}</span></strong></dt>
+          <dd>
+            <p>The read operation failed and the parameter <span class="code">What</span>
+              gives a hint about the error.</p>
+          </dd>
+        </dl>
+        <p>Example:</p>
+        <div class="example"><pre>
+3&gt; <span class="bold_code">io_lib:fread("~f~f~f", "15.6 17.3e-6 24.5").</span>
+{ok,[15.6,1.73e-5,24.5],[]}</pre></div>
+      </p></div>
+    <p><a name="fread-3"></a><span class="bold_code">fread(Continuation, CharSpec, Format) -&gt; Return</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Continuation = <span class="bold_code"><a href="#type-continuation">continuation()</a></span> | []</span></div>
+<div class="REFTYPES"><span class="bold_code">CharSpec = string() | eof</span></div>
+<div class="REFTYPES"><span class="bold_code">Format = string()</span></div>
+<div class="REFTYPES"><span class="bold_code">Return = {more, Continuation1 :: <span class="bold_code"><a href="#type-continuation">continuation()</a></span>}<br>       | {done, Result, LeftOverChars :: string()}</span></div>
+<div class="REFTYPES"><span class="bold_code">Result = {ok, InputList :: [term()]}<br>       | eof<br>       | {error, What :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>This is the re-entrant formatted reader. The continuation of
+          the first call to the functions must be <span class="code">[]</span>. Refer to
+          Armstrong, Virding, Williams, 'Concurrent Programming in
+          Erlang', Chapter 13 for a complete description of how the
+          re-entrant input scheme works.</p>
+        <p>The function returns:</p>
+        <dl>
+          <dt><strong><span class="code">{done, Result, LeftOverChars}</span></strong></dt>
+          <dd>
+            <p>The input is complete. The result is one of the
+              following:</p>
+            <dl>
+              <dt><strong><span class="code">{ok, InputList}</span></strong></dt>
+              <dd>
+                <p>The string was read. <span class="code">InputList</span> is the list of
+                  successfully matched and read items, and
+                  <span class="code">LeftOverChars</span> are the remaining characters.</p>
+              </dd>
+              <dt><strong><span class="code">eof</span></strong></dt>
+              <dd>
+                <p>End of file has been encountered.
+                  <span class="code">LeftOverChars</span> are the input characters not
+                  used.</p>
+              </dd>
+              <dt><strong><span class="code">{error, What}</span></strong></dt>
+              <dd>
+                <p>An error occurred and the parameter <span class="code">What</span> gives
+                  a hint about the error.</p>
+              </dd>
+            </dl>
+          </dd>
+          <dt><strong><span class="code">{more, Continuation}</span></strong></dt>
+          <dd>
+            <p>More data is required to build a term.
+              <span class="code">Continuation</span> must be passed to <span class="code">fread/3</span>,
+              when more data becomes available.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="write_atom-1"></a><span class="bold_code">write_atom(Atom) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span></span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Atom = atom()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns the list of characters needed to print the atom
+          <span class="code">Atom</span>.</p>
+      </p></div>
+    <p><a name="write_string-1"></a><span class="bold_code">write_string(String) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span></span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">String = string()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns the list of characters needed to print <span class="code">String</span>
+          as a string.</p>
+      </p></div>
+    <p><a name="write_char-1"></a><span class="bold_code">write_char(Char) -&gt; <span class="bold_code"><a href="#type-chars">chars()</a></span></span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Char = char()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns the list of characters needed to print a character
+          constant in the ISO-latin-1 character set.</p>
+      </p></div>
+    <p><a name="indentation-2"></a><span class="bold_code">indentation(String, StartIndent) -&gt; integer()</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">String = string()</span></div>
+<div class="REFTYPES"><span class="bold_code">StartIndent = integer()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns the indentation if <span class="code">String</span> has been printed,
+          starting at <span class="code">StartIndent</span>.</p>
+      </p></div>
+    <p><a name="char_list-1"></a><span class="bold_code">char_list(Term) -&gt; boolean()</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Term = term()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns <span class="code">true</span> if <span class="code">Term</span> is a flat list of
+          characters in the ISO-latin-1 range, otherwise it returns <span class="code">false</span>.</p>
+      </p></div>
+    <p><a name="deep_char_list-1"></a><span class="bold_code">deep_char_list(Term) -&gt; boolean()</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Term = term()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns <span class="code">true</span> if <span class="code">Term</span> is a, possibly deep, list
+          of characters in the ISO-latin-1 range, otherwise it returns <span class="code">false</span>.</p>
+      </p></div>
+    <p><a name="printable_list-1"></a><span class="bold_code">printable_list(Term) -&gt; boolean()</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Term = term()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns <span class="code">true</span> if <span class="code">Term</span> is a flat list of
+          printable ISO-latin-1 characters, otherwise it returns <span class="code">false</span>.</p>
+      </p></div>
+  
+</div>
+<div class="footer">
+<hr>
+<p>Copyright © 1997-2012 Ericsson AB. All Rights Reserved.</p>
+</div>
+</div>
+</div></body>
+</html>

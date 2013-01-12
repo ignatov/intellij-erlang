@@ -1,0 +1,56 @@
+span.bold_code {
+    font-family: Courier, monospace;
+    font-weight: bold
+}
+
+span.code {
+    font-family: Courier, monospace;
+    font-weight: normal
+}
+
+.note, .warning {
+    border: solid 1px;
+    margin: 1em 3em;
+}
+
+.note .label {
+    border: solid 1px;
+    font-weight: bold;
+    padding: 5px 10px;
+}
+
+.note .content {
+    border: solid 1px;
+    font-style: italic;
+    padding: 5px 10px;
+}
+
+.warning .label {
+    border: solid 1px;
+    font-weight: bold;
+    padding: 5px 10px;
+}
+
+.warning .content {
+    border: solid 1px;
+    font-style: italic;
+    padding: 5px 10px;
+}
+
+.example {
+    border: dotted 1px;
+    padding: 0 10px;
+}
+
+pre {
+    font-family: Courier, monospace;
+    font-weight: normal
+}
+
+.REFBODY {
+    margin-left: 13mm
+}
+
+.REFTYPES {
+    margin-left: 8mm
+}
