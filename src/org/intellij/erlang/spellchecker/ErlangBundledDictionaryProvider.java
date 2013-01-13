@@ -22,10 +22,8 @@ import com.intellij.spellchecker.BundledDictionaryProvider;
  * @author Sergey Evstifeev
  */
 class ErlangBundledDictionaryProvider implements BundledDictionaryProvider {
-
   @Override
   public String[] getBundledDictionaries() {
-    return new String[]{"erlang.dic"};
+    return new String[]{"/dictionary/erlang.dic"};
   }
-
 }
