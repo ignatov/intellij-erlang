@@ -4,4 +4,4 @@ The following people have made contributions (in no particular order):
 * Volodymyr Kyrychenko (github @vladimirk)
 * Maxim Vladimirsky (github @horkhe)
 * Todd Greenwood-Geer (github @ToddG)
-* Sergey Evstifeev (githus @sergeyevstifeev)
+* Sergey Evstifeev (github @sergeyevstifeev)
