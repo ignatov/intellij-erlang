@@ -140,6 +140,7 @@
 
         <colorSettingsPage implementation="org.intellij.erlang.editor.ErlangColorSettingsPage"/>
         <lang.documentationProvider language="Erlang" implementationClass="org.intellij.erlang.documentation.ErlangDocumentationProvider"/>
+        <lang.foldingBuilder language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangFoldingBuilder"/>
 
         <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
         <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
