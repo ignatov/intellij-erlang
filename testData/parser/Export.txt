@@ -344,7 +344,7 @@ ERL_FILE
                 PsiElement(var)('Nodes')
             PsiElement(})('}')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -502,7 +502,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('IsRunning')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1075,4 +1075,4 @@ ERL_FILE
                 PsiElement(var)('Nodes')
             PsiElement(})('}')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

@@ -175,4 +175,4 @@ ERL_FILE
                           PsiElement(atom)('ret_spec')
                       PsiElement(()('(')
                       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

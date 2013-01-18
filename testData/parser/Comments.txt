@@ -8,7 +8,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('test')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% function comment\n%% %% second line\n%% third line')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -22,4 +22,4 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('ok')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

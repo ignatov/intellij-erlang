@@ -22,4 +22,4 @@ ERL_FILE
               PsiElement(atom)('some_function')
             PsiElement(/)('/')
             PsiElement(integer)('1')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

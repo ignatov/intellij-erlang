@@ -17,7 +17,7 @@ ERL_FILE
           PsiElement(atom)('name')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

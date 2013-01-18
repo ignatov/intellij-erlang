@@ -20,13 +20,10 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
-import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
-
-import static org.intellij.erlang.ErlangTypes.ERL_DOT;
 
 /**
  * @author ignatov
@@ -53,18 +50,12 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
 
   @Override
   public void delete() throws IncorrectOperationException { // todo: move to more appropriate place
-    if (!(this instanceof ErlangFunction)
-      && !(this instanceof ErlangRecordDefinition)
-      && !(this instanceof ErlangMacrosDefinition)
-      && !(this instanceof ErlangTypeDefinition)
+    if (this instanceof ErlangFunction
+      || this instanceof ErlangRecordDefinition
+      || this instanceof ErlangMacrosDefinition
+      || this instanceof ErlangTypeDefinition
       ) {
-      return;
+      super.delete();
     }
-
-    PsiElement nextSibling = getNextSibling();
-    if (nextSibling instanceof LeafPsiElement && nextSibling.getNode().getElementType() == ERL_DOT) {
-      nextSibling.delete();
-    }
-    super.delete();
   }
 }

@@ -4,4 +4,4 @@
 
 
 %% function comment
-<fold text='foo/0 -> ...'>foo() -> ok</fold>.
+<fold text='foo/0 -> ...'>foo() -> ok.</fold>

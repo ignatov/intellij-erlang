@@ -7,7 +7,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('foo')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -71,7 +71,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           PsiElement(char)('$9')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -166,4 +166,4 @@ ERL_FILE
                     PsiElement(var)('Acc')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

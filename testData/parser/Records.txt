@@ -10,7 +10,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('mnesia_backup')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_INCLUDE
     PsiElement(-)('-')
     PsiElement(atom)('include_lib')
@@ -18,7 +18,7 @@ ERL_FILE
     ERL_INCLUDE_STRING
       PsiElement(string)('"kernel/include/file.hrl"')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_EXPORT
@@ -71,7 +71,7 @@ ERL_FILE
           PsiElement(integer)('1')
         PsiElement(])(']')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Backup callback interface')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
@@ -95,7 +95,7 @@ ERL_FILE
           PsiElement(atom)('file_desc')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Opens backup media for write\n%%\n%% Returns {ok, OpaqueData} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -321,7 +321,7 @@ ERL_FILE
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Writes BackupItems to the backup media\n%%\n%% Returns {ok, OpaqueData} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -434,7 +434,7 @@ ERL_FILE
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Closes the backup media after a successful backup\n%%\n%% Returns {ok, ReturnValueToUser} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -670,7 +670,7 @@ ERL_FILE
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Closes the backup media after an interrupted backup\n%%\n%% Returns {ok, ReturnValueToUser} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -797,7 +797,7 @@ ERL_FILE
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Restore callback interface')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
@@ -821,7 +821,7 @@ ERL_FILE
           PsiElement(atom)('cont')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -875,7 +875,7 @@ ERL_FILE
               PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -929,7 +929,7 @@ ERL_FILE
               PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -959,7 +959,7 @@ ERL_FILE
               PsiElement(])(']')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -1084,7 +1084,7 @@ ERL_FILE
               PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -1198,7 +1198,7 @@ ERL_FILE
               PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -1275,7 +1275,7 @@ ERL_FILE
               PsiElement(])(']')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -1312,7 +1312,7 @@ ERL_FILE
               PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -1362,7 +1362,7 @@ ERL_FILE
               PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Opens backup media for read\n%%\n%% Returns {ok, OpaqueData} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -1725,7 +1725,7 @@ ERL_FILE
                           PsiElement(})('}')
                   PsiElement(end)('end')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Reads BackupItems from the backup media\n%%\n%% Returns {ok, OpaqueData, BackupItems} or {error, Reason}\n%%\n%% BackupItems == [] is interpreted as eof')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -1985,7 +1985,7 @@ ERL_FILE
                       PsiElement(var)('BackupItems')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Closes the backup media after restore\n%%\n%% Returns {ok, ReturnValueToUser} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -2088,5 +2088,5 @@ ERL_FILE
                       PsiElement(var)('Reason')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(ERL_LINE_COMMENT)('%0')

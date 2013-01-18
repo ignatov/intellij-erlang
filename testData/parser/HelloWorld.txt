@@ -7,7 +7,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('test')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_EXPORT
@@ -34,7 +34,7 @@ ERL_FILE
           PsiElement(integer)('1')
         PsiElement(])(']')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -89,7 +89,7 @@ ERL_FILE
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
           PsiElement(])(']')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -112,7 +112,7 @@ ERL_FILE
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"hello, world"')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -135,7 +135,7 @@ ERL_FILE
               ERL_MAX_EXPRESSION
                 PsiElement(string)('"hello, world"')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(ERL_LINE_COMMENT)('%-type eval() :: 'pos' | 'neg' | 'dont_know'.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -157,4 +157,4 @@ ERL_FILE
           PsiElement(+)('+')
           ERL_MAX_EXPRESSION
             PsiElement(integer)('2')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

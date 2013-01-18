@@ -23,6 +23,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.containers.ContainerUtil;
@@ -194,12 +195,34 @@ public class ErlangFormattingBlock implements ASTBlock {
   @NotNull
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
-    Indent childIndent = Indent.getNoneIndent();
-    IElementType type = myNode.getElementType();
-    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_IF_EXPRESSION) {
-      childIndent = Indent.getNormalIndent(true);
+    Indent childIndent = null;
+//    Indent childIndent = getChildIndent(myNode.getElementType());
+//    
+//    if (childIndent != null) {
+//      return new ChildAttributes(childIndent, null);
+//    }
+
+    if (newChildIndex > 0) {
+      Block block = getSubBlocks().get(newChildIndex - 1);
+      while (block instanceof ErlangFormattingBlock && !block.getSubBlocks().isEmpty()) {
+        List<Block> subBlocks = block.getSubBlocks();
+        Block childBlock = subBlocks.get(subBlocks.size() - 1);
+        if (!(childBlock instanceof ErlangFormattingBlock) || ((ErlangFormattingBlock) childBlock).getNode().getPsi() instanceof LeafPsiElement) break;
+        block = childBlock;
+      }
+      IElementType type = block instanceof ErlangFormattingBlock ? ((ErlangFormattingBlock) block).getNode().getElementType() : null;
+      childIndent = getChildIndent(type);
     }
-    return new ChildAttributes(childIndent, null);
+    
+    return new ChildAttributes(childIndent == null ? Indent.getNoneIndent() : childIndent, null);
+  }
+
+  @Nullable
+  private static Indent getChildIndent(@Nullable IElementType type) {
+    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_IF_EXPRESSION) {
+      return Indent.getNormalIndent(true);
+    }
+    return null;
   }
 
   @Override

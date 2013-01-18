@@ -26,4 +26,4 @@ ERL_FILE
                 ERL_Q_ATOM
                   PsiElement(atom)('slow_media')
             PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

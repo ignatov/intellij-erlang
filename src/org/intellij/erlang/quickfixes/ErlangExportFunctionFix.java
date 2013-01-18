@@ -73,7 +73,6 @@ public class ErlangExportFunctionFix extends ErlangQuickFixBase {
 
       if (elementBefore != null) {
         containingFile.addBefore(ErlangElementFactory.createExportFromText(project, exportText), elementBefore);
-        containingFile.addBefore(ErlangElementFactory.createLeafFromText(project, "."), elementBefore);
         containingFile.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
       }
     }

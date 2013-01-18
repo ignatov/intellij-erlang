@@ -10,7 +10,7 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           PsiElement(string)('"<html xmlns=\"xhtml\">\n  </html>\n\t"')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -22,4 +22,4 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           PsiElement(string)('"\\\\"')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

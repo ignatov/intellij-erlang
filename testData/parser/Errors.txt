@@ -7,7 +7,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('errors')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_EXPORT
@@ -17,7 +17,7 @@ ERL_FILE
         PsiElement([)('[')
         PsiElement(])(']')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -114,4 +114,4 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('da')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

@@ -79,4 +79,4 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('true')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

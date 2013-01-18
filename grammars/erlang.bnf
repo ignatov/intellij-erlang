@@ -112,7 +112,10 @@
   extends("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
-forms ::= form ('.' form)* {pin=1}
+forms ::= form_with_period *
+private form_with_period ::= form period {recoverUntil=form_recover pin=1}
+private left period ::= '.'
+private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom | bnot | char | float | integer | not | string | var)
 private form ::=
     (is_app_config config_expression)
   | function
@@ -122,11 +125,9 @@ private form ::=
   | macros_definition
   | type_definition
   | attribute
-  | generic_function_call_expression // macros support
-  {recoverUntil=recoverer}
+  | macros_call // macros support
 
-private external is_app_config ::= isApplicationLanguage
-external eof ::= eofBuilder
+private is_app_config ::= &<<isApplicationLanguage>>
 
 q_atom ::= macros_arg | macros | atom
 q_var ::= '_' | var {
@@ -139,7 +140,6 @@ macros ::= '?' macros_name {
 }
 macros_name ::= atom | var
 
-private recoverer ::= !is_app_config !('.' &('-' | q_atom ('(' | ':') | eof)) // todo: complicated guard
 private tuple_recoverer ::= !('}'|',')
 
 record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
@@ -411,6 +411,7 @@ function_call_expression ::= q_atom argument_list {
   pin=0
   methods = [getReference getNameIdentifier getTextOffset]
 }
+macros_call ::= generic_function_call_expression
 generic_function_call_expression ::= (q_atom_or_var ':')? (q_atom_or_var | macros) argument_list {pin=0}
 private q_atom_or_var ::= q_atom | q_var
 

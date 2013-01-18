@@ -11,7 +11,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('EUNIT_HRL')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -24,7 +24,7 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('true')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% allow defining TEST to override NOTEST')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -37,7 +37,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('TEST')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -49,13 +49,13 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOTEST')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% allow defining DEBUG to override NODEBUG')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -68,7 +68,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('DEBUG')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -80,13 +80,13 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NODEBUG')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% allow NODEBUG to imply NOASSERT, unless overridden below')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -99,7 +99,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NODEBUG')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -111,7 +111,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -124,19 +124,19 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('true')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% note that the main switch used within this file is NOTEST; however,\n%% both TEST and EUNIT may be used to check whether testing is enabled')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -149,7 +149,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOTEST')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -161,7 +161,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(ERL_LINE_COMMENT)('% testing requires that assertions are enabled')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -174,7 +174,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('TEST')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -187,13 +187,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('true')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -205,7 +205,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('EUNIT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -218,19 +218,19 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('true')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -242,13 +242,13 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('EUNIT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% allow ASSERT to override NOASSERT (regardless of TEST/NOTEST)')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -261,7 +261,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('ASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -273,13 +273,13 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Parse transforms for automatic exporting/stripping of test functions.\n%% (Note that although automatic stripping is convenient, it will make\n%% the code dependent on this header file and the eunit_striptests\n%% module for compilation, even when testing is switched off! Using\n%% -ifdef(EUNIT) around all test code makes the program more portable.)')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -292,7 +292,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('EUNIT_NOAUTO')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -304,7 +304,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOTEST')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -323,13 +323,13 @@ ERL_FILE
               PsiElement(atom)('eunit_autoexport')
           PsiElement(})('}')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -348,19 +348,19 @@ ERL_FILE
               PsiElement(atom)('eunit_striptests')
           PsiElement(})('}')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% All macros should be available even if testing is turned off, and\n%% should preferably not require EUnit to be present at runtime.\n%%\n%% We must use fun-call wrappers ((fun () -> ... end)()) to avoid\n%% exporting local variables, and furthermore we only use variable names\n%% prefixed with "__", that hopefully will not be bound outside the fun.\n\n%% A generic let-macro is particularly useful when writing test cases.\n%% It is more compact than 'begin X = Y, Z end', and guarantees that\n%% X gets a new, local binding.\n%% (Note that lowercase 'let' is a reserved word.)')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -373,7 +373,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('LET')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -433,13 +433,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% It is important that testing code is short and readable.\n%% An if-then-else macro can make some code much more compact.\n%% Compare:  case f(X) of true->g(X); false->h(X) end\n%%     and:  ?IF(f(X), g(Y), h(Z))')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -452,7 +452,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('IF')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -520,13 +520,13 @@ ERL_FILE
           PsiElement(end)('end')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% This macro yields 'true' if the value of E matches the guarded\n%% pattern G, otherwise 'false'.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -539,7 +539,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('MATCHES')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -596,13 +596,13 @@ ERL_FILE
           PsiElement(end)('end')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% This macro can be used at any time to check whether or not the code\n%% is currently running directly under eunit. Note that it does not work\n%% in secondary processes if they have been assigned a new group leader.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -615,7 +615,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('UNDER_EUNIT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -685,13 +685,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -703,7 +703,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% The plain assert macro should be defined to do nothing if this file\n%% is included when debugging/testing is turned off.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -716,7 +716,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('assert')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -736,19 +736,19 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% The assert macro is written the way it is so as not to cause warnings\n%% for clauses that cannot match, even if the expression is a constant.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -761,7 +761,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('assert')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -948,13 +948,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -988,7 +988,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1031,7 +1031,7 @@ ERL_FILE
           PsiElement(end)('end')
         PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1069,7 +1069,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1103,7 +1103,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% This is mostly a convenience which gives more detailed reports.\n%% Note: Guard is a guarded pattern, and can not be used for value.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -1116,7 +1116,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1141,13 +1141,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1313,13 +1313,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1366,7 +1366,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% This is the inverse case of assertMatch, for convenience.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -1379,7 +1379,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1404,13 +1404,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1585,13 +1585,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1638,7 +1638,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% This is a convenience macro which gives more detailed reports when\n%% the expected LHS value is not a pattern, but a computed value')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -1651,7 +1651,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1676,13 +1676,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1848,13 +1848,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1901,7 +1901,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% This is the inverse case of assertEqual, for convenience.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -1914,7 +1914,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1939,13 +1939,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2100,13 +2100,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2153,7 +2153,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Note: Class and Term are patterns, and can not be used for value.\n%% Term can be a guarded pattern, but Class cannot.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -2166,7 +2166,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2196,13 +2196,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2556,13 +2556,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2604,7 +2604,7 @@ ERL_FILE
               PsiElement(var)('Expr')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2646,7 +2646,7 @@ ERL_FILE
               PsiElement(var)('Expr')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2688,7 +2688,7 @@ ERL_FILE
               PsiElement(var)('Expr')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2744,7 +2744,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2786,7 +2786,7 @@ ERL_FILE
               PsiElement(var)('Expr')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2828,7 +2828,7 @@ ERL_FILE
               PsiElement(var)('Expr')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2870,7 +2870,7 @@ ERL_FILE
               PsiElement(var)('Expr')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% This is the inverse case of assertException, for convenience.\n%% Note: Class and Term are patterns, and can not be used for value.\n%% Both Class and Term can be guarded patterns.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -2883,7 +2883,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -2913,13 +2913,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3193,13 +3193,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3255,7 +3255,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Macros for running operating system commands. (Note that these\n%% require EUnit to be present at runtime, or at least eunit_lib.)\n\n%% these can be used for simply running commands in a controlled way')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
@@ -3290,7 +3290,7 @@ ERL_FILE
               PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3471,7 +3471,7 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3518,7 +3518,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3550,7 +3550,7 @@ ERL_FILE
               PsiElement(var)('Cmd')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3588,7 +3588,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% these are only used for testing; they always return 'ok' on success,\n%% and have no effect if debugging/testing is turned off')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -3601,7 +3601,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3626,13 +3626,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3813,13 +3813,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3851,7 +3851,7 @@ ERL_FILE
               PsiElement(var)('Cmd')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -3863,7 +3863,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3888,13 +3888,13 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4075,13 +4075,13 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4128,7 +4128,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4166,7 +4166,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4213,7 +4213,7 @@ ERL_FILE
               PsiElement())(')')
           PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Macros to simplify debugging (in particular, they work even when the\n%% standard output is being redirected by EUnit while running tests)')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -4226,7 +4226,7 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('NODEBUG')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4246,7 +4246,7 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4259,7 +4259,7 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4284,7 +4284,7 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4307,7 +4307,7 @@ ERL_FILE
             PsiElement(var)('E')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4335,13 +4335,13 @@ ERL_FILE
             PsiElement(var)('E')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('else')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4418,7 +4418,7 @@ ERL_FILE
           PsiElement(end)('end')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4442,7 +4442,7 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4500,7 +4500,7 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4584,7 +4584,7 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -4727,17 +4727,17 @@ ERL_FILE
             PsiElement())(')')
         PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(ERL_LINE_COMMENT)('% EUNIT_HRL')

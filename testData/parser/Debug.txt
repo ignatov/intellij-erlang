@@ -1,0 +1,57 @@
+ERL_FILE
+  PsiComment(function_doc_comment)('%% Copyright')
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_ATOM_ATTRIBUTE
+      ERL_Q_ATOM
+        PsiElement(atom)('author')
+      ERL_ATTR_VAL
+        PsiElement(()('(')
+        ERL_MAX_EXPRESSION
+          PsiElement(string)('"ignatov"')
+        PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('ok')
+    PsiElement(.)('.')
+  PsiErrorElement:<q atom> expected, got ''
+    PsiElement(BAD_CHARACTER)('')
+  PsiComment(function_doc_comment)('%% API')
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_EXPORT
+      PsiElement(atom)('export')
+      PsiElement(()('(')
+      ERL_EXPORT_FUNCTIONS
+        PsiElement([)('[')
+        PsiElement(])(']')
+      PsiElement())(')')
+    PsiElement(.)('.')
+  PsiErrorElement:'' unexpected
+    PsiElement(BAD_CHARACTER)('')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_MAX_EXPRESSION
+            PsiElement(integer)('0')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('ok')
+    PsiElement(.)('.')

@@ -5,8 +5,10 @@ ERL_FILE
       PsiElement(atom)('module')
       PsiElement(()('(')
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        PsiElement(atom)('m')
       PsiElement())(')')
     PsiElement(.)('.')
   PsiErrorElement:'.' unexpected
     PsiElement(.)('.')
+  PsiElement(.)('.')
+  PsiElement(.)('.')

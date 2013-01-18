@@ -77,7 +77,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           PsiElement(string)('""')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -101,7 +101,7 @@ ERL_FILE
           PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -136,4 +136,4 @@ ERL_FILE
           PsiElement(atom)('alt')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

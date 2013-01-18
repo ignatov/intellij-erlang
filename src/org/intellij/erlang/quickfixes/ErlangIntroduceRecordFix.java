@@ -46,7 +46,6 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
 
         if (elementBefore != null) {
           file.addBefore(record, elementBefore);
-          file.addBefore(ErlangElementFactory.createLeafFromText(project, "."), elementBefore);
           String newLines = elementBefore instanceof ErlangRecordDefinition ? "\n" : "\n\n";
           file.addBefore(ErlangElementFactory.createLeafFromText(project, newLines), elementBefore);
         }

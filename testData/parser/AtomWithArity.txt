@@ -21,4 +21,4 @@ ERL_FILE
             PsiElement(integer)('0')
           PsiElement(])(']')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

@@ -271,7 +271,7 @@ ERL_FILE
               PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Exported Types')
   ERL_TYPE_DEFINITION
     PsiElement(-)('-')
@@ -291,7 +291,7 @@ ERL_FILE
               PsiElement(atom)('state')
           PsiElement({)('{')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -342,7 +342,7 @@ ERL_FILE
           PsiElement(atom)('orig')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -379,30 +379,32 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('ok')
     PsiElement())(')')
-  PsiElement(.)('.')
-  ERL_GENERIC_FUNCTION_CALL_EXPRESSION
-    ERL_Q_ATOM
-      ERL_MACROS
-        PsiElement(?)('?')
-        ERL_MACROS_NAME
-          PsiElement(var)('CHECK')
-    ERL_ARGUMENT_LIST
-      PsiElement(()('(')
-      ERL_MAX_EXPRESSION
-        ERL_Q_ATOM
-          PsiElement(atom)('h264_aac_1_flv_test')
-      PsiElement())(')')
-  PsiElement(.)('.')
-  ERL_GENERIC_FUNCTION_CALL_EXPRESSION
-    ERL_Q_ATOM
-      ERL_MACROS
-        PsiElement(?)('?')
-        ERL_MACROS_NAME
-          PsiElement(var)('CHECK')
-    ERL_ARGUMENT_LIST
-      PsiElement(()('(')
-      ERL_MAX_EXPRESSION
-        ERL_Q_ATOM
-          PsiElement(atom)('h264_aac_1_flv_test_2')
-      PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
+  ERL_MACROS_CALL
+    ERL_GENERIC_FUNCTION_CALL_EXPRESSION
+      ERL_Q_ATOM
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            PsiElement(var)('CHECK')
+      ERL_ARGUMENT_LIST
+        PsiElement(()('(')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('h264_aac_1_flv_test')
+        PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_MACROS_CALL
+    ERL_GENERIC_FUNCTION_CALL_EXPRESSION
+      ERL_Q_ATOM
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            PsiElement(var)('CHECK')
+      ERL_ARGUMENT_LIST
+        PsiElement(()('(')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('h264_aac_1_flv_test_2')
+        PsiElement())(')')
+    PsiElement(.)('.')

@@ -8,7 +8,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('mnesia')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(ERL_LINE_COMMENT)('%-behaviour(mnesia_access).')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -1060,7 +1060,7 @@ ERL_FILE
         PsiComment(ERL_LINE_COMMENT)('% Not for public use')
         PsiElement(])(']')
       PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
   ERL_INCLUDE
     PsiElement(-)('-')
@@ -1069,7 +1069,7 @@ ERL_FILE
     ERL_INCLUDE_STRING
       PsiElement(string)('"mnesia.hrl"')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -1090,7 +1090,7 @@ ERL_FILE
             PsiElement(integer)('2')
           PsiElement(])(']')
         PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1106,7 +1106,7 @@ ERL_FILE
             ERL_MACROS_NAME
               PsiElement(var)('MODULE')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Select ')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
@@ -1144,7 +1144,7 @@ ERL_FILE
           PsiElement(})('}')
         PsiElement(])(']')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1181,7 +1181,7 @@ ERL_FILE
           PsiElement(})('}')
         PsiElement(])(']')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Local function in order to avoid external function call')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -1256,7 +1256,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Value')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1318,7 +1318,7 @@ ERL_FILE
                   ERL_Q_ATOM
                     PsiElement(atom)('false')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1399,7 +1399,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('true')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1600,7 +1600,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('false')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1698,7 +1698,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Other')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Start and stop')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -1887,7 +1887,7 @@ ERL_FILE
                       PsiElement(var)('R')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1992,7 +1992,7 @@ ERL_FILE
                 PsiElement(var)('ExtraEnv')
             PsiElement(})('}')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2154,7 +2154,7 @@ ERL_FILE
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2235,7 +2235,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Other')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2433,7 +2433,7 @@ ERL_FILE
                 PsiElement(var)('BadKey')
             PsiElement(})('}')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Debugging')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -2462,7 +2462,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Level')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2483,7 +2483,7 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2515,7 +2515,7 @@ ERL_FILE
                 PsiElement([)('[')
                 PsiElement(])(']')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2640,7 +2640,7 @@ ERL_FILE
             ERL_Q_ATOM
               PsiElement(atom)('mnesia_event')
           PsiElement(])(']')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Activity mgt')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -2670,7 +2670,7 @@ ERL_FILE
                         PsiElement(atom)('no_return')
                     PsiElement(()('(')
                     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2700,7 +2700,7 @@ ERL_FILE
                   PsiElement(var)('Reason')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2776,7 +2776,7 @@ ERL_FILE
                   ERL_Q_ATOM
                     PsiElement(atom)('false')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -2828,7 +2828,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('async')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3028,7 +3028,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('async')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3090,7 +3090,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('async')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3142,7 +3142,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('sync')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3342,7 +3342,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('sync')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3404,7 +3404,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('sync')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3707,7 +3707,7 @@ ERL_FILE
                 PsiElement(var)('Mod')
             PsiElement(})('}')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3857,7 +3857,7 @@ ERL_FILE
                 PsiElement(var)('Args')
             PsiElement(})('}')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3884,7 +3884,7 @@ ERL_FILE
               PsiElement([)('[')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3937,7 +3937,7 @@ ERL_FILE
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3964,7 +3964,7 @@ ERL_FILE
               PsiElement([)('[')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4017,7 +4017,7 @@ ERL_FILE
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4044,7 +4044,7 @@ ERL_FILE
               PsiElement([)('[')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4097,7 +4097,7 @@ ERL_FILE
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4133,7 +4133,7 @@ ERL_FILE
               PsiElement([)('[')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4245,7 +4245,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Mod')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4582,7 +4582,7 @@ ERL_FILE
                     PsiElement(})('}')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -4689,7 +4689,7 @@ ERL_FILE
                         PsiElement(var)('BadRes')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Access within an activity - lock acquisition\n\n%% Grab a lock on an item in the global lock table\n%% Item may be any term. Lock may be write or read.\n%% write lock is set on all the given nodes\n%% read lock is only set on the first node\n%% Nodes may either be a list of nodes or one node as an atom\n%% Mnesia on all Nodes must be connected to each other, but\n%% it is not neccessary that they are up and running.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -4825,7 +4825,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -5044,7 +5044,7 @@ ERL_FILE
                   PsiElement([)('[')
                   PsiElement(])(']')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Grab a read lock on a whole table')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -5083,7 +5083,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('ok')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Grab a write lock on a whole table')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -5122,7 +5122,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('ok')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -5387,7 +5387,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -5626,7 +5626,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -5868,7 +5868,7 @@ ERL_FILE
                   PsiElement(var)('Nodes')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -5926,7 +5926,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Recover')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Access within an activity - updates')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -6031,7 +6031,7 @@ ERL_FILE
                   PsiElement(var)('Val')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -6106,7 +6106,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('sticky_write')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -6254,7 +6254,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -6627,7 +6627,7 @@ ERL_FILE
                   PsiElement(var)('LockKind')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -6886,7 +6886,7 @@ ERL_FILE
                       PsiElement(})('}')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -6953,7 +6953,7 @@ ERL_FILE
                   PsiElement(var)('Oid')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -7020,7 +7020,7 @@ ERL_FILE
                   PsiElement(var)('Oid')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -7168,7 +7168,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -7527,7 +7527,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -7631,7 +7631,7 @@ ERL_FILE
                   PsiElement(var)('Val')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -7735,7 +7735,7 @@ ERL_FILE
                   PsiElement(var)('Val')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -7883,7 +7883,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -8085,7 +8085,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -8576,7 +8576,7 @@ ERL_FILE
                         PsiElement(var)('Val')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Access within an activity - read')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -8613,7 +8613,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('read')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -8680,7 +8680,7 @@ ERL_FILE
                   PsiElement(var)('Oid')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -8747,7 +8747,7 @@ ERL_FILE
                   PsiElement(var)('Oid')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -8895,7 +8895,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -9263,7 +9263,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -9385,7 +9385,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -9623,7 +9623,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -9745,7 +9745,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -9983,7 +9983,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -10118,7 +10118,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -10383,7 +10383,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -10518,7 +10518,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -10783,7 +10783,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Compensate for transaction written and/or deleted records')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -11677,7 +11677,7 @@ ERL_FILE
                             PsiElement(var)('Key')
                   PsiElement(end)('end')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -11876,7 +11876,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)(''$end_of_table'')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -12116,7 +12116,7 @@ ERL_FILE
                             PsiElement())(')')
                   PsiElement(end)('end')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -12324,7 +12324,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Keys')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -12601,7 +12601,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Acc')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%\n%% Iterators ')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -12647,7 +12647,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('read')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -12820,7 +12820,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -12960,7 +12960,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Tab')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -13855,7 +13855,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('NewStored')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -13900,7 +13900,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('read')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -14073,7 +14073,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -14262,7 +14262,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Tab')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -15157,7 +15157,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('NewStored')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -15346,7 +15346,7 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('Previous')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -15500,7 +15500,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Res')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -15634,7 +15634,7 @@ ERL_FILE
                         PsiElement(var)('Previous')
                     PsiElement())(')')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% This routine fixes up the return value from read/1 so that\n%% it is correct with respect to what this particular transaction\n%% has already written, deleted .... etc')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -15748,7 +15748,7 @@ ERL_FILE
                         PsiElement(var)('Written')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -15849,7 +15849,7 @@ ERL_FILE
                   PsiElement([)('[')
                   PsiElement(])(']')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -16124,7 +16124,7 @@ ERL_FILE
                       PsiElement(var)('Ack')
                   PsiElement())(')')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -16228,7 +16228,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -16376,7 +16376,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -16726,7 +16726,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -16808,7 +16808,7 @@ ERL_FILE
                   PsiElement(})('}')
                 PsiElement())(')')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -16966,7 +16966,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('GetWritten')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -17350,7 +17350,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('set')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% For ordered_set only !!')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -18086,7 +18086,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Objs')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% For select chunk')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -18172,7 +18172,7 @@ ERL_FILE
               PsiElement([)('[')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -18934,7 +18934,7 @@ ERL_FILE
                         PsiElement(var)('Acc')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% For ordered_set only !!')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -19611,7 +19611,7 @@ ERL_FILE
             PsiElement([)('[')
             PsiElement(])(']')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -19753,7 +19753,7 @@ ERL_FILE
                     PsiElement(var)('T')
                 PsiElement())(')')
           PsiElement(])(']')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%')
   PsiComment(ERL_LINE_COMMENT)('% select ')
   ERL_FUNCTION
@@ -19791,7 +19791,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('read')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -20013,7 +20013,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -20113,7 +20113,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('SelectFun')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -20459,7 +20459,7 @@ ERL_FILE
                         PsiElement(var)('Spec')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -20671,7 +20671,7 @@ ERL_FILE
                         PsiElement(var)('LockKind')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Breakable Select')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -20926,7 +20926,7 @@ ERL_FILE
                   PsiElement(var)('NObjects')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -21101,7 +21101,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Type')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -21152,7 +21152,7 @@ ERL_FILE
           PsiElement(atom)('orig')
       PsiElement(})('}')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -21669,7 +21669,7 @@ ERL_FILE
                         PsiElement(var)('Def')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -21791,7 +21791,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -22166,7 +22166,7 @@ ERL_FILE
                   PsiElement(var)('Cont')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -22402,7 +22402,7 @@ ERL_FILE
                         PsiElement(var)('Written')
                 PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -22475,7 +22475,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)(''$end_of_table'')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -22555,7 +22555,7 @@ ERL_FILE
                     PsiElement(var)('R')
                 PsiElement())(')')
           PsiElement(])(']')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -22685,7 +22685,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -22924,7 +22924,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -23042,7 +23042,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -23203,7 +23203,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -23623,7 +23623,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -23779,7 +23779,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24199,7 +24199,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Dirty access regardless of activities - updates')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -24300,7 +24300,7 @@ ERL_FILE
                   PsiElement(var)('Val')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24336,7 +24336,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Val')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24634,7 +24634,7 @@ ERL_FILE
                   PsiElement(var)('Val')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24697,7 +24697,7 @@ ERL_FILE
                   PsiElement(var)('Oid')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24733,7 +24733,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Key')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24862,7 +24862,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24962,7 +24962,7 @@ ERL_FILE
                   PsiElement(var)('Val')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -24998,7 +24998,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Val')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -25213,7 +25213,7 @@ ERL_FILE
                   PsiElement(var)('Val')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% A Counter is an Oid being {CounterTab, CounterName}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -25291,7 +25291,7 @@ ERL_FILE
                   PsiElement(var)('Counter')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -25336,7 +25336,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Incr')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -25565,7 +25565,7 @@ ERL_FILE
                   PsiElement(var)('Incr')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Dirty access regardless of activities - read')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -25629,7 +25629,7 @@ ERL_FILE
                   PsiElement(var)('Oid')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -25733,7 +25733,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -25833,7 +25833,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -25966,7 +25966,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -26089,7 +26089,7 @@ ERL_FILE
                         PsiElement(var)('PosList')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -26309,7 +26309,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -26428,7 +26428,7 @@ ERL_FILE
                   PsiElement(var)('Spec')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -26632,7 +26632,7 @@ ERL_FILE
                           PsiElement(var)('Spec')
                       PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -26962,7 +26962,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Spec')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -27036,7 +27036,7 @@ ERL_FILE
                   PsiElement(var)('NObjects')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -27160,7 +27160,7 @@ ERL_FILE
                   PsiElement(var)('Ms')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -27397,7 +27397,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -27511,7 +27511,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -27853,7 +27853,7 @@ ERL_FILE
                   PsiElement(var)('Pat')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -28036,7 +28036,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -28152,7 +28152,7 @@ ERL_FILE
                   PsiElement(var)('Slot')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -28240,7 +28240,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -28328,7 +28328,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -28430,7 +28430,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -28532,7 +28532,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -28608,7 +28608,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Args')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -29050,7 +29050,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Other')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Info\n\n%% Info about one table')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -29092,7 +29092,7 @@ ERL_FILE
                         PsiElement(atom)('any')
                     PsiElement(()('(')
                     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -29240,7 +29240,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -29282,7 +29282,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Item')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -29711,7 +29711,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -29924,7 +29924,7 @@ ERL_FILE
                         PsiElement(var)('Item')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -30037,7 +30037,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('Val')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -30116,7 +30116,7 @@ ERL_FILE
                   PsiElement(var)('Item')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Raw info about all tables')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -30138,7 +30138,7 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Raw info about one tables')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -30167,7 +30167,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Tab')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -30195,7 +30195,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Err')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -30646,7 +30646,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('ok')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -30878,7 +30878,7 @@ ERL_FILE
                       PsiElement(var)('Running')
                 PsiElement(])(']')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -31309,7 +31309,7 @@ ERL_FILE
                     PsiElement(var)('Unodes')
                 PsiElement(])(']')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -31925,7 +31925,7 @@ ERL_FILE
                         PsiElement(var)('Repl')
                     PsiElement())(')')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -32112,7 +32112,7 @@ ERL_FILE
                     PsiElement(])(']')
                   PsiElement(})('}')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -32176,7 +32176,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Other')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -33916,7 +33916,7 @@ ERL_FILE
                   PsiElement(var)('Item')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34203,7 +34203,7 @@ ERL_FILE
             ERL_Q_ATOM
               PsiElement(atom)('version')
           PsiElement(])(']')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34377,7 +34377,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('IsRunning')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34443,7 +34443,7 @@ ERL_FILE
                         PsiElement(var)('Reason')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Database mgt')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -34472,7 +34472,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Ns')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34500,7 +34500,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Ns')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34528,7 +34528,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Opaque')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34565,7 +34565,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Mod')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34620,7 +34620,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Acc')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34693,7 +34693,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('A')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34721,7 +34721,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Opaque')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34758,7 +34758,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Mod')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34779,7 +34779,7 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34807,7 +34807,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Args')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34835,7 +34835,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Args')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34863,7 +34863,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Name')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34900,7 +34900,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Opaque')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34946,7 +34946,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Mod')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -34983,7 +34983,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Args')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Table mgt')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -35012,7 +35012,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Arg')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35108,7 +35108,7 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('Arg')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35136,7 +35136,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Tab')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35182,7 +35182,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('S')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35219,7 +35219,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('N')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35265,7 +35265,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('To')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35302,7 +35302,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Ix')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35339,7 +35339,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Ix')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35448,7 +35448,7 @@ ERL_FILE
                           PsiElement(var)('OldRN')
                       PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35503,7 +35503,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('NewRN')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35549,7 +35549,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('S')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35751,7 +35751,7 @@ ERL_FILE
                         PsiElement(})('}')
                       PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -35881,7 +35881,7 @@ ERL_FILE
                         PsiElement(atom)('no_transaction')
                     PsiElement())(')')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36018,7 +36018,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('ok')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Table mgt - user properties')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -36058,7 +36058,7 @@ ERL_FILE
                   PsiElement(var)('PropKey')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36095,7 +36095,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Prop')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36132,7 +36132,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('PropKey')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Table mgt - user properties')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -36170,7 +36170,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('FragProp')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Table mgt - table load\n\n%% Dump a ram table to disc')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -36199,7 +36199,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Tabs')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% allow the user to wait for some tables to be loaded')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -36237,7 +36237,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Timeout')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36292,7 +36292,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Other')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36329,7 +36329,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Access')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36366,7 +36366,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('O')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36712,7 +36712,7 @@ ERL_FILE
                 PsiElement(var)('Nodes')
             PsiElement(})('}')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -36870,7 +36870,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('IsRunning')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -37443,7 +37443,7 @@ ERL_FILE
                 PsiElement(var)('Nodes')
             PsiElement(})('}')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Misc admin')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -37468,7 +37468,7 @@ ERL_FILE
                 ERL_Q_ATOM
                   PsiElement(atom)('user')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -37503,7 +37503,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('What')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -37538,7 +37538,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('What')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -37573,7 +37573,7 @@ ERL_FILE
                     PsiElement(var)('Event')
                 PsiElement(})('}')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Snmp')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -37611,7 +37611,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Us')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -37639,7 +37639,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Tab')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -38131,7 +38131,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(module_doc_comment)('%%%%%%%%%%%%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -38562,7 +38562,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -38738,7 +38738,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Keys')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -38846,7 +38846,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('endOfTable')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(module_doc_comment)('%%%%%%%%%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -39083,7 +39083,7 @@ ERL_FILE
                   PsiElement(var)('Tab')
               PsiElement(})('}')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -39205,7 +39205,7 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('MnesiaKey')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -39718,7 +39718,7 @@ ERL_FILE
                           PsiElement(end)('end')
                   PsiElement(end)('end')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Textfile access')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -39747,7 +39747,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('F')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -39775,7 +39775,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('F')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% QLC Handles\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -39803,7 +39803,7 @@ ERL_FILE
               PsiElement([)('[')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -40510,7 +40510,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('QlcOptions')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -40861,7 +40861,7 @@ ERL_FILE
                             PsiElement(atom)('ok')
                   PsiElement(end)('end')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -41006,7 +41006,7 @@ ERL_FILE
                             PsiElement(atom)('ok')
                   PsiElement(end)('end')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -41108,7 +41108,7 @@ ERL_FILE
                           PsiElement())(')')
                       PsiElement())(')')
             PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -41194,7 +41194,7 @@ ERL_FILE
               PsiElement([)('[')
               PsiElement(])(']')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -41387,7 +41387,7 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('Opts')
           PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -41714,7 +41714,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('undefined')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -42065,7 +42065,7 @@ ERL_FILE
                     PsiElement(var)('Keys')
                 PsiElement(])(']')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -42299,7 +42299,7 @@ ERL_FILE
                   ERL_Q_ATOM
                     PsiElement(atom)('ok')
           PsiElement(end)('end')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Mnemosyne exclusive')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -42319,7 +42319,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('mnesia_activity_state')
             PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -42347,7 +42347,7 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Activity')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -42384,4 +42384,4 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Fun')
               PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

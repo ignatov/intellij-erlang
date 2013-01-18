@@ -33,4 +33,4 @@ ERL_FILE
                     PsiElement(var)('A')
             PsiElement())(')')
     PsiElement())(')')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
