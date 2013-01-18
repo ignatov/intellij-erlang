@@ -50,11 +50,13 @@ final class RebarConfigurable implements SearchableConfigurable, Configurable.No
 
     if (StringUtils.isEmpty(myRebarSettings.getRebarPath())) {
       VirtualFile baseDir = project.getBaseDir();
-      VirtualFile rebar = baseDir.findChild("rebar");
-      if (rebar != null) {
-        String canonicalPath = rebar.getCanonicalPath();
-        if (canonicalPath != null) {
-          myRebarSettings.setRebarPath(canonicalPath);
+      if (baseDir != null) {
+        VirtualFile rebar = baseDir.findChild("rebar");
+        if (rebar != null) {
+          String canonicalPath = rebar.getCanonicalPath();
+          if (canonicalPath != null) {
+            myRebarSettings.setRebarPath(canonicalPath);
+          }
         }
       }
     }
