@@ -25,9 +25,9 @@ import java.util.regex.Pattern;
 
 final class SdkFunctionDocProvider extends AbstractSdkDocProvider {
   private static final Pattern PATTERN_FUNC_BEGIN = Pattern.compile(
-    "^    <p><a name=\"(.*?)\"></a><span class=\"bold_code\">.*?</span><br><div class=\"REFBODY\">$");
+    "<a name=\"(.*?)\"></a><span class=\"bold_code\">.*?</span><br>");
   private static final Pattern PATTERN_BIF_BEGIN = Pattern.compile(
-    "^    <p><a name=\"(.*?)\"><span class=\"bold_code\">.*?</span></a><br></p>$");
+    "<a name=\"(.*?)\"><span class=\"bold_code\">.*?</span></a><br>");
   private static final Pattern PATTERN_END_OF_DOC = Pattern.compile("^<div class=\"footer\">$");
 
   @NotNull private final String myFuncSignature;
@@ -41,19 +41,23 @@ final class SdkFunctionDocProvider extends AbstractSdkDocProvider {
   @Override
   public boolean isDocBegin(@NotNull String line) {
     Matcher matcher = PATTERN_FUNC_BEGIN.matcher(line);
-    if (matcher.matches() && matcher.group(1).equals(myFuncSignature)) {
-      return true;
+    while (matcher.find()) {
+      if (matcher.group(1).equals(myFuncSignature)) {
+        return true;
+      }
     }
     matcher = PATTERN_BIF_BEGIN.matcher(line);
-    if (matcher.matches() && matcher.group(1).equals(myFuncSignature)) {
-      return true;
+    while (matcher.find()) {
+      if (matcher.group(1).equals(myFuncSignature)) {
+        return true;
+      }
     }
     return false;
   }
 
   @Override
   public boolean isDocEnd(@NotNull String line) {
-    return PATTERN_FUNC_BEGIN.matcher(line).matches() || PATTERN_BIF_BEGIN.matcher(line).matches()
+    return PATTERN_FUNC_BEGIN.matcher(line).find() || PATTERN_BIF_BEGIN.matcher(line).find()
       || PATTERN_END_OF_DOC.matcher(line).matches();
   }
 }

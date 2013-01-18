@@ -115,6 +115,50 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
         "    lists:for<caret>each(foo, bar).\n");
   }
 
+  public void testGenerateDocSdkFunctionMulti() throws Exception {
+    doTestGenerateDoc(
+      "<html>\n" +
+        AbstractSdkDocProvider.HTTP_STYLE +
+        "<body>\n" +
+        "    <p><a name=\"seq-2\"></a><span class=\"bold_code\">seq(From, To) -&gt; Seq</span><br><a name=\"seq-3\"></a><span class=\"bold_code\">seq(From, To, Incr) -&gt; Seq</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">From = To = Incr = integer()</span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\"></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\"></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Seq = [integer()]</span></div>\n" +
+        "</div></p>\n" +
+        "<div class=\"REFBODY\"><p>\n" +
+        "        <p>Returns a sequence of integers which starts with <span class=\"code\">From</span>\n" +
+        "          and contains the successive results of adding <span class=\"code\">Incr</span> to\n" +
+        "          the previous element, until <span class=\"code\">To</span> has been reached or\n" +
+        "          passed (in the latter case, <span class=\"code\">To</span> is not an element of\n" +
+        "          the sequence). <span class=\"code\">Incr</span> defaults to 1.</p>\n" +
+        "        <p>Failure: If <span class=\"code\">To&lt;From-Incr</span> and <span class=\"code\">Incr</span>\n" +
+        "          is positive, or if <span class=\"code\">To&gt;From-Incr</span> and <span class=\"code\">Incr</span> is\n" +
+        "          negative, or if <span class=\"code\">Incr==0</span> and <span class=\"code\">From/=To</span>.</p>\n" +
+        "        <p>The following equalities hold for all sequences:</p>\n" +
+        "        <div class=\"example\"><pre>\n" +
+        "length(lists:seq(From, To)) == To-From+1\n" +
+        "length(lists:seq(From, To, Incr)) == (To-From+Incr) div Incr</pre></div>\n" +
+        "        <p>Examples:</p>\n" +
+        "        <div class=\"example\"><pre>\n" +
+        "&gt; <span class=\"bold_code\">lists:seq(1, 10).</span>\n" +
+        "[1,2,3,4,5,6,7,8,9,10]\n" +
+        "&gt; <span class=\"bold_code\">lists:seq(1, 20, 3).</span>\n" +
+        "[1,4,7,10,13,16,19]\n" +
+        "&gt; <span class=\"bold_code\">lists:seq(1, 0, 1).</span>\n" +
+        "[]\n" +
+        "&gt; <span class=\"bold_code\">lists:seq(10, 6, 4).</span>\n" +
+        "[]\n" +
+        "&gt; <span class=\"bold_code\">lists:seq(1, 1, 0).</span>\n" +
+        "[1]</pre></div>\n" +
+        "      </p></div>\n" +
+        "</body></html>\n",
+      "" +
+        "-module(test).\n" +
+        "test() ->\n" +
+        "    lists:s<caret>eq(foo, bar, blah).\n");
+  }
+
   public void testGenerateDocSdkLastFunction() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
