@@ -14,6 +14,22 @@
  * limitations under the License.
  */
 
+/*
+ * Copyright 2013 Sergey Ignatov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
@@ -74,9 +90,9 @@ public class ErlangIoFormatInspection extends ErlangBaseInspection {
                     int doubleCount = StringUtil.getOccurrenceCount(substring, "~~");
                     int newLineCount = StringUtil.getOccurrenceCount(substring, "~n");
                     int occurrenceCount = StringUtil.getOccurrenceCount(substring, "~");
-                    int count = occurrenceCount - doubleCount * 2 - newLineCount;
-                    if (count != ((ErlangListExpression) args).getExpressionList().size()) {
-                      problemsHolder.registerProblem(str, "Wrong number of arguments in format call, should be " + occurrenceCount);
+                    int totalCount = occurrenceCount - doubleCount * 2 - newLineCount;
+                    if (totalCount != ((ErlangListExpression) args).getExpressionList().size()) {
+                      problemsHolder.registerProblem(str, "Wrong number of arguments in format call, should be " + totalCount);
                     }
                   }
                   else {
