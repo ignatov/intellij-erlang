@@ -982,8 +982,27 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static ErlangSpecification getSpecification(@Nullable ErlangFunction erlangFunction) { // todo: use ref search
-    return PsiTreeUtil.getChildOfType(PsiTreeUtil.getPrevSiblingOfType(erlangFunction, ErlangAttribute.class), ErlangSpecification.class);
+  public static PsiComment getFunctionComment(@Nullable ErlangFunction function) { // todo: a little bit duplicate
+    if (function == null) return null;
+    PsiElement prevSibling = function.getPrevSibling();
+    while (!(prevSibling instanceof ErlangFunction) && !(prevSibling instanceof PsiComment) && prevSibling != null) {
+      prevSibling = prevSibling.getPrevSibling();
+    }
+    if (prevSibling instanceof PsiComment) return (PsiComment) prevSibling;
+
+    return null;
+  }
+
+  @Nullable
+  public static ErlangSpecification getSpecification(@Nullable ErlangFunction function) { // todo: use ref search
+    if (function == null) return null;
+    PsiElement prevSibling = function.getPrevSibling();
+    while (!(prevSibling instanceof ErlangFunction) && !(prevSibling instanceof ErlangAttribute) && prevSibling != null) {
+      prevSibling = prevSibling.getPrevSibling();
+    }
+    if (prevSibling instanceof ErlangFunction) return null;
+
+    return PsiTreeUtil.getChildOfType(prevSibling, ErlangSpecification.class);
   }
 
   public static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {

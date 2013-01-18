@@ -50,11 +50,14 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
 
   @Override
   public void delete() throws IncorrectOperationException { // todo: move to more appropriate place
-    if (this instanceof ErlangFunction
-      || this instanceof ErlangRecordDefinition
-      || this instanceof ErlangMacrosDefinition
-      || this instanceof ErlangTypeDefinition
-      ) {
+    if (this instanceof ErlangFunction) {
+      ErlangSpecification specification = ErlangPsiImplUtil.getSpecification((ErlangFunction) this);
+      if (specification != null) {
+        specification.getParent().delete();
+      }
+      super.delete();
+    }
+    else if (this instanceof ErlangRecordDefinition || this instanceof ErlangMacrosDefinition || this instanceof ErlangTypeDefinition || this instanceof ErlangAttribute) {
       super.delete();
     }
   }

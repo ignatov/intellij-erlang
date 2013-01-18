@@ -153,18 +153,17 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   }
 
   @Nullable
-  private static String generateFunctionDoc(@NotNull ErlangFunction erlangFunction) {
-    ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(erlangFunction, ErlangFunction.class);
-    ErlangSpecification spec = ErlangPsiImplUtil.getSpecification(erlangFunction);
-    PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(erlangFunction, PsiComment.class);
+  private static String generateFunctionDoc(@NotNull ErlangFunction function) {
+    ErlangSpecification spec = ErlangPsiImplUtil.getSpecification(function);
+    PsiComment comment = ErlangPsiImplUtil.getFunctionComment(function);
     String commentText = "";
-    if (spec != null && ErlangPsiImplUtil.notFromPreviousFunction(spec, prevFunction)) {
+    if (spec != null) {
       commentText += spec.getText().replaceFirst("spec", "<b>Specification:</b><br/>") + "<br/><br/>";
     }
-    if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT && ErlangPsiImplUtil.notFromPreviousFunction(comment, prevFunction)) {
+    if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT) {
       commentText += "<b>Comment:</b><br/>" + getCommentText(comment, "%%", EDOC_FUNCTION_TAGS);
     }
-    return commentText;
+    return !commentText.isEmpty() ? commentText : null;
   }
 
   @Nullable

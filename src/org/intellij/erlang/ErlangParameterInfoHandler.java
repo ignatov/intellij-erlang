@@ -168,9 +168,8 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
 
       PsiElement parent = ((ErlangFunctionClause) p).getParent();
       ErlangSpecification specification = parent instanceof ErlangFunction ? ErlangPsiImplUtil.getSpecification((ErlangFunction) parent) : null;
-      ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangFunction.class);
 
-      if (specification != null && ErlangPsiImplUtil.notFromPreviousFunction(specification, prevFunction)) {
+      if (specification != null) {
         specification.accept(new ErlangRecursiveVisitor() {
           @Override
           public void visitFunTypeArguments(@NotNull ErlangFunTypeArguments o) {
