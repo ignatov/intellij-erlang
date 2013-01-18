@@ -33,6 +33,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
   private JComboBox myComboModules;
   private JTextField myParamsField;
   private JTextField myModuleAndFunctionField;
+  private JCheckBox myStopErlangInterpreterCheckBox;
 
   @Override
   protected void resetEditorFrom(ErlangApplicationConfiguration configuration) {
@@ -47,6 +48,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
     myComboModules.setSelectedItem(configuration.getConfigurationModule().getModule());
     myComboModules.setRenderer(getListCellRendererWrapper());
     myParamsField.setText(configuration.getParams());
+    myStopErlangInterpreterCheckBox.setSelected(configuration.stopErlang());
     myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
   }
   
@@ -67,6 +69,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
     configuration.setModule(getSelectedModule());
     configuration.setParams(myParamsField.getText());
     configuration.setModuleAndFunction(myModuleAndFunctionField.getText());
+    configuration.setStopErlang(myStopErlangInterpreterCheckBox.isSelected());
   }
 
   private Module getSelectedModule() {

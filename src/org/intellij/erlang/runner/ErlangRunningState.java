@@ -72,6 +72,9 @@ public class ErlangRunningState extends CommandLineState {
     commandLine.addParameters("-run");
     commandLine.addParameters(StringUtil.split(myConfiguration.getModuleAndFunction(), " "));
     commandLine.addParameters(StringUtil.split(myConfiguration.getParams(), " "));
-    commandLine.addParameters("-s", "init", "stop", "-noshell");
+    commandLine.addParameters("-noshell");
+    if (myConfiguration.stopErlang()) {
+      commandLine.addParameters("-s", "init", "stop");
+    }
   }
 }

@@ -45,6 +45,7 @@ public class ErlangApplicationConfiguration extends ModuleBasedConfiguration<Erl
   implements RunConfigurationWithSuppressedDefaultRunAction {
   private String myParams = "";
   private String myModuleAndFunction = "";
+  private boolean myStopErlang = true;
 
   public ErlangApplicationConfiguration(Project project, String name, ConfigurationType configurationType) {
     super(name, new ErlangApplicationModuleBasedConfiguration(project), configurationType.getConfigurationFactories()[0]);
@@ -95,5 +96,13 @@ public class ErlangApplicationConfiguration extends ModuleBasedConfiguration<Erl
     super.readExternal(element);
     readModule(element);
     XmlSerializer.deserializeInto(this, element);
+  }
+
+  public boolean stopErlang() {
+    return myStopErlang;
+  }
+
+  public void setStopErlang(boolean stopErlang) {
+    myStopErlang = stopErlang;
   }
 }
