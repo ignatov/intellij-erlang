@@ -97,6 +97,7 @@
         <projectService serviceImplementation="org.intellij.erlang.rebar.settings.RebarSettings"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
         <programRunner implementation="org.intellij.erlang.rebar.runner.RebarRunner"/>
+      
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -210,6 +211,9 @@
         <localInspection language="Erlang" shortName="ErlangDuplicateFunction" displayName="Duplicate function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangDuplicateFunctionInspection"/>
+        <localInspection language="Erlang" shortName="ErlangIoFormat" displayName="io:format"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING" 
+                         implementationClass="org.intellij.erlang.inspection.ErlangIoFormatInspection"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
 

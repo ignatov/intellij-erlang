@@ -16,8 +16,15 @@
 
 package org.intellij.erlang.highlighting;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.inspection.*;
+import org.intellij.erlang.sdk.ErlangSdkType;
 
 public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestCase {
   protected void doTest() {
@@ -33,9 +40,33 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
       ErlangUnusedVariableInspection.class,
       ErlangUnusedFunctionInspection.class,
       ErlangDuplicateFunctionInspection.class,
-      ErlangIncorrectModuleNameInspection.class
+      ErlangIncorrectModuleNameInspection.class,
+      ErlangIoFormatInspection.class
     );
     myFixture.checkHighlighting(true, false, false);
+  }
+
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return new DefaultLightProjectDescriptor() {
+      @Override
+      public Sdk getSdk() {
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
+      }
+    };
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        Sdk sdk = getProjectDescriptor().getSdk();
+        ProjectJdkTable.getInstance().addJdk(sdk);
+        ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
+      }
+    });
   }
 
   @Override
@@ -71,6 +102,7 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void test154()               { doTest(); }
   public void test155()               { doTest(); }
   public void test158()               { doTest(); }
+  public void testIoFormat()          { doTest(); }
 
   public void testUnresolvedMacros()  {
     //noinspection unchecked
