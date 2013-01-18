@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Sergey Ignatov
+ * Copyright 2013 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,36 @@
 
 package org.intellij.erlang.documentation;
 
-import com.intellij.lang.documentation.AbstractDocumentationProvider;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.psi.ErlangModule;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
-public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
+final class ModuleDocProvider implements ElementDocProvider {
+  @NotNull private final ErlangModule myErlangModule;
+
+  public ModuleDocProvider(@NotNull ErlangModule erlangModule) {
+    myErlangModule = erlangModule;
+  }
 
   @Nullable
   @Override
-  public List<String> getUrlFor(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
-    final ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
-    if (elementDocProvider != null) {
-      return elementDocProvider.getExternalDocUrls();
-    }
+  public List<String> getExternalDocUrls() {
     return null;
   }
 
   @Nullable
   @Override
-  public String generateDoc(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
-    final ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
-    if (elementDocProvider != null) {
-      return elementDocProvider.getDocText();
+  public String getDocText() {
+    PsiElement parent = myErlangModule.getParent();
+    PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(parent, PsiComment.class);
+    if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
+      return ErlangDocUtil.getCommentText(comment, "%%%", ErlangDocUtil.EDOC_MODULE_TAGS);
     }
     return null;
   }
