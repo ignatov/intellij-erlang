@@ -27,7 +27,13 @@ final class SdkModuleDocProvider extends AbstractSdkDocProvider {
   private static final Pattern PATTERN_MODULE_END = Pattern.compile("^  <h3>EXPORTS</h3>$");
 
   public SdkModuleDocProvider(@NotNull Project project, @NotNull VirtualFile virtualFile) {
-    super(project, virtualFile, "");
+    super(project, virtualFile);
+  }
+
+  @NotNull
+  @Override
+  protected String getInDocRef() {
+    return "";
   }
 
   @Override
