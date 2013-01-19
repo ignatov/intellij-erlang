@@ -317,36 +317,35 @@ public class ErlangPsiImplUtil {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
       List<ErlangFunction> functions = new ArrayList<ErlangFunction>();
 
-      String moduleName = null;
+      List<LookupElement> lookupElements = ContainerUtil.newArrayList();
+
       if (colonQualifier != null) {
         ErlangExpression qAtom = ContainerUtil.getFirstItem(colonQualifier.getExpressionList());
         if (qAtom != null) {
-          moduleName = qAtom.getText();
+          String moduleName = qAtom.getText();
           functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
+
+          for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs(moduleName)) {
+            lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
+          }
         }
       }
       else {
         functions.addAll(((ErlangFile) containingFile).getFunctions());
+
+        if (!withArity) {
+          for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs("erlang")) {
+            lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.BIF_PRIORITY));
+          }
+        }
       }
 
-      List<LookupElement> lookupElements = ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
+      lookupElements.addAll(ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
         @Override
         public LookupElement fun(@NotNull final ErlangFunction function) {
           return createFunctionLookupElement(function, withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY);
         }
-      });
-
-      if (!withArity) {
-        for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs("erlang")) {
-          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.BIF_PRIORITY));
-        }
-      }
-
-      if (moduleName != null) {
-        for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs(moduleName)) {
-          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
-        }
-      }
+      }));
 
       return lookupElements;
     }
