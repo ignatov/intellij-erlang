@@ -19,7 +19,11 @@ package org.intellij.erlang.documentation;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SdkModificator;
+import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
@@ -250,7 +254,13 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
+        final Sdk mockSdk = ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
+        // Set local SDK documentation path
+        final SdkModificator sdkModificator = mockSdk.getSdkModificator();
+        final VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath("testData/mockSdk-R15B02/");
+        sdkModificator.addRoot(localDocDir, JavadocOrderRootType.getInstance());
+        sdkModificator.commitChanges();
+        return mockSdk;
       }
     };
   }

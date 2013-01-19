@@ -34,8 +34,14 @@ final class SdkFunctionDocProvider extends AbstractSdkDocProvider {
 
   public SdkFunctionDocProvider(@NotNull Project project, @NotNull String functionName, int functionArity,
                                 @NotNull VirtualFile virtualFile) {
-    super(project, virtualFile, "#" + functionName + "-" + functionArity);
+    super(project, virtualFile);
     myFuncSignature = functionName + "-" + functionArity;
+  }
+
+  @NotNull
+  @Override
+  protected String getInDocRef() {
+    return "#" + myFuncSignature;
   }
 
   @Override
