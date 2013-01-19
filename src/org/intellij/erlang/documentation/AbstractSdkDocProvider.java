@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -51,22 +52,34 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
     HTTP_STYLE = "<style type=\"text/css\">\n" + css + "</style>\n";
   }
 
-  @NotNull private final List<String> myExternalDocUrls;
+  @NotNull private final Project myProject;
+  @NotNull private final VirtualFile myVirtualFile;
+  @Nullable private List<OrderEntry> myOrderEntries;
+  @Nullable private List<String> myExternalDocUrls;
 
-  protected AbstractSdkDocProvider(@NotNull Project project, @NotNull VirtualFile virtualFile, @NotNull String inDocRef) {
-    myExternalDocUrls = getUrls(project, virtualFile, inDocRef);
+  protected AbstractSdkDocProvider(@NotNull Project project, @NotNull VirtualFile virtualFile) {
+    myProject = project;
+    myVirtualFile = virtualFile;
   }
 
   @NotNull
   @Override
   public List<String> getExternalDocUrls() {
+    if (myExternalDocUrls == null) {
+      myExternalDocUrls = getHttpUrls(getOrderEntries(), myVirtualFile, getInDocRef());
+    }
     return myExternalDocUrls;
   }
 
   @Nullable
   @Override
   public String getDocText() {
-    for (String urlString : myExternalDocUrls) {
+    final List<String> fileUrls = getFileUrls(getOrderEntries(), myVirtualFile);
+    final List<String> httpUrls = getExternalDocUrls();
+    final List<String> urls = new ArrayList<String>(fileUrls.size() + httpUrls.size());
+    urls.addAll(fileUrls);
+    urls.addAll(httpUrls);
+    for (String urlString : urls) {
       final BufferedReader reader = createReader(urlString);
       if (reader == null) {
         continue;
@@ -84,6 +97,15 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
       }
     }
     return null;
+  }
+
+  @NotNull
+  private List<OrderEntry> getOrderEntries() {
+    if (myOrderEntries == null) {
+      final ProjectFileIndex fileIndex = ProjectRootManager.getInstance(myProject).getFileIndex();
+      myOrderEntries = fileIndex.getOrderEntriesForFile(myVirtualFile);
+    }
+    return myOrderEntries;
   }
 
   @Nullable
@@ -116,23 +138,46 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
     return null;
   }
 
+  @NotNull
+  protected abstract String getInDocRef();
+
   protected abstract boolean isDocEnd(@NotNull String line);
 
   protected abstract boolean isDocBegin(@NotNull String line);
 
   @NotNull
-  private static List<String> getUrls(@NotNull Project project, @NotNull VirtualFile virtualFile, @NotNull String inDocRef) {
-    final ProjectFileIndex fileIndex = ProjectRootManager.getInstance(project).getFileIndex();
-    final List<OrderEntry> orderEntries = fileIndex.getOrderEntriesForFile(virtualFile);
+  private static List<String> getHttpUrls(@NotNull List<OrderEntry> orderEntries,
+                                          @NotNull VirtualFile virtualFile,
+                                          @NotNull String inDocRef) {
     for (OrderEntry orderEntry : orderEntries) {
       final String[] docRootUrls = JavadocOrderRootType.getUrls(orderEntry);
       final String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
-      final List<String> docUrls = PlatformDocumentationUtil.getHttpRoots(docRootUrls, sdkHttpDocRelPath + inDocRef);
-      if (docUrls != null) {
-        return docUrls;
+      final List<String> httpUrls = PlatformDocumentationUtil.getHttpRoots(
+        docRootUrls, sdkHttpDocRelPath + inDocRef);
+      if (httpUrls != null) {
+        return httpUrls;
       }
     }
     return Collections.emptyList();
+  }
+
+  @NotNull
+  private static List<String> getFileUrls(@NotNull List<OrderEntry> orderEntries,
+                                          @NotNull VirtualFile virtualFile) {
+    List<String> fileUrls = null;
+    for (OrderEntry orderEntry : orderEntries) {
+      final VirtualFile[] docRootFiles = orderEntry.getFiles(JavadocOrderRootType.getInstance());
+      final String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
+      for (VirtualFile docRootFile : docRootFiles) {
+        if (docRootFile.isInLocalFileSystem()) {
+          if (fileUrls == null) {
+            fileUrls = new ArrayList<String>();
+          }
+          fileUrls.add(docRootFile.getUrl() + "/" + sdkHttpDocRelPath);
+        }
+      }
+    }
+    return fileUrls != null ? fileUrls : Collections.<String>emptyList();
   }
 
   @Nullable
@@ -144,6 +189,9 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
       }
       if (url.getProtocol().equals("http")) {
         return createHttpReader(url);
+      }
+      else if (url.getProtocol().equals("file")) {
+        return createFileReader(url);
       }
     } catch (Exception e) { // Ignore
     }
@@ -175,6 +223,16 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
       ? new InputStreamReader(inputStream, contentEncoding)
       : new InputStreamReader(inputStream);
     return new BufferedReader(inputStreamReader);
+  }
+
+  @Nullable
+  private static BufferedReader createFileReader(@NotNull URL url) {
+    try {
+      final InputStreamReader stream = new InputStreamReader(url.openStream());
+      return new BufferedReader(stream);
+    } catch (IOException e) {
+      return null;
+    }
   }
 
   @NotNull
