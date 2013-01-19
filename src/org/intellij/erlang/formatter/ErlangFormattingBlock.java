@@ -28,8 +28,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
-import org.intellij.erlang.psi.ErlangFakeBinaryExpression;
-import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -195,19 +194,25 @@ public class ErlangFormattingBlock implements ASTBlock {
   @NotNull
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
-    Indent childIndent = null;
-//    Indent childIndent = getChildIndent(myNode.getElementType());
-//    
-//    if (childIndent != null) {
-//      return new ChildAttributes(childIndent, null);
-//    }
+    Indent childIndent = getChildIndent(myNode.getElementType());
+
+    if (childIndent != null) {
+      return new ChildAttributes(childIndent, null);
+    }
 
     if (newChildIndex > 0) {
       Block block = getSubBlocks().get(newChildIndex - 1);
       while (block instanceof ErlangFormattingBlock && !block.getSubBlocks().isEmpty()) {
         List<Block> subBlocks = block.getSubBlocks();
         Block childBlock = subBlocks.get(subBlocks.size() - 1);
-        if (!(childBlock instanceof ErlangFormattingBlock) || ((ErlangFormattingBlock) childBlock).getNode().getPsi() instanceof LeafPsiElement) break;
+        if (!(childBlock instanceof ErlangFormattingBlock)) break;
+        else {
+          ASTNode node = ((ErlangFormattingBlock) childBlock).getNode();
+          PsiElement psi = node.getPsi();
+          IElementType elementType = node.getElementType();
+          if (elementType instanceof ErlangTokenType) break;
+          if (psi instanceof LeafPsiElement || psi instanceof ErlangQAtom || psi instanceof ErlangQVar) break;
+        }
         block = childBlock;
       }
       IElementType type = block instanceof ErlangFormattingBlock ? ((ErlangFormattingBlock) block).getNode().getElementType() : null;
@@ -219,7 +224,10 @@ public class ErlangFormattingBlock implements ASTBlock {
 
   @Nullable
   private static Indent getChildIndent(@Nullable IElementType type) {
-    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_IF_EXPRESSION) {
+    if (BLOCKS_TOKEN_SET.contains(type)) {
+      return Indent.getNormalIndent(true);
+    }
+    if (type == ERL_IF_EXPRESSION || type == ERL_CASE_EXPRESSION) {
       return Indent.getNormalIndent(true);
     }
     return null;

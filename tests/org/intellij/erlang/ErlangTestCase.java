@@ -21,6 +21,7 @@ import junit.framework.TestSuite;
 import org.intellij.erlang.completion.ErlangCompletionTest;
 import org.intellij.erlang.documentation.ErlangDocumentationProviderTest;
 import org.intellij.erlang.folding.ErlangFoldingBuilderTest;
+import org.intellij.erlang.formatting.ErlangAutoIndentTest;
 import org.intellij.erlang.formatting.ErlangFormattingTest;
 import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
@@ -43,17 +44,16 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangAppParserTest.class);
     suite.addTestSuite(ErlangHighlightingTest.class);
     suite.addTestSuite(ErlangFormattingTest.class);
+    suite.addTestSuite(ErlangAutoIndentTest.class);
     suite.addTestSuite(ErlangCompletionTest.class);
     suite.addTestSuite(RebarProjectImportBuilderTest.class);
     suite.addTestSuite(FileReferenceFilterTest.class);
     suite.addTestSuite(ErlangDocumentationProviderTest.class);
     suite.addTestSuite(ErlangParameterInfoHandlerTest.class);
     suite.addTestSuite(ErlangFoldingBuilderTest.class);
-
     suite.addTestSuite(ErlangExportFunctionFixTest.class);
     suite.addTestSuite(ErlangExportTypeFixTest.class);
     suite.addTestSuite(ErlangHeadMismatchFixTest.class);
-
     return suite;
   }
 }
