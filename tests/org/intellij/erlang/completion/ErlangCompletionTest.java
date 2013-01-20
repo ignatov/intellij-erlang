@@ -19,6 +19,8 @@ package org.intellij.erlang.completion;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.testFramework.UsefulTestCase;
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase;
+import com.intellij.util.ArrayUtilRt;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,11 +74,7 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
       "-type foo() :: atom().\n" +
       "-type buz() :: string().\n" +
       "-record(rec, {id :: <caret>}).",
-      // todo: use constant instead of this list
-      "term", "boolean", "byte", "char",
-      "non_neg_integer", "pos_integer", "neg_integer", "number", "integer", "float",
-      "list", "any", "maybe_improper_list", "string", "char", "nonempty_string",
-      "iolist", "module", "atom", "mfa", "node", "timeout", "no_return", "none"
+      ArrayUtilRt.toStringArray(ErlangPsiImplUtil.BUILT_IN_TYPES)
     );
   }
 
@@ -88,8 +86,8 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
   }
 
   public void testTypesInTypeDeclaration() throws Throwable {
-      doTestInclude(
-        "-type foo() :: <caret>atom().\n" +
+    doTestInclude(
+      "-type foo() :: <caret>atom().\n" +
         "-type buz() :: string().\n" +
         "-type tes() :: <caret>)", "foo", "buz", "atom", "no_return");
   }
@@ -131,7 +129,7 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
     }
     else if (checkType == CheckType.EXCLUDES) {
       varList.retainAll(stringList);
-      assertTrue("Unexpected variants: "+varList, varList.isEmpty());
+      assertTrue("Unexpected variants: " + varList, varList.isEmpty());
     }
   }
 }
