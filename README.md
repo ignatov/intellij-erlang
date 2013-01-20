@@ -24,30 +24,6 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
-### Version 0.4
-* Rebar run configurations (thanks to Maxim Vladimirsky)
-* Rebar-based Eunit integration
-* Eunit integration improvements
-* Erlang types support: completion (includes built-in types), rename and find usages for user defined types, export type quick fix and intention
-* External **Shift + F1** and local **Ctrl + Q** documentation for OTP functions and modules (thanks to Maxim Vladimirsky)
-* Function parameter info context help **Ctrl + P**
-* Upgraded structure view (shows exported and inner functions)
-* Go to action for Erlang symbols: functions, records, types and macroses **Ctrl + Alt + Shift + N**
-* Improved BIFs completion (includes BIFs from standard modules, fox example **lists:member/2**
-* Special highlighting type for atoms and macroses (thanks to Sergey Evstifeev)
-* Format inspection (for io:format(), io:fwrite() and io_lib:format() functions calls)
-* Inplace rename (without popup dialog) for all entities
-* Head mismatch inspection and quick fix
-* Formatter improvements
-* Folding builder for functions
-* Custom Erlang spelling dictionary for well-known words
-* Support for **export_all** compile directive
-* Safe delete functions improvement
-* Export function and type intentions
-* Better Darcula support
-* Parser improvements, also includes support for Nitrogen web framework
-* Bugfixes
-
 ### Version 0.3.5
 * Extract variable refactoring
 * New compiler mode (thanks to Nikolay Chashnikov)
