@@ -5,3 +5,4 @@ The following people have made contributions (in no particular order):
 * Maxim Vladimirsky (github @horkhe)
 * Todd Greenwood-Geer (github @ToddG)
 * Sergey Evstifeev (github @sergeyevstifeev)
+* Nikolay Chashnikov
