@@ -1,6 +1,6 @@
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.3.5</version>
+    <version>0.4</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="123.1" until-build="123.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -11,6 +11,31 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.4</p>
+            <ul>
+              <li>Rebar run configurations (thanks to Maxim Vladimirsky)</li>
+              <li>Rebar-based Eunit integration</li>
+              <li>Eunit integration improvements</li>
+              <li>Erlang types support: completion (includes built-in types), rename and find usages for user defined types, export type quick fix and intention</li>
+              <li>External (Shift + F1) and local (Ctrl + Q) documentation for OTP functions and modules (thanks to Maxim Vladimirsky)</li>
+              <li>Function parameter info context help (Ctrl + P)</li>
+              <li>Upgraded structure view (shows exported and inner functions)</li>
+              <li>Go to action for Erlang symbols: functions, records, types and macroses (Ctrl + Alt + Shift + N)</li>
+              <li>Improved BIFs completion (includes BIFs from OTP modules), for example lists:member/2</li>
+              <li>Special highlighting type for atoms and macroses (thanks to Sergey Evstifeev)</li>
+              <li>Format inspection (for io:format(), io:fwrite() and io_lib:format() functions calls)</li>
+              <li>Inplace rename (without popup dialog) for all entities</li>
+              <li>Head mismatch inspection and quick fix</li>
+              <li>Formatter improvements</li>
+              <li>Folding builder for functions</li>
+              <li>Custom Erlang spelling dictionary for well-known words</li>
+              <li>Support for export_all compile directive</li>
+              <li>Safe delete functions improvement</li>
+              <li>Export function and type intentions</li>
+              <li>Better Darcula support</li>
+              <li>Parser improvements, also includes support for Nitrogen web framework</li>
+              <li>Bugfixes</li>
+            </ul>
             <p>0.3.5:</p>
             <ul>
               <li>Extract variable refactoring</li>
@@ -155,7 +180,6 @@
         <testFinder implementation="org.intellij.erlang.ErlangTestFinder"/>
         <configurationProducer implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer"/>
         <configurationType implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationType"/>
-
 
         <codeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangLanguageCodeStyleSettingsProvider"/>
