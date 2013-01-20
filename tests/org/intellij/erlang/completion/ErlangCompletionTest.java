@@ -29,7 +29,12 @@ import java.util.List;
  * @author ignatov
  */
 public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
-  enum CheckType { EQUALS, INCLUDES, EXCLUDES }
+  private enum CheckType { EQUALS, INCLUDES, EXCLUDES }
+
+  @Override
+  protected String getTestDataPath() {
+    return "testData/completion/";
+  }
 
   public void testKeywords1() throws Throwable { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() throws Throwable { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
@@ -95,6 +100,12 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
 
   public void testBifFromModules() throws Throwable {
     doTestInclude("foo() -> lists:<caret>", "member", "reverse", "keysearch");
+  }
+
+  public void testMultiModule() throws Throwable {
+    myFixture.configureByFiles("multi-module/a.erl");
+    myFixture.configureByFile("multi-module/b.erl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo"); // means "bar/1", "bar/0", "foo/1", "foo/0"
   }
 
   private void doTestInclude(String txt, String... variants) throws Throwable {
