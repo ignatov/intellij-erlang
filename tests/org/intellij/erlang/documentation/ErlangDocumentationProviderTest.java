@@ -248,6 +248,35 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
         "    lis<caret>ts:foreach(foo, bar).\n");
   }
 
+  public void testGenerateDocSdkType() throws Exception {
+    doTestGenerateDoc(
+      "<html>\n" +
+        AbstractSdkDocProvider.HTTP_STYLE +
+        "<body>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-file_info\">file_info()</a> = <br>    #file_info{size = undefined | integer() &gt;= 0,<br>               type = undefined<br>                     | device<br>                     | directory<br>                     | other<br>                     | regular<br>                     | symlink,<br>               access = undefined<br>                       | read<br>                       | write<br>                       | read_write<br>                       | none,<br>               atime = undefined | <span class=\"bold_code\"><a href=\"file.html#type-date_time\">file:date_time()</a></span> | integer(),<br>               mtime = undefined | <span class=\"bold_code\"><a href=\"file.html#type-date_time\">file:date_time()</a></span> | integer(),<br>               ctime = undefined | <span class=\"bold_code\"><a href=\"file.html#type-date_time\">file:date_time()</a></span> | integer(),<br>               mode = undefined | integer(),<br>               links = undefined | integer() &gt;= 0,<br>               major_device = undefined | integer(),<br>               minor_device = undefined | integer(),<br>               inode = undefined | integer(),<br>               uid = undefined | integer(),<br>               gid = undefined | integer()}</span><br></p>    <p>\n" +
+        "</body></html>\n",
+      "" +
+        "-module(test).\n" +
+        "-spec test(file:fil<caret>e_info()) -> ok." +
+        "test(_FileInfo) ->\n" +
+        "    ok.\n");
+  }
+
+  public void testGenerateDocSdkLastType() throws Exception {
+    doTestGenerateDoc(
+      "<html>\n" +
+        AbstractSdkDocProvider.HTTP_STYLE +
+        "<body>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-sendfile_option\">sendfile_option()</a> = {chunk_size, integer() &gt;= 0}</span><br></p>   \n" +
+        "\n" +
+        "</body></html>\n",
+      "" +
+        "-module(test).\n" +
+        "-spec test(file:send<caret>file_option()) -> ok." +
+        "test(_SendFileOption) ->\n" +
+        "    ok.\n");
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {

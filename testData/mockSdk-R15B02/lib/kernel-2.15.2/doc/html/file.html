@@ -1,0 +1,2743 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html xmlns:fn="http://www.w3.org/2005/02/xpath-functions">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../../../doc/otp_doc.css" type="text/css">
+<title>Erlang -- file</title>
+</head>
+<body bgcolor="white" text="#000000" link="#0000ff" vlink="#ff00ff" alink="#ff0000"><div id="container">
+<script id="js" type="text/javascript" language="JavaScript" src="../../../../doc/js/flipmenu/flipmenu.js"></script><script id="js2" type="text/javascript" src="../../../../doc/js/erlresolvelinks.js"></script><script language="JavaScript" type="text/javascript">
+            <!--
+              function getWinHeight() {
+                var myHeight = 0;
+                if( typeof( window.innerHeight ) == 'number' ) {
+                  //Non-IE
+                  myHeight = window.innerHeight;
+                } else if( document.documentElement && ( document.documentElement.clientWidth ||
+                                                         document.documentElement.clientHeight ) ) {
+                  //IE 6+ in 'standards compliant mode'
+                  myHeight = document.documentElement.clientHeight;
+                } else if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) {
+                  //IE 4 compatible
+                  myHeight = document.body.clientHeight;
+                }
+                return myHeight;
+              }
+
+              function setscrollpos() {
+                var objf=document.getElementById('loadscrollpos');
+                 document.getElementById("leftnav").scrollTop = objf.offsetTop - getWinHeight()/2;
+              }
+
+              function addEvent(obj, evType, fn){
+                if (obj.addEventListener){
+                obj.addEventListener(evType, fn, true);
+                return true;
+              } else if (obj.attachEvent){
+                var r = obj.attachEvent("on"+evType, fn);
+                return r;
+              } else {
+                return false;
+              }
+             }
+
+             addEvent(window, 'load', setscrollpos);
+
+             //--></script><div id="leftnav"><div class="innertube">
+<img alt="Erlang logo" src="../../../../doc/erlang-logo.png"><br><small><a href="index.html">Reference Manual</a><br><a href="release_notes.html">Release Notes</a><br><a href="../pdf/kernel-2.15.2.pdf">PDF</a><br><a href="../../../../doc/index.html">Top</a></small><p><strong>Kernel</strong><br><strong>Reference Manual</strong><br><small>Version 2.15.2</small></p>
+<br><a href="javascript:openAllFlips()">Expand All</a><br><a href="javascript:closeAllFlips()">Contract All</a><p><small><strong>Table of Contents</strong></small></p>
+<ul class="flipMenu">
+<li title="kernel (App)"><a href="kernel_app.html">kernel (App)
+                </a></li>
+<li id="no" title="application " expanded="false">application<ul>
+<li><a href="application.html">
+                  Top of manual page
+                </a></li>
+<li title="get_all_env-0"><a href="application.html#get_all_env-0">get_all_env/0</a></li>
+<li title="get_all_env-1"><a href="application.html#get_all_env-1">get_all_env/1</a></li>
+<li title="get_all_key-0"><a href="application.html#get_all_key-0">get_all_key/0</a></li>
+<li title="get_all_key-1"><a href="application.html#get_all_key-1">get_all_key/1</a></li>
+<li title="get_application-0"><a href="application.html#get_application-0">get_application/0</a></li>
+<li title="get_application-1"><a href="application.html#get_application-1">get_application/1</a></li>
+<li title="get_env-1"><a href="application.html#get_env-1">get_env/1</a></li>
+<li title="get_env-2"><a href="application.html#get_env-2">get_env/2</a></li>
+<li title="get_key-1"><a href="application.html#get_key-1">get_key/1</a></li>
+<li title="get_key-2"><a href="application.html#get_key-2">get_key/2</a></li>
+<li title="load-1"><a href="application.html#load-1">load/1</a></li>
+<li title="load-2"><a href="application.html#load-2">load/2</a></li>
+<li title="loaded_applications-0"><a href="application.html#loaded_applications-0">loaded_applications/0</a></li>
+<li title="permit-2"><a href="application.html#permit-2">permit/2</a></li>
+<li title="set_env-3"><a href="application.html#set_env-3">set_env/3</a></li>
+<li title="set_env-4"><a href="application.html#set_env-4">set_env/4</a></li>
+<li title="start-1"><a href="application.html#start-1">start/1</a></li>
+<li title="start-2"><a href="application.html#start-2">start/2</a></li>
+<li title="start_type-0"><a href="application.html#start_type-0">start_type/0</a></li>
+<li title="stop-1"><a href="application.html#stop-1">stop/1</a></li>
+<li title="takeover-2"><a href="application.html#takeover-2">takeover/2</a></li>
+<li title="unload-1"><a href="application.html#unload-1">unload/1</a></li>
+<li title="unset_env-2"><a href="application.html#unset_env-2">unset_env/2</a></li>
+<li title="unset_env-3"><a href="application.html#unset_env-3">unset_env/3</a></li>
+<li title="which_applications-0"><a href="application.html#which_applications-0">which_applications/0</a></li>
+<li title="which_applications-1"><a href="application.html#which_applications-1">which_applications/1</a></li>
+<li title="Module:start-2"><a href="application.html#Module:start-2">Module:start/2</a></li>
+<li title="Module:start_phase-3"><a href="application.html#Module:start_phase-3">Module:start_phase/3</a></li>
+<li title="Module:prep_stop-1"><a href="application.html#Module:prep_stop-1">Module:prep_stop/1</a></li>
+<li title="Module:stop-1"><a href="application.html#Module:stop-1">Module:stop/1</a></li>
+<li title="Module:config_change-3"><a href="application.html#Module:config_change-3">Module:config_change/3</a></li>
+</ul>
+</li>
+<li id="no" title="auth " expanded="false">auth<ul>
+<li><a href="auth.html">
+                  Top of manual page
+                </a></li>
+<li title="is_auth-1"><a href="auth.html#is_auth-1">is_auth/1</a></li>
+<li title="cookie-0"><a href="auth.html#cookie-0">cookie/0</a></li>
+<li title="cookie-1"><a href="auth.html#cookie-1">cookie/1</a></li>
+<li title="node_cookie-1"><a href="auth.html#node_cookie-1">node_cookie/1</a></li>
+<li title="node_cookie-2"><a href="auth.html#node_cookie-2">node_cookie/2</a></li>
+</ul>
+</li>
+<li id="no" title="code " expanded="false">code<ul>
+<li><a href="code.html">
+                  Top of manual page
+                </a></li>
+<li title="set_path-1"><a href="code.html#set_path-1">set_path/1</a></li>
+<li title="get_path-0"><a href="code.html#get_path-0">get_path/0</a></li>
+<li title="add_path-1"><a href="code.html#add_path-1">add_path/1</a></li>
+<li title="add_pathz-1"><a href="code.html#add_pathz-1">add_pathz/1</a></li>
+<li title="add_patha-1"><a href="code.html#add_patha-1">add_patha/1</a></li>
+<li title="add_paths-1"><a href="code.html#add_paths-1">add_paths/1</a></li>
+<li title="add_pathsz-1"><a href="code.html#add_pathsz-1">add_pathsz/1</a></li>
+<li title="add_pathsa-1"><a href="code.html#add_pathsa-1">add_pathsa/1</a></li>
+<li title="del_path-1"><a href="code.html#del_path-1">del_path/1</a></li>
+<li title="replace_path-2"><a href="code.html#replace_path-2">replace_path/2</a></li>
+<li title="load_file-1"><a href="code.html#load_file-1">load_file/1</a></li>
+<li title="load_abs-1"><a href="code.html#load_abs-1">load_abs/1</a></li>
+<li title="ensure_loaded-1"><a href="code.html#ensure_loaded-1">ensure_loaded/1</a></li>
+<li title="load_binary-3"><a href="code.html#load_binary-3">load_binary/3</a></li>
+<li title="delete-1"><a href="code.html#delete-1">delete/1</a></li>
+<li title="purge-1"><a href="code.html#purge-1">purge/1</a></li>
+<li title="soft_purge-1"><a href="code.html#soft_purge-1">soft_purge/1</a></li>
+<li title="is_loaded-1"><a href="code.html#is_loaded-1">is_loaded/1</a></li>
+<li title="all_loaded-0"><a href="code.html#all_loaded-0">all_loaded/0</a></li>
+<li title="which-1"><a href="code.html#which-1">which/1</a></li>
+<li title="get_object_code-1"><a href="code.html#get_object_code-1">get_object_code/1</a></li>
+<li title="root_dir-0"><a href="code.html#root_dir-0">root_dir/0</a></li>
+<li title="lib_dir-0"><a href="code.html#lib_dir-0">lib_dir/0</a></li>
+<li title="lib_dir-1"><a href="code.html#lib_dir-1">lib_dir/1</a></li>
+<li title="lib_dir-2"><a href="code.html#lib_dir-2">lib_dir/2</a></li>
+<li title="compiler_dir-0"><a href="code.html#compiler_dir-0">compiler_dir/0</a></li>
+<li title="priv_dir-1"><a href="code.html#priv_dir-1">priv_dir/1</a></li>
+<li title="objfile_extension-0"><a href="code.html#objfile_extension-0">objfile_extension/0</a></li>
+<li title="stick_dir-1"><a href="code.html#stick_dir-1">stick_dir/1</a></li>
+<li title="unstick_dir-1"><a href="code.html#unstick_dir-1">unstick_dir/1</a></li>
+<li title="is_sticky-1"><a href="code.html#is_sticky-1">is_sticky/1</a></li>
+<li title="rehash-0"><a href="code.html#rehash-0">rehash/0</a></li>
+<li title="where_is_file-1"><a href="code.html#where_is_file-1">where_is_file/1</a></li>
+<li title="clash-0"><a href="code.html#clash-0">clash/0</a></li>
+<li title="is_module_native-1"><a href="code.html#is_module_native-1">is_module_native/1</a></li>
+</ul>
+</li>
+<li id="no" title="disk_log " expanded="false">disk_log<ul>
+<li><a href="disk_log.html">
+                  Top of manual page
+                </a></li>
+<li title="accessible_logs-0"><a href="disk_log.html#accessible_logs-0">accessible_logs/0</a></li>
+<li title="alog-2"><a href="disk_log.html#alog-2">alog/2</a></li>
+<li title="balog-2"><a href="disk_log.html#balog-2">balog/2</a></li>
+<li title="alog_terms-2"><a href="disk_log.html#alog_terms-2">alog_terms/2</a></li>
+<li title="balog_terms-2"><a href="disk_log.html#balog_terms-2">balog_terms/2</a></li>
+<li title="block-1"><a href="disk_log.html#block-1">block/1</a></li>
+<li title="block-2"><a href="disk_log.html#block-2">block/2</a></li>
+<li title="change_header-2"><a href="disk_log.html#change_header-2">change_header/2</a></li>
+<li title="change_notify-3"><a href="disk_log.html#change_notify-3">change_notify/3</a></li>
+<li title="change_size-2"><a href="disk_log.html#change_size-2">change_size/2</a></li>
+<li title="chunk-2"><a href="disk_log.html#chunk-2">chunk/2</a></li>
+<li title="chunk-3"><a href="disk_log.html#chunk-3">chunk/3</a></li>
+<li title="bchunk-2"><a href="disk_log.html#bchunk-2">bchunk/2</a></li>
+<li title="bchunk-3"><a href="disk_log.html#bchunk-3">bchunk/3</a></li>
+<li title="chunk_info-1"><a href="disk_log.html#chunk_info-1">chunk_info/1</a></li>
+<li title="chunk_step-3"><a href="disk_log.html#chunk_step-3">chunk_step/3</a></li>
+<li title="close-1"><a href="disk_log.html#close-1">close/1</a></li>
+<li title="format_error-1"><a href="disk_log.html#format_error-1">format_error/1</a></li>
+<li title="inc_wrap_file-1"><a href="disk_log.html#inc_wrap_file-1">inc_wrap_file/1</a></li>
+<li title="info-1"><a href="disk_log.html#info-1">info/1</a></li>
+<li title="lclose-1"><a href="disk_log.html#lclose-1">lclose/1</a></li>
+<li title="lclose-2"><a href="disk_log.html#lclose-2">lclose/2</a></li>
+<li title="log-2"><a href="disk_log.html#log-2">log/2</a></li>
+<li title="blog-2"><a href="disk_log.html#blog-2">blog/2</a></li>
+<li title="log_terms-2"><a href="disk_log.html#log_terms-2">log_terms/2</a></li>
+<li title="blog_terms-2"><a href="disk_log.html#blog_terms-2">blog_terms/2</a></li>
+<li title="open-1"><a href="disk_log.html#open-1">open/1</a></li>
+<li title="pid2name-1"><a href="disk_log.html#pid2name-1">pid2name/1</a></li>
+<li title="reopen-2"><a href="disk_log.html#reopen-2">reopen/2</a></li>
+<li title="reopen-3"><a href="disk_log.html#reopen-3">reopen/3</a></li>
+<li title="breopen-3"><a href="disk_log.html#breopen-3">breopen/3</a></li>
+<li title="sync-1"><a href="disk_log.html#sync-1">sync/1</a></li>
+<li title="truncate-1"><a href="disk_log.html#truncate-1">truncate/1</a></li>
+<li title="truncate-2"><a href="disk_log.html#truncate-2">truncate/2</a></li>
+<li title="btruncate-2"><a href="disk_log.html#btruncate-2">btruncate/2</a></li>
+<li title="unblock-1"><a href="disk_log.html#unblock-1">unblock/1</a></li>
+</ul>
+</li>
+<li id="no" title="erl_boot_server " expanded="false">erl_boot_server<ul>
+<li><a href="erl_boot_server.html">
+                  Top of manual page
+                </a></li>
+<li title="start-1"><a href="erl_boot_server.html#start-1">start/1</a></li>
+<li title="start_link-1"><a href="erl_boot_server.html#start_link-1">start_link/1</a></li>
+<li title="add_slave-1"><a href="erl_boot_server.html#add_slave-1">add_slave/1</a></li>
+<li title="delete_slave-1"><a href="erl_boot_server.html#delete_slave-1">delete_slave/1</a></li>
+<li title="which_slaves-0"><a href="erl_boot_server.html#which_slaves-0">which_slaves/0</a></li>
+</ul>
+</li>
+<li id="no" title="erl_ddll " expanded="false">erl_ddll<ul>
+<li><a href="erl_ddll.html">
+                  Top of manual page
+                </a></li>
+<li title="demonitor-1"><a href="erl_ddll.html#demonitor-1">demonitor/1</a></li>
+<li title="info-0"><a href="erl_ddll.html#info-0">info/0</a></li>
+<li title="info-1"><a href="erl_ddll.html#info-1">info/1</a></li>
+<li title="info-2"><a href="erl_ddll.html#info-2">info/2</a></li>
+<li title="load-2"><a href="erl_ddll.html#load-2">load/2</a></li>
+<li title="load_driver-2"><a href="erl_ddll.html#load_driver-2">load_driver/2</a></li>
+<li title="monitor-2"><a href="erl_ddll.html#monitor-2">monitor/2</a></li>
+<li title="reload-2"><a href="erl_ddll.html#reload-2">reload/2</a></li>
+<li title="reload_driver-2"><a href="erl_ddll.html#reload_driver-2">reload_driver/2</a></li>
+<li title="try_load-3"><a href="erl_ddll.html#try_load-3">try_load/3</a></li>
+<li title="try_unload-2"><a href="erl_ddll.html#try_unload-2">try_unload/2</a></li>
+<li title="unload-1"><a href="erl_ddll.html#unload-1">unload/1</a></li>
+<li title="unload_driver-1"><a href="erl_ddll.html#unload_driver-1">unload_driver/1</a></li>
+<li title="loaded_drivers-0"><a href="erl_ddll.html#loaded_drivers-0">loaded_drivers/0</a></li>
+<li title="format_error-1"><a href="erl_ddll.html#format_error-1">format_error/1</a></li>
+</ul>
+</li>
+<li title="erl_prim_loader"><a href="erl_prim_loader.html">erl_prim_loader</a></li>
+<li title="erlang"><a href="erlang.html">erlang</a></li>
+<li id="no" title="error_handler " expanded="false">error_handler<ul>
+<li><a href="error_handler.html">
+                  Top of manual page
+                </a></li>
+<li title="undefined_function-3"><a href="error_handler.html#undefined_function-3">undefined_function/3</a></li>
+<li title="undefined_lambda-3"><a href="error_handler.html#undefined_lambda-3">undefined_lambda/3</a></li>
+</ul>
+</li>
+<li id="no" title="error_logger " expanded="false">error_logger<ul>
+<li><a href="error_logger.html">
+                  Top of manual page
+                </a></li>
+<li title="error_msg-1"><a href="error_logger.html#error_msg-1">error_msg/1</a></li>
+<li title="error_msg-2"><a href="error_logger.html#error_msg-2">error_msg/2</a></li>
+<li title="format-2"><a href="error_logger.html#format-2">format/2</a></li>
+<li title="error_report-1"><a href="error_logger.html#error_report-1">error_report/1</a></li>
+<li title="error_report-2"><a href="error_logger.html#error_report-2">error_report/2</a></li>
+<li title="warning_map-0"><a href="error_logger.html#warning_map-0">warning_map/0</a></li>
+<li title="warning_msg-1"><a href="error_logger.html#warning_msg-1">warning_msg/1</a></li>
+<li title="warning_msg-2"><a href="error_logger.html#warning_msg-2">warning_msg/2</a></li>
+<li title="warning_report-1"><a href="error_logger.html#warning_report-1">warning_report/1</a></li>
+<li title="warning_report-2"><a href="error_logger.html#warning_report-2">warning_report/2</a></li>
+<li title="info_msg-1"><a href="error_logger.html#info_msg-1">info_msg/1</a></li>
+<li title="info_msg-2"><a href="error_logger.html#info_msg-2">info_msg/2</a></li>
+<li title="info_report-1"><a href="error_logger.html#info_report-1">info_report/1</a></li>
+<li title="info_report-2"><a href="error_logger.html#info_report-2">info_report/2</a></li>
+<li title="add_report_handler-1"><a href="error_logger.html#add_report_handler-1">add_report_handler/1</a></li>
+<li title="add_report_handler-2"><a href="error_logger.html#add_report_handler-2">add_report_handler/2</a></li>
+<li title="delete_report_handler-1"><a href="error_logger.html#delete_report_handler-1">delete_report_handler/1</a></li>
+<li title="tty-1"><a href="error_logger.html#tty-1">tty/1</a></li>
+<li title="logfile-1"><a href="error_logger.html#logfile-1">logfile/1</a></li>
+</ul>
+</li>
+<li id="loadscrollpos" title="file " expanded="true">file<ul>
+<li><a href="file.html">
+                  Top of manual page
+                </a></li>
+<li title="advise-4"><a href="file.html#advise-4">advise/4</a></li>
+<li title="change_group-2"><a href="file.html#change_group-2">change_group/2</a></li>
+<li title="change_mode-2"><a href="file.html#change_mode-2">change_mode/2</a></li>
+<li title="change_owner-2"><a href="file.html#change_owner-2">change_owner/2</a></li>
+<li title="change_owner-3"><a href="file.html#change_owner-3">change_owner/3</a></li>
+<li title="change_time-2"><a href="file.html#change_time-2">change_time/2</a></li>
+<li title="change_time-3"><a href="file.html#change_time-3">change_time/3</a></li>
+<li title="close-1"><a href="file.html#close-1">close/1</a></li>
+<li title="consult-1"><a href="file.html#consult-1">consult/1</a></li>
+<li title="copy-2"><a href="file.html#copy-2">copy/2</a></li>
+<li title="copy-3"><a href="file.html#copy-3">copy/3</a></li>
+<li title="del_dir-1"><a href="file.html#del_dir-1">del_dir/1</a></li>
+<li title="delete-1"><a href="file.html#delete-1">delete/1</a></li>
+<li title="eval-1"><a href="file.html#eval-1">eval/1</a></li>
+<li title="eval-2"><a href="file.html#eval-2">eval/2</a></li>
+<li title="file_info-1"><a href="file.html#file_info-1">file_info/1</a></li>
+<li title="format_error-1"><a href="file.html#format_error-1">format_error/1</a></li>
+<li title="get_cwd-0"><a href="file.html#get_cwd-0">get_cwd/0</a></li>
+<li title="get_cwd-1"><a href="file.html#get_cwd-1">get_cwd/1</a></li>
+<li title="list_dir-1"><a href="file.html#list_dir-1">list_dir/1</a></li>
+<li title="make_dir-1"><a href="file.html#make_dir-1">make_dir/1</a></li>
+<li title="make_link-2"><a href="file.html#make_link-2">make_link/2</a></li>
+<li title="make_symlink-2"><a href="file.html#make_symlink-2">make_symlink/2</a></li>
+<li title="native_name_encoding-0"><a href="file.html#native_name_encoding-0">native_name_encoding/0</a></li>
+<li title="open-2"><a href="file.html#open-2">open/2</a></li>
+<li title="path_consult-2"><a href="file.html#path_consult-2">path_consult/2</a></li>
+<li title="path_eval-2"><a href="file.html#path_eval-2">path_eval/2</a></li>
+<li title="path_open-3"><a href="file.html#path_open-3">path_open/3</a></li>
+<li title="path_script-2"><a href="file.html#path_script-2">path_script/2</a></li>
+<li title="path_script-3"><a href="file.html#path_script-3">path_script/3</a></li>
+<li title="pid2name-1"><a href="file.html#pid2name-1">pid2name/1</a></li>
+<li title="position-2"><a href="file.html#position-2">position/2</a></li>
+<li title="pread-2"><a href="file.html#pread-2">pread/2</a></li>
+<li title="pread-3"><a href="file.html#pread-3">pread/3</a></li>
+<li title="pwrite-2"><a href="file.html#pwrite-2">pwrite/2</a></li>
+<li title="pwrite-3"><a href="file.html#pwrite-3">pwrite/3</a></li>
+<li title="read-2"><a href="file.html#read-2">read/2</a></li>
+<li title="read_file-1"><a href="file.html#read_file-1">read_file/1</a></li>
+<li title="read_file_info-1"><a href="file.html#read_file_info-1">read_file_info/1</a></li>
+<li title="read_file_info-2"><a href="file.html#read_file_info-2">read_file_info/2</a></li>
+<li title="read_line-1"><a href="file.html#read_line-1">read_line/1</a></li>
+<li title="read_link-1"><a href="file.html#read_link-1">read_link/1</a></li>
+<li title="read_link_info-1"><a href="file.html#read_link_info-1">read_link_info/1</a></li>
+<li title="read_link_info-2"><a href="file.html#read_link_info-2">read_link_info/2</a></li>
+<li title="rename-2"><a href="file.html#rename-2">rename/2</a></li>
+<li title="script-1"><a href="file.html#script-1">script/1</a></li>
+<li title="script-2"><a href="file.html#script-2">script/2</a></li>
+<li title="set_cwd-1"><a href="file.html#set_cwd-1">set_cwd/1</a></li>
+<li title="sync-1"><a href="file.html#sync-1">sync/1</a></li>
+<li title="datasync-1"><a href="file.html#datasync-1">datasync/1</a></li>
+<li title="truncate-1"><a href="file.html#truncate-1">truncate/1</a></li>
+<li title="sendfile-2"><a href="file.html#sendfile-2">sendfile/2</a></li>
+<li title="sendfile-5"><a href="file.html#sendfile-5">sendfile/5</a></li>
+<li title="write-2"><a href="file.html#write-2">write/2</a></li>
+<li title="write_file-2"><a href="file.html#write_file-2">write_file/2</a></li>
+<li title="write_file-3"><a href="file.html#write_file-3">write_file/3</a></li>
+<li title="write_file_info-2"><a href="file.html#write_file_info-2">write_file_info/2</a></li>
+<li title="write_file_info-3"><a href="file.html#write_file_info-3">write_file_info/3</a></li>
+</ul>
+</li>
+<li id="no" title="gen_tcp " expanded="false">gen_tcp<ul>
+<li><a href="gen_tcp.html">
+                  Top of manual page
+                </a></li>
+<li title="connect-3"><a href="gen_tcp.html#connect-3">connect/3</a></li>
+<li title="connect-4"><a href="gen_tcp.html#connect-4">connect/4</a></li>
+<li title="listen-2"><a href="gen_tcp.html#listen-2">listen/2</a></li>
+<li title="accept-1"><a href="gen_tcp.html#accept-1">accept/1</a></li>
+<li title="accept-2"><a href="gen_tcp.html#accept-2">accept/2</a></li>
+<li title="send-2"><a href="gen_tcp.html#send-2">send/2</a></li>
+<li title="recv-2"><a href="gen_tcp.html#recv-2">recv/2</a></li>
+<li title="recv-3"><a href="gen_tcp.html#recv-3">recv/3</a></li>
+<li title="controlling_process-2"><a href="gen_tcp.html#controlling_process-2">controlling_process/2</a></li>
+<li title="close-1"><a href="gen_tcp.html#close-1">close/1</a></li>
+<li title="shutdown-2"><a href="gen_tcp.html#shutdown-2">shutdown/2</a></li>
+</ul>
+</li>
+<li id="no" title="gen_udp " expanded="false">gen_udp<ul>
+<li><a href="gen_udp.html">
+                  Top of manual page
+                </a></li>
+<li title="open-1"><a href="gen_udp.html#open-1">open/1</a></li>
+<li title="open-2"><a href="gen_udp.html#open-2">open/2</a></li>
+<li title="send-4"><a href="gen_udp.html#send-4">send/4</a></li>
+<li title="recv-2"><a href="gen_udp.html#recv-2">recv/2</a></li>
+<li title="recv-3"><a href="gen_udp.html#recv-3">recv/3</a></li>
+<li title="controlling_process-2"><a href="gen_udp.html#controlling_process-2">controlling_process/2</a></li>
+<li title="close-1"><a href="gen_udp.html#close-1">close/1</a></li>
+</ul>
+</li>
+<li id="no" title="gen_sctp " expanded="false">gen_sctp<ul>
+<li><a href="gen_sctp.html">
+                  Top of manual page
+                </a></li>
+<li title="abort-2"><a href="gen_sctp.html#abort-2">abort/2</a></li>
+<li title="close-1"><a href="gen_sctp.html#close-1">close/1</a></li>
+<li title="connect-4"><a href="gen_sctp.html#connect-4">connect/4</a></li>
+<li title="connect-5"><a href="gen_sctp.html#connect-5">connect/5</a></li>
+<li title="connect_init-4"><a href="gen_sctp.html#connect_init-4">connect_init/4</a></li>
+<li title="connect_init-5"><a href="gen_sctp.html#connect_init-5">connect_init/5</a></li>
+<li title="controlling_process-2"><a href="gen_sctp.html#controlling_process-2">controlling_process/2</a></li>
+<li title="eof-2"><a href="gen_sctp.html#eof-2">eof/2</a></li>
+<li title="listen-2"><a href="gen_sctp.html#listen-2">listen/2</a></li>
+<li title="open-0"><a href="gen_sctp.html#open-0">open/0</a></li>
+<li title="open-1"><a href="gen_sctp.html#open-1">open/1</a></li>
+<li title="open-2"><a href="gen_sctp.html#open-2">open/2</a></li>
+<li title="peeloff-2"><a href="gen_sctp.html#peeloff-2">peeloff/2</a></li>
+<li title="recv-1"><a href="gen_sctp.html#recv-1">recv/1</a></li>
+<li title="recv-2"><a href="gen_sctp.html#recv-2">recv/2</a></li>
+<li title="send-3"><a href="gen_sctp.html#send-3">send/3</a></li>
+<li title="send-4"><a href="gen_sctp.html#send-4">send/4</a></li>
+<li title="error_string-1"><a href="gen_sctp.html#error_string-1">error_string/1</a></li>
+</ul>
+</li>
+<li id="no" title="global " expanded="false">global<ul>
+<li><a href="global.html">
+                  Top of manual page
+                </a></li>
+<li title="del_lock-1"><a href="global.html#del_lock-1">del_lock/1</a></li>
+<li title="del_lock-2"><a href="global.html#del_lock-2">del_lock/2</a></li>
+<li title="notify_all_name-3"><a href="global.html#notify_all_name-3">notify_all_name/3</a></li>
+<li title="random_exit_name-3"><a href="global.html#random_exit_name-3">random_exit_name/3</a></li>
+<li title="random_notify_name-3"><a href="global.html#random_notify_name-3">random_notify_name/3</a></li>
+<li title="register_name-2"><a href="global.html#register_name-2">register_name/2</a></li>
+<li title="register_name-3"><a href="global.html#register_name-3">register_name/3</a></li>
+<li title="registered_names-0"><a href="global.html#registered_names-0">registered_names/0</a></li>
+<li title="re_register_name-2"><a href="global.html#re_register_name-2">re_register_name/2</a></li>
+<li title="re_register_name-3"><a href="global.html#re_register_name-3">re_register_name/3</a></li>
+<li title="send-2"><a href="global.html#send-2">send/2</a></li>
+<li title="set_lock-1"><a href="global.html#set_lock-1">set_lock/1</a></li>
+<li title="set_lock-2"><a href="global.html#set_lock-2">set_lock/2</a></li>
+<li title="set_lock-3"><a href="global.html#set_lock-3">set_lock/3</a></li>
+<li title="sync-0"><a href="global.html#sync-0">sync/0</a></li>
+<li title="trans-2"><a href="global.html#trans-2">trans/2</a></li>
+<li title="trans-3"><a href="global.html#trans-3">trans/3</a></li>
+<li title="trans-4"><a href="global.html#trans-4">trans/4</a></li>
+<li title="unregister_name-1"><a href="global.html#unregister_name-1">unregister_name/1</a></li>
+<li title="whereis_name-1"><a href="global.html#whereis_name-1">whereis_name/1</a></li>
+</ul>
+</li>
+<li id="no" title="global_group " expanded="false">global_group<ul>
+<li><a href="global_group.html">
+                  Top of manual page
+                </a></li>
+<li title="global_groups-0"><a href="global_group.html#global_groups-0">global_groups/0</a></li>
+<li title="info-0"><a href="global_group.html#info-0">info/0</a></li>
+<li title="monitor_nodes-1"><a href="global_group.html#monitor_nodes-1">monitor_nodes/1</a></li>
+<li title="own_nodes-0"><a href="global_group.html#own_nodes-0">own_nodes/0</a></li>
+<li title="registered_names-1"><a href="global_group.html#registered_names-1">registered_names/1</a></li>
+<li title="send-2"><a href="global_group.html#send-2">send/2</a></li>
+<li title="send-3"><a href="global_group.html#send-3">send/3</a></li>
+<li title="sync-0"><a href="global_group.html#sync-0">sync/0</a></li>
+<li title="whereis_name-1"><a href="global_group.html#whereis_name-1">whereis_name/1</a></li>
+<li title="whereis_name-2"><a href="global_group.html#whereis_name-2">whereis_name/2</a></li>
+</ul>
+</li>
+<li id="no" title="heart " expanded="false">heart<ul>
+<li><a href="heart.html">
+                  Top of manual page
+                </a></li>
+<li title="set_cmd-1"><a href="heart.html#set_cmd-1">set_cmd/1</a></li>
+<li title="clear_cmd-0"><a href="heart.html#clear_cmd-0">clear_cmd/0</a></li>
+<li title="get_cmd-0"><a href="heart.html#get_cmd-0">get_cmd/0</a></li>
+</ul>
+</li>
+<li id="no" title="inet " expanded="false">inet<ul>
+<li><a href="inet.html">
+                  Top of manual page
+                </a></li>
+<li title="close-1"><a href="inet.html#close-1">close/1</a></li>
+<li title="get_rc-0"><a href="inet.html#get_rc-0">get_rc/0</a></li>
+<li title="format_error-1"><a href="inet.html#format_error-1">format_error/1</a></li>
+<li title="getaddr-2"><a href="inet.html#getaddr-2">getaddr/2</a></li>
+<li title="getaddrs-2"><a href="inet.html#getaddrs-2">getaddrs/2</a></li>
+<li title="gethostbyaddr-1"><a href="inet.html#gethostbyaddr-1">gethostbyaddr/1</a></li>
+<li title="gethostbyname-1"><a href="inet.html#gethostbyname-1">gethostbyname/1</a></li>
+<li title="gethostbyname-2"><a href="inet.html#gethostbyname-2">gethostbyname/2</a></li>
+<li title="gethostname-0"><a href="inet.html#gethostname-0">gethostname/0</a></li>
+<li title="getifaddrs-0"><a href="inet.html#getifaddrs-0">getifaddrs/0</a></li>
+<li title="getopts-2"><a href="inet.html#getopts-2">getopts/2</a></li>
+<li title="getstat-1"><a href="inet.html#getstat-1">getstat/1</a></li>
+<li title="getstat-2"><a href="inet.html#getstat-2">getstat/2</a></li>
+<li title="peername-1"><a href="inet.html#peername-1">peername/1</a></li>
+<li title="port-1"><a href="inet.html#port-1">port/1</a></li>
+<li title="sockname-1"><a href="inet.html#sockname-1">sockname/1</a></li>
+<li title="setopts-2"><a href="inet.html#setopts-2">setopts/2</a></li>
+</ul>
+</li>
+<li id="no" title="inet_res " expanded="false">inet_res<ul>
+<li><a href="inet_res.html">
+                  Top of manual page
+                </a></li>
+<li title="getbyname-2"><a href="inet_res.html#getbyname-2">getbyname/2</a></li>
+<li title="getbyname-3"><a href="inet_res.html#getbyname-3">getbyname/3</a></li>
+<li title="gethostbyaddr-1"><a href="inet_res.html#gethostbyaddr-1">gethostbyaddr/1</a></li>
+<li title="gethostbyaddr-2"><a href="inet_res.html#gethostbyaddr-2">gethostbyaddr/2</a></li>
+<li title="gethostbyname-1"><a href="inet_res.html#gethostbyname-1">gethostbyname/1</a></li>
+<li title="gethostbyname-2"><a href="inet_res.html#gethostbyname-2">gethostbyname/2</a></li>
+<li title="gethostbyname-3"><a href="inet_res.html#gethostbyname-3">gethostbyname/3</a></li>
+<li title="lookup-3"><a href="inet_res.html#lookup-3">lookup/3</a></li>
+<li title="lookup-4"><a href="inet_res.html#lookup-4">lookup/4</a></li>
+<li title="lookup-5"><a href="inet_res.html#lookup-5">lookup/5</a></li>
+<li title="resolve-3"><a href="inet_res.html#resolve-3">resolve/3</a></li>
+<li title="resolve-4"><a href="inet_res.html#resolve-4">resolve/4</a></li>
+<li title="resolve-5"><a href="inet_res.html#resolve-5">resolve/5</a></li>
+<li title="nslookup-3"><a href="inet_res.html#nslookup-3">nslookup/3</a></li>
+<li title="nslookup-4"><a href="inet_res.html#nslookup-4">nslookup/4</a></li>
+<li title="nnslookup-4"><a href="inet_res.html#nnslookup-4">nnslookup/4</a></li>
+<li title="nnslookup-5"><a href="inet_res.html#nnslookup-5">nnslookup/5</a></li>
+</ul>
+</li>
+<li title="init"><a href="init.html">init</a></li>
+<li id="no" title="net_adm " expanded="false">net_adm<ul>
+<li><a href="net_adm.html">
+                  Top of manual page
+                </a></li>
+<li title="dns_hostname-1"><a href="net_adm.html#dns_hostname-1">dns_hostname/1</a></li>
+<li title="host_file-0"><a href="net_adm.html#host_file-0">host_file/0</a></li>
+<li title="localhost-0"><a href="net_adm.html#localhost-0">localhost/0</a></li>
+<li title="names-0"><a href="net_adm.html#names-0">names/0</a></li>
+<li title="names-1"><a href="net_adm.html#names-1">names/1</a></li>
+<li title="ping-1"><a href="net_adm.html#ping-1">ping/1</a></li>
+<li title="world-0"><a href="net_adm.html#world-0">world/0</a></li>
+<li title="world-1"><a href="net_adm.html#world-1">world/1</a></li>
+<li title="world_list-1"><a href="net_adm.html#world_list-1">world_list/1</a></li>
+<li title="world_list-2"><a href="net_adm.html#world_list-2">world_list/2</a></li>
+</ul>
+</li>
+<li id="no" title="net_kernel " expanded="false">net_kernel<ul>
+<li><a href="net_kernel.html">
+                  Top of manual page
+                </a></li>
+<li title="allow-1"><a href="net_kernel.html#allow-1">allow/1</a></li>
+<li title="connect_node-1"><a href="net_kernel.html#connect_node-1">connect_node/1</a></li>
+<li title="monitor_nodes-1"><a href="net_kernel.html#monitor_nodes-1">monitor_nodes/1</a></li>
+<li title="monitor_nodes-2"><a href="net_kernel.html#monitor_nodes-2">monitor_nodes/2</a></li>
+<li title="get_net_ticktime-0"><a href="net_kernel.html#get_net_ticktime-0">get_net_ticktime/0</a></li>
+<li title="set_net_ticktime-1"><a href="net_kernel.html#set_net_ticktime-1">set_net_ticktime/1</a></li>
+<li title="set_net_ticktime-2"><a href="net_kernel.html#set_net_ticktime-2">set_net_ticktime/2</a></li>
+<li title="start-1"><a href="net_kernel.html#start-1">start/1</a></li>
+<li title="start-1"><a href="net_kernel.html#start-1">start/1</a></li>
+<li title="start-1"><a href="net_kernel.html#start-1">start/1</a></li>
+<li title="stop-0"><a href="net_kernel.html#stop-0">stop/0</a></li>
+</ul>
+</li>
+<li id="no" title="os " expanded="false">os<ul>
+<li><a href="os.html">
+                  Top of manual page
+                </a></li>
+<li title="cmd-1"><a href="os.html#cmd-1">cmd/1</a></li>
+<li title="find_executable-1"><a href="os.html#find_executable-1">find_executable/1</a></li>
+<li title="find_executable-2"><a href="os.html#find_executable-2">find_executable/2</a></li>
+<li title="getenv-0"><a href="os.html#getenv-0">getenv/0</a></li>
+<li title="getenv-1"><a href="os.html#getenv-1">getenv/1</a></li>
+<li title="getpid-0"><a href="os.html#getpid-0">getpid/0</a></li>
+<li title="putenv-2"><a href="os.html#putenv-2">putenv/2</a></li>
+<li title="timestamp-0"><a href="os.html#timestamp-0">timestamp/0</a></li>
+<li title="type-0"><a href="os.html#type-0">type/0</a></li>
+<li title="version-0"><a href="os.html#version-0">version/0</a></li>
+</ul>
+</li>
+<li id="no" title="pg2 " expanded="false">pg2<ul>
+<li><a href="pg2.html">
+                  Top of manual page
+                </a></li>
+<li title="create-1"><a href="pg2.html#create-1">create/1</a></li>
+<li title="delete-1"><a href="pg2.html#delete-1">delete/1</a></li>
+<li title="get_closest_pid-1"><a href="pg2.html#get_closest_pid-1">get_closest_pid/1</a></li>
+<li title="get_members-1"><a href="pg2.html#get_members-1">get_members/1</a></li>
+<li title="get_local_members-1"><a href="pg2.html#get_local_members-1">get_local_members/1</a></li>
+<li title="join-2"><a href="pg2.html#join-2">join/2</a></li>
+<li title="leave-2"><a href="pg2.html#leave-2">leave/2</a></li>
+<li title="which_groups-0"><a href="pg2.html#which_groups-0">which_groups/0</a></li>
+<li title="start-0"><a href="pg2.html#start-0">start/0</a></li>
+<li title="start_link-0"><a href="pg2.html#start_link-0">start_link/0</a></li>
+</ul>
+</li>
+<li id="no" title="rpc " expanded="false">rpc<ul>
+<li><a href="rpc.html">
+                  Top of manual page
+                </a></li>
+<li title="call-4"><a href="rpc.html#call-4">call/4</a></li>
+<li title="call-5"><a href="rpc.html#call-5">call/5</a></li>
+<li title="block_call-4"><a href="rpc.html#block_call-4">block_call/4</a></li>
+<li title="block_call-5"><a href="rpc.html#block_call-5">block_call/5</a></li>
+<li title="async_call-4"><a href="rpc.html#async_call-4">async_call/4</a></li>
+<li title="yield-1"><a href="rpc.html#yield-1">yield/1</a></li>
+<li title="nb_yield-1"><a href="rpc.html#nb_yield-1">nb_yield/1</a></li>
+<li title="nb_yield-2"><a href="rpc.html#nb_yield-2">nb_yield/2</a></li>
+<li title="multicall-3"><a href="rpc.html#multicall-3">multicall/3</a></li>
+<li title="multicall-4"><a href="rpc.html#multicall-4">multicall/4</a></li>
+<li title="multicall-5"><a href="rpc.html#multicall-5">multicall/5</a></li>
+<li title="cast-4"><a href="rpc.html#cast-4">cast/4</a></li>
+<li title="eval_everywhere-3"><a href="rpc.html#eval_everywhere-3">eval_everywhere/3</a></li>
+<li title="eval_everywhere-4"><a href="rpc.html#eval_everywhere-4">eval_everywhere/4</a></li>
+<li title="abcast-2"><a href="rpc.html#abcast-2">abcast/2</a></li>
+<li title="abcast-3"><a href="rpc.html#abcast-3">abcast/3</a></li>
+<li title="sbcast-2"><a href="rpc.html#sbcast-2">sbcast/2</a></li>
+<li title="sbcast-3"><a href="rpc.html#sbcast-3">sbcast/3</a></li>
+<li title="server_call-4"><a href="rpc.html#server_call-4">server_call/4</a></li>
+<li title="multi_server_call-2"><a href="rpc.html#multi_server_call-2">multi_server_call/2</a></li>
+<li title="multi_server_call-3"><a href="rpc.html#multi_server_call-3">multi_server_call/3</a></li>
+<li title="safe_multi_server_call-2"><a href="rpc.html#safe_multi_server_call-2">safe_multi_server_call/2</a></li>
+<li title="safe_multi_server_call-3"><a href="rpc.html#safe_multi_server_call-3">safe_multi_server_call/3</a></li>
+<li title="parallel_eval-1"><a href="rpc.html#parallel_eval-1">parallel_eval/1</a></li>
+<li title="pmap-3"><a href="rpc.html#pmap-3">pmap/3</a></li>
+<li title="pinfo-1"><a href="rpc.html#pinfo-1">pinfo/1</a></li>
+<li title="pinfo-2"><a href="rpc.html#pinfo-2">pinfo/2</a></li>
+</ul>
+</li>
+<li id="no" title="seq_trace " expanded="false">seq_trace<ul>
+<li><a href="seq_trace.html">
+                  Top of manual page
+                </a></li>
+<li title="set_token-1"><a href="seq_trace.html#set_token-1">set_token/1</a></li>
+<li title="set_token-2"><a href="seq_trace.html#set_token-2">set_token/2</a></li>
+<li title="get_token-0"><a href="seq_trace.html#get_token-0">get_token/0</a></li>
+<li title="get_token-1"><a href="seq_trace.html#get_token-1">get_token/1</a></li>
+<li title="print-1"><a href="seq_trace.html#print-1">print/1</a></li>
+<li title="print-2"><a href="seq_trace.html#print-2">print/2</a></li>
+<li title="reset_trace-0"><a href="seq_trace.html#reset_trace-0">reset_trace/0</a></li>
+<li title="set_system_tracer-1"><a href="seq_trace.html#set_system_tracer-1">set_system_tracer/1</a></li>
+<li title="get_system_tracer-0"><a href="seq_trace.html#get_system_tracer-0">get_system_tracer/0</a></li>
+</ul>
+</li>
+<li title="user"><a href="user.html">user</a></li>
+<li id="no" title="wrap_log_reader " expanded="false">wrap_log_reader<ul>
+<li><a href="wrap_log_reader.html">
+                  Top of manual page
+                </a></li>
+<li title="chunk-1"><a href="wrap_log_reader.html#chunk-1">chunk/1</a></li>
+<li title="chunk-2"><a href="wrap_log_reader.html#chunk-2">chunk/2</a></li>
+<li title="close-1"><a href="wrap_log_reader.html#close-1">close/1</a></li>
+<li title="open-1"><a href="wrap_log_reader.html#open-1">open/1</a></li>
+<li title="open-2"><a href="wrap_log_reader.html#open-2">open/2</a></li>
+</ul>
+</li>
+<li title="zlib"><a href="zlib.html">zlib</a></li>
+<li title="app"><a href="app.html">app</a></li>
+<li title="config"><a href="config.html">config</a></li>
+<li title="packages"><a href="packages.html">packages</a></li>
+</ul>
+</div></div>
+<div id="content">
+<div class="innertube">
+<!-- refpage --><center><h1>file</h1></center>
+  
+  <h3>MODULE</h3>
+<div class="REFBODY">file</div>
+  <h3>MODULE SUMMARY</h3>
+<div class="REFBODY">File Interface Module</div>
+  <h3>DESCRIPTION</h3>
+<div class="REFBODY"><p>
+    <p>The module <span class="code">file</span> provides an interface to the file system.</p>
+    <p>On operating systems with thread support, it is possible to let
+      file operations be performed in threads of their own, allowing
+      other Erlang processes to continue executing in parallel with
+      the file operations. See the command line flag
+      <span class="code">+A</span> in <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','erts','erl.html');">erl(1)</a></span>.</p>
+
+    <p>The Erlang VM supports file names in Unicode to a limited
+    extent.  Depending on how the VM is started (with the parameter
+    <span class="code">+fnu</span> or <span class="code">+fnl</span>), file names given can contain
+    characters &gt; 255 and the VM system will convert file names
+    back and forth to the native file name encoding.</p>
+
+    <p>The default behavior for Unicode character translation depends
+    on to what extent the underlying OS/filesystem enforces consistent
+    naming. On OSes where all file names are ensured to be in one or
+    another encoding, Unicode is the default (currently this holds for
+    Windows and MacOSX). On OSes with completely transparent file
+    naming (i.e. all Unixes except MacOSX), ISO-latin-1 file naming is
+    the default. The reason for the ISO-latin-1 default is that
+    file names are not guaranteed to be possible to interpret according to
+    the Unicode encoding expected (i.e. UTF-8), and file names that
+    cannot be decoded will only be accessible by using "raw
+    file names", in other word file names given as binaries.</p>
+ 
+    <p>As file names are traditionally not binaries in Erlang,
+    applications that need to handle raw file names need to be
+    converted, why the Unicode mode for file names is not default on
+    systems having completely transparent file naming.</p>
+
+    <div class="note">
+<div class="label">Note</div>
+<div class="content"><p>
+      <p>As of R14B01, the most basic file handling modules
+      (<span class="code">file</span>, <span class="code">prim_file</span>, <span class="code">filelib</span> and
+      <span class="code">filename</span>) accept raw file names, but the rest of OTP is not
+      guaranteed to handle them, why Unicode file naming on systems
+      where it is not default is still considered experimental.</p>
+    </p></div>
+</div>
+
+    <p>Raw file names is a new feature in OTP R14B01, which allows the
+    user to supply completely uninterpreted file names to the
+    underlying OS/filesystem. They are supplied as binaries, where it
+    is up to the user to supply a correct encoding for the
+    environment. The function <span class="code">file:native_name_encoding()</span> can
+    be used to check what encoding the VM is working in. If the
+    function returns <span class="code">latin1</span> file names are not in any way
+    converted to Unicode, if it is <span class="code">utf8</span>, raw file names should
+    be encoded as UTF-8 if they are to follow the convention of the VM
+    (and usually the convention of the OS as well). Using raw
+    file names is useful if you have a filesystem with inconsistent
+    file naming, where some files are named in UTF-8 encoding while
+    others are not. A file:list_dir on such mixed file name systems
+    when the VM is in Unicode file name mode might return file names as
+    raw binaries as they cannot be interpreted as Unicode
+    file names. Raw file names can also be used to give UTF-8 encoded
+    file names even though the VM is not started in Unicode file name
+    translation mode.</p>
+
+    <p>Note that on Windows, <span class="code">file:native_name_encoding()</span>
+    returns <span class="code">utf8</span> per default, which is the format for raw
+    file names even on Windows, although the underlying OS specific
+    code works in a limited version of little endian UTF16. As far as
+    the Erlang programmer is concerned, Windows native Unicode format
+    is UTF-8...</p>
+  </p></div>
+
+  <h3>DATA TYPES</h3>
+    <p>
+      <span class="bold_code"><a name="type-deep_list">deep_list()</a> = [char() | atom() | <span class="bold_code"><a href="#type-deep_list">deep_list()</a></span>]</span><br></p>
+    <p>
+      <span class="bold_code"><a name="type-fd">fd()</a> = <br>    #file_descriptor{module = undefined | module(),<br>                     data = undefined | term()}</span><br></p>
+    <p>
+      <span class="bold_code"><a name="type-filename">filename()</a> = string() | binary()</span><br></p>
+    <p>
+      <span class="bold_code"><a name="type-io_device">io_device()</a> = pid() | <span class="bold_code"><a href="#type-fd">fd()</a></span></span><br></p>
+<div class="REFBODY"><p>
+        <p>As returned by
+          <span class="bold_code"><a href="#open-2">file:open/2</a></span>,
+          a process handling IO protocols.</p>
+      </p></div>
+    <p>
+      <span class="bold_code"><a name="type-name">name()</a> = string()<br>       | atom()<br>       | <span class="bold_code"><a href="#type-deep_list">deep_list()</a></span><br>       | (RawFilename :: binary())</span><br></p>
+<div class="REFBODY"><p>
+        <p>If VM is in Unicode filename mode, <span class="code">string()</span> and <span class="code">char()</span>
+          are allowed to be &gt; 255.
+          <span class="code">RawFilename</span> is a filename not subject to
+          Unicode translation,
+          meaning that it can contain characters not conforming to
+          the Unicode encoding expected from the filesystem
+          (i.e. non-UTF-8 characters although the VM is started
+          in Unicode filename mode).
+        </p>
+      </p></div>
+    <p>
+      <span class="bold_code"><a name="type-posix">posix()</a> = eacces<br>        | eagain<br>        | ebadf<br>        | ebusy<br>        | edquot<br>        | eexist<br>        | efault<br>        | efbig<br>        | eintr<br>        | einval<br>        | eio<br>        | eisdir<br>        | eloop<br>        | emfile<br>        | emlink<br>        | enametoolong<br>        | enfile<br>        | enodev<br>        | enoent<br>        | enomem<br>        | enospc<br>        | enotblk<br>        | enotdir<br>        | enotsup<br>        | enxio<br>        | eperm<br>        | epipe<br>        | erofs<br>        | espipe<br>        | esrch<br>        | estale<br>        | exdev</span><br></p>
+<div class="REFBODY"><p>
+        <p>An atom which is named from the POSIX error codes used in
+          Unix, and in the runtime libraries of most C compilers.</p>
+      </p></div>
+    <p>
+      <span class="bold_code"><a name="type-date_time">date_time()</a> = <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','calendar.html#type-datetime');">calendar:datetime()</a></span></span><br></p>
+<div class="REFBODY"><p>
+        <p>Must denote a valid date and time.</p>
+      </p></div>
+    <p>
+      <span class="bold_code"><a name="type-file_info">file_info()</a> = <br>    #file_info{size = undefined | integer() &gt;= 0,<br>               type = undefined<br>                     | device<br>                     | directory<br>                     | other<br>                     | regular<br>                     | symlink,<br>               access = undefined<br>                       | read<br>                       | write<br>                       | read_write<br>                       | none,<br>               atime = undefined | <span class="bold_code"><a href="file.html#type-date_time">file:date_time()</a></span> | integer(),<br>               mtime = undefined | <span class="bold_code"><a href="file.html#type-date_time">file:date_time()</a></span> | integer(),<br>               ctime = undefined | <span class="bold_code"><a href="file.html#type-date_time">file:date_time()</a></span> | integer(),<br>               mode = undefined | integer(),<br>               links = undefined | integer() &gt;= 0,<br>               major_device = undefined | integer(),<br>               minor_device = undefined | integer(),<br>               inode = undefined | integer(),<br>               uid = undefined | integer(),<br>               gid = undefined | integer()}</span><br></p>
+    <p>
+      <span class="bold_code"><a name="type-location">location()</a> = integer()<br>           | {bof, Offset :: integer()}<br>           | {cur, Offset :: integer()}<br>           | {eof, Offset :: integer()}<br>           | bof<br>           | cur<br>           | eof</span><br></p>
+    <p>
+      <span class="bold_code"><a name="type-mode">mode()</a> = read<br>       | write<br>       | append<br>       | exclusive<br>       | raw<br>       | binary<br>       | {delayed_write,<br>          Size :: integer() &gt;= 0,<br>          Delay :: integer() &gt;= 0}<br>       | delayed_write<br>       | {read_ahead, Size :: integer() &gt;= 1}<br>       | read_ahead<br>       | compressed<br>       | {encoding, <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','unicode.html#type-encoding');">unicode:encoding()</a></span>}</span><br></p>
+    <p>
+      <span class="bold_code"><a name="type-file_info_option">file_info_option()</a> = {time, local}<br>                   | {time, universal}<br>                   | {time, posix}</span><br></p>
+    <p>
+      <span class="bold_code"><a name="type-sendfile_option">sendfile_option()</a> = {chunk_size, integer() &gt;= 0}</span><br></p>
+   
+
+  <h3>EXPORTS</h3>
+    <p><a name="advise-4"></a><span class="bold_code">advise(IoDevice, Offset, Length, Advise) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Offset = Length = integer()</span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Advise = posix_file_advise()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+<div class="REFTYPES">
+      <span class="bold_code">posix_file_advise() = normal<br>                    | sequential<br>                    | random<br>                    | no_reuse<br>                    | will_need<br>                    | dont_need</span><br>
+</div>
+</div></p>
+<div class="REFBODY"><p>
+        <p><span class="code">advise/4</span> can be used to announce an intention to access file
+          data in a specific pattern in the future, thus allowing the
+          operating system to perform appropriate optimizations.</p>
+        <p>On some platforms, this function might have no effect.</p>
+      </p></div>
+    <p><a name="change_group-2"></a><span class="bold_code">change_group(Filename, Gid) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Gid = integer()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Changes group of a file. See
+          <span class="bold_code"><a href="#write_file_info-2">write_file_info/2</a></span>.</p>
+      </p></div>
+    <p><a name="change_mode-2"></a><span class="bold_code">change_mode(Filename, Mode) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Mode = integer()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Changes permissions of a file. See
+          <span class="bold_code"><a href="#write_file_info-2">write_file_info/2</a></span>.</p>
+      </p></div>
+    <p><a name="change_owner-2"></a><span class="bold_code">change_owner(Filename, Uid) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Uid = integer()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Changes owner of a file. See
+          <span class="bold_code"><a href="#write_file_info-2">write_file_info/2</a></span>.</p>
+      </p></div>
+    <p><a name="change_owner-3"></a><span class="bold_code">change_owner(Filename, Uid, Gid) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Uid = Gid = integer()</span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Changes owner and group of a file. See
+          <span class="bold_code"><a href="#write_file_info-2">write_file_info/2</a></span>.</p>
+      </p></div>
+    <p><a name="change_time-2"></a><span class="bold_code">change_time(Filename, Mtime) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Mtime = <span class="bold_code"><a href="#type-date_time">date_time()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Changes the modification and access times of a file. See
+          <span class="bold_code"><a href="#write_file_info-2">write_file_info/2</a></span>.</p>
+      </p></div>
+    <p><a name="change_time-3"></a><span class="bold_code">change_time(Filename, Atime, Mtime) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Atime = Mtime = <span class="bold_code"><a href="#type-date_time">date_time()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Changes the modification and last access times of a file. See
+          <span class="bold_code"><a href="#write_file_info-2">write_file_info/2</a></span>.</p>
+      </p></div>
+    <p><a name="close-1"></a><span class="bold_code">close(IoDevice) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Closes the file referenced by <span class="code">IoDevice</span>. It mostly
+          returns <span class="code">ok</span>, expect for some severe errors such as out
+          of memory.</p>
+        <p>Note that if the option <span class="code">delayed_write</span> was
+          used when opening the file, <span class="code">close/1</span> might return an
+          old write error and not even try to close the file. See
+          <span class="bold_code"><a href="#open-2">open/2</a></span>.</p>
+      </p></div>
+    <p><a name="consult-1"></a><span class="bold_code">consult(Filename) -&gt; {ok, Terms} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Terms = [term()]</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Reads Erlang terms, separated by '.', from
+           <span class="code">Filename</span>. Returns one of the following:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, Terms}</span></strong></dt>
+          <dd>
+            <p>The file was successfully read.</p>
+          </dd>
+          <dt><strong><span class="code">{error, atom()}</span></strong></dt>
+          <dd>
+            <p>An error occurred when opening the file or reading it.
+              See <span class="bold_code"><a href="#open-2">open/2</a></span> for a list
+              of typical error codes.</p>
+          </dd>
+          <dt><strong><span class="code">{error, {Line, Mod,
+                           Term}}</span></strong></dt>
+          <dd>
+            <p>An error occurred when interpreting the Erlang terms in
+              the file. Use <span class="code">format_error/1</span> to convert
+              the three-element tuple to an English description of
+              the error.</p>
+          </dd>
+        </dl>
+        <p>Example:</p>
+<div class="example"><pre>f.txt:  {person, "kalle", 25}.
+        {person, "pelle", 30}.</pre></div>
+<div class="example"><pre>1&gt; <span class="bold_code">file:consult("f.txt").</span>
+{ok,[{person,"kalle",25},{person,"pelle",30}]}</pre></div>
+      </p></div>
+    <p><a name="copy-2"></a><span class="bold_code">copy(Source, Destination) -&gt; {ok, BytesCopied} | {error, Reason}</span><br><a name="copy-3"></a><span class="bold_code">copy(Source, Destination, ByteCount) -&gt;<br>        {ok, BytesCopied} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Source = Destination = <span class="bold_code"><a href="#type-io_device">io_device()</a></span> | Filename | {Filename, Modes}</span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Modes = [<span class="bold_code"><a href="#type-mode">mode()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">ByteCount = integer() &gt;= 0 | infinity</span></div>
+<div class="REFTYPES"><span class="bold_code">BytesCopied = integer() &gt;= 0</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Copies <span class="code">ByteCount</span> bytes from
+          <span class="code">Source</span> to <span class="code">Destination</span>.
+          <span class="code">Source</span> and <span class="code">Destination</span> refer
+          to either filenames or IO devices from e.g. <span class="code">open/2</span>.
+          <span class="code">ByteCount</span> defaults to <span class="code">infinity</span>, denoting an
+          infinite number of bytes.</p>
+        <p>The argument <span class="code">Modes</span> is a list of possible modes,
+          see <span class="bold_code"><a href="#open-2">open/2</a></span>, and defaults to
+          [].</p>
+        <p>If both <span class="code">Source</span> and
+          <span class="code">Destination</span> refer to
+          filenames, the files are opened with <span class="code">[read, binary]</span>
+          and <span class="code">[write, binary]</span> prepended to their mode lists,
+          respectively, to optimize the copy.</p>
+        <p>If <span class="code">Source</span> refers to a filename, it is opened with
+          <span class="code">read</span> mode prepended to the mode list before the copy,
+          and closed when done.</p>
+        <p>If <span class="code">Destination</span> refers to a filename, it is opened
+          with <span class="code">write</span> mode prepended to the mode list before
+          the copy, and closed when done.</p>
+        <p>Returns <span class="code">{ok, BytesCopied}</span> where
+          <span class="code">BytesCopied</span> is
+          the number of bytes that actually was copied, which may be
+          less than <span class="code">ByteCount</span> if end of file was
+          encountered on the source. If the operation fails,
+          <span class="code">{error, Reason}</span> is returned.</p>
+        <p>Typical error reasons: As for <span class="code">open/2</span> if a file had to
+          be opened, and as for <span class="code">read/2</span> and <span class="code">write/2</span>.</p>
+      </p></div>
+    <p><a name="del_dir-1"></a><span class="bold_code">del_dir(Dir) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Dir = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Tries to delete the directory <span class="code">Dir</span>.
+          The directory must
+          be empty before it can be deleted. Returns <span class="code">ok</span> if
+          successful.</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing search or write permissions for the parent
+              directories of <span class="code">Dir</span>.</p>
+          </dd>
+          <dt><strong><span class="code">eexist</span></strong></dt>
+          <dd>
+            <p>The directory is not empty.</p>
+          </dd>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The directory does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of <span class="code">Dir</span> is not a directory.
+              On some platforms, <span class="code">enoent</span> is returned instead.</p>
+          </dd>
+          <dt><strong><span class="code">einval</span></strong></dt>
+          <dd>
+            <p>Attempt to delete the current directory. On some
+              platforms, <span class="code">eacces</span> is returned instead.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="delete-1"></a><span class="bold_code">delete(Filename) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Tries to delete the file <span class="code">Filename</span>.
+          Returns <span class="code">ok</span> if successful.</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The file does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing permission for the file or one of its parents.</p>
+          </dd>
+          <dt><strong><span class="code">eperm</span></strong></dt>
+          <dd>
+            <p>The file is a directory and the user is not super-user.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of the file name is not a directory. On some
+              platforms, <span class="code">enoent</span> is returned instead.</p>
+          </dd>
+          <dt><strong><span class="code">einval</span></strong></dt>
+          <dd>
+            <p><span class="code">Filename</span> had an improper type, such as tuple.</p>
+          </dd>
+        </dl>
+        <div class="warning">
+<div class="label">Warning</div>
+<div class="content"><p>
+          <p>In a future release, a bad type for the
+            <span class="code">Filename</span> argument will probably generate
+            an exception.</p>
+        </p></div>
+</div>
+      </p></div>
+    <p><a name="eval-1"></a><span class="bold_code">eval(Filename) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Reads and evaluates Erlang expressions, separated by '.' (or
+          ',', a sequence of expressions is also an expression), from
+          <span class="code">Filename</span>. The actual result of the evaluation
+          is not returned; any expression sequence in the file must be there
+          for its side effect. Returns one of the following:</p>
+        <dl>
+          <dt><strong><span class="code">ok</span></strong></dt>
+          <dd>
+            <p>The file was read and evaluated.</p>
+          </dd>
+          <dt><strong><span class="code">{error, atom()}</span></strong></dt>
+          <dd>
+            <p>An error occurred when opening the file or reading it.
+              See <span class="code">open/2</span> for a list of typical error codes.</p>
+          </dd>
+          <dt><strong><span class="code">{error, {Line, Mod,
+                           Term}}</span></strong></dt>
+          <dd>
+            <p>An error occurred when interpreting the Erlang
+              expressions in the file. Use <span class="code">format_error/1</span> to
+              convert the three-element tuple to an English description
+              of the error.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="eval-2"></a><span class="bold_code">eval(Filename, Bindings) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Bindings = <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','erl_eval.html#type-binding_struct');">erl_eval:binding_struct()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>The same as <span class="code">eval/1</span> but the variable bindings
+          <span class="code">Bindings</span> are used in the evaluation. See
+          <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','erl_eval.html');">erl_eval(3)</a></span> about
+          variable bindings.</p>
+      </p></div>
+    <p><a name="file_info-1"><span class="bold_code">file_info(Filename) -&gt; {ok, FileInfo} | {error, Reason}</span></a><br></p>
+<div class="REFBODY"><p>
+        <p>This function is obsolete. Use <span class="code">read_file_info/1,2</span>
+          instead.</p>
+      </p></div>
+    <p><a name="format_error-1"></a><span class="bold_code">format_error(Reason) -&gt; Chars</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+<div class="REFTYPES"><span class="bold_code">Chars = string()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Given the error reason returned by any function in this
+          module, returns a descriptive string of the error in English.</p>
+      </p></div>
+    <p><a name="get_cwd-0"></a><span class="bold_code">get_cwd() -&gt; {ok, Dir} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Dir = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span></span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns <span class="code">{ok, Dir}</span>, where <span class="code">Dir</span>
+          is the current
+          working directory of the file server.</p>
+        <div class="note">
+<div class="label">Note</div>
+<div class="content"><p>
+          <p>In rare circumstances, this function can fail on Unix.
+            It may happen if read permission does not exist for
+            the parent directories of the current directory.</p>
+        </p></div>
+</div>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing read permission for one of the parents of
+              the current directory.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="get_cwd-1"></a><span class="bold_code">get_cwd(Drive) -&gt; {ok, Dir} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Drive = string()</span></div>
+<div class="REFTYPES"><span class="bold_code">Dir = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p><span class="code">Drive</span> should be of the form
+          "<span class="code">Letter</span><span class="code">:</span>",
+          for example "c:". Returns <span class="code">{ok, Dir}</span> or
+          <span class="code">{error, Reason}</span>, where <span class="code">Dir</span>
+          is the current
+          working directory of the drive specified.</p>
+        <p>This function returns <span class="code">{error, enotsup}</span> on platforms
+          which have no concept of current drive (Unix, for example).</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">enotsup</span></strong></dt>
+          <dd>
+            <p>The operating system has no concept of drives.</p>
+          </dd>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>The drive does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">einval</span></strong></dt>
+          <dd>
+            <p>The format of <span class="code">Drive</span> is invalid.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="list_dir-1"></a><span class="bold_code">list_dir(Dir) -&gt; {ok, Filenames} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Dir = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Filenames = [<span class="bold_code"><a href="#type-filename">filename()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Lists all the files in a directory. Returns
+          <span class="code">{ok, Filenames}</span> if successful.
+          Otherwise, it returns <span class="code">{error, Reason}</span>.
+          <span class="code">Filenames</span> is a list of
+          the names of all the files in the directory. The names are
+          not sorted.</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing search or write permissions for <span class="code">Dir</span>
+              or one of its parent directories.</p>
+          </dd>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The directory does not exist.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="make_dir-1"></a><span class="bold_code">make_dir(Dir) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Dir = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Tries to create the directory <span class="code">Dir</span>. Missing parent
+          directories are <strong>not</strong> created. Returns <span class="code">ok</span> if
+          successful.</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing search or write permissions for the parent
+              directories of <span class="code">Dir</span>.</p>
+          </dd>
+          <dt><strong><span class="code">eexist</span></strong></dt>
+          <dd>
+            <p>There is already a file or directory named <span class="code">Dir</span>.</p>
+          </dd>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>A component of <span class="code">Dir</span> does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">enospc</span></strong></dt>
+          <dd>
+            <p>There is a no space left on the device.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of <span class="code">Dir</span> is not a directory.
+              On some platforms, <span class="code">enoent</span> is returned instead.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="make_link-2"></a><span class="bold_code">make_link(Existing, New) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Existing = New = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Makes a hard link from <span class="code">Existing</span> to
+          <span class="code">New</span>, on
+          platforms that support links (Unix and Windows). This function returns
+          <span class="code">ok</span> if the link was successfully created, or
+          <span class="code">{error, Reason}</span>. On platforms that do not support
+          links, <span class="code">{error,enotsup}</span> is returned.</p>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing read or write permissions for the parent
+              directories of <span class="code">Existing</span> or
+              <span class="code">New</span>.</p>
+          </dd>
+          <dt><strong><span class="code">eexist</span></strong></dt>
+          <dd>
+            <p><span class="code">New</span> already exists.</p>
+          </dd>
+          <dt><strong><span class="code">enotsup</span></strong></dt>
+          <dd>
+            <p>Hard links are not supported on this platform.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="make_symlink-2"></a><span class="bold_code">make_symlink(Existing, New) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Existing = New = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>This function creates a symbolic link <span class="code">New</span> to
+          the file or directory <span class="code">Existing</span>, on platforms that
+          support symbolic links (most Unix systems and Windows beginning with
+	  Vista).
+	  <span class="code">Existing</span> need not exist.
+          This function returns <span class="code">ok</span> if the link was
+          successfully created, or <span class="code">{error, Reason}</span>.
+          On platforms
+          that do not support symbolic links, <span class="code">{error, enotsup}</span>
+          is returned.</p>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing read or write permissions for the parent directories
+            of <span class="code">Existing</span> or <span class="code">New</span>.</p>
+          </dd>
+          <dt><strong><span class="code">eexist</span></strong></dt>
+          <dd>
+            <p><span class="code">New</span> already exists.</p>
+          </dd>
+          <dt><strong><span class="code">enotsup</span></strong></dt>
+          <dd>
+            <p>Symbolic links are not supported on this platform.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="native_name_encoding-0"><span class="bold_code">native_name_encoding() -&gt; latin1 | utf8</span></a><br></p>
+<div class="REFBODY"><p>
+        <p>This function returns the configured default file name encoding to use for raw file names. Generally an application supplying file names raw (as binaries), should obey the character encoding returned by this function.</p>
+	<p>By default, the VM uses ISO-latin-1 file name encoding on filesystems and/or OSes that use completely transparent file naming. This includes all Unix versions except MacOSX, where the vfs layer enforces UTF-8 file naming. By giving the experimental option <span class="code">+fnu</span> when starting Erlang, UTF-8 translation of file names can be turned on even for those systems. If Unicode file name translation is in effect, the system behaves as usual as long as file names conform to the encoding, but will return file names that are not properly encoded in UTF-8 as raw file names (i.e. binaries).</p> 
+	<p>On Windows, this function also returns <span class="code">utf8</span> by default. The OS uses a pure Unicode naming scheme and file names are always possible to interpret as valid Unicode. The fact that the underlying Windows OS actually encodes file names using little endian UTF-16 can be ignored by the Erlang programmer. Windows and MacOSX are the only operating systems where the VM operates in Unicode file name mode by default.</p>
+      </p></div>
+    <p><a name="open-2"></a><span class="bold_code">open(Filename, Modes) -&gt; {ok, IoDevice} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Modes = [<span class="bold_code"><a href="#type-mode">mode()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | system_limit</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Opens the file <span class="code">Filename</span> in the mode determined
+          by <span class="code">Modes</span>, which may contain one or more of the
+          following items:</p>
+        <dl>
+          <dt><strong><span class="code">read</span></strong></dt>
+          <dd>
+            <p>The file, which must exist, is opened for reading.</p>
+          </dd>
+          <dt><strong><span class="code">write</span></strong></dt>
+          <dd>
+            <p>The file is opened for writing. It is created if it does
+              not exist. If the file exists, and if <span class="code">write</span> is not
+              combined with <span class="code">read</span>, the file will be truncated.</p>
+          </dd>
+          <dt><strong><span class="code">append</span></strong></dt>
+          <dd>
+            <p>The file will be opened for writing, and it will be
+              created if it does not exist. Every write operation to a
+              file opened with <span class="code">append</span> will take place at
+              the end of the file.</p>
+          </dd>
+          <dt><strong><span class="code">exclusive</span></strong></dt>
+          <dd>
+            <p>The file, when opened for writing, is created if it
+              does not exist. If the file exists, open will return
+              <span class="code">{error, eexist}</span>.</p>
+	    <div class="warning">
+<div class="label">Warning</div>
+<div class="content"><p><p>This option does not guarantee exclusiveness on
+	    file systems that do not support O_EXCL properly,
+	    such as NFS. Do not depend on this option unless you
+	    know that the file system supports it (in general, local
+	    file systems should be safe).</p></p></div>
+</div>
+          </dd>
+          <dt><strong><span class="code">raw</span></strong></dt>
+          <dd>
+            <p>The <span class="code">raw</span> option allows faster access to a file,
+              because no Erlang process is needed to handle the file.
+              However, a file opened in this way has the following
+              limitations:</p>
+            <ul>
+              <li>The functions in the <span class="code">io</span> module cannot be used,
+               because they can only talk to an Erlang process.
+               Instead, use the <span class="code">read/2</span>, <span class="code">read_line/1</span> and 
+	       <span class="code">write/2</span>
+               functions.</li>
+	      <li>Especially if <span class="code">read_line/1</span> is to be used on a <span class="code">raw</span> file, it is recommended to combine this option with the <span class="code">{read_ahead, Size}</span> option as line oriented I/O is inefficient without buffering.</li>
+              <li>Only the Erlang process which opened the file can use
+               it.</li>
+              <li>A remote Erlang file server cannot be used;
+               the computer on which the Erlang node is running must
+               have access to the file system (directly or through
+               NFS).</li>
+            </ul>
+          </dd>
+          <dt><strong><span class="code">binary</span></strong></dt>
+          <dd>
+            <p>When this option has been given, read operations on the file
+	       will return binaries rather than lists.</p>
+          </dd>
+          <dt><strong><span class="code">{delayed_write, Size, Delay}</span></strong></dt>
+          <dd>
+            <p>If this option is used, the data in subsequent
+              <span class="code">write/2</span> calls is buffered until there are at least
+              <span class="code">Size</span> bytes buffered, or until the oldest buffered
+              data is <span class="code">Delay</span> milliseconds old. Then all buffered
+              data is written in one operating system call.
+              The buffered data is also flushed before some other file
+              operation than <span class="code">write/2</span> is executed.</p>
+            <p>The purpose of this option is to increase performance
+              by reducing the number of operating system calls, so the
+              <span class="code">write/2</span> calls should be for sizes significantly
+              less than <span class="code">Size</span>, and not interspersed by to many
+              other file operations, for this to happen.</p>
+            <p>When this option is used, the result of <span class="code">write/2</span>
+              calls may prematurely be reported as successful, and if
+              a write error should actually occur the error is
+              reported as the result of the next file operation, which
+              is not executed.</p>
+            <p>For example, when <span class="code">delayed_write</span> is used, after a
+              number of <span class="code">write/2</span> calls, <span class="code">close/1</span> might
+              return <span class="code">{error, enospc}</span> because there was not enough
+              space on the disc for previously written data, and
+              <span class="code">close/1</span> should probably be called again since the
+              file is still open.</p>
+          </dd>
+          <dt><strong><span class="code">delayed_write</span></strong></dt>
+          <dd>
+            <p>The same as <span class="code">{delayed_write, Size, Delay}</span> with
+              reasonable default values for <span class="code">Size</span> and
+              <span class="code">Delay</span>. (Roughly some 64 KBytes, 2 seconds)</p>
+          </dd>
+          <dt><strong><span class="code">{read_ahead, Size}</span></strong></dt>
+          <dd>
+            <p>This option activates read data buffering. If
+              <span class="code">read/2</span> calls are for significantly less than
+              <span class="code">Size</span> bytes, read operations towards the operating
+              system are still performed for blocks of <span class="code">Size</span>
+              bytes. The extra data is buffered and returned in
+              subsequent <span class="code">read/2</span> calls, giving a performance gain
+              since the number of operating system calls is reduced.</p>
+	    <p>The <span class="code">read_ahead</span> buffer is also highly utilized
+	      by the <span class="code">read_line/1</span> function in <span class="code">raw</span> mode,
+	      why this option is recommended (for performance reasons)
+	      when accessing raw files using that function.</p>
+            <p>If <span class="code">read/2</span> calls are for sizes not significantly
+              less than, or even greater than <span class="code">Size</span> bytes, no
+              performance gain can be expected.</p>
+          </dd>
+          <dt><strong><span class="code">read_ahead</span></strong></dt>
+          <dd>
+            <p>The same as <span class="code">{read_ahead, Size}</span> with a reasonable
+              default value for <span class="code">Size</span>. (Roughly some 64 KBytes)</p>
+          </dd>
+          <dt><strong><span class="code">compressed</span></strong></dt>
+          <dd>
+            <p>Makes it possible to read or write gzip compressed
+              files. The <span class="code">compressed</span> option must be combined
+	      with either <span class="code">read</span> or <span class="code">write</span>, but not both.
+	      Note that the file size obtained with
+              <span class="code">read_file_info/1</span> will most probably not match the
+              number of bytes that can be read from a compressed file.</p>
+          </dd>
+          <dt><strong><span class="code">{encoding, Encoding}</span></strong></dt>
+          <dd>
+            <p>Makes the file perform automatic translation of characters to and from a specific (Unicode) encoding. Note that the data supplied to file:write or returned by file:read still is byte oriented, this option only denotes how data is actually stored in the disk file.</p>
+	    <p>Depending on the encoding, different methods of reading and writing data is preferred. The default encoding of <span class="code">latin1</span> implies using this (the file) module for reading and writing data, as the interfaces provided here work with byte-oriented data, while using other (Unicode) encodings makes the  <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','io.html');">io(3)</a></span> module's <span class="code">get_chars</span>, <span class="code">get_line</span> and <span class="code">put_chars</span> functions more suitable, as they can work with the full Unicode range.</p>
+	    <p>If data is sent to an <span class="code">io_device()</span> in a format that cannot be converted to the specified encoding, or if data is read by a function that returns data in a format that cannot cope with the character range of the data, an error occurs and the file will be closed.</p> 
+	    <p>The allowed values for <span class="code">Encoding</span> are:</p>
+	    <dl>
+	    <dt><strong><span class="code">latin1</span></strong></dt>
+	    <dd>
+	    <p>The default encoding. Bytes supplied to i.e. file:write are written as is on the file, likewise bytes read from the file are returned to i.e. file:read as is. If the <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','io.html');">io(3)</a></span> module is used for writing, the file can only cope with Unicode characters up to codepoint 255 (the ISO-latin-1 range).</p>
+	    </dd>
+	    <dt><strong><span class="code">unicode</span> or <span class="code">utf8</span></strong></dt>
+	    <dd>
+	    <p>Characters are translated to and from the UTF-8 encoding before being written to or read from the file. A file opened in this way might be readable using the file:read function, as long as no data stored on the file lies beyond the ISO-latin-1 range (0..255), but failure will occur if the data contains Unicode codepoints beyond that range. The file is best read with the functions in the Unicode aware   <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','io.html');">io(3)</a></span> module.</p>
+	    <p>Bytes written to the file by any means are translated to UTF-8 encoding before actually being stored on the disk file.</p>
+	    </dd>
+	    <dt><strong><span class="code">utf16</span> or <span class="code">{utf16,big}</span></strong></dt>
+	    <dd>
+	    <p>Works like <span class="code">unicode</span>, but translation is done to and from big endian UTF-16 instead of UTF-8.</p>
+	    </dd>
+	    <dt><strong><span class="code">{utf16,little}</span></strong></dt>
+	    <dd>
+	    <p>Works like <span class="code">unicode</span>, but translation is done to and from little endian UTF-16 instead of UTF-8.</p>
+	    </dd>
+	    <dt><strong><span class="code">utf32</span> or <span class="code">{utf32,big}</span></strong></dt>
+	    <dd>
+	    <p>Works like <span class="code">unicode</span>, but translation is done to and from big endian UTF-32 instead of UTF-8.</p>
+	    </dd>
+	    <dt><strong><span class="code">{utf32,little}</span></strong></dt>
+	    <dd>
+	    <p>Works like <span class="code">unicode</span>, but translation is done to and from little endian UTF-32 instead of UTF-8.</p>
+	    </dd>
+	    </dl>
+	    <p>The Encoding can be changed for a file "on the fly" by using the <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','io.html#setopts-2');">io:setopts/2</a></span> function, why a file can be analyzed in latin1 encoding for i.e. a BOM, positioned beyond the BOM and then be set for the right encoding before further reading.See the <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','unicode.html');">unicode(3)</a></span> module for functions identifying BOM's.</p>
+	    <p>This option is not allowed on <span class="code">raw</span> files.</p>
+          </dd>
+        </dl>
+        <p>Returns:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, IoDevice}</span></strong></dt>
+          <dd>
+            <p>The file has been opened in the requested mode.
+              <span class="code">IoDevice</span> is a reference to the file.</p>
+          </dd>
+          <dt><strong><span class="code">{error, Reason}</span></strong></dt>
+          <dd>
+            <p>The file could not be opened.</p>
+          </dd>
+        </dl>
+        <p><span class="code">IoDevice</span> is really the pid of the process which
+          handles the file. This process is linked to the process
+          which originally opened the file. If any process to which
+          the <span class="code">IoDevice</span> is linked terminates, the file will
+          be closed and the process itself will be terminated.
+          An <span class="code">IoDevice</span> returned from this call can be used
+          as an argument to the IO functions (see
+          <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','io.html');">io(3)</a></span>).</p>
+        <div class="note">
+<div class="label">Note</div>
+<div class="content"><p>
+          <p>In previous versions of <span class="code">file</span>, modes were given
+            as one of the atoms <span class="code">read</span>, <span class="code">write</span>, or
+            <span class="code">read_write</span> instead of a list. This is still allowed
+            for reasons of backwards compatibility, but should not be
+            used for new code. Also note that <span class="code">read_write</span> is not
+            allowed in a mode list.</p>
+        </p></div>
+</div>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The file does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing permission for reading the file or searching one
+              of the parent directories.</p>
+          </dd>
+          <dt><strong><span class="code">eisdir</span></strong></dt>
+          <dd>
+            <p>The named file is not a regular file. It may be a
+              directory, a fifo, or a device.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of the file name is not a directory. On some
+              platforms, <span class="code">enoent</span> is returned instead.</p>
+          </dd>
+          <dt><strong><span class="code">enospc</span></strong></dt>
+          <dd>
+            <p>There is a no space left on the device (if <span class="code">write</span>
+              access was specified).</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="path_consult-2"></a><span class="bold_code">path_consult(Path, Filename) -&gt;<br>                {ok, Terms, FullName} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Path = [Dir]</span></div>
+<div class="REFTYPES"><span class="bold_code">Dir = Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Terms = [term()]</span></div>
+<div class="REFTYPES"><span class="bold_code">FullName = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Searches the path <span class="code">Path</span> (a list of directory
+          names) until the file <span class="code">Filename</span> is found.
+          If <span class="code">Filename</span>
+          is an absolute filename, <span class="code">Path</span> is ignored.
+          Then reads Erlang terms, separated by '.', from the file.
+          Returns one of the following:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, Terms, FullName}</span></strong></dt>
+          <dd>
+            <p>The file was successfully read. <span class="code">FullName</span> is
+              the full name of the file.</p>
+          </dd>
+          <dt><strong><span class="code">{error, enoent}</span></strong></dt>
+          <dd>
+            <p>The file could not be found in any of the directories in
+              <span class="code">Path</span>.</p>
+          </dd>
+          <dt><strong><span class="code">{error, atom()}</span></strong></dt>
+          <dd>
+            <p>An error occurred when opening the file or reading it.
+              See <span class="bold_code"><a href="#open-2">open/2</a></span> for a list
+              of typical error codes.</p>
+          </dd>
+          <dt><strong><span class="code">{error, {Line, Mod,
+                           Term}}</span></strong></dt>
+          <dd>
+            <p>An error occurred when interpreting the Erlang terms in
+              the file. Use <span class="code">format_error/1</span> to convert
+              the three-element tuple to an English description of
+              the error.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="path_eval-2"></a><span class="bold_code">path_eval(Path, Filename) -&gt; {ok, FullName} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Path = [Dir :: <span class="bold_code"><a href="#type-name">name()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">FullName = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Searches the path <span class="code">Path</span> (a list of directory
+          names) until the file <span class="code">Filename</span> is found.
+          If <span class="code">Filename</span> is an absolute file name,
+          <span class="code">Path</span> is ignored. Then reads
+          and evaluates Erlang expressions, separated by '.' (or ',', a
+          sequence of expressions is also an expression), from the file.
+          The actual result of evaluation is not returned; any
+          expression sequence in the file must be there for its side
+          effect. Returns one of the following:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, FullName}</span></strong></dt>
+          <dd>
+            <p>The file was read and evaluated. <span class="code">FullName</span> is
+              the full name of the file.</p>
+          </dd>
+          <dt><strong><span class="code">{error, enoent}</span></strong></dt>
+          <dd>
+            <p>The file could not be found in any of the directories in
+              <span class="code">Path</span>.</p>
+          </dd>
+          <dt><strong><span class="code">{error, atom()}</span></strong></dt>
+          <dd>
+            <p>An error occurred when opening the file or reading it.
+              See <span class="bold_code"><a href="#open-2">open/2</a></span> for a list
+              of typical error codes.</p>
+          </dd>
+          <dt><strong><span class="code">{error, {Line, Mod,
+                           Term}}</span></strong></dt>
+          <dd>
+            <p>An error occurred when interpreting the Erlang
+              expressions in the file. Use <span class="code">format_error/1</span> to
+              convert the three-element tuple to an English description
+              of the error.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="path_open-3"></a><span class="bold_code">path_open(Path, Filename, Modes) -&gt;<br>             {ok, IoDevice, FullName} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Path = [Dir :: <span class="bold_code"><a href="#type-name">name()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Modes = [<span class="bold_code"><a href="#type-mode">mode()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">FullName = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | system_limit</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Searches the path <span class="code">Path</span> (a list of directory
+          names) until the file <span class="code">Filename</span> is found.
+          If <span class="code">Filename</span>
+          is an absolute file name, <span class="code">Path</span> is ignored.
+          Then opens the file in the mode determined by <span class="code">Modes</span>.
+          Returns one of the following:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, IoDevice, FullName}</span></strong></dt>
+          <dd>
+            <p>The file has been opened in the requested mode.
+              <span class="code">IoDevice</span> is a reference to the file and
+              <span class="code">FullName</span> is the full name of the file.</p>
+          </dd>
+          <dt><strong><span class="code">{error, enoent}</span></strong></dt>
+          <dd>
+            <p>The file could not be found in any of the directories in
+              <span class="code">Path</span>.</p>
+          </dd>
+          <dt><strong><span class="code">{error, atom()}</span></strong></dt>
+          <dd>
+            <p>The file could not be opened.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="path_script-2"></a><span class="bold_code">path_script(Path, Filename) -&gt;<br>               {ok, Value, FullName} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Path = [Dir :: <span class="bold_code"><a href="#type-name">name()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Value = term()</span></div>
+<div class="REFTYPES"><span class="bold_code">FullName = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Searches the path <span class="code">Path</span> (a list of directory
+          names) until the file <span class="code">Filename</span> is found.
+          If <span class="code">Filename</span> is an absolute file name,
+          <span class="code">Path</span> is ignored. Then reads
+          and evaluates Erlang expressions, separated by '.' (or ',', a
+          sequence of expressions is also an expression), from the file.
+          Returns one of the following:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, Value, FullName}</span></strong></dt>
+          <dd>
+            <p>The file was read and evaluated. <span class="code">FullName</span> is
+              the full name of the file and <span class="code">Value</span> the value of
+              the last expression.</p>
+          </dd>
+          <dt><strong><span class="code">{error, enoent}</span></strong></dt>
+          <dd>
+            <p>The file could not be found in any of the directories in
+              <span class="code">Path</span>.</p>
+          </dd>
+          <dt><strong><span class="code">{error, atom()}</span></strong></dt>
+          <dd>
+            <p>An error occurred when opening the file or reading it.
+              See <span class="bold_code"><a href="#open-2">open/2</a></span> for a list
+              of typical error codes.</p>
+          </dd>
+          <dt><strong><span class="code">{error, {Line, Mod,
+                           Term}}</span></strong></dt>
+          <dd>
+            <p>An error occurred when interpreting the Erlang
+              expressions in the file. Use <span class="code">format_error/1</span> to
+              convert the three-element tuple to an English description
+              of the error.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="path_script-3"></a><span class="bold_code">path_script(Path, Filename, Bindings) -&gt;<br>               {ok, Value, FullName} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Path = [Dir :: <span class="bold_code"><a href="#type-name">name()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Bindings = <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','erl_eval.html#type-binding_struct');">erl_eval:binding_struct()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Value = term()</span></div>
+<div class="REFTYPES"><span class="bold_code">FullName = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>The same as <span class="code">path_script/2</span> but the variable bindings
+          <span class="code">Bindings</span> are used in the evaluation. See
+          <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','erl_eval.html');">erl_eval(3)</a></span> about
+          variable bindings.</p>
+      </p></div>
+    <p><a name="pid2name-1"></a><span class="bold_code">pid2name(Pid) -&gt; {ok, Filename} | undefined</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Pid = pid()</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>If <span class="code">Pid</span> is an IO device, that is, a pid returned from
+          <span class="code">open/2</span>, this function returns the filename, or rather:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, Filename}</span></strong></dt>
+          <dd>
+            <p>If this node's file server is not a slave, the file was
+              opened by this node's file server, (this implies that
+              <span class="code">Pid</span> must be a local pid) and the file is not
+              closed. <span class="code">Filename</span> is the filename in flat string
+              format.</p>
+          </dd>
+          <dt><strong><span class="code">undefined</span></strong></dt>
+          <dd>
+            <p>In all other cases.</p>
+          </dd>
+        </dl>
+        <div class="warning">
+<div class="label">Warning</div>
+<div class="content"><p>
+          <p>This function is intended for debugging only.</p>
+        </p></div>
+</div>
+      </p></div>
+    <p><a name="position-2"></a><span class="bold_code">position(IoDevice, Location) -&gt;<br>            {ok, NewPosition} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Location = <span class="bold_code"><a href="#type-location">location()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">NewPosition = integer()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Sets the position of the file referenced by <span class="code">IoDevice</span>
+          to <span class="code">Location</span>. Returns
+          <span class="code">{ok, NewPosition}</span> (as
+          absolute offset) if successful, otherwise
+          <span class="code">{error, Reason}</span>. <span class="code">Location</span> is
+          one of the following:</p>
+        <dl>
+          <dt><strong><span class="code">Offset</span></strong></dt>
+          <dd>
+            <p>The same as <span class="code">{bof, Offset}</span>.</p>
+          </dd>
+          <dt><strong><span class="code">{bof, Offset}</span></strong></dt>
+          <dd>
+            <p>Absolute offset.</p>
+          </dd>
+          <dt><strong><span class="code">{cur, Offset}</span></strong></dt>
+          <dd>
+            <p>Offset from the current position.</p>
+          </dd>
+          <dt><strong><span class="code">{eof, Offset}</span></strong></dt>
+          <dd>
+            <p>Offset from the end of file.</p>
+          </dd>
+          <dt><strong><span class="code">bof | cur | eof</span></strong></dt>
+          <dd>
+            <p>The same as above with <span class="code">Offset</span> 0.</p>
+          </dd>
+        </dl>
+	<p>Note that offsets are counted in bytes, not in characters. If the file is opened using some other <span class="code">encoding</span> than <span class="code">latin1</span>, one byte does not correspond to one character. Positioning in such a file can only be done to known character boundaries, i.e. to a position earlier retrieved by getting a current position, to the beginning/end of the file or to some other position <strong>known</strong> to be on a correct character boundary by some other means (typically beyond a byte order mark in the file, which has a known byte-size).</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">einval</span></strong></dt>
+          <dd>
+            <p>Either <span class="code">Location</span> was illegal, or it
+              evaluated to a
+              negative offset in the file. Note that if the resulting
+              position is a negative value, the result is an error, and
+              after the call the file position is undefined.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="pread-2"></a><span class="bold_code">pread(IoDevice, LocNums) -&gt; {ok, DataL} | eof | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">LocNums = <br>    [{Location :: <span class="bold_code"><a href="#type-location">location()</a></span>, Number :: integer() &gt;= 0}]</span></div>
+<div class="REFTYPES"><span class="bold_code">DataL = [Data]</span></div>
+<div class="REFTYPES"><span class="bold_code">Data = string() | binary() | eof</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Performs a sequence of <span class="code">pread/3</span> in one operation, 
+          which is more efficient than calling them one at a time.
+          Returns <span class="code">{ok, [Data, ...]}</span> or
+          <span class="code">{error, Reason}</span>,
+          where each <span class="code">Data</span>, the result of the corresponding
+          <span class="code">pread</span>, is either a list or a binary depending on
+          the mode of the file, or <span class="code">eof</span> if the requested position
+          was beyond end of file.</p>
+	  <p>As the position is given as a byte-offset, special caution has to be taken when working with files where <span class="code">encoding</span> is set to something else than <span class="code">latin1</span>, as not every byte position will be a valid character boundary on such a file.</p>
+      </p></div>
+    <p><a name="pread-3"></a><span class="bold_code">pread(IoDevice, Location, Number) -&gt;<br>         {ok, Data} | eof | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Location = <span class="bold_code"><a href="#type-location">location()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Number = integer() &gt;= 0</span></div>
+<div class="REFTYPES"><span class="bold_code">Data = string() | binary()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Combines <span class="code">position/2</span> and <span class="code">read/2</span> in one
+          operation, which is more efficient than calling them one at a
+          time. If <span class="code">IoDevice</span> has been opened in raw mode,
+          some restrictions apply: <span class="code">Location</span> is only allowed
+          to be an
+          integer; and the current position of the file is undefined
+          after the operation.</p>
+	  <p>As the position is given as a byte-offset, special caution has to be taken when working with files where <span class="code">encoding</span> is set to something else than <span class="code">latin1</span>, as not every byte position will be a valid character boundary on such a file.</p>
+        </p></div>
+    <p><a name="pwrite-2"></a><span class="bold_code">pwrite(IoDevice, LocBytes) -&gt; ok | {error, {N, Reason}}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">LocBytes = [{Location :: <span class="bold_code"><a href="#type-location">location()</a></span>, Bytes :: iodata()}]</span></div>
+<div class="REFTYPES"><span class="bold_code">N = integer() &gt;= 0</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Performs a sequence of <span class="code">pwrite/3</span> in one operation, 
+          which is more efficient than calling them one at a time.
+          Returns <span class="code">ok</span> or <span class="code">{error, {N,
+          Reason}}</span>, where
+          <span class="code">N</span> is the number of successful writes that was done
+          before the failure.</p>
+	<p>When positioning in a file with other <span class="code">encoding</span> than <span class="code">latin1</span>, caution must be taken to set the position on a correct character boundary, see <span class="bold_code"><a href="#position-2">position/2</a></span> for details.</p>
+      </p></div>
+    <p><a name="pwrite-3"></a><span class="bold_code">pwrite(IoDevice, Location, Bytes) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Location = <span class="bold_code"><a href="#type-location">location()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Bytes = iodata()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Combines <span class="code">position/2</span> and <span class="code">write/2</span> in one
+          operation, which is more efficient than calling them one at a
+          time. If <span class="code">IoDevice</span> has been opened in raw mode,
+          some restrictions apply: <span class="code">Location</span> is only allowed
+          to be an
+          integer; and the current position of the file is undefined
+          after the operation.</p>
+	<p>When positioning in a file with other <span class="code">encoding</span> than <span class="code">latin1</span>, caution must be taken to set the position on a correct character boundary, see <span class="bold_code"><a href="#position-2">position/2</a></span> for details.</p>
+      </p></div>
+    <p><a name="read-2"></a><span class="bold_code">read(IoDevice, Number) -&gt; {ok, Data} | eof | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span> | atom()</span></div>
+<div class="REFTYPES"><span class="bold_code">Number = integer() &gt;= 0</span></div>
+<div class="REFTYPES"><span class="bold_code">Data = string() | binary()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Reads <span class="code">Number</span> bytes/characters from the file
+          referenced by <span class="code">IoDevice</span>. The functions
+          <span class="code">read/2</span>, <span class="code">pread/3</span>
+          and <span class="code">read_line/1</span> are the only ways to read from a file
+          opened in raw mode (although they work for normally opened
+          files, too).</p>
+	  <p>For files where <span class="code">encoding</span> is set to something else than <span class="code">latin1</span>, one character might be represented by more than one byte on the file. The parameter <span class="code">Number</span> always denotes the number of <strong>characters</strong> read from the file, why the position in the file might be moved a lot more than this number when reading a Unicode file.</p>
+	  <p>Also if <span class="code">encoding</span> is set to something else than <span class="code">latin1</span>, the <span class="code">read/3</span> call will fail if the data contains characters larger than 255, why the <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','io.html');">io(3)</a></span> module is to be preferred when reading such a file.</p> 
+	  <p>The function returns:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, Data}</span></strong></dt>
+          <dd>
+            <p>If the file was opened in binary mode, the read bytes are
+              returned in a binary, otherwise in a list. The list or
+              binary will be shorter than the number of bytes requested
+              if end of file was reached.</p>
+          </dd>
+          <dt><strong><span class="code">eof</span></strong></dt>
+          <dd>
+            <p>Returned if <span class="code">Number&gt;0</span> and end of file was
+              reached before anything at all could be read.</p>
+          </dd>
+          <dt><strong><span class="code">{error, Reason}</span></strong></dt>
+          <dd>
+            <p>An error occurred.</p>
+          </dd>
+        </dl>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">ebadf</span></strong></dt>
+          <dd>
+            <p>The file is not opened for reading.</p>
+          </dd>
+          <dt><strong><span class="code">{no_translation, unicode, latin1}</span></strong></dt>
+          <dd>
+            <p>The file was opened with another <span class="code">encoding</span> than <span class="code">latin1</span> and the data in the file can not be translated to the byte-oriented data that this function returns.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="read_file-1"></a><span class="bold_code">read_file(Filename) -&gt; {ok, Binary} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Binary = binary()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated | system_limit</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Returns <span class="code">{ok, Binary}</span>, where
+          <span class="code">Binary</span> is a binary
+          data object that contains the contents of
+          <span class="code">Filename</span>, or
+          <span class="code">{error, Reason}</span> if an error occurs.</p>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The file does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing permission for reading the file, or for
+              searching one of the parent directories.</p>
+          </dd>
+          <dt><strong><span class="code">eisdir</span></strong></dt>
+          <dd>
+            <p>The named file is a directory.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of the file name is not a directory. On some
+              platforms, <span class="code">enoent</span> is returned instead.</p>
+          </dd>
+          <dt><strong><span class="code">enomem</span></strong></dt>
+          <dd>
+            <p>There is not enough memory for the contents of the file.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="read_file_info-1"></a><span class="bold_code">read_file_info(Filename) -&gt; {ok, FileInfo} | {error, Reason}</span><br><a name="read_file_info-2"></a><span class="bold_code">read_file_info(Filename, Opts) -&gt; {ok, FileInfo} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Opts = [<span class="bold_code"><a href="#type-file_info_option">file_info_option()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">FileInfo = <span class="bold_code"><a href="#type-file_info">file_info()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Retrieves information about a file. Returns
+          <span class="code">{ok, FileInfo}</span> if successful, otherwise
+          <span class="code">{error, Reason}</span>. <span class="code">FileInfo</span>
+          is a record
+          <span class="code">file_info</span>, defined in the Kernel include file
+          <span class="code">file.hrl</span>. Include the following directive in the module
+          from which the function is called:</p>
+        <div class="example"><pre>
+-include_lib("kernel/include/file.hrl").</pre></div>
+		<p>The time type returned in <span class="code">atime</span>, <span class="code">mtime</span> and <span class="code">ctime</span>
+			is dependent on the time type set in <span class="code">Opts :: {time, Type}</span>.
+			Type <span class="code">local</span> will return local time, <span class="code">universal</span> will
+			return universal time and <span class="code">posix</span> will return seconds since
+			or before unix time epoch which is 1970-01-01 00:00 UTC. 
+			Default is <span class="code">{time, local}</span>.
+		</p> 
+		<div class="note">
+<div class="label">Note</div>
+<div class="content"><p>
+          <p>
+			  Since file times is stored in posix time on most OS it is
+			  faster to query file information with the <span class="code">posix</span> option.
+		  </p> 
+        </p></div>
+</div>
+        
+        <p>The record <span class="code">file_info</span> contains the following fields.</p>
+        <dl>
+          <dt><strong><span class="code">size = integer()</span></strong></dt>
+          <dd>
+            <p>Size of file in bytes.</p>
+          </dd>
+          <dt><strong><span class="code">type = device | directory | regular | other</span></strong></dt>
+          <dd>
+            <p>The type of the file.</p>
+          </dd>
+          <dt><strong><span class="code">access = read | write | read_write | none</span></strong></dt>
+          <dd>
+            <p>The current system access to the file.</p>
+          </dd>
+          <dt><strong><span class="code">atime = <span class="bold_code"><a href="#type-date_time">date_time()</a></span> | integer() </span></strong></dt> 
+          <dd>
+            <p>The last time the file was read.</p>
+          </dd>
+          <dt><strong><span class="code">mtime = <span class="bold_code"><a href="#type-date_time">date_time()</a></span> | integer() </span></strong></dt> 
+          <dd>
+            <p>The last time the file was written.</p>
+          </dd>
+          <dt><strong><span class="code">ctime = <span class="bold_code"><a href="#type-date_time">date_time()</a></span> | integer() </span></strong></dt> 
+          <dd>
+            <p>The interpretation of this time field depends on
+              the operating system. On Unix, it is the last time
+              the file or the inode was changed. In Windows, it is
+              the create time.</p>
+          </dd>
+          <dt><strong><span class="code">mode = integer()</span></strong></dt>
+          <dd>
+            <p>The file permissions as the sum of the following bit
+              values:</p>
+            <dl>
+              <dt><strong>8#00400</strong></dt>
+              <dd>read permission: owner</dd>
+              <dt><strong>8#00200</strong></dt>
+              <dd>write permission: owner</dd>
+              <dt><strong>8#00100</strong></dt>
+              <dd>execute permission: owner</dd>
+              <dt><strong>8#00040</strong></dt>
+              <dd>read permission: group</dd>
+              <dt><strong>8#00020</strong></dt>
+              <dd>write permission: group</dd>
+              <dt><strong>8#00010</strong></dt>
+              <dd>execute permission: group</dd>
+              <dt><strong>8#00004</strong></dt>
+              <dd>read permission: other</dd>
+              <dt><strong>8#00002</strong></dt>
+              <dd>write permission: other</dd>
+              <dt><strong>8#00001</strong></dt>
+              <dd>execute permission: other</dd>
+              <dt><strong>16#800</strong></dt>
+              <dd>set user id on execution</dd>
+              <dt><strong>16#400</strong></dt>
+              <dd>set group id on execution</dd>
+            </dl>
+            <p>On Unix platforms, other bits than those listed above
+              may be set.</p>
+          </dd>
+          <dt><strong><span class="code">links = integer()</span></strong></dt>
+          <dd>
+            <p>Number of links to the file (this will always be 1 for
+              file systems which have no concept of links).</p>
+          </dd>
+          <dt><strong><span class="code">major_device = integer()</span></strong></dt>
+          <dd>
+            <p>Identifies the file system where the file is located.
+              In Windows, the number indicates a drive as follows:
+              0 means A:, 1 means B:, and so on.</p>
+          </dd>
+          <dt><strong><span class="code">minor_device = integer()</span></strong></dt>
+          <dd>
+            <p>Only valid for character devices on Unix. In all other
+              cases, this field is zero.</p>
+          </dd>
+          <dt><strong><span class="code">inode = integer()</span></strong></dt>
+          <dd>
+            <p>Gives the <span class="code">inode</span> number. On non-Unix file systems,
+              this field will be zero.</p>
+          </dd>
+          <dt><strong><span class="code">uid = integer()</span></strong></dt>
+          <dd>
+            <p>Indicates the owner of the file. Will be zero for
+              non-Unix file systems.</p>
+          </dd>
+          <dt><strong><span class="code">gid = integer()</span></strong></dt>
+          <dd>
+            <p>Gives the group that the owner of the file belongs to.
+              Will be zero for non-Unix file systems.</p>
+          </dd>
+        </dl>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing search permission for one of the parent
+              directories of the file.</p>
+          </dd>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The file does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of the file name is not a directory. On some
+              platforms, <span class="code">enoent</span> is returned instead.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="read_line-1"></a><span class="bold_code">read_line(IoDevice) -&gt; {ok, Data} | eof | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span> | atom()</span></div>
+<div class="REFTYPES"><span class="bold_code">Data = string() | binary()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Reads a line of bytes/characters from the file referenced by
+          <span class="code">IoDevice</span>. Lines are defined to be delimited by the linefeed (LF, <span class="code">\n</span>) character, but any carriage return (CR, <span class="code">\r</span>) followed by a newline is also treated as a single LF character (the carriage return is silently ignored). The line is returned <strong>including</strong> the LF, but excluding any CR immediately followed by a LF. This behaviour is consistent with the behaviour of <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','io.html#get_line-2');">io:get_line/2</a></span>. If end of file is reached without any LF ending the last line, a line with no trailing LF is returned.</p>
+	  <p>The function can be used on files opened in <span class="code">raw</span> mode. It is however inefficient to use it on <span class="code">raw</span> files if the file is not opened with the option <span class="code">{read_ahead, Size}</span> specified, why combining <span class="code">raw</span> and <span class="code">{read_ahead, Size}</span> is highly recommended when opening a text file for raw line oriented reading.</p> 
+	  <p>If <span class="code">encoding</span> is set to something else than <span class="code">latin1</span>, the <span class="code">read_line/1</span> call will fail if the data contains characters larger than 255, why the <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','io.html');">io(3)</a></span> module is to be preferred when reading such a file.</p> 
+	  <p>The function returns:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, Data}</span></strong></dt>
+          <dd>
+	    <p>One line from the file is returned, including the trailing LF, but with CRLF sequences replaced by a single LF (see above).</p>
+            <p>If the file was opened in binary mode, the read bytes are
+              returned in a binary, otherwise in a list.</p>
+          </dd>
+          <dt><strong><span class="code">eof</span></strong></dt>
+          <dd>
+            <p>Returned if end of file was reached
+              before anything at all could be read.</p>
+          </dd>
+          <dt><strong><span class="code">{error, Reason}</span></strong></dt>
+          <dd>
+            <p>An error occurred.</p>
+          </dd>
+        </dl>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">ebadf</span></strong></dt>
+          <dd>
+            <p>The file is not opened for reading.</p>
+          </dd>
+          <dt><strong><span class="code">{no_translation, unicode, latin1}</span></strong></dt>
+          <dd>
+            <p>The file is was opened with another <span class="code">encoding</span> than <span class="code">latin1</span> and the data on the file can not be translated to the byte-oriented data that this function returns.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="read_link-1"></a><span class="bold_code">read_link(Name) -&gt; {ok, Filename} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Name = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-filename">filename()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>This function returns <span class="code">{ok, Filename}</span> if
+          <span class="code">Name</span> refers to a symbolic link or
+          <span class="code">{error, Reason}</span> otherwise.
+          On platforms that do not support symbolic links, the return
+          value will be <span class="code">{error,enotsup}</span>.</p>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">einval</span></strong></dt>
+          <dd>
+            <p><span class="code">Name</span> does not refer to a symbolic link.</p>
+          </dd>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The file does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">enotsup</span></strong></dt>
+          <dd>
+            <p>Symbolic links are not supported on this platform.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="read_link_info-1"></a><span class="bold_code">read_link_info(Name) -&gt; {ok, FileInfo} | {error, Reason}</span><br><a name="read_link_info-2"></a><span class="bold_code">read_link_info(Name, Opts) -&gt; {ok, FileInfo} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Name = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Opts = [<span class="bold_code"><a href="#type-file_info_option">file_info_option()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">FileInfo = <span class="bold_code"><a href="#type-file_info">file_info()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+		  <p>This function works like 
+			 <span class="bold_code"><a href="#read_file_info-2">read_file_info/1,2</a></span> except that
+          if <span class="code">Name</span> is a symbolic link, information about
+          the link will be returned in the <span class="code">file_info</span> record and
+          the <span class="code">type</span> field of the record will be set to
+          <span class="code">symlink</span>.</p>
+        <p>If <span class="code">Name</span> is not a symbolic link, this function returns
+          exactly the same result as <span class="code">read_file_info/1</span>.
+          On platforms that do not support symbolic links, this function
+          is always equivalent to <span class="code">read_file_info/1</span>.</p>
+      </p></div>
+    <p><a name="rename-2"></a><span class="bold_code">rename(Source, Destination) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Source = Destination = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Tries to rename the file <span class="code">Source</span> to
+          <span class="code">Destination</span>.
+          It can be used to move files (and directories) between
+          directories, but it is not sufficient to specify
+          the destination only. The destination file name must also be
+          specified. For example, if <span class="code">bar</span> is a normal file and
+          <span class="code">foo</span> and <span class="code">baz</span> are directories,
+          <span class="code">rename("foo/bar", "baz")</span> returns an error, but
+          <span class="code">rename("foo/bar", "baz/bar")</span> succeeds. Returns
+          <span class="code">ok</span> if it is successful.</p>
+        <div class="note">
+<div class="label">Note</div>
+<div class="content"><p>
+          <p>Renaming of open files is not allowed on most platforms
+            (see <span class="code">eacces</span> below).</p>
+        </p></div>
+</div>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing read or write permissions for the parent
+              directories of <span class="code">Source</span> or
+              <span class="code">Destination</span>. On
+              some platforms, this error is given if either
+              <span class="code">Source</span> or <span class="code">Destination</span>
+              is open.</p>
+          </dd>
+          <dt><strong><span class="code">eexist</span></strong></dt>
+          <dd>
+            <p><span class="code">Destination</span> is not an empty directory.
+              On some platforms, also given when <span class="code">Source</span> and
+              <span class="code">Destination</span> are not of the same type.</p>
+          </dd>
+          <dt><strong><span class="code">einval</span></strong></dt>
+          <dd>
+            <p><span class="code">Source</span> is a root directory, or
+              <span class="code">Destination</span>
+              is a sub-directory of <span class="code">Source</span>.</p>
+          </dd>
+          <dt><strong><span class="code">eisdir</span></strong></dt>
+          <dd>
+            <p><span class="code">Destination</span> is a directory, but
+              <span class="code">Source</span> is not.</p>
+          </dd>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p><span class="code">Source</span> does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p><span class="code">Source</span> is a directory, but
+              <span class="code">Destination</span> is not.</p>
+          </dd>
+          <dt><strong><span class="code">exdev</span></strong></dt>
+          <dd>
+            <p><span class="code">Source</span> and <span class="code">Destination</span>
+              are on different file systems.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="script-1"></a><span class="bold_code">script(Filename) -&gt; {ok, Value} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Value = term()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Reads and evaluates Erlang expressions, separated by '.' (or
+          ',', a sequence of expressions is also an expression), from
+          the file. Returns one of the following:</p>
+        <dl>
+          <dt><strong><span class="code">{ok, Value}</span></strong></dt>
+          <dd>
+            <p>The file was read and evaluated. <span class="code">Value</span> is
+              the value of the last expression.</p>
+          </dd>
+          <dt><strong><span class="code">{error, atom()}</span></strong></dt>
+          <dd>
+            <p>An error occurred when opening the file or reading it.
+              See <span class="bold_code"><a href="#open-2">open/2</a></span> for a list
+              of typical error codes.</p>
+          </dd>
+          <dt><strong><span class="code">{error, {Line, Mod,
+                           Term}}</span></strong></dt>
+          <dd>
+            <p>An error occurred when interpreting the Erlang
+              expressions in the file. Use <span class="code">format_error/1</span> to
+              convert the three-element tuple to an English description
+              of the error.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="script-2"></a><span class="bold_code">script(Filename, Bindings) -&gt; {ok, Value} | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Bindings = <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','erl_eval.html#type-binding_struct');">erl_eval:binding_struct()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Value = term()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>The same as <span class="code">script/1</span> but the variable bindings
+          <span class="code">Bindings</span> are used in the evaluation. See
+          <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','erl_eval.html');">erl_eval(3)</a></span> about
+          variable bindings.</p>
+      </p></div>
+    <p><a name="set_cwd-1"></a><span class="bold_code">set_cwd(Dir) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Dir = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Sets the current working directory of the file server to
+          <span class="code">Dir</span>. Returns <span class="code">ok</span> if successful.</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The directory does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of <span class="code">Dir</span> is not a directory.
+              On some platforms, <span class="code">enoent</span> is returned.</p>
+          </dd>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing permission for the directory or one of its
+              parents.</p>
+          </dd>
+          <dt><strong><span class="code">badarg</span></strong></dt>
+          <dd>
+            <p><span class="code">Dir</span> had an improper type,
+              such as tuple.</p>
+          </dd>
+        </dl>
+        <div class="warning">
+<div class="label">Warning</div>
+<div class="content"><p>
+          <p>In a future release, a bad type for the
+            <span class="code">Dir</span>
+            argument will probably generate an exception.</p>
+        </p></div>
+</div>
+      </p></div>
+    <p><a name="sync-1"></a><span class="bold_code">sync(IoDevice) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Makes sure that any buffers kept by the operating system
+          (not by the Erlang runtime system) are written to disk. On
+          some platforms, this function might have no effect.</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">enospc</span></strong></dt>
+          <dd>
+            <p>Not enough space left to write the file.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="datasync-1"></a><span class="bold_code">datasync(IoDevice) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Makes sure that any buffers kept by the operating system
+          (not by the Erlang runtime system) are written to disk. In
+          many ways it's resembles fsync but it not requires to update
+          some of file's metadata such as the access time. On
+          some platforms, this function might have no effect.</p>
+        <p>Applications that access databases or log files often write
+          a tiny data fragment (e.g., one line in a log file) and then
+          call fsync() immediately in order to ensure that the written
+          data is physically stored on the harddisk. Unfortunately, fsync()
+          will always initiate two write operations: one for the newly
+          written data and another one in order to update the modification
+          time stored in the inode. If the modification time is not a part
+          of the transaction concept fdatasync() can be used to avoid
+          unnecessary inode disk write operations.</p>
+        <p>Available only in some POSIX systems. This call results in a
+          call to fsync(), or has no effect, in systems not implementing
+          the fdatasync syscall.</p>
+      </p></div>
+    <p><a name="truncate-1"></a><span class="bold_code">truncate(IoDevice) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Truncates the file referenced by <span class="code">IoDevice</span> at
+          the current position.  Returns <span class="code">ok</span> if successful,
+          otherwise <span class="code">{error, Reason}</span>.</p>
+      </p></div>
+    <p><a name="sendfile-2"></a><span class="bold_code">sendfile(Filename, Socket) -&gt;<br>            {ok, integer() &gt;= 0} |<br>            {error, <span class="bold_code"><a href="inet.html#type-posix">inet:posix()</a></span> | closed | badarg | not_owner}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="file.html#type-name">file:name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Socket = <span class="bold_code"><a href="inet.html#type-socket">inet:socket()</a></span></span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Sends the file <span class="code">Filename</span> to <span class="code">Socket</span>.
+        Returns <span class="code">{ok, BytesSent}</span> if successful,
+        otherwise <span class="code">{error, Reason}</span>.</p>
+      </p></div>
+    <p><a name="sendfile-5"></a><span class="bold_code">sendfile(RawFile, Socket, Offset, Bytes, Opts) -&gt;<br>            {ok, integer() &gt;= 0} |<br>            {error, <span class="bold_code"><a href="inet.html#type-posix">inet:posix()</a></span> | closed | badarg | not_owner}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">RawFile = <span class="bold_code"><a href="file.html#type-fd">file:fd()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Socket = <span class="bold_code"><a href="inet.html#type-socket">inet:socket()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Offset = Bytes = integer() &gt;= 0</span></div>
+<div class="REFTYPES"><span class="bold_code"></span></div>
+<div class="REFTYPES"><span class="bold_code">Opts = [<span class="bold_code"><a href="#type-sendfile_option">sendfile_option()</a></span>]</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Sends <span class="code">Bytes</span> from the file
+        referenced by <span class="code">RawFile</span> beginning at <span class="code">Offset</span> to
+        <span class="code">Socket</span>.
+        Returns <span class="code">{ok, BytesSent}</span> if successful,
+        otherwise <span class="code">{error, Reason}</span>. If <span class="code">Bytes</span> is set to
+	0 all data after the given <span class="code">Offset</span> is sent.</p>
+	<p>The file used must be opened using the raw flag, and the process
+	calling sendfile must be the controlling process of the socket.
+	See <span class="bold_code"><a href="gen_tcp.html#controlling_process-2">gen_tcp:controlling_process/2</a></span></p>
+	<p>If the OS used does not support sendfile, an Erlang fallback
+	using file:read and gen_tcp:send is used.</p>
+	<p>The option list can contain the following options:
+	<dl>
+          <dt><strong><span class="code">chunk_size</span></strong></dt>
+          <dd>The chunk size used by the erlang fallback to send
+	  data. If using the fallback, this should be set to a value
+	  which comfortably fits in the systems memory. Default is 20 MB.</dd>
+	</dl>
+	</p>
+	<p>On operating systems with thread support, it is recommended to use
+	async threads. See the command line flag
+	<span class="code">+A</span> in <span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','erts','erl.html');">erl(1)</a></span>. If it is not
+	possible to use async threads for sendfile, it is recommended to use
+	a relatively small value for the send buffer on the socket. Otherwise
+	the Erlang VM might loose some of its soft realtime guarantees.
+	Which size to use depends on the OS/hardware and the requirements
+	of the application.</p>
+      </p></div>
+    <p><a name="write-2"></a><span class="bold_code">write(IoDevice, Bytes) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">IoDevice = <span class="bold_code"><a href="#type-io_device">io_device()</a></span> | atom()</span></div>
+<div class="REFTYPES"><span class="bold_code">Bytes = iodata()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Writes <span class="code">Bytes</span> to the file referenced by
+          <span class="code">IoDevice</span>. This function is the only way to write to a
+          file opened in raw mode (although it works for normally
+          opened files, too). Returns <span class="code">ok</span> if successful, and
+          <span class="code">{error, Reason}</span> otherwise.</p>
+	  <p>If the file is opened with <span class="code">encoding</span> set to something else than <span class="code">latin1</span>, each byte written might result in several bytes actually being written to the file, as the byte range 0..255 might represent anything between one and four bytes depending on value and UTF encoding type.</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">ebadf</span></strong></dt>
+          <dd>
+            <p>The file is not opened for writing.</p>
+          </dd>
+          <dt><strong><span class="code">enospc</span></strong></dt>
+          <dd>
+            <p>There is a no space left on the device.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="write_file-2"></a><span class="bold_code">write_file(Filename, Bytes) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Bytes = iodata()</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated | system_limit</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Writes the contents of the iodata term <span class="code">Bytes</span>
+          to the file <span class="code">Filename</span>.
+          The file is created if it does not
+          exist. If it exists, the previous contents are
+          overwritten. Returns <span class="code">ok</span>, or <span class="code">{error, Reason}</span>.</p>
+        <p>Typical error reasons are:</p>
+        <dl>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>A component of the file name does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of the file name is not a directory. On some
+              platforms, <span class="code">enoent</span> is returned instead.</p>
+          </dd>
+          <dt><strong><span class="code">enospc</span></strong></dt>
+          <dd>
+            <p>There is a no space left on the device.</p>
+          </dd>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing permission for writing the file or searching one
+              of the parent directories.</p>
+          </dd>
+          <dt><strong><span class="code">eisdir</span></strong></dt>
+          <dd>
+            <p>The named file is a directory.</p>
+          </dd>
+        </dl>
+      </p></div>
+    <p><a name="write_file-3"></a><span class="bold_code">write_file(Filename, Bytes, Modes) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Bytes = iodata()</span></div>
+<div class="REFTYPES"><span class="bold_code">Modes = [<span class="bold_code"><a href="#type-mode">mode()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg | terminated | system_limit</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Same as <span class="code">write_file/2</span>, but takes a third argument
+          <span class="code">Modes</span>, a list of possible modes, see
+          <span class="bold_code"><a href="#open-2">open/2</a></span>. The mode flags
+          <span class="code">binary</span> and <span class="code">write</span> are implicit, so they should
+          not be used.</p>
+      </p></div>
+    <p><a name="write_file_info-2"></a><span class="bold_code">write_file_info(Filename, FileInfo) -&gt; ok | {error, Reason}</span><br><a name="write_file_info-3"></a><span class="bold_code">write_file_info(Filename, FileInfo, Opts) -&gt; ok | {error, Reason}</span><br><div class="REFBODY">
+<p>Types:</p>
+<div class="REFTYPES"><span class="bold_code">Filename = <span class="bold_code"><a href="#type-name">name()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Opts = [<span class="bold_code"><a href="#type-file_info_option">file_info_option()</a></span>]</span></div>
+<div class="REFTYPES"><span class="bold_code">FileInfo = <span class="bold_code"><a href="#type-file_info">file_info()</a></span></span></div>
+<div class="REFTYPES"><span class="bold_code">Reason = <span class="bold_code"><a href="#type-posix">posix()</a></span> | badarg</span></div>
+</div></p>
+<div class="REFBODY"><p>
+        <p>Change file information. Returns <span class="code">ok</span> if successful,
+          otherwise <span class="code">{error, Reason}</span>.
+          <span class="code">FileInfo</span> is a record
+          <span class="code">file_info</span>, defined in the Kernel include file
+          <span class="code">file.hrl</span>. Include the following directive in the module
+          from which the function is called:</p>
+        <div class="example"><pre>
+-include_lib("kernel/include/file.hrl").</pre></div>
+		<p>The time type set in <span class="code">atime</span>, <span class="code">mtime</span> and <span class="code">ctime</span>
+			is dependent on the time type set in <span class="code">Opts :: {time, Type}</span>.
+			Type <span class="code">local</span> will interpret the time set as local, <span class="code">universal</span> will
+			interpret it as universal time and <span class="code">posix</span> must be seconds since
+			or before unix time epoch which is 1970-01-01 00:00 UTC.
+			Default is <span class="code">{time, local}</span>.
+		</p>
+        <p>The following fields are used from the record, if they are
+          given.</p>
+        <dl>
+          <dt><strong><span class="code">atime = <span class="bold_code"><a href="#type-date_time">date_time()</a></span> | integer()</span></strong></dt>
+          <dd>
+            <p>The last time the file was read.</p>
+          </dd>
+          <dt><strong><span class="code">mtime = <span class="bold_code"><a href="#type-date_time">date_time()</a></span> | integer()</span></strong></dt>
+          <dd>
+            <p>The last time the file was written.</p>
+          </dd>
+          <dt><strong><span class="code">ctime = <span class="bold_code"><a href="#type-date_time">date_time()</a></span> | integer()</span></strong></dt>
+          <dd>
+            <p>On Unix, any value give for this field will be ignored
+              (the "ctime" for the file will be set to the current
+              time). On Windows, this field is the new creation time to
+              set for the file.</p>
+          </dd>
+          <dt><strong><span class="code">mode = integer()</span></strong></dt>
+          <dd>
+            <p>The file permissions as the sum of the following bit
+              values:</p>
+            <dl>
+              <dt><strong>8#00400</strong></dt>
+              <dd>read permission: owner</dd>
+              <dt><strong>8#00200</strong></dt>
+              <dd>write permission: owner</dd>
+              <dt><strong>8#00100</strong></dt>
+              <dd>execute permission: owner</dd>
+              <dt><strong>8#00040</strong></dt>
+              <dd>read permission: group</dd>
+              <dt><strong>8#00020</strong></dt>
+              <dd>write permission: group</dd>
+              <dt><strong>8#00010</strong></dt>
+              <dd>execute permission: group</dd>
+              <dt><strong>8#00004</strong></dt>
+              <dd>read permission: other</dd>
+              <dt><strong>8#00002</strong></dt>
+              <dd>write permission: other</dd>
+              <dt><strong>8#00001</strong></dt>
+              <dd>execute permission: other</dd>
+              <dt><strong>16#800</strong></dt>
+              <dd>set user id on execution</dd>
+              <dt><strong>16#400</strong></dt>
+              <dd>set group id on execution</dd>
+            </dl>
+            <p>On Unix platforms, other bits than those listed above
+              may be set.</p>
+          </dd>
+          <dt><strong><span class="code">uid = integer()</span></strong></dt>
+          <dd>
+            <p>Indicates the owner of the file. Ignored for non-Unix
+              file systems.</p>
+          </dd>
+          <dt><strong><span class="code">gid = integer()</span></strong></dt>
+          <dd>
+            <p>Gives the group that the owner of the file belongs to.
+              Ignored non-Unix file systems.</p>
+          </dd>
+        </dl>
+        <p>Typical error reasons:</p>
+        <dl>
+          <dt><strong><span class="code">eacces</span></strong></dt>
+          <dd>
+            <p>Missing search permission for one of the parent
+              directories of the file.</p>
+          </dd>
+          <dt><strong><span class="code">enoent</span></strong></dt>
+          <dd>
+            <p>The file does not exist.</p>
+          </dd>
+          <dt><strong><span class="code">enotdir</span></strong></dt>
+          <dd>
+            <p>A component of the file name is not a directory. On some
+              platforms, <span class="code">enoent</span> is returned instead.</p>
+          </dd>
+        </dl>
+      </p></div>
+  
+
+  <h3><a name="id118954">POSIX Error Codes</a></h3>
+<div class="REFBODY">
+    
+    <ul>
+      <li>
+<span class="code">eacces</span> - permission denied</li>
+      <li>
+<span class="code">eagain</span> - resource temporarily unavailable</li>
+      <li>
+<span class="code">ebadf</span> - bad file number</li>
+      <li>
+<span class="code">ebusy</span> - file busy</li>
+      <li>
+<span class="code">edquot</span> - disk quota exceeded</li>
+      <li>
+<span class="code">eexist</span> - file already exists</li>
+      <li>
+<span class="code">efault</span> - bad address in system call argument</li>
+      <li>
+<span class="code">efbig</span> - file too large</li>
+      <li>
+<span class="code">eintr</span> - interrupted system call</li>
+      <li>
+<span class="code">einval</span> - invalid argument</li>
+      <li>
+<span class="code">eio</span> - IO error</li>
+      <li>
+<span class="code">eisdir</span> - illegal operation on a directory</li>
+      <li>
+<span class="code">eloop</span> - too many levels of symbolic links</li>
+      <li>
+<span class="code">emfile</span> - too many open files</li>
+      <li>
+<span class="code">emlink</span> - too many links</li>
+      <li>
+<span class="code">enametoolong</span> - file name too long</li>
+      <li>
+<span class="code">enfile</span> - file table overflow</li>
+      <li>
+<span class="code">enodev</span> - no such device</li>
+      <li>
+<span class="code">enoent</span> - no such file or directory</li>
+      <li>
+<span class="code">enomem</span> - not enough memory</li>
+      <li>
+<span class="code">enospc</span> - no space left on device</li>
+      <li>
+<span class="code">enotblk</span> - block device required</li>
+      <li>
+<span class="code">enotdir</span> - not a directory</li>
+      <li>
+<span class="code">enotsup</span> - operation not supported</li>
+      <li>
+<span class="code">enxio</span> - no such device or address</li>
+      <li>
+<span class="code">eperm</span> - not owner</li>
+      <li>
+<span class="code">epipe</span> - broken pipe</li>
+      <li>
+<span class="code">erofs</span> - read-only file system</li>
+      <li>
+<span class="code">espipe</span> - invalid seek</li>
+      <li>
+<span class="code">esrch</span> - no such process</li>
+      <li>
+<span class="code">estale</span> - stale remote file handle</li>
+      <li>
+<span class="code">exdev</span> - cross-domain link</li>
+    </ul>
+  </div>
+
+  <h3><a name="id119165">Performance</a></h3>
+<div class="REFBODY">
+    
+    <p>Some operating system file operations, for example a
+      <span class="code">sync/1</span> or <span class="code">close/1</span> on a huge file, may block their 
+      calling thread for seconds. If this befalls the emulator main
+      thread, the response time is no longer in the order of
+      milliseconds, depending on the definition of "soft" in soft
+      real-time system.</p>
+    <p>If the device driver thread pool is active, file operations are
+      done through those threads instead, so the emulator can go on
+      executing Erlang processes. Unfortunately, the time for serving a
+      file operation increases due to the extra scheduling required
+      from the operating system.</p>
+    <p>If the device driver thread pool is disabled or of size 0, large
+      file reads and writes are segmented into several smaller, which
+      enables the emulator so server other processes during the file
+      operation. This gives the same effect as when using the thread
+      pool, but with larger overhead. Other file operations, for
+      example <span class="code">sync/1</span> or <span class="code">close/1</span> on a huge file, still are
+      a problem.</p>
+    <p>For increased performance, raw files are recommended. Raw files
+      uses the file system of the node's host machine. For normal files
+      (non-raw), the file server is used to find the files, and if
+      the node is running its file server as slave to another node's,
+      and the other node runs on some other host machine, they may have
+      different file systems. This is seldom a problem, but you have
+      now been warned.</p>
+    <p>A normal file is really a process so it can be used as an IO
+      device (see <span class="code">io</span>). Therefore when data is written to a
+      normal file, the sending of the data to the file process, copies 
+      all data that are not binaries. Opening the file in binary mode
+      and writing binaries is therefore recommended. If the file is
+      opened on another node, or if the file server runs as slave to
+      another node's, also binaries are copied.</p>
+    <p>Caching data to reduce the number of file operations, or rather
+      the number of calls to the file driver, will generally increase
+      performance. The following function writes 4 MBytes in 23
+      seconds when tested:</p>
+    <div class="example"><pre>
+create_file_slow(Name, N) when integer(N), N &gt;= 0 -&gt;
+    {ok, FD} = file:open(Name, [raw, write, delayed_write, binary]),
+    ok = create_file_slow(FD, 0, N),
+    ok = ?FILE_MODULE:close(FD),
+    ok.
+      
+create_file_slow(FD, M, M) -&gt;
+    ok;
+create_file_slow(FD, M, N) -&gt;
+    ok = file:write(FD, &lt;&lt;M:32/unsigned&gt;&gt;),
+    create_file_slow(FD, M+1, N).</pre></div>
+    <p>The following, functionally equivalent, function collects 1024
+      entries into a list of 128 32-byte binaries before each call to
+      <span class="code">file:write/2</span> and so does the same work in 0.52 seconds,
+      which is 44 times faster.</p>
+    <div class="example"><pre>
+create_file(Name, N) when integer(N), N &gt;= 0 -&gt;
+    {ok, FD} = file:open(Name, [raw, write, delayed_write, binary]),
+    ok = create_file(FD, 0, N),
+    ok = ?FILE_MODULE:close(FD),
+    ok.
+      
+create_file(FD, M, M) -&gt;
+    ok;
+create_file(FD, M, N) when M + 1024 =&amp;lt; N -&gt;
+    create_file(FD, M, M + 1024, []),
+    create_file(FD, M + 1024, N);
+create_file(FD, M, N) -&gt;
+    create_file(FD, M, N, []).
+      
+create_file(FD, M, M, R) -&gt;
+    ok = file:write(FD, R);
+create_file(FD, M, N0, R) when M + 8 =&amp;lt; N0 -&gt;
+    N1  = N0-1,  N2  = N0-2,  N3  = N0-3,  N4  = N0-4, 
+    N5  = N0-5,  N6  = N0-6,  N7  = N0-7,  N8  = N0-8, 
+    create_file(FD, M, N8, 
+                [&lt;&lt;N8:32/unsigned,  N7:32/unsigned, 
+                   N6:32/unsigned,  N5:32/unsigned, 
+                   N4:32/unsigned,  N3:32/unsigned, 
+                   N2:32/unsigned,  N1:32/unsigned&gt;&gt; | R]);
+create_file(FD, M, N0, R) -&gt;
+    N1 = N0-1,
+    create_file(FD, M, N1, [&lt;&lt;N1:32/unsigned&gt;&gt; | R]).</pre></div>
+    <div class="note">
+<div class="label">Note</div>
+<div class="content"><p>
+      <p>Trust only your own benchmarks. If the list length in 
+        <span class="code">create_file/2</span> above is increased, it will run slightly
+        faster, but consume more memory and cause more memory
+        fragmentation. How much this affects your application is
+        something that this simple benchmark can not predict.</p>
+      <p>If the size of each binary is increased to 64 bytes, it will
+        also run slightly faster, but the code will be twice as clumsy.
+        In the current implementation are binaries larger than 64 bytes
+        stored in memory common to all processes and not copied when
+        sent between processes, while these smaller binaries are stored
+        on the process heap and copied when sent like any other term.</p>
+      <p>So, with a binary size of 68 bytes <span class="code">create_file/2</span> runs
+        30 percent slower then with 64 bytes, and will cause much more
+        memory fragmentation. Note that if the binaries were to be sent
+        between processes (for example a non-raw file) the results
+        would probably be completely different.</p>
+    </p></div>
+</div>
+    <p>A raw file is really a port. When writing data to a port, it is
+      efficient to write a list of binaries. There is no need to
+      flatten a deep list before writing. On Unix hosts, scatter output,
+      which writes a set of buffers in one operation, is used when
+      possible. In this way <span class="code">file:write(FD, [Bin1, Bin2 | Bin3])</span>
+      will write the contents of the binaries without copying the data
+      at all except for perhaps deep down in the operating system
+      kernel.</p>
+    <p>For raw files, <span class="code">pwrite/2</span> and <span class="code">pread/2</span> are
+      efficiently implemented. The file driver is called only once for
+      the whole operation, and the list iteration is done in the file
+      driver.</p>
+    <p>The options <span class="code">delayed_write</span> and <span class="code">read_ahead</span> to 
+      <span class="code">file:open/2</span> makes the file driver cache data to reduce
+      the number of operating system calls. The function
+      <span class="code">create_file/2</span> in the example above takes 60 seconds
+      seconds without the <span class="code">delayed_write</span> option, which is 2.6
+      times slower.</p>
+    <p>And, as a really bad example, <span class="code">create_file_slow/2</span> above
+      without the <span class="code">raw</span>, <span class="code">binary</span> and <span class="code">delayed_write</span>
+      options, that is it calls <span class="code">file:open(Name, [write])</span>, needs
+      1 min 20 seconds for the job, which is 3.5 times slower than
+      the first example, and 150 times slower than the optimized
+      <span class="code">create_file/2</span>. </p>
+  </div>
+
+  <h3><a name="id119367">Warnings</a></h3>
+<div class="REFBODY">
+    
+    <p>If an error occurs when accessing an open file with the <span class="code">io</span>
+      module, the process which handles the file will exit. The dead
+      file process might hang if a process tries to access it later.
+      This will be fixed in a future release.</p>
+  </div>
+
+  <h3><a name="id119384">SEE ALSO</a></h3>
+<div class="REFBODY">
+    
+    <p><span class="bold_code"><a href="javascript:erlhref('../../../../doc/../','stdlib','filename.html');">filename(3)</a></span></p>
+  </div>
+</div>
+<div class="footer">
+<hr>
+<p>Copyright © 1997-2012 Ericsson AB. All Rights Reserved.</p>
+</div>
+</div>
+</div></body>
+</html>

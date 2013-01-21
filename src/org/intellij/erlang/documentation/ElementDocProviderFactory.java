@@ -64,6 +64,19 @@ final class ElementDocProviderFactory {
         return new FunctionDocProvider(erlangFunction);
       }
     }
+    else if (psiElement instanceof ErlangTypeDefinition) {
+      final VirtualFile virtualFile = getVirtualFile(psiElement);
+      if (virtualFile == null) {
+        return null;
+      }
+      final ErlangTypeDefinition typeDefinition = (ErlangTypeDefinition) psiElement;
+      if (isFileFromErlangSdk(project, virtualFile)) {
+        return new SdkTypeDocProvider(project, virtualFile, typeDefinition.getName());
+      }
+      else {
+        return null; // TODO implement TypeDocProvider
+      }
+    }
     else {
       final PsiElement parent = psiElement.getParent();
       if (parent instanceof ErlangFunctionCallExpression) {
