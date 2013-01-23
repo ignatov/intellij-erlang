@@ -27,13 +27,18 @@ import org.jetbrains.annotations.Nullable;
  * @author ignatov
  */
 public class ErlangBraceMatcher implements PairedBraceMatcher {
-
   private static final BracePair[] PAIRS = new BracePair[]{
     new BracePair(ErlangTypes.ERL_PAR_LEFT, ErlangTypes.ERL_PAR_RIGHT, false),
     new BracePair(ErlangTypes.ERL_CURLY_LEFT, ErlangTypes.ERL_CURLY_RIGHT, true),
     new BracePair(ErlangTypes.ERL_BRACKET_LEFT, ErlangTypes.ERL_BRACKET_RIGHT, false),
     new BracePair(ErlangTypes.ERL_BIN_START, ErlangTypes.ERL_BIN_END, true),
-//    new BracePair(ErlangTypes.ERL_BEGIN, ErlangTypes.ERL_END, false)
+    new BracePair(ErlangTypes.ERL_IF, ErlangTypes.ERL_END, true),
+    new BracePair(ErlangTypes.ERL_CASE, ErlangTypes.ERL_END, true),
+    new BracePair(ErlangTypes.ERL_BEGIN, ErlangTypes.ERL_END, true),
+    new BracePair(ErlangTypes.ERL_TRY, ErlangTypes.ERL_END, true),
+    new BracePair(ErlangTypes.ERL_QUERY, ErlangTypes.ERL_END, true),
+    new BracePair(ErlangTypes.ERL_FUN, ErlangTypes.ERL_END, true),
+    new BracePair(ErlangTypes.ERL_RECEIVE, ErlangTypes.ERL_END, true),
   };
 
   @Override
