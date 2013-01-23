@@ -83,7 +83,7 @@ public class ErlangIoFormatInspection extends ErlangBaseInspection {
 
                 int strLen = str.getText().length();
                 if (args instanceof ErlangListExpression) {
-                  if (str instanceof ErlangMaxExpression && strLen >= 2) {
+                  if (str instanceof ErlangStringLiteral && strLen >= 2) {
                     String substring = str.getText().substring(1, strLen - 1);
 
                     // todo: rewrite, see: http://www.erlang.org/doc/man/io.html#format-1
@@ -91,8 +91,9 @@ public class ErlangIoFormatInspection extends ErlangBaseInspection {
                     int newLineCount = StringUtil.getOccurrenceCount(substring, "~n");
                     int occurrenceCount = StringUtil.getOccurrenceCount(substring, "~");
                     int totalCount = occurrenceCount - doubleCount * 2 - newLineCount;
-                    if (totalCount != ((ErlangListExpression) args).getExpressionList().size()) {
-                      problemsHolder.registerProblem(str, "Wrong number of arguments in format call, should be " + totalCount);
+                    int agrSize = ((ErlangListExpression) args).getExpressionList().size();
+                    if (totalCount != agrSize) {
+                      problemsHolder.registerProblem(str, "Wrong number of arguments in format call, should be " + agrSize);
                     }
                   }
                   else {
