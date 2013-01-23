@@ -49,10 +49,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.lang.StringUtils;
-import org.intellij.erlang.ErlangCompletionContributor;
-import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.ErlangIcons;
-import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.parser.ErlangParserUtil;
@@ -1006,5 +1003,19 @@ public class ErlangPsiImplUtil {
 
   public static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {
     return (prevFunction == null || (spec.getTextOffset() > prevFunction.getTextOffset()));
+  }
+
+  public static boolean isValidHost(ErlangStringLiteral o) {
+    return true;
+  }
+
+  public static ErlangStringLiteralImpl updateText(ErlangStringLiteral o, @NotNull String text) {
+    final ErlangExpression expression = ErlangElementFactory.createExpressionFromText(o.getProject(), text);
+    return (ErlangStringLiteralImpl)o.replace(expression);
+  }
+
+  @NotNull
+  public static ErlangStringLiteralEscaper createLiteralTextEscaper(ErlangStringLiteral o) {
+    return new ErlangStringLiteralEscaper(o);
   }
 }

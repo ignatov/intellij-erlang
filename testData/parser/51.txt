@@ -131,14 +131,14 @@ ERL_FILE
         PsiElement(=)('=')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
-          ERL_MAX_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"#"')
           PsiElement(,)(',')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
               PsiElement(atom)('operation')
           PsiElement(,)(',')
-          ERL_MAX_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"-"')
           PsiElement(])(']')
       PsiElement(,)(',')
@@ -167,7 +167,7 @@ ERL_FILE
             ERL_Q_ATOM
               PsiElement(atom)('fname')
           PsiElement(,)(',')
-          ERL_MAX_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"__"')
           PsiElement(,)(',')
           ERL_MAX_EXPRESSION
@@ -3833,7 +3833,7 @@ ERL_FILE
                                       PsiElement(var)('R')
                                   PsiElement())(')')
                               PsiElement(,)(',')
-                              ERL_MAX_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('"__"')
                               PsiElement(,)(',')
                               ERL_LIST_EXPRESSION
@@ -14473,7 +14473,7 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Rname')
                     PsiElement(,)(',')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"__"')
                     PsiElement(,)(',')
                     ERL_MAX_EXPRESSION
@@ -15852,15 +15852,17 @@ ERL_FILE
                 ERL_LIST_EXPRESSION
                   PsiElement([)('[')
                   ERL_MAX_EXPRESSION
-                    PsiElement(string)('"*** ERROR in parse_transform function:~n"')
-                    PsiElement(string)('"*** Reason     = ~p~n"')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"*** ERROR in parse_transform function:~n"')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"*** Reason     = ~p~n"')
                   PsiElement(,)(',')
-                  ERL_MAX_EXPRESSION
+                  ERL_STRING_LITERAL
                     PsiElement(string)('"*** Location: ~p~n"')
                   PsiElement(,)(',')
                   ERL_LIST_COMPREHENSION
                     PsiElement([)('[')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"*** ~10w = ~p~n"')
                     PsiElement(||)('||')
                     ERL_LC_EXPRS

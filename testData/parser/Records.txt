@@ -140,7 +140,7 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('File')
                   PsiElement(,)(',')
-                  ERL_MAX_EXPRESSION
+                  ERL_STRING_LITERAL
                     PsiElement(string)('".BUPTMP"')
                   PsiElement(])(']')
                 PsiElement())(')')
@@ -1820,7 +1820,7 @@ ERL_FILE
                   PsiElement(,)(',')
                   ERL_TUPLE_EXPRESSION
                     PsiElement({)('{')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"Possibly truncated"')
                     PsiElement(,)(',')
                     ERL_MAX_EXPRESSION

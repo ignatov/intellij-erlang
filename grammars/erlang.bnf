@@ -455,7 +455,11 @@ fake fake_binary_expression ::= expression + {
 
 private exprs ::= expression (',' expression)*
 guard ::= exprs (';' exprs)* {pin(".*")=1}
-private atomic ::= char | integer | float | q_atom | string+
+private atomic ::= char | integer | float | q_atom | string_literal+
+string_literal ::= string {
+  implements = "com.intellij.psi.PsiLanguageInjectionHost"
+  methods = [isValidHost updateText createLiteralTextEscaper]
+}
 
 private prefix_op ::= '+' | '-' | bnot | not
 private mult_op ::= '/' |'*' | div | rem  | band | and

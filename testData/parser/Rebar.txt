@@ -20,10 +20,10 @@ ERL_FILE
     PsiElement(,)(',')
     ERL_LIST_EXPRESSION
       PsiElement([)('[')
-      ERL_CONFIG_EXPRESSION
+      ERL_STRING_LITERAL
         PsiElement(string)('"mymib1"')
       PsiElement(,)(',')
-      ERL_CONFIG_EXPRESSION
+      ERL_STRING_LITERAL
         PsiElement(string)('"mymib2"')
       PsiElement(])(']')
     PsiElement(})('}')
@@ -47,7 +47,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('i')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"myinclude"')
         PsiElement(})('}')
       PsiElement(,)(',')
@@ -59,10 +59,10 @@ ERL_FILE
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
-          ERL_CONFIG_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"src1"')
           PsiElement(,)(',')
-          ERL_CONFIG_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"src2"')
           PsiElement(])(']')
         PsiElement(})('}')
@@ -73,7 +73,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('platform_define')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"(linux|solaris|freebsd|darwin)"')
         PsiElement(,)(',')
         ERL_CONFIG_EXPRESSION
@@ -87,7 +87,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('platform_define')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"(linux|freebsd)"')
         PsiElement(,)(',')
         ERL_CONFIG_EXPRESSION
@@ -104,7 +104,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('platform_define')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"R13"')
         PsiElement(,)(',')
         ERL_CONFIG_EXPRESSION
@@ -161,22 +161,22 @@ ERL_FILE
       PsiElement([)('[')
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"CFLAGS"')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"$CFLAGS -Ifoo"')
         PsiElement(})('}')
       PsiElement(,)(',')
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"freebsd"')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"LDFLAGS"')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"$LDFLAGS -lfoo"')
         PsiElement(})('}')
       PsiElement(])(']')
@@ -193,42 +193,42 @@ ERL_FILE
       PsiElement([)('[')
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"priv/so_name.so"')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
-          ERL_CONFIG_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"c_src/*.c"')
           PsiElement(])(']')
         PsiElement(})('}')
       PsiElement(,)(',')
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"linux"')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"priv/hello_linux"')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
-          ERL_CONFIG_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"c_src/hello_linux.c"')
           PsiElement(])(']')
         PsiElement(})('}')
       PsiElement(,)(',')
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"linux"')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"priv/hello_linux"')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
-          ERL_CONFIG_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"c_src/*.c"')
           PsiElement(])(']')
         PsiElement(,)(',')
@@ -352,7 +352,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('ct_dir')
     PsiElement(,)(',')
-    ERL_CONFIG_EXPRESSION
+    ERL_STRING_LITERAL
       PsiElement(string)('"itest"')
     PsiElement(})('}')
     PsiElement(.)('.')
@@ -363,7 +363,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('ct_log_dir')
     PsiElement(,)(',')
-    ERL_CONFIG_EXPRESSION
+    ERL_STRING_LITERAL
       PsiElement(string)('"test/logs"')
     PsiElement(})('}')
     PsiElement(.)('.')
@@ -374,7 +374,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('ct_extra_params')
     PsiElement(,)(',')
-    ERL_CONFIG_EXPRESSION
+    ERL_STRING_LITERAL
       PsiElement(string)('"-boot start_sasl -s myapp"')
     PsiElement(})('}')
     PsiElement(.)('.')
@@ -452,10 +452,10 @@ ERL_FILE
     PsiElement(,)(',')
     ERL_LIST_EXPRESSION
       PsiElement([)('[')
-      ERL_CONFIG_EXPRESSION
+      ERL_STRING_LITERAL
         PsiElement(string)('"file"')
       PsiElement(,)(',')
-      ERL_CONFIG_EXPRESSION
+      ERL_STRING_LITERAL
         PsiElement(string)('"file2"')
       PsiElement(])(']')
     PsiElement(})('}')
@@ -467,7 +467,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('target')
     PsiElement(,)(',')
-    ERL_CONFIG_EXPRESSION
+    ERL_STRING_LITERAL
       PsiElement(string)('"target"')
     PsiElement(})('}')
     PsiElement(.)('.')
@@ -502,7 +502,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('deps_dir')
     PsiElement(,)(',')
-    ERL_CONFIG_EXPRESSION
+    ERL_STRING_LITERAL
       PsiElement(string)('"deps"')
     PsiElement(})('}')
     PsiElement(.)('.')
@@ -525,7 +525,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('application_name')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"1.0.*"')
         PsiElement(})('}')
       PsiElement(,)(',')
@@ -535,7 +535,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('application_name')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"1.0.*"')
         PsiElement(,)(',')
         ERL_TUPLE_EXPRESSION
@@ -544,7 +544,7 @@ ERL_FILE
             ERL_Q_ATOM
               PsiElement(atom)('git')
           PsiElement(,)(',')
-          ERL_CONFIG_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"git://github.com/basho/rebar.git"')
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
@@ -553,7 +553,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('branch')
             PsiElement(,)(',')
-            ERL_CONFIG_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"master"')
             PsiElement(})('}')
           PsiElement(})('}')
@@ -570,10 +570,10 @@ ERL_FILE
     PsiElement(,)(',')
     ERL_LIST_EXPRESSION
       PsiElement([)('[')
-      ERL_CONFIG_EXPRESSION
+      ERL_STRING_LITERAL
         PsiElement(string)('"dir1"')
       PsiElement(,)(',')
-      ERL_CONFIG_EXPRESSION
+      ERL_STRING_LITERAL
         PsiElement(string)('"dir2"')
       PsiElement(])(']')
     PsiElement(})('}')
@@ -604,7 +604,7 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('plugin_dir')
     PsiElement(,)(',')
-    ERL_CONFIG_EXPRESSION
+    ERL_STRING_LITERAL
       PsiElement(string)('"some_other_directory"')
     PsiElement(})('}')
     PsiElement(.)('.')
@@ -623,20 +623,20 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('clean')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"./prepare_package_files.sh"')
         PsiElement(})('}')
       PsiElement(,)(',')
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"linux"')
         PsiElement(,)(',')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('compile')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"c_src/build_linux.sh"')
         PsiElement(})('}')
       PsiElement(,)(',')
@@ -646,7 +646,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('compile')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"escript generate_headers"')
         PsiElement(})('}')
       PsiElement(,)(',')
@@ -656,7 +656,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('compile')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"escript check_headers"')
         PsiElement(})('}')
       PsiElement(])(']')
@@ -676,20 +676,20 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('clean')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"touch file1.out"')
         PsiElement(})('}')
       PsiElement(,)(',')
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"freebsd"')
         PsiElement(,)(',')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
             PsiElement(atom)('compile')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"c_src/freebsd_tweaks.sh"')
         PsiElement(})('}')
       PsiElement(,)(',')
@@ -699,7 +699,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('eunit')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"touch file2.out"')
         PsiElement(})('}')
       PsiElement(,)(',')
@@ -709,7 +709,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('compile')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"touch postcompile.out"')
         PsiElement(})('}')
       PsiElement(])(']')
@@ -758,8 +758,10 @@ ERL_FILE
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
-          PsiElement(string)('"(XC - UC) || (XU - X - B"')
-          PsiElement(string)('" - (\"ejabberd_logger\":\".*_msg\"/\"4\"))"')
+          ERL_STRING_LITERAL
+            PsiElement(string)('"(XC - UC) || (XU - X - B"')
+          ERL_STRING_LITERAL
+            PsiElement(string)('" - (\"ejabberd_logger\":\".*_msg\"/\"4\"))"')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')

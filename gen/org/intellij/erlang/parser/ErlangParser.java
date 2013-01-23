@@ -311,6 +311,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_SPECIFICATION) {
       result_ = specification(builder_, level_ + 1);
     }
+    else if (root_ == ERL_STRING_LITERAL) {
+      result_ = string_literal(builder_, level_ + 1);
+    }
     else if (root_ == ERL_TOP_TYPE) {
       result_ = top_type(builder_, level_ + 1);
     }
@@ -389,7 +392,7 @@ public class ErlangParser implements PsiParser {
       ERL_LIST_EXPRESSION, ERL_LIST_OP_EXPRESSION, ERL_MAX_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION,
       ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION,
       ERL_QUERY_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION,
-      ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
+      ERL_STRING_LITERAL, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
   };
   public static boolean type_extends_(IElementType child_, IElementType parent_) {
     for (TokenSet set : EXTENDS_SETS_) {
@@ -622,7 +625,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // char | integer | float | q_atom | string+
+  // char | integer | float | q_atom | string_literal+
   static boolean atomic(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "atomic")) return false;
     boolean result_ = false;
@@ -641,15 +644,15 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // string+
+  // string_literal+
   private static boolean atomic_4(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "atomic_4")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    result_ = consumeToken(builder_, ERL_STRING);
+    result_ = string_literal(builder_, level_ + 1);
     int offset_ = builder_.getCurrentOffset();
     while (result_) {
-      if (!consumeToken(builder_, ERL_STRING)) break;
+      if (!string_literal(builder_, level_ + 1)) break;
       int next_offset_ = builder_.getCurrentOffset();
       if (offset_ == next_offset_) {
         empty_element_parsed_guard_(builder_, offset_, "atomic_4");
@@ -4438,6 +4441,23 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // string
+  public static boolean string_literal(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "string_literal")) return false;
+    if (!nextTokenIs(builder_, ERL_STRING)) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_STRING);
+    if (result_) {
+      marker_.done(ERL_STRING_LITERAL);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    return result_;
   }
 
   /* ********************************************************** */

@@ -7,7 +7,7 @@ ERL_FILE
         PsiElement(atom)('author')
       ERL_ATTR_VAL
         PsiElement(()('(')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"ignatov"')
         PsiElement())(')')
     PsiElement(.)('.')

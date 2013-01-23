@@ -61,7 +61,7 @@ ERL_FILE
                 PsiElement(atom)('debug')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_MAX_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"Binding pat: ~w to ~s\n"')
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
@@ -2243,7 +2243,7 @@ ERL_FILE
                           PsiElement(atom)('debug')
                     ERL_ARGUMENT_LIST
                       PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
+                      ERL_STRING_LITERAL
                         PsiElement(string)('"Failed match for ~p\n"')
                       PsiElement(,)(',')
                       ERL_LIST_EXPRESSION
@@ -4032,7 +4032,7 @@ ERL_FILE
                 PsiElement(atom)('debug')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_MAX_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"Handling ~w guard: ~s\n"')
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
@@ -4816,7 +4816,7 @@ ERL_FILE
                         PsiElement(atom)('debug')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"Looking for var(~w)..."')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
@@ -4881,7 +4881,7 @@ ERL_FILE
                                 PsiElement(atom)('debug')
                           ERL_ARGUMENT_LIST
                             PsiElement(()('(')
-                            ERL_MAX_EXPRESSION
+                            ERL_STRING_LITERAL
                               PsiElement(string)('"Did not find it\n"')
                             PsiElement(,)(',')
                             ERL_LIST_EXPRESSION
@@ -5032,7 +5032,7 @@ ERL_FILE
                                 PsiElement(atom)('debug')
                           ERL_ARGUMENT_LIST
                             PsiElement(()('(')
-                            ERL_MAX_EXPRESSION
+                            ERL_STRING_LITERAL
                               PsiElement(string)('"Found it\n"')
                             PsiElement(,)(',')
                             ERL_LIST_EXPRESSION
@@ -6718,7 +6718,7 @@ ERL_FILE
                         PsiElement(atom)('debug')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"Type test: ~w failed\n"')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
@@ -6780,7 +6780,7 @@ ERL_FILE
                         PsiElement(atom)('debug')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"Type test: ~w succeeded, NewType: ~s, Ret: ~s\n"')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
@@ -11520,7 +11520,7 @@ ERL_FILE
                 PsiElement(atom)('debug')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_MAX_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"Types are:~s =:= ~s\n"')
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
@@ -18912,7 +18912,7 @@ ERL_FILE
                                         PsiElement(atom)('debug')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
-                                    ERL_MAX_EXPRESSION
+                                    ERL_STRING_LITERAL
                                       PsiElement(string)('"Binding ~p to ~p\n"')
                                     PsiElement(,)(',')
                                     ERL_LIST_EXPRESSION
@@ -18960,7 +18960,7 @@ ERL_FILE
                                         PsiElement(atom)('debug')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
-                                    ERL_MAX_EXPRESSION
+                                    ERL_STRING_LITERAL
                                       PsiElement(string)('"Entering ~p :: ~s\n"')
                                     PsiElement(,)(',')
                                     ERL_LIST_EXPRESSION
@@ -19379,7 +19379,7 @@ ERL_FILE
                                                 PsiElement(atom)('debug')
                                           ERL_ARGUMENT_LIST
                                             PsiElement(()('(')
-                                            ERL_MAX_EXPRESSION
+                                            ERL_STRING_LITERAL
                                               PsiElement(string)('"Subst: storing ~p = ~p\n"')
                                             PsiElement(,)(',')
                                             ERL_LIST_EXPRESSION
@@ -20110,7 +20110,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"Map:\n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -20151,7 +20151,7 @@ ERL_FILE
                             PsiElement(atom)('format')
                           ERL_ARGUMENT_LIST
                             PsiElement(()('(')
-                            ERL_MAX_EXPRESSION
+                            ERL_STRING_LITERAL
                               PsiElement(string)('"\t~w :: ~s\n"')
                             PsiElement(,)(',')
                             ERL_LIST_EXPRESSION
@@ -21478,7 +21478,7 @@ ERL_FILE
                 PsiElement(atom)('debug')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_MAX_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"Starting warning pass\n"')
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
@@ -25749,7 +25749,7 @@ ERL_FILE
                                 PsiElement(atom)('debug')
                           ERL_ARGUMENT_LIST
                             PsiElement(()('(')
-                            ERL_MAX_EXPRESSION
+                            ERL_STRING_LITERAL
                               PsiElement(string)('"Fixpoint for ~w: ~s\n"')
                             PsiElement(,)(',')
                             ERL_LIST_EXPRESSION
@@ -25825,7 +25825,7 @@ ERL_FILE
                                 PsiElement(atom)('debug')
                           ERL_ARGUMENT_LIST
                             PsiElement(()('(')
-                            ERL_MAX_EXPRESSION
+                            ERL_STRING_LITERAL
                               PsiElement(string)('"New Entry for ~w: ~s\n"')
                             PsiElement(,)(',')
                             ERL_LIST_EXPRESSION
@@ -25980,7 +25980,7 @@ ERL_FILE
                         PsiElement(atom)('debug')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"New Entry for ~w: ~s\n"')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
@@ -26353,7 +26353,7 @@ ERL_FILE
                                 PsiElement(atom)('debug')
                           ERL_ARGUMENT_LIST
                             PsiElement(()('(')
-                            ERL_MAX_EXPRESSION
+                            ERL_STRING_LITERAL
                               PsiElement(string)('"~w: Will try to add:~w\n"')
                             PsiElement(,)(',')
                             ERL_LIST_EXPRESSION
@@ -27635,7 +27635,7 @@ ERL_FILE
                         PsiElement(atom)('debug')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"~w: forwarding args ~s\n"')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
@@ -29189,7 +29189,7 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"()"')
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
@@ -29216,7 +29216,7 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_LIST_OP_EXPRESSION
           ERL_LIST_OP_EXPRESSION
-            ERL_MAX_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"("')
             PsiElement(++)('++')
             ERL_FUNCTION_CALL_EXPRESSION
@@ -29237,7 +29237,7 @@ ERL_FILE
                     PsiElement(var)('State')
                 PsiElement())(')')
           PsiElement(++)('++')
-          ERL_MAX_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('")"')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -29411,7 +29411,7 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('String')
             PsiElement(++)('++')
-            ERL_MAX_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('","')
           PsiElement(++)('++')
           ERL_FUNCTION_CALL_EXPRESSION
@@ -29450,7 +29450,7 @@ ERL_FILE
             ERL_Q_VAR
               PsiElement(var)('Default')
           PsiElement(=)('=')
-          ERL_MAX_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('""')
         PsiElement(,)(',')
         ERL_CASE_EXPRESSION
@@ -29531,7 +29531,7 @@ ERL_FILE
                             ERL_CR_CLAUSE
                               ERL_ARGUMENT_DEFINITION
                                 ERL_LIST_OP_EXPRESSION
-                                  ERL_MAX_EXPRESSION
+                                  ERL_STRING_LITERAL
                                     PsiElement(string)('"cor"')
                                   PsiElement(++)('++')
                                   ERL_MAX_EXPRESSION
@@ -29546,7 +29546,7 @@ ERL_FILE
                             ERL_CR_CLAUSE
                               ERL_ARGUMENT_DEFINITION
                                 ERL_LIST_OP_EXPRESSION
-                                  ERL_MAX_EXPRESSION
+                                  ERL_STRING_LITERAL
                                     PsiElement(string)('"rec"')
                                   PsiElement(++)('++')
                                   ERL_MAX_EXPRESSION
@@ -29570,7 +29570,7 @@ ERL_FILE
                                     ERL_Q_VAR
                                       PsiElement(var)('Name')
                                   PsiElement(++)('++')
-                                  ERL_MAX_EXPRESSION
+                                  ERL_STRING_LITERAL
                                     PsiElement(string)('"::"')
                           PsiElement(end)('end')
                     PsiElement(;)(';')
@@ -29888,7 +29888,7 @@ ERL_FILE
                   PsiElement(])(']')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                ERL_MAX_EXPRESSION
+                ERL_STRING_LITERAL
                   PsiElement(string)('"()"')
             PsiElement(;)(';')
             ERL_CR_CLAUSE
@@ -29919,7 +29919,7 @@ ERL_FILE
                       ERL_LIST_OP_EXPRESSION
                         ERL_LIST_OP_EXPRESSION
                           ERL_LIST_OP_EXPRESSION
-                            ERL_MAX_EXPRESSION
+                            ERL_STRING_LITERAL
                               PsiElement(string)('"("')
                             PsiElement(++)('++')
                             ERL_FUNCTION_CALL_EXPRESSION
@@ -29939,7 +29939,7 @@ ERL_FILE
                           ERL_LIST_COMPREHENSION
                             PsiElement([)('[')
                             ERL_LIST_OP_EXPRESSION
-                              ERL_MAX_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('","')
                               PsiElement(++)('++')
                               ERL_FUNCTION_CALL_EXPRESSION
@@ -29968,7 +29968,7 @@ ERL_FILE
                                     PsiElement(var)('SArgs')
                             PsiElement(])(']')
                         PsiElement(++)('++')
-                        ERL_MAX_EXPRESSION
+                        ERL_STRING_LITERAL
                           PsiElement(string)('")"')
                       PsiElement())(')')
           PsiElement(end)('end')
@@ -30192,7 +30192,7 @@ ERL_FILE
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
                         ERL_LIST_OP_EXPRESSION
-                          ERL_MAX_EXPRESSION
+                          ERL_STRING_LITERAL
                             PsiElement(string)('"variable "')
                           PsiElement(++)('++')
                           ERL_MAX_EXPRESSION
@@ -30207,7 +30207,7 @@ ERL_FILE
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
                         ERL_LIST_OP_EXPRESSION
-                          ERL_MAX_EXPRESSION
+                          ERL_STRING_LITERAL
                             PsiElement(string)('"pattern "')
                           PsiElement(++)('++')
                           ERL_MAX_EXPRESSION
@@ -30223,7 +30223,7 @@ ERL_FILE
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 ERL_LIST_OP_EXPRESSION
-                  ERL_MAX_EXPRESSION
+                  ERL_STRING_LITERAL
                     PsiElement(string)('"pattern "')
                   PsiElement(++)('++')
                   ERL_MAX_EXPRESSION
@@ -30340,7 +30340,7 @@ ERL_FILE
                                       ERL_CR_CLAUSE
                                         ERL_ARGUMENT_DEFINITION
                                           ERL_LIST_OP_EXPRESSION
-                                            ERL_MAX_EXPRESSION
+                                            ERL_STRING_LITERAL
                                               PsiElement(string)('"cor"')
                                             PsiElement(++)('++')
                                             ERL_MAX_EXPRESSION
@@ -30366,7 +30366,7 @@ ERL_FILE
                                       ERL_CR_CLAUSE
                                         ERL_ARGUMENT_DEFINITION
                                           ERL_LIST_OP_EXPRESSION
-                                            ERL_MAX_EXPRESSION
+                                            ERL_STRING_LITERAL
                                               PsiElement(string)('"rec"')
                                             PsiElement(++)('++')
                                             ERL_MAX_EXPRESSION

@@ -17,7 +17,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('description')
         PsiElement(,)(',')
-        ERL_CONFIG_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"description"')
         PsiElement(})('}')
       PsiElement(,)(',')
@@ -109,7 +109,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('orders_db')
             PsiElement(,)(',')
-            ERL_CONFIG_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"/var/lib/rtb/coordinator/orders"')
             PsiElement(})('}')
           PsiElement(,)(',')
@@ -119,7 +119,7 @@ ERL_FILE
               ERL_Q_ATOM
                 PsiElement(atom)('budget_db')
             PsiElement(,)(',')
-            ERL_CONFIG_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"/var/lib/rtb/coordinator/orders"')
             PsiElement(})('}')
           PsiElement(,)(',')
@@ -145,7 +145,7 @@ ERL_FILE
                       PsiElement([)('[')
                       ERL_BINARY_EXPRESSION
                         PsiElement(<<)('<<')
-                        ERL_CONFIG_EXPRESSION
+                        ERL_STRING_LITERAL
                           PsiElement(string)('"orders"')
                         PsiElement(>>)('>>')
                       PsiElement(])(']')
@@ -165,7 +165,7 @@ ERL_FILE
                       PsiElement([)('[')
                       ERL_BINARY_EXPRESSION
                         PsiElement(<<)('<<')
-                        ERL_CONFIG_EXPRESSION
+                        ERL_STRING_LITERAL
                           PsiElement(string)('"orders"')
                         PsiElement(>>)('>>')
                       PsiElement(,)(',')
@@ -216,7 +216,7 @@ ERL_FILE
                             PsiElement([)('[')
                             ERL_BINARY_EXPRESSION
                               PsiElement(<<)('<<')
-                              ERL_CONFIG_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('"public"')
                               PsiElement(>>)('>>')
                             PsiElement(])(']')
@@ -231,7 +231,7 @@ ERL_FILE
                         PsiElement(,)(',')
                         ERL_BINARY_EXPRESSION
                           PsiElement(<<)('<<')
-                          ERL_CONFIG_EXPRESSION
+                          ERL_STRING_LITERAL
                             PsiElement(string)('"index.html"')
                           PsiElement(>>)('>>')
                         PsiElement(})('}')
@@ -248,7 +248,7 @@ ERL_FILE
                             PsiElement({)('{')
                             ERL_BINARY_EXPRESSION
                               PsiElement(<<)('<<')
-                              ERL_CONFIG_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('".html"')
                               PsiElement(>>)('>>')
                             PsiElement(,)(',')
@@ -256,7 +256,7 @@ ERL_FILE
                               PsiElement([)('[')
                               ERL_BINARY_EXPRESSION
                                 PsiElement(<<)('<<')
-                                ERL_CONFIG_EXPRESSION
+                                ERL_STRING_LITERAL
                                   PsiElement(string)('"text/html"')
                                 PsiElement(>>)('>>')
                               PsiElement(])(']')
@@ -302,7 +302,7 @@ ERL_FILE
                             PsiElement([)('[')
                             ERL_BINARY_EXPRESSION
                               PsiElement(<<)('<<')
-                              ERL_CONFIG_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('"public"')
                               PsiElement(>>)('>>')
                             PsiElement(])(']')
@@ -321,7 +321,7 @@ ERL_FILE
                             PsiElement({)('{')
                             ERL_BINARY_EXPRESSION
                               PsiElement(<<)('<<')
-                              ERL_CONFIG_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('".js"')
                               PsiElement(>>)('>>')
                             PsiElement(,)(',')
@@ -329,7 +329,7 @@ ERL_FILE
                               PsiElement([)('[')
                               ERL_BINARY_EXPRESSION
                                 PsiElement(<<)('<<')
-                                ERL_CONFIG_EXPRESSION
+                                ERL_STRING_LITERAL
                                   PsiElement(string)('"application/javascript"')
                                 PsiElement(>>)('>>')
                               PsiElement(])(']')
@@ -339,7 +339,7 @@ ERL_FILE
                             PsiElement({)('{')
                             ERL_BINARY_EXPRESSION
                               PsiElement(<<)('<<')
-                              ERL_CONFIG_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('".png"')
                               PsiElement(>>)('>>')
                             PsiElement(,)(',')
@@ -347,7 +347,7 @@ ERL_FILE
                               PsiElement([)('[')
                               ERL_BINARY_EXPRESSION
                                 PsiElement(<<)('<<')
-                                ERL_CONFIG_EXPRESSION
+                                ERL_STRING_LITERAL
                                   PsiElement(string)('"image/png"')
                                 PsiElement(>>)('>>')
                               PsiElement(])(']')
@@ -357,7 +357,7 @@ ERL_FILE
                             PsiElement({)('{')
                             ERL_BINARY_EXPRESSION
                               PsiElement(<<)('<<')
-                              ERL_CONFIG_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('".css"')
                               PsiElement(>>)('>>')
                             PsiElement(,)(',')
@@ -365,7 +365,7 @@ ERL_FILE
                               PsiElement([)('[')
                               ERL_BINARY_EXPRESSION
                                 PsiElement(<<)('<<')
-                                ERL_CONFIG_EXPRESSION
+                                ERL_STRING_LITERAL
                                   PsiElement(string)('"text/css"')
                                 PsiElement(>>)('>>')
                               PsiElement(])(']')

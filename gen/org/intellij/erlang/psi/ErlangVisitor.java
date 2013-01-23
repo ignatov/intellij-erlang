@@ -394,6 +394,11 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
+    visitExpression(o);
+    // visitPsiLanguageInjectionHost(o);
+  }
+
   public void visitTopType(@NotNull ErlangTopType o) {
     visitCompositeElement(o);
   }

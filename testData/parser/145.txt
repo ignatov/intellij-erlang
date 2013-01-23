@@ -58,7 +58,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('class')
         PsiElement(=)('=')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('""')
       PsiElement(,)(',')
       ERL_ASSIGNMENT_EXPRESSION
@@ -66,7 +66,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('style')
         PsiElement(=)('=')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('""')
       PsiElement(,)(',')
       ERL_ASSIGNMENT_EXPRESSION
@@ -74,7 +74,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('html_id')
         PsiElement(=)('=')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('""')
     PsiElement())(')')
     PsiElement(.)('.')
@@ -128,7 +128,7 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('image')
         PsiElement(=)('=')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('""')
       PsiElement(,)(',')
       ERL_TYPED_EXPR

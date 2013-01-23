@@ -1786,7 +1786,7 @@ ERL_FILE
                     PsiElement(atom)('verbose')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"Mnesia started, ~p seconds~n"')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
@@ -1827,7 +1827,7 @@ ERL_FILE
                     PsiElement(atom)('verbose')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"Mnesia already started, ~p seconds~n"')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
@@ -1861,7 +1861,7 @@ ERL_FILE
                     PsiElement(atom)('verbose')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
+                    ERL_STRING_LITERAL
                       PsiElement(string)('"Mnesia failed to start, ~p seconds: ~p~n"')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
@@ -30286,7 +30286,7 @@ ERL_FILE
                       PsiElement(atom)('format')
                     ERL_ARGUMENT_LIST
                       PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
+                      ERL_STRING_LITERAL
                         PsiElement(string)('"---> Processes holding locks <--- ~n"')
                       PsiElement(,)(',')
                       ERL_LIST_EXPRESSION
@@ -30327,7 +30327,7 @@ ERL_FILE
                                     PsiElement(atom)('format')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
-                                    ERL_MAX_EXPRESSION
+                                    ERL_STRING_LITERAL
                                       PsiElement(string)('"Lock: ~p~n"')
                                     PsiElement(,)(',')
                                     ERL_LIST_EXPRESSION
@@ -30354,7 +30354,7 @@ ERL_FILE
                       PsiElement(atom)('format')
                     ERL_ARGUMENT_LIST
                       PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
+                      ERL_STRING_LITERAL
                         PsiElement(string)('"---> Processes waiting for locks <--- ~n"')
                       PsiElement(,)(',')
                       ERL_LIST_EXPRESSION
@@ -30415,8 +30415,10 @@ ERL_FILE
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
                                     ERL_MAX_EXPRESSION
-                                      PsiElement(string)('"Tid ~p waits for ~p lock "')
-                                      PsiElement(string)('"on oid ~p owned by ~p ~n"')
+                                      ERL_STRING_LITERAL
+                                        PsiElement(string)('"Tid ~p waits for ~p lock "')
+                                      ERL_STRING_LITERAL
+                                        PsiElement(string)('"on oid ~p owned by ~p ~n"')
                                     PsiElement(,)(',')
                                     ERL_LIST_EXPRESSION
                                       PsiElement([)('[')
@@ -30520,7 +30522,7 @@ ERL_FILE
                       PsiElement(atom)('format')
                     ERL_ARGUMENT_LIST
                       PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
+                      ERL_STRING_LITERAL
                         PsiElement(string)('"---> Uncertain transactions <--- ~n"')
                       PsiElement(,)(',')
                       ERL_LIST_EXPRESSION
@@ -30573,8 +30575,10 @@ ERL_FILE
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
                                     ERL_MAX_EXPRESSION
-                                      PsiElement(string)('"Tid ~w waits for decision "')
-                                      PsiElement(string)('"from ~w~n"')
+                                      ERL_STRING_LITERAL
+                                        PsiElement(string)('"Tid ~w waits for decision "')
+                                      ERL_STRING_LITERAL
+                                        PsiElement(string)('"from ~w~n"')
                                     PsiElement(,)(',')
                                     ERL_LIST_EXPRESSION
                                       PsiElement([)('[')
@@ -30666,7 +30670,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"===> System info in version ~p, debug level = ~p <===~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -30718,7 +30722,7 @@ ERL_FILE
                       PsiElement(atom)('true')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
-                  ERL_MAX_EXPRESSION
+                  ERL_STRING_LITERAL
                     PsiElement(string)('""')
               PsiElement(;)(';')
               ERL_CR_CLAUSE
@@ -30728,7 +30732,7 @@ ERL_FILE
                       PsiElement(atom)('false')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
-                  ERL_MAX_EXPRESSION
+                  ERL_STRING_LITERAL
                     PsiElement(string)('"NOT "')
             PsiElement(end)('end')
         PsiElement(,)(',')
@@ -30742,7 +30746,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"~w. Directory ~p is ~sused.~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -30783,7 +30787,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"use fallback at restart = ~w~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -30825,7 +30829,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"running db nodes   = ~w~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -30863,7 +30867,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"stopped db nodes   = ~w ~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -30975,8 +30979,10 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
-                PsiElement(string)('"~w transactions committed, ~w aborted, "')
-                PsiElement(string)('"~w restarted, ~w logged to disc~n"')
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"~w transactions committed, ~w aborted, "')
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"~w restarted, ~w logged to disc~n"')
               PsiElement(,)(',')
               ERL_GENERIC_FUNCTION_CALL_EXPRESSION
                 ERL_Q_VAR
@@ -31101,8 +31107,10 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
-                PsiElement(string)('"~w held locks, ~w in queue; "')
-                PsiElement(string)('"~w local transactions, ~w remote~n"')
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"~w held locks, ~w in queue; "')
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"~w local transactions, ~w remote~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
                 PsiElement([)('[')
@@ -31295,7 +31303,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"~w transactions waits for other nodes: ~p~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -31346,7 +31354,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"master node tables = ~p~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -31455,7 +31463,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"remote             = ~p~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -31487,7 +31495,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"ram_copies         = ~p~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -31519,7 +31527,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"disc_copies        = ~p~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -31551,7 +31559,7 @@ ERL_FILE
               PsiElement(atom)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"disc_only_copies   = ~p~n"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
@@ -31880,7 +31888,7 @@ ERL_FILE
                         PsiElement(atom)('format')
                       ERL_ARGUMENT_LIST
                         PsiElement(()('(')
-                        ERL_MAX_EXPRESSION
+                        ERL_STRING_LITERAL
                           PsiElement(string)('"~p = ~p~n"')
                         PsiElement(,)(',')
                         ERL_LIST_EXPRESSION
@@ -41960,8 +41968,10 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
-                PsiElement(string)('"lists:flatmap(fun(V) -> "')
-                PsiElement(string)('"~w:read(~w, V, ~w) end, ~w)"')
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"lists:flatmap(fun(V) -> "')
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"~w:read(~w, V, ~w) end, ~w)"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
                 PsiElement([)('[')
@@ -42040,8 +42050,10 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
-                PsiElement(string)('"lists:flatmap(fun(V) -> "')
-                PsiElement(string)('"~w:index_read(~w, V, ~w) end, ~w)"')
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"lists:flatmap(fun(V) -> "')
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"~w:index_read(~w, V, ~w) end, ~w)"')
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
                 PsiElement([)('[')

@@ -109,7 +109,7 @@ ERL_FILE
               PsiElement(atom)('fwrite')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"hello, world"')
               PsiElement())(')')
     PsiElement(.)('.')
@@ -132,7 +132,7 @@ ERL_FILE
               PsiElement(atom)('fwrite')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
-              ERL_MAX_EXPRESSION
+              ERL_STRING_LITERAL
                 PsiElement(string)('"hello, world"')
               PsiElement())(')')
     PsiElement(.)('.')

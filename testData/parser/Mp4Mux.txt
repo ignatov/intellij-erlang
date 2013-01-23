@@ -126,7 +126,7 @@ ERL_FILE
             PsiElement(atom)('format')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
-            ERL_MAX_EXPRESSION
+            ERL_STRING_LITERAL
               PsiElement(string)('"mp4mux:~p ~p~n"')
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
@@ -391,7 +391,7 @@ ERL_FILE
                                   ERL_Q_VAR
                                     PsiElement(var)('Spec')
                                 PsiElement(,)(',')
-                                ERL_MAX_EXPRESSION
+                                ERL_STRING_LITERAL
                                   PsiElement(string)('"@"')
                                 PsiElement())(')')
                         PsiElement(,)(',')
@@ -781,7 +781,7 @@ ERL_FILE
                         ERL_BINARY_EXPRESSION
                           PsiElement(<<)('<<')
                           ERL_BIN_ELEMENT
-                            ERL_MAX_EXPRESSION
+                            ERL_STRING_LITERAL
                               PsiElement(string)('"isom"')
                           PsiElement(,)(',')
                           ERL_BIN_ELEMENT
@@ -798,19 +798,19 @@ ERL_FILE
                           ERL_BINARY_EXPRESSION
                             PsiElement(<<)('<<')
                             ERL_BIN_ELEMENT
-                              ERL_MAX_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('"isom"')
                             PsiElement(,)(',')
                             ERL_BIN_ELEMENT
-                              ERL_MAX_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('"iso2"')
                             PsiElement(,)(',')
                             ERL_BIN_ELEMENT
-                              ERL_MAX_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('"avc1"')
                             PsiElement(,)(',')
                             ERL_BIN_ELEMENT
-                              ERL_MAX_EXPRESSION
+                              ERL_STRING_LITERAL
                                 PsiElement(string)('"mp42"')
                             PsiElement(>>)('>>')
                           PsiElement(])(']')
@@ -1138,7 +1138,7 @@ ERL_FILE
                     PsiElement(integer)('32')
               PsiElement(,)(',')
               ERL_BIN_ELEMENT
-                ERL_MAX_EXPRESSION
+                ERL_STRING_LITERAL
                   PsiElement(string)('"mdat"')
               PsiElement(>>)('>>')
             PsiElement())(')')

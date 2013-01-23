@@ -12,7 +12,7 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('name')
         PsiElement(=)('=')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"nested0"')
       PsiElement(})('}')
     PsiElement())(')')
@@ -30,7 +30,7 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('name')
         PsiElement(=)('=')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"nested1"')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
@@ -61,7 +61,7 @@ ERL_FILE
         ERL_Q_ATOM
           PsiElement(atom)('name')
         PsiElement(=)('=')
-        ERL_MAX_EXPRESSION
+        ERL_STRING_LITERAL
           PsiElement(string)('"nested2"')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
@@ -103,7 +103,7 @@ ERL_FILE
               PsiElement(})('}')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
-          ERL_MAX_EXPRESSION
+          ERL_STRING_LITERAL
             PsiElement(string)('"nested0"')
           PsiElement(=)('=')
           ERL_RECORD_EXPRESSION
@@ -175,7 +175,7 @@ ERL_FILE
                   ERL_Q_ATOM
                     PsiElement(atom)('name')
                   PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
+                  ERL_STRING_LITERAL
                     PsiElement(string)('"nested0a"')
               PsiElement(})('}')
     PsiElement(.)('.')
