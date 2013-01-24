@@ -101,42 +101,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
 
   @Override
   public void updateParameterInfo(@NotNull ErlangArgumentList place, UpdateParameterInfoContext context) {
-    final ASTNode parentNode = place.getNode();
-    int index = 0;
-
-    if (parentNode != null) {
-      int offset = context.getEditor().getCaretModel().getOffset() - parentNode.getStartOffset();
-      if (offset < 0) {
-        context.setCurrentParameter(-1);
-        return;
-      }
-      for (final ASTNode child : parentNode.getChildren(null)) {
-        offset -= child.getTextLength();
-        if (!(child.getPsi() instanceof ErlangExpression)) {
-          continue;
-        }
-        final IElementType type = child.getElementType();
-        if (offset <= 0 && type != TokenType.WHITE_SPACE && type != ErlangTypes.ERL_COMMA) {
-          break;
-        }
-        index++;
-      }
-      if (offset > 0) index++;
-    }
-    context.setCurrentParameter(index);
-
-    if (context.getParameterOwner() == null) {
-      context.setParameterOwner(place);
-    }
-    else if (!context.getParameterOwner().equals(place)) {
-      context.removeHint();
-      return;
-    }
-    Object[] objects = context.getObjectsToView();
-
-    for (int i = 0; i < objects.length; i++) {
-      context.setUIComponentEnabled(i, true);
-    }
+    context.setCurrentParameter(ParameterInfoUtils.getCurrentParameterIndex(place.getNode(), context.getOffset(), ErlangTypes.ERL_COMMA));
   }
 
   @Override
