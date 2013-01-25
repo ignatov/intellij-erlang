@@ -91,10 +91,7 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
             && super.processServiceMessages(testFinished(myCurrentTest).toString(), outputType, visitor);
         }
         else if (myFailed) {
-          if (!StringUtil.isEmptyOrSpaces(text)) {
-            myStdOut += text;
-          }
-          else {
+          if (StringUtil.isEmptyOrSpaces(text)) {
             myFailed = false;
             myFailedTests.add(myCurrentTest);
             return super.processServiceMessages(testFailed(myCurrentTest).addAttribute("message", myStdOut).toString(), outputType, visitor)
