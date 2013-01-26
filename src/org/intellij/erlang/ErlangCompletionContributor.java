@@ -75,7 +75,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement previousByOffset = startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
     //noinspection unchecked
     ErlangCompositeElement typeParent = PsiTreeUtil.getParentOfType(elementAt, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class);
-    if (parent instanceof ErlangExport || exportType != null || export != null || prevIsRadix(elementAt)
+    if (parent instanceof ErlangExport || parent instanceof ErlangExportFunctions || exportType != null || export != null || prevIsRadix(elementAt)
       || (previousByOffset != null && previousByOffset.getNode().getElementType() == ErlangTypes.ERL_RADIX)
       || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField)
       || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField
