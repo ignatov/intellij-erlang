@@ -38,8 +38,17 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.intellij.codeInsight.documentation.DocumentationManager.PSI_ELEMENT_PROTOCOL;
 
 abstract class AbstractSdkDocProvider implements ElementDocProvider {
+  private static final Pattern PATTERN_HREF = Pattern.compile("<a href=\"(.*?)\">(.*?)</a>");
+  private static final Pattern PATTERN_EVALUATED_LINK = Pattern.compile("javascript:erlhref\\('.*?','.*?','(.*?)'\\);");
+  private static final Pattern PATTERN_EXTERNAL_LINK = Pattern.compile("(.*)\\.html#(.*)");
+
   static final String HTTP_STYLE;
   static {
     final String css;
@@ -123,9 +132,10 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
         return null;
       }
       final StringBuilder builder = new StringBuilder(1024);
-      builder.append(line);
+      appendCorrectedLine(builder, line);
       while ((line = reader.readLine()) != null && !isDocEnd(line)) {
-        builder.append(line).append("\n");
+        appendCorrectedLine(builder, line);
+        builder.append("\n");
       }
       return builder.toString();
     } catch (IOException e) { // Ignore
@@ -136,6 +146,27 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
       }
     }
     return null;
+  }
+
+  @NotNull
+  private String appendCorrectedLine(@NotNull StringBuilder builder, @NotNull String line) {
+    final Matcher matcher = PATTERN_HREF.matcher(line);
+    int lastCopiedChar = 0;
+    while (matcher.find()) {
+      final MatchResult matchResult = matcher.toMatchResult();
+      builder.append(line.substring(lastCopiedChar, matchResult.start()));
+      final String linkHref = matchResult.group(1);
+      final String linkText = matchResult.group(2);
+      final String convertedLink = convertLink(linkHref);
+      builder.append("<a href=\"")
+        .append(convertedLink)
+        .append("\">")
+        .append(linkText)
+        .append("</a>");
+      lastCopiedChar = matchResult.end();
+    }
+    builder.append(line.substring(lastCopiedChar, line.length()));
+    return line;
   }
 
   @NotNull
@@ -238,5 +269,22 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
   @NotNull
   private static String decorateRetrievedHtml(@NotNull String retrievedHtml) {
     return "<html>\n" + HTTP_STYLE + "<body>\n" + retrievedHtml + "</body></html>\n";
+  }
+
+  @NotNull
+  private String convertLink(@NotNull String href) {
+    final Matcher evaluatedLinkMatcher = PATTERN_EVALUATED_LINK.matcher(href);
+    final String concreteHref = (evaluatedLinkMatcher.matches()) ? evaluatedLinkMatcher.group(1) : href;
+    final Matcher externalLinkMatcher = PATTERN_EXTERNAL_LINK.matcher(concreteHref);
+    if (externalLinkMatcher.matches()) {
+      return PSI_ELEMENT_PROTOCOL + externalLinkMatcher.group(1) + "#" + externalLinkMatcher.group(2);
+    }
+    if (concreteHref.charAt(0) == '#') {
+      return PSI_ELEMENT_PROTOCOL + myVirtualFile.getNameWithoutExtension() + concreteHref;
+    }
+    if (concreteHref.endsWith(".html")) {
+      return PSI_ELEMENT_PROTOCOL + concreteHref.substring(0, concreteHref.length() - 5);
+    }
+    return href;
   }
 }

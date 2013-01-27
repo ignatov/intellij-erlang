@@ -29,6 +29,9 @@ import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
@@ -253,7 +256,7 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
       "<html>\n" +
         AbstractSdkDocProvider.HTTP_STYLE +
         "<body>\n" +
-        "      <span class=\"bold_code\"><a name=\"type-file_info\">file_info()</a> = <br>    #file_info{size = undefined | integer() &gt;= 0,<br>               type = undefined<br>                     | device<br>                     | directory<br>                     | other<br>                     | regular<br>                     | symlink,<br>               access = undefined<br>                       | read<br>                       | write<br>                       | read_write<br>                       | none,<br>               atime = undefined | <span class=\"bold_code\"><a href=\"file.html#type-date_time\">file:date_time()</a></span> | integer(),<br>               mtime = undefined | <span class=\"bold_code\"><a href=\"file.html#type-date_time\">file:date_time()</a></span> | integer(),<br>               ctime = undefined | <span class=\"bold_code\"><a href=\"file.html#type-date_time\">file:date_time()</a></span> | integer(),<br>               mode = undefined | integer(),<br>               links = undefined | integer() &gt;= 0,<br>               major_device = undefined | integer(),<br>               minor_device = undefined | integer(),<br>               inode = undefined | integer(),<br>               uid = undefined | integer(),<br>               gid = undefined | integer()}</span><br></p>    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-file_info\">file_info()</a> = <br>    #file_info{size = undefined | integer() &gt;= 0,<br>               type = undefined<br>                     | device<br>                     | directory<br>                     | other<br>                     | regular<br>                     | symlink,<br>               access = undefined<br>                       | read<br>                       | write<br>                       | read_write<br>                       | none,<br>               atime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               mtime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               ctime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               mode = undefined | integer(),<br>               links = undefined | integer() &gt;= 0,<br>               major_device = undefined | integer(),<br>               minor_device = undefined | integer(),<br>               inode = undefined | integer(),<br>               uid = undefined | integer(),<br>               gid = undefined | integer()}</span><br></p>    <p>\n" +
         "</body></html>\n",
       "" +
         "-module(test).\n" +
@@ -275,6 +278,178 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
         "-spec test(file:send<caret>file_option()) -> ok." +
         "test(_SendFileOption) ->\n" +
         "    ok.\n");
+  }
+
+  public void testLinkConverterLocal() throws Exception {
+    // <a href="#write_$FUNC$-$ARITY$">
+    // <a href="#type-$TYPE$">
+    doTestGenerateDoc(
+      "<html>\n" +
+        AbstractSdkDocProvider.HTTP_STYLE +
+        "<body>\n" +
+        "    <p><a name=\"change_time-2\"></a><span class=\"bold_code\">change_time(Filename, Mtime) -&gt; ok | {error, Reason}</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Filename = <span class=\"bold_code\"><a href=\"psi_element://file#type-name\">name()</a></span></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Mtime = <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">date_time()</a></span></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Reason = <span class=\"bold_code\"><a href=\"psi_element://file#type-posix\">posix()</a></span> | badarg</span></div>\n" +
+        "</div></p>\n" +
+        "<div class=\"REFBODY\"><p>\n" +
+        "        <p>Changes the modification and access times of a file. See\n" +
+        "          <span class=\"bold_code\"><a href=\"psi_element://file#write_file_info-2\">write_file_info/2</a></span>.</p>\n" +
+        "      </p></div>\n" +
+        "</body></html>\n",
+      "" +
+        "-module(test).\n" +
+        "test(_SendFileOption) ->\n" +
+        "    file:cha<caret>nge_time(foo, bar).\n");
+  }
+
+  public void testLinkConverterErlRef() throws Exception {
+    // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html#type-$TYPE$');">
+    // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html');">
+    doTestGenerateDoc(
+      "<html>\n" +
+        AbstractSdkDocProvider.HTTP_STYLE +
+        "<body>\n" +
+        "    <p><a name=\"path_script-3\"></a><span class=\"bold_code\">path_script(Path, Filename, Bindings) -&gt;<br>               {ok, Value, FullName} | {error, Reason}</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Path = [Dir :: <span class=\"bold_code\"><a href=\"psi_element://file#type-name\">name()</a></span>]</span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Filename = <span class=\"bold_code\"><a href=\"psi_element://file#type-name\">name()</a></span></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Bindings = <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-binding_struct\">erl_eval:binding_struct()</a></span></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Value = term()</span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">FullName = <span class=\"bold_code\"><a href=\"psi_element://file#type-filename\">filename()</a></span></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Reason = <span class=\"bold_code\"><a href=\"psi_element://file#type-posix\">posix()</a></span><br>       | badarg<br>       | terminated<br>       | system_limit<br>       | {Line :: integer(), Mod :: module(), Term :: term()}</span></div>\n" +
+        "</div></p>\n" +
+        "<div class=\"REFBODY\"><p>\n" +
+        "        <p>The same as <span class=\"code\">path_script/2</span> but the variable bindings\n" +
+        "          <span class=\"code\">Bindings</span> are used in the evaluation. See\n" +
+        "          <span class=\"bold_code\"><a href=\"psi_element://erl_eval\">erl_eval(3)</a></span> about\n" +
+        "          variable bindings.</p>\n" +
+        "      </p></div>\n" +
+        "</body></html>\n",
+      "" +
+        "-module(test).\n" +
+        "test(_SendFileOption) ->\n" +
+        "    file:pat<caret>h_script(1, 2, 3).\n");
+  }
+
+  public void testLinkConverterErlRef2() throws Exception {
+    // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html#$FUNCTION$-$ARITY$');">
+    doTestGenerateDoc(
+      "<html>\n" +
+        AbstractSdkDocProvider.HTTP_STYLE +
+        "<body>\n" +
+        "    <p><a name=\"read_line-1\"></a><span class=\"bold_code\">read_line(IoDevice) -&gt; {ok, Data} | eof | {error, Reason}</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">IoDevice = <span class=\"bold_code\"><a href=\"psi_element://file#type-io_device\">io_device()</a></span> | atom()</span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Data = string() | binary()</span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Reason = <span class=\"bold_code\"><a href=\"psi_element://file#type-posix\">posix()</a></span> | badarg | terminated</span></div>\n" +
+        "</div></p>\n" +
+        "<div class=\"REFBODY\"><p>\n" +
+        "        <p>Reads a line of bytes/characters from the file referenced by\n" +
+        "          <span class=\"code\">IoDevice</span>. Lines are defined to be delimited by the linefeed (LF, <span class=\"code\">\\n</span>) character, but any carriage return (CR, <span class=\"code\">\\r</span>) followed by a newline is also treated as a single LF character (the carriage return is silently ignored). The line is returned <strong>including</strong> the LF, but excluding any CR immediately followed by a LF. This behaviour is consistent with the behaviour of <span class=\"bold_code\"><a href=\"psi_element://io#get_line-2\">io:get_line/2</a></span>. If end of file is reached without any LF ending the last line, a line with no trailing LF is returned.</p>\n" +
+        "\t  <p>The function can be used on files opened in <span class=\"code\">raw</span> mode. It is however inefficient to use it on <span class=\"code\">raw</span> files if the file is not opened with the option <span class=\"code\">{read_ahead, Size}</span> specified, why combining <span class=\"code\">raw</span> and <span class=\"code\">{read_ahead, Size}</span> is highly recommended when opening a text file for raw line oriented reading.</p> \n" +
+        "\t  <p>If <span class=\"code\">encoding</span> is set to something else than <span class=\"code\">latin1</span>, the <span class=\"code\">read_line/1</span> call will fail if the data contains characters larger than 255, why the <span class=\"bold_code\"><a href=\"psi_element://io\">io(3)</a></span> module is to be preferred when reading such a file.</p> \n" +
+        "\t  <p>The function returns:</p>\n" +
+        "        <dl>\n" +
+        "          <dt><strong><span class=\"code\">{ok, Data}</span></strong></dt>\n" +
+        "          <dd>\n" +
+        "\t    <p>One line from the file is returned, including the trailing LF, but with CRLF sequences replaced by a single LF (see above).</p>\n" +
+        "            <p>If the file was opened in binary mode, the read bytes are\n" +
+        "              returned in a binary, otherwise in a list.</p>\n" +
+        "          </dd>\n" +
+        "          <dt><strong><span class=\"code\">eof</span></strong></dt>\n" +
+        "          <dd>\n" +
+        "            <p>Returned if end of file was reached\n" +
+        "              before anything at all could be read.</p>\n" +
+        "          </dd>\n" +
+        "          <dt><strong><span class=\"code\">{error, Reason}</span></strong></dt>\n" +
+        "          <dd>\n" +
+        "            <p>An error occurred.</p>\n" +
+        "          </dd>\n" +
+        "        </dl>\n" +
+        "        <p>Typical error reasons:</p>\n" +
+        "        <dl>\n" +
+        "          <dt><strong><span class=\"code\">ebadf</span></strong></dt>\n" +
+        "          <dd>\n" +
+        "            <p>The file is not opened for reading.</p>\n" +
+        "          </dd>\n" +
+        "          <dt><strong><span class=\"code\">{no_translation, unicode, latin1}</span></strong></dt>\n" +
+        "          <dd>\n" +
+        "            <p>The file is was opened with another <span class=\"code\">encoding</span> than <span class=\"code\">latin1</span> and the data on the file can not be translated to the byte-oriented data that this function returns.</p>\n" +
+        "          </dd>\n" +
+        "        </dl>\n" +
+        "      </p></div>\n" +
+        "</body></html>\n",
+      "" +
+        "-module(test).\n" +
+        "test(_SendFileOption) ->\n" +
+        "    file:rea<caret>d_line(1).\n");
+  }
+
+  public void testLinkConverterInModule() throws Exception {
+    // <a href="$MODULE$.html#$FUNCTION$-$ARITY$">
+    // <a href="$MODULE$.html#type-$TYPE$">
+    doTestGenerateDoc(
+      "<html>\n" +
+        AbstractSdkDocProvider.HTTP_STYLE +
+        "<body>\n" +
+        "    <p><a name=\"sendfile-5\"></a><span class=\"bold_code\">sendfile(RawFile, Socket, Offset, Bytes, Opts) -&gt;<br>            {ok, integer() &gt;= 0} |<br>            {error, <span class=\"bold_code\"><a href=\"psi_element://inet#type-posix\">inet:posix()</a></span> | closed | badarg | not_owner}</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">RawFile = <span class=\"bold_code\"><a href=\"psi_element://file#type-fd\">file:fd()</a></span></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Socket = <span class=\"bold_code\"><a href=\"psi_element://inet#type-socket\">inet:socket()</a></span></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Offset = Bytes = integer() &gt;= 0</span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\"></span></div>\n" +
+        "<div class=\"REFTYPES\"><span class=\"bold_code\">Opts = [<span class=\"bold_code\"><a href=\"psi_element://file#type-sendfile_option\">sendfile_option()</a></span>]</span></div>\n" +
+        "</div></p>\n" +
+        "<div class=\"REFBODY\"><p>\n" +
+        "        <p>Sends <span class=\"code\">Bytes</span> from the file\n" +
+        "        referenced by <span class=\"code\">RawFile</span> beginning at <span class=\"code\">Offset</span> to\n" +
+        "        <span class=\"code\">Socket</span>.\n" +
+        "        Returns <span class=\"code\">{ok, BytesSent}</span> if successful,\n" +
+        "        otherwise <span class=\"code\">{error, Reason}</span>. If <span class=\"code\">Bytes</span> is set to\n" +
+        "\t0 all data after the given <span class=\"code\">Offset</span> is sent.</p>\n" +
+        "\t<p>The file used must be opened using the raw flag, and the process\n" +
+        "\tcalling sendfile must be the controlling process of the socket.\n" +
+        "\tSee <span class=\"bold_code\"><a href=\"psi_element://gen_tcp#controlling_process-2\">gen_tcp:controlling_process/2</a></span></p>\n" +
+        "\t<p>If the OS used does not support sendfile, an Erlang fallback\n" +
+        "\tusing file:read and gen_tcp:send is used.</p>\n" +
+        "\t<p>The option list can contain the following options:\n" +
+        "\t<dl>\n" +
+        "          <dt><strong><span class=\"code\">chunk_size</span></strong></dt>\n" +
+        "          <dd>The chunk size used by the erlang fallback to send\n" +
+        "\t  data. If using the fallback, this should be set to a value\n" +
+        "\t  which comfortably fits in the systems memory. Default is 20 MB.</dd>\n" +
+        "\t</dl>\n" +
+        "\t</p>\n" +
+        "\t<p>On operating systems with thread support, it is recommended to use\n" +
+        "\tasync threads. See the command line flag\n" +
+        "\t<span class=\"code\">+A</span> in <span class=\"bold_code\"><a href=\"psi_element://erl\">erl(1)</a></span>. If it is not\n" +
+        "\tpossible to use async threads for sendfile, it is recommended to use\n" +
+        "\ta relatively small value for the send buffer on the socket. Otherwise\n" +
+        "\tthe Erlang VM might loose some of its soft realtime guarantees.\n" +
+        "\tWhich size to use depends on the OS/hardware and the requirements\n" +
+        "\tof the application.</p>\n" +
+        "      </p></div>\n" +
+        "</body></html>\n",
+      "" +
+        "-module(test).\n" +
+        "test(_SendFileOption) ->\n" +
+        "    file:sen<caret>dfile(1,2,3,4,5).\n");
+  }
+
+  public void testResolveLinkModule() {
+    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(
+      getPsiManager(), "file", null);
+    assertTrue(psiElement instanceof ErlangModule);
+  }
+
+  public void testResolveLinkFunction() {
+    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(
+      getPsiManager(), "file#read_line-1", null);
+    assertTrue(psiElement instanceof ErlangFunction);
+  }
+
+  public void testResolveLinkType() {
+    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(
+      getPsiManager(), "file#type-filename", null);
+    assertTrue(psiElement instanceof ErlangTypeDefinition);
   }
 
   @NotNull
