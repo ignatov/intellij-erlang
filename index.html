@@ -66,6 +66,49 @@
 <h2>Donations</h2>
 
 <p>If you would like to make a donation you can use <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=C344TC8DDC5UN">PayPal</a>.</p>
+
+<h2><a name="how-to" href="#rebar-eunit">How-tos</a></h2>
+<h3><a name="rebar-eunit" href="#rebar-eunit">Rebar integration</a></h3>
+
+          <div>
+              <div>
+                  First of all, you need to provide the right path to the <a href="https://github.com/basho/rebar">Rebar</a> executable (<strong>Settings > Rebar</strong>). <br/>
+                  <img src="images/rebar_setup.png"/>
+              </div>
+              <div>
+                  After that you may create the new one Rebar run configuration (<strong>Run > Edit run configurations...</strong>), <br/>
+                  use a little green button on the top left corner:
+                  <img src="images/new_rebar_run_configuration.png"/>
+              </div>
+
+              <div>
+                  Or execute existing (<strong>Run > Run...</strong>)
+                  <br/>
+                  <img src="images/run_configuration_popup.png"/></div>
+              <div>
+                  You may create run configuration for every command which Rebar supports, e.g. <code>compile</code> or <code>eunit</code>, etc.
+                  <img src="images/compile_run_configuration.png"/>
+              </div>
+
+              <div>
+                  <strong>Skip dependencies</strong> checkbox adds <code>skip_deps=true</code> command for Rebar executable. <br/>
+                  <strong>Use test runner console</strong> checkbox attaches Eunit console which allows use graphical runner for your tests.
+              </div>
+
+              <div>
+                  <img src="images/eunit_run_configuration.png"/>
+              </div>
+
+              <div>
+                  Rebar-based Eunit test runner (with <code>eunit</code> command): <br/>
+                  <img src="images/rebar_eunit.png"/>
+              </div>
+              <div>
+                  Compilation result (with <code>compile</code> command): <br/>
+                  <img src="images/rebar_compile_result.png"/>
+              </div>
+          </div>
+
       </section>
     </div>
 
