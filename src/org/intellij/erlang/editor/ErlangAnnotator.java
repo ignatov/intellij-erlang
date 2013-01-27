@@ -109,6 +109,12 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       }
 
       @Override
+      public void visitImportDirective(@NotNull ErlangImportDirective o) {
+        super.visitImportDirective(o);
+        markFirstChildAsKeyword(o, annotationHolder);
+      }
+
+      @Override
       public void visitInclude(@NotNull ErlangInclude o) {
         super.visitInclude(o);
         markFirstChildAsKeyword(o, annotationHolder);

@@ -238,6 +238,18 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitImportDirective(@NotNull ErlangImportDirective o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitImportFunction(@NotNull ErlangImportFunction o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitImportFunctions(@NotNull ErlangImportFunctions o) {
+    visitCompositeElement(o);
+  }
+
   public void visitInclude(@NotNull ErlangInclude o) {
     visitCompositeElement(o);
   }

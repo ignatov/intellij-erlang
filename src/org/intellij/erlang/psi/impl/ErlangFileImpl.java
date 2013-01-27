@@ -502,6 +502,25 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return byUnquote == null ? value.get("'" + name + "'") : byUnquote;
   }
 
+  @NotNull
+  @Override
+  public ArrayList<ErlangImportFunction> getImportedFunctions() {
+    ArrayList<ErlangImportFunction> result = new ArrayList<ErlangImportFunction>();
+    for (ErlangAttribute attribute : getAttributes()) {
+      ErlangImportDirective importDirective = attribute.getImportDirective();
+      if (importDirective != null) {
+        ErlangImportFunctions importFunctions = importDirective.getImportFunctions();
+        if (importFunctions != null) {
+          List<ErlangImportFunction> importFunctionList = importFunctions.getImportFunctionList();
+          for (ErlangImportFunction importFunction : importFunctionList) {
+            result.add(importFunction);
+          }
+        }
+      }
+    }
+    return result;
+  }
+
   private List<ErlangFunction> calcFunctions() {
     final List<ErlangFunction> result = new ArrayList<ErlangFunction>();
     processChildrenDummyAware(this, new Processor<PsiElement>() {

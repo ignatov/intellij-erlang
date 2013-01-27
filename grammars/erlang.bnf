@@ -160,6 +160,7 @@ attribute ::= '-' (
   module
   | export
   | export_type_attribute
+  | import_directive
   | specification
   | callback_spec
   | behaviour
@@ -172,6 +173,7 @@ specification ::= 'spec' type_spec {
 }
 export ::= 'export' '(' export_functions ')' {pin=1}
 export_type_attribute ::= 'export_type' '(' export_types ')' {pin=1}
+import_directive ::= 'import' '(' module_ref ',' import_functions ')' {pin=1}
 module ::= 'module' '(' q_atom (',' argument_definition)? ')' {
   pin=1
   methods = [getName setName getNameIdentifier getTextOffset processDeclarations]
@@ -203,6 +205,13 @@ export_function ::= q_atom '/' integer {
 export_types ::= '[' export_type_list? ']' {pin=1}
 private export_type_list ::= export_type (',' export_type)*
 export_type ::= q_atom '/' integer {
+  pin = 1
+  methods = [getReference]
+}
+
+import_functions ::= '[' import_function_list? ']'
+private import_function_list ::= import_function (',' import_function)*
+import_function ::= q_atom '/' integer {
   pin = 1
   methods = [getReference]
 }

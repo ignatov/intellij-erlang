@@ -75,7 +75,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement previousByOffset = startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
     //noinspection unchecked
     ErlangCompositeElement typeParent = PsiTreeUtil.getParentOfType(elementAt, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class);
-    if (parent instanceof ErlangExport || parent instanceof ErlangExportFunctions || exportType != null || export != null || prevIsRadix(elementAt)
+    if (parent instanceof ErlangExport || parent instanceof ErlangExportFunctions
+      || parent instanceof ErlangImportDirective || parent instanceof ErlangImportFunctions
+      || exportType != null || export != null || prevIsRadix(elementAt)
       || (previousByOffset != null && previousByOffset.getNode().getElementType() == ErlangTypes.ERL_RADIX)
       || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField)
       || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField
@@ -109,7 +111,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
         else {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
           if (colonQualified != null && PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null) {
-            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, colonQualified));
+            ErlangQAtom qAtom = ErlangPsiImplUtil.getQAtom(colonQualified);
+            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, qAtom));
           }
           else if (originalParent instanceof ErlangRecordFields || parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
             Pair<List<ErlangTypedExpr>,List<ErlangQAtom>> recordFields = ErlangPsiImplUtil.getRecordFields(parent);
@@ -138,11 +141,17 @@ public class ErlangCompletionContributor extends CompletionContributor {
             boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;
             //noinspection unchecked
             if (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null && moduleCompletion) {
-              suggestModules(result, position);
+              suggestModules(result, position, true);
             }
             else {
-              String shortcut = getActionShortcut(IdeActions.ACTION_CODE_COMPLETION);
-              CompletionService.getCompletionService().setAdvertisementText(shortcut + " to activate module name completion");
+              //noinspection unchecked
+              if (PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective) {
+                suggestModules(result, position, false);
+              }
+              else {
+                String shortcut = getActionShortcut(IdeActions.ACTION_CODE_COMPLETION);
+                CompletionService.getCompletionService().setAdvertisementText(shortcut + " to activate module name completion");
+              }
             }
           }
           if (colonQualified == null && parent instanceof ErlangExpression && ErlangPsiImplUtil.inFunction(position)) {
@@ -159,7 +168,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     return (prevSiblingNode != null ? prevSiblingNode.getElementType() : null) == ErlangTypes.ERL_RADIX;
   }
 
-  private static void suggestModules(CompletionResultSet result, PsiElement position) {
+  private static void suggestModules(CompletionResultSet result, PsiElement position, boolean withColon) {
     Project project = position.getProject();
     Collection<VirtualFile> files = FilenameIndex.getAllFilesByExt(project, "erl", GlobalSearchScope.projectScope(project));
 
@@ -182,7 +191,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           PrioritizedLookupElement.withPriority(
             LookupElementBuilder.create(file.getNameWithoutExtension())
               .withIcon(ErlangIcons.MODULE)
-              .withInsertHandler(new SingleCharInsertHandler(':')),
+              .withInsertHandler(withColon ? new SingleCharInsertHandler(':') : null),
             MODULE_PRIORITY));
       }
     }

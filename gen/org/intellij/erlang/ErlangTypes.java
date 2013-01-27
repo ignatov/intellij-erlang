@@ -67,6 +67,9 @@ public interface ErlangTypes {
   IElementType ERL_IF_CLAUSE = new ErlangCompositeElementType("ERL_IF_CLAUSE");
   IElementType ERL_IF_CLAUSES = new ErlangCompositeElementType("ERL_IF_CLAUSES");
   IElementType ERL_IF_EXPRESSION = new ErlangCompositeElementType("ERL_IF_EXPRESSION");
+  IElementType ERL_IMPORT_DIRECTIVE = new ErlangCompositeElementType("ERL_IMPORT_DIRECTIVE");
+  IElementType ERL_IMPORT_FUNCTION = new ErlangCompositeElementType("ERL_IMPORT_FUNCTION");
+  IElementType ERL_IMPORT_FUNCTIONS = new ErlangCompositeElementType("ERL_IMPORT_FUNCTIONS");
   IElementType ERL_INCLUDE = new ErlangCompositeElementType("ERL_INCLUDE");
   IElementType ERL_INCLUDE_STRING = new ErlangCompositeElementType("ERL_INCLUDE_STRING");
   IElementType ERL_INT_TYPE = new ErlangCompositeElementType("ERL_INT_TYPE");
@@ -370,6 +373,15 @@ public interface ErlangTypes {
       }
       else if (type == ERL_IF_EXPRESSION) {
         return new ErlangIfExpressionImpl(node);
+      }
+      else if (type == ERL_IMPORT_DIRECTIVE) {
+        return new ErlangImportDirectiveImpl(node);
+      }
+      else if (type == ERL_IMPORT_FUNCTION) {
+        return new ErlangImportFunctionImpl(node);
+      }
+      else if (type == ERL_IMPORT_FUNCTIONS) {
+        return new ErlangImportFunctionsImpl(node);
       }
       else if (type == ERL_INCLUDE) {
         return new ErlangIncludeImpl(node);

@@ -106,6 +106,21 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo"); // means "bar/1", "bar/0", "foo/1", "foo/0"
   }
 
+  public void testBifImport() throws Throwable {
+    doTestInclude("-import(math, [<caret>]).", "sin", "sqrt");
+  }
+
+  public void testBifImport2() throws Throwable {
+    doTestInclude("-import(math, [sin/1, sqrt/1]).\n" +
+      "foo() -> <caret>", "sin", "sqrt");
+  }
+
+  public void testImportModule() throws Throwable {
+    myFixture.configureByFiles("multi-module/a.erl");
+    myFixture.configureByFile("multi-module/b.erl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo"); // means "bar/1", "bar/0", "foo/1", "foo/0"
+  }
+
   private void doTestInclude(String txt, String... variants) throws Throwable {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
   }

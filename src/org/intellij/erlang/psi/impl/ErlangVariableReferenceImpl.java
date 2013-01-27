@@ -82,7 +82,8 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
       };
       ResolveUtil.treeWalkUp(myElement, processor);
 
-      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), false, PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class)));
+      ErlangQAtom qAtom = getQAtom(PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class));
+      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), false, qAtom));
     }
 
     return ArrayUtil.toObjectArray(result);

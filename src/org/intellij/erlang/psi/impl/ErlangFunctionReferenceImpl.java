@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.psi.impl;
 
-import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.intellij.psi.search.FilenameIndex;
@@ -26,10 +25,7 @@ import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
-import org.intellij.erlang.psi.ErlangCallbackSpec;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -68,7 +64,24 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     }
 
     PsiFile containingFile = getElement().getContainingFile();
-    return containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunction(myReferenceName, myArity) : null;
+    if (containingFile instanceof ErlangFile) {
+      ErlangFile erlangFile = (ErlangFile) containingFile;
+
+      ErlangFunction result = erlangFile.getFunction(myReferenceName, myArity);
+      if (result != null) return result;
+
+      for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
+        PsiReference reference = importFunction.getReference();
+        PsiElement resolve = reference != null ? reference.resolve() : null;
+        if (resolve instanceof ErlangFunction) {
+          ErlangFunction function = (ErlangFunction) resolve;
+          if (function.getName().equals(myReferenceName) && function.getArity() == myArity) {
+            return function;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   @NotNull
@@ -92,7 +105,23 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     }
     else {
       PsiFile containingFile = getElement().getContainingFile();
-      result = containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getFunctionsByName(myReferenceName) : ContainerUtil.<ErlangFunction>emptyList();
+      if (containingFile instanceof ErlangFile) {
+        ErlangFile erlangFile = (ErlangFile) containingFile;
+        result = new ArrayList<ErlangFunction>();
+
+        for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
+          PsiReference reference = importFunction.getReference();
+          PsiElement resolve = reference != null ? reference.resolve() : null;
+          if (resolve instanceof ErlangFunction && ((ErlangFunction) resolve).getName().equals(myReferenceName)) {
+            result.add((ErlangFunction) resolve);
+          }
+        }
+
+        result.addAll(erlangFile.getFunctionsByName(myReferenceName));
+      }
+      else {
+        result = ContainerUtil.emptyList();
+      }
     }
     return PsiElementResolveResult.createResults(result);
   }
@@ -130,8 +159,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   @NotNull
   @Override
   public Object[] getVariants() {
-    List<LookupElement> lookupElements = ErlangPsiImplUtil.getFunctionLookupElements(getElement().getContainingFile(), true, null);
-    return ArrayUtil.toObjectArray(lookupElements);
+    return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getFunctionLookupElements(getElement().getContainingFile(), true, myModuleAtom));
   }
 
   @Override

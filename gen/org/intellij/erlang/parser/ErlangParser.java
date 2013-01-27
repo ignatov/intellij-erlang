@@ -194,6 +194,15 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_IF_EXPRESSION) {
       result_ = if_expression(builder_, level_ + 1);
     }
+    else if (root_ == ERL_IMPORT_DIRECTIVE) {
+      result_ = import_directive(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_IMPORT_FUNCTION) {
+      result_ = import_function(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_IMPORT_FUNCTIONS) {
+      result_ = import_functions(builder_, level_ + 1);
+    }
     else if (root_ == ERL_INCLUDE) {
       result_ = include(builder_, level_ + 1);
     }
@@ -710,6 +719,7 @@ public class ErlangParser implements PsiParser {
   //   module
   //   | export
   //   | export_type_attribute
+  //   | import_directive
   //   | specification
   //   | callback_spec
   //   | behaviour
@@ -738,6 +748,7 @@ public class ErlangParser implements PsiParser {
   // module
   //   | export
   //   | export_type_attribute
+  //   | import_directive
   //   | specification
   //   | callback_spec
   //   | behaviour
@@ -749,6 +760,7 @@ public class ErlangParser implements PsiParser {
     result_ = module(builder_, level_ + 1);
     if (!result_) result_ = export(builder_, level_ + 1);
     if (!result_) result_ = export_type_attribute(builder_, level_ + 1);
+    if (!result_) result_ = import_directive(builder_, level_ + 1);
     if (!result_) result_ = specification(builder_, level_ + 1);
     if (!result_) result_ = callback_spec(builder_, level_ + 1);
     if (!result_) result_ = behaviour(builder_, level_ + 1);
@@ -2982,6 +2994,139 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // 'import' '(' module_ref ',' import_functions ')'
+  public static boolean import_directive(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "import_directive")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<import directive>");
+    result_ = consumeToken(builder_, "import");
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, module_ref(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_COMMA)) && result_;
+    result_ = pinned_ && report_error_(builder_, import_functions(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_IMPORT_DIRECTIVE);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // q_atom '/' integer
+  public static boolean import_function(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "import_function")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
+        && replaceVariants(builder_, 2, "<import function>")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<import function>");
+    result_ = q_atom(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_OP_AR_DIV));
+    result_ = pinned_ && consumeToken(builder_, ERL_INTEGER) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_IMPORT_FUNCTION);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // import_function (',' import_function)*
+  static boolean import_function_list(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "import_function_list")) return false;
+    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = import_function(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && import_function_list_1(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // (',' import_function)*
+  private static boolean import_function_list_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "import_function_list_1")) return false;
+    int offset_ = builder_.getCurrentOffset();
+    while (true) {
+      if (!import_function_list_1_0(builder_, level_ + 1)) break;
+      int next_offset_ = builder_.getCurrentOffset();
+      if (offset_ == next_offset_) {
+        empty_element_parsed_guard_(builder_, offset_, "import_function_list_1");
+        break;
+      }
+      offset_ = next_offset_;
+    }
+    return true;
+  }
+
+  // ',' import_function
+  private static boolean import_function_list_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "import_function_list_1_0")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_COMMA);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && import_function(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // '[' import_function_list? ']'
+  public static boolean import_functions(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "import_functions")) return false;
+    if (!nextTokenIs(builder_, ERL_BRACKET_LEFT)) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_BRACKET_LEFT);
+    result_ = result_ && import_functions_1(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_BRACKET_RIGHT);
+    if (result_) {
+      marker_.done(ERL_IMPORT_FUNCTIONS);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    return result_;
+  }
+
+  // import_function_list?
+  private static boolean import_functions_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "import_functions_1")) return false;
+    import_function_list(builder_, level_ + 1);
+    return true;
   }
 
   /* ********************************************************** */

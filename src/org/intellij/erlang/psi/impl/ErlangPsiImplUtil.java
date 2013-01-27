@@ -235,6 +235,15 @@ public class ErlangPsiImplUtil {
       o.getQAtom().getText(), getArity(arity));
   }
 
+  @NotNull
+  public static PsiReference getReference(@NotNull ErlangImportFunction o) {
+    ErlangImportDirective importDirective = PsiTreeUtil.getParentOfType(o, ErlangImportDirective.class);
+    ErlangModuleRef moduleRef = importDirective != null ? importDirective.getModuleRef() : null;
+    ErlangQAtom moduleRefQAtom = moduleRef != null ? moduleRef.getQAtom() : null;
+    PsiElement arity = o.getInteger();
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), moduleRefQAtom, TextRange.from(0, o.getQAtom().getTextLength()), o.getQAtom().getText(), getArity(arity));
+  }
+
   private static int getArity(@Nullable PsiElement arity) {
     return StringUtil.parseInt(arity == null ? "" : arity.getText(), -1);
   }
@@ -310,25 +319,27 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, final boolean withArity, @Nullable ErlangColonQualifiedExpression colonQualifier) {
+  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, final boolean withArity, @Nullable ErlangQAtom qAtom) {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
       List<ErlangFunction> functions = new ArrayList<ErlangFunction>();
 
       List<LookupElement> lookupElements = ContainerUtil.newArrayList();
 
-      if (colonQualifier != null) {
-        ErlangExpression qAtom = ContainerUtil.getFirstItem(colonQualifier.getExpressionList());
-        if (qAtom != null) {
-          String moduleName = qAtom.getText();
-          functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
+      if (qAtom != null) {
+        String moduleName = qAtom.getText();
+        functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
 
-          for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs(moduleName)) {
-            lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
-          }
+        for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs(moduleName)) {
+          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
         }
       }
       else {
-        functions.addAll(((ErlangFile) containingFile).getFunctions());
+        ErlangFile erlangFile = (ErlangFile) containingFile;
+        functions.addAll(erlangFile.getFunctions());
+
+        for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
+          lookupElements.add(createFunctionLookupElement(importFunction.getQAtom().getText(), getArity(importFunction.getInteger()), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
+        }
 
         if (!withArity) {
           for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs("erlang")) {
@@ -1017,5 +1028,11 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static ErlangStringLiteralEscaper createLiteralTextEscaper(ErlangStringLiteral o) {
     return new ErlangStringLiteralEscaper(o);
+  }
+
+  @Nullable
+  public static ErlangQAtom getQAtom(@Nullable ErlangColonQualifiedExpression colonQualifier) {
+    ErlangExpression firstExpression = colonQualifier == null ? null : ContainerUtil.getFirstItem(colonQualifier.getExpressionList());
+    return firstExpression instanceof ErlangMaxExpression ? ((ErlangMaxExpression) firstExpression).getQAtom() : null;
   }
 }

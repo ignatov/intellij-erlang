@@ -1072,24 +1072,22 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        PsiElement(atom)('import')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
+    ERL_IMPORT_DIRECTIVE
+      PsiElement(atom)('import')
+      PsiElement(()('(')
+      ERL_MODULE_REF
+        ERL_Q_ATOM
+          PsiElement(atom)('mnesia_lib')
+      PsiElement(,)(',')
+      ERL_IMPORT_FUNCTIONS
+        PsiElement([)('[')
+        ERL_IMPORT_FUNCTION
           ERL_Q_ATOM
-            PsiElement(atom)('mnesia_lib')
-        PsiElement(,)(',')
-        ERL_LIST_EXPRESSION
-          PsiElement([)('[')
-          ERL_EXPRESSION
-            ERL_Q_ATOM
-              PsiElement(atom)('verbose')
-            PsiElement(/)('/')
-            PsiElement(integer)('2')
-          PsiElement(])(']')
-        PsiElement())(')')
+            PsiElement(atom)('verbose')
+          PsiElement(/)('/')
+          PsiElement(integer)('2')
+        PsiElement(])(']')
+      PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')

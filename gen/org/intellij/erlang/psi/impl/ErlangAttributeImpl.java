@@ -48,6 +48,12 @@ public class ErlangAttributeImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @Nullable
+  public ErlangImportDirective getImportDirective() {
+    return findChildByClass(ErlangImportDirective.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangModule getModule() {
     return findChildByClass(ErlangModule.class);
   }

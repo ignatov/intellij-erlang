@@ -20,6 +20,7 @@ import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -70,4 +71,7 @@ public interface ErlangFile extends PsiFile {
   Collection<ErlangFunction> getExportedFunctions();
 
   boolean isExportedAll();
+
+  @NotNull
+  ArrayList<ErlangImportFunction> getImportedFunctions();
 }
