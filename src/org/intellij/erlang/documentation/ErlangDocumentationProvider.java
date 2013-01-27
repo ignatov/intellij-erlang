@@ -63,7 +63,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
   @Override
   public PsiElement getDocumentationElementForLink(@NotNull PsiManager psiManager,
                                                    @NotNull String link,
-                                                   @NotNull PsiElement context) {
+                                                   @Nullable PsiElement context) {
     final Project project = psiManager.getProject();
     final Matcher linkMatcher = PATTERN_PSI_LINK.matcher(link);
     if (linkMatcher.matches()) {
