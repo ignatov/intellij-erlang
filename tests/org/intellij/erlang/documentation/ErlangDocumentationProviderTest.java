@@ -299,7 +299,7 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
         "</body></html>\n",
       "" +
         "-module(test).\n" +
-        "test(_SendFileOption) ->\n" +
+        "test() ->\n" +
         "    file:cha<caret>nge_time(foo, bar).\n");
   }
 
@@ -327,7 +327,7 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
         "</body></html>\n",
       "" +
         "-module(test).\n" +
-        "test(_SendFileOption) ->\n" +
+        "test() ->\n" +
         "    file:pat<caret>h_script(1, 2, 3).\n");
   }
 
@@ -380,7 +380,7 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
         "</body></html>\n",
       "" +
         "-module(test).\n" +
-        "test(_SendFileOption) ->\n" +
+        "test() ->\n" +
         "    file:rea<caret>d_line(1).\n");
   }
 
@@ -430,7 +430,7 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
         "</body></html>\n",
       "" +
         "-module(test).\n" +
-        "test(_SendFileOption) ->\n" +
+        "test() ->\n" +
         "    file:sen<caret>dfile(1,2,3,4,5).\n");
   }
 

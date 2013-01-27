@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
 import static com.intellij.codeInsight.documentation.DocumentationManager.PSI_ELEMENT_PROTOCOL;
 
 abstract class AbstractSdkDocProvider implements ElementDocProvider {
-  private static final Pattern PATTERN_HREF = Pattern.compile("<a href=\"(.*?)\">(.*?)</a>");
+  private static final Pattern PATTERN_HREF = Pattern.compile("<a href=\"(.*?)\">");
   private static final Pattern PATTERN_EVALUATED_LINK = Pattern.compile("javascript:erlhref\\('.*?','.*?','(.*?)'\\);");
   private static final Pattern PATTERN_EXTERNAL_LINK = Pattern.compile("(.*)\\.html#(.*)");
 
@@ -156,13 +156,10 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
       final MatchResult matchResult = matcher.toMatchResult();
       builder.append(line.substring(lastCopiedChar, matchResult.start()));
       final String linkHref = matchResult.group(1);
-      final String linkText = matchResult.group(2);
       final String convertedLink = convertLink(linkHref);
       builder.append("<a href=\"")
         .append(convertedLink)
-        .append("\">")
-        .append(linkText)
-        .append("</a>");
+        .append("\">");
       lastCopiedChar = matchResult.end();
     }
     builder.append(line.substring(lastCopiedChar, line.length()));
