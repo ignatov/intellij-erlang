@@ -32,6 +32,7 @@ import org.intellij.erlang.quickfixes.ErlangExportTypeFixTest;
 import org.intellij.erlang.quickfixes.ErlangHeadMismatchFixTest;
 import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
 import org.intellij.erlang.rebar.runner.FileReferenceFilterTest;
+import org.intellij.erlang.typing.ErlangTypedHandlerTest;
 
 /**
  * @author ignatov
@@ -54,6 +55,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangExportFunctionFixTest.class);
     suite.addTestSuite(ErlangExportTypeFixTest.class);
     suite.addTestSuite(ErlangHeadMismatchFixTest.class);
+    suite.addTestSuite(ErlangTypedHandlerTest.class);
     return suite;
   }
 }

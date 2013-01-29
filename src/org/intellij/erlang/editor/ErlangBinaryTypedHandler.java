@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
  */
-public class ErlangTypedHandler extends TypedHandlerDelegate {
+public class ErlangBinaryTypedHandler extends TypedHandlerDelegate {
 
   @Override
   public Result charTyped(char c, Project project, Editor editor, @NotNull PsiFile file) {
