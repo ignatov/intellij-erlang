@@ -21,8 +21,11 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.ErlangArgumentDefinition;
 import org.intellij.erlang.psi.ErlangExpression;
+import org.intellij.erlang.psi.ErlangParenthesizedExpression;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -62,9 +65,6 @@ public class ErlangIndentProcessor {
     if (COMMENTS.contains(elementType) && settings.KEEP_FIRST_COLUMN_COMMENT) {
       return Indent.getAbsoluteNoneIndent();
     }
-//    if (node instanceof PsiErrorElement) {
-//      return Indent.getContinuationIndent();
-//    }
 
     if (elementType == ERL_CATCH) {
       return Indent.getNoneIndent();
@@ -102,7 +102,10 @@ public class ErlangIndentProcessor {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_RECORD_FIELDS) {
-      return Indent.getContinuationIndent();
+      // todo: not a smart solution
+      //noinspection unchecked
+      boolean insideCall = PsiTreeUtil.getParentOfType(node.getPsi(), ErlangArgumentDefinition.class, ErlangParenthesizedExpression.class) != null;
+      return insideCall ? Indent.getContinuationIndent() : Indent.getNormalIndent();
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();
