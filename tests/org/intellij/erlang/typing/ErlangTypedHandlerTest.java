@@ -25,13 +25,13 @@ public class ErlangTypedHandlerTest extends LightPlatformCodeInsightFixtureTestC
   public void testFunctionClause() throws Exception {
     doTest("foo(A, B, C) -> ok<caret>",
       "foo(A, B, C) -> ok;\n" +
-        "foo(A, B, C) -> ");
+        "foo(A, B, C) ->");
   }
 
   public void testEmptyFunctionClause() throws Exception {
     doTest("foo() -> ok<caret>",
       "foo() -> ok;\n" +
-        "foo() -> <caret>");
+        "foo() -><caret>");
   }
 
   public void testCaseClause() throws Exception {
@@ -42,7 +42,7 @@ public class ErlangTypedHandlerTest extends LightPlatformCodeInsightFixtureTestC
       "main(A) ->\n" +
         "  case A of\n" +
         "    1 -> 2;\n" +
-        "    _ -> ");
+        "    _ -><caret>");
   }
 
 //  public void testBinaryHandler() throws Exception {

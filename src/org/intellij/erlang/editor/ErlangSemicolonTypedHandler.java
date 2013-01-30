@@ -84,7 +84,7 @@ public class ErlangSemicolonTypedHandler extends TypedHandlerDelegate {
 
   private static void processCrClause(Project project, Editor editor) {
     TemplateManager templateManager = TemplateManager.getInstance(project);
-    Template template = templateManager.createTemplate("", "", "\n$variable$ -> $END$");
+    Template template = templateManager.createTemplate("", "", "\n$variable$ ->$END$");
     TextExpression var = new TextExpression("_");
     template.addVariable("variable", var, var, true);
 
@@ -113,7 +113,7 @@ public class ErlangSemicolonTypedHandler extends TypedHandlerDelegate {
       template.addVariable("variable" + i, foo, foo, true);
     }
 
-    template.addTextSegment(") -> ");
+    template.addTextSegment(") ->");
     template.addEndVariable();
 
     editor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
