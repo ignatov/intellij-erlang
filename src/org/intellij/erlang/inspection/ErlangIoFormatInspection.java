@@ -83,7 +83,7 @@ public class ErlangIoFormatInspection extends ErlangBaseInspection {
 
                 int strLen = str.getText().length();
                 if (args instanceof ErlangListExpression) {
-                  if (str instanceof ErlangStringLiteral && strLen >= 2) {
+                  if ((str instanceof ErlangStringLiteral || str instanceof ErlangMaxExpression) && strLen >= 2) {
                     String substring = str.getText().substring(1, strLen - 1);
 
                     // todo: rewrite, see: http://www.erlang.org/doc/man/io.html#format-1
