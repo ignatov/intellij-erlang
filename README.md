@@ -24,15 +24,20 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.4.x (work in progress)
+* External **Shift+F1** and local **Ctrl+Q** help for OTP types (except for built-in);
+* Links in local OTP documentation to other OTP modules, functions, and types were fixed;
+* Function parameter help **Ctlr+P** for BIF was fixed;
+
 ### Version 0.4
 * Rebar run configurations (thanks to Maxim Vladimirsky)
 * Rebar-based Eunit integration
 * Eunit integration improvements
 * Erlang types support: completion (includes built-in types), rename and find usages for user defined types, export type quick fix and intention
-* External **Shift + F1** and local **Ctrl + Q** documentation for OTP functions and modules (thanks to Maxim Vladimirsky)
-* Function parameter info context help **Ctrl + P**
+* External **Shift+F1** and local **Ctrl+Q** documentation for OTP functions and modules (thanks to Maxim Vladimirsky)
+* Function parameter info context help **Ctrl+P**
 * Upgraded structure view (shows exported and inner functions)
-* Go to action for Erlang symbols: functions, records, types and macroses **Ctrl + Alt + Shift + N**
+* Go to action for Erlang symbols: functions, records, types and macroses **Ctrl+Alt+Shift+N**
 * Improved BIFs completion (includes BIFs from OTP modules, for example **lists:member/2**
 * Special highlighting type for atoms and macroses (thanks to Sergey Evstifeev)
 * Format inspection (for io:format(), io:fwrite() and io_lib:format() functions calls)
@@ -56,7 +61,7 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ### Version 0.3.4
 * Eunit test runner
-* Tests/sources switcher **Ctrl + Shift + T**
+* Tests/sources switcher **Ctrl+Shift+T**
 * Copyright plugin support (thanks to Maxim Vladimirsky)
 * Recursive icon on the gutter
 * Better completion
