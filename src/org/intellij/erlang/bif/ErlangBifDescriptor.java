@@ -22,11 +22,13 @@ public final class ErlangBifDescriptor {
   @NotNull private final String myModule;
   @NotNull private final String myName;
   private final int myArity;
+  @NotNull private final String myParams;
 
-  public ErlangBifDescriptor(@NotNull String module, @NotNull String name, int arity) {
+  public ErlangBifDescriptor(@NotNull String module, @NotNull String name, int arity, @NotNull String params) {
     myModule = module;
     myName = name;
     myArity = arity;
+    myParams = params;
   }
 
   @NotNull
@@ -41,6 +43,11 @@ public final class ErlangBifDescriptor {
 
   public int getArity() {
     return myArity;
+  }
+
+  @NotNull
+  public String getParams() {
+    return myParams;
   }
 
   @Override

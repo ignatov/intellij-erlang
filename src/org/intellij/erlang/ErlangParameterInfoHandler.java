@@ -17,14 +17,16 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.lookup.LookupElement;
-import com.intellij.lang.ASTNode;
 import com.intellij.lang.parameterInfo.*;
 import com.intellij.openapi.util.Ref;
-import com.intellij.psi.*;
-import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -70,21 +72,17 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
 
   @Override
   public void showParameterInfo(@NotNull ErlangArgumentList args, CreateParameterInfoContext context) {
-    ErlangFunctionCallExpression function = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
-
-    if (function != null) {
-      PsiReference reference = function.getReference();
+    ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
+    if (erlFunctionCall != null) {
+      PsiReference reference = erlFunctionCall.getReference();
       PsiElement resolve = reference != null ? reference.resolve() : null;
-
       List<ErlangFunctionClause> clauses = new ArrayList<ErlangFunctionClause>();
-
       if (resolve instanceof ErlangFunction) {
         List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
         clauses.addAll(clauseList);
       }
       else if (reference instanceof PsiPolyVariantReference) {
         ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
-
         for (ResolveResult result : resolveResults) {
           PsiElement element = result.getElement();
           if (element instanceof ErlangFunction) {
@@ -93,8 +91,25 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
       }
       if (clauses.size() > 0) {
-        context.setItemsToShow(clauses.toArray(new Object[clauses.size()]));
+        context.setItemsToShow(ArrayUtil.toObjectArray(clauses));
         context.showHint(args, args.getTextRange().getStartOffset(), this);
+      }
+      else {
+        final ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(
+          erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
+        if (erlGlobalFunctionCall != null) {
+          final ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
+          if (moduleRef != null) {
+            final String moduleName = moduleRef.getText();
+            final String functionName = erlFunctionCall.getNameIdentifier().getText();
+            final int arity = erlFunctionCall.getArgumentList().getExpressionList().size();
+            final String bifParams = ErlangBifTable.getBifParams(moduleName, functionName, arity);
+            if (bifParams != null) {
+              context.setItemsToShow(new Object[]{bifParams});
+              context.showHint(args, args.getTextRange().getStartOffset(), this);
+            }
+          }
+        }
       }
     }
   }
@@ -115,7 +130,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   }
 
   @Override
-  public void updateUI(Object p, ParameterInfoUIContext context) {
+  public void updateUI(@Nullable Object p, @NotNull ParameterInfoUIContext context) {
     if (p == null) {
       context.setUIComponentEnabled(false);
       return;
@@ -127,7 +142,6 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
 
     int start = 0;
     int end = 0;
-
     if (p instanceof ErlangFunctionClause) {
       final Ref<ErlangFunTypeArguments> argsRef = Ref.create();
 
@@ -186,6 +200,15 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
         if (index == i) end = builder.length();
       }
+    }
+    else if (p instanceof String) {
+      final String bifParams = (String) p;
+      builder.append(bifParams);
+      for (int i = 0; i < index; ++i) {
+        start = bifParams.indexOf(',', start + 1);
+      }
+      end = bifParams.indexOf(',', start + 1);
+      end = (end == -1 ? bifParams.length() : end);
     }
 
     if (builder.length() == 0) {
