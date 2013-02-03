@@ -97,32 +97,44 @@ public class ErlangPsiImplUtil {
           if (macros == null) {
             result.add(e);
           }
-          else { // for #149: Nitrogen support
-            PsiReference psiReference = macros.getReference();
-            PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
-            if (macrosDefinition instanceof ErlangMacrosDefinition) {
-              ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
-              List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
-              for (ErlangExpression ee : expressionList) {
-                if (ee instanceof ErlangMaxExpression){
-                  ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
-                  ContainerUtil.addIfNotNull(atoms, qAtom);
-                }
-                else if (ee instanceof ErlangAssignmentExpression) {
-                  ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
-                  if (left instanceof ErlangMaxExpression){
-                    ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
-                    ContainerUtil.addIfNotNull(atoms, qAtom);
-                  }
-                }
-              }
-            }
+          else {
+            processRecordFields(macros, atoms);
+          }
+        }
+        for (ErlangGenericFunctionCallExpression gc : typedRecordFields.getGenericFunctionCallExpressionList()) {
+          ErlangQAtom qAtom = ContainerUtil.getFirstItem(gc.getQAtomList());
+          ErlangMacros macros = qAtom == null ? null : qAtom.getMacros();
+          if (macros != null) {
+            processRecordFields(macros, atoms);
           }
         }
       }
     }
 
     return Pair.create(result, atoms);
+  }
+
+   // for #149: Nitrogen support
+  private static void processRecordFields(ErlangMacros macros, List<ErlangQAtom> atoms) {
+    PsiReference psiReference = macros.getReference();
+    PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
+    if (macrosDefinition instanceof ErlangMacrosDefinition) {
+      ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
+      List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
+      for (ErlangExpression ee : expressionList) {
+        if (ee instanceof ErlangMaxExpression){
+          ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
+          ContainerUtil.addIfNotNull(atoms, qAtom);
+        }
+        else if (ee instanceof ErlangAssignmentExpression) {
+          ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
+          if (left instanceof ErlangMaxExpression){
+            ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
+            ContainerUtil.addIfNotNull(atoms, qAtom);
+          }
+        }
+      }
+    }
   }
 
   @Nullable
