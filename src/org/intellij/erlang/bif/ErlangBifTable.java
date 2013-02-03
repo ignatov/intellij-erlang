@@ -1,13 +1,12 @@
 package org.intellij.erlang.bif;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import com.intellij.util.containers.MultiMap;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.TreeSet;
 import java.util.List;
+import java.util.TreeSet;
 
 public final class ErlangBifTable {
   private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {
