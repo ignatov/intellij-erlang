@@ -133,6 +133,12 @@ public class ErlangPsiImplUtil {
             ContainerUtil.addIfNotNull(atoms, qAtom);
           }
         }
+        else if (ee instanceof ErlangFunctionCallExpression) {
+          ErlangMacros m = ((ErlangFunctionCallExpression) ee).getQAtom().getMacros();
+          if (m != null) {
+            processRecordFields(m, atoms);
+          }
+        }
       }
     }
   }
