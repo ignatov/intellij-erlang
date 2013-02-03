@@ -27,7 +27,7 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 ### Version 0.4.x (work in progress)
 * External **Shift+F1** and local **Ctrl+Q** help for OTP types (except for built-in);
 * Links in local OTP documentation to other OTP modules, functions, and types were fixed;
-* Function parameter help **Ctlr+P** for BIF was fixed;
+* Function parameter help **Ctrl+P** for BIF was fixed;
 
 ### Version 0.4
 * Rebar run configurations (thanks to Maxim Vladimirsky)

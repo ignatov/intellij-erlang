@@ -26,14 +26,14 @@ import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author ignatov
@@ -91,6 +91,14 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
       }
       if (clauses.size() > 0) {
+        Collections.sort(clauses, new Comparator<ErlangFunctionClause>() {
+          @Override
+          public int compare(ErlangFunctionClause lhs, ErlangFunctionClause rhs) {
+            final int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+            final int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+            return Integer.signum(lhsSize - rhsSize);
+          }
+        });
         context.setItemsToShow(ArrayUtil.toObjectArray(clauses));
         context.showHint(args, args.getTextRange().getStartOffset(), this);
       }
@@ -102,12 +110,9 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
           if (moduleRef != null) {
             final String moduleName = moduleRef.getText();
             final String functionName = erlFunctionCall.getNameIdentifier().getText();
-            final int arity = erlFunctionCall.getArgumentList().getExpressionList().size();
-            final String bifParams = ErlangBifTable.getBifParams(moduleName, functionName, arity);
-            if (bifParams != null) {
-              context.setItemsToShow(new Object[]{bifParams});
-              context.showHint(args, args.getTextRange().getStartOffset(), this);
-            }
+            final Collection<ErlangBifDescriptor> bifDescriptors = ErlangBifTable.getBifs(moduleName, functionName);
+            context.setItemsToShow(ArrayUtil.toObjectArray(bifDescriptors));
+            context.showHint(args, args.getTextRange().getStartOffset(), this);
           }
         }
       }
@@ -135,19 +140,19 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       context.setUIComponentEnabled(false);
       return;
     }
-
     int index = context.getCurrentParameterIndex();
 
     final StringBuilder builder = new StringBuilder();
 
+    boolean disabled = false;
     int start = 0;
     int end = 0;
     if (p instanceof ErlangFunctionClause) {
       final Ref<ErlangFunTypeArguments> argsRef = Ref.create();
 
       PsiElement parent = ((ErlangFunctionClause) p).getParent();
-      ErlangSpecification specification = parent instanceof ErlangFunction ? ErlangPsiImplUtil.getSpecification((ErlangFunction) parent) : null;
-
+      ErlangSpecification specification = parent instanceof ErlangFunction
+        ? ErlangPsiImplUtil.getSpecification((ErlangFunction) parent) : null;
       if (specification != null) {
         specification.accept(new ErlangRecursiveVisitor() {
           @Override
@@ -200,28 +205,28 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
         if (index == i) end = builder.length();
       }
+      disabled = index >= args.size();
     }
-    else if (p instanceof String) {
-      final String bifParams = (String) p;
+    else if (p instanceof ErlangBifDescriptor) {
+      final String bifParams = ((ErlangBifDescriptor) p).getParams();
       builder.append(bifParams);
-      for (int i = 0; i < index; ++i) {
+      for (int i = 0; i < index && start != -1; ++i) {
         start = bifParams.indexOf(',', start + 1);
       }
-      end = bifParams.indexOf(',', start + 1);
-      end = (end == -1 ? bifParams.length() : end);
+      if (start == -1) {
+        disabled = true;
+      }
+      else {
+        end = bifParams.indexOf(',', start + 1);
+        end = (end == -1 ? bifParams.length() : end);
+      }
     }
 
     if (builder.length() == 0) {
       builder.append("<no parameters>");
     }
 
-    context.setupUIComponentPresentation(
-      builder.toString(),
-      start,
-      end,
-      !context.isUIComponentEnabled(),
-      false,
-      false,
+    context.setupUIComponentPresentation(builder.toString(), start, end, disabled, false, true,
       context.getDefaultParameterColor());
   }
 }

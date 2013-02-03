@@ -347,7 +347,7 @@ public class ErlangPsiImplUtil {
         String moduleName = qAtom.getText();
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
 
-        for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs(moduleName)) {
+        for (ErlangBifDescriptor bif : ErlangBifTable.getBifs(moduleName)) {
           lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
         }
       }
@@ -360,7 +360,7 @@ public class ErlangPsiImplUtil {
         }
 
         if (!withArity) {
-          for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs("erlang")) {
+          for (ErlangBifDescriptor bif : ErlangBifTable.getBifs("erlang")) {
             lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.BIF_PRIORITY));
           }
         }

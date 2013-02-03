@@ -29,7 +29,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
-import org.apache.log4j.Logger;
 import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangGlobalFunctionCallExpression;
@@ -53,7 +52,6 @@ public class ErlangBifParser extends LightPlatformCodeInsightFixtureTestCase {
   private static final Pattern BIF_DECLARATION = Pattern.compile("bif (\\w+)\\:(\\w+)/(\\d+)");
   private static final Pattern BIF_SEPARATOR = Pattern.compile("# New Bifs in (R.+)");
 
-  private static final Logger ourLogger = Logger.getLogger(ErlangBifParser.class);
   private ErlangDocumentationProvider myDocProvider;
 
   public void testSomething() throws Exception {
@@ -67,14 +65,16 @@ public class ErlangBifParser extends LightPlatformCodeInsightFixtureTestCase {
         "import org.jetbrains.annotations.Nullable;\n" +
         "import com.intellij.util.containers.MultiMap;\n" +
         "\n" +
+        "import java.util.ArrayList;\n" +
         "import java.util.Collection;\n" +
-        "import java.util.HashSet;\n" +
+        "import java.util.TreeSet;\n" +
+        "import java.util.List;\n" +
         "\n" +
         "public final class ErlangBifTable {\n" +
         "  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {\n" +
         "    @Override\n" +
         "    protected Collection<ErlangBifDescriptor> createCollection() {\n" +
-        "      return new HashSet<ErlangBifDescriptor>();\n" +
+        "      return new TreeSet<ErlangBifDescriptor>();\n" +
         "    }\n" +
         "  };\n" +
         "\n" +
@@ -101,24 +101,32 @@ public class ErlangBifParser extends LightPlatformCodeInsightFixtureTestCase {
         "  }\n" +
         "\n" +
         "  @NotNull\n" +
-        "  public static Collection<ErlangBifDescriptor> getModuleBifs(@NotNull String module) {\n" +
-        "    return bifMap.get(module);\n" +
+        "  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName) {\n" +
+        "    return bifMap.get(moduleName);\n" +
         "  }\n" +
         "\n" +
-        "  @Nullable\n" +
-        "  public static String getBifParams(@NotNull String moduleName, @NotNull String functionName, int arity) {\n" +
+        "  @NotNull\n" +
+        "  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName,\n" +
+        "                                                        @NotNull String functionName) {\n" +
+        "    final List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();\n" +
+        "    for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {\n" +
+        "      if (functionName.equals(bifDescriptor.getName())) {\n" +
+        "        bifDescriptors.add(bifDescriptor);\n" +
+        "      }\n" +
+        "    }\n" +
+        "    return bifDescriptors;\n" +
+        "  }\n" +
+        "\n" +
+        "\n" +
+        "  public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {\n" +
         "    final Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);\n" +
         "    for (ErlangBifDescriptor bifDescriptor : erlangBifDescriptors) {\n" +
         "      if (bifDescriptor.getModule().equals(moduleName) && bifDescriptor.getName().equals(functionName) &&\n" +
         "        bifDescriptor.getArity() == arity) {\n" +
-        "        return bifDescriptor.getParams();\n" +
+        "        return true;\n" +
         "      }\n" +
         "    }\n" +
-        "    return null;\n" +
-        "  }\n" +
-        "\n" +
-        "  public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {\n" +
-        "    return getBifParams(moduleName, functionName, arity) != null;\n" +
+        "    return false;\n" +
         "  }\n" +
         "}\n");
     } finally {

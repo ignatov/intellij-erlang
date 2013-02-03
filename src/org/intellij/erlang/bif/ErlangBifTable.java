@@ -4,14 +4,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import com.intellij.util.containers.MultiMap;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.TreeSet;
+import java.util.List;
 
 public final class ErlangBifTable {
   private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {
     @Override
     protected Collection<ErlangBifDescriptor> createCollection() {
-      return new HashSet<ErlangBifDescriptor>();
+      return new TreeSet<ErlangBifDescriptor>();
     }
   };
 
@@ -377,23 +379,31 @@ public final class ErlangBifTable {
   }
 
   @NotNull
-  public static Collection<ErlangBifDescriptor> getModuleBifs(@NotNull String module) {
-    return bifMap.get(module);
+  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName) {
+    return bifMap.get(moduleName);
   }
 
-  @Nullable
-  public static String getBifParams(@NotNull String moduleName, @NotNull String functionName, int arity) {
+  @NotNull
+  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName,
+                                                        @NotNull String functionName) {
+    final List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();
+    for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {
+      if (functionName.equals(bifDescriptor.getName())) {
+        bifDescriptors.add(bifDescriptor);
+      }
+    }
+    return bifDescriptors;
+  }
+
+
+  public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {
     final Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);
     for (ErlangBifDescriptor bifDescriptor : erlangBifDescriptors) {
       if (bifDescriptor.getModule().equals(moduleName) && bifDescriptor.getName().equals(functionName) &&
         bifDescriptor.getArity() == arity) {
-        return bifDescriptor.getParams();
+        return true;
       }
     }
-    return null;
-  }
-
-  public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {
-    return getBifParams(moduleName, functionName, arity) != null;
+    return false;
   }
 }
