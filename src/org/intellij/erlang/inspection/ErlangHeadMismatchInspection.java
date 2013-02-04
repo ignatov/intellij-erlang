@@ -28,6 +28,7 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionClause;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -47,10 +48,11 @@ public class ErlangHeadMismatchInspection extends ErlangBaseInspection implement
       if (clauses.size() > 1) {
         for (ErlangFunctionClause clause : clauses) {
           ErlangQAtom clauseHead = clause.getQAtom();
-          String clauseHeadName = clauseHead.getText();
+          String clauseSignature = ErlangPsiImplUtil.createFunctionClausePresentation(clause);
+          String functionSignature = ErlangPsiImplUtil.createFunctionPresentation(function);
 
-          if (!clauseHeadName.equals(functionName)) {
-            problemsHolder.registerProblem(clauseHead, "Head mismatch: should be '" + functionName + "'",
+          if (!functionSignature.equals(clauseSignature)) {
+            problemsHolder.registerProblem(clauseHead, "Head mismatch: should be '" + functionSignature + "'",
               new LocalQuickFixBase("Rename clause head") {
                 @Override
                 public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
