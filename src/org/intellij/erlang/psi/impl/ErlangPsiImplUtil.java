@@ -501,9 +501,14 @@ public class ErlangPsiImplUtil {
     return Collections.emptyList();
   }
 
-  private static int calculateTypeArity(ErlangTypeDefinition rd) {
+  private static int calculateTypeArity(@NotNull ErlangTypeDefinition rd) {
     ErlangArgumentDefinitionList argumentDefinitionList = rd.getArgumentDefinitionList();
     if (argumentDefinitionList == null) return 0;
+    return argumentDefinitionList.getArgumentDefinitionList().size();
+  }
+
+  private static int calculateFunctionClauseArity(@NotNull ErlangFunctionClause clause) {
+    ErlangArgumentDefinitionList argumentDefinitionList = clause.getArgumentDefinitionList();
     return argumentDefinitionList.getArgumentDefinitionList().size();
   }
 
@@ -951,6 +956,12 @@ public class ErlangPsiImplUtil {
         return o.getIcon(0);
       }
     };
+  }
+
+  @NotNull
+  public static String createFunctionClausePresentation(@Nullable ErlangFunctionClause clause) {
+    if (clause == null) return "";
+    return clause.getQAtom() + "/" + calculateFunctionClauseArity(clause);
   }
 
   @NotNull
