@@ -33,6 +33,28 @@ public class ErlangTypedHandlerTest extends LightPlatformCodeInsightFixtureTestC
       "foo() -> ok;\n" +
         "foo() -><caret>");
   }
+  
+  public void testNotLastFunctionClause() throws Exception {
+    doTest(
+      "foo() -> ok<caret>\n" +
+        "foo() -> ok;",
+      "foo() -> ok;\n" +
+        "foo() -> ok;");
+  }
+
+  public void testNotLastCaseClause() throws Exception {
+    doTest(
+      "foo() ->\n" +
+        "  case 1 of\n" +
+        "    14 -> 30<caret>\n" +
+        "    123 -> 123\n" +
+        "  end",
+      "foo() ->\n" +
+        "  case 1 of\n" +
+        "    14 -> 30;\n" +
+        "    123 -> 123\n" +
+        "  end");
+  }
 
   public void testCaseClause() throws Exception {
     doTest(
