@@ -49,11 +49,11 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import org.intellij.erlang.psi.ErlangExportFunction;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.bif.ErlangBifTable;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -69,6 +69,32 @@ public class ErlangUnresolvedFunctionInspection extends ErlangBaseInspection {
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
           problemsHolder.registerProblem(o, "Unresolved function " + "'" + o.getText() + "'");
+        }
+      }
+
+      @Override
+      public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
+        PsiReference reference = o.getReference();
+        if (reference != null && reference.resolve() == null) {
+          if (o.getQAtom().getMacros() != null) return;
+
+          String name = o.getNameIdentifier().getText();
+          int arity = o.getArgumentList().getExpressionList().size();
+          if (ErlangBifTable.isBif("erlang", name, arity)) return;
+
+          String signature = name + "/" + arity;
+
+          PsiElement parent = o.getParent();
+          if (parent instanceof ErlangGlobalFunctionCallExpression) {
+            ErlangModuleRef moduleRef = ((ErlangGlobalFunctionCallExpression) parent).getModuleRef();
+            if (moduleRef != null) {
+              String moduleName = moduleRef.getText();
+              if (ErlangBifTable.isBif(moduleName, name, arity)) return;
+              signature = moduleName + ":" + signature;
+            }
+          }
+
+          problemsHolder.registerProblem(o.getNameIdentifier(), "Unresolved function " + "'" + signature + "'");
         }
       }
     });

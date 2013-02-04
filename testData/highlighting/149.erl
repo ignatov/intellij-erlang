@@ -16,3 +16,5 @@ f(#my_record{}=A) ->
   foo(B, C, D),
   #h1{id=ola},
   #actionbase{target=ola}.
+
+foo(A, B, C) -> A + B + C.

@@ -5,7 +5,7 @@ bar() ->
   io:format(<warning>"~p"</warning>, [1, 1]),
   io:format(1, <warning>""</warning>, [1]),
   io_lib:format(<warning>"~~"</warning>, [1]),
-  io_lib:format("~~~~"),
+  io:format("~~~~"),
   io_lib:format("", <warning>1</warning>),
   io_lib:format(<warning>"    f9_dmt_type:new(~p, ~p[]).~n~n"</warning>, [1]),
   io_lib:format("blah" "", []),
