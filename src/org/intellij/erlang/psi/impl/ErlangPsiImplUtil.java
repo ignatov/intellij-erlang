@@ -961,7 +961,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static String createFunctionClausePresentation(@Nullable ErlangFunctionClause clause) {
     if (clause == null) return "";
-    return clause.getQAtom() + "/" + calculateFunctionClauseArity(clause);
+    return clause.getQAtom().getText() + "/" + calculateFunctionClauseArity(clause);
   }
 
   @NotNull
