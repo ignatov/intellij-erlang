@@ -17,11 +17,19 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.filters.Filter;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.testFramework.PlatformTestCase;
+import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.regex.Pattern;
@@ -29,12 +37,20 @@ import java.util.regex.Pattern;
 import static org.intellij.erlang.rebar.runner.FileReferenceFilter.*;
 
 @SuppressWarnings("ConstantConditions")
-public class FileReferenceFilterTest extends PlatformTestCase {
+public class FileReferenceFilterTest extends LightPlatformCodeInsightFixtureTestCase {
 
   public void setUp() throws Exception {
     super.setUp();
     final File currentTestRoot = new File("testData/rebar/sampleProject");
     FileUtil.copyDir(currentTestRoot, new File(getProject().getBaseDir().getPath()));
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        final Sdk sdk = getProjectDescriptor().getSdk();
+        ProjectJdkTable.getInstance().addJdk(sdk);
+        ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
+      }
+    });
   }
 
   public void testCompilationErrorRelativePath() {
@@ -92,5 +108,23 @@ public class FileReferenceFilterTest extends PlatformTestCase {
     assertEquals(10, result.highlightStartOffset);
     assertEquals(48, result.highlightEndOffset);
     assertNotNull(result.hyperlinkInfo);
+  }
+
+  public void testLinkToSdkFile() {
+    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), COMPILATION_ERROR_PATH);
+    final String consoleOutput = "some text||src/lists.erl:123: more text here";
+    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    assertNotNull(result.hyperlinkInfo);
+  }
+
+  @NotNull
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return new DefaultLightProjectDescriptor() {
+      @Override
+      public Sdk getSdk() {
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
+      }
+    };
   }
 }

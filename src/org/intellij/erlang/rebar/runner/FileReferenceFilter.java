@@ -23,6 +23,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.ProjectScope;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +47,8 @@ public final class FileReferenceFilter implements Filter {
 
   private static final String FILE_PATH_REGEXP = "((?:\\p{Alpha}\\:)?[0-9 a-z_A-Z\\-\\\\./]+)";
   private static final String NUMBER_REGEXP = "([0-9]+)";
+
+  private static final Pattern PATTERN_FILENAME = Pattern.compile("[/\\\\](.*?\\.erl)$");
 
   private final Pattern myPattern;
   private final Project myProject;
@@ -109,8 +115,10 @@ public final class FileReferenceFilter implements Filter {
     final int fileCol = matchGroupToNumber(matcher, myColumnMatchGroup);
     final int highlightStartOffset = entireLength - line.length() + matcher.start(0);
     final int highlightEndOffset = highlightStartOffset + (matcher.end(0) - matcher.start(0));
-    final HyperlinkInfo info = createOpenFileHyperlink(filePath, fileLine, fileCol);
-    return new Result(highlightStartOffset, highlightEndOffset, info);
+    final VirtualFile absolutePath = resolveAbsolutePath(filePath);
+    final HyperlinkInfo hyperLink = (absolutePath != null
+      ? new OpenFileHyperlinkInfo(myProject, absolutePath, fileLine, fileCol) : null);
+    return new Result(highlightStartOffset, highlightEndOffset, hyperLink);
   }
 
   private static int matchGroupToNumber(@NotNull Matcher matcher, int matchGroup) {
@@ -125,22 +133,37 @@ public final class FileReferenceFilter implements Filter {
   }
 
   @Nullable
-  private HyperlinkInfo createOpenFileHyperlink(@NotNull String path, int line, int column) {
-    HyperlinkInfo res = createAbsolutePathHyperlink(path, line, column);
-    if (res == null) {
-      String absolutePath = path.startsWith(myProject.getBasePath()) ? path : new File(myProject.getBasePath(), path).getAbsolutePath();
-      res = createAbsolutePathHyperlink(absolutePath, line, column);
+  private VirtualFile resolveAbsolutePath(@NotNull String path) {
+    final VirtualFile asIsFile = pathToVirtualFile(path);
+    if (asIsFile != null) {
+      return asIsFile;
     }
-    return res;
+    final String projectBasedPath = path.startsWith(myProject.getBasePath())
+      ? path : new File(myProject.getBasePath(), path).getAbsolutePath();
+    final VirtualFile projectBasedFile = pathToVirtualFile(projectBasedPath);
+    if (projectBasedFile != null) {
+      return projectBasedFile;
+    }
+    final Matcher filenameMatcher = PATTERN_FILENAME.matcher(path);
+    if (filenameMatcher.find()) {
+      final String filename = filenameMatcher.group(1);
+      final GlobalSearchScope projectScope = ProjectScope.getProjectScope(myProject);
+      final PsiFile[] projectFiles = FilenameIndex.getFilesByName(myProject, filename, projectScope);
+      if (projectFiles.length > 0) {
+        return projectFiles[0].getVirtualFile();
+      }
+      final GlobalSearchScope libraryScope = ProjectScope.getLibrariesScope(myProject);
+      final PsiFile[] libraryFiles = FilenameIndex.getFilesByName(myProject, filename, libraryScope);
+      if (libraryFiles.length > 0) {
+        return libraryFiles[0].getVirtualFile();
+      }
+    }
+    return null;
   }
 
   @Nullable
-  private HyperlinkInfo createAbsolutePathHyperlink(@NotNull String absolutePath, int line, int column) {
-    final String normalizedAbsolutePath = absolutePath.replace(File.separatorChar, '/');
-    final VirtualFile file = LocalFileSystem.getInstance().findFileByPath(normalizedAbsolutePath);
-    if (file == null) {
-      return null;
-    }
-    return new OpenFileHyperlinkInfo(myProject, file, line, column);
+  private static VirtualFile pathToVirtualFile(@NotNull String path) {
+    final String normalizedPath = path.replace(File.separatorChar, '/');
+    return LocalFileSystem.getInstance().findFileByPath(normalizedPath);
   }
 }
