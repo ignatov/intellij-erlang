@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface ErlangIntType extends ErlangCompositeElement {
 
   @Nullable
+  ErlangArgumentList getArgumentList();
+
+  @Nullable
   ErlangMacros getMacros();
 
   @Nullable
