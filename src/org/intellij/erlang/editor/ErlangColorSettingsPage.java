@@ -53,6 +53,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Records", RECORDS),
       new AttributesDescriptor("Operation sign", OP_SIGN),
       new AttributesDescriptor("Edoc tag", DOC_COMMENT_TAG),
+      new AttributesDescriptor("Function", FUNCTION),
     };
   }
 
