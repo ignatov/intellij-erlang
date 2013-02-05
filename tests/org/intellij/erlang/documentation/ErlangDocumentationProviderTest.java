@@ -28,7 +28,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
@@ -36,7 +36,7 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("ConstantConditions")
-public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTestCase {
+public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFixtureTestCase {
   private ErlangDocumentationProvider myErlangDocProvider;
 
   @Override
@@ -432,6 +432,69 @@ public class ErlangDocumentationProviderTest extends LightCodeInsightFixtureTest
         "-module(test).\n" +
         "test() ->\n" +
         "    file:sen<caret>dfile(1,2,3,4,5).\n");
+  }
+
+  public void testLinkConverterWithLineBreak() throws Exception {
+    doTestGenerateDoc(
+      "<html>\n" +
+        AbstractSdkDocProvider.HTTP_STYLE +
+        "<body>\n" +
+        "  <h3>MODULE</h3><div class=\"REFBODY\">erl_eval</div>\n" +
+        "  <h3>MODULE SUMMARY</h3>\n" +
+        "<div class=\"REFBODY\">The Erlang Meta Interpreter</div>\n" +
+        "  <h3>DESCRIPTION</h3>\n" +
+        "<div class=\"REFBODY\"><p>\n" +
+        "    <p>This module provides an interpreter for Erlang expressions. The\n" +
+        "      expressions are in the abstract syntax as returned by\n" +
+        "      <span class=\"bold_code\"><a href=\"psi_element://erl_parse\"><span class=\"code\">erl_parse</span></a></span>,\n" +
+        // Link to module `io` is multi-line
+        "      the Erlang parser, or <span class=\"bold_code\"><a href=\"psi_element://io\">\n" +
+        "      <span class=\"code\">io</span></a></span>.</p>\n" +
+        "  </p></div>\n" +
+        "  <h3>DATA TYPES</h3>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-bindings\">bindings()</a> = [{<span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-name\">name()</a></span>, <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-value\">value()</a></span>}]</span><br></p>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-binding_struct\">binding_struct()</a> = <span class=\"bold_code\"><a href=\"psi_element://orddict#type-orddict\">orddict:orddict()</a></span></span><br></p>\n" +
+        "<div class=\"REFBODY\"><p><p>A binding structure.</p></p></div>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-expression\">expression()</a> = <span class=\"bold_code\"><a href=\"psi_element://erl_parse#type-abstract_expr\">erl_parse:abstract_expr()</a></span></span><br></p>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-expressions\">expressions()</a> = [<span class=\"bold_code\"><a href=\"psi_element://erl_parse#type-abstract_expr\">erl_parse:abstract_expr()</a></span>]</span><br></p>\n" +
+        "<div class=\"REFBODY\"><p><p>As returned by <span class=\"bold_code\"><a href=\"psi_element://erl_parse#parse_exprs-1\">\n" +
+        "        <span class=\"code\">erl_parse:parse_exprs/1</span></a></span> or\n" +
+        "        <span class=\"bold_code\"><a href=\"psi_element://io#parse_erl_exprs-2\">\n" +
+        "        <span class=\"code\">io:parse_erl_exprs/2</span></a></span>.</p></p></div>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-expression_list\">expression_list()</a> = [<span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-expression\">expression()</a></span>]</span><br></p>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-func_spec\">func_spec()</a> = {Module :: module(), Function :: atom()}<br>            | function()</span><br></p>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-lfun_eval_handler\">lfun_eval_handler()</a> = <br>    fun((Name :: atom(),<br>         Arguments :: <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-expression_list\">expression_list()</a></span>,<br>         Bindings :: <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-binding_struct\">binding_struct()</a></span>) -&gt;<br>            {value,<br>             Value :: <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-value\">value()</a></span>,<br>             NewBindings :: <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-binding_struct\">binding_struct()</a></span>})</span><br></p>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-lfun_value_handler\">lfun_value_handler()</a> = <br>    fun((Name :: atom(), Arguments :: [term()]) -&gt;<br>            Value :: <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-value\">value()</a></span>)</span><br></p>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-local_function_handler\">local_function_handler()</a> = {value, <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-lfun_value_handler\">lfun_value_handler()</a></span>}<br>                         | {eval, <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-lfun_eval_handler\">lfun_eval_handler()</a></span>}<br>                         | none</span><br></p>\n" +
+        "<div class=\"REFBODY\"><p><p>Further described\n" +
+        "        <span class=\"bold_code\"><a href=\"psi_element://erl_eval#local_function_handler\">below.</a></span></p>\n" +
+        "      </p></div>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-name\">name()</a> = term()</span><br></p>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-nlfun_handler\">nlfun_handler()</a> = <br>    fun((FuncSpec :: <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-func_spec\">func_spec()</a></span>, Arguments :: [term()]) -&gt; term())</span><br></p>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-non_local_function_handler\">non_local_function_handler()</a> = {value, <span class=\"bold_code\"><a href=\"psi_element://erl_eval#type-nlfun_handler\">nlfun_handler()</a></span>} | none</span><br></p>\n" +
+        "<div class=\"REFBODY\"><p><p>Further described\n" +
+        "        <span class=\"bold_code\"><a href=\"psi_element://erl_eval#non_local_function_handler\">below.</a></span></p>\n" +
+        "      </p></div>\n" +
+        "    <p>\n" +
+        "      <span class=\"bold_code\"><a name=\"type-value\">value()</a> = term()</span><br></p>\n" +
+        "  \n" +
+        "</body></html>\n",
+      "" +
+        "-module(test).\n" +
+        "test() ->\n" +
+        "    erl<caret>_eval:expr(1, 2).\n");
   }
 
   public void testResolveLinkModule() {
