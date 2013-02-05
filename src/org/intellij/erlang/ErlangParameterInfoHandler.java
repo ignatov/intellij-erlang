@@ -17,21 +17,23 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.lookup.LookupElement;
-import com.intellij.lang.ASTNode;
 import com.intellij.lang.parameterInfo.*;
 import com.intellij.openapi.util.Ref;
-import com.intellij.psi.*;
-import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.bif.ErlangBifDescriptor;
+import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author ignatov
@@ -70,21 +72,17 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
 
   @Override
   public void showParameterInfo(@NotNull ErlangArgumentList args, CreateParameterInfoContext context) {
-    ErlangFunctionCallExpression function = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
-
-    if (function != null) {
-      PsiReference reference = function.getReference();
+    ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
+    if (erlFunctionCall != null) {
+      PsiReference reference = erlFunctionCall.getReference();
       PsiElement resolve = reference != null ? reference.resolve() : null;
-
       List<ErlangFunctionClause> clauses = new ArrayList<ErlangFunctionClause>();
-
       if (resolve instanceof ErlangFunction) {
         List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
         clauses.addAll(clauseList);
       }
       else if (reference instanceof PsiPolyVariantReference) {
         ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
-
         for (ResolveResult result : resolveResults) {
           PsiElement element = result.getElement();
           if (element instanceof ErlangFunction) {
@@ -93,8 +91,30 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
       }
       if (clauses.size() > 0) {
-        context.setItemsToShow(clauses.toArray(new Object[clauses.size()]));
+        Collections.sort(clauses, new Comparator<ErlangFunctionClause>() {
+          @Override
+          public int compare(ErlangFunctionClause lhs, ErlangFunctionClause rhs) {
+            final int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+            final int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+            return Integer.signum(lhsSize - rhsSize);
+          }
+        });
+        context.setItemsToShow(ArrayUtil.toObjectArray(clauses));
         context.showHint(args, args.getTextRange().getStartOffset(), this);
+      }
+      else {
+        final ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(
+          erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
+        if (erlGlobalFunctionCall != null) {
+          final ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
+          if (moduleRef != null) {
+            final String moduleName = moduleRef.getText();
+            final String functionName = erlFunctionCall.getNameIdentifier().getText();
+            final Collection<ErlangBifDescriptor> bifDescriptors = ErlangBifTable.getBifs(moduleName, functionName);
+            context.setItemsToShow(ArrayUtil.toObjectArray(bifDescriptors));
+            context.showHint(args, args.getTextRange().getStartOffset(), this);
+          }
+        }
       }
     }
   }
@@ -115,25 +135,24 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   }
 
   @Override
-  public void updateUI(Object p, ParameterInfoUIContext context) {
+  public void updateUI(@Nullable Object p, @NotNull ParameterInfoUIContext context) {
     if (p == null) {
       context.setUIComponentEnabled(false);
       return;
     }
-
     int index = context.getCurrentParameterIndex();
 
     final StringBuilder builder = new StringBuilder();
 
+    boolean disabled = false;
     int start = 0;
     int end = 0;
-
     if (p instanceof ErlangFunctionClause) {
       final Ref<ErlangFunTypeArguments> argsRef = Ref.create();
 
       PsiElement parent = ((ErlangFunctionClause) p).getParent();
-      ErlangSpecification specification = parent instanceof ErlangFunction ? ErlangPsiImplUtil.getSpecification((ErlangFunction) parent) : null;
-
+      ErlangSpecification specification = parent instanceof ErlangFunction
+        ? ErlangPsiImplUtil.getSpecification((ErlangFunction) parent) : null;
       if (specification != null) {
         specification.accept(new ErlangRecursiveVisitor() {
           @Override
@@ -186,19 +205,28 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
         if (index == i) end = builder.length();
       }
+      disabled = index >= args.size();
+    }
+    else if (p instanceof ErlangBifDescriptor) {
+      final String bifParams = ((ErlangBifDescriptor) p).getParams();
+      builder.append(bifParams);
+      for (int i = 0; i < index && start != -1; ++i) {
+        start = bifParams.indexOf(',', start + 1);
+      }
+      if (start == -1) {
+        disabled = true;
+      }
+      else {
+        end = bifParams.indexOf(',', start + 1);
+        end = (end == -1 ? bifParams.length() : end);
+      }
     }
 
     if (builder.length() == 0) {
       builder.append("<no parameters>");
     }
 
-    context.setupUIComponentPresentation(
-      builder.toString(),
-      start,
-      end,
-      !context.isUIComponentEnabled(),
-      false,
-      false,
+    context.setupUIComponentPresentation(builder.toString(), start, end, disabled, false, true,
       context.getDefaultParameterColor());
   }
 }

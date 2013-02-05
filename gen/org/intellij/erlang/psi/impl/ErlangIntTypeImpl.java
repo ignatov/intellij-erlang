@@ -18,6 +18,12 @@ public class ErlangIntTypeImpl extends ErlangCompositeElementImpl implements Erl
 
   @Override
   @Nullable
+  public ErlangArgumentList getArgumentList() {
+    return findChildByClass(ErlangArgumentList.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangMacros getMacros() {
     return findChildByClass(ErlangMacros.class);
   }

@@ -250,7 +250,7 @@ type ::=
   | '{' top_type_list? '}'
   | '#' record_ref '{' field_type_list? '}' {pin(".*") = 1}
 
-int_type ::= '-'? (integer | macros)
+int_type ::= '-'? (integer | macros argument_list?)
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {pin(".*")=1}
 top_type_clause ::= '->' top_type {pin=1}
 fun_type ::= fun_type_arguments top_type_clause {pin=1}

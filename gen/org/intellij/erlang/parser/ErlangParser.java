@@ -3188,7 +3188,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '-'? (integer | macros)
+  // '-'? (integer | macros argument_list?)
   public static boolean int_type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "int_type")) return false;
     boolean result_ = false;
@@ -3213,13 +3213,13 @@ public class ErlangParser implements PsiParser {
     return true;
   }
 
-  // integer | macros
+  // integer | macros argument_list?
   private static boolean int_type_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "int_type_1")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_INTEGER);
-    if (!result_) result_ = macros(builder_, level_ + 1);
+    if (!result_) result_ = int_type_1_1(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }
@@ -3227,6 +3227,29 @@ public class ErlangParser implements PsiParser {
       marker_.drop();
     }
     return result_;
+  }
+
+  // macros argument_list?
+  private static boolean int_type_1_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "int_type_1_1")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = macros(builder_, level_ + 1);
+    result_ = result_ && int_type_1_1_1(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // argument_list?
+  private static boolean int_type_1_1_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "int_type_1_1_1")) return false;
+    argument_list(builder_, level_ + 1);
+    return true;
   }
 
   /* ********************************************************** */

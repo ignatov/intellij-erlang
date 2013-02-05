@@ -24,6 +24,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +45,7 @@ final class ElementDocProviderFactory {
       }
       final ErlangModule erlangModule = (ErlangModule) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
-        return new SdkModuleDocProvider(erlangModule.getProject(), virtualFile);
+        return new SdkModuleDocProvider(project, virtualFile);
       }
       else {
         return new ModuleDocProvider(erlangModule);
@@ -57,7 +58,7 @@ final class ElementDocProviderFactory {
       }
       final ErlangFunction erlangFunction = (ErlangFunction) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
-        return new SdkFunctionDocProvider(erlangFunction.getProject(), erlangFunction.getName(),
+        return new SdkFunctionDocProvider(project, erlangFunction.getName(),
           erlangFunction.getArity(), virtualFile);
       }
       else {
@@ -78,22 +79,22 @@ final class ElementDocProviderFactory {
       }
     }
     else {
-      final PsiElement parent = psiElement.getParent();
-      if (parent instanceof ErlangFunctionCallExpression) {
-        final ErlangFunctionCallExpression unresolvedFunctionCall = (ErlangFunctionCallExpression) parent;
-        final String functionName = unresolvedFunctionCall.getNameIdentifier().getText();
-        final int functionArity = unresolvedFunctionCall.getArgumentList().getExpressionList().size();
-        final PsiElement callExpressionParent = unresolvedFunctionCall.getParent();
-        if (callExpressionParent instanceof ErlangGlobalFunctionCallExpression) {
-          final ErlangModuleRef moduleRef = ((ErlangGlobalFunctionCallExpression) callExpressionParent).getModuleRef();
-          final PsiReference psiReference = (moduleRef != null ? moduleRef.getReference() : null);
-          final PsiElement tentativeErlangModule = psiReference != null ? psiReference.resolve() : null;
-          if (tentativeErlangModule instanceof ErlangModule) {
-            final ErlangModule erlangModule = (ErlangModule) tentativeErlangModule;
-            if (ErlangBifTable.isBif(erlangModule.getName(), functionName, functionArity)) {
-              final VirtualFile virtualFile = getVirtualFile(erlangModule);
+      final ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(
+        psiElement, ErlangGlobalFunctionCallExpression.class);
+      if (erlGlobalFunctionCall != null) {
+        final ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
+        if (moduleRef != null) {
+          final String moduleName = moduleRef.getText();
+          final ErlangFunctionCallExpression erlFunctionCall = erlGlobalFunctionCall.getFunctionCallExpression();
+          final String functionName = erlFunctionCall.getNameIdentifier().getText();
+          final int arity = erlFunctionCall.getArgumentList().getExpressionList().size();
+          if (ErlangBifTable.isBif(moduleName, functionName, arity)) {
+            final PsiReference psiReference = moduleRef.getReference();
+            final PsiElement tentativeErlangModule = psiReference != null ? psiReference.resolve() : null;
+            if (tentativeErlangModule instanceof ErlangModule) {
+              final VirtualFile virtualFile = getVirtualFile(tentativeErlangModule);
               if (virtualFile != null) {
-                return new SdkFunctionDocProvider(erlangModule.getProject(), functionName, functionArity, virtualFile);
+                return new SdkFunctionDocProvider(project, functionName, arity, virtualFile);
               }
             }
           }

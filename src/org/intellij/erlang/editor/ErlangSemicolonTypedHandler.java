@@ -33,8 +33,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.formatter.FormatterUtil;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -75,10 +78,23 @@ public class ErlangSemicolonTypedHandler extends TypedHandlerDelegate {
     PsiElement psi = sibling.getPsi();
 
     if (psi instanceof ErlangFunctionClause) {
-      processFunctionClause(project, editor, offset, (ErlangFunctionClause) psi);
+      ErlangFunctionClause nextClause = PsiTreeUtil.getNextSiblingOfType(psi, ErlangFunctionClause.class);
+      String current = ErlangPsiImplUtil.createFunctionClausePresentation((ErlangFunctionClause) psi);
+      String nextP = ErlangPsiImplUtil.createFunctionClausePresentation(nextClause);
+      if (!nextP.equals(current)) {
+        processFunctionClause(project, editor, offset, (ErlangFunctionClause) psi);
+      }
     }
     else if (psi instanceof ErlangCrClause) {
-      processCrClause(project, editor);
+      PsiElement parent = psi.getParent();
+      
+      if (parent instanceof ErlangCrClauses) {
+        List<ErlangCrClause> crClauseList = ((ErlangCrClauses) parent).getCrClauseList();
+        ErlangCrClause last = ContainerUtil.iterateAndGetLastItem(crClauseList);
+        if (psi.equals(last)) {
+          processCrClause(project, editor);          
+        }
+      }
     }
   }
 

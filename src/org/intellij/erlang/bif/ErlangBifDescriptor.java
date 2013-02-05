@@ -18,15 +18,17 @@ package org.intellij.erlang.bif;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class ErlangBifDescriptor {
+public final class ErlangBifDescriptor implements Comparable<ErlangBifDescriptor> {
   @NotNull private final String myModule;
   @NotNull private final String myName;
   private final int myArity;
+  @NotNull private final String myParams;
 
-  public ErlangBifDescriptor(@NotNull String module, @NotNull String name, int arity) {
+  public ErlangBifDescriptor(@NotNull String module, @NotNull String name, int arity, @NotNull String params) {
     myModule = module;
     myName = name;
     myArity = arity;
+    myParams = params;
   }
 
   @NotNull
@@ -41,6 +43,11 @@ public final class ErlangBifDescriptor {
 
   public int getArity() {
     return myArity;
+  }
+
+  @NotNull
+  public String getParams() {
+    return myParams;
   }
 
   @Override
@@ -67,6 +74,18 @@ public final class ErlangBifDescriptor {
     int result = myModule.hashCode();
     result = 31 * result + myName.hashCode();
     result = 31 * result + myArity;
+    return result;
+  }
+
+  @Override
+  public int compareTo(@NotNull ErlangBifDescriptor that) {
+    int result = myModule.compareTo(that.myModule);
+    if (result == 0) {
+      result = myName.compareTo(that.myName);
+      if (result == 0) {
+        result = Integer.signum(myArity - that.myArity);
+      }
+    }
     return result;
   }
 }

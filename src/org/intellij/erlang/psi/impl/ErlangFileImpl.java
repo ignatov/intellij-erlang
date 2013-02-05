@@ -121,6 +121,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
                   if (e instanceof ErlangMaxExpression && e.getText().equals("export_all")) return true;
                 }
               }
+              else if (expression instanceof ErlangMaxExpression && expression.getText().equals("export_all")) return true;
             }
           }
         }

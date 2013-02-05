@@ -97,32 +97,50 @@ public class ErlangPsiImplUtil {
           if (macros == null) {
             result.add(e);
           }
-          else { // for #149: Nitrogen support
-            PsiReference psiReference = macros.getReference();
-            PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
-            if (macrosDefinition instanceof ErlangMacrosDefinition) {
-              ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
-              List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
-              for (ErlangExpression ee : expressionList) {
-                if (ee instanceof ErlangMaxExpression){
-                  ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
-                  ContainerUtil.addIfNotNull(atoms, qAtom);
-                }
-                else if (ee instanceof ErlangAssignmentExpression) {
-                  ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
-                  if (left instanceof ErlangMaxExpression){
-                    ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
-                    ContainerUtil.addIfNotNull(atoms, qAtom);
-                  }
-                }
-              }
-            }
+          else {
+            processRecordFields(macros, atoms);
+          }
+        }
+        for (ErlangGenericFunctionCallExpression gc : typedRecordFields.getGenericFunctionCallExpressionList()) {
+          ErlangQAtom qAtom = ContainerUtil.getFirstItem(gc.getQAtomList());
+          ErlangMacros macros = qAtom == null ? null : qAtom.getMacros();
+          if (macros != null) {
+            processRecordFields(macros, atoms);
           }
         }
       }
     }
 
     return Pair.create(result, atoms);
+  }
+
+   // for #149: Nitrogen support
+  private static void processRecordFields(ErlangMacros macros, List<ErlangQAtom> atoms) {
+    PsiReference psiReference = macros.getReference();
+    PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
+    if (macrosDefinition instanceof ErlangMacrosDefinition) {
+      ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
+      List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
+      for (ErlangExpression ee : expressionList) {
+        if (ee instanceof ErlangMaxExpression){
+          ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
+          ContainerUtil.addIfNotNull(atoms, qAtom);
+        }
+        else if (ee instanceof ErlangAssignmentExpression) {
+          ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
+          if (left instanceof ErlangMaxExpression){
+            ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
+            ContainerUtil.addIfNotNull(atoms, qAtom);
+          }
+        }
+        else if (ee instanceof ErlangFunctionCallExpression) {
+          ErlangMacros m = ((ErlangFunctionCallExpression) ee).getQAtom().getMacros();
+          if (m != null) {
+            processRecordFields(m, atoms);
+          }
+        }
+      }
+    }
   }
 
   @Nullable
@@ -329,7 +347,7 @@ public class ErlangPsiImplUtil {
         String moduleName = qAtom.getText();
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
 
-        for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs(moduleName)) {
+        for (ErlangBifDescriptor bif : ErlangBifTable.getBifs(moduleName)) {
           lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
         }
       }
@@ -342,7 +360,7 @@ public class ErlangPsiImplUtil {
         }
 
         if (!withArity) {
-          for (ErlangBifDescriptor bif : ErlangBifTable.getModuleBifs("erlang")) {
+          for (ErlangBifDescriptor bif : ErlangBifTable.getBifs("erlang")) {
             lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.BIF_PRIORITY));
           }
         }
@@ -483,9 +501,14 @@ public class ErlangPsiImplUtil {
     return Collections.emptyList();
   }
 
-  private static int calculateTypeArity(ErlangTypeDefinition rd) {
+  private static int calculateTypeArity(@NotNull ErlangTypeDefinition rd) {
     ErlangArgumentDefinitionList argumentDefinitionList = rd.getArgumentDefinitionList();
     if (argumentDefinitionList == null) return 0;
+    return argumentDefinitionList.getArgumentDefinitionList().size();
+  }
+
+  private static int calculateFunctionClauseArity(@NotNull ErlangFunctionClause clause) {
+    ErlangArgumentDefinitionList argumentDefinitionList = clause.getArgumentDefinitionList();
     return argumentDefinitionList.getArgumentDefinitionList().size();
   }
 
@@ -933,6 +956,12 @@ public class ErlangPsiImplUtil {
         return o.getIcon(0);
       }
     };
+  }
+
+  @NotNull
+  public static String createFunctionClausePresentation(@Nullable ErlangFunctionClause clause) {
+    if (clause == null) return "";
+    return clause.getQAtom().getText() + "/" + calculateFunctionClauseArity(clause);
   }
 
   @NotNull
