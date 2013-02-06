@@ -182,9 +182,18 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         PsiElement parentNextSibling = parent.getNextSibling();
         boolean needHighlighting =
           parent instanceof ErlangMaxExpression
-          || parent instanceof ErlangTypeRef && (parentNextSibling == null || parentNextSibling.getNode().getElementType() != ErlangTypes.ERL_PAR_LEFT);
+            || parent instanceof ErlangTypeRef && (parentNextSibling == null || parentNextSibling.getNode().getElementType() != ErlangTypes.ERL_PAR_LEFT);
         if (atom != null && needHighlighting) {
           setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.ATOM);
+        }
+      }
+
+      @Override
+      public void visitFunction(@NotNull ErlangFunction o) {
+        super.visitFunction(o);
+
+        for (ErlangFunctionClause erlangFunClause :  o.getFunctionClauseList()) {
+          setHighlighting(erlangFunClause.getFirstChild(), annotationHolder, ErlangSyntaxHighlighter.FUNCTION);
         }
       }
     });

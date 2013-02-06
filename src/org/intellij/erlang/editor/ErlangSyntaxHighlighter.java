@@ -55,6 +55,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey RECORDS = createTextAttributesKey("ERL_RECORDS", new TextAttributes(RECORD_DEFAULTS.getForegroundColor(), RECORD_DEFAULTS.getBackgroundColor(), null, null, Font.BOLD));
   public static final TextAttributesKey OP_SIGN = createTextAttributesKey("ERL_OP_SIGN", SyntaxHighlighterColors.OPERATION_SIGN.getDefaultAttributes());
   public static final TextAttributesKey DOC_COMMENT_TAG = createTextAttributesKey("ERL_BOLD", SyntaxHighlighterColors.DOC_COMMENT_TAG.getDefaultAttributes());
+  public static final TextAttributesKey FUNCTION = createTextAttributesKey("ERL_FUNCTION", CodeInsightColors.METHOD_DECLARATION_ATTRIBUTES.getDefaultAttributes());
 
   @NotNull
   @Override
@@ -91,6 +92,9 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
     }
     if (type == ERL_VAR) {
       return pack(VARIABLES);
+    }
+    if (type == ERL_FUNCTION) {
+      return pack(FUNCTION);
     }
     if (
       ERL_AFTER == type ||
