@@ -93,17 +93,17 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "%% Factorial implementation\n" +
       "%% <d>@doc</d> Documentation\n" +
-      "fac(0) -> 1;\n" +
-      "fac(N) when N > 0, is_integer(N) -> N * fac(N-1).\n" +
+      "<f>fac</f>(0) -> 1;\n" +
+      "<f>fac</f>(N) when N > 0, is_integer(N) -> N * fac(N-1).\n" +
       "\n" +
-      "string_sample(A) -> \"string\n" +
+      "<f>string_sample</f>(A) -> \"string\n" +
       "  second line\".\n" +
       "\n" +
-      "update_state(State) -> State#<r>state</r>{id=10}.\n" +
+      "<f>update_state</f>(State) -> State#<r>state</r>{id=10}.\n" +
       "\n" +
-      "simple(<a>ok</a>) -> <a>ok</a>.\n" +
+      "<f>simple</f>(<a>ok</a>) -> <a>ok</a>.\n" +
       "\n" +
-      "use_macro() -> ?<m>MACRO</m>."
+      "<f>use_macro</f>() -> ?<m>MACRO</m>."
       ;
   }
 
@@ -115,6 +115,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     map.put("k", KEYWORD);
     map.put("m", MACRO);
     map.put("r", RECORDS);
+    map.put("f", FUNCTION);
     return map;
   }
 }
