@@ -34,6 +34,7 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
@@ -67,6 +68,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
     VirtualFile virtualFile = psiFile.getVirtualFile();
     if (virtualFile == null) return;
 
+    final String groupId = e.getPresentation().getText();
     try {
       final File tmpFile = FileUtil.createTempFile("emacs", ".erl", true);
 
@@ -102,6 +104,13 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
             public void run() {
               try {
                 final String emacsText = FileUtilRt.loadFile(tmpFile);
+                if (StringUtil.isEmptyOrSpaces(emacsText)) {
+                  Notifications.Bus.notify(new Notification(groupId,
+                    "Reformat code with Emacs",
+                    "Emacs returned an empty file",
+                    NotificationType.WARNING), project);
+                  return;
+                }
                 final Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
                 if (document == null) return;
                 CommandProcessor.getInstance().executeCommand(project, new Runnable() {
@@ -116,13 +125,13 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
                   }
                 }, "Reformat code with Emacs", "", document);
 
-                Notifications.Bus.notify(new Notification(e.getPresentation().getText(),
+                Notifications.Bus.notify(new Notification(groupId,
                   "Reformat code with Emacs",
                   psiFile.getName() + " formatted with Emacs",
                   NotificationType.INFORMATION), project);
 
               } catch (Exception ex) {
-                Notifications.Bus.notify(new Notification(e.getPresentation().getText(),
+                Notifications.Bus.notify(new Notification(groupId,
                   psiFile.getName() + " formatting with Emacs failed", ExceptionUtil.getUserStackTrace(ex, LOG),
                   NotificationType.ERROR), project);
                 LOG.error(ex);
@@ -133,7 +142,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       });
       handler.startNotify();
     } catch (Exception ex) {
-      Notifications.Bus.notify(new Notification(e.getPresentation().getText(),
+      Notifications.Bus.notify(new Notification(groupId,
         psiFile.getName() + " formatting with Emacs failed", ExceptionUtil.getUserStackTrace(ex, LOG),
         NotificationType.ERROR), project);
       LOG.error(ex);
