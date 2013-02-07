@@ -19,10 +19,10 @@ package org.intellij.erlang.formatter;
 import com.intellij.formatting.*;
 import com.intellij.formatting.alignment.AlignmentStrategy;
 import com.intellij.lang.ASTNode;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -41,7 +41,7 @@ import static org.intellij.erlang.ErlangTypes.*;
 /**
  * @author ignatov
  */
-public class ErlangFormattingBlock implements ASTBlock {
+public class ErlangFormattingBlock extends AbstractBlock {
   public static final TokenSet BLOCKS_TOKEN_SET = TokenSet.create(
     ERL_CLAUSE_BODY,
     ERL_MACROS_BODY,
@@ -60,11 +60,8 @@ public class ErlangFormattingBlock implements ASTBlock {
     ERL_TYPE_SIG_GUARD
   );
 
-  private final ASTNode myNode;
-  private final Alignment myAlignment;
   private final Indent myIndent;
   private final AlignmentStrategy myAlignmentStrategy;
-  private final Wrap myWrap;
   private final CommonCodeStyleSettings mySettings;
   private final ErlangCodeStyleSettings myErlangSettings;
   private final SpacingBuilder mySpacingBuilder;
@@ -77,10 +74,8 @@ public class ErlangFormattingBlock implements ASTBlock {
                                @NotNull CommonCodeStyleSettings settings,
                                @NotNull ErlangCodeStyleSettings erlangSettings,
                                @NotNull SpacingBuilder spacingBuilder) {
-    myNode = node;
-    myAlignment = alignment;
+    super(node, wrap, alignment);
     myAlignmentStrategy = alignmentStrategy;
-    myWrap = wrap;
     mySettings = settings;
     myErlangSettings = erlangSettings;
     mySpacingBuilder = spacingBuilder;
@@ -88,34 +83,13 @@ public class ErlangFormattingBlock implements ASTBlock {
   }
 
   @Override
-  public ASTNode getNode() {
-    return myNode;
-  }
-
-  @NotNull
-  @Override
-  public TextRange getTextRange() {
-    return myNode.getTextRange();
-  }
-
-  @Override
-  public Wrap getWrap() {
-    return myWrap;
-  }
-
-  @Override
   public Indent getIndent() {
     return myIndent;
   }
 
-  @Override
-  public Alignment getAlignment() {
-    return myAlignment;
-  }
-
   @NotNull
   @Override
-  public List<Block> getSubBlocks() {
+  protected List<Block> buildChildren() {
     if (mySubBlocks == null) {
       mySubBlocks = buildSubBlocks();
     }
