@@ -208,11 +208,6 @@ public class ErlangFormattingBlock extends AbstractBlock {
   }
 
   @Override
-  public boolean isIncomplete() {
-    return false;
-  }
-
-  @Override
   public boolean isLeaf() {
     return myNode.getFirstChildNode() == null;
   }

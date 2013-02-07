@@ -19,4 +19,4 @@
 
 foo() ->
   if
-  <caret>
+    <caret>
