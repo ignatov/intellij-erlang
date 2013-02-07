@@ -6,3 +6,4 @@ The following people have made contributions (in no particular order):
 * Todd Greenwood-Geer (github @ToddG)
 * Sergey Evstifeev (github @sergeyevstifeev)
 * Nikolay Chashnikov
+* Marcus Nilsson (github @Enouk, tandy.nilsson@gmail.com)
