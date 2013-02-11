@@ -48,7 +48,7 @@ public final class FileReferenceFilter implements Filter {
   private static final String FILE_PATH_REGEXP = "((?:\\p{Alpha}\\:)?[0-9 a-z_A-Z\\-\\\\./]+)";
   private static final String NUMBER_REGEXP = "([0-9]+)";
 
-  private static final Pattern PATTERN_FILENAME = Pattern.compile("[/\\\\]?(.*?\\.erl)$");
+  private static final Pattern PATTERN_FILENAME = Pattern.compile("[/\\\\]?([^/\\\\]*?\\.erl)$");
 
   private final Pattern myPattern;
   private final Project myProject;
