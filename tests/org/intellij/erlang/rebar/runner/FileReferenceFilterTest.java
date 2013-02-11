@@ -117,6 +117,13 @@ public class FileReferenceFilterTest extends LightPlatformCodeInsightFixtureTest
     assertNotNull(result.hyperlinkInfo);
   }
 
+  public void testLinkToSdkFileNoSrc() {
+    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), COMPILATION_ERROR_PATH);
+    final String consoleOutput = "some text||lists.erl:123: more text here";
+    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    assertNotNull(result.hyperlinkInfo);
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
