@@ -87,13 +87,17 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitSpecification(@NotNull ErlangSpecification o) {
         super.visitSpecification(o);
-        markFirstChildAsKeyword(o, annotationHolder);
+        markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.SPECIFICATION);
       }
 
       @Override
       public void visitAttribute(@NotNull ErlangAttribute o) {
         super.visitAttribute(o);
-        markFirstChildAsKeyword(o, annotationHolder);
+        if (o.getSpecification() != null)
+        {
+          markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.SPECIFICATION);
+        }
+        else markFirstChildAsKeyword(o, annotationHolder);
       }
 
       @Override
@@ -145,9 +149,9 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitTypeDefinition(@NotNull ErlangTypeDefinition o) {
         super.visitTypeDefinition(o);
-        markFirstChildAsKeyword(o, annotationHolder);
-        markAttributeNameAsKeyword(o, annotationHolder, "type");
-        markAttributeNameAsKeyword(o, annotationHolder, "opaque");
+        markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.TYPE_DEFINITION);
+        markAttributeName(o, annotationHolder, "type", ErlangSyntaxHighlighter.TYPE_DEFINITION);
+        markAttributeName(o, annotationHolder, "opaque", ErlangSyntaxHighlighter.TYPE_DEFINITION);
       }
 
       @Override
@@ -186,6 +190,9 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         if (atom != null && needHighlighting) {
           setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.ATOM);
         }
+        else if (parent instanceof ErlangTypeRef || parent instanceof ErlangTypeDefinition) {
+          setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.TYPE);
+        }
       }
 
       @Override
@@ -200,20 +207,30 @@ public class ErlangAnnotator implements Annotator, DumbAware {
   }
 
   private static void markAttributeNameAsKeyword(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder, @NotNull String name) {
+    markAttributeName(o, annotationHolder, name, ErlangSyntaxHighlighter.KEYWORD);
+  }
+
+  private static void markAttributeName(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder,
+                                        @NotNull String name, @NotNull TextAttributesKey key) {
     PsiElement rec = o.getFirstChild();
     while (rec != null) {
       if (rec instanceof LeafPsiElement && name.equals(rec.getText())) break;
       rec = rec.getNextSibling();
     }
     if (rec != null) {
-      setHighlighting(rec, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+      setHighlighting(rec, annotationHolder, key);
     }
   }
 
   private static void markFirstChildAsKeyword(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder) {
+    markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+  }
+
+  private static void markFirstChild(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder,
+                                     @NotNull TextAttributesKey key) {
     final PsiElement firstChild = o.getFirstChild();
     if (firstChild != null) {
-      setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+      setHighlighting(firstChild, annotationHolder, key);
     }
   }
 

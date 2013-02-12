@@ -54,6 +54,9 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Operation sign", OP_SIGN),
       new AttributesDescriptor("Edoc tag", DOC_COMMENT_TAG),
       new AttributesDescriptor("Function", FUNCTION),
+      new AttributesDescriptor("Type definition", TYPE_DEFINITION),
+      new AttributesDescriptor("Type", TYPE),
+      new AttributesDescriptor("Specification", SPECIFICATION)
     };
   }
 
@@ -91,6 +94,9 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "-<k>define</k>(<m>MACRO</m>, macro_value).\n" +
       "\n" +
+      "<td>-type</td> <t>in</t>() :: ok | hello .\n" +
+      "<td>-type</td> <t>out</t>() :: ok | {error, <t>term</t>()}.\n" +
+      "\n" +
       "%% Factorial implementation\n" +
       "%% <d>@doc</d> Documentation\n" +
       "<f>fac</f>(0) -> 1;\n" +
@@ -101,6 +107,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "<f>update_state</f>(State) -> State#<r>state</r>{id=10}.\n" +
       "\n" +
+      "<s>-spec</s> simple(<t>in</t>())-> <t>out</t>(). \n"  +
       "<f>simple</f>(<a>ok</a>) -> <a>ok</a>.\n" +
       "\n" +
       "<f>use_macro</f>() -> ?<m>MACRO</m>."
@@ -116,6 +123,10 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     map.put("m", MACRO);
     map.put("r", RECORDS);
     map.put("f", FUNCTION);
+    map.put("td", TYPE_DEFINITION);
+    map.put("t", TYPE);
+    map.put("s", SPECIFICATION);
+
     return map;
   }
 }
