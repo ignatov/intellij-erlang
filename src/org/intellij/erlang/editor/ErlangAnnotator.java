@@ -29,8 +29,8 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
-import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.documentation.ErlangDocUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -44,38 +44,15 @@ import java.util.Set;
 public class ErlangAnnotator implements Annotator, DumbAware {
   @Override
   public void annotate(@NotNull PsiElement psiElement, @NotNull final AnnotationHolder annotationHolder) {
-    if (!(psiElement instanceof ErlangFile)) return;
+    if (psiElement instanceof PsiComment) {
+      highlightEdocTags((PsiComment) psiElement, annotationHolder);
+    }
+    else if (!(psiElement instanceof ErlangFile)) return;
     psiElement.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
         super.visitAtomAttribute(o);
         setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
-      }
-
-      @Override
-      public void visitComment(PsiComment comment) {
-        IElementType tokenType = comment.getTokenType();
-        final Set<String> edocTags;
-        if (tokenType == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT) {
-          edocTags = ErlangDocUtil.EDOC_FUNCTION_TAGS;
-        }
-        else if (tokenType == ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
-          edocTags = ErlangDocUtil.EDOC_MODULE_TAGS;
-        }
-        else {
-          return;
-        }
-
-        String commentText = comment.getText();
-        List<Pair<String, Integer>> wordsWithOffset = StringUtil.getWordsWithOffset(commentText);
-        for (Pair<String, Integer> pair : wordsWithOffset) {
-          Integer offset = pair.second;
-          String tag = pair.first;
-          if (edocTags.contains(tag)) {
-            annotationHolder.createInfoAnnotation(TextRange.from(comment.getTextOffset() + offset, tag.length()), null).
-              setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(ErlangSyntaxHighlighter.DOC_COMMENT_TAG));
-          }
-        }
       }
 
       @Override
@@ -93,11 +70,12 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitAttribute(@NotNull ErlangAttribute o) {
         super.visitAttribute(o);
-        if (o.getSpecification() != null)
-        {
+        if (o.getSpecification() != null) {
           markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.SPECIFICATION);
         }
-        else markFirstChildAsKeyword(o, annotationHolder);
+        else {
+          markFirstChildAsKeyword(o, annotationHolder);
+        }
       }
 
       @Override
@@ -206,6 +184,31 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     });
   }
 
+  private static void highlightEdocTags(@NotNull PsiComment comment, @NotNull AnnotationHolder annotationHolder) {
+    IElementType tokenType = comment.getTokenType();
+    final Set<String> edocTags;
+    if (tokenType == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT) {
+      edocTags = ErlangDocUtil.EDOC_FUNCTION_TAGS;
+    }
+    else if (tokenType == ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
+      edocTags = ErlangDocUtil.EDOC_MODULE_TAGS;
+    }
+    else {
+      return;
+    }
+
+    String commentText = comment.getText();
+    List<Pair<String, Integer>> wordsWithOffset = StringUtil.getWordsWithOffset(commentText);
+    for (Pair<String, Integer> pair : wordsWithOffset) {
+      Integer offset = pair.second;
+      String tag = pair.first;
+      if (edocTags.contains(tag)) {
+        TextRange range = TextRange.from(comment.getTextOffset() + offset, tag.length());
+        setHighlighting(range, annotationHolder, ErlangSyntaxHighlighter.DOC_COMMENT_TAG);
+      }
+    }
+  }
+
   private static void markAttributeNameAsKeyword(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder, @NotNull String name) {
     markAttributeName(o, annotationHolder, name, ErlangSyntaxHighlighter.KEYWORD);
   }
@@ -234,7 +237,12 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     }
   }
 
-  private static void setHighlighting(@NotNull PsiElement element, @NotNull AnnotationHolder holder, final TextAttributesKey key) {
+  private static void setHighlighting(@NotNull TextRange range, @NotNull AnnotationHolder holder, @NotNull TextAttributesKey key) {
+    holder.createInfoAnnotation(range, null).setEnforcedTextAttributes(TextAttributes.ERASE_MARKER);
+    holder.createInfoAnnotation(range, null).setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key));
+  }
+
+  private static void setHighlighting(@NotNull PsiElement element, @NotNull AnnotationHolder holder, @NotNull TextAttributesKey key) {
     holder.createInfoAnnotation(element, null).setEnforcedTextAttributes(TextAttributes.ERASE_MARKER);
     holder.createInfoAnnotation(element, null).setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key));
   }
