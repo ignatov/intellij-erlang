@@ -19,6 +19,7 @@ package org.intellij.erlang.sdk;
 import org.jetbrains.annotations.NotNull;
 
 public enum ErlangSdkRelease {
+  R16A("5.10"),
   R15B03("5.9.3"),
   R15B02("5.9.2"),
   R15B01("5.9.1"),
