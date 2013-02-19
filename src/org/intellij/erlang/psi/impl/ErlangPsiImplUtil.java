@@ -1026,18 +1026,6 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static PsiComment getFunctionComment(@Nullable ErlangFunction function) { // todo: a little bit duplicate
-    if (function == null) return null;
-    PsiElement prevSibling = function.getPrevSibling();
-    while (!(prevSibling instanceof ErlangFunction) && !(prevSibling instanceof PsiComment) && prevSibling != null) {
-      prevSibling = prevSibling.getPrevSibling();
-    }
-    if (prevSibling instanceof PsiComment) return (PsiComment) prevSibling;
-
-    return null;
-  }
-
-  @Nullable
   public static ErlangSpecification getSpecification(@Nullable ErlangFunction function) { // todo: use ref search
     if (function == null) return null;
     PsiElement prevSibling = function.getPrevSibling();
@@ -1053,17 +1041,18 @@ public class ErlangPsiImplUtil {
     return (prevFunction == null || (spec.getTextOffset() > prevFunction.getTextOffset()));
   }
 
-  public static boolean isValidHost(ErlangStringLiteral o) {
+  @SuppressWarnings("UnusedParameters")
+  public static boolean isValidHost(@NotNull ErlangStringLiteral o) {
     return true;
   }
 
-  public static ErlangStringLiteralImpl updateText(ErlangStringLiteral o, @NotNull String text) {
+  public static ErlangStringLiteralImpl updateText(@NotNull ErlangStringLiteral o, @NotNull String text) {
     final ErlangExpression expression = ErlangElementFactory.createExpressionFromText(o.getProject(), text);
     return (ErlangStringLiteralImpl)o.replace(expression);
   }
 
   @NotNull
-  public static ErlangStringLiteralEscaper createLiteralTextEscaper(ErlangStringLiteral o) {
+  public static ErlangStringLiteralEscaper createLiteralTextEscaper(@NotNull ErlangStringLiteral o) {
     return new ErlangStringLiteralEscaper(o);
   }
 
