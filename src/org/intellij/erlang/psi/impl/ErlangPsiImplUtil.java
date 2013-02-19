@@ -28,6 +28,8 @@ import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Pair;
@@ -54,6 +56,8 @@ import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -347,8 +351,12 @@ public class ErlangPsiImplUtil {
         String moduleName = qAtom.getText();
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
 
-        for (ErlangBifDescriptor bif : ErlangBifTable.getBifs(moduleName)) {
-          lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
+        Sdk sdk = ProjectRootManager.getInstance(containingFile.getProject()).getProjectSdk();
+        ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
+        if (release == null || release != ErlangSdkRelease.R16A) { // todo [ignatov] compare sdk versions
+          for (ErlangBifDescriptor bif : ErlangBifTable.getBifs(moduleName)) {
+            lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
+          }
         }
       }
       else {
