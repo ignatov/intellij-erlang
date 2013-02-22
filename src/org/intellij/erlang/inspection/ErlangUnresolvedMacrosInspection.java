@@ -90,7 +90,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangBaseInspection {
         if (ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(o, "Unresolved record " + "'" + o.getText() + "'");
+          problemsHolder.registerProblem(o, "Unresolved macros " + "'" + o.getText() + "'");
         }
       }
     });
