@@ -8,7 +8,7 @@
 
 {
   parserClass="org.intellij.erlang.parser.ErlangParser"
-  stubParserClass="org.intellij.erlang.parser.ErlangParserUtil"
+  parserUtilClass="org.intellij.erlang.parser.ErlangParserUtil"
 
   implements="org.intellij.erlang.psi.ErlangCompositeElement"
   extends="org.intellij.erlang.psi.impl.ErlangCompositeElementImpl"
