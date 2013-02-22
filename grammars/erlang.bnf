@@ -420,7 +420,8 @@ function_call_expression ::= q_atom argument_list {
   pin=0
   methods = [getReference getNameIdentifier getTextOffset]
 }
-macros_call ::= generic_function_call_expression
+macros_call ::= &('?') generic_function_call_expression {recoverUntil=macros_call_recover}
+private macros_call_recover ::= !('.')
 generic_function_call_expression ::= (q_atom_or_var ':')? (q_atom_or_var | macros) argument_list {pin=0}
 private q_atom_or_var ::= q_atom | q_var
 
