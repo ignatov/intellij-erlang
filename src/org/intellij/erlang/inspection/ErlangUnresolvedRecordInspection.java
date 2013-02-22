@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author ignatov
  */
-public class ErlangUnresolvedRecordInspection extends ErlangBaseInspection {
+public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

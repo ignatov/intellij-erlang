@@ -26,7 +26,7 @@ import org.intellij.erlang.psi.ErlangTypeSig;
 /**
  * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
  */
-public class ErlangIncorrectAritySpecificationInspection extends ErlangBaseInspection {
+public class ErlangIncorrectAritySpecificationInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

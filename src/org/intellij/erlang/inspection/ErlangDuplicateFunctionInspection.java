@@ -77,7 +77,7 @@ import java.util.List;
 /**
  * @author ignatov
  */
-public class ErlangDuplicateFunctionInspection extends ErlangBaseInspection {
+public class ErlangDuplicateFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(final PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

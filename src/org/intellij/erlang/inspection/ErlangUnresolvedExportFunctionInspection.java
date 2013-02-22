@@ -17,17 +17,15 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
-public class ErlangUnresolvedExportFunctionInspection extends ErlangBaseInspection {
+public class ErlangUnresolvedExportFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

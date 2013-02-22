@@ -47,7 +47,7 @@ import java.util.Set;
 /**
  * @author ignatov
  */
-public class ErlangIoFormatInspection extends ErlangBaseInspection {
+public class ErlangIoFormatInspection extends ErlangInspectionBase {
   Set<String> MODULE_NAMES = ContainerUtil.set("io", "io_lib");
   Set<String> FUNCTION_NAMES = ContainerUtil.set("format", "fwrite");
 

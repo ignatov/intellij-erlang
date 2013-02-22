@@ -72,7 +72,7 @@ import java.util.List;
 /**
  * @author ignatov
  */
-public class ErlangUnusedFunctionInspection extends ErlangBaseInspection {
+public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

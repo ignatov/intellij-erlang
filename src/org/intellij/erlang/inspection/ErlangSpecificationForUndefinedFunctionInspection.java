@@ -26,7 +26,7 @@ import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangSpecificationForUndefinedFunctionInspection extends ErlangBaseInspection {
+public class ErlangSpecificationForUndefinedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!StringUtils.endsWith(file.getName(), ErlangFileType.MODULE.getDefaultExtension())) return;

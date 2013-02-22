@@ -36,7 +36,7 @@ import java.util.List;
 /**
  * @author ignatov
  */
-public class ErlangHeadMismatchInspection extends ErlangBaseInspection implements DumbAware {
+public class ErlangHeadMismatchInspection extends ErlangInspectionBase implements DumbAware {
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
