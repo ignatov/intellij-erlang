@@ -115,6 +115,13 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
       "foo() -> <caret>", "sin", "sqrt");
   }
 
+  public void test182() throws Throwable {
+    doTestInclude("test() -> <caret>\n" +
+      "ok.\n" +
+      "my_local_function() -> not_so_ok.",
+      "my_local_function");
+  }
+
   public void testImportModule() throws Throwable {
     myFixture.configureByFiles("multi-module/a.erl");
     myFixture.configureByFile("multi-module/b.erl");

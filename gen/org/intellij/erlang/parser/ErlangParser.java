@@ -24,13 +24,13 @@ public class ErlangParser implements PsiParser {
     boolean result_;
     builder_ = adapt_builder_(root_, builder_, this);
     if (root_ == ERL_ADDITIVE_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 7);
+      result_ = expression(builder_, level_ + 1, 6);
     }
     else if (root_ == ERL_ANDALSO_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 4);
+      result_ = expression(builder_, level_ + 1, 3);
     }
     else if (root_ == ERL_ANONYMOUS_CALL_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 11);
+      result_ = expression(builder_, level_ + 1, 10);
     }
     else if (root_ == ERL_ARGUMENT_DEFINITION) {
       result_ = argument_definition(builder_, level_ + 1);
@@ -42,7 +42,7 @@ public class ErlangParser implements PsiParser {
       result_ = argument_list(builder_, level_ + 1);
     }
     else if (root_ == ERL_ASSIGNMENT_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 1);
+      result_ = expression(builder_, level_ + 1, 0);
     }
     else if (root_ == ERL_ATOM_ATTRIBUTE) {
       result_ = atom_attribute(builder_, level_ + 1);
@@ -96,10 +96,10 @@ public class ErlangParser implements PsiParser {
       result_ = clause_guard(builder_, level_ + 1);
     }
     else if (root_ == ERL_COLON_QUALIFIED_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 10);
+      result_ = expression(builder_, level_ + 1, 9);
     }
     else if (root_ == ERL_COMP_OP_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 5);
+      result_ = expression(builder_, level_ + 1, 4);
     }
     else if (root_ == ERL_CONFIG_CALL_EXPRESSION) {
       result_ = config_call_expression(builder_, level_ + 1);
@@ -225,7 +225,7 @@ public class ErlangParser implements PsiParser {
       result_ = list_expression(builder_, level_ + 1);
     }
     else if (root_ == ERL_LIST_OP_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 6);
+      result_ = expression(builder_, level_ + 1, 5);
     }
     else if (root_ == ERL_MACROS) {
       result_ = macros(builder_, level_ + 1);
@@ -255,13 +255,13 @@ public class ErlangParser implements PsiParser {
       result_ = module_ref(builder_, level_ + 1);
     }
     else if (root_ == ERL_MULTIPLICATIVE_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 8);
+      result_ = expression(builder_, level_ + 1, 7);
     }
     else if (root_ == ERL_OPT_BIT_TYPE_LIST) {
       result_ = opt_bit_type_list(builder_, level_ + 1);
     }
     else if (root_ == ERL_ORELSE_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 3);
+      result_ = expression(builder_, level_ + 1, 2);
     }
     else if (root_ == ERL_PARENTHESIZED_EXPRESSION) {
       result_ = parenthesized_expression(builder_, level_ + 1);
@@ -288,7 +288,7 @@ public class ErlangParser implements PsiParser {
       result_ = record_definition(builder_, level_ + 1);
     }
     else if (root_ == ERL_RECORD_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 11);
+      result_ = expression(builder_, level_ + 1, 10);
     }
     else if (root_ == ERL_RECORD_FIELD) {
       result_ = record_field(builder_, level_ + 1);
@@ -312,7 +312,7 @@ public class ErlangParser implements PsiParser {
       result_ = rule_clause(builder_, level_ + 1);
     }
     else if (root_ == ERL_SEND_EXPRESSION) {
-      result_ = expression(builder_, level_ + 1, 2);
+      result_ = expression(builder_, level_ + 1, 1);
     }
     else if (root_ == ERL_SPEC_FUN) {
       result_ = spec_fun(builder_, level_ + 1);
@@ -2059,7 +2059,7 @@ public class ErlangParser implements PsiParser {
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    enterErrorRecordingSection(builder_, level_, _SECTION_RECOVER_, null);
     result_ = expression(builder_, level_ + 1, -1);
     pinned_ = result_; // pin = 1
     result_ = result_ && exprs_1(builder_, level_ + 1);
@@ -2069,7 +2069,7 @@ public class ErlangParser implements PsiParser {
     else {
       marker_.drop();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_RECOVER_, exprs_recover_parser_);
     return result_ || pinned_;
   }
 
@@ -2107,6 +2107,44 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of)
+  static boolean exprs_recover(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "exprs_recover")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_NOT_, null);
+    result_ = !exprs_recover_0(builder_, level_ + 1);
+    marker_.rollbackTo();
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_NOT_, null);
+    return result_;
+  }
+
+  // ')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of
+  private static boolean exprs_recover_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "exprs_recover_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_PAR_RIGHT);
+    if (!result_) result_ = consumeToken(builder_, ERL_COMMA);
+    if (!result_) result_ = consumeToken(builder_, ERL_ARROW);
+    if (!result_) result_ = consumeToken(builder_, ERL_DOT);
+    if (!result_) result_ = consumeToken(builder_, ":-");
+    if (!result_) result_ = consumeToken(builder_, ERL_SEMI);
+    if (!result_) result_ = consumeToken(builder_, ERL_CURLY_RIGHT);
+    if (!result_) result_ = consumeToken(builder_, ERL_AFTER);
+    if (!result_) result_ = consumeToken(builder_, ERL_CATCH);
+    if (!result_) result_ = consumeToken(builder_, ERL_END);
+    if (!result_) result_ = consumeToken(builder_, ERL_OF);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
   }
 
   /* ********************************************************** */
@@ -6632,6 +6670,11 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
+  final static Parser exprs_recover_parser_ = new Parser() {
+    public boolean parse(PsiBuilder builder_, int level_) {
+      return exprs_recover(builder_, level_ + 1);
+    }
+  };
   final static Parser form_recover_parser_ = new Parser() {
     public boolean parse(PsiBuilder builder_, int level_) {
       return form_recover(builder_, level_ + 1);

@@ -24,7 +24,7 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('ok')
     PsiElement(.)('.')
-  PsiErrorElement:<q atom> expected, got ''
+  PsiErrorElement:'' unexpected
     PsiElement(BAD_CHARACTER)('')
   PsiComment(function_doc_comment)('%% API')
   ERL_ATTRIBUTE

@@ -80,9 +80,8 @@ ERL_FILE
                     PsiElement(var)('Eep')
                 PsiElement(})('}')
               PsiElement())(')')
+  PsiErrorElement:'.' or ';' expected, got '->'
     PsiElement(->)('->')
-    PsiErrorElement:'ok' unexpected
-      <empty list>
   PsiElement(atom)('ok')
   PsiErrorElement:'(' or ':' expected, got ','
     PsiElement(,)(',')
