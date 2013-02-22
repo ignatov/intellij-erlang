@@ -15,6 +15,6 @@ basic_test_() ->
 simple_2_test() ->
   ?assert(1 + 1 =:= 3).
 
-<warning>foo</warning>() -> eunit:<error>test</error>(1).
+<warning>foo</warning>() -> eunit:<warning>test</warning>(1).
 
 zzz_test() -> ?assert(get_num(100) == 100).

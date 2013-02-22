@@ -10,15 +10,15 @@
 	_NotRunning ->
 	    case UseDir of
 		true ->
-		    mnesia_lib:<error>lock_table</error>(schema),
+		    mnesia_lib:<warning>lock_table</warning>(schema),
 		    Res = 
-			case mnesia_schema:<error>read_cstructs_from_disc</error>() of
+			case mnesia_schema:<warning>read_cstructs_from_disc</warning>() of
 			    {ok, Cstructs} ->
 				log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning);
 			    {error, Reason} ->
 				{error, Reason}
 			end,
-			mnesia_lib:<error>unlock_table</error>(schema),
+			mnesia_lib:<warning>unlock_table</warning>(schema),
 		    Res;
 		false ->
 		    ok
@@ -29,12 +29,12 @@ set_master_nodes(Nodes) ->
 
 log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning) ->
     Fun = fun(Cs) ->
-		  Copies = mnesia_lib:<error>copy_holders</error>(Cs),
-		  Valid = mnesia_lib:<error>intersect</error>(Nodes, Copies),
+		  Copies = mnesia_lib:<warning>copy_holders</warning>(Cs),
+		  Valid = mnesia_lib:<warning>intersect</warning>(Nodes, Copies),
 		  {Cs#<error>cstruct</error>.name, Valid}
 	  end,
     Args = lists:map(Fun, Cstructs),
-    mnesia_recover:<error>log_master_nodes</error>(Args, UseDir, IsRunning).
+    mnesia_recover:<warning>log_master_nodes</warning>(Args, UseDir, IsRunning).
 
 <warning>set_master_nodes</warning>(Tab, Nodes) when is_list(Nodes) ->
     UseDir = system_info(use_dir),
@@ -45,10 +45,10 @@ log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning) ->
 		{'EXIT', _} ->
 		    {error, {no_exists, Tab}};
 		Cs ->
-		    case Nodes -- mnesia_lib:<error>copy_holders</error>(Cs) of
+		    case Nodes -- mnesia_lib:<warning>copy_holders</warning>(Cs) of
 			[] ->
 			    Args = [{Tab , Nodes}],
-			    mnesia_recover:<error>log_master_nodes</error>(Args, UseDir, IsRunning);
+			    mnesia_recover:<warning>log_master_nodes</warning>(Args, UseDir, IsRunning);
 			BadNodes ->
 			    {error, {no_exists, Tab,  BadNodes}}
 		    end
@@ -56,16 +56,16 @@ log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning) ->
 	_NotRunning ->
 	    case UseDir of
 		true ->
-		    mnesia_lib:<error>lock_table</error>(schema),
+		    mnesia_lib:<warning>lock_table</warning>(schema),
 		    Res =
-			case mnesia_schema:<error>read_cstructs_from_disc</error>() of
+			case mnesia_schema:<warning>read_cstructs_from_disc</warning>() of
 			    {ok, Cstructs} ->
 				case lists:keysearch(Tab, 2, Cstructs) of
 				    {value, Cs} ->
-					case Nodes -- mnesia_lib:<error>copy_holders</error>(Cs) of
+					case Nodes -- mnesia_lib:<warning>copy_holders</warning>(Cs) of
 					    [] ->
 						Args = [{Tab , Nodes}],
-						mnesia_recover:<error>log_master_nodes</error>(Args, UseDir, IsRunning);
+						mnesia_recover:<warning>log_master_nodes</warning>(Args, UseDir, IsRunning);
 					    BadNodes ->
 						{error, {no_exists, Tab,  BadNodes}}
 					end;
@@ -75,7 +75,7 @@ log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning) ->
 			    {error, Reason} ->
 				{error, Reason}
 			end,
-		    mnesia_lib:<error>unlock_table</error>(schema),
+		    mnesia_lib:<warning>unlock_table</warning>(schema),
 		    Res;
 		false ->
 		    ok

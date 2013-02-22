@@ -34,9 +34,10 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
       ErlangUnboundVariableInspection.class,
       ErlangUnresolvedRecordInspection.class,
       ErlangUnresolvedRecordFieldInspection.class,
-      ErlangUnresolvedFunctionInspection.class,
+      ErlangUnresolvedExportFunctionInspection.class,
       ErlangHeadMismatchInspection.class,
 
+      ErlangUnresolvedFunctionInspection.class,
       ErlangUnusedVariableInspection.class,
       ErlangUnusedFunctionInspection.class,
       ErlangDuplicateFunctionInspection.class,

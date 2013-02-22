@@ -80,12 +80,12 @@ run(Writer, Inputs) when is_function(Writer) ->
     {difference, timer:now_diff(T4,T3) - IO},
     ok
   }),
-  timer:<error>sleep</error>(50),
+  timer:<warning>sleep</warning>(50),
   ok.
 
 
 mvhd(Duration, TrackCount) ->
-  CTime = timer:<error>now_diff</error>(now(), {0,0,0}) div 1000000,
+  CTime = timer:<warning>now_diff</warning>(now(), {0,0,0}) div 1000000,
   MTime = CTime,
   TimeScale = 1000,
   Rate = 1,

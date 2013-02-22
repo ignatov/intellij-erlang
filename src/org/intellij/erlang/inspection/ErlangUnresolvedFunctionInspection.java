@@ -65,14 +65,6 @@ public class ErlangUnresolvedFunctionInspection extends ErlangBaseInspection {
     if (!(file instanceof ErlangFile)) return;
     file.accept(new ErlangRecursiveVisitor() {
       @Override
-      public void visitExportFunction(@NotNull ErlangExportFunction o) {
-        PsiReference reference = o.getReference();
-        if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(o, "Unresolved function " + "'" + o.getText() + "'");
-        }
-      }
-
-      @Override
       public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {

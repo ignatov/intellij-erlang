@@ -5,14 +5,14 @@
 perform1(X, Y) ->
     <error>A</error>,
     Z = X ++ "X",
-    [error_m || <error>f</error>(Z, <error>EbinProdDir</error>, Y), m:<error>f</error>(Z, m:v(Y), <error>EbinProdDir</error>)].
+    [error_m || <warning>f</warning>(Z, <error>EbinProdDir</error>, Y), m:<warning>f</warning>(Z, m:v(Y), <error>EbinProdDir</error>)].
 
 perform(X, Y) ->
     Z = X ++ "X",
-    [error_m || <error>f</error>(Z, <error>EbinProdDir</error>, Y) ].
+    [error_m || <warning>f</warning>(Z, <error>EbinProdDir</error>, Y) ].
 
 run(_, _) ->
-    lists:<error>map</error>(fun(Spec) ->
+    lists:<warning>map</warning>(fun(Spec) ->
         string:tokens(Spec, "@")
     end).
 
