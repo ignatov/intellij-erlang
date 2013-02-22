@@ -23,11 +23,13 @@ import com.intellij.openapi.projectRoots.*;
 import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl;
 import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.OrderRootType;
+import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.jps.model.JpsErlangModelSerializerExtension;
@@ -72,6 +74,30 @@ public class ErlangSdkType extends SdkType {
   public String suggestHomePath() {
     if (SystemInfo.isWindows) {
       return "C:\\cygwin\\bin";
+    }
+    else if (SystemInfo.isMac) {
+      String macPorts = "/opt/local/lib/erlang";
+      if (new File(macPorts).exists()) return macPorts;
+      
+      // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
+      File brewRoot = new File("/usr/local/Cellar/erlang");
+      if (brewRoot.exists()) {
+        final Ref<String> ref = Ref.create();
+        FileUtil.processFilesRecursively(brewRoot, new Processor<File>() {
+          @Override
+          public boolean process(File file) {
+            if (!ref.isNull()) return false;
+            if (!file.isDirectory()) return true;
+            if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
+              ref.set(file.getAbsolutePath());
+              return false;
+            }
+            return true;
+          }
+        });
+        if (!ref.isNull()) return ref.get();
+      }
+      return null;
     }
     else if (SystemInfo.isLinux) {
       return "/usr/lib/erlang";
