@@ -16,28 +16,40 @@
 
 package org.intellij.erlang.rebar.settings;
 
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.components.labels.ActionLink;
+import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.download.DownloadableFileDescription;
+import com.intellij.util.download.DownloadableFileService;
+import com.intellij.util.download.FileDownloader;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.concurrent.*;
 
 final class RebarConfigurable implements SearchableConfigurable, Configurable.NoScroll  {
   private JPanel myPanel;
   private TextFieldWithBrowseButton myRebarPathSelector;
   private JTextField myRebarVersionText;
+  private JPanel myLinkContainer;
 
   private String myPrevRebarPath;
   private RebarSettings myRebarSettings;
@@ -157,5 +169,35 @@ final class RebarConfigurable implements SearchableConfigurable, Configurable.No
     } catch (IOException e) { // Suppress
     }
     return "";
+  }
+
+  private void createUIComponents() {
+    myLinkContainer = new JPanel(new BorderLayout());
+    ActionLink link = new ActionLink("Download the latest Rebar version", new AnAction() {
+      @Override
+      public void actionPerformed(AnActionEvent e) {
+        DownloadableFileService service = DownloadableFileService.getInstance();
+        DownloadableFileDescription rebar = service.createFileDescription("https://github.com/rebar/rebar/wiki/rebar", "rebar");
+        FileDownloader downloader = service.createDownloader(ContainerUtil.list(rebar), getEventProject(e), myLinkContainer, "rebar");
+        List<Pair<VirtualFile,DownloadableFileDescription>> pairs = downloader.downloadAndReturnWithDescriptions();
+        if (pairs != null) {
+          for (Pair<VirtualFile, DownloadableFileDescription> pair : pairs) {
+            try {
+              String path = pair.first.getCanonicalPath();
+              if (path != null) {
+                FileUtilRt.setExecutableAttribute(path, true);
+                if (StringUtils.isEmpty(myRebarSettings.getRebarPath()) || StringUtils.isEmpty(myRebarPathSelector.getText())) {
+                  myRebarSettings.setRebarPath(path);
+                  myRebarPathSelector.setText(myRebarSettings.getRebarPath());
+                  validateRebarPath();
+                }
+              }
+            } catch (Exception e1) { // Ignore
+            }
+          }
+        }
+      }
+    });
+    myLinkContainer.add(link, BorderLayout.NORTH);
   }
 }
