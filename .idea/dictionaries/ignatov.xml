@@ -2,6 +2,7 @@
   <dictionary name="ignatov">
     <words>
       <w>erlang</w>
+      <w>rebar</w>
     </words>
   </dictionary>
 </component>
