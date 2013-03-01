@@ -13,7 +13,7 @@
         <![CDATA[
             <p>0.4.1</p>
             <ul>
-              <li>External **Shift+F1** and local (Ctrl+Q) help for OTP types (except for built-in)</li>
+              <li>External (Shift+F1) and local (Ctrl+Q) help for OTP types (except for built-in)</li>
               <li>Links in local OTP documentation to other OTP modules, functions, and types were fixed</li>
               <li>Function parameter help (Ctrl+P) for BIF was fixed</li>
               <li>Unresolved function inspection added</li>
