@@ -24,10 +24,18 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
-### Version 0.4.x (work in progress)
-* External **Shift+F1** and local **Ctrl+Q** help for OTP types (except for built-in);
-* Links in local OTP documentation to other OTP modules, functions, and types were fixed;
-* Function parameter help **Ctrl+P** for BIF was fixed;
+### Version 0.4.1
+* External **Shift+F1** and local **Ctrl+Q** help for OTP types (except for built-in)
+* Links in local OTP documentation to other OTP modules, functions, and types were fixed
+* Function parameter help **Ctrl+P** for BIF was fixed
+* Unresolved function inspection added
+* Better autodetection for Erlang SDK under Mac OS X
+* Better local function completion (#182)
+* Support for R16A and R16B
+* **Experimental** Emacs-based formatter action **Ctrl+Alt+Shift+E**
+* Smart typed handler for function and case clauses
+* Highlighting settings for function declarations, types and specs (thanks to Marcus Nilsson)
+* Bugfixes
 
 ### Version 0.4
 * Rebar run configurations (thanks to Maxim Vladimirsky)
