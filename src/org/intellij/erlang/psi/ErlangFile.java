@@ -31,6 +31,9 @@ public interface ErlangFile extends PsiFile {
   @NotNull
   List<ErlangAttribute> getAttributes();
 
+  @Nullable
+  ErlangCallbackSpec getCallbackByName(@NotNull String fullName);
+
   @NotNull
   List<ErlangFunction> getFunctions();
 

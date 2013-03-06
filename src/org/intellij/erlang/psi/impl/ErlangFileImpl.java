@@ -84,6 +84,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap;
   private CachedValue<List<ErlangTypeDefinition>> myTypeValue;
   private CachedValue<Map<String, ErlangTypeDefinition>> myTypeMap;
+  private CachedValue<Map<String, ErlangCallbackSpec>> myCallbackMap;
   private CachedValue<List<ErlangBehaviour>> myBehavioursValue;
   private CachedValue<List<ErlangSpecification>> mySpecificationsValue;
   private CachedValue<Boolean> myExportAll;
@@ -157,6 +158,46 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     }
     return myAttributeValue.getValue();
   }
+
+  @Nullable
+  @Override
+  public ErlangCallbackSpec getCallbackByName(@NotNull String fullName) {
+    if (myCallbackMap == null) {
+      myCallbackMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangCallbackSpec>>() {
+        @Nullable
+        @Override
+        public Result<Map<String, ErlangCallbackSpec>> compute() {
+          return Result.create(calcCallbacks(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myCallbackMap.getValue().get(fullName);
+  }
+
+  private Map<String, ErlangCallbackSpec> calcCallbacks() {
+    Map<String, ErlangCallbackSpec> callbacksMap = new HashMap<String, ErlangCallbackSpec>();
+
+    Iterable<? extends ErlangAttribute> attributes = getAttributes();
+    for (ErlangAttribute a : attributes) {
+      ErlangCallbackSpec spec = a.getCallbackSpec();
+      if (spec != null) {
+        ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
+        ErlangSpecFun specFun = funTypeSigs != null ? funTypeSigs.getSpecFun() : null;
+        ErlangQAtom atom = specFun != null ? ContainerUtil.getFirstItem(specFun.getQAtomList()) : null;
+        String name = atom != null ? atom.getText() : "";
+
+        ErlangTypeSig typeSig = funTypeSigs != null ? ContainerUtil.getFirstItem(funTypeSigs.getTypeSigList()) : null;
+        ErlangFunType funType = typeSig != null ? typeSig.getFunType() : null;
+        ErlangFunTypeArguments arguments = funType != null ? funType.getFunTypeArguments() : null;
+        List<ErlangTopType> topTypeList = arguments != null ? arguments.getTopTypeList() : null;
+        int arity = topTypeList != null ? topTypeList.size() : -1;
+
+        callbacksMap.put(name + "/" + arity, spec);
+      }
+    }
+    return callbacksMap;
+  }
+
 
   @NotNull
   @Override

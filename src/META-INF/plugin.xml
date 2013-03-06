@@ -203,7 +203,9 @@
 
         <moduleConfigurationEditorProvider implementation="org.intellij.erlang.configuration.DefaultModuleEditorsProvider" order="first"/>
 
-        <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangRecursiveCallLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.marker.ErlangRecursiveCallLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.marker.ErlangBehaviourMarkerProvider"/>
+
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
 
         <fileBasedIndex implementation="org.intellij.erlang.ErlangSymbolIndex"/>

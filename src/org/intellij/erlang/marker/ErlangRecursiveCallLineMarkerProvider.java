@@ -1,4 +1,4 @@
-package org.intellij.erlang;
+package org.intellij.erlang.marker;
 
 import com.intellij.codeHighlighting.Pass;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
@@ -11,6 +11,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.FunctionUtil;
 import com.intellij.util.containers.HashSet;
+import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
