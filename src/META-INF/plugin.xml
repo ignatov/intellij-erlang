@@ -260,6 +260,9 @@
         <localInspection language="Erlang" shortName="ErlangIoFormat" displayName="io:format"
                          groupName="Erlang" enabledByDefault="true" level="WARNING" 
                          implementationClass="org.intellij.erlang.inspection.ErlangIoFormatInspection"/>
+        <localInspection language="Erlang" shortName="ErlangUndefinedCallbackFunction" displayName="Undefined callback function"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
 

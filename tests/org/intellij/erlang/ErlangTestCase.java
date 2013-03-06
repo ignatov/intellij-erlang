@@ -23,6 +23,7 @@ import org.intellij.erlang.documentation.ErlangDocumentationProviderTest;
 import org.intellij.erlang.folding.ErlangFoldingBuilderTest;
 import org.intellij.erlang.formatting.ErlangAutoIndentTest;
 import org.intellij.erlang.formatting.ErlangFormattingTest;
+import org.intellij.erlang.highlighting.ErlangBehaviourInspectionsTest;
 import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
@@ -58,6 +59,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangHeadMismatchFixTest.class);
     suite.addTestSuite(ErlangTypedHandlerTest.class);
     suite.addTestSuite(ErlangSdkReleaseTest.class);
+    suite.addTestSuite(ErlangBehaviourInspectionsTest.class);
     return suite;
   }
 }

@@ -159,9 +159,19 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return myAttributeValue.getValue();
   }
 
+  @NotNull
+  @Override
+  public Collection<String> getAllCallbacksFullNames() {
+    return getCallbackMap().keySet();
+  }
+
   @Nullable
   @Override
   public ErlangCallbackSpec getCallbackByName(@NotNull String fullName) {
+    return getCallbackMap().get(fullName);
+  }
+
+  private Map<String, ErlangCallbackSpec> getCallbackMap() {
     if (myCallbackMap == null) {
       myCallbackMap = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangCallbackSpec>>() {
         @Nullable
@@ -171,7 +181,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         }
       }, false);
     }
-    return myCallbackMap.getValue().get(fullName);
+    return myCallbackMap.getValue();
   }
 
   private Map<String, ErlangCallbackSpec> calcCallbacks() {

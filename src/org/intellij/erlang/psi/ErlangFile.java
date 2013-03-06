@@ -77,4 +77,7 @@ public interface ErlangFile extends PsiFile {
 
   @NotNull
   ArrayList<ErlangImportFunction> getImportedFunctions();
+
+  @NotNull
+  Collection<String> getAllCallbacksFullNames();
 }
