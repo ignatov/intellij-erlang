@@ -1061,4 +1061,22 @@ public class ErlangPsiImplUtil {
     ErlangExpression firstExpression = colonQualifier == null ? null : ContainerUtil.getFirstItem(colonQualifier.getExpressionList());
     return firstExpression instanceof ErlangMaxExpression ? ((ErlangMaxExpression) firstExpression).getQAtom() : null;
   }
+
+  @Nullable
+  public static String getCallbackSpecName(@NotNull ErlangCallbackSpec spec) {
+    ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
+    ErlangSpecFun specFun = funTypeSigs != null ? funTypeSigs.getSpecFun() : null;
+    ErlangQAtom atom = specFun != null ? ContainerUtil.getFirstItem(specFun.getQAtomList()) : null;
+    return atom != null ? atom.getText() : null;
+  }
+
+  @NotNull
+  public static List<ErlangTopType> getCallBackSpecArguments(ErlangCallbackSpec spec) {
+    ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
+    List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
+    ErlangTypeSig typeSig = ContainerUtil.getFirstItem(typeSigList);
+    ErlangFunType funType = typeSig != null ? typeSig.getFunType() : null;
+    ErlangFunTypeArguments arguments = funType != null ? funType.getFunTypeArguments() : null;
+    return arguments != null ? arguments.getTopTypeList() : ContainerUtil.<ErlangTopType>emptyList();
+  }
 }

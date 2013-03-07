@@ -16,8 +16,12 @@
 
 package org.intellij.erlang.highlighting;
 
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection;
+
+import java.util.List;
 
 /**
  * @author ignatov
@@ -38,6 +42,16 @@ public class ErlangBehaviourInspectionsTest extends LightPlatformCodeInsightFixt
   public void testSimple() throws Exception {
     myFixture.configureByFiles("b1.erl", "b2.erl", "test.erl");
     myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testTest() throws Exception {
+    myFixture.configureByFiles("b1.erl", "b2.erl");
+    myFixture.configureByFile("test-qf.erl");
+    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions("Implement all callbacks");
+    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
+    assertNotNull(action);
+    myFixture.launchAction(action);
+    myFixture.checkResultByFile("test-qf-after.erl");
   }
 
   @Override

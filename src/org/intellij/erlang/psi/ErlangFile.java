@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface ErlangFile extends PsiFile {
   @NotNull
@@ -79,5 +80,5 @@ public interface ErlangFile extends PsiFile {
   ArrayList<ErlangImportFunction> getImportedFunctions();
 
   @NotNull
-  Collection<String> getAllCallbacksFullNames();
+  Map<String, ErlangCallbackSpec> getCallbackMap();
 }
