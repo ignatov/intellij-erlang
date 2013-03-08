@@ -47,21 +47,32 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
     if (psiElement instanceof ErlangFunction) return false;
     if (psiElement instanceof ErlangSpecification) return false;
-    ErlangFunctionClause clause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
+    ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
-      if (
-        (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || inAssignment(psiElement)))
-        || isInModule(psiElement)
-        || PsiTreeUtil.isAncestor(spec, psiElement, false)) {
+      boolean inFunctionClause = PsiTreeUtil.isAncestor(functionClause, psiElement, false);
+      boolean inSpecification = PsiTreeUtil.isAncestor(spec, psiElement, false);
+      boolean inDefinitionOrAssignment = inDefinition(psiElement) || inAssignment(psiElement);
+      if ((inFunctionClause && inDefinitionOrAssignment) || inModule(psiElement) || inSpecification) {
+        boolean inArgumentList = inArgumentList(psiElement);
         //noinspection unchecked
-        if (inArgumentList(psiElement) && PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList) return true;
+        boolean inArgumentListBeforeAssignment =
+          PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
+        if (inArgumentList && inArgumentListBeforeAssignment) return true;
+        if (inDifferentCrClauses(psiElement)) return true;
 
         myVarList.add(0, (ErlangQVar) psiElement); // put all possible variables to list
         return true;
       }
     }
     return true;
+  }
+
+  private boolean inDifferentCrClauses(PsiElement psiElement) {
+    ErlangCrClause crClause = PsiTreeUtil.getParentOfType(psiElement, ErlangCrClause.class);
+    ErlangCrClause crClauseOrigin = PsiTreeUtil.getParentOfType(myOrigin, ErlangCrClause.class);
+    if (crClause != null && crClauseOrigin != null && crClause != crClauseOrigin) return true;
+    return false;
   }
 
   @Nullable

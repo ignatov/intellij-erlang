@@ -709,7 +709,7 @@ public class ErlangPsiImplUtil {
     return null;
   }
 
-  static boolean isInModule(PsiElement psiElement) {
+  static boolean inModule(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangModule.class) != null;
   }
 
