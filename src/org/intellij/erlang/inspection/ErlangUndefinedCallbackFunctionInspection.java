@@ -123,7 +123,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
 
         if (document == null) return;
         String join = StringUtil.join(vars, ", ");
-        String newFunction = "\n" + name + "(" + join + ") ->\n not_implemented.\n";
+        String newFunction = "\n" + name + "(" + join + ") ->\n erlang:error(not_implemented).\n";
         document.insertString(textOffset, newFunction);
         manager.commitDocument(document);
         CodeStyleManager.getInstance(project).reformatText(file, textOffset, textOffset + newFunction.length());

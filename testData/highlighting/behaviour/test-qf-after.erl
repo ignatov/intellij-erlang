@@ -4,7 +4,7 @@
 -behaviour(b2).
 
 init1(_) ->
-  not_implemented.
+  erlang:error(not_implemented).
 
 init2(_) ->
-  not_implemented.
+  erlang:error(not_implemented).
