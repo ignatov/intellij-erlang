@@ -27,6 +27,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.jetbrains.annotations.NotNull;
@@ -57,13 +58,14 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   @Override
   public SuppressIntentionAction[] getSuppressActions(@Nullable PsiElement element) {
     return new SuppressIntentionAction[]{
-      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for function", ErlangFunction.class)
+      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for function", ErlangFunction.class),
+      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for attribute", ErlangAttribute.class)
     };
   }
 
   @Override
   public boolean isSuppressedFor(PsiElement element) {
-    return isSuppressedForParent(element, ErlangFunction.class);
+    return isSuppressedForParent(element, ErlangFunction.class) || isSuppressedForParent(element, ErlangAttribute.class);
   }
 
   private boolean isSuppressedForParent(PsiElement element, final Class<? extends ErlangCompositeElement> parentClass) {
