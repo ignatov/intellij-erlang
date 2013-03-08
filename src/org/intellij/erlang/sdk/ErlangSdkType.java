@@ -185,8 +185,12 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   public static ErlangSdkRelease getRelease(@NotNull final Sdk sdk) {
-    final String versionString = sdk.getVersionString();
-    return versionString == null ? null : ErlangSdkRelease.valueOf(versionString);
+    String versionString = sdk.getVersionString();
+    try {
+      return versionString == null ? null : ErlangSdkRelease.valueOf(versionString);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 
   @Nullable
