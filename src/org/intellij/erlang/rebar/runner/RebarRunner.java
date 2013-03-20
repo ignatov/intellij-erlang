@@ -68,11 +68,7 @@ public final class RebarRunner extends DefaultProgramRunner {
                                            @NotNull ExecutionEnvironment env)
     throws ExecutionException {
     FileDocumentManager.getInstance().saveAllDocuments();
-    final RebarRunningState rebarRunningState = (RebarRunningState) state;
-    final ExecutionResult result = rebarRunningState.execute(executor, this);
-    final RunContentBuilder contentBuilder = new RunContentBuilder(project, this, executor);
-    contentBuilder.setExecutionResult(result);
-    contentBuilder.setEnvironment(env);
-    return contentBuilder.showRunContent(contentToReuse);
+    ExecutionResult result = state.execute(executor, this);
+    return new RunContentBuilder(project, this, executor, result, env).showRunContent(contentToReuse);
   }
 }

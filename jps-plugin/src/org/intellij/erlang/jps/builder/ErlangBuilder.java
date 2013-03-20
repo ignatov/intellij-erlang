@@ -8,6 +8,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.util.CommonProcessors;
@@ -86,7 +87,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     CommonProcessors.CollectProcessor<File> processor = new CommonProcessors.CollectProcessor<File>() {
       @Override
       protected boolean accept(File file) {
-        return !file.isDirectory() && FileUtil.getExtension(file.getName()).equals("erl");
+        return !file.isDirectory() && FileUtilRt.extensionEquals(file.getName(), "erl");
       }
     };
     for (JpsModuleSourceRoot root : module.getSourceRoots()) {

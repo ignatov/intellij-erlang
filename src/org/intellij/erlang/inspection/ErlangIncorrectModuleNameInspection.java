@@ -71,6 +71,7 @@ import com.intellij.openapi.application.AccessToken;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -93,7 +94,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitModule(@NotNull ErlangModule o) {
-        String ext = FileUtil.getExtension(o.getContainingFile().getName());
+        String ext = FileUtilRt.getExtension(o.getContainingFile().getName());
         String withoutExtension = FileUtil.getNameWithoutExtension(o.getContainingFile().getName());
         String moduleName = StringUtil.replace(o.getName(), "'", "");
         ErlangCompositeElement atom = o.getQAtom();
@@ -153,7 +154,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     public ErlangRenameFileFix(ErlangModule module) {
       myModule = module;
-      myExtension = FileUtil.getExtension(myModule.getContainingFile().getName());
+      myExtension = FileUtilRt.getExtension(myModule.getContainingFile().getName());
     }
 
     @NotNull

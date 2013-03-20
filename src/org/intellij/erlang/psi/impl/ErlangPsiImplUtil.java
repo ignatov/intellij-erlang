@@ -34,7 +34,7 @@ import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -48,7 +48,10 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.*;
+import com.intellij.util.ArrayUtil;
+import com.intellij.util.Function;
+import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.*;
@@ -638,7 +641,7 @@ public class ErlangPsiImplUtil {
     VirtualFile virtualFile = o.getContainingFile().getVirtualFile();
     if (virtualFile != null) {
       try {
-        String ext = FileUtil.getExtension(virtualFile.getName());
+        String ext = FileUtilRt.getExtension(virtualFile.getName());
         virtualFile.rename(o, StringUtil.replace(newName, "'", "") + "." + ext);
 
         ErlangQAtom qAtom = o.getQAtom();

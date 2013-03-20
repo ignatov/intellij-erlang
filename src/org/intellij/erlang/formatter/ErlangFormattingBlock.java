@@ -199,7 +199,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Nullable
   private static Indent getChildIndent(@Nullable IElementType type) {
     if (BLOCKS_TOKEN_SET.contains(type)) {
-      return Indent.getNormalIndent(true);
+      return Indent.getNormalIndent(false);
     }
     if (type == ERL_IF_EXPRESSION || type == ERL_CASE_EXPRESSION) {
       return Indent.getNormalIndent(true);

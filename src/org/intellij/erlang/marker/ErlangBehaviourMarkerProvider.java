@@ -142,10 +142,10 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
       new GutterIconNavigationHandler<PsiElement>() {
         @Override
         public void navigate(MouseEvent e, PsiElement elt) {
+          String title = MessageFormat.format("<html><body>Choose Overriding Callback of <b>{0}</b> ({1} callbacks found)</body></html>", presentation, prototypes.size());
           PsiElementListNavigator.openTargets(
             e, navigatables.toArray(new NavigatablePsiElement[navigatables.size()]),
-            MessageFormat.format("<html><body>Choose Overriding Callback of <b>{0}</b> ({1} callbacks found)</body></html>", presentation, prototypes.size()),
-            new DefaultPsiElementCellRenderer()
+            title, title, new DefaultPsiElementCellRenderer()
           );
         }
       },

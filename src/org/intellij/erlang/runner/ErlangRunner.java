@@ -88,11 +88,6 @@ public class ErlangRunner extends DefaultProgramRunner {
     FileDocumentManager.getInstance().saveAllDocuments();
 
     ExecutionResult executionResult = runningState.execute(executor, this);
-    if (executionResult == null) return null;
-
-    final RunContentBuilder contentBuilder = new RunContentBuilder(project, this, executor);
-    contentBuilder.setExecutionResult(executionResult);
-    contentBuilder.setEnvironment(env);
-    return contentBuilder.showRunContent(contentToReuse);
+    return new RunContentBuilder(project, this, executor, executionResult, env).showRunContent(contentToReuse);
   }
 }

@@ -4,7 +4,7 @@ import org.intellij.erlang.jps.model.JpsErlangModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildTargetLoader;
-import org.jetbrains.jps.builders.BuildTargetType;
+import org.jetbrains.jps.builders.ModuleBasedBuildTargetType;
 import org.jetbrains.jps.model.JpsDummyElement;
 import org.jetbrains.jps.model.JpsModel;
 import org.jetbrains.jps.model.module.JpsTypedModule;
@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * @author @nik
  */
-public class ErlangTargetType extends BuildTargetType<ErlangTarget> {
+public class ErlangTargetType extends ModuleBasedBuildTargetType<ErlangTarget> {
   public static final ErlangTargetType PRODUCTION = new ErlangTargetType("erlang-production", false);
   public static final ErlangTargetType TESTS = new ErlangTargetType("erlang-tests", true);
   private final boolean myTests;
