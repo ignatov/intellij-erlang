@@ -105,7 +105,7 @@ public class ErlangIndentProcessor {
       // todo: not a smart solution
       //noinspection unchecked
       boolean insideCall = PsiTreeUtil.getParentOfType(node.getPsi(), ErlangArgumentDefinition.class, ErlangParenthesizedExpression.class) != null;
-      return insideCall ? Indent.getContinuationIndent() : Indent.getNormalIndent();
+      return insideCall ? Indent.getNormalIndent() : Indent.getNoneIndent();
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();
