@@ -198,6 +198,9 @@
         <configurationProducer implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer"/>
         <configurationType implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationType"/>
 
+        <!-- Tool Runners -->
+        <configurationType implementation="org.intellij.erlang.console.ErlangConsoleRunConfigurationType"/>
+
         <codeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangCodeStyleSettingsProvider"/>
         <langCodeStyleSettingsProvider implementation="org.intellij.erlang.formatter.settings.ErlangLanguageCodeStyleSettingsProvider"/>
 
@@ -286,5 +289,17 @@
             <add-to-group group-id="CodeFormatGroup" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt E"/>
         </action>
+        <action id="Erlang.SendSelectionToConsole"
+                class="org.intellij.erlang.console.SendSelectionToErlangConsoleAction"
+                text="Send Selection to Erlang Console"
+                description="Send selection to be executed in an open Erlang Console">
+            <add-to-group group-id="RunContextPopupGroup" anchor="last"/>
+            <keyboard-shortcut first-keystroke="ctrl shift X" keymap="$default"/>
+        </action>
+        <action id="ErlangConsole.Execute"
+                class="org.intellij.erlang.console.ErlangConsoleExecuteAction">
+            <keyboard-shortcut first-keystroke="ctrl ENTER" keymap="$default"/>
+        </action>
+
     </actions>
 </idea-plugin>
