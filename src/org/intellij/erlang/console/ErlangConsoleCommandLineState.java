@@ -52,7 +52,9 @@ public class ErlangConsoleCommandLineState extends CommandLineState {
     final TextConsoleBuilder consoleBuilder = new TextConsoleBuilderImpl(myConfig.getProject()) {
       @Override
       public ConsoleView getConsole() {
-        return new ErlangConsoleView(myConfig.getProject());
+        final ErlangConsoleView consoleView = new ErlangConsoleView(myConfig.getProject());
+        ErlangConsoleUtil.attachFilters(myConfig.getProject(), consoleView);
+        return consoleView;
       }
     };
     setConsoleBuilder(consoleBuilder);

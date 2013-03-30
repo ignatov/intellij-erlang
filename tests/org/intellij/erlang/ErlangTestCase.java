@@ -32,7 +32,7 @@ import org.intellij.erlang.quickfixes.ErlangExportFunctionFixTest;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFixTest;
 import org.intellij.erlang.quickfixes.ErlangHeadMismatchFixTest;
 import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
-import org.intellij.erlang.rebar.runner.FileReferenceFilterTest;
+import org.intellij.erlang.console.FileReferenceFilterTest;
 import org.intellij.erlang.sdk.ErlangSdkReleaseTest;
 import org.intellij.erlang.typing.ErlangTypedHandlerTest;
 

@@ -12,7 +12,7 @@ import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
-import org.intellij.erlang.rebar.runner.FileReferenceFilter;
+import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.runner.ErlangApplicationConfiguration;
 import org.intellij.erlang.runner.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
@@ -40,18 +40,15 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     setConsoleBuilder(getConsoleBuilder());
 
     ConsoleView consoleView = createConsoleView(executor);
-    if (consoleView != null) {
-      consoleView.attachToProcess(processHandler);
-      consoleView.addMessageFilter(new FileReferenceFilter(myConfiguration.getProject(), FileReferenceFilter.COMPILATION_ERROR_PATH));
-      consoleView.addMessageFilter(new FileReferenceFilter(myConfiguration.getProject(), FileReferenceFilter.EUNIT_ERROR_PATH));
-      consoleView.addMessageFilter(new FileReferenceFilter(myConfiguration.getProject(), FileReferenceFilter.EUNIT_FAILURE_PATH));
-    }
+    ErlangConsoleUtil.attachFilters(myConfiguration.getProject(), consoleView);
+    consoleView.attachToProcess(processHandler);
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
     executionResult.setRestartActions(new ToggleAutoTestAction());
     return executionResult;
   }
 
+  @NotNull
   private ConsoleView createConsoleView(Executor executor) throws ExecutionException {
     final ErlangUnitRunConfiguration runConfiguration = (ErlangUnitRunConfiguration) getRunnerSettings().getRunProfile();
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(

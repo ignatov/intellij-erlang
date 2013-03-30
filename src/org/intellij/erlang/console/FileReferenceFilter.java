@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.intellij.erlang.rebar.runner;
+package org.intellij.erlang.console;
 
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.filters.HyperlinkInfo;
@@ -40,10 +40,6 @@ public final class FileReferenceFilter implements Filter {
   public static final String PATH_MACROS = "$FILE_PATH$";
   public static final String LINE_MACROS = "$LINE$";
   public static final String COLUMN_MACROS = "$COLUMN$";
-  
-  public static final String EUNIT_FAILURE_PATH = "\\[\\{file,\"" + PATH_MACROS + "\"\\},\\{line," + LINE_MACROS + "\\}\\]";
-  public static final String EUNIT_ERROR_PATH = PATH_MACROS + ", line " + LINE_MACROS;
-  public static final String COMPILATION_ERROR_PATH = PATH_MACROS + ":" + LINE_MACROS;
 
   private static final String FILE_PATH_REGEXP = "((?:\\p{Alpha}\\:)?[0-9 a-z_A-Z\\-\\\\./]+)";
   private static final String NUMBER_REGEXP = "([0-9]+)";
