@@ -94,6 +94,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         PsiFile file = position.getContainingFile();
         if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
 
+        boolean inConsole = ErlangParserUtil.isConsole(file);
         PsiElement parent = position.getParent().getParent();
         PsiElement originalPosition = parameters.getOriginalPosition();
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
@@ -110,7 +111,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
         else {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
-          if (colonQualified != null && PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null) {
+          if (colonQualified != null && (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null || inConsole)) {
             ErlangQAtom qAtom = ErlangPsiImplUtil.getQAtom(colonQualified);
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, qAtom));
           }
@@ -140,7 +141,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
             int invocationCount = parameters.getInvocationCount();
             boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;
             //noinspection unchecked
-            if (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null && moduleCompletion) {
+            boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
+            if ((inside || inConsole) && moduleCompletion) {
               suggestModules(result, position, true);
             }
             else {

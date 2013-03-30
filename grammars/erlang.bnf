@@ -112,12 +112,15 @@
   extends("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
 }
 
-forms ::= form_with_period *
+forms ::= console_expression | form_with_period *
+private console_expression ::= is_console empty console_expression_or_empty {pin=2}
+private console_expression_or_empty ::= expression period | empty {pin(".*")=1}
+private empty ::= ()
 private form_with_period ::= form period {recoverUntil=form_recover pin=1}
 private left period ::= '.'
 private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom | bnot | char | float | integer | not | string | var)
 private form ::=
-    (is_app_config config_expression)
+    is_app_config config_expression
   | function
   | rule
   | record_definition
@@ -128,6 +131,7 @@ private form ::=
   | macros_call // macros support
 
 private is_app_config ::= &<<isApplicationLanguage>>
+private is_console ::= &<<isConsole>>
 
 q_atom ::= macros_arg | macros | atom
 q_var ::= '_' | var {

@@ -31,6 +31,16 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return isApplicationConfigFileType(file);
   }
 
+  public static boolean isConsole(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
+    PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
+    assert file != null;
+    return isConsole(file);
+  }
+
+  public static boolean isConsole(PsiFile file) {
+    return file.getName().equals("Erlang Console"); // todo: use key
+  }
+
   public static boolean isApplicationConfigFileType(@NotNull PsiFile file) {
     FileType fileType = file.getViewProvider().getVirtualFile().getFileType();
     return fileType == ErlangFileType.APP || fileType == ErlangFileType.TERMS ||
