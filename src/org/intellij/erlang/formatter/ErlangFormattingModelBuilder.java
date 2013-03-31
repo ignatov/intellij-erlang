@@ -125,6 +125,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .aroundInside(ERL_OP_AR_DIV, ERL_FUN_TYPE_SIGS).none()
       .aroundInside(ERL_OP_AR_DIV, ERL_EXPORT_FUNCTION).none()
       .aroundInside(ERL_OP_AR_DIV, ERL_EXPORT_TYPE).none()
+      .aroundInside(ERL_OP_AR_DIV, ERL_FUNCTION_WITH_ARITY).none()
 
       .aroundInside(ERL_COLON_COLON, ERL_FUN_TYPE_SIGS).spaces(1)
       .betweenInside(ERL_COLON_COLON, ERL_TYPE_SIG, ERL_FUN_TYPE_SIGS).spaces(1)

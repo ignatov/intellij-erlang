@@ -60,6 +60,7 @@ public class ErlangFormattingTest extends LightPlatformCodeInsightFixtureTestCas
   public void test141()    throws Exception { doTest(); }
   public void test125()    throws Exception { doTest(); }
   public void test171()    throws Exception { doTest(); }
+  public void test191()    throws Exception { doTest(); }
   public void testSimple() throws Exception { doTest(); }
 
   public void testAligned() throws Exception {
