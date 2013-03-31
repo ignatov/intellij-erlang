@@ -101,6 +101,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
                   }
                 }
                 else {
+                  if (args instanceof ErlangMaxExpression && ((ErlangMaxExpression) args).getQVar() != null) return;
                   problemsHolder.registerProblem(args, "Format arguments not a list");
                 }
               }
