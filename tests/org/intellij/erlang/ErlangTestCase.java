@@ -19,6 +19,7 @@ package org.intellij.erlang;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.intellij.erlang.completion.ErlangCompletionTest;
+import org.intellij.erlang.console.FileReferenceFilterTest;
 import org.intellij.erlang.documentation.ErlangDocumentationProviderTest;
 import org.intellij.erlang.folding.ErlangFoldingBuilderTest;
 import org.intellij.erlang.formatting.ErlangAutoIndentTest;
@@ -32,9 +33,8 @@ import org.intellij.erlang.quickfixes.ErlangExportFunctionFixTest;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFixTest;
 import org.intellij.erlang.quickfixes.ErlangHeadMismatchFixTest;
 import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
-import org.intellij.erlang.console.FileReferenceFilterTest;
 import org.intellij.erlang.sdk.ErlangSdkReleaseTest;
-import org.intellij.erlang.typing.ErlangTypedHandlerTest;
+import org.intellij.erlang.typing.ErlangSmartEnterClauseProcessorTest;
 
 /**
  * @author ignatov
@@ -57,7 +57,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangExportFunctionFixTest.class);
     suite.addTestSuite(ErlangExportTypeFixTest.class);
     suite.addTestSuite(ErlangHeadMismatchFixTest.class);
-    suite.addTestSuite(ErlangTypedHandlerTest.class);
+    suite.addTestSuite(ErlangSmartEnterClauseProcessorTest.class);
     suite.addTestSuite(ErlangSdkReleaseTest.class);
     suite.addTestSuite(ErlangBehaviourInspectionsTest.class);
     return suite;

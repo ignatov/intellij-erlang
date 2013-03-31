@@ -16,29 +16,38 @@
 
 package org.intellij.erlang.typing;
 
+import com.intellij.codeInsight.editorActions.smartEnter.SmartEnterProcessor;
+import com.intellij.codeInsight.editorActions.smartEnter.SmartEnterProcessors;
+import com.intellij.openapi.application.Result;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import org.intellij.erlang.ErlangLanguage;
+
+import java.util.List;
 
 /**
  * @author ignatov
  */
-public class ErlangTypedHandlerTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangSmartEnterClauseProcessorTest extends LightPlatformCodeInsightFixtureTestCase {
   public void testFunctionClause() throws Exception {
-    doTest("foo(A, B, C) -> ok<caret>",
+    doTest("foo(A, B, C) -> ok;<caret>",
       "foo(A, B, C) -> ok;\n" +
         "foo(A, B, C) ->");
   }
 
   public void testEmptyFunctionClause() throws Exception {
-    doTest("foo() -> ok<caret>",
+    doTest("foo() -> ok;<caret>",
       "foo() -> ok;\n" +
         "foo() -><caret>");
   }
   
   public void testNotLastFunctionClause() throws Exception {
     doTest(
-      "foo() -> ok<caret>\n" +
+      "foo() -> ok;<caret>\n" +
         "foo() -> ok;",
       "foo() -> ok;\n" +
+      "foo() ->\n" +
         "foo() -> ok;");
   }
 
@@ -46,12 +55,13 @@ public class ErlangTypedHandlerTest extends LightPlatformCodeInsightFixtureTestC
     doTest(
       "foo() ->\n" +
         "  case 1 of\n" +
-        "    14 -> 30<caret>\n" +
+        "    14 -> 30;<caret>\n" +
         "    123 -> 123\n" +
         "  end",
       "foo() ->\n" +
         "  case 1 of\n" +
         "    14 -> 30;\n" +
+        "    _ ->\n" +
         "    123 -> 123\n" +
         "  end");
   }
@@ -60,24 +70,25 @@ public class ErlangTypedHandlerTest extends LightPlatformCodeInsightFixtureTestC
     doTest(
       "main(A) ->\n" +
         "  case A of\n" +
-        "    1 -> 2<caret>",
+        "    1 -> 2;<caret>",
       "main(A) ->\n" +
         "  case A of\n" +
         "    1 -> 2;\n" +
         "    _ -><caret>");
   }
 
-//  public void testBinaryHandler() throws Exception {
-//    doTest("foo() -> <<caret>", "foo() -> <<<caret>>>", "<");
-//  }
-
   private void doTest(String before, String after) {
-    doTest(before, after, ";");
-  }
-
-  private void doTest(String before, String after, String symbol) {
     myFixture.configureByText("a.erl", before);
-    myFixture.type(symbol);
+    final List<SmartEnterProcessor> processors = SmartEnterProcessors.INSTANCE.forKey(ErlangLanguage.INSTANCE);
+    new WriteCommandAction(myFixture.getProject()) {
+      @Override
+      protected void run(Result result) throws Throwable {
+        final Editor editor = myFixture.getEditor();
+        for (SmartEnterProcessor processor : processors) {
+          processor.process(myFixture.getProject(), editor, myFixture.getFile());
+        }
+      }
+    }.execute();
     myFixture.checkResult(after);
   }
 }

@@ -177,7 +177,7 @@
         <renameInputValidator implementation="org.intellij.erlang.ErlangRenameInputValidator"/>
         <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler"/>
         <typedHandler implementation="org.intellij.erlang.editor.ErlangBinaryTypedHandler" id="ErlangBinary"/>
-        <typedHandler implementation="org.intellij.erlang.editor.ErlangSemicolonTypedHandler" id="ErlangSemicolon"/>
+        <lang.smartEnterProcessor language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangClausesSmartEnterProcessor" id="ErlangClause"/>
         <lang.elementManipulator forClass="org.intellij.erlang.psi.impl.ErlangStringLiteralImpl"
                                  implementationClass="org.intellij.erlang.editor.ErlangStringManipulator"/>
 
