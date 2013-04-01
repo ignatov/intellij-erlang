@@ -39,6 +39,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.ExceptionUtil;
+import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.psi.ErlangFile;
 
 import javax.swing.*;
@@ -73,7 +74,14 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       final File tmpFile = FileUtil.createTempFile("emacs", ".erl", true);
 
       final GeneralCommandLine commandLine = new GeneralCommandLine();
-      commandLine.setExePath("emacs");
+      String emacsPath = EmacsSettings.getInstance(project).getEmacsPath();
+      if (emacsPath.isEmpty()) {
+        Notifications.Bus.notify(
+          new Notification(groupId, "Reformat code with Emacs", "Emacs executable path is empty",
+          NotificationType.WARNING), project);
+        return;
+      }
+      commandLine.setExePath(emacsPath);
       commandLine.addParameters("--batch", "--eval");
 
       String s = "\n" +
