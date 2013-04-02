@@ -32,6 +32,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
@@ -50,6 +52,7 @@ import java.text.MessageFormat;
  * @author ignatov
  */
 public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
+  private static final String NOTIFICATION_TITLE = "Reformat code with Emacs";
   private static final Logger LOG = Logger.getInstance(ErlangEmacsFormatAction.class);
 
   @Override
@@ -64,7 +67,6 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
     final PsiFile psiFile = e.getData(LangDataKeys.PSI_FILE);
     final Project project = getEventProject(e);
     if (project == null) return;
-    if (psiFile == null) return;
     if (!(psiFile instanceof ErlangFile)) return;
     VirtualFile virtualFile = psiFile.getVirtualFile();
     if (virtualFile == null) return;
@@ -77,29 +79,34 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       String emacsPath = EmacsSettings.getInstance(project).getEmacsPath();
       if (emacsPath.isEmpty()) {
         Notifications.Bus.notify(
-          new Notification(groupId, "Reformat code with Emacs", "Emacs executable path is empty",
+          new Notification(groupId, NOTIFICATION_TITLE, "Emacs executable path is empty",
           NotificationType.WARNING), project);
         return;
       }
       commandLine.setExePath(emacsPath);
       commandLine.addParameters("--batch", "--eval");
 
+      final Sdk projectSdk = ProjectRootManager.getInstance(project).getProjectSdk();
+      if (projectSdk == null) {
+        Notifications.Bus.notify(
+          new Notification(groupId, NOTIFICATION_TITLE, "Erlang project SDK is not configured",
+            NotificationType.WARNING), project);
+        return;
+      }
       String s = "\n" +
-        "(progn (find-file \"{0}\")\n" +
-//        Mac OS specific settings
-//        "    (if (string-equal \"darwin\" (symbol-name system-type))\n" +
-//        "        (setq erlang-root-dir (car (file-expand-wildcards \"/usr/local/Cellar/erlang/R*\")))\n" +
-//        "        (setq erlang-root-dir \"/usr/lib/erlang/\"))\n" +
-//        "    (setq load-path (cons (car (file-expand-wildcards (concat erlang-root-dir \"/lib/erlang/lib/tools-*/emacs\"))) load-path))\n" +
-        "    (require ''erlang-start)\n" +
+        "(progn (find-file \"" + virtualFile.getCanonicalPath() + "\")\n" +
+        "    (setq erlang-root-dir \"" + projectSdk.getHomePath() +"\")\n" +
+        "    (setq load-path (cons (car (file-expand-wildcards (concat erlang-root-dir \"/lib/tools-*/emacs\")))\n" +
+        "                          load-path))\n" +
+        "    (require 'erlang-start)\n" +
         "    (erlang-mode)\n" +
-        "    (untabify (point-min) (point-max))\n" +
-        "    (delete-trailing-whitespace)\n" +
         "    (erlang-indent-current-buffer)\n" +
-        "    (write-region (point-min) (point-max) \"{1}\")\n" +
+        "    (delete-trailing-whitespace)\n" +
+        "    (untabify (point-min) (point-max))\n" +
+        "    (write-region (point-min) (point-max) \"" + tmpFile.getCanonicalPath() + "\")\n" +
         "    (kill-emacs))";
 
-      commandLine.addParameter(MessageFormat.format(s, virtualFile.getCanonicalPath(), tmpFile.getCanonicalPath()));
+      commandLine.addParameter(s);
 
       ApplicationManager.getApplication().saveAll();
 
@@ -113,8 +120,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
               try {
                 final String emacsText = FileUtilRt.loadFile(tmpFile);
                 if (StringUtil.isEmptyOrSpaces(emacsText)) {
-                  Notifications.Bus.notify(new Notification(groupId,
-                    "Reformat code with Emacs",
+                  Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
                     "Emacs returned an empty file",
                     NotificationType.WARNING), project);
                   return;
@@ -131,10 +137,9 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
                       }
                     });
                   }
-                }, "Reformat code with Emacs", "", document);
+                }, NOTIFICATION_TITLE, "", document);
 
-                Notifications.Bus.notify(new Notification(groupId,
-                  "Reformat code with Emacs",
+                Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
                   psiFile.getName() + " formatted with Emacs",
                   NotificationType.INFORMATION), project);
 
