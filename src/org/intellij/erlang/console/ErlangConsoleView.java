@@ -27,12 +27,12 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.psi.impl.ErlangVarProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -65,7 +65,6 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
       }
     }
   };
-  public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 
   @Nullable private ConsoleHistoryModel myConsoleHistoryModel;
   @Nullable private OutputStreamWriter myProcessInputWriter;
@@ -74,7 +73,7 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
     super(new LanguageConsoleImpl(project, "Erlang Console", ErlangLanguage.INSTANCE));
     LanguageConsoleImpl console = getConsole();
     PsiFile originalFile = console.getFile().getOriginalFile();
-    originalFile.putUserData(ERLANG_CONSOLE, console);
+    originalFile.putUserData(ErlangPsiImplUtil.ERLANG_CONSOLE, console);
     originalFile.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, new HashMap<String, ErlangQVar>());
   }
 

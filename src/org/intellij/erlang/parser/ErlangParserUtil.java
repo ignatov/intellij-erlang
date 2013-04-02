@@ -22,7 +22,7 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.console.ErlangConsoleView;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangParserUtil extends GeneratedParserUtilBase {
@@ -39,7 +39,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   }
 
   public static boolean isConsole(@NotNull PsiFile file) {
-    return file.getOriginalFile().getUserData(ErlangConsoleView.ERLANG_CONSOLE) != null;
+    return file.getOriginalFile().getUserData(ErlangPsiImplUtil.ERLANG_CONSOLE) != null;
   }
 
   public static boolean isApplicationConfigFileType(@NotNull PsiFile file) {
