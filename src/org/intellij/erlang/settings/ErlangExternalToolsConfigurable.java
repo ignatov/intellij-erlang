@@ -51,8 +51,8 @@ import java.util.concurrent.*;
 /**
  * @author Maxim Vladimirsky, ignatov
  */
-public class ErlangThirdPartyToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
-  private static String ERLANG_RELATED_TOOLS = "Erlang related tools";
+public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
+  private static String ERLANG_RELATED_TOOLS = "Erlang External Tools";
   private JPanel myPanel;
   private TextFieldWithBrowseButton myRebarPathSelector;
   private JTextField myRebarVersionText;
@@ -65,7 +65,7 @@ public class ErlangThirdPartyToolsConfigurable implements SearchableConfigurable
   private String myPrevEmacsPath;
   private EmacsSettings myEmacsSettings;
 
-  public ErlangThirdPartyToolsConfigurable(@NotNull Project project) {
+  public ErlangExternalToolsConfigurable(@NotNull Project project) {
     myRebarSettings = RebarSettings.getInstance(project);
     myEmacsSettings = EmacsSettings.getInstance(project);
     myRebarPathSelector.addBrowseFolderListener("Select Rebar executable", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());

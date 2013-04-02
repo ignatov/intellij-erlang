@@ -132,7 +132,7 @@
         <projectImportProvider implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportProvider"/>
         <projectImportBuilder implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilder"/>
         <projectOpenProcessor implementation="org.intellij.erlang.rebar.importWizard.RebarProjectOpenProcessor"/>
-        <projectConfigurable instance="org.intellij.erlang.settings.ErlangThirdPartyToolsConfigurable"/>
+        <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable"/>
         <projectService serviceImplementation="org.intellij.erlang.rebar.settings.RebarSettings"/>
         <projectService serviceImplementation="org.intellij.erlang.emacs.EmacsSettings"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
