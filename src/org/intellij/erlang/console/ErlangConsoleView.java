@@ -27,18 +27,23 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiFile;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.impl.ErlangVarProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
-final class ErlangConsoleView extends LanguageConsoleViewImpl {
+public final class ErlangConsoleView extends LanguageConsoleViewImpl {
   private static final Comparator<AnAction> ourActionComparator = new Comparator<AnAction>() {
     @Override
     public int compare(@NotNull AnAction o1, @NotNull AnAction o2) {
@@ -60,12 +65,17 @@ final class ErlangConsoleView extends LanguageConsoleViewImpl {
       }
     }
   };
+  public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 
   @Nullable private ConsoleHistoryModel myConsoleHistoryModel;
   @Nullable private OutputStreamWriter myProcessInputWriter;
 
   public ErlangConsoleView(@NotNull Project project) {
     super(new LanguageConsoleImpl(project, "Erlang Console", ErlangLanguage.INSTANCE));
+    LanguageConsoleImpl console = getConsole();
+    PsiFile originalFile = console.getFile().getOriginalFile();
+    originalFile.putUserData(ERLANG_CONSOLE, console);
+    originalFile.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, new HashMap<String, ErlangQVar>());
   }
 
   @Override
@@ -109,10 +119,24 @@ final class ErlangConsoleView extends LanguageConsoleViewImpl {
     if (myProcessInputWriter == null || myConsoleHistoryModel == null) {
       return;
     }
-    final EditorEx consoleEditor = getConsole().getConsoleEditor();
+    LanguageConsoleImpl console = getConsole();
+    final EditorEx consoleEditor = console.getConsoleEditor();
     final Document editorDocument = consoleEditor.getDocument();
     final String text = editorDocument.getText();
-    getConsole().addCurrentToHistory(new TextRange(0, text.length()), true, true);
+
+    PsiFile file = console.getFile();
+    final Map<String, ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
+    if (context != null) { // todo: process only successful statements
+      file.accept(new ErlangRecursiveVisitor() {
+        @Override
+        public void visitQVar(@NotNull ErlangQVar o) {
+          String name = o.getName();
+          if (!context.containsKey(name)) context.put(name, o);
+        }
+      });
+    }
+
+    console.addCurrentToHistory(new TextRange(0, text.length()), true, true);
     myConsoleHistoryModel.addToHistory(text);
     for (String line : text.split("\n")) {
       try {

@@ -16,7 +16,9 @@
 
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -27,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
@@ -34,6 +37,7 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
  * @author ignatov
  */
 public class ErlangVarProcessor extends BaseScopeProcessor {
+  public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
   private List<ErlangQVar> myVarList = new ArrayList<ErlangQVar>(0);
   private final String myRequestedName;
   private final PsiElement myOrigin;
@@ -62,9 +66,15 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
         if (inDifferentCrClauses(psiElement)) return true;
 
         myVarList.add(0, (ErlangQVar) psiElement); // put all possible variables to list
-        return true;
       }
     }
+
+    PsiFile file = psiElement.getContainingFile();
+    Map<String,ErlangQVar> context = file.getOriginalFile().getUserData(ERLANG_VARIABLE_CONTEXT);
+    if (context != null) {
+      ContainerUtil.addIfNotNull(context.get(myRequestedName), myVarList);
+    }
+
     return true;
   }
 

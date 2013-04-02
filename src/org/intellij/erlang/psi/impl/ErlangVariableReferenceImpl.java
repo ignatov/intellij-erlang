@@ -19,10 +19,7 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNamedElement;
-import com.intellij.psi.PsiReferenceBase;
-import com.intellij.psi.ResolveState;
+import com.intellij.psi.*;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
@@ -33,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
@@ -60,7 +58,6 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     return processor.getResult();
   }
 
-
   @NotNull
   @Override
   public Object[] getVariants() {
@@ -84,6 +81,14 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
 
       ErlangQAtom qAtom = getQAtom(PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class));
       result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), false, qAtom));
+    }
+
+    PsiFile file = myElement.getContainingFile();
+    Map<String,ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
+    if (context != null) {
+      for (String var : context.keySet()) {
+        result.add(LookupElementBuilder.create(var).withIcon(ErlangIcons.VARIABLE));
+      }
     }
 
     return ArrayUtil.toObjectArray(result);
