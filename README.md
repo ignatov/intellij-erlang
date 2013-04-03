@@ -24,6 +24,15 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.4.2
+* IntelliJ IDEA 12.1 compatibility
+* Erlang console run configuration
+* Settings for Emacs executable path and Emacs-based formatter action a little bit reworked
+* Behaviour line marker provider
+* Implement all callbacks quickfix
+* Better resolve for variables
+* Bugfixes
+
 ### Version 0.4.1
 * External **Shift+F1** and local **Ctrl+Q** help for OTP types (except for built-in)
 * Links in local OTP documentation to other OTP modules, functions, and types were fixed

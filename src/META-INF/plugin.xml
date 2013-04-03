@@ -1,6 +1,6 @@
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.4.1</version>
+    <version>0.4.2</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="129.1" until-build="129.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -11,6 +11,16 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.4.2</p>
+            <ul>
+              <li>IntelliJ IDEA 12.1 compatibility</li>
+              <li>Erlang console run configuration</li>
+              <li>Settings for Emacs executable path and Emacs-based formatter action a little bit reworked</li>
+              <li>Behaviour line marker provider</li>
+              <li>Implement all callbacks quickfix</li>
+              <li>Better resolve for variables</li>
+              <li>Bugfixes</li>
+            </ul>
             <p>0.4.1</p>
             <ul>
               <li>External (Shift+F1) and local (Ctrl+Q) help for OTP types (except for built-in)</li>
