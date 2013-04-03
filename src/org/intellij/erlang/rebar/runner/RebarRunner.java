@@ -29,7 +29,6 @@ import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public final class RebarRunner extends DefaultProgramRunner {
   public static final String REBAR_RUNNER_ID = "RebarRunner";
