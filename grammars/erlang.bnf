@@ -114,7 +114,7 @@
 
 forms ::= console_expression | form_with_period *
 private console_expression ::= is_console empty console_expression_or_empty {pin=2}
-private console_expression_or_empty ::= expression period | empty {pin(".*")=1}
+private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
 private form_with_period ::= form period {recoverUntil=form_recover pin=1}
 private left period ::= '.'

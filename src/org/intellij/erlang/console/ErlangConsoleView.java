@@ -30,6 +30,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -132,6 +133,13 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
         public void visitQVar(@NotNull ErlangQVar o) {
           String name = o.getName();
           if (!context.containsKey(name)) context.put(name, o);
+        }
+
+        @Override
+        public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
+          String name = o.getNameIdentifier().getText();
+          int size = o.getArgumentList().getExpressionList().size();
+          if (name.equals("f") && size == 0) context.clear();
         }
       });
     }

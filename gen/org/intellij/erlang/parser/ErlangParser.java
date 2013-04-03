@@ -379,10 +379,9 @@ public class ErlangParser implements PsiParser {
     }
     else {
       Marker marker_ = builder_.mark();
+      enterErrorRecordingSection(builder_, level_, _SECTION_RECOVER_, null);
       result_ = parse_root_(root_, builder_, level_);
-      while (builder_.getTokenType() != null) {
-        builder_.advanceLexer();
-      }
+      exitErrorRecordingSection(builder_, level_, result_, true, _SECTION_RECOVER_, TOKEN_ADVANCER);
       marker_.done(root_);
     }
     return builder_.getTreeBuilt();
@@ -403,6 +402,7 @@ public class ErlangParser implements PsiParser {
       ERL_QUERY_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION,
       ERL_STRING_LITERAL, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
   };
+
   public static boolean type_extends_(IElementType child_, IElementType parent_) {
     for (TokenSet set : EXTENDS_SETS_) {
       if (set.contains(child_) && set.contains(parent_)) return true;
@@ -1691,7 +1691,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // expression period | empty
+  // exprs period | empty
   static boolean console_expression_or_empty(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "console_expression_or_empty")) return false;
     boolean result_ = false;
@@ -1707,14 +1707,14 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // expression period
+  // exprs period
   private static boolean console_expression_or_empty_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "console_expression_or_empty_0")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
-    result_ = expression(builder_, level_ + 1, -1);
+    result_ = exprs(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && period(builder_, level_ + 1);
     if (!result_ && !pinned_) {
