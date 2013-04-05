@@ -81,7 +81,11 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   private boolean inDifferentCrClauses(PsiElement psiElement) {
     ErlangCrClause crClause = PsiTreeUtil.getParentOfType(psiElement, ErlangCrClause.class);
     ErlangCrClause crClauseOrigin = PsiTreeUtil.getParentOfType(myOrigin, ErlangCrClause.class);
-    if (crClause != null && crClauseOrigin != null && crClause != crClauseOrigin) return true;
+
+    ErlangCaseExpression caseExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
+    ErlangCaseExpression caseExpressionOrigin = PsiTreeUtil.getParentOfType(myOrigin, ErlangCaseExpression.class);
+
+    if (caseExpression == caseExpressionOrigin && crClause != crClauseOrigin) return true;
     return false;
   }
 
