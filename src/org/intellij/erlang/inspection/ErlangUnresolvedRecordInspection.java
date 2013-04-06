@@ -53,6 +53,7 @@ public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
       @Override
       public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
         ErlangRecordRef ref = o.getRecordRef();
+        if (ref != null && ref.getQAtom().getMacros() != null) return;
         PsiReference reference = ref != null ? ref.getReference() : null;
         if (reference == null || reference.resolve() == null) {
           problemsHolder.registerProblem(ref != null ? ref : o,
