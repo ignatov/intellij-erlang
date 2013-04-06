@@ -88,8 +88,12 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
       }
     }
     while (prevSibling instanceof PsiComment || prevSibling instanceof PsiWhiteSpace) {
-      if (prevSibling instanceof PsiComment && isSuppressedInComment(prevSibling.getText().substring(prefix.length()).trim())) {
-        return true;
+      if (prevSibling instanceof PsiComment) {
+        int prefixLength = prefix.length();
+        String text = prevSibling.getText();
+        if (text.length() >= prefixLength && isSuppressedInComment(text.substring(prefixLength).trim())) {
+          return true;
+        }
       }
       prevSibling = prevSibling.getPrevSibling();
     }

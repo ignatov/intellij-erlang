@@ -3,3 +3,6 @@ buzz() -> false.
 
 %% noinspection ErlangUnboundVariable,ErlangUnusedVariable,ErlangUnusedFunction
 buzz2(A, B, C) -> D.
+
+%
+<warning>buzz3</warning>(<warning>A</warning>, <warning>B</warning>, <warning>C</warning>) -> <error>D</error>.
