@@ -2,7 +2,7 @@
 Erlang Plugin turns [IntelliJ IDEA](http://www.jetbrains.com/idea/) to a convenient [Erlang](http://www.erlang.org/) IDE.
 
 # Pre-realise builds
-I you would like to have some new features you can manually set up the latest version of plugin from the [intellij-erlang-builds](https://www.dropbox.com/sh/4sbgxzjto5fa21b/1cpM3Nb-yF) folder.
+If you would like to have some new features you can manually set up the latest version of plugin from the [intellij-erlang-builds](https://www.dropbox.com/sh/4sbgxzjto5fa21b/1cpM3Nb-yF) folder.
 
 ## Contributing
 If you want to help but doesn't know how, you may check out issues [for collaboration](https://github.com/ignatov/intellij-erlang/issues?labels=for+collaboration&state=open).
