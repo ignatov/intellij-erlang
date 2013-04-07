@@ -57,10 +57,10 @@ FloatLiteral = {DecimalLiteral} "." {DecimalLiteral} {ExponentPart}?
 OctalEscape = \\ [0-7]{1,3}
 ControlName = [@A-Z\[\\\]\^_] /* this is the octal range \100 - \137 */ 
 ControlEscape = \\ \^ {ControlName}
-EscapeSequence = \\\" | "\\b" | "\\d" | "\\e" | "\\f" | "\\n" | "\\r" | "\\s" | "\\t" | "\\v" | "\\'" | "\\\\" | "\\[" | "\\{" | "\\]" | "\\}" | "\\`" | "\\$" | {ControlEscape} | {OctalEscape}
+EscapeSequence = \\\" | "\\b" | "\\d" | "\\e" | "\\f" | "\\n" | "\\r" | "\\s" | "\\t" | "\\v" | "\\'" | "\\\\" | "\\[" | "\\{" | "\\]" | "\\}" | "\\`" | "\\$" | "\\=" | "\\%" | {ControlEscape} | {OctalEscape}
 
 CharLiteralChar = {InputCharacter} | {EscapeSequence}
-CharLiteral = \$ {CharLiteralChar}
+CharLiteral = \$ {CharLiteralChar} | \$
 
 /* Without the \\\" at the start the lexer won't find it, for unknown reasons */
 ESC = "\\" ( [^] )
