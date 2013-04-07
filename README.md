@@ -27,9 +27,12 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.4.x
+* Bugfixes
+
 ### Version 0.4.2
 * IntelliJ IDEA 12.1 compatibility
-* Erlang console run configuration
+* Erlang console run configuration (experimental)
 * Settings for Emacs executable path and Emacs-based formatter action a little bit reworked
 * Behaviour line marker provider
 * Implement all callbacks quickfix
