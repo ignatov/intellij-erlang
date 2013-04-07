@@ -223,7 +223,7 @@ read_atom_header({Module, Device}, Pos) ->
   case Module:pread(Device, Pos, 8) of
     {ok, <<0:32, AtomName/binary>>} ->
       {atom, binary_to_atom(AtomName, latin1), Pos + 8, all_file};
-    {ok, <<1:32, <warning>AtomName</warning>/binary>>} ->
+    {ok, <<1:32, AtomName/binary>>} ->
       case Module:pread(Device, Pos+4, 12) of
         {ok, <<AtomName:4/binary, AtomLength:64>>} when AtomLength >= 12 ->
           {atom, binary_to_atom(AtomName, latin1), Pos + 16, AtomLength - 16};

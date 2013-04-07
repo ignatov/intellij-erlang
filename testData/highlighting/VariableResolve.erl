@@ -67,3 +67,14 @@ do_receive(DeviceToken, ChannelPID, DeviceID, ChangeID, ChannelRef, WithAttachme
       [DeviceID, ChannelRef, ChangeID, ChannelPID]),
     erlang:error(receive_timeout, 70000)
   end.
+
+-export([find_in_binary/0]).
+
+find_in_binary() ->
+  case 1 of
+    Last when Last < 0 -> Last;
+    Last ->
+      case 2 of
+        _ -> Last
+      end
+  end.

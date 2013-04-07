@@ -65,7 +65,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
         if (inArgumentList && inArgumentListBeforeAssignment) return true;
         if (inDifferentCrClauses(psiElement)) return true;
 
-        myVarList.add(0, (ErlangQVar) psiElement); // put all possible variables to list
+        myVarList.add((ErlangQVar) psiElement); // put all possible variables to list
       }
     }
 
