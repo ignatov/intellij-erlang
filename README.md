@@ -27,7 +27,7 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
-### Version 0.4.x
+### Version 0.4.3
 * Bugfixes
 
 ### Version 0.4.2
