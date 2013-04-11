@@ -17,9 +17,11 @@
 package org.intellij.erlang.rebar.importWizard;
 
 import com.intellij.ide.util.projectWizard.WizardContext;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -31,12 +33,20 @@ import javax.swing.*;
 final class RebarProjectRootStep extends ProjectImportWizardStep {
   private JPanel myPanel;
   private TextFieldWithBrowseButton myProjectRootComponent;
+  private JCheckBox myGetDepsCheckbox;
+  private JCheckBox myImportExamplesCheckBox;
 
   public RebarProjectRootStep(final WizardContext context) {
     super(context);
     myProjectRootComponent.addBrowseFolderListener("Select rebar.config of the project to import", "", null,
       FileChooserDescriptorFactory.createSingleFolderDescriptor());
     myProjectRootComponent.setText(context.getProjectFileDirectory()); // provide project path
+
+    String rebarExecutable = RebarProjectImportBuilder.getRebarExecutable();
+    boolean rebarExists = !StringUtil.isEmptyOrSpaces(rebarExecutable);
+    myGetDepsCheckbox.setEnabled(rebarExists);
+    myGetDepsCheckbox.setVisible(!SystemInfo.isWindows);
+    myGetDepsCheckbox.setToolTipText(rebarExists ? "Fetch dependencies via '" + rebarExecutable.trim() + " get-deps'" : "Can not find rebar executable in the PATH");
   }
 
   @Override
@@ -46,7 +56,13 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
       return false;
     }
     final VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByPath(projectRootPath);
-    return projectRoot != null && getBuilder().setProjectRoot(projectRoot);
+    if (projectRoot == null) return false;
+    if (myGetDepsCheckbox.isSelected() && myGetDepsCheckbox.isEnabled() && !ApplicationManager.getApplication().isUnitTestMode()) {
+      RebarProjectImportBuilder.fetchDependencies(projectRoot);
+    }
+    RebarProjectImportBuilder builder = getBuilder();
+    builder.setImportExamples(myImportExamplesCheckBox.isSelected());
+    return builder.setProjectRoot(projectRoot);
   }
 
   @Override
