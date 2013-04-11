@@ -37,6 +37,7 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         if ((inDefinition(o) && !inArgumentList(o))
+          || inDefinitionBeforeArgumentList(o)
           || inAssignment(o) || inAtomAttribute(o) || isMacros(o)
           || isForceSkipped(o) || inSpecification(o) || inDefine(o)
           || inCallback(o) || inRecordDefinition(o)) {

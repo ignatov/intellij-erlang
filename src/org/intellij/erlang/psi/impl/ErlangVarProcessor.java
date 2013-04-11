@@ -56,13 +56,14 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
       boolean inFunctionClause = PsiTreeUtil.isAncestor(functionClause, psiElement, false);
       boolean inSpecification = PsiTreeUtil.isAncestor(spec, psiElement, false);
-      boolean inDefinitionOrAssignment = inDefinition(psiElement) || inAssignment(psiElement);
-      if ((inFunctionClause && inDefinitionOrAssignment) || inModule(psiElement) || inSpecification) {
+      boolean inDefinition = inDefinition(psiElement);
+      boolean inAssignment = inAssignment(psiElement);
+      if ((inFunctionClause && (inDefinition || inAssignment)) || inModule(psiElement) || inSpecification) {
         boolean inArgumentList = inArgumentList(psiElement);
         //noinspection unchecked
         boolean inArgumentListBeforeAssignment =
           PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
-        if (inArgumentList && inArgumentListBeforeAssignment) return true;
+        if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
         if (inDifferentCrClauses(psiElement)) return true;
 
         myVarList.add((ErlangQVar) psiElement); // put all possible variables to list

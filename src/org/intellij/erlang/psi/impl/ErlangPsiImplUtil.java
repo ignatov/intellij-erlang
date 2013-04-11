@@ -293,6 +293,11 @@ public class ErlangPsiImplUtil {
     return new ErlangTypeReferenceImpl<ErlangQAtom>(atom, moduleRef, TextRange.from(0, atom.getTextLength()), atom.getText());
   }
 
+  @SuppressWarnings("unchecked")
+  public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {
+    return inDefinition(psiElement) && inArgumentList(psiElement) && PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class, ErlangArgumentList.class) instanceof ErlangArgumentDefinition;
+  }
+
   public static boolean inDefinition(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
   }
