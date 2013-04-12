@@ -57,6 +57,7 @@ import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.editor.ErlangModuleType;
 import org.intellij.erlang.rebar.runner.RebarRunConfiguration;
 import org.intellij.erlang.rebar.runner.RebarRunConfigurationFactory;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -339,6 +340,12 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       ((RebarRunConfiguration)configuration).setCommand("compile");
     }
     runManager.addConfiguration(runnerAndSettings, false);
+
+
+    String rebarExecutable = getRebarExecutable();
+    if (!StringUtil.isEmptyOrSpaces(rebarExecutable)) {
+      RebarSettings.getInstance(project).setRebarPath(rebarExecutable);
+    }
 
     return createdModules;
   }
