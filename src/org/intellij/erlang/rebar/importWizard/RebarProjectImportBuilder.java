@@ -18,7 +18,10 @@ package org.intellij.erlang.rebar.importWizard;
 
 import com.google.common.collect.Sets;
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.RunManagerEx;
+import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.process.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationInfoEx;
@@ -52,6 +55,8 @@ import com.intellij.util.containers.ContainerUtil;
 import org.apache.log4j.Logger;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.editor.ErlangModuleType;
+import org.intellij.erlang.rebar.runner.RebarRunConfiguration;
+import org.intellij.erlang.rebar.runner.RebarRunConfigurationFactory;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -66,13 +71,11 @@ import java.util.regex.Pattern;
 
 public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpApp> {
   private static final Pattern APP_NAME_PATTERN = Pattern.compile("\\{\\s*application\\s*,\\s*(.*?)\\s*,");
-  private static final Pattern APP_DEPS_LIST_PATTERN = Pattern.compile(
-    "\\{\\s*applications\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
-  private static final Pattern DIRS_LIST_PATTERN = Pattern.compile(
-    "\\{\\s*sub_dirs\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
+  private static final Pattern APP_DEPS_LIST_PATTERN = Pattern.compile("\\{\\s*applications\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
+  private static final Pattern DIRS_LIST_PATTERN = Pattern.compile("\\{\\s*sub_dirs\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
   private static final Pattern SPLIT_DIR_LIST_PATTERN = Pattern.compile("\"\\s*(,\\s*\")?");
 
-  private static final Logger ourLogger = Logger.getLogger(RebarProjectImportBuilder.class);
+  private static final Logger LOG = Logger.getLogger(RebarProjectImportBuilder.class);
 
   private boolean myOpenProjectSettingsAfter = false;
   @Nullable private VirtualFile myProjectRoot = null;
@@ -157,7 +160,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
           handler.waitFor();
           indicator.setText2("Refreshing");
         } catch (ExecutionException e) {
-          e.printStackTrace();
+          LOG.warn(e);
         }
       }
     });
@@ -181,39 +184,41 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     if (projectRoot.equals(myProjectRoot)) {
       return true;
     }
+    
+    final boolean unitTestMode = ApplicationManager.getApplication().isUnitTestMode();
+    
     myProjectRoot = projectRoot;
-    if (projectRoot instanceof VirtualDirectoryImpl) {
-      ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild(".");
+    if (!unitTestMode && projectRoot instanceof VirtualDirectoryImpl) {
+      ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("deps");
     }
-
-
 
     ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Scanning Rebar projects", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
 
         final List<VirtualFile> rebarConfigFiles = findRebarConfigs(myProjectRoot, indicator);
-        final List<ImportedOtpApp> importedOtpApps = new ArrayList<ImportedOtpApp>(rebarConfigFiles.size());
+        final LinkedHashSet<ImportedOtpApp> importedOtpApps = new LinkedHashSet<ImportedOtpApp>(rebarConfigFiles.size());
 
-        VfsUtilCore.visitChildrenRecursively(projectRoot, new VirtualFileVisitor() {
-          @Override
-          public boolean visitFile(@NotNull VirtualFile file) {
-            indicator.checkCanceled();
+        if (!unitTestMode) {
+          VfsUtilCore.visitChildrenRecursively(projectRoot, new VirtualFileVisitor() {
+            @Override
+            public boolean visitFile(@NotNull VirtualFile file) {
+              indicator.checkCanceled();
+  
+              if (file.isDirectory()) {
+                indicator.setText2(file.getPath());
+                if (isExamplesDirectory(file)) return false;
+              }
 
-            if (file.isDirectory()) {
-              indicator.setText2(file.getPath());
-              if (isExamplesDirectory(file)) return false;
+              ContainerUtil.addAllNotNull(importedOtpApps, createImportedOtpApp(file));
+              return true;
             }
-
-            ImportedOtpApp app = createImportedOtpApp(file);
-            ContainerUtil.addAllNotNull(importedOtpApps, app);
-            return true;
-          }
-        });
+          });
+        }
 
         for (VirtualFile rebarConfigFile : rebarConfigFiles) {
           resolveOtpAppsByRebarConfig(rebarConfigFile, importedOtpApps);
         }
-        myFoundOtpApps = importedOtpApps;
+        myFoundOtpApps = ContainerUtil.newArrayList(importedOtpApps);
       }
     });
 
@@ -256,7 +261,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         deleteIdeaModuleFiles(mySelectedOtpApps);
         return true;
       } catch (IOException e) {
-        ourLogger.error(e);
+        LOG.error(e);
         return false;
       }
     }
@@ -314,7 +319,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       }
     }
     // Commit project structure.
-    ourLogger.info("Commit project structure");
+    LOG.info("Commit project structure");
     if (moduleModel == null) {
       ApplicationManager.getApplication().runWriteAction(new Runnable() {
         public void run() {
@@ -325,6 +330,16 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         }
       });
     }
+
+    RebarRunConfigurationFactory rebarFactory = RebarRunConfigurationFactory.getInstance();
+    final RunManagerEx runManager = RunManagerEx.getInstanceEx(project);
+    RunnerAndConfigurationSettings runnerAndSettings = runManager.createConfiguration("Compile", rebarFactory);
+    RunConfiguration configuration = runnerAndSettings.getConfiguration();
+    if (configuration instanceof RebarRunConfiguration) {
+      ((RebarRunConfiguration)configuration).setCommand("compile");
+    }
+    runManager.addConfiguration(runnerAndSettings, false);
+
     return createdModules;
   }
 
@@ -384,7 +399,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   }
 
   private static void resolveOtpAppsByRebarConfig(@NotNull VirtualFile rebarConfigFile,
-                                                  @NotNull List<ImportedOtpApp> importedOtpApps) {
+                                                  @NotNull Collection<ImportedOtpApp> importedOtpApps) {
     final VirtualFile root = rebarConfigFile.getParent();
 
     final List<VirtualFile> tentativeAppRoots = new ArrayList<VirtualFile>();
