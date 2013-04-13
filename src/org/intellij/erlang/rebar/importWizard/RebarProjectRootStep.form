@@ -34,7 +34,7 @@
         </constraints>
         <properties>
           <selected value="true"/>
-          <text value="&amp;Fetch dependencies via rebar"/>
+          <text value="&amp;Fetch dependencies with rebar"/>
         </properties>
       </component>
       <component id="2fc5" class="javax.swing.JCheckBox" binding="myImportExamplesCheckBox">
