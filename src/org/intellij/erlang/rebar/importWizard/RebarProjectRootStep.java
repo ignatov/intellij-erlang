@@ -40,9 +40,10 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
     super(context);
     myProjectRootComponent.addBrowseFolderListener("Select rebar.config of the project to import", "", null,
       FileChooserDescriptorFactory.createSingleFolderDescriptor());
-    myProjectRootComponent.setText(context.getProjectFileDirectory()); // provide project path
+    String projectFileDirectory = context.getProjectFileDirectory();
+    myProjectRootComponent.setText(projectFileDirectory); // provide project path
 
-    String rebarExecutable = RebarProjectImportBuilder.getRebarExecutable();
+    String rebarExecutable = RebarProjectImportBuilder.getRebarExecutable(projectFileDirectory);
     boolean rebarExists = !StringUtil.isEmptyOrSpaces(rebarExecutable);
     myGetDepsCheckbox.setEnabled(rebarExists);
     myGetDepsCheckbox.setVisible(!SystemInfo.isWindows);

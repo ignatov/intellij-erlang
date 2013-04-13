@@ -139,7 +139,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   public static void fetchDependencies(@NotNull final VirtualFile projectRoot) {
     ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Fetching dependencies", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
-        String rebarExecutable = getRebarExecutable();
+        String rebarExecutable = getRebarExecutable(projectRoot.getCanonicalPath());
         if (StringUtil.isEmptyOrSpaces(rebarExecutable)) return;
         
         indicator.setIndeterminate(true);
@@ -168,9 +168,17 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   }
 
   @NotNull
-  public static String getRebarExecutable() {
+  public static String getRebarExecutable(@Nullable String directory) {
     boolean isPosix = SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix;
     if (!isPosix) return "";
+
+    if (directory != null) {
+      File rebar = new File(directory, "rebar");
+      if (rebar.exists() && rebar.canExecute()) {
+        return rebar.getPath();
+      }
+    }
+
     String output = "";
     try {
       GeneralCommandLine which = new GeneralCommandLine("which");
@@ -342,7 +350,8 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     runManager.addConfiguration(runnerAndSettings, false);
 
 
-    String rebarExecutable = getRebarExecutable();
+    String canonicalPath = myProjectRoot != null ? myProjectRoot.getCanonicalPath() : null;
+    String rebarExecutable = getRebarExecutable(canonicalPath);
     if (!StringUtil.isEmptyOrSpaces(rebarExecutable)) {
       RebarSettings.getInstance(project).setRebarPath(rebarExecutable);
     }
