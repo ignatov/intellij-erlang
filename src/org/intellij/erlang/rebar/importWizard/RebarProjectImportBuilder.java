@@ -136,15 +136,14 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     mySelectedOtpApps = Collections.emptyList();
   }
   
-  public static void fetchDependencies(@NotNull final VirtualFile projectRoot) {
+  public static void fetchDependencies(@NotNull final VirtualFile projectRoot, @Nullable final String rebarPath) {
+    if (rebarPath == null || StringUtil.isEmptyOrSpaces(rebarPath)) return;
+
     ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Fetching dependencies", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
-        String rebarExecutable = getRebarExecutable(projectRoot.getCanonicalPath());
-        if (StringUtil.isEmptyOrSpaces(rebarExecutable)) return;
-        
         indicator.setIndeterminate(true);
         GeneralCommandLine commandLine = new GeneralCommandLine();
-        commandLine.setExePath(rebarExecutable);
+        commandLine.setExePath(rebarPath);
         commandLine.setWorkDirectory(projectRoot.getCanonicalPath());
         commandLine.addParameter("get-deps");
         try {

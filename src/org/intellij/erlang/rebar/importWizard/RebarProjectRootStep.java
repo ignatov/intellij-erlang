@@ -29,37 +29,54 @@ import com.intellij.projectImport.ProjectImportWizardStep;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 final class RebarProjectRootStep extends ProjectImportWizardStep {
   private JPanel myPanel;
   private TextFieldWithBrowseButton myProjectRootComponent;
   private JCheckBox myGetDepsCheckbox;
   private JCheckBox myImportExamplesCheckBox;
+  private TextFieldWithBrowseButton myRebarPathField;
 
   public RebarProjectRootStep(final WizardContext context) {
     super(context);
-    myProjectRootComponent.addBrowseFolderListener("Select rebar.config of the project to import", "", null,
-      FileChooserDescriptorFactory.createSingleFolderDescriptor());
-    String projectFileDirectory = context.getProjectFileDirectory();
+    final String projectFileDirectory = context.getProjectFileDirectory();
+    myGetDepsCheckbox.addChangeListener(new ChangeListener() {
+      @Override
+      public void stateChanged(ChangeEvent e) {
+        setRebarUI(projectFileDirectory);
+      }
+    });
+    myProjectRootComponent.addBrowseFolderListener("Select rebar.config of the project to import", "", null, FileChooserDescriptorFactory.createSingleFolderDescriptor());
+    myRebarPathField.addBrowseFolderListener("Select rebar executable", "", null, FileChooserDescriptorFactory.createSingleFolderDescriptor());
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
+    myGetDepsCheckbox.setVisible(!SystemInfo.isWindows);
+    setRebarUI(projectFileDirectory);
+  }
+
+  private void setRebarUI(String projectFileDirectory) {
+    myRebarPathField.setVisible(myGetDepsCheckbox.isSelected());
 
     String rebarExecutable = RebarProjectImportBuilder.getRebarExecutable(projectFileDirectory);
     boolean rebarExists = !StringUtil.isEmptyOrSpaces(rebarExecutable);
     myGetDepsCheckbox.setEnabled(rebarExists);
-    myGetDepsCheckbox.setVisible(!SystemInfo.isWindows);
     myGetDepsCheckbox.setToolTipText(rebarExists ? "Fetch dependencies via '" + rebarExecutable.trim() + " get-deps'" : "Can not find rebar executable in the PATH");
+    myRebarPathField.setText(rebarExecutable);
   }
 
   @Override
   public boolean validate() throws ConfigurationException {
     final String projectRootPath = myProjectRootComponent.getText();
+    String rebarPath = myRebarPathField.getText();
     if (StringUtil.isEmpty(projectRootPath)) {
       return false;
     }
     final VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByPath(projectRootPath);
     if (projectRoot == null) return false;
-    if (myGetDepsCheckbox.isSelected() && myGetDepsCheckbox.isEnabled() && !ApplicationManager.getApplication().isUnitTestMode()) {
-      RebarProjectImportBuilder.fetchDependencies(projectRoot);
+    if (myGetDepsCheckbox.isSelected() && myGetDepsCheckbox.isEnabled()  && !StringUtil.isEmptyOrSpaces(rebarPath) &&
+      !ApplicationManager.getApplication().isUnitTestMode()) {
+      RebarProjectImportBuilder.fetchDependencies(projectRoot, rebarPath);
     }
     RebarProjectImportBuilder builder = getBuilder();
     builder.setImportExamples(myImportExamplesCheckBox.isSelected());
