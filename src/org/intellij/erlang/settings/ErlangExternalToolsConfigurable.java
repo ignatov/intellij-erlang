@@ -16,37 +16,24 @@
 
 package org.intellij.erlang.settings;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.ui.components.labels.ActionLink;
 import com.intellij.util.ArrayUtil;
-import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.download.DownloadableFileDescription;
-import com.intellij.util.download.DownloadableFileService;
-import com.intellij.util.download.FileDownloader;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.emacs.EmacsSettings;
+import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
 import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.awt.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.concurrent.*;
 
 /**
  * @author Maxim Vladimirsky, ignatov
@@ -54,23 +41,17 @@ import java.util.concurrent.*;
 public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
   private static String ERLANG_RELATED_TOOLS = "Erlang External Tools";
   private JPanel myPanel;
-  private TextFieldWithBrowseButton myRebarPathSelector;
-  private JTextField myRebarVersionText;
-  private RebarSettings myRebarSettings;
-  private JPanel myLinkContainer;
-
-  private String myPrevRebarPath;
   private TextFieldWithBrowseButton myEmacsPathSelector;
   private JTextField myEmacsVersionText;
+  private RebarConfigurationForm myRebarConfigurationForm;
   private String myPrevEmacsPath;
   private EmacsSettings myEmacsSettings;
+  private RebarSettings myRebarSettings;
 
   public ErlangExternalToolsConfigurable(@NotNull Project project) {
     myRebarSettings = RebarSettings.getInstance(project);
     myEmacsSettings = EmacsSettings.getInstance(project);
-    myRebarPathSelector.addBrowseFolderListener("Select Rebar executable", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     myEmacsPathSelector.addBrowseFolderListener("Select Emacs executable", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
-    myPrevRebarPath = myRebarSettings.getRebarPath();
     myPrevEmacsPath = myEmacsSettings.getEmacsPath();
 
     if (StringUtils.isEmpty(myRebarSettings.getRebarPath())) {
@@ -116,31 +97,28 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   @Nullable
   @Override
   public JComponent createComponent() {
+    myRebarConfigurationForm.createComponent();
     return myPanel;
   }
 
   @Override
   public boolean isModified() {
-    String rebarSelectedPath = myRebarPathSelector.getText();
-    if (!myPrevRebarPath.equals(rebarSelectedPath)) validateRebarPath();
-
     String emacsSelectedPath = myEmacsPathSelector.getText();
     if (!myPrevEmacsPath.equals(emacsSelectedPath)) validateEmacsPath();
 
-    return !myRebarSettings.getRebarPath().equals(rebarSelectedPath)
+    return myRebarConfigurationForm.isModified()
       || !myEmacsSettings.getEmacsPath().equals(emacsSelectedPath);
   }
 
   @Override
   public void apply() throws ConfigurationException {
-    myRebarSettings.setRebarPath(myRebarPathSelector.getText());
+    myRebarSettings.setRebarPath(myRebarConfigurationForm.getPath());
     myEmacsSettings.setEmacsPath(myEmacsPathSelector.getText());
   }
 
   @Override
   public void reset() {
-    myRebarPathSelector.setText(myRebarSettings.getRebarPath());
-    validateRebarPath();
+    myRebarConfigurationForm.setPath(myRebarSettings.getRebarPath());
     myEmacsPathSelector.setText(myEmacsSettings.getEmacsPath());
     validateEmacsPath();
   }
@@ -149,18 +127,8 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   public void disposeUIResources() {
   }
 
-  private void validateRebarPath() {
-    String version = restrictedTimeExec(myRebarPathSelector.getText() + " --version", 3000);
-    if (version.startsWith("rebar")) {
-      myRebarVersionText.setText(version);
-    }
-    else {
-      myRebarVersionText.setText("N/A");
-    }
-  }
-
   private void validateEmacsPath() {
-    String version = restrictedTimeExec(myEmacsPathSelector.getText() + " --version", 3000);
+    String version = ExtProcessUtil.restrictedTimeExec(myEmacsPathSelector.getText() + " --version", 3000);
     String[] split = StringUtils.split(version, "\n");
     if (StringUtils.containsIgnoreCase(version, "emacs") && split.length > 0) {
       myEmacsVersionText.setText(ArrayUtil.getFirstElement(split));
@@ -168,64 +136,5 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     else {
       myEmacsVersionText.setText("N/A");
     }
-  }
-
-  @NotNull
-  private static String restrictedTimeExec(@NotNull String cmd, int timeout) {
-    try {
-      final Process cmdRunner = Runtime.getRuntime().exec(cmd);
-      ExecutorService singleTreadExecutor = Executors.newSingleThreadExecutor();
-      Future<String> cmdRunnerFuture = singleTreadExecutor.submit(new Callable<String>() {
-        @Override
-        public String call() throws Exception {
-          cmdRunner.waitFor();
-          BufferedReader outReader = new BufferedReader(new InputStreamReader(cmdRunner.getInputStream()));
-          try {
-            String firstLine = outReader.readLine();
-            return firstLine == null ? "" : firstLine;
-          } finally {
-            outReader.close();
-          }
-        }
-      });
-      try {
-        return cmdRunnerFuture.get(timeout, TimeUnit.MILLISECONDS);
-      } catch (Exception e) { // Suppress
-      }
-      cmdRunnerFuture.cancel(true);
-      singleTreadExecutor.shutdown();
-    } catch (IOException e) { // Suppress
-    }
-    return "";
-  }
-
-  private void createUIComponents() {
-    myLinkContainer = new JPanel(new BorderLayout());
-    ActionLink link = new ActionLink("Download the latest Rebar version", new AnAction() {
-      @Override
-      public void actionPerformed(AnActionEvent e) {
-        DownloadableFileService service = DownloadableFileService.getInstance();
-        DownloadableFileDescription rebar = service.createFileDescription("https://github.com/rebar/rebar/wiki/rebar", "rebar");
-        FileDownloader downloader = service.createDownloader(ContainerUtil.list(rebar), getEventProject(e), myLinkContainer, "rebar");
-        List<Pair<VirtualFile, DownloadableFileDescription>> pairs = downloader.downloadAndReturnWithDescriptions();
-        if (pairs != null) {
-          for (Pair<VirtualFile, DownloadableFileDescription> pair : pairs) {
-            try {
-              String path = pair.first.getCanonicalPath();
-              if (path != null) {
-                FileUtilRt.setExecutableAttribute(path, true);
-                if (StringUtils.isEmpty(myRebarSettings.getRebarPath()) || StringUtils.isEmpty(myRebarPathSelector.getText())) {
-                  myRebarSettings.setRebarPath(path);
-                  myRebarPathSelector.setText(myRebarSettings.getRebarPath());
-                  validateRebarPath();
-                }
-              }
-            } catch (Exception e1) { // Ignore
-            }
-          }
-        }
-      }
-    });
-    myLinkContainer.add(link, BorderLayout.NORTH);
   }
 }
