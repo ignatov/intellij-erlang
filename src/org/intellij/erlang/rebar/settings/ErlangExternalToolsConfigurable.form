@@ -40,8 +40,9 @@
         </constraints>
         <properties>
           <editable value="false"/>
-          <enabled value="true"/>
+          <enabled value="false"/>
           <font/>
+          <text value=""/>
         </properties>
       </component>
       <grid id="87ab1" binding="myLinkContainer" custom-create="true" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -90,7 +91,7 @@
         </constraints>
         <properties>
           <editable value="false"/>
-          <enabled value="true"/>
+          <enabled value="false"/>
           <font/>
         </properties>
       </component>
