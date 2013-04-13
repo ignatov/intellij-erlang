@@ -214,7 +214,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   
               if (file.isDirectory()) {
                 indicator.setText2(file.getPath());
-                if (isExamplesDirectory(file)) return false;
+                if (isExamplesDirectory(file) || isRelDirectory(projectRoot.getPath(), file.getPath())) return false;
               }
 
               ContainerUtil.addAllNotNull(importedOtpApps, createImportedOtpApp(file));
@@ -243,6 +243,10 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
     mySelectedOtpApps = myFoundOtpApps;
     return !myFoundOtpApps.isEmpty();
+  }
+
+  private static boolean isRelDirectory(String projectRootPath, String path) {
+    return (projectRootPath + "/rel").equals(path);
   }
 
   @SuppressWarnings("DialogTitleCapitalization")
@@ -388,19 +392,19 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   }
 
   @NotNull
-  private List<VirtualFile> findRebarConfigs(@NotNull VirtualFile root, @NotNull final ProgressIndicator indicator) {
+  private List<VirtualFile> findRebarConfigs(@NotNull final VirtualFile root, @NotNull final ProgressIndicator indicator) {
     root.refresh(false, true);
     final List<VirtualFile> foundRebarConfigs = new ArrayList<VirtualFile>();
     VfsUtilCore.visitChildrenRecursively(root, new VirtualFileVisitor() {
       @Override
-      public boolean visitFile(@NotNull VirtualFile virtualFile) {
+      public boolean visitFile(@NotNull VirtualFile file) {
         indicator.checkCanceled();
-        if (virtualFile.isDirectory()) {
-          if (isExamplesDirectory(virtualFile)) return false;
-          indicator.setText2(virtualFile.getPath());
+        if (file.isDirectory()) {
+          if (isExamplesDirectory(file) || isRelDirectory(root.getPath(), file.getPath())) return false;
+          indicator.setText2(file.getPath());
         }
-        else if (virtualFile.getName().equalsIgnoreCase("rebar.config")) {
-          foundRebarConfigs.add(virtualFile);
+        else if (file.getName().equalsIgnoreCase("rebar.config")) {
+          foundRebarConfigs.add(file);
         }
         return true;
       }
