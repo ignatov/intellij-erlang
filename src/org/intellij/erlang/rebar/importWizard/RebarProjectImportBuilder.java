@@ -17,12 +17,9 @@
 package org.intellij.erlang.rebar.importWizard;
 
 import com.google.common.collect.Sets;
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.RunManagerEx;
 import com.intellij.execution.RunnerAndConfigurationSettings;
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.execution.process.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationInfoEx;
 import com.intellij.openapi.module.ModifiableModuleModel;
@@ -41,8 +38,6 @@ import com.intellij.openapi.roots.ex.ProjectRootManagerEx;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.util.Key;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -83,6 +78,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   @NotNull private List<ImportedOtpApp> myFoundOtpApps = Collections.emptyList();
   @NotNull private List<ImportedOtpApp> mySelectedOtpApps = Collections.emptyList();
   private boolean myImportExamples;
+  @NotNull private String myRebarPath = "";
 
   @NotNull
   @NonNls
@@ -134,58 +130,6 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     myProjectRoot = null;
     myFoundOtpApps = Collections.emptyList();
     mySelectedOtpApps = Collections.emptyList();
-  }
-  
-  public static void fetchDependencies(@NotNull final VirtualFile projectRoot, @Nullable final String rebarPath) {
-    if (rebarPath == null || StringUtil.isEmptyOrSpaces(rebarPath)) return;
-
-    ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Fetching dependencies", true) {
-      public void run(@NotNull final ProgressIndicator indicator) {
-        indicator.setIndeterminate(true);
-        GeneralCommandLine commandLine = new GeneralCommandLine();
-        commandLine.setExePath(rebarPath);
-        commandLine.setWorkDirectory(projectRoot.getCanonicalPath());
-        commandLine.addParameter("get-deps");
-        try {
-          OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getPreparedCommandLine());
-          handler.addProcessListener(new ProcessAdapter() {
-            @Override
-            public void onTextAvailable(ProcessEvent event, Key outputType) {
-              String text = event.getText();
-              indicator.setText2(text);
-            }
-          });
-          ProcessTerminatedListener.attach(handler);
-          handler.startNotify();
-          handler.waitFor();
-          indicator.setText2("Refreshing");
-        } catch (ExecutionException e) {
-          LOG.warn(e);
-        }
-      }
-    });
-  }
-
-  @NotNull
-  public static String getRebarExecutable(@Nullable String directory) {
-    boolean isPosix = SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix;
-    if (!isPosix) return "";
-
-    if (directory != null) {
-      File rebar = new File(directory, "rebar");
-      if (rebar.exists() && rebar.canExecute()) {
-        return rebar.getPath();
-      }
-    }
-
-    String output = "";
-    try {
-      GeneralCommandLine which = new GeneralCommandLine("which");
-      which.addParameter("rebar");
-      output = ScriptRunnerUtil.getProcessOutput(which);
-    } catch (Exception ignored) {
-    }
-    return output;
   }
 
   public boolean setProjectRoot(@NotNull final VirtualFile projectRoot) {
@@ -352,13 +296,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     }
     runManager.addConfiguration(runnerAndSettings, false);
 
-
-    String canonicalPath = myProjectRoot != null ? myProjectRoot.getCanonicalPath() : null;
-    String rebarExecutable = getRebarExecutable(canonicalPath);
-    if (!StringUtil.isEmptyOrSpaces(rebarExecutable)) {
-      RebarSettings.getInstance(project).setRebarPath(rebarExecutable);
-    }
-
+    RebarSettings.getInstance(project).setRebarPath(myRebarPath);
     return createdModules;
   }
 
@@ -581,5 +519,9 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
   public void setImportExamples(boolean importExamples) {
     myImportExamples = importExamples;
+  }
+
+  public void setRebarPath(@NotNull String rebarPath) {
+    myRebarPath = rebarPath;
   }
 }

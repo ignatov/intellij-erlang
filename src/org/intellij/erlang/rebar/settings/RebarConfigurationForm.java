@@ -23,6 +23,7 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.labels.ActionLink;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.download.DownloadableFileDescription;
@@ -33,7 +34,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
 import java.awt.*;
+import java.io.File;
 import java.util.List;
 
 /**
@@ -45,19 +48,24 @@ public class RebarConfigurationForm {
   private JTextField myRebarVersionText;
   private JPanel myLinkContainer;
 
-  private String myPrevRebarPath;
+  private boolean myRebarPathValid;
 
   public RebarConfigurationForm() {
     myRebarPathSelector.addBrowseFolderListener("Select Rebar executable", "", null,
       FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
-    myPrevRebarPath = "";
+    myRebarPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
+      @Override
+      protected void textChanged(DocumentEvent documentEvent) {
+        myRebarPathValid = validateRebarPath();
+      }
+    });
+    myRebarPathValid = false;
   }
 
   public void setPath(@NotNull String rebarPath) {
     if (!myRebarPathSelector.getText().equals(rebarPath)) {
-      myPrevRebarPath = rebarPath;
       myRebarPathSelector.setText(rebarPath);
-      validateRebarPath();
+      myRebarPathValid = validateRebarPath();
     }
   }
 
@@ -66,27 +74,26 @@ public class RebarConfigurationForm {
     return myRebarPathSelector.getText();
   }
 
+  public boolean isPathValid() {
+    return myRebarPathValid;
+  }
+
   @Nullable
   public JComponent createComponent() {
     return myPanel;
   }
 
-  public boolean isModified() {
-    if (!myPrevRebarPath.equals(myRebarPathSelector.getText())) {
-      validateRebarPath();
-      return true;
+  private boolean validateRebarPath() {
+    final String rebarPath = myRebarPathSelector.getText();
+    if (new File(rebarPath).exists()) {
+      String version = ExtProcessUtil.restrictedTimeExec(myRebarPathSelector.getText() + " --version", 3000);
+      if (version.startsWith("rebar")) {
+        myRebarVersionText.setText(version);
+        return true;
+      }
     }
+    myRebarVersionText.setText("N/A");
     return false;
-  }
-
-  private void validateRebarPath() {
-    String version = ExtProcessUtil.restrictedTimeExec(myRebarPathSelector.getText() + " --version", 3000);
-    if (version.startsWith("rebar")) {
-      myRebarVersionText.setText(version);
-    }
-    else {
-      myRebarVersionText.setText("N/A");
-    }
   }
 
   private void createUIComponents() {

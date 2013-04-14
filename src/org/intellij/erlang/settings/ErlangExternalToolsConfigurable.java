@@ -106,7 +106,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     String emacsSelectedPath = myEmacsPathSelector.getText();
     if (!myPrevEmacsPath.equals(emacsSelectedPath)) validateEmacsPath();
 
-    return myRebarConfigurationForm.isModified()
+    return !myRebarSettings.getRebarPath().equals(myRebarConfigurationForm.getPath())
       || !myEmacsSettings.getEmacsPath().equals(emacsSelectedPath);
   }
 
