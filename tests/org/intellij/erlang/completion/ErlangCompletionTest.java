@@ -128,6 +128,12 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo"); // means "bar/1", "bar/0", "foo/1", "foo/0"
   }
 
+  public void test176() throws Throwable {
+    myFixture.configureByFiles("headers/header.hrl");
+    myFixture.configureByFile("headers/a.erl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "foo");
+  }
+
   private void doTestInclude(String txt, String... variants) throws Throwable {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
   }

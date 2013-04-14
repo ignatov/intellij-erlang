@@ -83,6 +83,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
           }
         }
       }
+      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangFunctionsFromIncludes((ErlangFile) containingFile, false, myReferenceName, myArity));
     }
     return null;
   }

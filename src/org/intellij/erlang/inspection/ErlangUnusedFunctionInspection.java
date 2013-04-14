@@ -61,6 +61,7 @@ import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
@@ -76,6 +77,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
+    if (file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension())) return;
     if (((ErlangFile) file).isExportedAll()) return;
     final boolean isEunitImported = ErlangPsiImplUtil.isEunitImported((ErlangFile) file);
     file.accept(new ErlangRecursiveVisitor() {

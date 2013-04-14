@@ -118,4 +118,8 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
     );
     doTest();
   }
+
+  public void test176() {
+    myFixture.configureByText("aaa.hrl", "foo() -> ok.");
+  }
 }
