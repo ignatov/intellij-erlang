@@ -51,7 +51,7 @@
         <properties>
           <enabled value="true"/>
           <selected value="true"/>
-          <text value="&amp;Fetch dependencies with rebar (Requires valid Rebar path)"/>
+          <text value="&amp;Fetch dependencies with rebar (requires valid rebar path)"/>
         </properties>
       </component>
     </children>
