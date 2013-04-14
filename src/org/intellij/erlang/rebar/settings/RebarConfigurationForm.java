@@ -24,6 +24,7 @@ import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
+import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.labels.ActionLink;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.download.DownloadableFileDescription;
@@ -47,6 +48,7 @@ public class RebarConfigurationForm {
   private TextFieldWithBrowseButton myRebarPathSelector;
   private JTextField myRebarVersionText;
   private JPanel myLinkContainer;
+  private TitledSeparator myTitledSeparator;
 
   private boolean myRebarPathValid;
 
@@ -60,6 +62,10 @@ public class RebarConfigurationForm {
       }
     });
     myRebarPathValid = false;
+  }
+
+  public void disableSeparator() {
+    myTitledSeparator.setVisible(false);
   }
 
   public void setPath(@NotNull String rebarPath) {

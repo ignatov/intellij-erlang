@@ -40,6 +40,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.io.File;
 
 final class RebarProjectRootStep extends ProjectImportWizardStep {
@@ -50,6 +52,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
   private JCheckBox myGetDepsCheckbox;
   private JCheckBox myImportExamplesCheckBox;
   private RebarConfigurationForm myRebarConfigurationForm;
+  private static final boolean ourEnabled = !SystemInfo.isWindows;
 
   public RebarProjectRootStep(final WizardContext context) {
     super(context);
@@ -57,8 +60,10 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
     myProjectRootComponent.addBrowseFolderListener("Select rebar.config of the project to import", "", null,
       FileChooserDescriptorFactory.createSingleFolderDescriptor());
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
-    myGetDepsCheckbox.setVisible(!SystemInfo.isWindows);
+
+    myGetDepsCheckbox.setVisible(ourEnabled);
     myRebarConfigurationForm.setPath(getRebarExecutable(projectFileDirectory));
+    myRebarConfigurationForm.disableSeparator();
   }
 
   @Override
@@ -86,7 +91,16 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
   @Override
   @NotNull
   public JComponent getComponent() {
-    myRebarConfigurationForm.createComponent();
+    final JComponent component = myRebarConfigurationForm.createComponent();
+    if (component != null) {
+      component.setVisible(ourEnabled);
+      myGetDepsCheckbox.addChangeListener(new ChangeListener() {
+        @Override
+        public void stateChanged(ChangeEvent e) {
+          component.setVisible(myGetDepsCheckbox.isSelected());
+        }
+      });
+    }
     return myPanel;
   }
 
@@ -129,7 +143,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
       output = ScriptRunnerUtil.getProcessOutput(which);
     } catch (Exception ignored) {
     }
-    return output;
+    return output.trim();
   }
 
   private static void fetchDependencies(@NotNull final VirtualFile projectRoot, @NotNull final String rebarPath) {
