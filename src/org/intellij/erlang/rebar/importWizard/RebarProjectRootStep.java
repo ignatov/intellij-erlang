@@ -63,7 +63,6 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
 
     myGetDepsCheckbox.setVisible(ourEnabled);
     myRebarConfigurationForm.setPath(getRebarExecutable(projectFileDirectory));
-    myRebarConfigurationForm.disableSeparator();
   }
 
   @Override
