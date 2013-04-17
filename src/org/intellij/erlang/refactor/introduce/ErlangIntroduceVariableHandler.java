@@ -19,6 +19,7 @@ import com.intellij.refactoring.introduce.inplace.OccurrencesChooser;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
+import org.apache.velocity.util.StringUtils;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.refactor.ErlangRefactoringUtil;
@@ -155,7 +156,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
 
   @Nullable
   private static PsiElement performElement(Editor editor, @NotNull ErlangExpression expression, @NotNull List<PsiElement> occurrences) {
-    InitializerTextBuilder builder = new InitializerTextBuilder();
+    VariableTextBuilder builder = new VariableTextBuilder();
     expression.accept(builder);
     String newName = builder.result();
     String newText = newName + " = " + expression.getText();
@@ -295,7 +296,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     }
   }
 
-  private static class InitializerTextBuilder extends PsiRecursiveElementVisitor {
+  public static class VariableTextBuilder extends PsiRecursiveElementVisitor {
     private final StringBuilder myResult = new StringBuilder();
 
     @Override
@@ -310,7 +311,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
         return;
       }
       else if (element instanceof ErlangQAtom) {
-        myResult.append(element.getText());
+        myResult.append(StringUtils.capitalizeFirstLetter(element.getText()));
         return;
       }
       else if (element instanceof ErlangFunctionCallExpression) {
@@ -321,7 +322,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
         ErlangExpression expression = ((ErlangCaseExpression) element).getExpression();
         myResult.append("Case");
         if (expression != null) {
-          InitializerTextBuilder b = new InitializerTextBuilder();
+          VariableTextBuilder b = new VariableTextBuilder();
           expression.accept(b);
           myResult.append(b.result());
         }
@@ -329,15 +330,34 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       }
       else if (element instanceof ErlangFunExpression) {
         myResult.append("Fun");
-        ErlangFunClauses funClauses1 = ((ErlangFunExpression) element).getFunClauses();
-        List<ErlangFunClause> funClauses = funClauses1 != null ? funClauses1.getFunClauseList() : ContainerUtil.<ErlangFunClause>emptyList();
+        ErlangFunClauses clauses = ((ErlangFunExpression) element).getFunClauses();
+        List<ErlangFunClause> funClauses = clauses != null ? clauses.getFunClauseList() : ContainerUtil.<ErlangFunClause>emptyList();
         ErlangFunClause firstItem = ContainerUtil.getFirstItem(funClauses);
         if (firstItem != null) {
-          InitializerTextBuilder b = new InitializerTextBuilder();
+          VariableTextBuilder b = new VariableTextBuilder();
           firstItem.getArgumentDefinitionList().accept(b);
           myResult.append(b.result());
         }
         return;
+      }
+      else if (element instanceof ErlangListComprehension || element instanceof ErlangListExpression) {
+        myResult.append("List");
+        return;
+      }
+      else if (element instanceof ErlangTupleExpression || element instanceof ErlangRecordTuple) {
+        myResult.append("Tuple");
+        return;
+      }
+      else if (element instanceof ErlangMaxExpression) {
+        if (((ErlangMaxExpression) element).getInteger() != null) {
+          myResult.append("N");
+        }
+        if (((ErlangMaxExpression) element).getFloat() != null) {
+          myResult.append("F");
+        }
+      }
+      if (element instanceof ErlangStringLiteral) {
+        myResult.append("Str");
       }
       super.visitElement(element);
     }

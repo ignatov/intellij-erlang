@@ -32,6 +32,7 @@ import org.intellij.erlang.parser.ErlangParserTest;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFixTest;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFixTest;
 import org.intellij.erlang.quickfixes.ErlangHeadMismatchFixTest;
+import org.intellij.erlang.quickfixes.ErlangIntroduceFunctionFixTest;
 import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
 import org.intellij.erlang.sdk.ErlangSdkReleaseTest;
 import org.intellij.erlang.typing.ErlangSmartEnterClauseProcessorTest;
@@ -57,6 +58,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangExportFunctionFixTest.class);
     suite.addTestSuite(ErlangExportTypeFixTest.class);
     suite.addTestSuite(ErlangHeadMismatchFixTest.class);
+    suite.addTestSuite(ErlangIntroduceFunctionFixTest.class);
     suite.addTestSuite(ErlangSmartEnterClauseProcessorTest.class);
     suite.addTestSuite(ErlangSdkReleaseTest.class);
     suite.addTestSuite(ErlangBehaviourInspectionsTest.class);

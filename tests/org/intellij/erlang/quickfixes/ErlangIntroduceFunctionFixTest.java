@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Sergey Ignatov
+ * Copyright 2012-2013 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,25 @@
 
 package org.intellij.erlang.quickfixes;
 
-import org.intellij.erlang.inspection.ErlangHeadMismatchInspection;
+import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
 
 /**
  * @author ignatov
  */
-public class ErlangHeadMismatchFixTest extends ErlangQuickFixTestBase {
+public class ErlangIntroduceFunctionFixTest extends ErlangQuickFixTestBase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     //noinspection unchecked
-    myFixture.enableInspections(ErlangHeadMismatchInspection.class);
+    myFixture.enableInspections(ErlangUnresolvedFunctionInspection.class);
   }
 
   @Override
   protected String getTestDataPath() {
-    return "testData/quickfixes/head_mismatch/";
+    return "testData/quickfixes/introduce_function/";
   }
 
-  public void testSimple() throws Throwable { doTest("Rename clause head"); }
+  public void testSimple() throws Throwable {
+    doTest("Create Function 'lll/6'");
+  }
 }

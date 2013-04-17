@@ -48,13 +48,28 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInsight.template.Template;
+import com.intellij.codeInsight.template.TemplateManager;
+import com.intellij.codeInsight.template.impl.ConstantNode;
+import com.intellij.codeInspection.LocalQuickFix;
+import com.intellij.codeInspection.LocalQuickFixBase;
+import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.util.PsiUtilBase;
+import com.intellij.util.Function;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 /**
  * @author ignatov
@@ -87,9 +102,64 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
             }
           }
 
-          problemsHolder.registerProblem(o.getNameIdentifier(), "Unresolved function " + "'" + signature + "'");
+          LocalQuickFix[] qfs = parent instanceof ErlangGenericFunctionCallExpression || parent instanceof ErlangGlobalFunctionCallExpression ?
+            new LocalQuickFix[]{} :
+            new LocalQuickFix[]{new ErlangCreateFunctionQuickFixBase(signature)};
+
+          problemsHolder.registerProblem(o.getNameIdentifier(), "Unresolved function " + "'" + signature + "'", qfs);
         }
       }
     });
+  }
+
+  private static class ErlangCreateFunctionQuickFixBase extends LocalQuickFixBase {
+    protected ErlangCreateFunctionQuickFixBase(@NotNull String name) {
+      super("Create Function '" + name + "'", "Erlang");
+    }
+
+    @Override
+    public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+      ErlangFunctionCallExpression call = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunctionCallExpression.class);
+      if (call != null) {
+        //noinspection unchecked
+        ErlangCompositeElement topmost = PsiTreeUtil.getParentOfType(call, ErlangFunction.class, ErlangRecordDefinition.class, ErlangMacros.class);
+        if (topmost != null) {
+          Editor editor = PsiUtilBase.findEditor(topmost);
+          if (editor == null) return;
+          String text = call.getNameIdentifier().getText();
+          List<ErlangExpression> exrList = call.getArgumentList().getExpressionList();
+          List<String> placeHolders = ContainerUtil.map(exrList, new Function<ErlangExpression, String>() {
+            @Override
+            public String fun(ErlangExpression erlangExpression) {
+              return shorten(erlangExpression);
+            }
+          });
+
+          TemplateManager templateManager = TemplateManager.getInstance(project);
+          Template template = templateManager.createTemplate("", "");
+          template.setToReformat(true);
+          template.addTextSegment(text + "(");
+          int size = placeHolders.size();
+          for (int i = 0; i < placeHolders.size(); i++) {
+            String name = placeHolders.get(i);
+            template.addVariable("param" + i, new ConstantNode(name), true);
+            if (i != size - 1) template.addTextSegment(", ");
+          }
+          template.addTextSegment(") ->\n");
+          template.addEndVariable();
+          template.addTextSegment("erlang:error(not_implemented)");
+          template.addTextSegment(".\n\n");
+
+          editor.getCaretModel().moveToOffset(topmost.getTextOffset());
+          templateManager.startTemplate(editor, template);
+        }
+      }
+    }
+
+    private static String shorten(ErlangExpression o) { // maybe better to return List<String>
+      ErlangIntroduceVariableHandler.VariableTextBuilder visitor = new ErlangIntroduceVariableHandler.VariableTextBuilder();
+      o.accept(visitor);
+      return visitor.result();
+    }
   }
 }

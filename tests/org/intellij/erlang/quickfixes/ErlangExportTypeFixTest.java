@@ -22,6 +22,7 @@ public class ErlangExportTypeFixTest extends ErlangQuickFixTestBase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    //noinspection unchecked
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
   }
 
