@@ -82,27 +82,19 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
                 ErlangExpression str = reverse.get(1);
 
                 int strLen = str.getText().length();
-                if (args instanceof ErlangListExpression) {
-                  if ((str instanceof ErlangStringLiteral || str instanceof ErlangMaxExpression) && strLen >= 2) {
-                    String substring = str.getText().substring(1, strLen - 1);
+                if (args instanceof ErlangListExpression &&
+                  (str instanceof ErlangStringLiteral || str instanceof ErlangMaxExpression) && strLen >= 2) {
+                  String substring = str.getText().substring(1, strLen - 1);
 
-                    // todo: rewrite, see: http://www.erlang.org/doc/man/io.html#format-1
-                    int doubleCount = StringUtil.getOccurrenceCount(substring, "~~");
-                    int newLineCount = StringUtil.getOccurrenceCount(substring, "~n");
-                    int occurrenceCount = StringUtil.getOccurrenceCount(substring, "~");
-                    int totalCount = occurrenceCount - doubleCount * 2 - newLineCount;
-                    int agrSize = ((ErlangListExpression) args).getExpressionList().size();
-                    if (totalCount != agrSize) {
-                      problemsHolder.registerProblem(str, "Wrong number of arguments in format call, should be " + agrSize);
-                    }
+                  // todo: rewrite, see: http://www.erlang.org/doc/man/io.html#format-1
+                  int doubleCount = StringUtil.getOccurrenceCount(substring, "~~");
+                  int newLineCount = StringUtil.getOccurrenceCount(substring, "~n");
+                  int occurrenceCount = StringUtil.getOccurrenceCount(substring, "~");
+                  int totalCount = occurrenceCount - doubleCount * 2 - newLineCount;
+                  int agrSize = ((ErlangListExpression) args).getExpressionList().size();
+                  if (totalCount != agrSize) {
+                    problemsHolder.registerProblem(str, "Wrong number of arguments in format call, should be " + agrSize);
                   }
-                  else {
-                    problemsHolder.registerProblem(str, "Should be a string");
-                  }
-                }
-                else {
-                  if (args instanceof ErlangMaxExpression && ((ErlangMaxExpression) args).getQVar() != null) return;
-                  problemsHolder.registerProblem(args, "Format arguments not a list");
                 }
               }
             }
