@@ -26,38 +26,48 @@ import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
 import com.intellij.util.ArrayUtil;
 import org.intellij.erlang.ErlangParameterInfoHandler;
+import org.intellij.erlang.psi.ErlangArgumentList;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
 public class ErlangParameterInfoHandlerTest extends LightCodeInsightFixtureTestCase {
-  private static final String FOO = "foo(Arg1, Arg2) -> ok.\n ";
+  private static final String FOO = "foo(Arg1, Arg2) -> ok.\n";
 
-  public void testEmpty() { doTest(FOO + "bar() -> foo(<caret>)", 0); }
-  public void testSecond() { doTest(FOO + "bar() -> foo(1, <caret>)", 1); }
+  public void testEmpty()     { doTest(FOO + "bar() -> foo(<caret>)", 0); }
+  public void testSecond()    { doTest(FOO + "bar() -> foo(1, <caret>)", 1); }
+  public void testBif()       { doTest("bar() -> hash({}, <caret>)", 1); }
+  public void testModuleBif() { doTest("bar() -> math:sin(<caret>)", 0); }
+
+  @Override
+  protected void setUp() throws Exception {
+    System.setProperty("idea.platform.prefix", "Idea");
+    super.setUp();
+  }
 
   private void doTest(String text, int highlightedParameterIndex) {
     myFixture.configureByText("a.erl", text);
-    final ParameterInfoHandler paramInfoHandler = new ErlangParameterInfoHandler();
-//    final CreateParameterInfoContext parameterInfoContext = new MockCreateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
-//    final Object list = paramInfoHandler.findElementForParameterInfo(parameterInfoContext);
+    final ErlangParameterInfoHandler parameterInfoHandler = new ErlangParameterInfoHandler();
+    final CreateParameterInfoContext createContext = new MockCreateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
+    final ErlangArgumentList list = parameterInfoHandler.findElementForParameterInfo(createContext);
 
-//    if (highlightedParameterIndex >= 0) {
-//      assertNotNull(list);
-//      Object[] itemsToShow = parameterInfoContext.getItemsToShow();
-//      assertNotNull(itemsToShow);
-//      assertTrue(itemsToShow.length > 0);
-//    }
+    if (highlightedParameterIndex >= 0) {
+      assertNotNull(list);
+      parameterInfoHandler.showParameterInfo(list, createContext);
+      Object[] itemsToShow = createContext.getItemsToShow();
+      assertNotNull(itemsToShow);
+      assertTrue(itemsToShow.length > 0);
+    }
     MockUpdateParameterInfoContext updateContext = new MockUpdateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
-    final Object element = paramInfoHandler.findElementForUpdatingParameterInfo(updateContext);
+    final ErlangArgumentList element = parameterInfoHandler.findElementForUpdatingParameterInfo(updateContext);
     if (element == null) {
       assertEquals(-1, highlightedParameterIndex);
     }
     else {
       assertNotNull(element);
       //noinspection unchecked
-      paramInfoHandler.updateParameterInfo(element, updateContext);
+      parameterInfoHandler.updateParameterInfo(element, updateContext);
       assertEquals(highlightedParameterIndex, updateContext.getCurrentParameter());
     }
   }
@@ -186,6 +196,4 @@ public class ErlangParameterInfoHandlerTest extends LightCodeInsightFixtureTestC
       return myEditor;
     }
   }
-
-
 }
