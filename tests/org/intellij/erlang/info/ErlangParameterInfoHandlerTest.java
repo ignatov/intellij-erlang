@@ -40,12 +40,6 @@ public class ErlangParameterInfoHandlerTest extends LightCodeInsightFixtureTestC
   public void testBif()       { doTest("bar() -> hash({}, <caret>)", 1); }
   public void testModuleBif() { doTest("bar() -> math:sin(<caret>)", 0); }
 
-  @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
   private void doTest(String text, int highlightedParameterIndex) {
     myFixture.configureByText("a.erl", text);
     final ErlangParameterInfoHandler parameterInfoHandler = new ErlangParameterInfoHandler();
