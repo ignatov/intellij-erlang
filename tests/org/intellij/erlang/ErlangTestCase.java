@@ -62,6 +62,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangSmartEnterClauseProcessorTest.class);
     suite.addTestSuite(ErlangSdkReleaseTest.class);
     suite.addTestSuite(ErlangBehaviourInspectionsTest.class);
+    suite.addTestSuite(ErlangCopyFileTest.class);
     return suite;
   }
 }
