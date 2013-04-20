@@ -73,6 +73,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       throw new ProjectBuildException();
     }
 
+    if (!outputDirectory.exists()) FileUtil.createDirectory(outputDirectory);
+
     JpsSdk<JpsDummyElement> sdk = module.getSdk(JpsErlangSdkType.INSTANCE);
     if (sdk == null) {
       context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "No SDK for module " + module.getName()));
@@ -107,7 +109,6 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       ProcessAdapter() {
         @Override
         public void onTextAvailable(ProcessEvent event, Key outputType) {
-
           ErlangCompilerError error = ErlangCompilerError.create("", event.getText());
           if (error != null) {
 
