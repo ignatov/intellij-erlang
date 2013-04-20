@@ -21,12 +21,13 @@ import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.junit.RuntimeConfigurationProducer;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtil;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 /**
  * @author ignatov
@@ -48,13 +49,14 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
     PsiElement psiElement = location.getPsiElement();
     myFile = psiElement.getContainingFile();
     if (!(myFile instanceof ErlangFile)) return null;
+    if (!ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile)) return null;
 
     Project project = psiElement.getProject();
 
     RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(project, context);
     ErlangUnitRunConfiguration configuration = (ErlangUnitRunConfiguration) settings.getConfiguration();
 
-    Module module = ModuleUtil.findModuleForPsiElement(psiElement);
+    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
     if (module != null) {
       configuration.setModule(module);
     }

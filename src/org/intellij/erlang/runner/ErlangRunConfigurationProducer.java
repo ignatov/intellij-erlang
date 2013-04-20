@@ -21,7 +21,7 @@ import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.junit.RuntimeConfigurationProducer;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtil;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -56,11 +56,12 @@ public class ErlangRunConfigurationProducer extends RuntimeConfigurationProducer
     PsiFile containingFile = psiElement.getContainingFile();
 
     if (containingFile instanceof ErlangFile && ErlangPsiImplUtil.isEunitTestFile((ErlangFile) containingFile)) return null;
+    if (ErlangPsiImplUtil.isPrivateFunction(containingFile, myFunction)) return null;
 
     RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(project, context);
     ErlangApplicationConfiguration configuration = (ErlangApplicationConfiguration) settings.getConfiguration();
 
-    Module module = ModuleUtil.findModuleForPsiElement(psiElement);
+    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
 
     final VirtualFile vFile = containingFile.getVirtualFile();
     if (vFile == null) return null;

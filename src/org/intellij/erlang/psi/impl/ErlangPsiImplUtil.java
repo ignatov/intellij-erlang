@@ -1103,4 +1103,10 @@ public class ErlangPsiImplUtil {
     ErlangFunTypeArguments arguments = funType != null ? funType.getFunTypeArguments() : null;
     return arguments != null ? arguments.getTopTypeList() : ContainerUtil.<ErlangTopType>emptyList();
   }
+
+  public static boolean isPrivateFunction(@NotNull PsiFile containingFile, @NotNull ErlangFunction function) {
+    boolean exportAll = containingFile instanceof ErlangFile && ((ErlangFile) containingFile).isExportedAll();
+    if (exportAll) return false;
+    return containingFile instanceof ErlangFile && !((ErlangFile) containingFile).getExportedFunctions().contains(function);
+  }
 }
