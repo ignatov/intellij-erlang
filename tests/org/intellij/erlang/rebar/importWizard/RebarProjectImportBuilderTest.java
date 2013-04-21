@@ -119,7 +119,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   public void testRebarlessDeps() throws Exception {
-    final Project createdProject = doTest(null);
+    doTest(null);
   }
 
   private static void createMockSdk() {
