@@ -90,16 +90,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
   @Override
   @NotNull
   public JComponent getComponent() {
-    final JComponent component = myRebarConfigurationForm.createComponent();
-    if (component != null) {
-      component.setVisible(ourEnabled);
-      myGetDepsCheckbox.addChangeListener(new ChangeListener() {
-        @Override
-        public void stateChanged(ChangeEvent e) {
-          component.setVisible(myGetDepsCheckbox.isSelected());
-        }
-      });
-    }
+    myRebarConfigurationForm.createComponent();
     return myPanel;
   }
 
