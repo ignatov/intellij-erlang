@@ -306,7 +306,12 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     final Sdk selectedSdk = projectRootMgr.getProjectSdk();
     if (selectedSdk == null || selectedSdk.getSdkType() != ErlangSdkType.getInstance()) {
       final Sdk moreSuitableSdk = ProjectJdkTable.getInstance().findMostRecentSdkOfType(ErlangSdkType.getInstance());
-      projectRootMgr.setProjectSdk(moreSuitableSdk);
+      ApplicationManager.getApplication().runWriteAction(new Runnable() {
+        @Override
+        public void run() {
+          projectRootMgr.setProjectSdk(moreSuitableSdk);
+        }
+      });
       return moreSuitableSdk;
     }
     return selectedSdk;
