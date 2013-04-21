@@ -150,22 +150,20 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         final List<VirtualFile> rebarConfigFiles = findRebarConfigs(myProjectRoot, indicator);
         final LinkedHashSet<ImportedOtpApp> importedOtpApps = new LinkedHashSet<ImportedOtpApp>(rebarConfigFiles.size());
 
-        if (!unitTestMode) {
-          VfsUtilCore.visitChildrenRecursively(projectRoot, new VirtualFileVisitor() {
-            @Override
-            public boolean visitFile(@NotNull VirtualFile file) {
-              indicator.checkCanceled();
-  
-              if (file.isDirectory()) {
-                indicator.setText2(file.getPath());
-                if (isExamplesDirectory(file) || isRelDirectory(projectRoot.getPath(), file.getPath())) return false;
-              }
+        VfsUtilCore.visitChildrenRecursively(projectRoot, new VirtualFileVisitor() {
+          @Override
+          public boolean visitFile(@NotNull VirtualFile file) {
+            indicator.checkCanceled();
 
-              ContainerUtil.addAllNotNull(importedOtpApps, createImportedOtpApp(file));
-              return true;
+            if (file.isDirectory()) {
+              indicator.setText2(file.getPath());
+              if (isExamplesDirectory(file) || isRelDirectory(projectRoot.getPath(), file.getPath())) return false;
             }
-          });
-        }
+
+            ContainerUtil.addAllNotNull(importedOtpApps, createImportedOtpApp(file));
+            return true;
+          }
+        });
 
         for (VirtualFile rebarConfigFile : rebarConfigFiles) {
           resolveOtpAppsByRebarConfig(rebarConfigFile, importedOtpApps);

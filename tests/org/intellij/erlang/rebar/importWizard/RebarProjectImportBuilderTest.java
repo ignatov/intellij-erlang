@@ -49,6 +49,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
   @Override
   public void setUp() throws Exception {
+    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     createMockSdk();
     final File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
@@ -115,6 +116,10 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   public void testEmbeddedRebar() throws Exception {
     final Project createdProject = doTest(null);
     assertEquals(createdProject.getBasePath() + "/rebar", RebarSettings.getInstance(createdProject).getRebarPath());
+  }
+
+  public void testRebarlessDeps() throws Exception {
+    final Project createdProject = doTest(null);
   }
 
   private static void createMockSdk() {
