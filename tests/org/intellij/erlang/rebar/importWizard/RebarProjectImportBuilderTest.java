@@ -32,6 +32,7 @@ import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.Consumer;
 import junit.framework.Assert;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -111,6 +112,11 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     });
   }
 
+  public void testEmbeddedRebar() throws Exception {
+    final Project createdProject = doTest(null);
+    assertEquals(createdProject.getBasePath() + "/rebar", RebarSettings.getInstance(createdProject).getRebarPath());
+  }
+
   private static void createMockSdk() {
     final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR);
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
@@ -121,7 +127,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     });
   }
 
-  private void doTest(@Nullable Consumer<ModuleWizardStep> adjuster) throws Exception {
+  private Project doTest(@Nullable Consumer<ModuleWizardStep> adjuster) throws Exception {
     final String projectPath = getProject().getBaseDir().getPath();
     final String importFromPath = projectPath + "/test/";
     final Module firstModule = importProjectFrom(importFromPath, adjuster,
@@ -130,6 +136,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     for (Module importedModule : ModuleManager.getInstance(createdProject).getModules()) {
       validateModule(importedModule);
     }
+    return createdProject;
   }
 
   private void validateModule(@NotNull Module module) throws Exception {
