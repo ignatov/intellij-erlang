@@ -29,6 +29,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.impl.ModuleRootManagerImpl;
 import com.intellij.openapi.util.JDOMUtil;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.Consumer;
 import junit.framework.Assert;
@@ -49,7 +50,6 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
   @Override
   public void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     createMockSdk();
     final File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
@@ -115,6 +115,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
   public void testEmbeddedRebar() throws Exception {
     final Project createdProject = doTest(null);
+    if (SystemInfo.isWindows) return;
     assertEquals(createdProject.getBasePath() + "/rebar", RebarSettings.getInstance(createdProject).getRebarPath());
   }
 
