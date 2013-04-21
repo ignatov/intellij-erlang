@@ -8,13 +8,12 @@ import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.openapi.compiler.CompilerPaths;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VirtualFile;
+import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,22 +43,10 @@ public class ErlangRunningState extends CommandLineState {
 
   private GeneralCommandLine getCommand(Sdk sdk) {
     final GeneralCommandLine commandLine = new GeneralCommandLine();
-    VirtualFile moduleOutputDirectory = CompilerPaths.getModuleOutputDirectory(module, false);
     String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(sdk.getHomePath()).getAbsolutePath());
-    String canonicalPath = moduleOutputDirectory.getCanonicalPath();
-    commandLine.setWorkDirectory(canonicalPath);
-
     commandLine.setExePath(erl);
-    
-    commandLine.addParameter("-pa");
-    Module[] dependencies = ModuleRootManager.getInstance(module).getDependencies();
-    for (Module dependency : dependencies) {
-      VirtualFile outputDir = CompilerPaths.getModuleOutputDirectory(dependency, false);
-      String cp = outputDir != null ? outputDir.getCanonicalPath() : null;
-      if (cp != null) {
-        commandLine.addParameter(cp);
-      }
-    }
+    commandLine.setWorkDirectory(module.getProject().getBasePath());
+    commandLine.addParameters(ErlangConsoleUtil.getCodePath(module));
     
     setUpParameters(commandLine);
 

@@ -24,7 +24,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import org.jetbrains.annotations.NotNull;
 
-final class RebarRunConfigurationFactory extends ConfigurationFactory {
+public final class RebarRunConfigurationFactory extends ConfigurationFactory {
   private static final RebarRunConfigurationFactory ourInstance = new RebarRunConfigurationFactory();
 
   private RebarRunConfigurationFactory() {
