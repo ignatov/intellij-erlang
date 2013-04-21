@@ -66,12 +66,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpApp> {
+  private static final Logger LOG = Logger.getLogger(RebarProjectImportBuilder.class);
+
   private static final Pattern APP_NAME_PATTERN = Pattern.compile("\\{\\s*application\\s*,\\s*(.*?)\\s*,");
   private static final Pattern APP_DEPS_LIST_PATTERN = Pattern.compile("\\{\\s*applications\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
-  private static final Pattern DIRS_LIST_PATTERN = Pattern.compile("\\{\\s*sub_dirs\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
-  private static final Pattern SPLIT_DIR_LIST_PATTERN = Pattern.compile("\"\\s*(,\\s*\")?");
-
-  private static final Logger LOG = Logger.getLogger(RebarProjectImportBuilder.class);
 
   private boolean myOpenProjectSettingsAfter = false;
   @Nullable private VirtualFile myProjectRoot = null;
@@ -165,9 +163,6 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
           }
         });
 
-        for (VirtualFile rebarConfigFile : rebarConfigFiles) {
-          resolveOtpAppsByRebarConfig(rebarConfigFile, importedOtpApps);
-        }
         myFoundOtpApps = ContainerUtil.newArrayList(importedOtpApps);
       }
     });
@@ -356,35 +351,6 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
   private boolean isExamplesDirectory(VirtualFile virtualFile) {
     return "examples".equals(virtualFile.getName()) && !myImportExamples;
-  }
-
-  private static void resolveOtpAppsByRebarConfig(@NotNull VirtualFile rebarConfigFile,
-                                                  @NotNull Collection<ImportedOtpApp> importedOtpApps) {
-    final VirtualFile root = rebarConfigFile.getParent();
-
-    final List<VirtualFile> tentativeAppRoots = new ArrayList<VirtualFile>();
-    tentativeAppRoots.add(root);
-    try {
-      final String content = new String(rebarConfigFile.contentsToByteArray());
-      final Matcher matcher = DIRS_LIST_PATTERN.matcher(content);
-      if (matcher.find()) {
-        final String subDirsValue = matcher.group(1);
-        final String[] relativeSubDirs = SPLIT_DIR_LIST_PATTERN.split(subDirsValue);
-        for (String relativeSubDir : relativeSubDirs) {
-          ContainerUtil.addAllNotNull(tentativeAppRoots, root.findFileByRelativePath(relativeSubDir));
-        }
-      }
-    } catch (IOException e) { // Ignore
-    }
-
-    for (VirtualFile tentativeAppRoot : tentativeAppRoots) {
-      final ImportedOtpApp importedOtpApp = createImportedOtpApp(tentativeAppRoot);
-      if (importedOtpApp != null) {
-        if (!importedOtpApps.contains(importedOtpApp)) {
-          importedOtpApps.add(importedOtpApp);
-        }
-      }
-    }
   }
 
   @Nullable
