@@ -110,6 +110,7 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
   public void test200()               { doTest(); }
+  public void testSpawnTest()         { doTest(); }
 
   public void testUnresolvedMacros()  {
     //noinspection unchecked

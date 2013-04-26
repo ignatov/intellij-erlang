@@ -73,6 +73,9 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
       ErlangFunction result = erlangFile.getFunction(myReferenceName, myArity);
       if (result != null) return result;
 
+      final ErlangFunction implicitFunction = getExternalFunction("erlang.erl");
+      if (implicitFunction != null) return implicitFunction;
+
       for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
         PsiReference reference = importFunction.getReference();
         PsiElement resolve = reference != null ? reference.resolve() : null;
@@ -98,14 +101,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
     Collection<ErlangFunction> result;
     if (myModuleAtom != null) {
-      PsiFile[] files = FilenameIndex.getFilesByName(getElement().getProject(), getModuleFileName(),
-        GlobalSearchScope.allScope(getElement().getProject()));
-      result = new ArrayList<ErlangFunction>();
-      for (PsiFile file : files) {
-        if (file instanceof ErlangFile) {
-          result.addAll(((ErlangFile) file).getFunctionsByName(myReferenceName));
-        }
-      }
+      result = getErlangFunctionsFromModule(getModuleFileName());
     }
     else {
       PsiFile containingFile = getElement().getContainingFile();
@@ -122,12 +118,25 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
         }
 
         result.addAll(erlangFile.getFunctionsByName(myReferenceName));
+        result.addAll(getErlangFunctionsFromModule("erlang.erl"));
       }
       else {
         result = ContainerUtil.emptyList();
       }
     }
     return PsiElementResolveResult.createResults(result);
+  }
+
+  private Collection<ErlangFunction> getErlangFunctionsFromModule(String moduleFileName) {
+    Collection<ErlangFunction> result;PsiFile[] files = FilenameIndex.getFilesByName(getElement().getProject(), moduleFileName,
+      GlobalSearchScope.allScope(getElement().getProject()));
+    result = new ArrayList<ErlangFunction>();
+    for (PsiFile file : files) {
+      if (file instanceof ErlangFile) {
+        result.addAll(((ErlangFile) file).getFunctionsByName(myReferenceName));
+      }
+    }
+    return result;
   }
 
   private boolean suppressResolve() {
