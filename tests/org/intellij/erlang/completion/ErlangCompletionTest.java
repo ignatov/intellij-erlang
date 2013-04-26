@@ -17,6 +17,7 @@
 package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.testFramework.UsefulTestCase;
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase;
 import com.intellij.util.ArrayUtilRt;
@@ -132,6 +133,19 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
     myFixture.configureByFiles("headers/header.hrl");
     myFixture.configureByFile("headers/a.erl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "foo");
+  }
+
+  public void testFunctionExpression() throws Throwable {
+    myFixture.configureByText("a.erl", "foo() -> fun f<caret>");
+    myFixture.completeBasic();
+    myFixture.checkResult("foo() -> fun foo/0");
+  }
+
+  public void testFunctionExpression2() throws Throwable {
+    myFixture.configureByText("a.erl", "foo() -> fun <caret>");
+    myFixture.completeBasic();
+    myFixture.type(Lookup.NORMAL_SELECT_CHAR);
+    myFixture.checkResult("foo() -> fun foo/0");
   }
 
   private void doTestInclude(String txt, String... variants) throws Throwable {
