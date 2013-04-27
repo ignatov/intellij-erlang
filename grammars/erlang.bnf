@@ -222,21 +222,21 @@ import_function ::= q_atom '/' integer {
 
 private type_spec ::= fun_type_sigs_braces | fun_type_sigs
 fun_type_sigs_braces ::= '(' fun_type_sigs ')' {pin=1}
-fun_type_sigs ::= spec_fun ['::'] type_sigs_list {
-  pin = 1
-  methods=[getReference]
-}
+fun_type_sigs ::= [module_ref ':'] spec_fun '::'? type_sigs_list {pin=2}
 private type_sigs_list ::= type_sig (';' type_sig)*
-spec_fun ::= q_atom ['/' integer | ':' q_atom ['/' integer]]
+spec_fun ::= q_atom ('/' integer | &('(')) {
+  pin(".*")=1
+  methods = [getReference]
+}
 typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
 typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
 private typed_exprs ::= typed_expr_or_macros (',' typed_expr_or_macros)* // todo: hack #145
 private typed_expr_or_macros ::= generic_function_call_expression | typed_expr
-typed_expr ::= q_atom ['=' expression] ['::' top_type] {
+typed_expr ::= q_atom ['=' expression] ['::' (record_tail | top_type)] {
   pin(".*")=1
   methods=[getName setName getNameIdentifier getTextOffset]
 }
-type_sig ::= fun_type [type_sig_guard]
+type_sig ::= fun_type type_sig_guard? {pin=1}
 type_sig_guard ::= when type_guard_list
 private type_guard_list ::= type_guard (',' type_guard)*
 type_guard ::= (q_atom '(' top_type_list ')') | top_type
@@ -256,8 +256,8 @@ type ::=
 
 int_type ::= '-'? (integer | macros argument_list?)
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {pin(".*")=1}
-top_type_clause ::= '->' top_type {pin=1}
 fun_type ::= fun_type_arguments top_type_clause {pin=1}
+top_type_clause ::= '->' top_type {pin=1}
 fun_type_arguments ::= '(' top_type_list? ')' {pin=1}
 private field_type_list ::= field_type (',' field_type)*
 field_type ::= q_atom '::' top_type {
@@ -285,7 +285,8 @@ function ::= function_clause (';' function_clause)* {
   ]
 }
 
-function_clause ::= q_atom argument_definition_list clause_guard? clause_body
+private function_clause_recover ::= !('.' | ';')
+function_clause ::= q_atom argument_definition_list clause_guard? clause_body //{pin=2 recoverUntil=function_clause_recover}
 argument_definition_list ::= '(' argument_definition? (',' argument_definition)* ')'
 
 clause_guard ::= when guard {pin=1}
@@ -400,7 +401,9 @@ record_expression ::= expression record_tail {
   pin=2
   methods = [getReference]
 }
-private record_tail ::= '#' record_ref (record_field_ref | record_tuple) {pin=1}
+private record_tail ::= record_head (record_field_ref | record_tuple | ) {pin=1}
+private record_head ::= record_head_classic | macros &('{'|'.' q_atom)
+private record_head_classic ::= '#' record_ref {pin=1}
 record_field_ref ::= '.' q_atom {pin=1 elementType="record_field"}
 record_ref ::= q_atom {methods = [getReference]}
 

@@ -14,6 +14,7 @@ import com.intellij.util.containers.HashSet;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
+import org.intellij.erlang.psi.ErlangFunctionWithArity;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,7 +36,7 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
   public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
     Set<Integer> lines = new HashSet<Integer>();
     for (PsiElement element : elements) {
-      if (element instanceof ErlangFunctionCallExpression) {
+      if (element instanceof ErlangFunctionCallExpression || element instanceof ErlangFunctionWithArity) {
         PsiReference reference = element.getReference();
         PsiElement resolve = reference != null ? reference.resolve() : null;
         if (resolve instanceof ErlangFunction) {

@@ -1,14 +1,12 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi.impl;
 
-import java.util.List;
-import org.jetbrains.annotations.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
-import com.intellij.psi.util.PsiTreeUtil;
-import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements ErlangTypedExpr {
 
@@ -23,9 +21,33 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
   }
 
   @Override
+  @Nullable
+  public ErlangMacros getMacros() {
+    return findChildByClass(ErlangMacros.class);
+  }
+
+  @Override
   @NotNull
   public ErlangQAtom getQAtom() {
     return findNotNullChildByClass(ErlangQAtom.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangRecordField getRecordField() {
+    return findChildByClass(ErlangRecordField.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangRecordRef getRecordRef() {
+    return findChildByClass(ErlangRecordRef.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangRecordTuple getRecordTuple() {
+    return findChildByClass(ErlangRecordTuple.class);
   }
 
   @Override

@@ -135,6 +135,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
           return baseAlignment;
         }
       }
+      if (parentType == ERL_FUN_TYPE_SIGS) {
+        if (childType == ERL_TYPE_SIG) {
+          return baseAlignment;
+        }
+      }
       if (psi instanceof ErlangFakeBinaryExpression) {
         return baseAlignment;
       }

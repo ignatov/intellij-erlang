@@ -66,9 +66,11 @@ import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangFunctionReferenceImpl;
 import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -82,14 +84,16 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
       @Override
       public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
         PsiReference reference = o.getReference();
-        if (reference != null && reference.resolve() == null) {
+        if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
           if (o.getQAtom().getMacros() != null) return;
+          ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
 
-          String name = o.getNameIdentifier().getText();
-          int arity = o.getArgumentList().getExpressionList().size();
+          String name = r.getName();
+          int arity = r.getArity();
+
           if (ErlangBifTable.isBif("erlang", name, arity)) return;
 
-          String signature = name + "/" + arity;
+          String signature = r.getSignature();
 
           PsiElement parent = o.getParent();
           if (parent instanceof ErlangGlobalFunctionCallExpression) {
@@ -104,41 +108,90 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
 
           LocalQuickFix[] qfs = parent instanceof ErlangGenericFunctionCallExpression || parent instanceof ErlangGlobalFunctionCallExpression ?
             new LocalQuickFix[]{} :
-            new LocalQuickFix[]{new ErlangCreateFunctionQuickFixBase(signature)};
+            new LocalQuickFix[]{new ErlangCreateFunctionQuickFixBase(name, arity)};
 
           problemsHolder.registerProblem(o.getNameIdentifier(), "Unresolved function " + "'" + signature + "'", qfs);
+        }
+      }
+
+      @Override
+      public void visitSpecFun(@NotNull ErlangSpecFun o) {
+        PsiReference reference = o.getReference();
+        if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
+          if (o.getQAtom().getMacros() != null) return;
+          ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
+
+          LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(o, ErlangModuleRef.class) != null ?
+            new LocalQuickFix[]{} :
+            new LocalQuickFix[]{new ErlangCreateFunctionQuickFixBase(r.getName(), r.getArity())};
+
+          problemsHolder.registerProblem(o.getQAtom(), "Unresolved function " + "'" + r.getSignature() + "'", qfs);
+        }
+      }
+
+      @Override
+      public void visitFunctionWithArity(@NotNull ErlangFunctionWithArity o) {
+        PsiReference reference = o.getReference();
+        if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
+          if (o.getQAtom().getMacros() != null) return;
+          ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
+
+          LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(o, ErlangModuleRef.class) != null ?
+            new LocalQuickFix[]{} :
+            new LocalQuickFix[]{new ErlangCreateFunctionQuickFixBase(r.getName(), r.getArity())};
+
+          problemsHolder.registerProblem(o.getQAtom(), "Unresolved function " + "'" + r.getSignature() + "'", qfs);
         }
       }
     });
   }
 
   private static class ErlangCreateFunctionQuickFixBase extends LocalQuickFixBase {
-    protected ErlangCreateFunctionQuickFixBase(@NotNull String name) {
-      super("Create Function '" + name + "'", "Erlang");
+    private final String myName;
+    private final int myArity;
+
+    protected ErlangCreateFunctionQuickFixBase(@NotNull String name, int arity) {
+      super("Create Function '" + name + "/" + arity + "'", "Erlang");
+      myName = name;
+      myArity = arity;
     }
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-      ErlangFunctionCallExpression call = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunctionCallExpression.class);
+      //noinspection unchecked
+      ErlangCompositeElement call = PsiTreeUtil.getParentOfType(
+        descriptor.getPsiElement(),
+        ErlangFunctionCallExpression.class,
+        ErlangSpecFun.class,
+        ErlangFunctionWithArity.class
+
+      );
       if (call != null) {
         //noinspection unchecked
-        ErlangCompositeElement topmost = PsiTreeUtil.getParentOfType(call, ErlangFunction.class, ErlangRecordDefinition.class, ErlangMacros.class);
+        ErlangCompositeElement topmost = PsiTreeUtil.getParentOfType(call,
+          ErlangFunction.class, ErlangRecordDefinition.class, ErlangMacros.class, ErlangAttribute.class);
         if (topmost != null) {
           Editor editor = PsiUtilBase.findEditor(topmost);
           if (editor == null) return;
-          String text = call.getNameIdentifier().getText();
-          List<ErlangExpression> exrList = call.getArgumentList().getExpressionList();
-          List<String> placeHolders = ContainerUtil.map(exrList, new Function<ErlangExpression, String>() {
-            @Override
-            public String fun(ErlangExpression erlangExpression) {
-              return shorten(erlangExpression);
-            }
-          });
+          List<String> placeHolders = new ArrayList<String>(myArity);
+          for (int i = 0; i < myArity; i++) placeHolders.add("_Arg" + i);
+          if (call instanceof ErlangFunctionCallExpression) {
+            List<ErlangExpression> exrList = ((ErlangFunctionCallExpression) call).getArgumentList().getExpressionList();
+            placeHolders = ContainerUtil.map(exrList, new Function<ErlangExpression, String>() {
+              @Override
+              public String fun(ErlangExpression erlangExpression) {
+                return shorten(erlangExpression);
+              }
+            });
+          }
+
+          boolean addBelow = topmost instanceof ErlangAttribute;
 
           TemplateManager templateManager = TemplateManager.getInstance(project);
           Template template = templateManager.createTemplate("", "");
           template.setToReformat(true);
-          template.addTextSegment(text + "(");
+          template.addTextSegment(addBelow ? "\n" : "");
+          template.addTextSegment(myName + "(");
           int size = placeHolders.size();
           for (int i = 0; i < placeHolders.size(); i++) {
             String name = placeHolders.get(i);
@@ -148,9 +201,11 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
           template.addTextSegment(") ->\n");
           template.addEndVariable();
           template.addTextSegment("erlang:error(not_implemented)");
-          template.addTextSegment(".\n\n");
+          template.addTextSegment(".\n" + (addBelow ? "" : "\n"));
 
-          editor.getCaretModel().moveToOffset(topmost.getTextOffset());
+          editor.getCaretModel().moveToOffset(addBelow ?
+            topmost.getTextRange().getEndOffset() :
+            topmost.getTextOffset());
           templateManager.startTemplate(editor, template);
         }
       }

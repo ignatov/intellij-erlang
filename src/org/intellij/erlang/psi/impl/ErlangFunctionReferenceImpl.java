@@ -183,4 +183,16 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     }
     return getElement();
   }
+
+  public String getSignature() {
+    return myReferenceName + "/" + myArity;
+  }
+
+  public String getName() {
+    return myReferenceName;
+  }
+
+  public int getArity() {
+    return myArity;
+  }
 }

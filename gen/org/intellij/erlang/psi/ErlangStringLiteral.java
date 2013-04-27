@@ -1,12 +1,10 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi;
 
-import java.util.List;
-import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiLanguageInjectionHost;
-import org.intellij.erlang.psi.impl.ErlangStringLiteralImpl;
 import org.intellij.erlang.ErlangStringLiteralEscaper;
+import org.jetbrains.annotations.NotNull;
 
 public interface ErlangStringLiteral extends ErlangExpression, PsiLanguageInjectionHost {
 
@@ -15,7 +13,7 @@ public interface ErlangStringLiteral extends ErlangExpression, PsiLanguageInject
 
   boolean isValidHost();
 
-  ErlangStringLiteralImpl updateText(String text);
+  ErlangStringLiteral updateText(String text);
 
   @NotNull
   ErlangStringLiteralEscaper createLiteralTextEscaper();

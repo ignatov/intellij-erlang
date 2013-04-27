@@ -19,25 +19,25 @@ package org.intellij.erlang.editor;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.AbstractElementManipulator;
 import com.intellij.util.IncorrectOperationException;
-import org.intellij.erlang.psi.impl.ErlangStringLiteralImpl;
+import org.intellij.erlang.psi.ErlangStringLiteral;
 
 /**
  * @author ignatov
  */
-public class ErlangStringManipulator extends AbstractElementManipulator<ErlangStringLiteralImpl> {
+public class ErlangStringManipulator extends AbstractElementManipulator<ErlangStringLiteral> {
   @Override
-  public ErlangStringLiteralImpl handleContentChange(ErlangStringLiteralImpl psi, TextRange range, String newContent) throws IncorrectOperationException {
+  public ErlangStringLiteral handleContentChange(ErlangStringLiteral psi, TextRange range, String newContent) throws IncorrectOperationException {
     final String oldText = psi.getText();
     final String newText = oldText.substring(0, range.getStartOffset()) + newContent + oldText.substring(range.getEndOffset());
     return psi.updateText(newText);
   }
 
   @Override
-  public TextRange getRangeInElement(final ErlangStringLiteralImpl element) {
+  public TextRange getRangeInElement(final ErlangStringLiteral element) {
     return getStringTokenRange(element);
   }
 
-  public static TextRange getStringTokenRange(final ErlangStringLiteralImpl element) {
+  public static TextRange getStringTokenRange(final ErlangStringLiteral element) {
     return TextRange.from(1, element.getTextLength() - 2);
   }
 }

@@ -95,6 +95,32 @@ public class ErlangPsiImplUtil {
     PsiReference reference = recordExpression != null ? recordExpression.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
 
+    if (resolve == null && recordExpression != null) {
+      ErlangMacros macros = recordExpression.getMacros();
+      PsiReference macrosReference = macros != null ? macros.getReference() : null;
+      PsiElement macroDefinition = macrosReference != null ? macrosReference.resolve() : null;
+      if (macroDefinition instanceof ErlangMacrosDefinition) {
+        ErlangMacrosBody body = ((ErlangMacrosDefinition) macroDefinition).getMacrosBody();
+        final Ref<ErlangRecordRef> ref = Ref.create();
+        if (body != null) {
+          body.accept(new ErlangRecursiveVisitor() {
+            @Override
+            public void visitRecordRef(@NotNull ErlangRecordRef o) {
+              ref.setIfNull(o);
+            }
+          });
+        }
+
+        if (!ref.isNull()) {
+          PsiReference r = ref.get().getReference();
+          PsiElement rr = r != null ? r.resolve() : null;
+          if (rr instanceof ErlangRecordDefinition) {
+            resolve = rr;
+          }
+        }
+      }
+    }
+
     if (resolve instanceof ErlangRecordDefinition) {
       ErlangTypedRecordFields typedRecordFields = ((ErlangRecordDefinition) resolve).getTypedRecordFields();
       if (typedRecordFields != null) {
@@ -268,7 +294,7 @@ public class ErlangPsiImplUtil {
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), moduleRefQAtom, TextRange.from(0, o.getQAtom().getTextLength()), o.getQAtom().getText(), getArity(arity));
   }
 
-  private static int getArity(@Nullable PsiElement arity) {
+  public static int getArity(@Nullable PsiElement arity) {
     return StringUtil.parseInt(arity == null ? "" : arity.getText(), -1);
   }
 
@@ -949,14 +975,26 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static PsiReference getReference(ErlangFunTypeSigs o) {
-    ErlangQAtom atom = ContainerUtil.getFirstItem(o.getSpecFun().getQAtomList());
-    ErlangTypeSig sigs = ContainerUtil.getFirstItem(o.getTypeSigList());
-    if (sigs != null && atom != null) {
-      int argsCount = sigs.getFunType().getFunTypeArguments().getTopTypeList().size();
-      return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, null, TextRange.from(0, atom.getTextLength()), atom.getText(), argsCount);
+  public static PsiReference getReference(ErlangSpecFun o) {
+    ErlangQAtom atom = o.getQAtom();
+    ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
+    Integer arity = getArity(o);
+
+    if (arity != null) {
+      return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, moduleRef == null ? null : moduleRef.getQAtom(),
+        TextRange.from(0, atom.getTextLength()), atom.getText(), arity);
     }
     return null;
+  }
+
+  @Nullable
+  public static Integer getArity(@NotNull ErlangSpecFun o) {
+    PsiElement integer = o.getInteger();
+    Integer arity = null;
+    if (integer != null) arity = getArity(integer);
+    ErlangTypeSig sigs = PsiTreeUtil.getNextSiblingOfType(o, ErlangTypeSig.class);
+    if (arity == null && sigs != null) arity = sigs.getFunType().getFunTypeArguments().getTopTypeList().size();
+    return arity;
   }
 
   @Nullable
@@ -1071,7 +1109,7 @@ public class ErlangPsiImplUtil {
     return true;
   }
 
-  public static ErlangStringLiteralImpl updateText(@NotNull ErlangStringLiteral o, @NotNull String text) {
+  public static ErlangStringLiteral updateText(@NotNull ErlangStringLiteral o, @NotNull String text) {
     final ErlangExpression expression = ErlangElementFactory.createExpressionFromText(o.getProject(), text);
     return (ErlangStringLiteralImpl)o.replace(expression);
   }
@@ -1091,7 +1129,7 @@ public class ErlangPsiImplUtil {
   public static String getCallbackSpecName(@NotNull ErlangCallbackSpec spec) {
     ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
     ErlangSpecFun specFun = funTypeSigs != null ? funTypeSigs.getSpecFun() : null;
-    ErlangQAtom atom = specFun != null ? ContainerUtil.getFirstItem(specFun.getQAtomList()) : null;
+    ErlangQAtom atom = specFun != null ? specFun.getQAtom() : null;
     return atom != null ? atom.getText() : null;
   }
 

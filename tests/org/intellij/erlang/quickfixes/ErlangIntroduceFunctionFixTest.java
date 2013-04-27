@@ -34,7 +34,7 @@ public class ErlangIntroduceFunctionFixTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/introduce_function/";
   }
 
-  public void testSimple() throws Throwable {
-    doTest("Create Function 'lll/6'");
-  }
+  public void testFunctionCall()        throws Throwable { doTest("Create Function 'lll/6'"); }
+  public void testFunctionExpression()  throws Throwable { doTest("Create Function 'lll/6'"); }
+  public void testFunctionSpec()        throws Throwable { doTest("Create Function 'lll/6'"); }
 }

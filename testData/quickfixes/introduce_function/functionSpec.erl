@@ -1,0 +1,1 @@
+-spec lll<caret>/6 :: (ok, ok, ok, ok, ok, ok)-> ok.

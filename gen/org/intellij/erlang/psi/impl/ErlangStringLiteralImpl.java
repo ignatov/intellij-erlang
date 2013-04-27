@@ -1,15 +1,15 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi.impl;
 
-import java.util.List;
-import org.jetbrains.annotations.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
-import com.intellij.psi.util.PsiTreeUtil;
-import static org.intellij.erlang.ErlangTypes.*;
-import org.intellij.erlang.psi.*;
 import org.intellij.erlang.ErlangStringLiteralEscaper;
+import org.intellij.erlang.psi.ErlangStringLiteral;
+import org.intellij.erlang.psi.ErlangVisitor;
+import org.jetbrains.annotations.NotNull;
+
+import static org.intellij.erlang.ErlangTypes.ERL_STRING;
 
 public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements ErlangStringLiteral {
 
@@ -32,7 +32,7 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
     return ErlangPsiImplUtil.isValidHost(this);
   }
 
-  public ErlangStringLiteralImpl updateText(String text) {
+  public ErlangStringLiteral updateText(String text) {
     return ErlangPsiImplUtil.updateText(this, text);
   }
 

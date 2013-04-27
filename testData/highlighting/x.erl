@@ -16,5 +16,6 @@ run(_, _) ->
         string:tokens(Spec, "@")
     end).
 
+-spec x:stsz_size/1 :: (int) -> list.
 stsz_size(SampleSizeData) ->
     lists:sum([S || <<S:32>> <= SampleSizeData]).

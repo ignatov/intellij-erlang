@@ -209,6 +209,12 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
         if (index == i) end = builder.length();
       }
+
+      ErlangClauseGuard clauseGuard = ((ErlangFunctionClause) p).getClauseGuard();
+
+      String text = clauseGuard != null ? " " + clauseGuard.getText() : "";
+      builder.append(text);
+
       disabled = index >= args.size();
     }
     else if (p instanceof ErlangBifDescriptor) {

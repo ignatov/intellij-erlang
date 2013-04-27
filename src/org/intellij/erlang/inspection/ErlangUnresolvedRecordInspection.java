@@ -52,6 +52,7 @@ public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
+        if (o.getMacros() != null) return;
         ErlangRecordRef ref = o.getRecordRef();
         if (ref != null && ref.getQAtom().getMacros() != null) return;
         PsiReference reference = ref != null ? ref.getReference() : null;

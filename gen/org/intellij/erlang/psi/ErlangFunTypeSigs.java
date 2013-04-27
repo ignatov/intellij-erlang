@@ -1,20 +1,20 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
-import org.jetbrains.annotations.*;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
 
 public interface ErlangFunTypeSigs extends ErlangCompositeElement {
+
+  @Nullable
+  ErlangModuleRef getModuleRef();
 
   @NotNull
   ErlangSpecFun getSpecFun();
 
   @NotNull
   List<ErlangTypeSig> getTypeSigList();
-
-  @Nullable
-  PsiReference getReference();
 
 }
