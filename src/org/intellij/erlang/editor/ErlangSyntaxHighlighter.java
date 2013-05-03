@@ -127,7 +127,8 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
         ERL_OR == type ||
         ERL_NOT == type ||
         ERL_BSL == type ||
-        ERL_BSR == type
+        ERL_BSR == type ||
+        ERL_OR_OR == type
 //        ||
 //        ERL_ARROW == type
       ) {
