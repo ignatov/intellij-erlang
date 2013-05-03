@@ -372,8 +372,15 @@ atom_with_arity_expression ::= q_atom '/' integer {elementType="expression" pin=
 begin_end_expression ::= begin begin_end_body end {pin=1}
 begin_end_body ::= exprs {name="expression"}
 
-list_expression ::= '[' (']' | (expression tail)) {pin=0} // todo: rewrite without tail
-private tail ::= ']' | ('|' expression ']') | (',' expression tail)
+list_expression ::= '[' (']' | (expression not_comprehension tail)) {pin(".*")="not_comprehension"}
+private not_comprehension ::= !('||') // todo: rewrite without tail
+private tail ::= ']' | ('|' expression ']') | (',' expression tail) {pin(".*")=1}
+
+//list_expression ::= '[' expression_list? not_comprehension tail? ']' {pin(".*")="not_comprehension"}
+//private not_comprehension ::= !('||')
+//private tail ::= '|' expression_list {pin=1}
+
+//private expression_list ::= expression (',' expression)*
 
 binary_expression ::= '<<' bin_element_list? '>>' {pin=1}
 private bin_element_list ::= bin_element (',' bin_element)*

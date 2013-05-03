@@ -16,3 +16,10 @@ f() ->
 .
 
 not_add() -> ok|.
+
+list1() -> [first,
+.
+list2() -> [first|
+.
+list3() -> [first||
+.
