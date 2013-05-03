@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Sergey Ignatov
+ * Copyright 2012-2013 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,20 @@ package org.intellij.erlang.formatting;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import junit.framework.Assert;
+import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 
 import java.io.File;
 
-public class ErlangFormattingTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public static final boolean OVERRIDE_TEST_DATA = false;
+  private CodeStyleSettings myTemporarySettings;
 
   public void doTest() throws Exception {
     final String testName = getTestName(true);
@@ -73,12 +79,52 @@ public class ErlangFormattingTest extends LightPlatformCodeInsightFixtureTestCas
     doTest();
   }
 
+  public void testKeepCommentAtTheFirstLine() throws Exception {
+    getCommonSettings().KEEP_FIRST_COLUMN_COMMENT = true;
+    doTest();
+  }
+
+  public void testNotKeepCommentAtTheFirstLine() throws Exception {
+    getCommonSettings().KEEP_FIRST_COLUMN_COMMENT = false;
+    doTest();
+  }
+
   private ErlangCodeStyleSettings getErlangSettings() {
-    return CodeStyleSettingsManager.getSettings(getProject()).getCustomSettings(ErlangCodeStyleSettings.class);
+    return myTemporarySettings.getCustomSettings(ErlangCodeStyleSettings.class);
+  }
+
+  private CommonCodeStyleSettings getCommonSettings() {
+    return myTemporarySettings.getCommonSettings(ErlangLanguage.INSTANCE);
   }
 
   @Override
   protected String getTestDataPath() {
     return "testData/formatter/";
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setTestStyleSettings();
+  }
+
+  @Override
+  public void tearDown() throws Exception {
+    restoreStyleSettings();
+    super.tearDown();
+  }
+
+  private void setTestStyleSettings() {
+    CodeStyleSettingsManager settingsManager = CodeStyleSettingsManager.getInstance(getProject());
+    CodeStyleSettings currSettings = settingsManager.getCurrentSettings();
+    Assert.assertNotNull(currSettings);
+    myTemporarySettings = currSettings.clone();
+    CodeStyleSettings.IndentOptions indentOptions = myTemporarySettings.getIndentOptions(ErlangFileType.MODULE);
+    Assert.assertNotNull(indentOptions);
+    settingsManager.setTemporarySettings(myTemporarySettings);
+  }
+
+  private void restoreStyleSettings() {
+    CodeStyleSettingsManager.getInstance(getProject()).dropTemporarySettings();
   }
 }

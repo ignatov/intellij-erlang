@@ -35,8 +35,8 @@ ModuleDocCommentLine = "%%%"[^\r\n]*
 FunctionDocCommentLine = "%%"[^\r\n]*
 CommentLine = "%"[^\r\n]*
 
-ModuleDocComment = {ModuleDocCommentLine} ({Whitespace}? {ModuleDocCommentLine})*
-FunctionDocComment = {FunctionDocCommentLine} ({Whitespace}? {FunctionDocCommentLine})*
+ModuleDocComment = {ModuleDocCommentLine} {ModuleDocCommentLine}*
+FunctionDocComment = {FunctionDocCommentLine} {FunctionDocCommentLine}*
 Comment = {CommentLine} {CommentLine}*
 Whitespace = ([ \t\n] | {ControlCharacter})+
 ErlangUppercase = [A-Z]

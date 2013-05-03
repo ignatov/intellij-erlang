@@ -26,10 +26,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-final class ModuleDocProvider implements ElementDocProvider {
+final class ErlangModuleDocProvider implements ElementDocProvider {
   @NotNull private final ErlangModule myErlangModule;
 
-  public ModuleDocProvider(@NotNull ErlangModule erlangModule) {
+  public ErlangModuleDocProvider(@NotNull ErlangModule erlangModule) {
     myErlangModule = erlangModule;
   }
 
@@ -45,7 +45,7 @@ final class ModuleDocProvider implements ElementDocProvider {
     PsiElement parent = myErlangModule.getParent();
     PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(parent, PsiComment.class);
     if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
-      return ErlangDocUtil.getCommentText(comment, "%%%", ErlangDocUtil.EDOC_MODULE_TAGS);
+      return ErlangDocUtil.getCommentsText(ErlangDocUtil.collectPrevComments(comment), "%%%", ErlangDocUtil.EDOC_MODULE_TAGS);
     }
     return null;
   }

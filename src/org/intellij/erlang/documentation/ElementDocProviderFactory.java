@@ -45,10 +45,10 @@ final class ElementDocProviderFactory {
       }
       final ErlangModule erlangModule = (ErlangModule) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
-        return new SdkModuleDocProvider(project, virtualFile);
+        return new ErlangSdkModuleDocProvider(project, virtualFile);
       }
       else {
-        return new ModuleDocProvider(erlangModule);
+        return new ErlangModuleDocProvider(erlangModule);
       }
     }
     else if (psiElement instanceof ErlangFunction) {
@@ -58,11 +58,11 @@ final class ElementDocProviderFactory {
       }
       final ErlangFunction erlangFunction = (ErlangFunction) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
-        return new SdkFunctionDocProvider(project, erlangFunction.getName(),
+        return new ErlangSdkFunctionDocProvider(project, erlangFunction.getName(),
           erlangFunction.getArity(), virtualFile);
       }
       else {
-        return new FunctionDocProvider(erlangFunction);
+        return new ErlangFunctionDocProvider(erlangFunction);
       }
     }
     else if (psiElement instanceof ErlangTypeDefinition) {
@@ -72,7 +72,7 @@ final class ElementDocProviderFactory {
       }
       final ErlangTypeDefinition typeDefinition = (ErlangTypeDefinition) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
-        return new SdkTypeDocProvider(project, virtualFile, typeDefinition.getName());
+        return new ErlangSdkTypeDocProvider(project, virtualFile, typeDefinition.getName());
       }
       else {
         return null; // TODO implement TypeDocProvider
@@ -94,7 +94,7 @@ final class ElementDocProviderFactory {
             if (tentativeErlangModule instanceof ErlangModule) {
               final VirtualFile virtualFile = getVirtualFile(tentativeErlangModule);
               if (virtualFile != null) {
-                return new SdkFunctionDocProvider(project, functionName, arity, virtualFile);
+                return new ErlangSdkFunctionDocProvider(project, functionName, arity, virtualFile);
               }
             }
           }

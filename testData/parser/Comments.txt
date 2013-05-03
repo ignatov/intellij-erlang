@@ -1,5 +1,7 @@
 ERL_FILE
-  PsiComment(module_doc_comment)('%%% Module\n%%% comment\n%%% 5')
+  PsiComment(module_doc_comment)('%%% Module')
+  PsiComment(module_doc_comment)('%%% comment')
+  PsiComment(module_doc_comment)('%%% 5')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
@@ -9,7 +11,9 @@ ERL_FILE
         PsiElement(atom)('test')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% function comment\n%% %% second line\n%% third line')
+  PsiComment(function_doc_comment)('%% function comment')
+  PsiComment(function_doc_comment)('%% %% second line')
+  PsiComment(function_doc_comment)('%% third line')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

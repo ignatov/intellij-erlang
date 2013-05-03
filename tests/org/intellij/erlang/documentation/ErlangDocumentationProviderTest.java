@@ -77,7 +77,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
   public void testGenerateDocSdkBif() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "    <p><a name=\"member-2\"><span class=\"bold_code\">member(Elem, List) -&gt; boolean()</span></a><br></p><div class=\"REFBODY\">\n" +
         "<p>Types:</p>\n" +
@@ -102,7 +102,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
   public void testGenerateDocSdkFunction() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "    <p><a name=\"foreach-2\"></a><span class=\"bold_code\">foreach(Fun, List) -&gt; ok</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
         "<div class=\"REFTYPES\"><span class=\"bold_code\">Fun = fun((Elem :: T) -&gt; term())</span></div>\n" +
@@ -125,7 +125,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
   public void testGenerateDocSdkFunctionMulti() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "    <p><a name=\"seq-2\"></a><span class=\"bold_code\">seq(From, To) -&gt; Seq</span><br><a name=\"seq-3\"></a><span class=\"bold_code\">seq(From, To, Incr) -&gt; Seq</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
         "<div class=\"REFTYPES\"><span class=\"bold_code\">From = To = Incr = integer()</span></div>\n" +
@@ -169,7 +169,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
   public void testGenerateDocSdkLastFunction() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "    <p><a name=\"zipwith3-4\"></a><span class=\"bold_code\">zipwith3(Combine, List1, List2, List3) -&gt; List4</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
         "<div class=\"REFTYPES\"><span class=\"bold_code\">Combine = fun((X, Y, Z) -&gt; T)</span></div>\n" +
@@ -207,7 +207,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
   public void testGenerateDocSdkModule() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "  <h3>MODULE</h3><div class=\"REFBODY\">lists</div>\n" +
         "  <h3>MODULE SUMMARY</h3>\n" +
@@ -254,7 +254,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
   public void testGenerateDocSdkType() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "      <span class=\"bold_code\"><a name=\"type-file_info\">file_info()</a> = <br>    #file_info{size = undefined | integer() &gt;= 0,<br>               type = undefined<br>                     | device<br>                     | directory<br>                     | other<br>                     | regular<br>                     | symlink,<br>               access = undefined<br>                       | read<br>                       | write<br>                       | read_write<br>                       | none,<br>               atime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               mtime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               ctime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               mode = undefined | integer(),<br>               links = undefined | integer() &gt;= 0,<br>               major_device = undefined | integer(),<br>               minor_device = undefined | integer(),<br>               inode = undefined | integer(),<br>               uid = undefined | integer(),<br>               gid = undefined | integer()}</span><br></p>    <p>\n" +
         "</body></html>\n",
@@ -268,7 +268,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
   public void testGenerateDocSdkLastType() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "      <span class=\"bold_code\"><a name=\"type-sendfile_option\">sendfile_option()</a> = {chunk_size, integer() &gt;= 0}</span><br></p>   \n" +
         "\n" +
@@ -285,7 +285,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
     // <a href="#type-$TYPE$">
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "    <p><a name=\"change_time-2\"></a><span class=\"bold_code\">change_time(Filename, Mtime) -&gt; ok | {error, Reason}</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
         "<div class=\"REFTYPES\"><span class=\"bold_code\">Filename = <span class=\"bold_code\"><a href=\"psi_element://file#type-name\">name()</a></span></span></div>\n" +
@@ -308,7 +308,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
     // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html');">
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "    <p><a name=\"path_script-3\"></a><span class=\"bold_code\">path_script(Path, Filename, Bindings) -&gt;<br>               {ok, Value, FullName} | {error, Reason}</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
         "<div class=\"REFTYPES\"><span class=\"bold_code\">Path = [Dir :: <span class=\"bold_code\"><a href=\"psi_element://file#type-name\">name()</a></span>]</span></div>\n" +
@@ -335,7 +335,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
     // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html#$FUNCTION$-$ARITY$');">
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "    <p><a name=\"read_line-1\"></a><span class=\"bold_code\">read_line(IoDevice) -&gt; {ok, Data} | eof | {error, Reason}</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
         "<div class=\"REFTYPES\"><span class=\"bold_code\">IoDevice = <span class=\"bold_code\"><a href=\"psi_element://file#type-io_device\">io_device()</a></span> | atom()</span></div>\n" +
@@ -389,7 +389,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
     // <a href="$MODULE$.html#type-$TYPE$">
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "    <p><a name=\"sendfile-5\"></a><span class=\"bold_code\">sendfile(RawFile, Socket, Offset, Bytes, Opts) -&gt;<br>            {ok, integer() &gt;= 0} |<br>            {error, <span class=\"bold_code\"><a href=\"psi_element://inet#type-posix\">inet:posix()</a></span> | closed | badarg | not_owner}</span><br><div class=\"REFBODY\"><p>Types:</p>\n" +
         "<div class=\"REFTYPES\"><span class=\"bold_code\">RawFile = <span class=\"bold_code\"><a href=\"psi_element://file#type-fd\">file:fd()</a></span></span></div>\n" +
@@ -437,7 +437,7 @@ public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFix
   public void testLinkConverterWithLineBreak() throws Exception {
     doTestGenerateDoc(
       "<html>\n" +
-        AbstractSdkDocProvider.HTTP_STYLE +
+        ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
         "  <h3>MODULE</h3><div class=\"REFBODY\">erl_eval</div>\n" +
         "  <h3>MODULE SUMMARY</h3>\n" +

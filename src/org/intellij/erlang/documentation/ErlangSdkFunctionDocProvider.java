@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class SdkFunctionDocProvider extends AbstractSdkDocProvider {
+final class ErlangSdkFunctionDocProvider extends ErlangSdkDocProviderBase {
   private static final Pattern PATTERN_FUNC_BEGIN = Pattern.compile(
     "<a name=\"(.*?)\"></a><span class=\"bold_code\">.*?</span><br>");
   private static final Pattern PATTERN_BIF_BEGIN = Pattern.compile(
@@ -32,8 +32,8 @@ final class SdkFunctionDocProvider extends AbstractSdkDocProvider {
 
   @NotNull private final String myFuncSignature;
 
-  public SdkFunctionDocProvider(@NotNull Project project, @NotNull String functionName, int functionArity,
-                                @NotNull VirtualFile virtualFile) {
+  public ErlangSdkFunctionDocProvider(@NotNull Project project, @NotNull String functionName, int functionArity,
+                                      @NotNull VirtualFile virtualFile) {
     super(project, virtualFile);
     myFuncSignature = functionName + "-" + functionArity;
   }

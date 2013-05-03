@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.intellij.erlang.ErlangParserDefinition.COMMENTS;
 import static org.intellij.erlang.ErlangTypes.*;
 
 /**
@@ -79,7 +80,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     mySettings = settings;
     myErlangSettings = erlangSettings;
     mySpacingBuilder = spacingBuilder;
-    myIndent = new ErlangIndentProcessor(mySettings).getChildIndent(node);
+    myIndent = ErlangIndentProcessor.getChildIndent(node);
   }
 
   @Override
@@ -167,6 +168,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Override
   @Nullable
   public Spacing getSpacing(@Nullable Block child1, @NotNull Block child2) {
+    if (child2 instanceof ErlangFormattingBlock) {
+      if (COMMENTS.contains(((ErlangFormattingBlock) child2).getNode().getElementType()) && mySettings.KEEP_FIRST_COLUMN_COMMENT) {
+        return Spacing.createKeepingFirstColumnSpacing(0, Integer.MAX_VALUE, true, mySettings.KEEP_BLANK_LINES_IN_CODE);
+      }
+    }
     return mySpacingBuilder.getSpacing(this, child1, child2);
   }
 

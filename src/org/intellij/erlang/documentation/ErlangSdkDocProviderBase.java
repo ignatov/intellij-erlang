@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 
 import static com.intellij.codeInsight.documentation.DocumentationManager.PSI_ELEMENT_PROTOCOL;
 
-abstract class AbstractSdkDocProvider implements ElementDocProvider {
+abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   private static final Pattern PATTERN_HREF = Pattern.compile("<a href=\"(.*?)\">");
   private static final Pattern PATTERN_EVALUATED_LINK = Pattern.compile("javascript:erlhref\\('.*?','.*?','(.*?)'\\);");
   private static final Pattern PATTERN_EXTERNAL_LINK = Pattern.compile("(.*)\\.html#(.*)");
@@ -54,7 +54,7 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
     final String css;
     try {
        css = ResourceUtil.loadText(ResourceUtil.getResource(
-         AbstractSdkDocProvider.class, "/documentation", "erlang-sdk-doc.css"));
+         ErlangSdkDocProviderBase.class, "/documentation", "erlang-sdk-doc.css"));
     } catch (IOException e) {
       throw (AssertionError) (new AssertionError().initCause(e));
     }
@@ -66,7 +66,7 @@ abstract class AbstractSdkDocProvider implements ElementDocProvider {
   @Nullable private List<OrderEntry> myOrderEntries;
   @Nullable private List<String> myExternalDocUrls;
 
-  protected AbstractSdkDocProvider(@NotNull Project project, @NotNull VirtualFile virtualFile) {
+  protected ErlangSdkDocProviderBase(@NotNull Project project, @NotNull VirtualFile virtualFile) {
     myProject = project;
     myVirtualFile = virtualFile;
   }

@@ -16,12 +16,17 @@
 
 package org.intellij.erlang.documentation;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public final class ErlangDocUtil {
@@ -52,10 +57,15 @@ public final class ErlangDocUtil {
   private ErlangDocUtil() {
   }
 
-  static String getCommentText(@NotNull PsiComment comment,
-                               @NotNull final String commentStartsWith,
-                               @NotNull final Set<String> contextTags) {
-    String[] lines = StringUtil.splitByLines(comment.getText());
+  public static String getCommentsText(@NotNull List<PsiComment> comments,
+                                       @NotNull final String commentStartsWith,
+                                       @NotNull final Set<String> contextTags) {
+    List<String> lines = ContainerUtil.map(comments, new Function<PsiComment, String>() {
+      @Override
+      public String fun(PsiComment psiComment) {
+        return psiComment.getText();
+      }
+    });
     return StringUtil.join(ContainerUtil.map(lines, new Function<String, String>() {
       @Override
       public String fun(String s) {
@@ -66,5 +76,22 @@ public final class ErlangDocUtil {
         return replace;
       }
     }), "<br/>");
+  }
+
+  @NotNull
+  static List<PsiComment> collectPrevComments(@NotNull PsiComment comment) {
+    ArrayList<PsiComment> result = new ArrayList<PsiComment>();
+    PsiElement current = comment;
+    while (current instanceof PsiComment) {
+      result.add((PsiComment) current);
+      ASTNode sibling = FormatterUtil.getPreviousNonWhitespaceSibling(current.getNode());
+      if (sibling != null) {
+        current = sibling.getPsi();
+      }
+      else {
+        current = null;
+      }
+    }
+    return ContainerUtil.reverse(result);
   }
 }

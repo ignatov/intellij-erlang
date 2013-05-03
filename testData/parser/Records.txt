@@ -1,7 +1,52 @@
 ERL_FILE
-  PsiComment(function_doc_comment)('%%\n%% %CopyrightBegin%\n%%\n%% Copyright Ericsson AB 1996-2009. All Rights Reserved.\n%%\n%% The contents of this file are subject to the Erlang Public License,\n%% Version 1.1, (the "License"); you may not use this file except in\n%% compliance with the License. You should have received a copy of the\n%% Erlang Public License along with this software. If not, it can be\n%% retrieved online at http://www.erlang.org/.\n%%\n%% Software distributed under the License is distributed on an "AS IS"\n%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See\n%% the License for the specific language governing rights and limitations\n%% under the License.\n%%\n%% %CopyrightEnd%\n%%\n\n%%\n\n%%-behaviour(mnesia_backup).')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% %CopyrightBegin%')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Copyright Ericsson AB 1996-2009. All Rights Reserved.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% The contents of this file are subject to the Erlang Public License,')
+  PsiComment(function_doc_comment)('%% Version 1.1, (the "License"); you may not use this file except in')
+  PsiComment(function_doc_comment)('%% compliance with the License. You should have received a copy of the')
+  PsiComment(function_doc_comment)('%% Erlang Public License along with this software. If not, it can be')
+  PsiComment(function_doc_comment)('%% retrieved online at http://www.erlang.org/.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Software distributed under the License is distributed on an "AS IS"')
+  PsiComment(function_doc_comment)('%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See')
+  PsiComment(function_doc_comment)('%% the License for the specific language governing rights and limitations')
+  PsiComment(function_doc_comment)('%% under the License.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% %CopyrightEnd%')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%%-behaviour(mnesia_backup).')
   PsiComment(ERL_LINE_COMMENT)('%0')
-  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%%\n%% This module contains one implementation of callback functions\n%% used by Mnesia at backup and restore. The user may however\n%% write an own module the same interface as mnesia_backup and\n%% configure Mnesia so the alternate module performs the actual\n%% accesses to the backup media. This means that the user may put\n%% the backup on medias that Mnesia does not know about, possibly\n%% on hosts where Erlang is not running.\n%%\n%% The OpaqueData argument is never interpreted by other parts of\n%% Mnesia. It is the property of this module. Alternate implementations\n%% of this module may have different interpretations of OpaqueData.\n%% The OpaqueData argument given to open_write/1 and open_read/1\n%% are forwarded directly from the user.\n%%\n%% All functions must return {ok, NewOpaqueData} or {error, Reason}.\n%%\n%% The NewOpaqueData arguments returned by backup callback functions will\n%% be given as input when the next backup callback function is invoked.\n%% If any return value does not match {ok, _} the backup will be aborted.\n%%\n%% The NewOpaqueData arguments returned by restore callback functions will\n%% be given as input when the next restore callback function is invoked\n%% If any return value does not match {ok, _} the restore will be aborted.\n%%\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+  PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% This module contains one implementation of callback functions')
+  PsiComment(function_doc_comment)('%% used by Mnesia at backup and restore. The user may however')
+  PsiComment(function_doc_comment)('%% write an own module the same interface as mnesia_backup and')
+  PsiComment(function_doc_comment)('%% configure Mnesia so the alternate module performs the actual')
+  PsiComment(function_doc_comment)('%% accesses to the backup media. This means that the user may put')
+  PsiComment(function_doc_comment)('%% the backup on medias that Mnesia does not know about, possibly')
+  PsiComment(function_doc_comment)('%% on hosts where Erlang is not running.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% The OpaqueData argument is never interpreted by other parts of')
+  PsiComment(function_doc_comment)('%% Mnesia. It is the property of this module. Alternate implementations')
+  PsiComment(function_doc_comment)('%% of this module may have different interpretations of OpaqueData.')
+  PsiComment(function_doc_comment)('%% The OpaqueData argument given to open_write/1 and open_read/1')
+  PsiComment(function_doc_comment)('%% are forwarded directly from the user.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% All functions must return {ok, NewOpaqueData} or {error, Reason}.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% The NewOpaqueData arguments returned by backup callback functions will')
+  PsiComment(function_doc_comment)('%% be given as input when the next backup callback function is invoked.')
+  PsiComment(function_doc_comment)('%% If any return value does not match {ok, _} the backup will be aborted.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% The NewOpaqueData arguments returned by restore callback functions will')
+  PsiComment(function_doc_comment)('%% be given as input when the next restore callback function is invoked')
+  PsiComment(function_doc_comment)('%% If any return value does not match {ok, _} the restore will be aborted.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
@@ -72,7 +117,8 @@ ERL_FILE
         PsiElement(])(']')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Backup callback interface')
+  PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+  PsiComment(function_doc_comment)('%% Backup callback interface')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -96,7 +142,9 @@ ERL_FILE
       PsiElement(})('}')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Opens backup media for write\n%%\n%% Returns {ok, OpaqueData} or {error, Reason}')
+  PsiComment(function_doc_comment)('%% Opens backup media for write')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Returns {ok, OpaqueData} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -322,7 +370,9 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Writes BackupItems to the backup media\n%%\n%% Returns {ok, OpaqueData} or {error, Reason}')
+  PsiComment(function_doc_comment)('%% Writes BackupItems to the backup media')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Returns {ok, OpaqueData} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -435,7 +485,9 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Closes the backup media after a successful backup\n%%\n%% Returns {ok, ReturnValueToUser} or {error, Reason}')
+  PsiComment(function_doc_comment)('%% Closes the backup media after a successful backup')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Returns {ok, ReturnValueToUser} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -671,7 +723,9 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Closes the backup media after an interrupted backup\n%%\n%% Returns {ok, ReturnValueToUser} or {error, Reason}')
+  PsiComment(function_doc_comment)('%% Closes the backup media after an interrupted backup')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Returns {ok, ReturnValueToUser} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -798,7 +852,8 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Restore callback interface')
+  PsiComment(module_doc_comment)('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+  PsiComment(function_doc_comment)('%% Restore callback interface')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('record')
@@ -1363,7 +1418,9 @@ ERL_FILE
       PsiElement(})('}')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Opens backup media for read\n%%\n%% Returns {ok, OpaqueData} or {error, Reason}')
+  PsiComment(function_doc_comment)('%% Opens backup media for read')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Returns {ok, OpaqueData} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1726,7 +1783,11 @@ ERL_FILE
                   PsiElement(end)('end')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Reads BackupItems from the backup media\n%%\n%% Returns {ok, OpaqueData, BackupItems} or {error, Reason}\n%%\n%% BackupItems == [] is interpreted as eof')
+  PsiComment(function_doc_comment)('%% Reads BackupItems from the backup media')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Returns {ok, OpaqueData, BackupItems} or {error, Reason}')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% BackupItems == [] is interpreted as eof')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -1986,7 +2047,9 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Closes the backup media after restore\n%%\n%% Returns {ok, ReturnValueToUser} or {error, Reason}')
+  PsiComment(function_doc_comment)('%% Closes the backup media after restore')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Returns {ok, ReturnValueToUser} or {error, Reason}')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

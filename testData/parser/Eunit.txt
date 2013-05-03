@@ -1,5 +1,38 @@
 ERL_FILE
-  PsiComment(function_doc_comment)('%% This library is free software; you can redistribute it and/or modify\n%% it under the terms of the GNU Lesser General Public License as\n%% published by the Free Software Foundation; either version 2 of the\n%% License, or (at your option) any later version.\n%%\n%% This library is distributed in the hope that it will be useful, but\n%% WITHOUT ANY WARRANTY; without even the implied warranty of\n%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU\n%% Lesser General Public License for more details.\n%%\n%% You should have received a copy of the GNU Lesser General Public\n%% License along with this library; if not, write to the Free Software\n%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307\n%% USA\n%%\n%% Copyright (C) 2004-2006 Micka�l R�mond, Richard Carlsson\n\n%% Including this file turns on testing and defines TEST, unless NOTEST\n%% is defined before the file is included. If both NOTEST and TEST are\n%% already defined, then TEST takes precedence, and NOTEST will become\n%% undefined.\n%%\n%% If NODEBUG is defined before this file is included, the debug macros\n%% are disabled, unless DEBUG is also defined, in which case NODEBUG\n%% will become undefined. NODEBUG also implies NOASSERT, unless testing\n%% is enabled.\n%%\n%% If including this file causes TEST to be defined, then NOASSERT will\n%% be undefined, even if it was previously defined and even if NODEBUG\n%% is defined. If both ASSERT and NOASSERT are defined before the file\n%% is included, then ASSERT takes precedence, and NOASSERT will become\n%% undefined regardless of TEST.\n%%\n%% After including this file, EUNIT will be defined if and only if TEST\n%% is defined.')
+  PsiComment(function_doc_comment)('%% This library is free software; you can redistribute it and/or modify')
+  PsiComment(function_doc_comment)('%% it under the terms of the GNU Lesser General Public License as')
+  PsiComment(function_doc_comment)('%% published by the Free Software Foundation; either version 2 of the')
+  PsiComment(function_doc_comment)('%% License, or (at your option) any later version.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% This library is distributed in the hope that it will be useful, but')
+  PsiComment(function_doc_comment)('%% WITHOUT ANY WARRANTY; without even the implied warranty of')
+  PsiComment(function_doc_comment)('%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU')
+  PsiComment(function_doc_comment)('%% Lesser General Public License for more details.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% You should have received a copy of the GNU Lesser General Public')
+  PsiComment(function_doc_comment)('%% License along with this library; if not, write to the Free Software')
+  PsiComment(function_doc_comment)('%% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307')
+  PsiComment(function_doc_comment)('%% USA')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Copyright (C) 2004-2006 Micka�l R�mond, Richard Carlsson')
+  PsiComment(function_doc_comment)('%% Including this file turns on testing and defines TEST, unless NOTEST')
+  PsiComment(function_doc_comment)('%% is defined before the file is included. If both NOTEST and TEST are')
+  PsiComment(function_doc_comment)('%% already defined, then TEST takes precedence, and NOTEST will become')
+  PsiComment(function_doc_comment)('%% undefined.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% If NODEBUG is defined before this file is included, the debug macros')
+  PsiComment(function_doc_comment)('%% are disabled, unless DEBUG is also defined, in which case NODEBUG')
+  PsiComment(function_doc_comment)('%% will become undefined. NODEBUG also implies NOASSERT, unless testing')
+  PsiComment(function_doc_comment)('%% is enabled.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% If including this file causes TEST to be defined, then NOASSERT will')
+  PsiComment(function_doc_comment)('%% be undefined, even if it was previously defined and even if NODEBUG')
+  PsiComment(function_doc_comment)('%% is defined. If both ASSERT and NOASSERT are defined before the file')
+  PsiComment(function_doc_comment)('%% is included, then ASSERT takes precedence, and NOASSERT will become')
+  PsiComment(function_doc_comment)('%% undefined regardless of TEST.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% After including this file, EUNIT will be defined if and only if TEST')
+  PsiComment(function_doc_comment)('%% is defined.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -137,7 +170,8 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% note that the main switch used within this file is NOTEST; however,\n%% both TEST and EUNIT may be used to check whether testing is enabled')
+  PsiComment(function_doc_comment)('%% note that the main switch used within this file is NOTEST; however,')
+  PsiComment(function_doc_comment)('%% both TEST and EUNIT may be used to check whether testing is enabled')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -280,7 +314,11 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Parse transforms for automatic exporting/stripping of test functions.\n%% (Note that although automatic stripping is convenient, it will make\n%% the code dependent on this header file and the eunit_striptests\n%% module for compilation, even when testing is switched off! Using\n%% -ifdef(EUNIT) around all test code makes the program more portable.)')
+  PsiComment(function_doc_comment)('%% Parse transforms for automatic exporting/stripping of test functions.')
+  PsiComment(function_doc_comment)('%% (Note that although automatic stripping is convenient, it will make')
+  PsiComment(function_doc_comment)('%% the code dependent on this header file and the eunit_striptests')
+  PsiComment(function_doc_comment)('%% module for compilation, even when testing is switched off! Using')
+  PsiComment(function_doc_comment)('%% -ifdef(EUNIT) around all test code makes the program more portable.)')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -361,7 +399,16 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% All macros should be available even if testing is turned off, and\n%% should preferably not require EUnit to be present at runtime.\n%%\n%% We must use fun-call wrappers ((fun () -> ... end)()) to avoid\n%% exporting local variables, and furthermore we only use variable names\n%% prefixed with "__", that hopefully will not be bound outside the fun.\n\n%% A generic let-macro is particularly useful when writing test cases.\n%% It is more compact than 'begin X = Y, Z end', and guarantees that\n%% X gets a new, local binding.\n%% (Note that lowercase 'let' is a reserved word.)')
+  PsiComment(function_doc_comment)('%% All macros should be available even if testing is turned off, and')
+  PsiComment(function_doc_comment)('%% should preferably not require EUnit to be present at runtime.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% We must use fun-call wrappers ((fun () -> ... end)()) to avoid')
+  PsiComment(function_doc_comment)('%% exporting local variables, and furthermore we only use variable names')
+  PsiComment(function_doc_comment)('%% prefixed with "__", that hopefully will not be bound outside the fun.')
+  PsiComment(function_doc_comment)('%% A generic let-macro is particularly useful when writing test cases.')
+  PsiComment(function_doc_comment)('%% It is more compact than 'begin X = Y, Z end', and guarantees that')
+  PsiComment(function_doc_comment)('%% X gets a new, local binding.')
+  PsiComment(function_doc_comment)('%% (Note that lowercase 'let' is a reserved word.)')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -440,7 +487,10 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% It is important that testing code is short and readable.\n%% An if-then-else macro can make some code much more compact.\n%% Compare:  case f(X) of true->g(X); false->h(X) end\n%%     and:  ?IF(f(X), g(Y), h(Z))')
+  PsiComment(function_doc_comment)('%% It is important that testing code is short and readable.')
+  PsiComment(function_doc_comment)('%% An if-then-else macro can make some code much more compact.')
+  PsiComment(function_doc_comment)('%% Compare:  case f(X) of true->g(X); false->h(X) end')
+  PsiComment(function_doc_comment)('%%     and:  ?IF(f(X), g(Y), h(Z))')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -527,7 +577,8 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% This macro yields 'true' if the value of E matches the guarded\n%% pattern G, otherwise 'false'.')
+  PsiComment(function_doc_comment)('%% This macro yields 'true' if the value of E matches the guarded')
+  PsiComment(function_doc_comment)('%% pattern G, otherwise 'false'.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -603,7 +654,9 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% This macro can be used at any time to check whether or not the code\n%% is currently running directly under eunit. Note that it does not work\n%% in secondary processes if they have been assigned a new group leader.')
+  PsiComment(function_doc_comment)('%% This macro can be used at any time to check whether or not the code')
+  PsiComment(function_doc_comment)('%% is currently running directly under eunit. Note that it does not work')
+  PsiComment(function_doc_comment)('%% in secondary processes if they have been assigned a new group leader.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -704,7 +757,8 @@ ERL_FILE
             PsiElement(var)('NOASSERT')
         PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% The plain assert macro should be defined to do nothing if this file\n%% is included when debugging/testing is turned off.')
+  PsiComment(function_doc_comment)('%% The plain assert macro should be defined to do nothing if this file')
+  PsiComment(function_doc_comment)('%% is included when debugging/testing is turned off.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -749,7 +803,8 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('else')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% The assert macro is written the way it is so as not to cause warnings\n%% for clauses that cannot match, even if the expression is a constant.')
+  PsiComment(function_doc_comment)('%% The assert macro is written the way it is so as not to cause warnings')
+  PsiComment(function_doc_comment)('%% for clauses that cannot match, even if the expression is a constant.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -1104,7 +1159,8 @@ ERL_FILE
           PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% This is mostly a convenience which gives more detailed reports.\n%% Note: Guard is a guarded pattern, and can not be used for value.')
+  PsiComment(function_doc_comment)('%% This is mostly a convenience which gives more detailed reports.')
+  PsiComment(function_doc_comment)('%% Note: Guard is a guarded pattern, and can not be used for value.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -1639,7 +1695,8 @@ ERL_FILE
           PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% This is a convenience macro which gives more detailed reports when\n%% the expected LHS value is not a pattern, but a computed value')
+  PsiComment(function_doc_comment)('%% This is a convenience macro which gives more detailed reports when')
+  PsiComment(function_doc_comment)('%% the expected LHS value is not a pattern, but a computed value')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -2154,7 +2211,8 @@ ERL_FILE
           PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Note: Class and Term are patterns, and can not be used for value.\n%% Term can be a guarded pattern, but Class cannot.')
+  PsiComment(function_doc_comment)('%% Note: Class and Term are patterns, and can not be used for value.')
+  PsiComment(function_doc_comment)('%% Term can be a guarded pattern, but Class cannot.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -2871,7 +2929,9 @@ ERL_FILE
           PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% This is the inverse case of assertException, for convenience.\n%% Note: Class and Term are patterns, and can not be used for value.\n%% Both Class and Term can be guarded patterns.')
+  PsiComment(function_doc_comment)('%% This is the inverse case of assertException, for convenience.')
+  PsiComment(function_doc_comment)('%% Note: Class and Term are patterns, and can not be used for value.')
+  PsiComment(function_doc_comment)('%% Both Class and Term can be guarded patterns.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -3256,7 +3316,9 @@ ERL_FILE
           PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Macros for running operating system commands. (Note that these\n%% require EUnit to be present at runtime, or at least eunit_lib.)\n\n%% these can be used for simply running commands in a controlled way')
+  PsiComment(function_doc_comment)('%% Macros for running operating system commands. (Note that these')
+  PsiComment(function_doc_comment)('%% require EUnit to be present at runtime, or at least eunit_lib.)')
+  PsiComment(function_doc_comment)('%% these can be used for simply running commands in a controlled way')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -3589,7 +3651,8 @@ ERL_FILE
           PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% these are only used for testing; they always return 'ok' on success,\n%% and have no effect if debugging/testing is turned off')
+  PsiComment(function_doc_comment)('%% these are only used for testing; they always return 'ok' on success,')
+  PsiComment(function_doc_comment)('%% and have no effect if debugging/testing is turned off')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -4214,7 +4277,8 @@ ERL_FILE
           PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Macros to simplify debugging (in particular, they work even when the\n%% standard output is being redirected by EUnit while running tests)')
+  PsiComment(function_doc_comment)('%% Macros to simplify debugging (in particular, they work even when the')
+  PsiComment(function_doc_comment)('%% standard output is being redirected by EUnit while running tests)')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE

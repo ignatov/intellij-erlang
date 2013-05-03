@@ -27,10 +27,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-final class FunctionDocProvider implements ElementDocProvider {
+final class ErlangFunctionDocProvider implements ElementDocProvider {
   @NotNull private final ErlangFunction myErlangFunction;
 
-  public FunctionDocProvider(@NotNull ErlangFunction erlangFunction) {
+  public ErlangFunctionDocProvider(@NotNull ErlangFunction erlangFunction) {
     myErlangFunction = erlangFunction;
   }
 
@@ -46,14 +46,15 @@ final class FunctionDocProvider implements ElementDocProvider {
     final ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, ErlangFunction.class);
     final ErlangSpecification spec = ErlangPsiImplUtil.getSpecification(myErlangFunction);
     final PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, PsiComment.class);
+
     String commentText = "";
     if (spec != null && ErlangPsiImplUtil.notFromPreviousFunction(spec, prevFunction)) {
       commentText += spec.getText().replaceFirst("spec", "<b>Specification:</b><br/>") + "<br/><br/>";
     }
     if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT &&
       ErlangPsiImplUtil.notFromPreviousFunction(comment, prevFunction)) {
-      commentText += "<b>Comment:</b><br/>" + ErlangDocUtil.getCommentText(
-        comment, "%%", ErlangDocUtil.EDOC_FUNCTION_TAGS);
+      commentText += "<b>Comment:</b><br/>" + ErlangDocUtil.getCommentsText(
+        ErlangDocUtil.collectPrevComments(comment), "%%", ErlangDocUtil.EDOC_FUNCTION_TAGS);
     }
     return commentText;
   }

@@ -1,5 +1,30 @@
 ERL_FILE
-  PsiComment(function_doc_comment)('%% -*- erlang-indent-level: 2 -*-\n%%--------------------------------------------------------------------\n%% %CopyrightBegin%\n%%\n%% Copyright Ericsson AB 2006-2011. All Rights Reserved.\n%%\n%% The contents of this file are subject to the Erlang Public License,\n%% Version 1.1, (the "License"); you may not use this file except in\n%% compliance with the License. You should have received a copy of the\n%% Erlang Public License along with this software. If not, it can be\n%% retrieved online at http://www.erlang.org/.\n%%\n%% Software distributed under the License is distributed on an "AS IS"\n%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See\n%% the License for the specific language governing rights and limitations\n%% under the License.\n%%\n%% %CopyrightEnd%\n%%\n\n%%%-------------------------------------------------------------------\n%%% File    : dialyzer_dataflow.erl\n%%% Author  : Tobias Lindahl <tobiasl@it.uu.se>\n%%% Description :\n%%%\n%%% Created : 19 Apr 2005 by Tobias Lindahl <tobiasl@it.uu.se>\n%%%-------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%% -*- erlang-indent-level: 2 -*-')
+  PsiComment(function_doc_comment)('%%--------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%% %CopyrightBegin%')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Copyright Ericsson AB 2006-2011. All Rights Reserved.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% The contents of this file are subject to the Erlang Public License,')
+  PsiComment(function_doc_comment)('%% Version 1.1, (the "License"); you may not use this file except in')
+  PsiComment(function_doc_comment)('%% compliance with the License. You should have received a copy of the')
+  PsiComment(function_doc_comment)('%% Erlang Public License along with this software. If not, it can be')
+  PsiComment(function_doc_comment)('%% retrieved online at http://www.erlang.org/.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Software distributed under the License is distributed on an "AS IS"')
+  PsiComment(function_doc_comment)('%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See')
+  PsiComment(function_doc_comment)('%% the License for the specific language governing rights and limitations')
+  PsiComment(function_doc_comment)('%% under the License.')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% %CopyrightEnd%')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(module_doc_comment)('%%%-------------------------------------------------------------------')
+  PsiComment(module_doc_comment)('%%% File    : dialyzer_dataflow.erl')
+  PsiComment(module_doc_comment)('%%% Author  : Tobias Lindahl <tobiasl@it.uu.se>')
+  PsiComment(module_doc_comment)('%%% Description :')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% Created : 19 Apr 2005 by Tobias Lindahl <tobiasl@it.uu.se>')
+  PsiComment(module_doc_comment)('%%%-------------------------------------------------------------------')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
@@ -584,7 +609,10 @@ ERL_FILE
         PsiElement(])(']')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%-define(DEBUG, true).\n%%-define(DEBUG_PP, true).\n%%-define(DEBUG_TIME, true).\n%%-define(DOT, true).')
+  PsiComment(function_doc_comment)('%%-define(DEBUG, true).')
+  PsiComment(function_doc_comment)('%%-define(DEBUG_PP, true).')
+  PsiComment(function_doc_comment)('%%-define(DEBUG_TIME, true).')
+  PsiComment(function_doc_comment)('%%-define(DOT, true).')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -693,7 +721,9 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%-define(debug1(S_, L_), io:format(S_, L_)).\n%%-define(debug1(S_, L_), ok).\n\n%%--------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%%-define(debug1(S_, L_), io:format(S_, L_)).')
+  PsiComment(function_doc_comment)('%%-define(debug1(S_, L_), ok).')
+  PsiComment(function_doc_comment)('%%--------------------------------------------------------------------')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom)('define')
@@ -1786,7 +1816,8 @@ ERL_FILE
               PsiElement(()('(')
               PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%--------------------------------------------------------------------\n%% This is used in the testsuite.')
+  PsiComment(function_doc_comment)('%%--------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%% This is used in the testsuite.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
@@ -2466,7 +2497,11 @@ ERL_FILE
                         PsiElement())(')')
             PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(module_doc_comment)('%%% ===========================================================================\n%%%\n%%%  Annotate all top level funs.\n%%%\n%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%%  Annotate all top level funs.')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3449,7 +3484,11 @@ ERL_FILE
           PsiElement([)('[')
           PsiElement(])(']')
     PsiElement(.)('.')
-  PsiComment(module_doc_comment)('%%% ===========================================================================\n%%%\n%%%  The analysis.\n%%%\n%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%%  The analysis.')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -3892,7 +3931,8 @@ ERL_FILE
                           PsiElement(var)('State4')
                       PsiElement())(')')
                 PsiElement(,)(',')
-                PsiComment(function_doc_comment)('%% EXPERIMENTAL: Turn all behaviour API calls into calls to the\n      %%               respective callback module's functions.')
+                PsiComment(function_doc_comment)('%% EXPERIMENTAL: Turn all behaviour API calls into calls to the')
+                PsiComment(function_doc_comment)('%%               respective callback module's functions.')
                 ERL_CASE_EXPRESSION
                   PsiElement(case)('case')
                   ERL_MAX_EXPRESSION
@@ -5126,7 +5166,8 @@ ERL_FILE
                     PsiElement(atom)('alias')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
-                PsiComment(function_doc_comment)('%% This only happens when checking for illegal record patterns\n      %% so the handling is a bit rudimentary.')
+                PsiComment(function_doc_comment)('%% This only happens when checking for illegal record patterns')
+                PsiComment(function_doc_comment)('%% so the handling is a bit rudimentary.')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
                     PsiElement(atom)('traverse')
@@ -5637,7 +5678,8 @@ ERL_FILE
                             PsiElement(var)('Tree')
                         PsiElement())(')')
                 PsiElement(,)(',')
-                PsiComment(function_doc_comment)('%% By not including the variables in scope we can assure that we\n      %% will get the current function type when using the variables.')
+                PsiComment(function_doc_comment)('%% By not including the variables in scope we can assure that we')
+                PsiComment(function_doc_comment)('%% will get the current function type when using the variables.')
                 ERL_ASSIGNMENT_EXPRESSION
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
@@ -6981,7 +7023,10 @@ ERL_FILE
                 PsiElement())(')')
           PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%________________________________________\n%%\n%% Special instructions\n%%')
+  PsiComment(function_doc_comment)('%%________________________________________')
+  PsiComment(function_doc_comment)('%%')
+  PsiComment(function_doc_comment)('%% Special instructions')
+  PsiComment(function_doc_comment)('%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -8652,7 +8697,9 @@ ERL_FILE
                 PsiElement(var)('SigRange')
             PsiElement(})('}')
           PsiElement(=)('=')
-          PsiComment(function_doc_comment)('%% if there is hard-coded or contract information with opaque types,\n    %% the checking for possible type violations needs to take place w.r.t.\n    %% this information and not w.r.t. the structure-based success typing.')
+          PsiComment(function_doc_comment)('%% if there is hard-coded or contract information with opaque types,')
+          PsiComment(function_doc_comment)('%% the checking for possible type violations needs to take place w.r.t.')
+          PsiComment(function_doc_comment)('%% this information and not w.r.t. the structure-based success typing.')
           ERL_CASE_EXPRESSION
             PsiElement(case)('case')
             ERL_FUNCTION_CALL_EXPRESSION
@@ -9749,7 +9796,8 @@ ERL_FILE
                             PsiElement())(')')
                         PsiElement())(')')
                   PsiElement(,)(',')
-                  PsiComment(function_doc_comment)('%% EXPERIMENTAL: Turn a behaviour's API call into a call to the\n\t%%               respective callback module's function.')
+                  PsiComment(function_doc_comment)('%% EXPERIMENTAL: Turn a behaviour's API call into a call to the')
+                  PsiComment(function_doc_comment)('%%               respective callback module's function.')
                   ERL_ASSIGNMENT_EXPRESSION
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
@@ -11846,7 +11894,11 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% returns 'true' if we are running with opaque on (not checked yet),\n%% and there is either a contract or hard-coded type information with\n%% opaque types\n%% TODO: check that we are running with opaque types\n%% TODO: check the return type also')
+  PsiComment(function_doc_comment)('%% returns 'true' if we are running with opaque on (not checked yet),')
+  PsiComment(function_doc_comment)('%% and there is either a contract or hard-coded type information with')
+  PsiComment(function_doc_comment)('%% opaque types')
+  PsiComment(function_doc_comment)('%% TODO: check that we are running with opaque types')
+  PsiComment(function_doc_comment)('%% TODO: check the return type also')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -14432,7 +14484,9 @@ ERL_FILE
                   PsiElement(var)('State')
               PsiElement())(')')
         PsiElement(,)(',')
-        PsiComment(function_doc_comment)('%% Module and function names should be treated as *structured terms*\n  %% even if they happen to be identical to an atom (or tuple) which\n  %% is also involved in the definition of an opaque data type.')
+        PsiComment(function_doc_comment)('%% Module and function names should be treated as *structured terms*')
+        PsiComment(function_doc_comment)('%% even if they happen to be identical to an atom (or tuple) which')
+        PsiComment(function_doc_comment)('%% is also involved in the definition of an opaque data type.')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
@@ -16589,7 +16643,8 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(function_doc_comment)('%% By not including the variables in scope we can assure that we\n  %% will get the current function type when using the variables.')
+        PsiComment(function_doc_comment)('%% By not including the variables in scope we can assure that we')
+        PsiComment(function_doc_comment)('%% will get the current function type when using the variables.')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
@@ -17732,7 +17787,8 @@ ERL_FILE
                     PsiElement(})('}')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
-                  PsiComment(function_doc_comment)('%% Try to bind the argument. Will only succeed if\n\t%% it is a simple structured term.')
+                  PsiComment(function_doc_comment)('%% Try to bind the argument. Will only succeed if')
+                  PsiComment(function_doc_comment)('%% it is a simple structured term.')
                   ERL_ASSIGNMENT_EXPRESSION
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
@@ -18878,7 +18934,9 @@ ERL_FILE
                   PsiElement(end)('end')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%----------------------------------------\n%% Clauses\n%%')
+  PsiComment(function_doc_comment)('%%----------------------------------------')
+  PsiComment(function_doc_comment)('%% Clauses')
+  PsiComment(function_doc_comment)('%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -20434,7 +20492,8 @@ ERL_FILE
                                           PsiElement())(')')
                                       PsiElement(])(']')
                                   PsiElement(,)(',')
-                                  PsiComment(function_doc_comment)('%% See if this is covered by an earlier clause or if it\n\t\t%% simply cannot match')
+                                  PsiComment(function_doc_comment)('%% See if this is covered by an earlier clause or if it')
+                                  PsiComment(function_doc_comment)('%% simply cannot match')
                                   ERL_ASSIGNMENT_EXPRESSION
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
@@ -20621,7 +20680,8 @@ ERL_FILE
                                       PsiElement(atom)('false')
                                 ERL_CLAUSE_BODY
                                   PsiElement(->)('->')
-                                  PsiComment(function_doc_comment)('%% Try to find out if this is a default clause in a list\n\t\t%% comprehension and supress this. A real Hack(tm)')
+                                  PsiComment(function_doc_comment)('%% Try to find out if this is a default clause in a list')
+                                  PsiComment(function_doc_comment)('%% comprehension and supress this. A real Hack(tm)')
                                   ERL_ASSIGNMENT_EXPRESSION
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
@@ -21218,7 +21278,8 @@ ERL_FILE
                               PsiElement(atom)('false')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
-                          PsiComment(function_doc_comment)('%% Try to bind the argument. Will only succeed if\n\t    %% it is a simple structured term.')
+                          PsiComment(function_doc_comment)('%% Try to bind the argument. Will only succeed if')
+                          PsiComment(function_doc_comment)('%% it is a simple structured term.')
                           ERL_CASE_EXPRESSION
                             PsiElement(case)('case')
                             ERL_FUNCTION_CALL_EXPRESSION
@@ -22308,7 +22369,9 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('Map')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%----------------------------------------\n%% Patterns\n%%')
+  PsiComment(function_doc_comment)('%%----------------------------------------')
+  PsiComment(function_doc_comment)('%% Patterns')
+  PsiComment(function_doc_comment)('%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -22762,7 +22825,8 @@ ERL_FILE
                       PsiElement(atom)('binary')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
-                  PsiComment(function_doc_comment)('%% Cannot bind the binary if we are in reverse match since\n\t%% binary patterns and binary construction are not symmetric.')
+                  PsiComment(function_doc_comment)('%% Cannot bind the binary if we are in reverse match since')
+                  PsiComment(function_doc_comment)('%% binary patterns and binary construction are not symmetric.')
                   ERL_CASE_EXPRESSION
                     PsiElement(case)('case')
                     ERL_MAX_EXPRESSION
@@ -26330,7 +26394,9 @@ ERL_FILE
                     PsiElement())(')')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%----------------------------------------\n%% Guards\n%%')
+  PsiComment(function_doc_comment)('%%----------------------------------------')
+  PsiComment(function_doc_comment)('%% Guards')
+  PsiComment(function_doc_comment)('%%')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -40497,7 +40563,11 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(module_doc_comment)('%%% ===========================================================================\n%%%\n%%%  Maps and types.\n%%%\n%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%%  Maps and types.')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -42730,7 +42800,11 @@ ERL_FILE
       ERL_Q_ATOM
         PsiElement(atom)('endif')
     PsiElement(.)('.')
-  PsiComment(module_doc_comment)('%%% ===========================================================================\n%%%\n%%%  Utilities\n%%%\n%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%%  Utilities')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -42865,7 +42939,13 @@ ERL_FILE
                   PsiElement(var)('ArgType')
               PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% t_is_structured(ArgType) ->\n%%   case t_is_nil(ArgType) of\n%%     true -> false;\n%%     false ->\n%%       SType = t_inf(t_sup([t_list(), t_tuple(), t_binary()]), ArgType),\n%%       t_is_equal(ArgType, SType)\n%%   end.')
+  PsiComment(function_doc_comment)('%% t_is_structured(ArgType) ->')
+  PsiComment(function_doc_comment)('%%   case t_is_nil(ArgType) of')
+  PsiComment(function_doc_comment)('%%     true -> false;')
+  PsiComment(function_doc_comment)('%%     false ->')
+  PsiComment(function_doc_comment)('%%       SType = t_inf(t_sup([t_list(), t_tuple(), t_binary()]), ArgType),')
+  PsiComment(function_doc_comment)('%%       t_is_equal(ArgType, SType)')
+  PsiComment(function_doc_comment)('%%   end.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -43338,7 +43418,8 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        PsiComment(function_doc_comment)('%% This can actually happen, for example in\n  %%      receive after 1 -> ok end')
+        PsiComment(function_doc_comment)('%% This can actually happen, for example in')
+        PsiComment(function_doc_comment)('%%      receive after 1 -> ok end')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
           PsiElement(])(']')
@@ -43406,7 +43487,11 @@ ERL_FILE
                     PsiElement(atom)('structured')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(module_doc_comment)('%%% ===========================================================================\n%%%\n%%%  The State.\n%%%\n%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%%  The State.')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -50809,7 +50894,11 @@ ERL_FILE
                     PsiElement(var)('Records')
             PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(module_doc_comment)('%%% ===========================================================================\n%%%\n%%%  Races\n%%%\n%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%%  Races')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -51090,7 +51179,11 @@ ERL_FILE
                   PsiElement(end)('end')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(module_doc_comment)('%%% ===========================================================================\n%%%\n%%%  Worklist\n%%%\n%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%%  Worklist')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -51394,7 +51487,11 @@ ERL_FILE
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
-  PsiComment(module_doc_comment)('%%% ===========================================================================\n%%%\n%%%  Utilities.\n%%%\n%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%%  Utilities.')
+  PsiComment(module_doc_comment)('%%%')
+  PsiComment(module_doc_comment)('%%% ===========================================================================')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
@@ -54180,7 +54277,10 @@ ERL_FILE
               PsiElement(var)('Normal')
           PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%----------------------------------------------------------------------------\n\n%% If you write a record pattern in a matching that violates the\n%% definition it will never match. However, the warning is lost in the\n%% regular analysis. This after-pass catches it.')
+  PsiComment(function_doc_comment)('%%----------------------------------------------------------------------------')
+  PsiComment(function_doc_comment)('%% If you write a record pattern in a matching that violates the')
+  PsiComment(function_doc_comment)('%% definition it will never match. However, the warning is lost in the')
+  PsiComment(function_doc_comment)('%% regular analysis. This after-pass catches it.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

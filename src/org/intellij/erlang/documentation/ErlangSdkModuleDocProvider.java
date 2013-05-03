@@ -20,35 +20,29 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class SdkTypeDocProvider extends AbstractSdkDocProvider {
-  private static final Pattern PATTERN_TYPE_BEGIN = Pattern.compile(
-    "^      <span class=\"bold_code\"><a name=\"type-(.*?)\">.*?</span><br></p>$");
-  private static final Pattern PATTERN_FUNC_BEGIN = Pattern.compile("^  <h3>EXPORTS</h3>$");
+final class ErlangSdkModuleDocProvider extends ErlangSdkDocProviderBase {
+  private static final Pattern PATTERN_MODULE_BEGIN = Pattern.compile("^  <h3>MODULE</h3>$");
+  private static final Pattern PATTERN_MODULE_END = Pattern.compile("^  <h3>EXPORTS</h3>$");
 
-  @NotNull private final String myTypeName;
-
-  public SdkTypeDocProvider(@NotNull Project project, @NotNull VirtualFile virtualFile, @NotNull String typeName) {
+  public ErlangSdkModuleDocProvider(@NotNull Project project, @NotNull VirtualFile virtualFile) {
     super(project, virtualFile);
-    myTypeName = typeName;
   }
 
   @NotNull
   @Override
   protected String getInDocRef() {
-    return "#type-" + myTypeName;
+    return "";
   }
 
   @Override
-  protected boolean isDocBegin(@NotNull String line) {
-    final Matcher matcher = PATTERN_TYPE_BEGIN.matcher(line);
-    return (matcher.matches() && matcher.group(1).equals(myTypeName));
+  public boolean isDocBegin(@NotNull String line) {
+    return PATTERN_MODULE_BEGIN.matcher(line).matches();
   }
 
   @Override
-  protected boolean isDocEnd(@NotNull String line) {
-    return PATTERN_TYPE_BEGIN.matcher(line).matches() || PATTERN_FUNC_BEGIN.matcher(line).matches();
+  public boolean isDocEnd(@NotNull String line) {
+    return PATTERN_MODULE_END.matcher(line).matches();
   }
 }

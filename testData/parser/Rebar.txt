@@ -1,5 +1,10 @@
 ERL_FILE
-  PsiComment(function_doc_comment)('%% -*- mode: erlang;erlang-indent-level: 4;indent-tabs-mode: nil -*-\n%% ex: ts=4 sw=4 ft=erlang et\n%% This is a sample rebar.conf file that shows examples of some of rebar's\n%% options.\n\n%% == Core ==\n\n%% Additional library directories to add to the code path')
+  PsiComment(function_doc_comment)('%% -*- mode: erlang;erlang-indent-level: 4;indent-tabs-mode: nil -*-')
+  PsiComment(function_doc_comment)('%% ex: ts=4 sw=4 ft=erlang et')
+  PsiComment(function_doc_comment)('%% This is a sample rebar.conf file that shows examples of some of rebar's')
+  PsiComment(function_doc_comment)('%% options.')
+  PsiComment(function_doc_comment)('%% == Core ==')
+  PsiComment(function_doc_comment)('%% Additional library directories to add to the code path')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -11,7 +16,10 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Erlang Compiler ==\n\n%% Erlang files to compile before the rest. Rebar automatically compiles\n%% parse_transforms and custom behaviours before anything other than the files\n%% in this list.')
+  PsiComment(function_doc_comment)('%% == Erlang Compiler ==')
+  PsiComment(function_doc_comment)('%% Erlang files to compile before the rest. Rebar automatically compiles')
+  PsiComment(function_doc_comment)('%% parse_transforms and custom behaviours before anything other than the files')
+  PsiComment(function_doc_comment)('%% in this list.')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -138,7 +146,8 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == EDoc ==\n\n%% EDoc options')
+  PsiComment(function_doc_comment)('%% == EDoc ==')
+  PsiComment(function_doc_comment)('%% EDoc options')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -150,7 +159,9 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Port Compiler ==\n\n%% Port compilation environment variables. See rebar_port_compiler.erl for\n%% more info. Default is `[]'')
+  PsiComment(function_doc_comment)('%% == Port Compiler ==')
+  PsiComment(function_doc_comment)('%% Port compilation environment variables. See rebar_port_compiler.erl for')
+  PsiComment(function_doc_comment)('%% more info. Default is `[]'')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -182,7 +193,10 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% port_specs\n%% List of filenames or wildcards to be compiled. May also contain a tuple\n%% consisting of a regular expression to be applied against the system\n%% architecture as a filter.')
+  PsiComment(function_doc_comment)('%% port_specs')
+  PsiComment(function_doc_comment)('%% List of filenames or wildcards to be compiled. May also contain a tuple')
+  PsiComment(function_doc_comment)('%% consisting of a regular expression to be applied against the system')
+  PsiComment(function_doc_comment)('%% architecture as a filter.')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -249,7 +263,8 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == LFE Compiler ==\n\n%% LFE files to compile before the rest')
+  PsiComment(function_doc_comment)('%% == LFE Compiler ==')
+  PsiComment(function_doc_comment)('%% LFE files to compile before the rest')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -261,7 +276,9 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Options for the LFE compiler: reuse {erl_opts, []}\n\n%% == ErlyDTL Compiler ==\n\n%% Options for the ErlyDTL compiler')
+  PsiComment(function_doc_comment)('%% Options for the LFE compiler: reuse {erl_opts, []}')
+  PsiComment(function_doc_comment)('%% == ErlyDTL Compiler ==')
+  PsiComment(function_doc_comment)('%% Options for the ErlyDTL compiler')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -273,7 +290,8 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == EUnit ==\n\n%% Options for eunit:test()')
+  PsiComment(function_doc_comment)('%% == EUnit ==')
+  PsiComment(function_doc_comment)('%% Options for eunit:test()')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -309,7 +327,8 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Cover ==\n\n%% Whether to enable coverage reporting. Default is `false'')
+  PsiComment(function_doc_comment)('%% == Cover ==')
+  PsiComment(function_doc_comment)('%% Whether to enable coverage reporting. Default is `false'')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -345,7 +364,8 @@ ERL_FILE
         PsiElement(atom)('false')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Common Test ==\n\n%% Override the default "test" directory in which SUITEs are located')
+  PsiComment(function_doc_comment)('%% == Common Test ==')
+  PsiComment(function_doc_comment)('%% Override the default "test" directory in which SUITEs are located')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -390,7 +410,8 @@ ERL_FILE
         PsiElement(atom)('true')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == QuickCheck ==\n\n%% If qc_mod is unspecified, rebar tries to detect Triq or EQC')
+  PsiComment(function_doc_comment)('%% == QuickCheck ==')
+  PsiComment(function_doc_comment)('%% If qc_mod is unspecified, rebar tries to detect Triq or EQC')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -443,7 +464,8 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Cleanup ==\n\n%% Which files to cleanup')
+  PsiComment(function_doc_comment)('%% == Cleanup ==')
+  PsiComment(function_doc_comment)('%% Which files to cleanup')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -460,7 +482,8 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Reltool ==\n\n%% Target directory for the release')
+  PsiComment(function_doc_comment)('%% == Reltool ==')
+  PsiComment(function_doc_comment)('%% Target directory for the release')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -471,7 +494,8 @@ ERL_FILE
       PsiElement(string)('"target"')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == OTP Applications ==\n\n%% Binaries to link into the erlang path?')
+  PsiComment(function_doc_comment)('%% == OTP Applications ==')
+  PsiComment(function_doc_comment)('%% Binaries to link into the erlang path?')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -495,7 +519,8 @@ ERL_FILE
         PsiElement(atom)('true')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Dependencies ==\n\n%% Where to put any downloaded dependencies. Default is "deps"')
+  PsiComment(function_doc_comment)('%% == Dependencies ==')
+  PsiComment(function_doc_comment)('%% Where to put any downloaded dependencies. Default is "deps"')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -506,7 +531,10 @@ ERL_FILE
       PsiElement(string)('"deps"')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% What dependencies we have, dependencies can be of 3 forms, an application\n%% name as an atom, eg. mochiweb, a name and a version (from the .app file), or\n%% an application name, a version and the SCM details on how to fetch it (SCM\n%% type, location and revision). Rebar currently supports git, hg, bzr and svn.')
+  PsiComment(function_doc_comment)('%% What dependencies we have, dependencies can be of 3 forms, an application')
+  PsiComment(function_doc_comment)('%% name as an atom, eg. mochiweb, a name and a version (from the .app file), or')
+  PsiComment(function_doc_comment)('%% an application name, a version and the SCM details on how to fetch it (SCM')
+  PsiComment(function_doc_comment)('%% type, location and revision). Rebar currently supports git, hg, bzr and svn.')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -561,7 +589,8 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Subdirectories ==\n\n%% Subdirectories?')
+  PsiComment(function_doc_comment)('%% == Subdirectories ==')
+  PsiComment(function_doc_comment)('%% Subdirectories?')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -578,7 +607,11 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% == Plugins ==\n\n%% Plugins you wish to include.\n%% These can include any module on the code path, including deps.\n%% Alternatively, plugins can be placed as source files in the plugin_dir, in\n%% which case they will be compiled and loaded dynamically at runtime.')
+  PsiComment(function_doc_comment)('%% == Plugins ==')
+  PsiComment(function_doc_comment)('%% Plugins you wish to include.')
+  PsiComment(function_doc_comment)('%% These can include any module on the code path, including deps.')
+  PsiComment(function_doc_comment)('%% Alternatively, plugins can be placed as source files in the plugin_dir, in')
+  PsiComment(function_doc_comment)('%% which case they will be compiled and loaded dynamically at runtime.')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -597,7 +630,8 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Override the directory in which plugin sources can be found.\n%% Defaults to ./plugins')
+  PsiComment(function_doc_comment)('%% Override the directory in which plugin sources can be found.')
+  PsiComment(function_doc_comment)('%% Defaults to ./plugins')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
@@ -746,7 +780,11 @@ ERL_FILE
       PsiElement(])(']')
     PsiElement(})('}')
     PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%% Optional custom xref queries (xref manual has details) specified as\n%%     {xref_queries, [{query_string(), expected_query_result()},...]}\n%% The following for example removes all references to ejabberd:*_msg/4\n%% functions from undefined external function calls as those are in a\n%% generated module')
+  PsiComment(function_doc_comment)('%% Optional custom xref queries (xref manual has details) specified as')
+  PsiComment(function_doc_comment)('%%     {xref_queries, [{query_string(), expected_query_result()},...]}')
+  PsiComment(function_doc_comment)('%% The following for example removes all references to ejabberd:*_msg/4')
+  PsiComment(function_doc_comment)('%% functions from undefined external function calls as those are in a')
+  PsiComment(function_doc_comment)('%% generated module')
   ERL_TUPLE_EXPRESSION
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION

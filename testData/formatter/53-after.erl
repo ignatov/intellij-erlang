@@ -14,5 +14,5 @@ to_stream(L) when is_list(L) ->
 
 %comment should be aligned as well
 f() ->
-% comment line
+  % comment line
   f().

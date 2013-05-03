@@ -18,7 +18,6 @@ package org.intellij.erlang.formatter;
 
 import com.intellij.formatting.Indent;
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -30,7 +29,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
-import static org.intellij.erlang.ErlangParserDefinition.COMMENTS;
 import static org.intellij.erlang.ErlangTypes.*;
 
 /**
@@ -44,13 +42,8 @@ public class ErlangIndentProcessor {
     ERL_OP_LT, ERL_OP_EQ_LT, ERL_OP_GT, ERL_OP_GT_EQ, ERL_OP_LT_EQ, ERL_OP_PLUS_PLUS,
     ERL_OP_MINUS_MINUS, ERL_OP_EQ, ERL_OP_EXL, ERL_OP_LT_MINUS, ERL_ANDALSO, ERL_ORELSE
   );
-  private final CommonCodeStyleSettings settings;
 
-  public ErlangIndentProcessor(CommonCodeStyleSettings settings) {
-    this.settings = settings;
-  }
-
-  public Indent getChildIndent(ASTNode node) {
+  public static Indent getChildIndent(ASTNode node) {
     IElementType elementType = node.getElementType();
     ASTNode parent = node.getTreeParent();
     IElementType parentType = parent != null ? parent.getElementType() : null;
@@ -61,9 +54,6 @@ public class ErlangIndentProcessor {
 
     if (parent == null || parent.getTreeParent() == null) {
       return Indent.getNoneIndent();
-    }
-    if (COMMENTS.contains(elementType) && settings.KEEP_FIRST_COLUMN_COMMENT) {
-      return Indent.getAbsoluteNoneIndent();
     }
 
     if (elementType == ERL_CATCH) {
