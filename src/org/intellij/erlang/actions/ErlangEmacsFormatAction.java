@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Sergey Ignatov
+ * Copyright 2012-2013 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,6 @@ import org.intellij.erlang.psi.ErlangFile;
 
 import javax.swing.*;
 import java.io.File;
-import java.text.MessageFormat;
 
 /**
  * @author ignatov
