@@ -11,7 +11,7 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('AA')
-        PsiErrorElement:'!', '#', '(', '*', '+', '++', ',', '-', '--', '/', '/=', ':', <, '=', '=/=', '=:=', '=<', '==', '>', '>=', '?', and, andalso, band, bor, bsl, bsr, bxor, div, orelse, rem, xor or '|' expected, got 'ok'
+        PsiErrorElement:'!', '#', '(', '*', '+', '++', ',', '-', '--', '/', '/=', ':', <, '=', '=/=', '=:=', '=<', '==', '>', '>=', '?', and, andalso, band, bor, bsl, bsr, bxor, div, or, orelse, rem or xor expected, got 'ok'
           PsiElement(atom)('ok')
     PsiElement(.)('.')
   ERL_FUNCTION

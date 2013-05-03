@@ -421,13 +421,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--add_to_plt"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--add_to_plt"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -464,13 +463,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--apps"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--apps"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -544,13 +542,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--build_plt"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--build_plt"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -587,13 +584,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--check_plt"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--check_plt"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -630,13 +626,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"-n"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"-n"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -648,13 +643,12 @@ ERL_FILE
             PsiElement(()('(')
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_STRING_LITERAL
-                  PsiElement(string)('"--no_check_plt"')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"--no_check_plt"')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('T')
               PsiElement(])(']')
             PsiElement())(')')
     PsiElement(;)(';')
@@ -666,13 +660,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--no_check_plt"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--no_check_plt"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -709,13 +702,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"-nn"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"-nn"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -727,13 +719,12 @@ ERL_FILE
             PsiElement(()('(')
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_STRING_LITERAL
-                  PsiElement(string)('"--no_native"')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"--no_native"')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('T')
               PsiElement(])(']')
             PsiElement())(')')
     PsiElement(;)(';')
@@ -745,13 +736,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--no_native"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--no_native"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -788,13 +778,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--plt_info"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--plt_info"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -831,13 +820,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--get_warnings"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--get_warnings"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -874,13 +862,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"-D"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(_)('_')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"-D"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(_)('_')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -906,14 +893,13 @@ ERL_FILE
               ERL_STRING_LITERAL
                 PsiElement(string)('"-D"')
               PsiElement(++)('++')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Define')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Define')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -983,13 +969,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"-h"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(_)('_')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"-h"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(_)('_')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1009,13 +994,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--help"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(_)('_')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--help"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(_)('_')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1061,14 +1045,13 @@ ERL_FILE
             ERL_STRING_LITERAL
               PsiElement(string)('"-I"')
             PsiElement(,)(',')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('Dir')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('Dir')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1105,14 +1088,13 @@ ERL_FILE
               ERL_STRING_LITERAL
                 PsiElement(string)('"-I"')
               PsiElement(++)('++')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Dir')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Dir')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1149,14 +1131,13 @@ ERL_FILE
               ERL_STRING_LITERAL
                 PsiElement(string)('"-c"')
               PsiElement(++)('++')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(_)('_')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(_)('_')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1198,14 +1179,13 @@ ERL_FILE
               ERL_STRING_LITERAL
                 PsiElement(string)('"-r"')
               PsiElement(++)('++')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(_)('_')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T0')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(_)('_')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T0')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1264,13 +1244,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--remove_from_plt"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--remove_from_plt"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1311,14 +1290,13 @@ ERL_FILE
               ERL_STRING_LITERAL
                 PsiElement(string)('"--com"')
               PsiElement(++)('++')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(_)('_')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(_)('_')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1405,14 +1383,13 @@ ERL_FILE
             ERL_STRING_LITERAL
               PsiElement(string)('"--output"')
             PsiElement(,)(',')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('Output')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('Output')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1475,14 +1452,13 @@ ERL_FILE
             ERL_STRING_LITERAL
               PsiElement(string)('"--output_plt"')
             PsiElement(,)(',')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('Output')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('Output')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1522,14 +1498,13 @@ ERL_FILE
             ERL_STRING_LITERAL
               PsiElement(string)('"-o"')
             PsiElement(,)(',')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('Output')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('Output')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1570,14 +1545,13 @@ ERL_FILE
               ERL_STRING_LITERAL
                 PsiElement(string)('"-o"')
               PsiElement(++)('++')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Output')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Output')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1614,13 +1588,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--raw"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--raw"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1657,13 +1630,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--fullpath"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--fullpath"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1703,14 +1675,13 @@ ERL_FILE
             ERL_STRING_LITERAL
               PsiElement(string)('"-pa"')
             PsiElement(,)(',')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('Path')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('Path')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1813,14 +1784,13 @@ ERL_FILE
             ERL_STRING_LITERAL
               PsiElement(string)('"--plt"')
             PsiElement(,)(',')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('PLT')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('PLT')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1883,13 +1853,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--plts"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--plts"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1952,13 +1921,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"-q"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"-q"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -1995,13 +1963,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--quiet"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--quiet"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2038,13 +2005,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--src"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--src"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2081,13 +2047,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--no_spec"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--no_spec"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2124,13 +2089,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"-v"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(_)('_')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"-v"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(_)('_')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2187,13 +2151,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--version"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(_)('_')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--version"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(_)('_')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2250,13 +2213,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--verbose"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--verbose"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2293,13 +2255,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"-W"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(_)('_')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"-W"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(_)('_')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2321,13 +2282,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"-Whelp"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(_)('_')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"-Whelp"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(_)('_')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2351,14 +2311,13 @@ ERL_FILE
               ERL_STRING_LITERAL
                 PsiElement(string)('"-W"')
               PsiElement(++)('++')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Warn')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Warn')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2430,14 +2389,13 @@ ERL_FILE
             ERL_STRING_LITERAL
               PsiElement(string)('"--dump_callgraph"')
             PsiElement(,)(',')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('File')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('File')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2474,13 +2432,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--gui"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--gui"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2524,13 +2481,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--wx"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--wx"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -2575,14 +2531,13 @@ ERL_FILE
           ERL_ASSIGNMENT_EXPRESSION
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('H')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(_)('_')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('H')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(_)('_')
               PsiElement(])(']')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -3713,14 +3668,13 @@ ERL_FILE
                 ERL_STRING_LITERAL
                   PsiElement(string)('"-"')
                 PsiElement(++)('++')
-                ERL_ADDITIVE_EXPRESSION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(_)('_')
-                  PsiElement(|)('|')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(_)('_')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(_)('_')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(_)('_')
               PsiElement(])(']')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -3764,14 +3718,13 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('Arg')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('Arg')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
@@ -3792,14 +3745,13 @@ ERL_FILE
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Arg')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Acc')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Arg')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Acc')
               PsiElement(])(']')
             PsiElement())(')')
     PsiElement(;)(';')
@@ -3973,30 +3925,29 @@ ERL_FILE
                 PsiElement())(')')
             PsiElement(})('}')
           PsiElement(,)(',')
-          ERL_ADDITIVE_EXPRESSION
-            ERL_TUPLE_EXPRESSION
-              PsiElement({)('{')
-              ERL_MAX_EXPRESSION
-                ERL_Q_ATOM
-                  PsiElement(atom)('callgraph_file')
-              PsiElement(,)(',')
-              ERL_FUNCTION_CALL_EXPRESSION
-                ERL_Q_ATOM
-                  PsiElement(atom)('get')
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_callgraph_file')
-                  PsiElement())(')')
-              PsiElement(})('}')
-            PsiElement(|)('|')
+          ERL_TUPLE_EXPRESSION
+            PsiElement({)('{')
+            ERL_MAX_EXPRESSION
+              ERL_Q_ATOM
+                PsiElement(atom)('callgraph_file')
+            PsiElement(,)(',')
             ERL_FUNCTION_CALL_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('common_options')
+                PsiElement(atom)('get')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('dialyzer_callgraph_file')
                 PsiElement())(')')
+            PsiElement(})('}')
+          PsiElement(|)('|')
+          ERL_FUNCTION_CALL_EXPRESSION
+            ERL_Q_ATOM
+              PsiElement(atom)('common_options')
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              PsiElement())(')')
           PsiElement(])(']')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -4243,14 +4194,13 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('H')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('H')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
@@ -4387,14 +4337,13 @@ ERL_FILE
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('NewElem')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Acc')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('NewElem')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Acc')
               PsiElement(])(']')
             PsiElement())(')')
     PsiElement(;)(';')
@@ -4440,13 +4389,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"--"')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"--"')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
@@ -4495,14 +4443,13 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('_Opt')
               PsiElement(=)('=')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('H')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('T')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('H')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
@@ -4531,14 +4478,13 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('H')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('H')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
           PsiElement(})('}')
     PsiElement(;)(';')
@@ -4550,14 +4496,13 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('H')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('T')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('H')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('T')
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
@@ -4578,14 +4523,13 @@ ERL_FILE
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
-              ERL_ADDITIVE_EXPRESSION
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('H')
-                PsiElement(|)('|')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Acc')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('H')
+              PsiElement(|)('|')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Acc')
               PsiElement(])(']')
             PsiElement())(')')
     PsiElement(;)(';')

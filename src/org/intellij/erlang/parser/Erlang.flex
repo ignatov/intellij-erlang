@@ -171,7 +171,7 @@ FullStop = \.
   ":"                           { return ERL_COLON; }
   "::"                          { return ERL_COLON_COLON; }
   "||"                          { return ERL_OR_OR; }
-  "|"                           { return ERL_OR; }
+  "|"                           { return ERL_OP_OR; }
   ";"                           { return ERL_SEMI; }
   ","                           { return ERL_COMMA; }
   "?"                           { return ERL_QMARK; }

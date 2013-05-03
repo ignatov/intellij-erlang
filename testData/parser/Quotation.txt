@@ -246,14 +246,13 @@ ERL_FILE
         ERL_ASSIGNMENT_EXPRESSION
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
-            ERL_ADDITIVE_EXPRESSION
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('Type')
-              PsiElement(|)('|')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('Parts')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('Type')
+            PsiElement(|)('|')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('Parts')
             PsiElement(])(']')
           PsiElement(=)('=')
           ERL_LIST_COMPREHENSION
@@ -408,51 +407,28 @@ ERL_FILE
                             PsiElement(,)(',')
                             ERL_LIST_EXPRESSION
                               PsiElement([)('[')
-                              ERL_ADDITIVE_EXPRESSION
-                                ERL_MAX_EXPRESSION
-                                  PsiElement(char)('$\=')
-                                PsiElement(|)('|')
-                                ERL_MAX_EXPRESSION
-                                  ERL_Q_VAR
-                                    PsiElement(var)('Value')
+                              ERL_MAX_EXPRESSION
+                                PsiElement(char)('$\=')
+                              PsiElement(|)('|')
+                              ERL_MAX_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('Value')
                               PsiElement(])(']')
                             PsiElement(})('}')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
                           ERL_LIST_EXPRESSION
                             PsiElement([)('[')
-                            ERL_ADDITIVE_EXPRESSION
-                              ERL_TUPLE_EXPRESSION
-                                PsiElement({)('{')
-                                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                                  ERL_MODULE_REF
-                                    ERL_Q_ATOM
-                                      PsiElement(atom)('string')
-                                  PsiElement(:)(':')
-                                  ERL_FUNCTION_CALL_EXPRESSION
-                                    ERL_Q_ATOM
-                                      PsiElement(atom)('to_lower')
-                                    ERL_ARGUMENT_LIST
-                                      PsiElement(()('(')
-                                      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                                        ERL_MODULE_REF
-                                          ERL_Q_ATOM
-                                            PsiElement(atom)('string')
-                                        PsiElement(:)(':')
-                                        ERL_FUNCTION_CALL_EXPRESSION
-                                          ERL_Q_ATOM
-                                            PsiElement(atom)('strip')
-                                          ERL_ARGUMENT_LIST
-                                            PsiElement(()('(')
-                                            ERL_MAX_EXPRESSION
-                                              ERL_Q_VAR
-                                                PsiElement(var)('Name')
-                                            PsiElement())(')')
-                                      PsiElement())(')')
-                                PsiElement(,)(',')
+                            ERL_TUPLE_EXPRESSION
+                              PsiElement({)('{')
+                              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                                ERL_MODULE_REF
+                                  ERL_Q_ATOM
+                                    PsiElement(atom)('string')
+                                PsiElement(:)(':')
                                 ERL_FUNCTION_CALL_EXPRESSION
                                   ERL_Q_ATOM
-                                    PsiElement(atom)('unquote_header')
+                                    PsiElement(atom)('to_lower')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
                                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -467,14 +443,35 @@ ERL_FILE
                                           PsiElement(()('(')
                                           ERL_MAX_EXPRESSION
                                             ERL_Q_VAR
-                                              PsiElement(var)('Value')
+                                              PsiElement(var)('Name')
                                           PsiElement())(')')
                                     PsiElement())(')')
-                                PsiElement(})('}')
-                              PsiElement(|)('|')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('Acc')
+                              PsiElement(,)(',')
+                              ERL_FUNCTION_CALL_EXPRESSION
+                                ERL_Q_ATOM
+                                  PsiElement(atom)('unquote_header')
+                                ERL_ARGUMENT_LIST
+                                  PsiElement(()('(')
+                                  ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                                    ERL_MODULE_REF
+                                      ERL_Q_ATOM
+                                        PsiElement(atom)('string')
+                                    PsiElement(:)(':')
+                                    ERL_FUNCTION_CALL_EXPRESSION
+                                      ERL_Q_ATOM
+                                        PsiElement(atom)('strip')
+                                      ERL_ARGUMENT_LIST
+                                        PsiElement(()('(')
+                                        ERL_MAX_EXPRESSION
+                                          ERL_Q_VAR
+                                            PsiElement(var)('Value')
+                                        PsiElement())(')')
+                                  PsiElement())(')')
+                              PsiElement(})('}')
+                            PsiElement(|)('|')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(var)('Acc')
                             PsiElement(])(']')
                     PsiElement(end)('end')
             PsiElement(end)('end')

@@ -4987,7 +4987,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "tail_1")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    result_ = consumeToken(builder_, ERL_OR);
+    result_ = consumeToken(builder_, ERL_OP_OR);
     result_ = result_ && expression(builder_, level_ + 1, -1);
     result_ = result_ && consumeToken(builder_, ERL_BRACKET_RIGHT);
     if (!result_) {
@@ -5093,7 +5093,7 @@ public class ErlangParser implements PsiParser {
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
-    result_ = consumeToken(builder_, ERL_OR);
+    result_ = consumeToken(builder_, ERL_OP_OR);
     pinned_ = result_; // pin = 1
     result_ = result_ && top_type_100_t(builder_, level_ + 1);
     if (!result_ && !pinned_) {

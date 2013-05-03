@@ -115,3 +115,18 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('da')
     PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('not_add')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('ok')
+        PsiErrorElement:'!', '#', '(', '*', '+', '++', ',', '-', '--', '.', '/', '/=', ':', <, '=', '=/=', '=:=', '=<', '==', '>', '>=', '?', and, andalso, band, bor, bsl, bsr, bxor, div, or, orelse, rem or xor expected, got '|'
+          PsiElement(|)('|')
+    PsiElement(.)('.')

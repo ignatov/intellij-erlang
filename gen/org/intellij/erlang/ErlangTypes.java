@@ -1,9 +1,9 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang;
 
-import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.PsiElement;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.psi.ErlangCompositeElementType;
 import org.intellij.erlang.psi.ErlangTokenType;
 import org.intellij.erlang.psi.impl.*;
@@ -180,9 +180,10 @@ public interface ErlangTypes {
   IElementType ERL_OP_LT_MINUS = new ErlangTokenType("<-");
   IElementType ERL_OP_MINUS = new ErlangTokenType("-");
   IElementType ERL_OP_MINUS_MINUS = new ErlangTokenType("--");
+  IElementType ERL_OP_OR = new ErlangTokenType("|");
   IElementType ERL_OP_PLUS = new ErlangTokenType("+");
   IElementType ERL_OP_PLUS_PLUS = new ErlangTokenType("++");
-  IElementType ERL_OR = new ErlangTokenType("|");
+  IElementType ERL_OR = new ErlangTokenType("or");
   IElementType ERL_ORELSE = new ErlangTokenType("orelse");
   IElementType ERL_OR_OR = new ErlangTokenType("||");
   IElementType ERL_PAR_LEFT = new ErlangTokenType("(");
