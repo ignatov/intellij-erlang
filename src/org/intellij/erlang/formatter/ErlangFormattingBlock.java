@@ -179,7 +179,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @NotNull
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
-    Indent childIndent = getChildIndent(myNode.getElementType());
+    Indent childIndent = getChildIndent(myNode.getElementType(), newChildIndex);
 
     if (childIndent != null) {
       return new ChildAttributes(childIndent, null);
@@ -201,20 +201,27 @@ public class ErlangFormattingBlock extends AbstractBlock {
         block = childBlock;
       }
       IElementType type = block instanceof ErlangFormattingBlock ? ((ErlangFormattingBlock) block).getNode().getElementType() : null;
-      childIndent = getChildIndent(type);
+      childIndent = getChildIndent(type, newChildIndex);
     }
     
     return new ChildAttributes(childIndent == null ? Indent.getNoneIndent() : childIndent, null);
   }
 
   @Nullable
-  private static Indent getChildIndent(@Nullable IElementType type) {
-    if (BLOCKS_TOKEN_SET.contains(type)) {
-      return Indent.getNormalIndent(false);
-    }
-    if (type == ERL_IF_EXPRESSION || type == ERL_CASE_EXPRESSION) {
-      return Indent.getNormalIndent(true);
-    }
+  private static Indent getChildIndent(@Nullable IElementType type, int newChildIndex) {
+    if (
+      type == ERL_IF_EXPRESSION ||
+      type == ERL_CASE_EXPRESSION ||
+      type == ERL_TRY_EXPRESSION ||
+      (type == ERL_TRY_CATCH && newChildIndex == 1)
+      ) return Indent.getNormalIndent(true);
+
+    if (
+      type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1
+      ) return Indent.getNoneIndent();
+
+    if (BLOCKS_TOKEN_SET.contains(type)) return Indent.getNormalIndent(false);
+
     return null;
   }
 

@@ -1,0 +1,4 @@
+test() ->
+  try
+    fail()
+  <caret>

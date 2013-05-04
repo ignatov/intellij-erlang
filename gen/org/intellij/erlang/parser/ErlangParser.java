@@ -5227,7 +5227,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // (catch try_clauses [after try_expressions_clause] end) | (after try_expressions_clause end)
+  // catch try_clauses [after try_expressions_clause] end | after try_expressions_clause end
   public static boolean try_catch(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "try_catch")) return false;
     if (!nextTokenIs(builder_, ERL_AFTER) && !nextTokenIs(builder_, ERL_CATCH)

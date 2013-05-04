@@ -34,15 +34,23 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public static final boolean OVERRIDE_TEST_DATA = false;
   private CodeStyleSettings myTemporarySettings;
 
-  public void doTest() throws Exception {
+  public void doTest() throws Exception { doTest(true); }
+  public void doEnterTest() throws Exception { doTest(false); }
+
+  public void doTest(boolean format) throws Exception {
     final String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
-      }
-    });
+    if (format) {
+      ApplicationManager.getApplication().runWriteAction(new Runnable() {
+        @Override
+        public void run() {
+          CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
+        }
+      });
+    }
+    else {
+      myFixture.type('\n');
+    }
 
     String after = String.format("%s-after.erl", testName);
     if (OVERRIDE_TEST_DATA) {
@@ -88,6 +96,16 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
     getCommonSettings().KEEP_FIRST_COLUMN_COMMENT = false;
     doTest();
   }
+
+  public void testIf1() throws Exception { doEnterTest(); }
+  public void testIf2() throws Exception { doEnterTest(); }
+  public void testIf3() throws Exception { doEnterTest(); }
+
+  public void testTry1() throws Exception { doEnterTest(); }
+  public void testTry2() throws Exception { doEnterTest(); }
+  public void testTry3() throws Exception { doEnterTest(); }
+  public void testTry4() throws Exception { doEnterTest(); }
+  public void testTry5() throws Exception { doEnterTest(); }
 
   private ErlangCodeStyleSettings getErlangSettings() {
     return myTemporarySettings.getCustomSettings(ErlangCodeStyleSettings.class);

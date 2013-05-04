@@ -1,0 +1,3 @@
+test() ->
+  try
+    fail()<caret>

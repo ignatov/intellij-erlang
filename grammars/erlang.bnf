@@ -463,7 +463,7 @@ function_with_arity_variables ::= q_var '/' (integer|q_var) {pin=1}
 fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body {pin=1}
 try_expression ::= try try_expressions_clause (of cr_clauses)? try_catch {pin=1}
-try_catch ::= (catch try_clauses [after try_expressions_clause] end) | (after try_expressions_clause end) {pin(".*")="catch|after"}
+try_catch ::= catch try_clauses [after try_expressions_clause] end | after try_expressions_clause end {pin(".*")="catch|after"}
 try_expressions_clause ::= exprs
 try_clauses ::= try_clause (';' try_clause)*
 try_clause ::= [argument_definition ':'] argument_definition clause_guard? clause_body {pin=2}
