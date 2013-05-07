@@ -151,7 +151,7 @@ record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   methods = [getName setName getNameIdentifier getTextOffset]
 }
 
-macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ',' macros_body ')' {
+macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ',' <<guarded macros_body>> ')' {
   pin = 2
   methods = [getName setName getNameIdentifier getTextOffset]
 }
@@ -239,7 +239,7 @@ typed_expr ::= q_atom ['=' expression] ['::' (record_tail | top_type)] {
 type_sig ::= fun_type type_sig_guard? {pin=1}
 type_sig_guard ::= when type_guard_list
 private type_guard_list ::= type_guard (',' type_guard)*
-type_guard ::= (q_atom '(' top_type_list ')') | top_type
+type_guard ::= q_atom '(' top_type_list ')' | top_type
 private top_type_list ::= top_type (',' top_type)*
 top_type ::= [q_var '::'] top_type_100_t
 top_type_100_t ::= type ['|' top_type_100_t] {pin(".*")=1}
@@ -270,7 +270,7 @@ private bin_base_type_list ::= bin_base_type ',' bin_unit_type
 bin_base_type ::= q_var ':' integer
 bin_unit_type ::= q_var ':' q_var '*' integer
 
-attr_val ::= ('(' exprs ')') | exprs {name="attribute value"}
+attr_val ::= '(' exprs ')' | exprs {name="attribute value"}
 
 function ::= function_clause (';' function_clause)* {
   pin(".*") = 1
@@ -285,11 +285,10 @@ function ::= function_clause (';' function_clause)* {
   ]
 }
 
-private function_clause_recover ::= !('.' | ';')
-function_clause ::= q_atom argument_definition_list clause_guard? clause_body //{pin=2 recoverUntil=function_clause_recover}
+function_clause ::= q_atom argument_definition_list clause_guard? clause_body
 argument_definition_list ::= '(' argument_definition? (',' argument_definition)* ')'
 
-clause_guard ::= when guard {pin=1}
+clause_guard ::= when <<guarded guard>> {pin=1}
 clause_body ::= '->' exprs {pin=1}
 
 config_expression ::=
@@ -345,7 +344,7 @@ private max_group ::=
   | record2_expression
   | qualified_expression
 colon_qualified_expression ::= expression ':' expression
-qualified_expression ::= q_atom '.' q_atom&(!('('))
+qualified_expression ::= q_atom '.' q_atom &(!('('))
 
 record2_expression ::= record_tail {elementType=record_expression}
 
@@ -424,30 +423,34 @@ module_ref ::= q_atom {
 }
 global_function_call_expression ::= module_ref_or_dot_atom ':' function_call_expression {pin=0}
 private module_ref_or_dot_atom ::= '.' q_atom | module_ref
-function_call_expression ::= q_atom argument_list {
-  pin=0
+function_call_expression ::= q_atom argument_list &not_function_definition {
   methods = [getReference getNameIdentifier getTextOffset]
 }
+private not_function_definition ::= <<isModeOn "GUARD">> | !('->'|when)
 macros_call ::= &('?') generic_function_call_expression {recoverUntil=macros_call_recover}
 private macros_call_recover ::= !('.')
-generic_function_call_expression ::= (q_atom_or_var ':')? (q_atom_or_var | macros) argument_list {pin=0}
+generic_function_call_expression ::= (q_atom_or_var ':')? (q_atom_or_var | macros) argument_list &not_function_definition
 private q_atom_or_var ::= q_atom | q_var
 
-anonymous_call_expression ::= expression argument_list
+anonymous_call_expression ::= expression argument_list &not_function_definition
 
 private expr_with_guard ::= expression clause_guard? {pin=1}
 private call_exprs ::= expr_with_guard (',' expr_with_guard)*
 
 if_expression ::= if if_clauses end {pin=1}
 if_clauses ::= if_clause (';' if_clause)*
-if_clause ::= guard clause_body {pin=1}
+if_clause ::= guard_with_mode clause_body {pin=1}
+private meta guarded ::= <<enterMode "GUARD">> (<<p1>> <<exitMode "GUARD">>|<<exitMode "GUARD">> !())
+private guard_with_mode ::= <<guarded guard>>
 
 case_expression ::= case expression of cr_clauses end {pin=1}
 cr_clauses ::= cr_clause (';' cr_clause)*
-cr_clause ::= argument_definition clause_guard? clause_body {pin=1}
+cr_clause ::= cr_clause_argument_definition clause_guard? clause_body {pin=1}
+private cr_clause_argument_definition ::= <<guarded argument_definition>>
 argument_definition ::= expression
 
-receive_expression ::= receive ((cr_clauses end) | (cr_clauses? after expression clause_body end)) {pin=1}
+receive_expression ::= receive (cr_clauses end | receive_tail) {pin=1}
+private receive_tail ::= cr_clauses? after <<guarded expression>> clause_body end {pin=2}
 fun_expression ::= fun ((fun_clauses end) | ([(module_ref | q_var) ':'] (function_with_arity|function_with_arity_variables))) {pin=1}
 function_with_arity ::= q_atom '/' integer {
   pin= 1
@@ -460,21 +463,23 @@ try_expression ::= try try_expressions_clause (of cr_clauses)? try_catch {pin=1}
 try_catch ::= catch try_clauses [after try_expressions_clause] end | after try_expressions_clause end {pin(".*")="catch|after"}
 try_expressions_clause ::= exprs
 try_clauses ::= try_clause (';' try_clause)*
-try_clause ::= [argument_definition ':'] argument_definition clause_guard? clause_body {pin=2}
+try_clause ::= <<guarded try_argument_definition>> clause_guard? clause_body {pin=1}
+private try_argument_definition ::= [argument_definition ':'] argument_definition
 
 query_expression ::= query list_comprehension end {pin=1}
 argument_list ::= '(' call_exprs? ')'
 
-fake fake_binary_expression ::= expression + {
+fake fake_binary_expression ::= expression+ {
   methods = [
     left="expression[0]"
-    right="expression[1]"]
-  }
+    right="expression[1]"
+  ]
+}
 
 private exprs ::= expression (',' expression)* {recoverUntil=exprs_recover}
-private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of)
+private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
-private atomic ::= char | integer | float | q_atom | string_literal+
+private atomic ::= char | integer | float | q_atom !'(' | string_literal+
 string_literal ::= string {
   implements = "com.intellij.psi.PsiLanguageInjectionHost"
   methods = [isValidHost updateText createLiteralTextEscaper]

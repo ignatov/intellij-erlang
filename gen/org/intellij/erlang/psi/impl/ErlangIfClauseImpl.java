@@ -1,14 +1,14 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi.impl;
 
-import java.util.List;
-import org.jetbrains.annotations.*;
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
-import com.intellij.psi.util.PsiTreeUtil;
-import static org.intellij.erlang.ErlangTypes.*;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangClauseBody;
+import org.intellij.erlang.psi.ErlangGuard;
+import org.intellij.erlang.psi.ErlangIfClause;
+import org.intellij.erlang.psi.ErlangVisitor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangIfClauseImpl extends ErlangCompositeElementImpl implements ErlangIfClause {
 
@@ -23,9 +23,9 @@ public class ErlangIfClauseImpl extends ErlangCompositeElementImpl implements Er
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangGuard getGuard() {
-    return findNotNullChildByClass(ErlangGuard.class);
+    return findChildByClass(ErlangGuard.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

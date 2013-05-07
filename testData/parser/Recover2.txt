@@ -1,0 +1,47 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_TRY_EXPRESSION
+          PsiElement(try)('try')
+          ERL_TRY_EXPRESSIONS_CLAUSE
+            ERL_FUNCTION_CALL_EXPRESSION
+              ERL_Q_ATOM
+                PsiElement(atom)('test')
+              ERL_ARGUMENT_LIST
+                PsiElement(()('(')
+                PsiElement())(')')
+          ERL_TRY_CATCH
+            PsiElement(catch)('catch')
+            ERL_TRY_CLAUSES
+              ERL_TRY_CLAUSE
+                ERL_ARGUMENT_DEFINITION
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_ATOM
+                      PsiElement(atom)('ok')
+                ERL_CLAUSE_BODY
+                  PsiElement(->)('->')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_ATOM
+                      PsiElement(atom)('ok')
+            PsiErrorElement:';', after or end expected, got 'bar'
+              <empty list>
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('bar')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('ok')
+    PsiElement(.)('.')
