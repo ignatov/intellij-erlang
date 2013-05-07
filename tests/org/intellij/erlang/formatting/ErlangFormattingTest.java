@@ -29,17 +29,37 @@ import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 
 import java.io.File;
+import java.io.IOException;
 
 public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public static final boolean OVERRIDE_TEST_DATA = false;
   private CodeStyleSettings myTemporarySettings;
 
-  public void doTest() throws Exception { doTest(true); }
+  public void doTest()      throws Exception { doTest(true);  }
   public void doEnterTest() throws Exception { doTest(false); }
 
   public void doTest(boolean format) throws Exception {
     final String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
+    String after = doTest(format, testName);
+    myFixture.checkResultByFile(after);
+  }
+
+  public void doEnterParasiteTest() throws Exception {
+    doParasiteTest(false);
+  }
+
+  public void doParasiteTest(boolean format) throws Exception {
+    String appendix = "\nfoo() -> ok.";
+    final String testName = getTestName(true).replace("Parasite", "");
+    String text = FileUtil.loadFile(new File(getTestDataPath() + testName + ".erl")) + appendix;
+    myFixture.configureByText(testName + ".erl", text);
+    String after = doTest(format, testName);
+    String afterText = FileUtil.loadFile(new File(getTestDataPath() + after)) + appendix;
+    myFixture.checkResult(afterText);
+  }
+
+  private String doTest(boolean format, String testName) throws IOException {
     if (format) {
       ApplicationManager.getApplication().runWriteAction(new Runnable() {
         @Override
@@ -56,7 +76,7 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
     if (OVERRIDE_TEST_DATA) {
       FileUtil.writeToFile(new File(myFixture.getTestDataPath() + "/" + after), myFixture.getFile().getText());
     }
-    myFixture.checkResultByFile(after);
+    return after;
   }
 
   public void test48()     throws Exception { doTest(); }
@@ -107,6 +127,26 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public void testTry4() throws Exception { doEnterTest(); }
   public void testTry5() throws Exception { doEnterTest(); }
 
+  public void testCase1() throws Exception { doEnterTest(); }
+  public void testCase2() throws Exception { doEnterTest(); }
+  public void testCase3() throws Exception { doEnterTest(); }
+  public void testCase4() throws Exception { doEnterTest(); }
+
+  public void testIfParasite1() throws Exception { doEnterParasiteTest(); }
+  public void testIfParasite2() throws Exception { doEnterParasiteTest(); }
+  public void testIfParasite3() throws Exception { doEnterParasiteTest(); }
+
+  public void testTryParasite1() throws Exception { doEnterParasiteTest(); }
+  public void testTryParasite2() throws Exception { doEnterParasiteTest(); }
+  public void testTryParasite3() throws Exception { doEnterParasiteTest(); }
+  public void testTryParasite4() throws Exception { doEnterParasiteTest(); }
+  public void testTryParasite5() throws Exception { doEnterParasiteTest(); }
+
+  public void testCaseParasite1() throws Exception { doEnterParasiteTest(); }
+  public void testCaseParasite2() throws Exception { doEnterParasiteTest(); }
+  public void testCaseParasite3() throws Exception { doEnterParasiteTest(); }
+  public void testCaseParasite4() throws Exception { doEnterParasiteTest(); }
+
   private ErlangCodeStyleSettings getErlangSettings() {
     return myTemporarySettings.getCustomSettings(ErlangCodeStyleSettings.class);
   }
@@ -122,6 +162,7 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
 
   @Override
   protected void setUp() throws Exception {
+    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     setTestStyleSettings();
   }
