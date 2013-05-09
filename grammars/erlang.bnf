@@ -449,9 +449,11 @@ cr_clause ::= cr_clause_argument_definition clause_guard? clause_body {pin=1}
 private cr_clause_argument_definition ::= <<guarded argument_definition>>
 argument_definition ::= expression
 
-receive_expression ::= receive (cr_clauses end | receive_tail) {pin=1}
-private receive_tail ::= cr_clauses? after <<guarded expression>> clause_body end {pin=2}
+receive_expression ::= receive (after_clause end | cr_clauses after_clause? end) {pin(".*")=1}
+after_clause ::= after after_clause_body {pin=1}
+after_clause_body ::= <<guarded expression>> clause_body {pin=1}
 fun_expression ::= fun ((fun_clauses end) | ([(module_ref | q_var) ':'] (function_with_arity|function_with_arity_variables))) {pin=1}
+
 function_with_arity ::= q_atom '/' integer {
   pin= 1
   methods = [getReference]
@@ -459,6 +461,7 @@ function_with_arity ::= q_atom '/' integer {
 function_with_arity_variables ::= q_var '/' (integer|q_var) {pin=1}
 fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body {pin=1}
+
 try_expression ::= try try_expressions_clause (of cr_clauses)? try_catch {pin=1}
 try_catch ::= catch try_clauses [after try_expressions_clause] end | after try_expressions_clause end {pin(".*")="catch|after"}
 try_expressions_clause ::= exprs

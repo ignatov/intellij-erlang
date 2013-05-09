@@ -1,13 +1,21 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi;
 
-import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitAdditiveExpression(@NotNull ErlangAdditiveExpression o) {
     visitFakeBinaryExpression(o);
+  }
+
+  public void visitAfterClause(@NotNull ErlangAfterClause o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitAfterClauseBody(@NotNull ErlangAfterClauseBody o) {
+    visitCompositeElement(o);
   }
 
   public void visitAndalsoExpression(@NotNull ErlangAndalsoExpression o) {

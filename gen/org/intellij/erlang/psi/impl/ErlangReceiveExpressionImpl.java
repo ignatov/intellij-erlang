@@ -1,14 +1,18 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi.impl;
 
-import java.util.List;
-import org.jetbrains.annotations.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
-import com.intellij.psi.util.PsiTreeUtil;
-import static org.intellij.erlang.ErlangTypes.*;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangAfterClause;
+import org.intellij.erlang.psi.ErlangCrClauses;
+import org.intellij.erlang.psi.ErlangReceiveExpression;
+import org.intellij.erlang.psi.ErlangVisitor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static org.intellij.erlang.ErlangTypes.ERL_END;
+import static org.intellij.erlang.ErlangTypes.ERL_RECEIVE;
 
 public class ErlangReceiveExpressionImpl extends ErlangExpressionImpl implements ErlangReceiveExpression {
 
@@ -18,26 +22,14 @@ public class ErlangReceiveExpressionImpl extends ErlangExpressionImpl implements
 
   @Override
   @Nullable
-  public ErlangClauseBody getClauseBody() {
-    return findChildByClass(ErlangClauseBody.class);
+  public ErlangAfterClause getAfterClause() {
+    return findChildByClass(ErlangAfterClause.class);
   }
 
   @Override
   @Nullable
   public ErlangCrClauses getCrClauses() {
     return findChildByClass(ErlangCrClauses.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getAfter() {
-    return findChildByType(ERL_AFTER);
   }
 
   @Override

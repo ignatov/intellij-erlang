@@ -27,6 +27,12 @@ public class ErlangParser implements PsiParser {
     if (root_ == ERL_ADDITIVE_EXPRESSION) {
       result_ = expression(builder_, level_ + 1, 6);
     }
+    else if (root_ == ERL_AFTER_CLAUSE) {
+      result_ = after_clause(builder_, level_ + 1);
+    }
+    else if (root_ == ERL_AFTER_CLAUSE_BODY) {
+      result_ = after_clause_body(builder_, level_ + 1);
+    }
     else if (root_ == ERL_ANDALSO_EXPRESSION) {
       result_ = expression(builder_, level_ + 1, 3);
     }
@@ -432,6 +438,49 @@ public class ErlangParser implements PsiParser {
       marker_.drop();
     }
     return result_;
+  }
+
+  /* ********************************************************** */
+  // after after_clause_body
+  public static boolean after_clause(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "after_clause")) return false;
+    if (!nextTokenIs(builder_, ERL_AFTER)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_AFTER);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && after_clause_body(builder_, level_ + 1);
+    if (result_ || pinned_) {
+      marker_.done(ERL_AFTER_CLAUSE);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // <<guarded expression>> clause_body
+  public static boolean after_clause_body(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "after_clause_body")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<after clause body>");
+    result_ = guarded(builder_, level_ + 1, expression_parser_);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && clause_body(builder_, level_ + 1);
+    if (result_ || pinned_) {
+      marker_.done(ERL_AFTER_CLAUSE_BODY);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */
@@ -4488,7 +4537,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // receive (cr_clauses end | receive_tail)
+  // receive (after_clause end | cr_clauses after_clause? end)
   public static boolean receive_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "receive_expression")) return false;
     if (!nextTokenIs(builder_, ERL_RECEIVE)) return false;
@@ -4509,13 +4558,13 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // cr_clauses end | receive_tail
+  // after_clause end | cr_clauses after_clause? end
   private static boolean receive_expression_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "receive_expression_1")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = receive_expression_1_0(builder_, level_ + 1);
-    if (!result_) result_ = receive_tail(builder_, level_ + 1);
+    if (!result_) result_ = receive_expression_1_1(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }
@@ -4525,35 +4574,36 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // cr_clauses end
+  // after_clause end
   private static boolean receive_expression_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "receive_expression_1_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
-    result_ = cr_clauses(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_END);
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
-    }
-    return result_;
-  }
-
-  /* ********************************************************** */
-  // cr_clauses? after <<guarded expression>> clause_body end
-  static boolean receive_tail(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "receive_tail")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
-    result_ = receive_tail_0(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_AFTER);
-    pinned_ = result_; // pin = 2
-    result_ = result_ && report_error_(builder_, guarded(builder_, level_ + 1, expression_parser_));
-    result_ = pinned_ && report_error_(builder_, clause_body(builder_, level_ + 1)) && result_;
+    result_ = after_clause(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && consumeToken(builder_, ERL_END);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // cr_clauses after_clause? end
+  private static boolean receive_expression_1_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "receive_expression_1_1")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = cr_clauses(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, receive_expression_1_1_1(builder_, level_ + 1));
     result_ = pinned_ && consumeToken(builder_, ERL_END) && result_;
     if (!result_ && !pinned_) {
       marker_.rollbackTo();
@@ -4565,10 +4615,10 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // cr_clauses?
-  private static boolean receive_tail_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "receive_tail_0")) return false;
-    cr_clauses(builder_, level_ + 1);
+  // after_clause?
+  private static boolean receive_expression_1_1_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "receive_expression_1_1_1")) return false;
+    after_clause(builder_, level_ + 1);
     return true;
   }
 

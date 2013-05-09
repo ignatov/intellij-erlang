@@ -43,6 +43,9 @@ public class ErlangIndentProcessor {
     ERL_OP_MINUS_MINUS, ERL_OP_EQ, ERL_OP_EXL, ERL_OP_LT_MINUS, ERL_ANDALSO, ERL_ORELSE
   );
 
+  private ErlangIndentProcessor() {
+  }
+
   public static Indent getChildIndent(ASTNode node) {
     IElementType elementType = node.getElementType();
     ASTNode parent = node.getTreeParent();
@@ -56,7 +59,7 @@ public class ErlangIndentProcessor {
       return Indent.getNoneIndent();
     }
 
-    if (elementType == ERL_CATCH) {
+    if (elementType == ERL_CATCH || elementType == ERL_AFTER) {
       return Indent.getNoneIndent();
     }
 
@@ -107,9 +110,6 @@ public class ErlangIndentProcessor {
   }
 
   private static boolean needIndent(@Nullable IElementType type) {
-    if (type == null) {
-      return false;
-    }
-    return ErlangFormattingBlock.BLOCKS_TOKEN_SET.contains(type);
+    return type != null && ErlangFormattingBlock.BLOCKS_TOKEN_SET.contains(type);
   }
 }

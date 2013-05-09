@@ -58,7 +58,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_TOP_TYPE_CLAUSE,
     ERL_FUN_CLAUSES,
     ERL_TRY_EXPRESSIONS_CLAUSE,
-    ERL_TYPE_SIG_GUARD
+    ERL_TYPE_SIG_GUARD,
+    ERL_AFTER_CLAUSE
   );
 
   private final Indent myIndent;
@@ -213,12 +214,16 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_IF_EXPRESSION ||
       type == ERL_CASE_EXPRESSION ||
       type == ERL_TRY_EXPRESSION ||
-      (type == ERL_TRY_CATCH && newChildIndex == 1)
-      ) return Indent.getNormalIndent(true);
+      type == ERL_AFTER_CLAUSE ||
+      type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||
+      type == ERL_TRY_CATCH && newChildIndex == 1) {
+      return Indent.getNormalIndent(true);
+    }
 
     if (
-      type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1
-      ) return Indent.getNoneIndent();
+      type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) {
+      return Indent.getNoneIndent();
+    }
 
     if (BLOCKS_TOKEN_SET.contains(type)) return Indent.getNormalIndent(false);
 

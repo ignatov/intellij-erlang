@@ -1,0 +1,3 @@
+test() ->
+  receive
+    X -><caret>

@@ -132,6 +132,15 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public void testCase3() throws Exception { doEnterTest(); }
   public void testCase4() throws Exception { doEnterTest(); }
 
+  public void testReceive() throws Exception { doTest(); }
+//  public void testReceive1() throws Exception { doEnterTest(); }
+  public void testReceive2() throws Exception { doEnterTest(); }
+  public void testReceive3() throws Exception { doEnterTest(); }
+  public void testReceive4() throws Exception { doEnterTest(); }
+  public void testReceive5() throws Exception { doEnterTest(); }
+  public void testReceive6() throws Exception { doEnterTest(); }
+  public void testReceive7() throws Exception { doEnterTest(); }
+
   public void testIfParasite1() throws Exception { doEnterParasiteTest(); }
   public void testIfParasite2() throws Exception { doEnterParasiteTest(); }
   public void testIfParasite3() throws Exception { doEnterParasiteTest(); }
@@ -146,6 +155,14 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public void testCaseParasite2() throws Exception { doEnterParasiteTest(); }
   public void testCaseParasite3() throws Exception { doEnterParasiteTest(); }
   public void testCaseParasite4() throws Exception { doEnterParasiteTest(); }
+
+  public void testReceiveParasite1() throws Exception { doEnterParasiteTest(); }
+  public void testReceiveParasite2() throws Exception { doEnterParasiteTest(); }
+  public void testReceiveParasite3() throws Exception { doEnterParasiteTest(); }
+  public void testReceiveParasite4() throws Exception { doEnterParasiteTest(); }
+  public void testReceiveParasite5() throws Exception { doEnterParasiteTest(); }
+  public void testReceiveParasite6() throws Exception { doEnterParasiteTest(); }
+  public void testReceiveParasite7() throws Exception { doEnterParasiteTest(); }
 
   private ErlangCodeStyleSettings getErlangSettings() {
     return myTemporarySettings.getCustomSettings(ErlangCodeStyleSettings.class);
