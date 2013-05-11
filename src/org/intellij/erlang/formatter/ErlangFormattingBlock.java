@@ -182,30 +182,31 @@ public class ErlangFormattingBlock extends AbstractBlock {
   public ChildAttributes getChildAttributes(int newChildIndex) {
     Indent childIndent = getChildIndent(myNode.getElementType(), newChildIndex);
 
-    if (childIndent != null) {
-      return new ChildAttributes(childIndent, null);
-    }
+    if (childIndent != null) return new ChildAttributes(childIndent, null);
 
-    if (newChildIndex > 0) {
-      Block block = getSubBlocks().get(newChildIndex - 1);
-      while (block instanceof ErlangFormattingBlock && !block.getSubBlocks().isEmpty()) {
-        List<Block> subBlocks = block.getSubBlocks();
-        Block childBlock = subBlocks.get(subBlocks.size() - 1);
-        if (!(childBlock instanceof ErlangFormattingBlock)) break;
-        else {
-          ASTNode node = ((ErlangFormattingBlock) childBlock).getNode();
-          PsiElement psi = node.getPsi();
-          IElementType elementType = node.getElementType();
-          if (elementType instanceof ErlangTokenType) break;
-          if (psi instanceof LeafPsiElement || psi instanceof ErlangQAtom || psi instanceof ErlangQVar) break;
-        }
-        block = childBlock;
-      }
-      IElementType type = block instanceof ErlangFormattingBlock ? ((ErlangFormattingBlock) block).getNode().getElementType() : null;
-      childIndent = getChildIndent(type, newChildIndex);
-    }
+    IElementType type = newChildIndex > 0 ? getIElementType(newChildIndex) : null;
+    if (type != null) childIndent = getChildIndent(type, newChildIndex);
     
     return new ChildAttributes(childIndent == null ? Indent.getNoneIndent() : childIndent, null);
+  }
+
+  @Nullable
+  private IElementType getIElementType(int newChildIndex) {
+    Block block = getSubBlocks().get(newChildIndex - 1);
+    while (block instanceof ErlangFormattingBlock && !block.getSubBlocks().isEmpty()) {
+      List<Block> subBlocks = block.getSubBlocks();
+      Block childBlock = subBlocks.get(subBlocks.size() - 1);
+      if (!(childBlock instanceof ErlangFormattingBlock)) break;
+      else {
+        ASTNode node = ((ErlangFormattingBlock) childBlock).getNode();
+        PsiElement psi = node.getPsi();
+        IElementType elementType = node.getElementType();
+        if (elementType instanceof ErlangTokenType) break;
+        if (psi instanceof LeafPsiElement || psi instanceof ErlangQAtom || psi instanceof ErlangQVar) break;
+      }
+      block = childBlock;
+    }
+    return block instanceof ErlangFormattingBlock ? ((ErlangFormattingBlock) block).getNode().getElementType() : null;
   }
 
   @Nullable
@@ -214,6 +215,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_IF_EXPRESSION ||
       type == ERL_CASE_EXPRESSION ||
       type == ERL_TRY_EXPRESSION ||
+      type == ERL_BEGIN_END_EXPRESSION ||
       type == ERL_AFTER_CLAUSE ||
       type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||
       type == ERL_TRY_CATCH && newChildIndex == 1) {

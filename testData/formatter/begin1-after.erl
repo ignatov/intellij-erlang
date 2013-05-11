@@ -1,0 +1,3 @@
+foo() ->
+  begin
+    <caret>

@@ -141,6 +141,10 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public void testReceive6() throws Exception { doEnterTest(); }
   public void testReceive7() throws Exception { doEnterTest(); }
 
+  public void testBegin1() throws Exception { doEnterTest(); }
+  public void testBegin2() throws Exception { doEnterTest(); }
+  public void testBegin3() throws Exception { doEnterTest(); }
+
   public void testIfParasite1() throws Exception { doEnterParasiteTest(); }
   public void testIfParasite2() throws Exception { doEnterParasiteTest(); }
   public void testIfParasite3() throws Exception { doEnterParasiteTest(); }
@@ -163,6 +167,10 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public void testReceiveParasite5() throws Exception { doEnterParasiteTest(); }
   public void testReceiveParasite6() throws Exception { doEnterParasiteTest(); }
   public void testReceiveParasite7() throws Exception { doEnterParasiteTest(); }
+
+  public void testBeginParasite1() throws Exception { doEnterParasiteTest(); }
+//  public void testBeginParasite2() throws Exception { doEnterParasiteTest(); }
+  public void testBeginParasite3() throws Exception { doEnterParasiteTest(); }
 
   private ErlangCodeStyleSettings getErlangSettings() {
     return myTemporarySettings.getCustomSettings(ErlangCodeStyleSettings.class);
