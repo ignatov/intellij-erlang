@@ -402,7 +402,7 @@ record_expression ::= expression record_tail {
   methods = [getReference]
 }
 private record_tail ::= record_head (record_field_ref | record_tuple | ) {pin=1}
-private record_head ::= record_head_classic | macros &('{'|'.' q_atom)
+private record_head ::= record_head_classic | macros &('{'|'.' q_atom &(!('(')))
 private record_head_classic ::= '#' record_ref {pin=1}
 record_field_ref ::= '.' q_atom {pin=1 elementType="record_field"}
 record_ref ::= q_atom {methods = [getReference]}

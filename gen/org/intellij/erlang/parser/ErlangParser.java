@@ -4804,7 +4804,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // record_head_classic | macros &('{'|'.' q_atom)
+  // record_head_classic | macros &('{'|'.' q_atom &(!('(')))
   static boolean record_head(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_head")) return false;
     if (!nextTokenIs(builder_, ERL_RADIX) && !nextTokenIs(builder_, ERL_QMARK)) return false;
@@ -4821,7 +4821,7 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // macros &('{'|'.' q_atom)
+  // macros &('{'|'.' q_atom &(!('(')))
   private static boolean record_head_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_head_1")) return false;
     boolean result_ = false;
@@ -4837,7 +4837,7 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // &('{'|'.' q_atom)
+  // &('{'|'.' q_atom &(!('(')))
   private static boolean record_head_1_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_head_1_1")) return false;
     boolean result_ = false;
@@ -4849,7 +4849,7 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // '{'|'.' q_atom
+  // '{'|'.' q_atom &(!('('))
   private static boolean record_head_1_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_head_1_1_0")) return false;
     boolean result_ = false;
@@ -4865,13 +4865,53 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // '.' q_atom
+  // '.' q_atom &(!('('))
   private static boolean record_head_1_1_0_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_head_1_1_0_1")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_DOT);
     result_ = result_ && q_atom(builder_, level_ + 1);
+    result_ = result_ && record_head_1_1_0_1_2(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // &(!('('))
+  private static boolean record_head_1_1_0_1_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_head_1_1_0_1_2")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_AND_, null);
+    result_ = record_head_1_1_0_1_2_0(builder_, level_ + 1);
+    marker_.rollbackTo();
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_AND_, null);
+    return result_;
+  }
+
+  // !('(')
+  private static boolean record_head_1_1_0_1_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_head_1_1_0_1_2_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_NOT_, null);
+    result_ = !record_head_1_1_0_1_2_0_0(builder_, level_ + 1);
+    marker_.rollbackTo();
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_NOT_, null);
+    return result_;
+  }
+
+  // ('(')
+  private static boolean record_head_1_1_0_1_2_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_head_1_1_0_1_2_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_PAR_LEFT);
     if (!result_) {
       marker_.rollbackTo();
     }
