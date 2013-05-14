@@ -30,16 +30,6 @@
   OP_MINUS        = "-"
   OP_AR_MUL       = "*"
   OP_AR_DIV       = "/"
-  OP_DIV          = "div"
-  OP_REM          = "rem"
-  OP_OR           = "or"
-  OP_XOR          = "xor"
-  OP_BOR          = "bor"
-  OP_BXOR         = "bxor"
-  OP_BSL          = "bsl"
-  OP_BSR          = "bsr"
-  OP_AND          = "and"
-  OP_BAND         = "band"
   OP_EQ_EQ        = "=="
   OP_DIV_EQ       = "/="
   OP_EQ_COL_EQ    = "=:="
@@ -49,15 +39,11 @@
   OP_GT           = ">"
   OP_GT_EQ        = ">="
   OP_LT_EQ        = "<="
-  OP_NOT          = "not"
-  OP_BNOT         = "bnot"
   OP_PLUS_PLUS    = "++"
   OP_MINUS_MINUS  = "--"
   OP_EQ           = "="
   OP_EXL          = "!"
   OP_LT_MINUS     = "<-"
-  OP_ANDALSO      = "andalso"
-  OP_ORELSE       = "orelse"
 
   BIN_START       = "<<"
   BIN_END         = ">>"
@@ -81,26 +67,7 @@
   RADIX           = "#"
   QMARK           = "?"
   UNI_PATTERN     = "_"
-  
-  AFTER           = "after"
-  COND            = "cond"
-  LET             = "let"
-  WHEN            = "when"
-  BEGIN           = "begin"
-  END             = "end"
-  OF              = "of"
-  CASE            = "case"
-  FUN             = "fun"
-  QUERY           = "query"
-  CATCH           = "catch"
-  IF              = "if"
-  RECEIVE         = "receive"
-  TRY             = "try"
 
-  INT             = "integer"
-  FLOAT           = "float"
-  CHAR            = "char"
-  
   extends("assignment_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal|atomic|q_atom|q_var)")=expression
   name(".*_(expression|comprehension|literal|atomic)")=expression
@@ -178,7 +145,7 @@ specification ::= 'spec' type_spec {
 export ::= 'export' '(' export_functions ')' {pin=1}
 export_type_attribute ::= 'export_type' '(' export_types ')' {pin=1}
 import_directive ::= 'import' '(' module_ref ',' import_functions ')' {pin=1}
-module ::= 'module' '(' q_atom (',' argument_definition)? ')' {
+module ::= 'module' '(' q_atom [',' argument_definition] ')' {
   pin=1
   methods = [getName setName getNameIdentifier getTextOffset processDeclarations]
 }
@@ -199,7 +166,7 @@ type_ref ::= q_atom {
   methods = [getReference]
 }
 
-atom_attribute ::= q_atom [('(' typed_attr_val ')') | typed_attr_val | attr_val]
+atom_attribute ::= q_atom ['(' typed_attr_val ')' | typed_attr_val | attr_val]
 export_functions ::= '[' export_function_list? ']' {pin=1}
 private export_function_list ::= export_function (',' export_function)*
 export_function ::= q_atom '/' integer {
@@ -228,7 +195,7 @@ spec_fun ::= q_atom ('/' integer | &('(')) {
   pin(".*")=1
   methods = [getReference]
 }
-typed_attr_val ::= expression ((',' typed_record_fields) | ('::' top_type))
+typed_attr_val ::= expression (',' typed_record_fields | '::' top_type)
 typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
 private typed_exprs ::= typed_expr_or_macros (',' typed_expr_or_macros)* // todo: hack #145
 private typed_expr_or_macros ::= generic_function_call_expression | typed_expr
@@ -250,7 +217,7 @@ type ::=
   | type_ref_with_module ['(' top_type_list? ')']
   | binary_type
   | q_var ['::' top_type]
-  | '[' [top_type (',' '...')?] ']'
+  | '[' [top_type [',' '...']] ']'
   | '{' top_type_list? '}'
   | '#' record_ref '{' field_type_list? '}' {pin(".*") = 1}
 
@@ -371,13 +338,13 @@ atom_with_arity_expression ::= q_atom '/' integer {elementType="expression" pin=
 begin_end_expression ::= begin begin_end_body end {pin=1}
 begin_end_body ::= exprs {name="expression"}
 
-list_expression ::= '[' (']' | (expression not_comprehension tail)) {pin(".*")="not_comprehension"}
-private not_comprehension ::= !('||')
-private tail ::= ']' | ('|' expression ']') | (',' expression tail) {pin(".*")=1}
+list_expression ::= '[' (']' | expression not_comprehension tail) {pin(".*")="not_comprehension"}
+private not_comprehension ::= !'||'
+private tail ::= ']' | '|' expression ']' | ',' expression tail {pin(".*")=1}
 
 binary_expression ::= '<<' bin_element_list? '>>' {pin=1}
 private bin_element_list ::= bin_element (',' bin_element)*
-bin_element ::= prefix_op? expression (':' expression)? opt_bit_type_list? {name="binary element"}
+bin_element ::= prefix_op? expression [':' expression] opt_bit_type_list? {name="binary element"}
 
 opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*
@@ -428,8 +395,8 @@ function_call_expression ::= q_atom argument_list &not_function_definition {
 }
 private not_function_definition ::= <<isModeOn "GUARD">> | !('->'|when)
 macros_call ::= &('?') generic_function_call_expression {recoverUntil=macros_call_recover}
-private macros_call_recover ::= !('.')
-generic_function_call_expression ::= (q_atom_or_var ':')? (q_atom_or_var | macros) argument_list &not_function_definition
+private macros_call_recover ::= !'.'
+generic_function_call_expression ::= [q_atom_or_var ':'] (q_atom_or_var | macros) argument_list &not_function_definition
 private q_atom_or_var ::= q_atom | q_var
 
 anonymous_call_expression ::= expression argument_list &not_function_definition
@@ -453,7 +420,7 @@ receive_expression ::= receive (after_clause end | cr_clauses after_clause? end)
 after_clause ::= after after_clause_body {pin=1}
 after_clause_body ::= <<guarded expression>> clause_body {pin=1}
 fun_expression ::= fun (fun_expression_block | fun_expression_lambda) {pin=1}
-private fun_expression_lambda ::= [(module_ref | q_var) ':'] (function_with_arity|function_with_arity_variables)
+private fun_expression_lambda ::= [(module_ref | q_var) ':'] (function_with_arity | function_with_arity_variables)
 private fun_expression_block ::= fun_clauses end {pin=1}
 
 function_with_arity ::= q_atom '/' integer {
@@ -464,7 +431,7 @@ function_with_arity_variables ::= q_var '/' (integer|q_var) {pin=1}
 fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body {pin=1}
 
-try_expression ::= try try_expressions_clause (of cr_clauses)? try_catch {pin=1}
+try_expression ::= try try_expressions_clause [of cr_clauses] try_catch {pin=1}
 try_catch ::= catch try_clauses [after try_expressions_clause] end | after try_expressions_clause end {pin(".*")="catch|after"}
 try_expressions_clause ::= exprs
 try_clauses ::= try_clause (';' try_clause)*
