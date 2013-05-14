@@ -218,6 +218,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_QUERY_EXPRESSION ||
       type == ERL_BEGIN_END_EXPRESSION ||
       type == ERL_AFTER_CLAUSE ||
+      type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
       type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||
       type == ERL_TRY_CATCH && newChildIndex == 1) {
       return Indent.getNormalIndent(true);

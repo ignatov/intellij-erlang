@@ -1,0 +1,3 @@
+foo() ->
+  fun
+    <caret>
