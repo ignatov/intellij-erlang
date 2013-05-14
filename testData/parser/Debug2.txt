@@ -8,7 +8,7 @@ ERL_FILE
         PsiElement(atom)('m')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiErrorElement:'.' unexpected
+    PsiErrorElement:'.' unexpected
+      PsiElement(.)('.')
     PsiElement(.)('.')
-  PsiElement(.)('.')
-  PsiElement(.)('.')
+    PsiElement(.)('.')

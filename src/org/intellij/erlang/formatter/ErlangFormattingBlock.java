@@ -223,7 +223,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
     }
 
     if (
-      type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) {
+      type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1 ||
+      type == ERL_RECEIVE_EXPRESSION && newChildIndex == 2
+      ) {
       return Indent.getNoneIndent();
     }
 

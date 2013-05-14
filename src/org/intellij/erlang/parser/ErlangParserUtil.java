@@ -17,11 +17,13 @@
 package org.intellij.erlang.parser;
 
 import com.intellij.lang.PsiBuilder;
+import com.intellij.lang.PsiParser;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
+import com.intellij.psi.tree.IElementType;
 import gnu.trove.TObjectIntHashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -78,5 +80,12 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     else if (count > 1) flags.put(mode, count -1);
     else builder_.error("Could not exit inactive '" + mode + "' mode at offset " + builder_.getCurrentOffset());
     return true;
+  }
+
+  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
+  public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser) {
+    PsiBuilder result = GeneratedParserUtilBase.adapt_builder_(root, builder, parser);
+    GeneratedParserUtilBase.ErrorState.get(result).altMode = true;
+    return result;
   }
 }

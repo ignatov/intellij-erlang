@@ -43,5 +43,6 @@ ERL_FILE
         PsiElement(,)(',')
         PsiErrorElement:<expression> or <record field> expected, got '}'
           <empty list>
-  PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiErrorElement:'.' or ';' expected, got '}'
+      PsiElement(})('}')
+    PsiElement(.)('.')

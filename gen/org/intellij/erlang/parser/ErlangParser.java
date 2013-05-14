@@ -2202,7 +2202,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // expression (',' expression)*
+  // expression (exprs_tail)*
   static boolean exprs(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "exprs")) return false;
     boolean result_ = false;
@@ -2222,7 +2222,7 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // (',' expression)*
+  // (exprs_tail)*
   private static boolean exprs_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "exprs_1")) return false;
     int offset_ = builder_.getCurrentOffset();
@@ -2238,16 +2238,15 @@ public class ErlangParser implements PsiParser {
     return true;
   }
 
-  // ',' expression
+  // (exprs_tail)
   private static boolean exprs_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "exprs_1_0")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
-    result_ = consumeToken(builder_, ERL_COMMA);
+    result_ = exprs_tail(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
-    result_ = result_ && expression(builder_, level_ + 1, -1);
     if (!result_ && !pinned_) {
       marker_.rollbackTo();
     }
@@ -2311,6 +2310,27 @@ public class ErlangParser implements PsiParser {
       marker_.drop();
     }
     return result_;
+  }
+
+  /* ********************************************************** */
+  // ',' expression
+  static boolean exprs_tail(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "exprs_tail")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_RECOVER_, null);
+    result_ = consumeToken(builder_, ERL_COMMA);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && expression(builder_, level_ + 1, -1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_RECOVER_, exprs_recover_parser_);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */

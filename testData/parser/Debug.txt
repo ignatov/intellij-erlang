@@ -24,8 +24,8 @@ ERL_FILE
           ERL_Q_ATOM
             PsiElement(atom)('ok')
     PsiElement(.)('.')
-  PsiErrorElement:'' unexpected
-    PsiElement(BAD_CHARACTER)('')
+    PsiErrorElement:'' unexpected
+      PsiElement(BAD_CHARACTER)('')
   PsiComment(function_doc_comment)('%% API')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -37,8 +37,8 @@ ERL_FILE
         PsiElement(])(']')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiErrorElement:'' unexpected
-    PsiElement(BAD_CHARACTER)('')
+    PsiErrorElement:'' unexpected
+      PsiElement(BAD_CHARACTER)('')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

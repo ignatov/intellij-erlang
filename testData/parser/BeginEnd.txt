@@ -1,0 +1,29 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_BEGIN_END_EXPRESSION
+          PsiElement(begin)('begin')
+          ERL_BEGIN_END_BODY
+            ERL_FUNCTION_CALL_EXPRESSION
+              ERL_Q_ATOM
+                PsiElement(atom)('test')
+              ERL_ARGUMENT_LIST
+                PsiElement(()('(')
+                PsiElement())(')')
+            PsiElement(,)(',')
+            ERL_FUNCTION_CALL_EXPRESSION
+              ERL_Q_ATOM
+                PsiElement(atom)('test')
+              ERL_ARGUMENT_LIST
+                PsiElement(()('(')
+                PsiElement())(')')
+            PsiElement(,)(',')
+            PsiErrorElement:<expression> expected, unexpected end of file
+              <empty list>

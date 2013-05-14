@@ -479,7 +479,8 @@ fake fake_binary_expression ::= expression+ {
   ]
 }
 
-private exprs ::= expression (',' expression)* {recoverUntil=exprs_recover}
+private exprs ::= expression (exprs_tail)* {recoverUntil=exprs_recover}
+private exprs_tail ::= ',' expression {pin=1 recoverUntil=exprs_recover}
 private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
 private atomic ::= char | integer | float | q_atom !'(' | string_literal+

@@ -169,7 +169,7 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public void testReceiveParasite7() throws Exception { doEnterParasiteTest(); }
 
   public void testBeginParasite1() throws Exception { doEnterParasiteTest(); }
-//  public void testBeginParasite2() throws Exception { doEnterParasiteTest(); }
+  public void testBeginParasite2() throws Exception { doEnterParasiteTest(); }
   public void testBeginParasite3() throws Exception { doEnterParasiteTest(); }
 
   private ErlangCodeStyleSettings getErlangSettings() {
