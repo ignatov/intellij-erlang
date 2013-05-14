@@ -22,6 +22,8 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ArrayUtil;
 import org.apache.commons.lang.StringUtils;
@@ -34,12 +36,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.io.File;
 
 /**
  * @author Maxim Vladimirsky, ignatov
  */
 public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
-  private static String ERLANG_RELATED_TOOLS = "Erlang External Tools";
+  public static String ERLANG_RELATED_TOOLS = "Erlang External Tools";
   private JPanel myPanel;
   private TextFieldWithBrowseButton myEmacsPathSelector;
   private JTextField myEmacsVersionText;
@@ -64,6 +67,14 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
             myRebarSettings.setRebarPath(canonicalPath);
           }
         }
+      }
+    }
+
+    if (StringUtils.isEmpty(myEmacsSettings.getEmacsPath()) && SystemInfo.isLinux) {
+      String suggestedPath = "/usr/bin/emacs";
+      File file = new File(suggestedPath);
+      if (file.exists() && FileUtil.canExecute(file)) {
+        myEmacsSettings.setEmacsPath(suggestedPath);
       }
     }
 
