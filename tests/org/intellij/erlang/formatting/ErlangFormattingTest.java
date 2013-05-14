@@ -55,7 +55,7 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
     String text = FileUtil.loadFile(new File(getTestDataPath() + testName + ".erl")) + appendix;
     myFixture.configureByText(testName + ".erl", text);
     String after = doTest(format, testName);
-    String afterText = FileUtil.loadFile(new File(getTestDataPath() + after)) + appendix;
+    String afterText = FileUtil.loadFile(new File(getTestDataPath() + after), true) + appendix;
     myFixture.checkResult(afterText);
   }
 
