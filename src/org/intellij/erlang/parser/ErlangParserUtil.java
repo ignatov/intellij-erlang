@@ -59,21 +59,21 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return flags;
   }
 
-  public static boolean isModeOn(PsiBuilder builder_, int level_, String mode) {
+  public static boolean isModeOn(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
     return getParsingModes(builder_).get(mode) > 0;
   }
 
-  public static boolean isModeOff(PsiBuilder builder_, int level_, String mode) {
+  public static boolean isModeOff(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
     return getParsingModes(builder_).get(mode) == 0;
   }
 
-  public static boolean enterMode(PsiBuilder builder_, int level_, String mode) {
+  public static boolean enterMode(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
     TObjectIntHashMap<String> flags = getParsingModes(builder_);
     if (!flags.increment(mode)) flags.put(mode, 1);
     return true;
   }
 
-  public static boolean exitMode(PsiBuilder builder_, int level_, String mode) {
+  public static boolean exitMode(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
     TObjectIntHashMap<String> flags = getParsingModes(builder_);
     int count = flags.get(mode);
     if (count == 1) flags.remove(mode);
