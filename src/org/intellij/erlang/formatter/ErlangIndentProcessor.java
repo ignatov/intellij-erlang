@@ -65,21 +65,15 @@ public class ErlangIndentProcessor {
 
     if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_DEFINITION_LIST
       || parentType == ERL_FUN_TYPE || parentType == ERL_FUN_TYPE_ARGUMENTS) {
-      if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) {
-        return Indent.getNoneIndent();
-      }
+      if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) return Indent.getNoneIndent();
       return Indent.getContinuationIndent();
     }
     if (parentType == ERL_ARGUMENT_LIST) {
-      if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) {
-        return Indent.getNoneIndent();
-      }
+      if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) return Indent.getNoneIndent();
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS) {
-      if (elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT) {
-        return Indent.getNoneIndent();
-      }
+      if (elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT) return Indent.getNoneIndent();
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS || parentType == ERL_EXPORT_TYPES) {
@@ -92,6 +86,10 @@ public class ErlangIndentProcessor {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_LC_EXPRS) {
+      return Indent.getNormalIndent();
+    }
+    if (parentType == ERL_QUERY_EXPRESSION) {
+      if (elementType == ERL_QUERY || elementType == ERL_END) return Indent.getNoneIndent();
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_RECORD_FIELDS) {

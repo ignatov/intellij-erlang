@@ -215,6 +215,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_IF_EXPRESSION ||
       type == ERL_CASE_EXPRESSION ||
       type == ERL_TRY_EXPRESSION ||
+      type == ERL_QUERY_EXPRESSION ||
       type == ERL_BEGIN_END_EXPRESSION ||
       type == ERL_AFTER_CLAUSE ||
       type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||

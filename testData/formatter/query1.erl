@@ -1,0 +1,2 @@
+foo() ->
+  query<caret>
