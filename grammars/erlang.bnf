@@ -311,7 +311,7 @@ private max_group ::=
   | record2_expression
   | qualified_expression
 colon_qualified_expression ::= expression ':' expression
-qualified_expression ::= q_atom '.' q_atom &(!('('))
+qualified_expression ::= q_atom '.' q_atom !'('
 
 record2_expression ::= record_tail {elementType=record_expression}
 

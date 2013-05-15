@@ -7220,7 +7220,7 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // q_atom '.' q_atom &(!('('))
+  // q_atom '.' q_atom !'('
   public static boolean qualified_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "qualified_expression")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
@@ -7242,42 +7242,15 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // &(!('('))
+  // !'('
   private static boolean qualified_expression_3(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "qualified_expression_3")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_AND_, null);
-    result_ = qualified_expression_3_0(builder_, level_ + 1);
-    marker_.rollbackTo();
-    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_AND_, null);
-    return result_;
-  }
-
-  // !('(')
-  private static boolean qualified_expression_3_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "qualified_expression_3_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_NOT_, null);
-    result_ = !qualified_expression_3_0_0(builder_, level_ + 1);
+    result_ = !consumeToken(builder_, ERL_PAR_LEFT);
     marker_.rollbackTo();
     result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_NOT_, null);
-    return result_;
-  }
-
-  // ('(')
-  private static boolean qualified_expression_3_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "qualified_expression_3_0_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
-    result_ = consumeToken(builder_, ERL_PAR_LEFT);
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
-    }
     return result_;
   }
 
