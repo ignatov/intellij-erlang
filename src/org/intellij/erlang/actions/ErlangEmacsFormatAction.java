@@ -21,7 +21,6 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -31,7 +30,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -45,11 +43,9 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.ExceptionUtil;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
-import org.jetbrains.annotations.NotNull;
+import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
 import java.io.File;
 
 /**
@@ -86,7 +82,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
           new Notification(groupId, NOTIFICATION_TITLE,
             "Emacs executable path is empty"+
             "<br/><a href='configure'>Configure</a>",
-          NotificationType.WARNING, new MyNotificationListener(project)), project);
+          NotificationType.WARNING, new ErlangExternalToolsNotificationListener(project)), project);
         return;
       }
       commandLine.setExePath(emacsPath);
@@ -168,21 +164,4 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
     }
   }
 
-  private static class MyNotificationListener implements NotificationListener {
-    @NotNull
-    private final Project myProject;
-
-    private MyNotificationListener(@NotNull Project project) {
-      myProject = project;
-    }
-
-    @Override
-    public void hyperlinkUpdate(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
-      if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-        if (event.getDescription().equals("configure") && !myProject.isDisposed()) {
-          ShowSettingsUtil.getInstance().showSettingsDialog(myProject, ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
-        }
-      }
-    }
-  }
 }

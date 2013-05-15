@@ -31,12 +31,17 @@ import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.ui.ConsoleView;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
+import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.console.FileReferenceFilter;
 import org.intellij.erlang.eunit.ErlangTestLocationProvider;
 import org.intellij.erlang.eunit.ErlangUnitConsoleProperties;
 import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -100,8 +105,9 @@ final class RebarRunningState extends CommandLineState {
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
     final GeneralCommandLine commandLine = new GeneralCommandLine();
-    final RebarSettings rebarSettings = RebarSettings.getInstance(myConfiguration.getProject());
-    commandLine.setWorkDirectory(myConfiguration.getProject().getBasePath());
+    Project project = myConfiguration.getProject();
+    final RebarSettings rebarSettings = RebarSettings.getInstance(project);
+    commandLine.setWorkDirectory(project.getBasePath());
     commandLine.setExePath(rebarSettings.getRebarPath());
     
     List<String> split = ContainerUtil.list(myConfiguration.getCommand().split("\\s+"));
@@ -113,7 +119,21 @@ final class RebarRunningState extends CommandLineState {
     if (myConfiguration.isUseTestConsole() && !split.contains("--verbose")) {
       commandLine.addParameter("--verbose");
     }
-    
-    return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
+
+    try {
+      return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
+    } catch (ExecutionException e) {
+      String message = e.getMessage();
+      boolean isEmpty = message.equals("Executable is not specified");
+      boolean notCorrect = message.startsWith("Cannot run program");
+      if (isEmpty || notCorrect) {
+        Notifications.Bus.notify(
+          new Notification("Rebar run configuration", "Rebar settings",
+            "Rebar executable path is " + (isEmpty ? "empty" : "not specified correctly") +
+              "<br/><a href='configure'>Configure</a>",
+            NotificationType.ERROR, new ErlangExternalToolsNotificationListener(project)), project);
+      }
+      throw e;
+    }
   }
 }
