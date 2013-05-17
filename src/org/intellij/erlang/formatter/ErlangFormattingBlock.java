@@ -46,7 +46,6 @@ public class ErlangFormattingBlock extends AbstractBlock {
   public static final TokenSet BLOCKS_TOKEN_SET = TokenSet.create(
     ERL_CLAUSE_BODY,
     ERL_MACROS_BODY,
-//    ERL_TYPED_RECORD_FIELDS,
     ERL_ARGUMENT_LIST,
     ERL_TUPLE_EXPRESSION,
     ERL_LIST_EXPRESSION,
@@ -224,13 +223,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
       return Indent.getNormalIndent(true);
     }
 
-    if (
-      type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1
-      ) {
-      return Indent.getNoneIndent();
-    }
+    if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 
-    if (BLOCKS_TOKEN_SET.contains(type)) return Indent.getNormalIndent(false);
+    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) return Indent.getNormalIndent(false);
 
     return null;
   }

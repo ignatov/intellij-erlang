@@ -147,7 +147,10 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   
   public void testQuery() throws Exception { doTest(); }  
   public void testQuery1() throws Exception { doEnterTest(); }
-  public void testQuery2() throws Exception { doEnterTest(); }  
+  public void testQuery2() throws Exception { doEnterTest(); }
+
+  public void testRecordFields1() throws Exception { doEnterTest(); }
+  public void testRecordFields2() throws Exception { doEnterTest(); }
   
 //  public void testFunExpression1() throws Exception { doEnterTest(); }
   public void testFunExpression2() throws Exception { doEnterTest(); }

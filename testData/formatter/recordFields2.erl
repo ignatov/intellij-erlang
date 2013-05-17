@@ -1,0 +1,3 @@
+-record(test, {
+  field,<caret>
+}).
