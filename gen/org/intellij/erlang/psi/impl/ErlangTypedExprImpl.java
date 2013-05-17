@@ -21,33 +21,9 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
   }
 
   @Override
-  @Nullable
-  public ErlangMacros getMacros() {
-    return findChildByClass(ErlangMacros.class);
-  }
-
-  @Override
   @NotNull
   public ErlangQAtom getQAtom() {
     return findNotNullChildByClass(ErlangQAtom.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangRecordField getRecordField() {
-    return findChildByClass(ErlangRecordField.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangRecordRef getRecordRef() {
-    return findChildByClass(ErlangRecordRef.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangRecordTuple getRecordTuple() {
-    return findChildByClass(ErlangRecordTuple.class);
   }
 
   @Override

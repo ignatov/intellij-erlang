@@ -6621,7 +6621,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom ['=' expression] ['::' (record_tail | top_type)]
+  // q_atom ['=' expression] ['::' top_type]
   public static boolean typed_expr(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_expr")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
@@ -6671,14 +6671,14 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // ['::' (record_tail | top_type)]
+  // ['::' top_type]
   private static boolean typed_expr_2(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_expr_2")) return false;
     typed_expr_2_0(builder_, level_ + 1);
     return true;
   }
 
-  // '::' (record_tail | top_type)
+  // '::' top_type
   private static boolean typed_expr_2_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "typed_expr_2_0")) return false;
     boolean result_ = false;
@@ -6687,7 +6687,7 @@ public class ErlangParser implements PsiParser {
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = consumeToken(builder_, ERL_COLON_COLON);
     pinned_ = result_; // pin = 1
-    result_ = result_ && typed_expr_2_0_1(builder_, level_ + 1);
+    result_ = result_ && top_type(builder_, level_ + 1);
     if (!result_ && !pinned_) {
       marker_.rollbackTo();
     }
@@ -6696,22 +6696,6 @@ public class ErlangParser implements PsiParser {
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;
-  }
-
-  // record_tail | top_type
-  private static boolean typed_expr_2_0_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "typed_expr_2_0_1")) return false;
-    boolean result_ = false;
-    Marker marker_ = builder_.mark();
-    result_ = record_tail(builder_, level_ + 1);
-    if (!result_) result_ = top_type(builder_, level_ + 1);
-    if (!result_) {
-      marker_.rollbackTo();
-    }
-    else {
-      marker_.drop();
-    }
-    return result_;
   }
 
   /* ********************************************************** */

@@ -199,7 +199,7 @@ typed_attr_val ::= expression (',' typed_record_fields | '::' top_type)
 typed_record_fields ::= '{' typed_exprs? '}' {pin=1}
 private typed_exprs ::= typed_expr_or_macros (',' typed_expr_or_macros)* // todo: hack #145
 private typed_expr_or_macros ::= generic_function_call_expression | typed_expr
-typed_expr ::= q_atom ['=' expression] ['::' (record_tail | top_type)] {
+typed_expr ::= q_atom ['=' expression] ['::' top_type] {
   pin(".*")=1
   methods=[getName setName getNameIdentifier getTextOffset]
 }

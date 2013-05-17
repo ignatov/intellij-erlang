@@ -10,20 +10,8 @@ public interface ErlangTypedExpr extends ErlangNamedElement {
   @Nullable
   ErlangExpression getExpression();
 
-  @Nullable
-  ErlangMacros getMacros();
-
   @NotNull
   ErlangQAtom getQAtom();
-
-  @Nullable
-  ErlangRecordField getRecordField();
-
-  @Nullable
-  ErlangRecordRef getRecordRef();
-
-  @Nullable
-  ErlangRecordTuple getRecordTuple();
 
   @Nullable
   ErlangTopType getTopType();
