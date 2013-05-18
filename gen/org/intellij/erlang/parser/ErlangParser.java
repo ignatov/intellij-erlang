@@ -255,6 +255,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_MAX_EXPRESSION) {
       result_ = max_expression(builder_, level_ + 1);
     }
+    else if (root_ == ERL_MODEL_FIELD_LIST) {
+      result_ = model_field_list(builder_, level_ + 1);
+    }
     else if (root_ == ERL_MODULE) {
       result_ = module(builder_, level_ + 1);
     }
@@ -4187,7 +4190,113 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // 'module' '(' q_atom [',' argument_definition] ')'
+  // q_var ['::' top_type]
+  public static boolean model_field(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "model_field")) return false;
+    if (!nextTokenIs(builder_, ERL_UNI_PATTERN) && !nextTokenIs(builder_, ERL_VAR)
+        && replaceVariants(builder_, 2, "<model field>")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<model field>");
+    result_ = q_var(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && model_field_1(builder_, level_ + 1);
+    if (result_ || pinned_) {
+      marker_.done(ERL_ARGUMENT_DEFINITION);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // ['::' top_type]
+  private static boolean model_field_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "model_field_1")) return false;
+    model_field_1_0(builder_, level_ + 1);
+    return true;
+  }
+
+  // '::' top_type
+  private static boolean model_field_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "model_field_1_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = consumeToken(builder_, ERL_COLON_COLON);
+    result_ = result_ && top_type(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // '[' model_field (',' model_field)* ']'
+  public static boolean model_field_list(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "model_field_list")) return false;
+    if (!nextTokenIs(builder_, ERL_BRACKET_LEFT)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_BRACKET_LEFT);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, model_field(builder_, level_ + 1));
+    result_ = pinned_ && report_error_(builder_, model_field_list_2(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_BRACKET_RIGHT) && result_;
+    if (result_ || pinned_) {
+      marker_.done(ERL_MODEL_FIELD_LIST);
+    }
+    else {
+      marker_.rollbackTo();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  // (',' model_field)*
+  private static boolean model_field_list_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "model_field_list_2")) return false;
+    int offset_ = builder_.getCurrentOffset();
+    while (true) {
+      if (!model_field_list_2_0(builder_, level_ + 1)) break;
+      int next_offset_ = builder_.getCurrentOffset();
+      if (offset_ == next_offset_) {
+        empty_element_parsed_guard_(builder_, offset_, "model_field_list_2");
+        break;
+      }
+      offset_ = next_offset_;
+    }
+    return true;
+  }
+
+  // ',' model_field
+  private static boolean model_field_list_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "model_field_list_2_0")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    result_ = consumeToken(builder_, ERL_COMMA);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && model_field(builder_, level_ + 1);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // 'module' '(' q_atom [',' module_tail] ')'
   public static boolean module(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "module")) return false;
     boolean result_ = false;
@@ -4210,20 +4319,20 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // [',' argument_definition]
+  // [',' module_tail]
   private static boolean module_3(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "module_3")) return false;
     module_3_0(builder_, level_ + 1);
     return true;
   }
 
-  // ',' argument_definition
+  // ',' module_tail
   private static boolean module_3_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "module_3_0")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_COMMA);
-    result_ = result_ && argument_definition(builder_, level_ + 1);
+    result_ = result_ && module_tail(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }
@@ -4277,6 +4386,23 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_DOT);
     result_ = result_ && q_atom(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // model_field_list | argument_definition
+  static boolean module_tail(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "module_tail")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = model_field_list(builder_, level_ + 1);
+    if (!result_) result_ = argument_definition(builder_, level_ + 1);
     if (!result_) {
       marker_.rollbackTo();
     }

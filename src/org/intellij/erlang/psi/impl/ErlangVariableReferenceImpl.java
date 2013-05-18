@@ -27,6 +27,7 @@ import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,18 +67,12 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     final List<LookupElement> result = new ArrayList<LookupElement>();
     if (!(myElement.getParent() instanceof ErlangRecordExpression)) {
       final ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myElement, ErlangFunctionClause.class);
-      BaseScopeProcessor processor = new BaseScopeProcessor() {
-        @Override
-        public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
-          if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_") && !inColonQualified(myElement)) {
-            if (PsiTreeUtil.isAncestor(clause, psiElement, false) && (inDefinition(psiElement) || inAssignment(psiElement))) {
-              result.add(LookupElementBuilder.create((PsiNamedElement) psiElement).withIcon(ErlangIcons.VARIABLE));
-            }
-          }
-          return true;
-        }
-      };
-      ResolveUtil.treeWalkUp(myElement, processor);
+      ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(clause, false, result));
+
+      ErlangModule module = getModule(myElement.getContainingFile());
+      if (module != null) {
+        module.processDeclarations(new MyBaseScopeProcessor(clause, true, result), ResolveState.initial(), module, module);
+      }
 
       ErlangQAtom qAtom = getQAtom(PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class));
       result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), myElement.getParent() instanceof ErlangFunctionWithArityVariables, qAtom));
@@ -98,5 +93,28 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
     myElement.replace(ErlangElementFactory.createQVarFromText(myElement.getProject(), newElementName));
     return myElement;
+  }
+
+  private class MyBaseScopeProcessor extends BaseScopeProcessor {
+    private final ErlangFunctionClause myClause;
+    private final boolean myForce;
+    private final List<LookupElement> myResult;
+
+    public MyBaseScopeProcessor(@Nullable ErlangFunctionClause clause, boolean force, List<LookupElement> result) {
+      myClause = clause;
+      myForce = force;
+      myResult = result;
+    }
+
+    @Override
+    public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
+      if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_") && !inColonQualified(myElement)) {
+        boolean ancestor = PsiTreeUtil.isAncestor(myClause, psiElement, false);
+        if ((ancestor || myForce) && (inDefinition(psiElement) || inAssignment(psiElement))) {
+          myResult.add(LookupElementBuilder.create((PsiNamedElement) psiElement).withIcon(ErlangIcons.VARIABLE));
+        }
+      }
+      return true;
+    }
   }
 }

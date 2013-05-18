@@ -318,6 +318,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitModelFieldList(@NotNull ErlangModelFieldList o) {
+    visitCompositeElement(o);
+  }
+
   public void visitModule(@NotNull ErlangModule o) {
     visitNamedElement(o);
   }

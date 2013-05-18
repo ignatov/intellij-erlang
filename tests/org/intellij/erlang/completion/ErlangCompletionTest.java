@@ -148,6 +148,10 @@ public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
     myFixture.checkResult("foo() -> fun foo/0");
   }
 
+  public void test211() throws Throwable {
+    doTestInclude("-module(test, [Id, Name::string()]). foo() -> <caret>", "Id", "Name");
+  }
+
   private void doTestInclude(String txt, String... variants) throws Throwable {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
   }
