@@ -19,7 +19,11 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangExportFunction;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -34,7 +38,9 @@ public class ErlangUnresolvedExportFunctionInspection extends ErlangInspectionBa
       public void visitExportFunction(@NotNull ErlangExportFunction o) {
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(o, "Unresolved function " + "'" + o.getText() + "'");
+          String name = o.getQAtom().getText();
+          int arity = ErlangPsiImplUtil.getArity(o.getInteger());
+          problemsHolder.registerProblem(o, "Unresolved function " + "'" + o.getText() + "'", new ErlangCreateFunctionQuickFix(name, arity));
         }
       }
     });

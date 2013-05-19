@@ -16,17 +16,19 @@
 
 package org.intellij.erlang.quickfixes;
 
+import org.intellij.erlang.inspection.ErlangUnresolvedExportFunctionInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
 
 /**
  * @author ignatov
  */
 public class ErlangIntroduceFunctionFixTest extends ErlangQuickFixTestBase {
+  @SuppressWarnings("unchecked")
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    //noinspection unchecked
     myFixture.enableInspections(ErlangUnresolvedFunctionInspection.class);
+    myFixture.enableInspections(ErlangUnresolvedExportFunctionInspection.class);
   }
 
   @Override
@@ -37,4 +39,5 @@ public class ErlangIntroduceFunctionFixTest extends ErlangQuickFixTestBase {
   public void testFunctionCall()        throws Throwable { doTest("Create Function 'lll/6'"); }
   public void testFunctionExpression()  throws Throwable { doTest("Create Function 'lll/6'"); }
   public void testFunctionSpec()        throws Throwable { doTest("Create Function 'lll/6'"); }
+  public void testFunctionExport()      throws Throwable { doTest("Create Function 'lll/6'"); }
 }
