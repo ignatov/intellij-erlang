@@ -1,3 +1,19 @@
+/*
+ * Copyright 2012-2013 Sergey Ignatov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.intellij.erlang.dialyzer;
 
 import com.intellij.codeInsight.daemon.HighlightDisplayKey;
@@ -61,7 +77,10 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
     String workingDir = file.getProject().getBasePath();
     String dialyzerPath = homePath + "/bin/dialyzer";
-    return new State(dialyzerPath, canonicalPath, workingDir);
+
+    String currentPltPath = DialyzerSettings.getInstance(file.getProject()).getCurrentPltPath();
+
+    return new State(dialyzerPath, currentPltPath, canonicalPath, workingDir);
   }
 
   @Nullable
@@ -71,7 +90,8 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
     ProcessOutput output = null;
     try {
-      output = ErlangSystemUtil.getProcessOutput(state.myWorkingDir, state.myDialyzerPath, state.myFilePath);
+      String[] params = StringUtil.isEmptyOrSpaces(state.myCurrentPltPath) ? new String[]{state.myFilePath} : new String[]{"--plt", state.myCurrentPltPath, state.myFilePath};
+      output = ErlangSystemUtil.getProcessOutput(state.myWorkingDir, state.myDialyzerPath, params);
     } catch (ExecutionException e) {
       LOG.debug(e);
     }
@@ -93,8 +113,10 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     for (Problem problem : annotationResult.problems) {
       int offset = StringUtil.lineColToOffset(text, problem.myLine - 1, 0);
 
+      if (offset == -1) continue;
+
       int width = 0;
-      while (!StringUtil.isLineBreak(text.charAt(offset + width))) width++;
+      while (offset + width < text.length() && !StringUtil.isLineBreak(text.charAt(offset + width))) width++;
 
       TextRange problemRange = TextRange.create(offset, offset + width);
       final String message = "Dialyzer: " + problem.myDescription;
@@ -123,11 +145,13 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
   public static class State {
     public final List<Problem> problems = new ArrayList<Problem>();
     private final String myDialyzerPath;
+    private final String myCurrentPltPath;
     private final String myFilePath;
     private final String myWorkingDir;
 
-    public State(String dialyzerPath, String filePath, String workingDir) {
+    public State(String dialyzerPath, String currentPltPath, String filePath, String workingDir) {
       myDialyzerPath = dialyzerPath;
+      myCurrentPltPath = currentPltPath;
       myFilePath = filePath;
       myWorkingDir = workingDir;
     }

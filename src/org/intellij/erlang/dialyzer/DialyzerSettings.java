@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.emacs;
+package org.intellij.erlang.dialyzer;
 
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
@@ -26,44 +26,44 @@ import org.jetbrains.annotations.Nullable;
  * @author ignatov
  */
 @State(
-  name = "EmacsSettings",
+  name = "DialyzerSettings",
   storages = {
     @Storage(file = StoragePathMacros.PROJECT_FILE),
-    @Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/emacs.xml", scheme = StorageScheme.DIRECTORY_BASED)
+    @Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/dialyzer.xml", scheme = StorageScheme.DIRECTORY_BASED)
   }
 )
-public final class EmacsSettings implements PersistentStateComponent<EmacsSettings> {
+public final class DialyzerSettings implements PersistentStateComponent<DialyzerSettings> {
   @NotNull
-  private String myEmacsPath = "";
+  private String myCurrentPltPath = "";
 
   @NotNull
-  public static EmacsSettings getInstance(@NotNull Project project) {
-    final EmacsSettings persisted = ServiceManager.getService(project, EmacsSettings.class);
-    return persisted != null ? persisted : new EmacsSettings();
+  public static DialyzerSettings getInstance(@NotNull Project project) {
+    final DialyzerSettings persisted = ServiceManager.getService(project, DialyzerSettings.class);
+    return persisted != null ? persisted : new DialyzerSettings();
   }
 
   @Nullable
   @Override
-  public EmacsSettings getState() {
+  public DialyzerSettings getState() {
     return this;
   }
 
   @Override
-  public void loadState(@NotNull EmacsSettings emacsSettings) {
-    XmlSerializerUtil.copyBean(emacsSettings, this);
+  public void loadState(@NotNull DialyzerSettings dialyzerSettings) {
+    XmlSerializerUtil.copyBean(dialyzerSettings, this);
   }
 
   @NotNull
-  public String getEmacsPath() {
-    return myEmacsPath;
+  public String getCurrentPltPath() {
+    return myCurrentPltPath;
   }
 
-  public void setEmacsPath(@NotNull String emacsPath) {
-    myEmacsPath = emacsPath;
+  public void setCurrentPltPath(@NotNull String currentPltPath) {
+    myCurrentPltPath = currentPltPath;
   }
 
   @Override
   public String toString() {
-    return "EmacsSettings(emacsPath='" + myEmacsPath + "')";
+    return "DialyzerSettings(myCurrentPltPath='" + myCurrentPltPath + "')";
   }
 }
