@@ -44,11 +44,11 @@ import java.util.regex.Pattern;
 @SuppressWarnings({"JUnitTestClassNamingConvention"})
 public class ErlangBifParser extends LightPlatformCodeInsightFixtureTestCase {
   private static final Pattern PATTERN_FUNC_DECLARATION = Pattern.compile(
-    "<span class=\"bold_code\">.*?\\((.*?)\\) -&gt; .*?</span>", Pattern.MULTILINE);
+    "<span\\s+class=\"bold_code\">.*\\((.*)\\) -&gt;.*</span>", Pattern.MULTILINE);
   private static final String BIF_TABLE_PATH = "src/org/intellij/erlang/bif/bif.tab.txt";
   private static final String GENERATED_FILE = "src/org/intellij/erlang/bif/ErlangBifTable.java";
   private static final String ERLANG_SDK_PATH = "/usr/lib/erlang";
-  private static final String ERLANG_DOC_PATH = "/home/maxim/Downloads/otp_doc_html_R15B03-1";
+  private static final String ERLANG_DOC_PATH = "/home/ignatov/Downloads/otp_doc_html_R16B";
   private static final Pattern BIF_DECLARATION = Pattern.compile("bif (\\w+)\\:(\\w+)/(\\d+)");
   private static final Pattern BIF_SEPARATOR = Pattern.compile("# New Bifs in (R.+)");
 
@@ -152,6 +152,7 @@ public class ErlangBifParser extends LightPlatformCodeInsightFixtureTestCase {
 
   @Override
   protected void setUp() throws Exception {
+    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     myDocProvider = new ErlangDocumentationProvider();
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
