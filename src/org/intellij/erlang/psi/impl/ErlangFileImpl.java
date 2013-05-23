@@ -18,6 +18,7 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -64,9 +65,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       ErlangModule module = moduleAttributes.getModule();
       if (module != null) {
         // todo: use module with dependencies scope
-        Query<PsiReference> search = ReferencesSearch.search(module, GlobalSearchScope.allScope(module.getProject()));
-        for (PsiReference psiReference : search) {
-          psiReference.handleElementRename(nameWithoutExtension);
+        if (!DumbService.isDumb(getProject())) {
+          Query<PsiReference> search = ReferencesSearch.search(module, GlobalSearchScope.allScope(module.getProject()));
+          for (PsiReference psiReference : search) {
+            psiReference.handleElementRename(nameWithoutExtension);
+          }
         }
         module.setName(nameWithoutExtension);
       }
