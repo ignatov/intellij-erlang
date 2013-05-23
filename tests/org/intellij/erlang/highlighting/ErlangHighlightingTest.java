@@ -59,6 +59,7 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
 
   @Override
   protected void setUp() throws Exception {
+//    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
