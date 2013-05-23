@@ -328,5 +328,13 @@
             <keyboard-shortcut first-keystroke="ctrl ENTER" keymap="$default"/>
         </action>
 
+        <group id="EunitGenerateGroup">
+            <action id="EUnitGenerateTestMethod" class="org.intellij.erlang.eunit.generation.ErlangUnitTestMethodAction"
+                    text="EUnit Test Method"
+                    description="Creates EUnit test function"/>
+            <separator/>
+            <add-to-group group-id="GenerateGroup" anchor="first"/>
+        </group>
+      
     </actions>
 </idea-plugin>
