@@ -49,7 +49,6 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_ARGUMENT_LIST,
     ERL_TUPLE_EXPRESSION,
     ERL_LIST_EXPRESSION,
-    ERL_CR_CLAUSES,
     ERL_IF_CLAUSES,
     ERL_TRY_CLAUSES,
     ERL_CATCH_EXPRESSION,
@@ -219,13 +218,16 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_AFTER_CLAUSE ||
       type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
       type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||
-      type == ERL_TRY_CATCH && newChildIndex == 1) {
+      type == ERL_TRY_CATCH && newChildIndex == 1 ||
+      type == ERL_SEMI) {
       return Indent.getNormalIndent(true);
     }
 
     if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 
-    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) return Indent.getNormalIndent(false);
+    if (BLOCKS_TOKEN_SET.contains(type) || 
+      type == ERL_TYPED_RECORD_FIELDS
+      ) return Indent.getNormalIndent(false);
 
     return null;
   }

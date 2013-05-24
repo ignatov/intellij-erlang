@@ -117,9 +117,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_CR_CLAUSE) {
       result_ = cr_clause(builder_, level_ + 1);
     }
-    else if (root_ == ERL_CR_CLAUSES) {
-      result_ = cr_clauses(builder_, level_ + 1);
-    }
     else if (root_ == ERL_EXPORT) {
       result_ = export(builder_, level_ + 1);
     }
@@ -1845,20 +1842,20 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // cr_clause (';' cr_clause)*
-  public static boolean cr_clauses(PsiBuilder builder_, int level_) {
+  static boolean cr_clauses(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "cr_clauses")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<cr clauses>");
+    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = cr_clause(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && cr_clauses_1(builder_, level_ + 1);
-    if (result_ || pinned_) {
-      marker_.done(ERL_CR_CLAUSES);
+    if (!result_ && !pinned_) {
+      marker_.rollbackTo();
     }
     else {
-      marker_.rollbackTo();
+      marker_.drop();
     }
     result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
     return result_ || pinned_;

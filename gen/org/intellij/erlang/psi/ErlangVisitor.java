@@ -130,10 +130,6 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
-  public void visitCrClauses(@NotNull ErlangCrClauses o) {
-    visitCompositeElement(o);
-  }
-
   public void visitExport(@NotNull ErlangExport o) {
     visitCompositeElement(o);
   }

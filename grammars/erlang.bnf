@@ -414,7 +414,7 @@ private meta guarded ::= <<enterMode "GUARD">> (<<p1>> <<exitMode "GUARD">>|<<ex
 private guard_with_mode ::= <<guarded guard>>
 
 case_expression ::= case expression of cr_clauses end {pin=1}
-cr_clauses ::= cr_clause (';' cr_clause)*
+private cr_clauses ::= cr_clause (';' cr_clause)*
 cr_clause ::= cr_clause_argument_definition clause_guard? clause_body {pin=1}
 private cr_clause_argument_definition ::= <<guarded argument_definition>>
 argument_definition ::= expression

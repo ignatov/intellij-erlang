@@ -4,12 +4,15 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangAfterClause;
-import org.intellij.erlang.psi.ErlangCrClauses;
+import org.intellij.erlang.psi.ErlangCrClause;
 import org.intellij.erlang.psi.ErlangReceiveExpression;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 import static org.intellij.erlang.ErlangTypes.ERL_END;
 import static org.intellij.erlang.ErlangTypes.ERL_RECEIVE;
@@ -27,9 +30,9 @@ public class ErlangReceiveExpressionImpl extends ErlangExpressionImpl implements
   }
 
   @Override
-  @Nullable
-  public ErlangCrClauses getCrClauses() {
-    return findChildByClass(ErlangCrClauses.class);
+  @NotNull
+  public List<ErlangCrClause> getCrClauseList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangCrClause.class);
   }
 
   @Override

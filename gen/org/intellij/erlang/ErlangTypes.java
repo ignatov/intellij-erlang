@@ -41,7 +41,6 @@ public interface ErlangTypes {
   IElementType ERL_CONFIG_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_CONFIG_CALL_EXPRESSION");
   IElementType ERL_CONFIG_EXPRESSION = new ErlangCompositeElementType("ERL_CONFIG_EXPRESSION");
   IElementType ERL_CR_CLAUSE = new ErlangCompositeElementType("ERL_CR_CLAUSE");
-  IElementType ERL_CR_CLAUSES = new ErlangCompositeElementType("ERL_CR_CLAUSES");
   IElementType ERL_EXPORT = new ErlangCompositeElementType("ERL_EXPORT");
   IElementType ERL_EXPORT_FUNCTION = new ErlangCompositeElementType("ERL_EXPORT_FUNCTION");
   IElementType ERL_EXPORT_FUNCTIONS = new ErlangCompositeElementType("ERL_EXPORT_FUNCTIONS");
@@ -299,9 +298,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_CR_CLAUSE) {
         return new ErlangCrClauseImpl(node);
-      }
-      else if (type == ERL_CR_CLAUSES) {
-        return new ErlangCrClausesImpl(node);
       }
       else if (type == ERL_EXPORT) {
         return new ErlangExportImpl(node);

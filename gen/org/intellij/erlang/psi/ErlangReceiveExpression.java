@@ -5,13 +5,15 @@ import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 public interface ErlangReceiveExpression extends ErlangExpression {
 
   @Nullable
   ErlangAfterClause getAfterClause();
 
-  @Nullable
-  ErlangCrClauses getCrClauses();
+  @NotNull
+  List<ErlangCrClause> getCrClauseList();
 
   @Nullable
   PsiElement getEnd();

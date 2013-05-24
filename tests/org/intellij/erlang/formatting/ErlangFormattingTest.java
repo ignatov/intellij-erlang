@@ -96,6 +96,7 @@ public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
   public void test171()    throws Exception { doTest(); }
   public void test191()    throws Exception { doTest(); }
   public void testSimple() throws Exception { doTest(); }
+  public void testCaseEx() throws Exception { doTest(); }
 
   public void testAligned() throws Exception {
     getErlangSettings().ALIGN_MULTILINE_BLOCK = true;
