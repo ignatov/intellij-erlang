@@ -80,7 +80,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
 
     PsiFile file = myElement.getContainingFile();
     Map<String,ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
-    if (context != null) {
+    if (context != null && PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class) == null) {
       for (String var : context.keySet()) {
         result.add(LookupElementBuilder.create(var).withIcon(ErlangIcons.VARIABLE));
       }
