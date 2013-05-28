@@ -99,6 +99,8 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
       if (output.getStderrLines().isEmpty()) {
         for (String line : output.getStdoutLines()) {
           final Problem problem = parseProblem(line);
+          LOG.debug(line);
+          LOG.debug(problem != null ? problem.toString() : null);
           ContainerUtil.addAllNotNull(state.problems, problem);
         }
       }
@@ -139,6 +141,14 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     public Problem(int line, String description) {
       myLine = line;
       myDescription = description;
+    }
+
+    @Override
+    public String toString() {
+      return "Problem{" +
+        "myLine=" + myLine +
+        ", myDescription='" + myDescription + '\'' +
+        '}';
     }
   }
 
