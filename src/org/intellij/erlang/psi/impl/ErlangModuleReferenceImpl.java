@@ -18,14 +18,11 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import org.intellij.erlang.psi.ErlangModule;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
-
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getModule;
 
 /**
  * @author ignatov
@@ -37,12 +34,7 @@ public class ErlangModuleReferenceImpl<T extends ErlangQAtom> extends ErlangAtom
 
   @Override
   public PsiElement resolve() {
-    PsiFile[] files = FilenameIndex.getFilesByName(myElement.getProject(), myReferenceName, GlobalSearchScope.allScope(myElement.getProject()));
-    for (PsiFile file : files) {
-      ErlangModule module = getModule(file);
-      if (module != null) return module;
-    }
-    return null;
+    return ContainerUtil.getFirstItem(ErlangModuleIndex.getModulesByName(myElement.getProject(), myReferenceName, GlobalSearchScope.allScope(myElement.getProject())));
   }
 
   @NotNull

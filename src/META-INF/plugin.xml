@@ -234,6 +234,7 @@
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
 
         <fileBasedIndex implementation="org.intellij.erlang.ErlangSymbolIndex"/>
+        <fileBasedIndex implementation="org.intellij.erlang.ErlangModuleIndex"/>
 
         <gotoSymbolContributor implementation="org.intellij.erlang.go.ErlangSymbolContributor"/>
 

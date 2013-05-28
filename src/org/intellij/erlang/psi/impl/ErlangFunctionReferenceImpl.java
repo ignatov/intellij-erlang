@@ -16,14 +16,15 @@
 
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangModuleIndex;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +74,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
       ErlangFunction result = erlangFile.getFunction(myReferenceName, myArity);
       if (result != null) return result;
 
-      final ErlangFunction implicitFunction = getExternalFunction("erlang.erl");
+      final ErlangFunction implicitFunction = getExternalFunction("erlang");
       if (implicitFunction != null) return implicitFunction;
 
       for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
@@ -118,7 +119,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
         }
 
         result.addAll(erlangFile.getFunctionsByName(myReferenceName));
-        result.addAll(getErlangFunctionsFromModule("erlang.erl"));
+        result.addAll(getErlangFunctionsFromModule("erlang"));
       }
       else {
         result = ContainerUtil.emptyList();
@@ -128,13 +129,10 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   }
 
   private Collection<ErlangFunction> getErlangFunctionsFromModule(String moduleFileName) {
-    Collection<ErlangFunction> result;PsiFile[] files = FilenameIndex.getFilesByName(getElement().getProject(), moduleFileName,
-      GlobalSearchScope.allScope(getElement().getProject()));
-    result = new ArrayList<ErlangFunction>();
-    for (PsiFile file : files) {
-      if (file instanceof ErlangFile) {
-        result.addAll(((ErlangFile) file).getFunctionsByName(myReferenceName));
-      }
+    Project project = getElement().getProject();
+    Collection<ErlangFunction> result = new ArrayList<ErlangFunction>();
+    for (ErlangFile file : ErlangModuleIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project))) {
+      result.addAll(file.getFunctionsByName(myReferenceName));
     }
     return result;
   }
@@ -145,10 +143,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
   @NotNull
   private String getModuleFileName() {
-    if (myModuleAtom != null) {
-      return myModuleAtom.getText() + ".erl";
-    }
-    return ".erl";
+    return myModuleAtom != null ? myModuleAtom.getText() : "";
   }
 
   @Override
@@ -158,10 +153,9 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
   @Nullable
   private ErlangFunction getExternalFunction(@NotNull String moduleFileName) {
-    PsiFile[] files = FilenameIndex.getFilesByName(getElement().getProject(), moduleFileName,
-      GlobalSearchScope.allScope(getElement().getProject())); // todo: use module scope
+    Project project = getElement().getProject();
     List<ErlangFunction> result = new ArrayList<ErlangFunction>();
-    for (PsiFile file : files) {
+    for (PsiFile file : ErlangModuleIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project))) {
       if (file instanceof ErlangFile) {
         result.add(((ErlangFile) file).getFunction(myReferenceName, myArity));
       }

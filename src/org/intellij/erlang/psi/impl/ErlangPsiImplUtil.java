@@ -618,8 +618,7 @@ public class ErlangPsiImplUtil {
   @Nullable
   public static PsiReference getReference(@NotNull ErlangModuleRef o) {
     ErlangQAtom atom = o.getQAtom();
-    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom,
-      TextRange.from(0, atom.getTextLength()), atom.getText() + ".erl");
+    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText());
   }
 
   @NotNull

@@ -22,17 +22,12 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.impl.source.tree.TreeUtil;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
@@ -172,30 +167,15 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
   private static void suggestModules(CompletionResultSet result, PsiElement position, boolean withColon) {
     Project project = position.getProject();
-    Collection<VirtualFile> files = FilenameIndex.getAllFilesByExt(project, "erl", GlobalSearchScope.projectScope(project));
 
-    List<VirtualFile> standardModules = ContainerUtil.filter(FilenameIndex.getAllFilesByExt(project, "erl", GlobalSearchScope.allScope(project)),
-      new Condition<VirtualFile>() {
-        @Override
-        public boolean value(VirtualFile virtualFile) {
-          String canonicalPath = virtualFile.getCanonicalPath();
-          canonicalPath = FileUtil.toSystemIndependentName(canonicalPath != null ? canonicalPath : "");
-          String kernelRegExp = ".*/lib/kernel[\\-\\d\\.]+/src/.*\\.erl";
-          String stdlibRegExp = ".*/lib/stdlib[\\-\\d\\.]+/src/.*\\.erl";
-          return canonicalPath.matches(kernelRegExp) || canonicalPath.matches(stdlibRegExp);
-        }
-      });// todo: module with libs scope
-
-    //noinspection unchecked
-    for (VirtualFile file : ContainerUtil.concat(files, standardModules)) {
-      if (file.getFileType() == ErlangFileType.MODULE) {
-        result.addElement(
-          PrioritizedLookupElement.withPriority(
-            LookupElementBuilder.create(file.getNameWithoutExtension())
-              .withIcon(ErlangIcons.MODULE)
-              .withInsertHandler(withColon ? new SingleCharInsertHandler(':') : null),
-            MODULE_PRIORITY));
-      }
+    Collection<String> names = ErlangModuleIndex.getNames(project);
+    for (String name : names) {
+      result.addElement(
+        PrioritizedLookupElement.withPriority(
+          LookupElementBuilder.create(name)
+            .withIcon(ErlangIcons.MODULE)
+            .withInsertHandler(withColon ? new SingleCharInsertHandler(':') : null),
+          MODULE_PRIORITY));
     }
   }
 
