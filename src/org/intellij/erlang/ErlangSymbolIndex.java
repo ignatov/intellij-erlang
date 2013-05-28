@@ -16,7 +16,6 @@
 
 package org.intellij.erlang;
 
-import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -66,7 +65,7 @@ public class ErlangSymbolIndex extends ScalarIndexExtension<String> {
 
   @Override
   public FileBasedIndex.InputFilter getInputFilter() {
-    return ERLANG_INPUT_FILTER;
+    return ErlangIndexUtil.ERLANG_INPUT_FILTER;
   }
 
   @Override
@@ -74,28 +73,16 @@ public class ErlangSymbolIndex extends ScalarIndexExtension<String> {
     return true;
   }
 
-  public static final FileBasedIndex.InputFilter ERLANG_INPUT_FILTER = new FileBasedIndex.InputFilter() {
-    @Override
-    public boolean acceptInput(VirtualFile file) {
-      return isErlangFileType(file.getFileType());
-    }
-  };
-
-  private static boolean isErlangFileType(FileType fileType) {
-    return fileType == ErlangFileType.MODULE || fileType == ErlangFileType.HEADER;
-  }
-
   public static Collection<String> getNames(Project project) {
     return FileBasedIndex.getInstance().getAllKeys(ERLANG_SYMBOL_INDEX, project);
   }
 
-  public static List<ErlangNamedElement> getItemsByName(final String name, Project project, GlobalSearchScope searchScope) {
-    final Collection<VirtualFile> files =
-      FileBasedIndex.getInstance().getContainingFiles(ERLANG_SYMBOL_INDEX, name, searchScope);
+  public static List<ErlangNamedElement> getItemsByName(Project project, final String name, GlobalSearchScope searchScope) {
+    final Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(ERLANG_SYMBOL_INDEX, name, searchScope);
     final Set<ErlangNamedElement> result = new THashSet<ErlangNamedElement>();
     for (VirtualFile vFile : files) {
       final PsiFile psiFile = PsiManager.getInstance(project).findFile(vFile);
-      if (psiFile == null || !isErlangFileType(psiFile.getFileType())) {
+      if (psiFile == null || !ErlangIndexUtil.isErlangFileType(psiFile.getFileType())) {
         continue;
       }
       processComponents(psiFile, new PsiElementProcessor<ErlangNamedElement>() {
