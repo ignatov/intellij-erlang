@@ -19,7 +19,7 @@ package org.intellij.erlang.completion;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.testFramework.UsefulTestCase;
-import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.ArrayUtilRt;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * @author ignatov
  */
-public class ErlangCompletionTest extends JavaCodeInsightFixtureTestCase {
+public class ErlangCompletionTest extends LightPlatformCodeInsightFixtureTestCase {
   private enum CheckType { EQUALS, INCLUDES, EXCLUDES }
 
   @Override

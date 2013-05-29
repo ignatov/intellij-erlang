@@ -22,7 +22,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
-import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import junit.framework.Assert;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
@@ -31,7 +31,7 @@ import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import java.io.File;
 import java.io.IOException;
 
-public class ErlangFormattingTest extends LightCodeInsightFixtureTestCase {
+public class ErlangFormattingTest extends LightPlatformCodeInsightFixtureTestCase {
   public static final boolean OVERRIDE_TEST_DATA = false;
   private CodeStyleSettings myTemporarySettings;
 

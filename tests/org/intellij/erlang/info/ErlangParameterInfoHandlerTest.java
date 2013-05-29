@@ -23,7 +23,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.ArrayUtil;
 import org.intellij.erlang.ErlangParameterInfoHandler;
 import org.intellij.erlang.psi.ErlangArgumentList;
@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author ignatov
  */
-public class ErlangParameterInfoHandlerTest extends LightCodeInsightFixtureTestCase {
+public class ErlangParameterInfoHandlerTest extends LightPlatformCodeInsightFixtureTestCase {
   private static final String FOO = "foo(Arg1, Arg2) -> ok.\n";
 
   public void testEmpty()     { doTest(FOO + "bar() -> foo(<caret>)", 0); }

@@ -1,12 +1,12 @@
 package org.intellij.erlang.highlighting.generate;
 
 import com.intellij.testFramework.PlatformTestUtil;
-import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 
 /**
  * @author ignatov
  */
-public class ErlangGenerateTest extends LightCodeInsightFixtureTestCase {
+public class ErlangGenerateTest extends LightPlatformCodeInsightFixtureTestCase {
   private void doTest(String actionId, String before, String after) {
     myFixture.configureByText("a.erl", before);
     PlatformTestUtil.invokeNamedAction(actionId);
