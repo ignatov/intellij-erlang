@@ -75,7 +75,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
       }
     }
 
-    if (StringUtils.isEmpty(myEmacsSettings.getEmacsPath()) && SystemInfo.isLinux) {
+    if (StringUtils.isEmpty(myEmacsSettings.getEmacsPath()) && (SystemInfo.isLinux || SystemInfo.isMac)) {
       String suggestedPath = "/usr/bin/emacs";
       File file = new File(suggestedPath);
       if (file.exists() && FileUtil.canExecute(file)) {
