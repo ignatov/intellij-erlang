@@ -80,22 +80,24 @@ public class ErlangSdkType extends SdkType {
       if (new File(macPorts).exists()) return macPorts;
       
       // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
-      File brewRoot = new File("/usr/local/Cellar/erlang");
-      if (brewRoot.exists()) {
-        final Ref<String> ref = Ref.create();
-        FileUtil.processFilesRecursively(brewRoot, new Processor<File>() {
-          @Override
-          public boolean process(File file) {
-            if (!ref.isNull()) return false;
-            if (!file.isDirectory()) return true;
-            if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
-              ref.set(file.getAbsolutePath());
-              return false;
+      for (String version : new String[]{"", "-r14", "-r15", "-r16"}) {
+        File brewRoot = new File("/usr/local/Cellar/erlang" + version);
+        if (brewRoot.exists()) {
+          final Ref<String> ref = Ref.create();
+          FileUtil.processFilesRecursively(brewRoot, new Processor<File>() {
+            @Override
+            public boolean process(File file) {
+              if (!ref.isNull()) return false;
+              if (!file.isDirectory()) return true;
+              if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
+                ref.set(file.getAbsolutePath());
+                return false;
+              }
+              return true;
             }
-            return true;
-          }
-        });
-        if (!ref.isNull()) return ref.get();
+          });
+          if (!ref.isNull()) return ref.get();
+        }
       }
       return null;
     }
