@@ -17,11 +17,11 @@
 package org.intellij.erlang.formatting;
 
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.File;
 
-public class ErlangAutoIndentTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangAutoIndentTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public static final boolean OVERRIDE_TEST_DATA = false;
 
   @Override

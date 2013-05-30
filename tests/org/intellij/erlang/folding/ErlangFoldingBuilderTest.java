@@ -16,12 +16,12 @@
 
 package org.intellij.erlang.folding;
 
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 /**
  * @author ignatov
  */
-public class ErlangFoldingBuilderTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangFoldingBuilderTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {
     return "testData/folding/";

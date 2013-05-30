@@ -16,17 +16,14 @@
 
 package org.intellij.erlang.highlighting;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.inspection.*;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
-public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   protected void doTest() {
     myFixture.configureByFile(getTestName(false) + ".erl");
     //noinspection unchecked
@@ -61,14 +58,7 @@ public class ErlangHighlightingTest extends LightPlatformCodeInsightFixtureTestC
   protected void setUp() throws Exception {
     System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        Sdk sdk = getProjectDescriptor().getSdk();
-        ProjectJdkTable.getInstance().addJdk(sdk);
-        ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
-      }
-    });
+    setUpProjectSdk();
   }
 
   @Override

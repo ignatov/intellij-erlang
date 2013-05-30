@@ -16,24 +16,21 @@
 
 package org.intellij.erlang.bif;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.JavadocOrderRootType;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangGlobalFunctionCallExpression;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -42,7 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings({"JUnitTestClassNamingConvention"})
-public class ErlangBifParser extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final Pattern PATTERN_FUNC_DECLARATION = Pattern.compile(
     "<span\\s+class=\"bold_code\">.*\\((.*)\\) -&gt;.*</span>", Pattern.MULTILINE);
   private static final String BIF_TABLE_PATH = "src/org/intellij/erlang/bif/bif.tab.txt";
@@ -155,14 +152,7 @@ public class ErlangBifParser extends LightPlatformCodeInsightFixtureTestCase {
     System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     myDocProvider = new ErlangDocumentationProvider();
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        Sdk sdk = getProjectDescriptor().getSdk();
-        ProjectJdkTable.getInstance().addJdk(sdk);
-        ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
-      }
-    });
+    setUpProjectSdk();
   }
 
   @Override

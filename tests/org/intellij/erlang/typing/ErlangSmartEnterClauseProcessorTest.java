@@ -21,15 +21,15 @@ import com.intellij.codeInsight.editorActions.smartEnter.SmartEnterProcessors;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
 
 /**
  * @author ignatov
  */
-public class ErlangSmartEnterClauseProcessorTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testFunctionClause() throws Exception {
     doTest("foo(A, B, C) -> ok;<caret>",
       "foo(A, B, C) -> ok;\n" +

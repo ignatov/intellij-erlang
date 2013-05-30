@@ -19,12 +19,12 @@ package org.intellij.erlang;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.copy.CopyFilesOrDirectoriesHandler;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 /**
  * @author ignatov
  */
-public class ErlangCopyFileTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangCopyFileTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testSimple() throws Exception {
     PsiFile file = myFixture.configureByText("aaa.erl", "-module(aaa).\nfoo() -> ok.");
     PsiDirectory containingDirectory = file.getContainingDirectory();

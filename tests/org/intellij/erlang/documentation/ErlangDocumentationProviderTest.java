@@ -16,41 +16,31 @@
 
 package org.intellij.erlang.documentation;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.JavadocOrderRootType;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("ConstantConditions")
-public class ErlangDocumentationProviderTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private ErlangDocumentationProvider myErlangDocProvider;
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     myErlangDocProvider = new ErlangDocumentationProvider();
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        final Sdk sdk = getProjectDescriptor().getSdk();
-        ProjectJdkTable.getInstance().addJdk(sdk);
-        ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
-      }
-    });
+    setUpProjectSdk();
   }
 
   public void testExternalUrlSdkFunction() throws Exception {

@@ -17,16 +17,16 @@
 package org.intellij.erlang.highlighting;
 
 import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
 
 /**
  * @author ignatov
  */
-public class ErlangBehaviourInspectionsTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();

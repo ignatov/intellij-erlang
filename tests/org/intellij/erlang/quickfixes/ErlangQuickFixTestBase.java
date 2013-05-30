@@ -17,15 +17,15 @@
 package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
 
 /**
  * @author ignatov
  */
-public abstract class ErlangQuickFixTestBase extends LightPlatformCodeInsightFixtureTestCase {
+public abstract class ErlangQuickFixTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected boolean isWriteActionRequired() {
     return false;
