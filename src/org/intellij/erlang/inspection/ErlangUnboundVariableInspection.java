@@ -16,12 +16,22 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInsight.template.Template;
+import com.intellij.codeInsight.template.TemplateManager;
+import com.intellij.codeInsight.template.impl.ConstantNode;
+import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiUtilBase;
+import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.quickfixes.ErlangQuickFixBase;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
@@ -45,9 +55,51 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
         }
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(o, "Variable " + "'" + o.getText() + "' is unbound");
+          problemsHolder.registerProblem(o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
         }
       }
     });
+  }
+
+  private static class ErlangIntroduceVariableQuickFix extends ErlangQuickFixBase {
+    @NotNull
+    @Override
+    public String getFamilyName() {
+      return "Introduce variable";
+    }
+
+    @Override
+    public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+      PsiElement psiElement = descriptor.getPsiElement();
+      if (!(psiElement instanceof ErlangQVar)) return;
+
+      PsiElement anchor = psiElement;
+      while (anchor != null && !(anchor.getParent() instanceof ErlangClauseBody)) {
+        anchor = anchor.getParent();
+      }
+
+      if (anchor != null) {
+        PsiElement parent = anchor.getParent();
+        if (parent != null) {
+          Editor editor = PsiUtilBase.findEditor(anchor);
+          if (editor == null) return;
+
+          editor.getCaretModel().moveToOffset(anchor.getTextRange().getStartOffset());
+
+          TemplateManager manager = TemplateManager.getInstance(project);
+          Template template = manager.createTemplate("", "");
+
+          template.addTextSegment(((ErlangQVar) psiElement).getName());
+          template.addTextSegment(" = ");
+          template.addVariable(new ConstantNode("unbound"), true);
+          template.addTextSegment("");
+          template.addEndVariable();
+          template.addTextSegment(",\n");
+
+          manager.startTemplate(editor, template);
+
+        }
+      }
+    }
   }
 }
