@@ -68,7 +68,7 @@ do_receive(DeviceToken, ChannelPID, DeviceID, ChangeID, ChannelRef, WithAttachme
     erlang:error(receive_timeout, 70000)
   end.
 
--export([find_in_binary/0]).
+-export([find_in_binary/0, unbound_test/0]).
 
 find_in_binary() ->
   case 1 of
@@ -78,3 +78,6 @@ find_in_binary() ->
         _ -> Last
       end
   end.
+
+unbound_test() ->
+  <warning>Var1</warning> = <error>Var2</error>.

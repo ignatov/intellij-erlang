@@ -57,7 +57,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
       boolean inFunctionClause = PsiTreeUtil.isAncestor(functionClause, psiElement, false);
       boolean inSpecification = PsiTreeUtil.isAncestor(spec, psiElement, false);
       boolean inDefinition = inDefinition(psiElement);
-      boolean inAssignment = inAssignment(psiElement);
+      boolean inAssignment = inLeftPartOfAssignment(psiElement);
       if ((inFunctionClause && (inDefinition || inAssignment)) || inModule(psiElement) || inSpecification) {
         boolean inArgumentList = inArgumentList(psiElement);
         //noinspection unchecked

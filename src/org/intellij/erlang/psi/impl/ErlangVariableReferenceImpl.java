@@ -110,7 +110,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
       if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_") && !inColonQualified(myElement)) {
         boolean ancestor = PsiTreeUtil.isAncestor(myClause, psiElement, false);
-        if ((ancestor || myForce) && (inDefinition(psiElement) || inAssignment(psiElement))) {
+        if ((ancestor || myForce) && (inDefinition(psiElement) || inLeftPartOfAssignment(psiElement))) {
           myResult.add(LookupElementBuilder.create((PsiNamedElement) psiElement).withIcon(ErlangIcons.VARIABLE));
         }
       }
