@@ -155,10 +155,8 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   private ErlangFunction getExternalFunction(@NotNull String moduleFileName) {
     Project project = getElement().getProject();
     List<ErlangFunction> result = new ArrayList<ErlangFunction>();
-    for (PsiFile file : ErlangModuleIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project))) {
-      if (file instanceof ErlangFile) {
-        result.add(((ErlangFile) file).getFunction(myReferenceName, myArity));
-      }
+    for (ErlangFile file : ErlangModuleIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project))) {
+      ContainerUtil.addAllNotNull(result, file.getFunction(myReferenceName, myArity));
     }
     return ContainerUtil.getFirstItem(result);
   }
