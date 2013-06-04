@@ -20,6 +20,7 @@ import com.intellij.codeInsight.hint.ImplementationTextSelectioner;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFunctionClause;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,7 +39,8 @@ public class ErlangImplementationTextSelectioner implements ImplementationTextSe
   }
 
   private static TextRange getTextRange(PsiElement psiElement) {
-    PsiElement function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunctionClause.class);
+    @SuppressWarnings("unchecked")
+    PsiElement function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunctionClause.class, ErlangAttribute.class);
     PsiElement element = function == null ? psiElement : function;
     return element.getTextRange();
   }
