@@ -98,8 +98,9 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (output != null) {
       if (output.getStderrLines().isEmpty()) {
         for (String line : output.getStdoutLines()) {
-          final Problem problem = parseProblem(line);
           LOG.debug(line);
+          if (line.equals("dialyzer: Analysis failed with error:")) return state; // todo: show the warning in notification area
+          Problem problem = parseProblem(line);
           LOG.debug(problem != null ? problem.toString() : null);
           ContainerUtil.addAllNotNull(state.problems, problem);
         }
