@@ -291,7 +291,7 @@
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection"/>
         <localInspection language="Erlang" shortName="ErlangDialyzerInspection" displayName="Dialyzer based inspections"
-                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         groupName="Erlang" enabledByDefault="false" level="WARNING"
                          implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerInspection"/>
       
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
