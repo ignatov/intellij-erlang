@@ -189,6 +189,7 @@
         <lang.findUsagesProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangFindUsagesProvider"/>
         <elementDescriptionProvider implementation="org.intellij.erlang.ErlangDescriptionProvider"/>
         <lang.parserDefinition language="Erlang" implementationClass="org.intellij.erlang.ErlangParserDefinition"/>
+        <lang.ast.factory language="Erlang" implementationClass="org.intellij.erlang.psi.impl.ErlangASTFactory"/>
         <annotator language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangAnnotator"/>
         <lang.syntaxHighlighterFactory key="Erlang" implementationClass="org.intellij.erlang.editor.ErlangSyntaxHighlighterFactory"/>
         <lang.braceMatcher language="Erlang" implementationClass="org.intellij.erlang.ErlangBraceMatcher"/>
@@ -202,6 +203,8 @@
         <lang.smartEnterProcessor language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangClausesSmartEnterProcessor" id="ErlangClause"/>
         <lang.elementManipulator forClass="org.intellij.erlang.psi.impl.ErlangStringLiteralImpl"
                                  implementationClass="org.intellij.erlang.editor.ErlangStringManipulator"/>
+        <lang.elementManipulator forClass="org.intellij.erlang.psi.impl.ErlangASTFactory$ErlangCommentImpl" order="first"
+                                 implementationClass="org.intellij.erlang.editor.ExtendedPsiCommentManipulator"/>
         <lang.implementationTextSelectioner language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangImplementationTextSelectioner"/>
 
         <colorSettingsPage implementation="org.intellij.erlang.editor.ErlangColorSettingsPage"/>
