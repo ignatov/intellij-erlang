@@ -152,6 +152,14 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
     doTestInclude("-module(test, [Id, Name::string()]). foo() -> <caret>", "Id", "Name");
   }
 
+  public void testNoCompletionInStrings() throws Throwable {
+    doTestVariants("foo() -> \"<caret>\"", CompletionType.BASIC, 1, CheckType.EQUALS);
+  }
+
+  public void testNoCompletionInComments() throws Throwable {
+    doTestVariants("% <caret>", CompletionType.BASIC, 1, CheckType.EQUALS);
+  }
+
   private void doTestInclude(String txt, String... variants) throws Throwable {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
   }

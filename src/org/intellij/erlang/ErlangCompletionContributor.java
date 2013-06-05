@@ -24,6 +24,7 @@ import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
@@ -93,6 +94,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
         PsiElement parent = position.getParent().getParent();
         PsiElement originalPosition = parameters.getOriginalPosition();
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
+
+        if (originalParent instanceof ErlangStringLiteral || originalPosition instanceof PsiComment) return;
 
         if (parent instanceof ErlangType) {
           result.addAllElements(ErlangPsiImplUtil.getTypeLookupElements(file, true, false));
