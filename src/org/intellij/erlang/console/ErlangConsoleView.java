@@ -71,13 +71,19 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
   @Nullable private OutputStreamWriter myProcessInputWriter;
 
   public ErlangConsoleView(@NotNull Project project) {
-    super(new LanguageConsoleImpl(project, "Erlang Console", ErlangLanguage.INSTANCE));
+    super(new LanguageConsoleImpl(project, "Erlang Console", ErlangLanguage.INSTANCE) {
+      @Override
+      protected void doAddPromptToHistory() {
+      }
+    });
     LanguageConsoleImpl console = getConsole();
-    console.setPrompt("");
+    console.setPrompt(">");
     PsiFile originalFile = console.getFile().getOriginalFile();
     originalFile.putUserData(ErlangPsiImplUtil.ERLANG_CONSOLE, console);
     originalFile.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, new HashMap<String, ErlangQVar>());
   }
+
+
 
   @Override
   public void attachToProcess(@NotNull ProcessHandler processHandler) {
