@@ -18,7 +18,6 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -53,27 +52,29 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     if (psiElement instanceof ErlangSpecification) return false;
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
+
+    Map<String, ErlangQVar> variableContext = psiElement.getContainingFile().getOriginalFile().getUserData(ERLANG_VARIABLE_CONTEXT);
+    boolean isREPLConsole = variableContext != null;
     if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
-      boolean inFunctionClause = PsiTreeUtil.isAncestor(functionClause, psiElement, false);
       boolean inSpecification = PsiTreeUtil.isAncestor(spec, psiElement, false);
-      boolean inDefinition = inDefinition(psiElement);
+      boolean inDefinition = inArgumentDefinition(psiElement);
+      boolean inFunctionClauseOrREPL = PsiTreeUtil.isAncestor(functionClause, psiElement, false) || isREPLConsole;
       boolean inAssignment = inLeftPartOfAssignment(psiElement);
-      if ((inFunctionClause && (inDefinition || inAssignment)) || inModule(psiElement) || inSpecification) {
+      boolean inDefinitionOrAssignment = inDefinition || inAssignment;
+      boolean inFunctionOrREPL = inFunctionClauseOrREPL && inDefinitionOrAssignment;
+      if (inFunctionOrREPL || inModule(psiElement) || inSpecification) {
         boolean inArgumentList = inArgumentList(psiElement);
         //noinspection unchecked
         boolean inArgumentListBeforeAssignment =
           PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
         if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
         if (inDifferentCrClauses(psiElement)) return true;
-
         myVarList.add((ErlangQVar) psiElement); // put all possible variables to list
       }
     }
 
-    PsiFile file = psiElement.getContainingFile();
-    Map<String,ErlangQVar> context = file.getOriginalFile().getUserData(ERLANG_VARIABLE_CONTEXT);
-    if (context != null) {
-      ContainerUtil.addIfNotNull(context.get(myRequestedName), myVarList);
+    if (isREPLConsole) {
+      ContainerUtil.addIfNotNull(variableContext.get(myRequestedName), myVarList);
     }
 
     return true;

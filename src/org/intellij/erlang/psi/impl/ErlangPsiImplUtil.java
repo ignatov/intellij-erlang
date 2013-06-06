@@ -321,10 +321,10 @@ public class ErlangPsiImplUtil {
 
   @SuppressWarnings("unchecked")
   public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {
-    return inDefinition(psiElement) && inArgumentList(psiElement) && PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class, ErlangArgumentList.class) instanceof ErlangArgumentDefinition;
+    return inArgumentDefinition(psiElement) && inArgumentList(psiElement) && PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class, ErlangArgumentList.class) instanceof ErlangArgumentDefinition;
   }
 
-  public static boolean inDefinition(PsiElement psiElement) {
+  public static boolean inArgumentDefinition(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
   }
 
