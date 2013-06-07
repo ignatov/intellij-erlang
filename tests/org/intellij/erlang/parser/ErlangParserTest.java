@@ -74,17 +74,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testRecover2()          { doTest(true, true);  }
   public void testBeginEnd()          { doTest(true, true);  }
   public void testBeginEnd2()         { doTest(true, true);  }
-
-  protected void doTest(boolean checkResult, boolean suppressErrors) {
-//    OVERWRITE_TESTDATA = true;
-
-    super.doTest(checkResult);
-    if (!suppressErrors) {
-      assertFalse(
-        "PsiFile contains error elements",
-        toParseTreeText(myFile, skipSpaces(), includeRanges()).contains("PsiErrorElement")
-      );
-    }
-  }
 }
 
