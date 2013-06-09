@@ -74,7 +74,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
           markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.SPECIFICATION);
         }
         else {
-          markFirstChildAsModuleAttribute(o, annotationHolder);
+          markFirstChildAsKeyword(o, annotationHolder);
         }
       }
 
@@ -99,7 +99,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitInclude(@NotNull ErlangInclude o) {
         super.visitInclude(o);
-        markFirstChildAsModuleAttribute(o, annotationHolder);
+        markFirstChildAsKeyword(o, annotationHolder);
         markAttributeNameAsModuleAttribute(o, annotationHolder, "include");
         markAttributeNameAsModuleAttribute(o, annotationHolder, "include_lib");
       }
@@ -113,14 +113,14 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
         super.visitRecordDefinition(o);
-        markFirstChildAsModuleAttribute(o, annotationHolder);
+        markFirstChildAsKeyword(o, annotationHolder);
         markAttributeNameAsModuleAttribute(o, annotationHolder, "record");
       }
 
       @Override
       public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
         super.visitMacrosDefinition(o);
-        markFirstChildAsModuleAttribute(o, annotationHolder);
+        markFirstChildAsKeyword(o, annotationHolder);
         markAttributeNameAsModuleAttribute(o, annotationHolder, "define");
       }
 
@@ -227,6 +227,10 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
   private static void markFirstChildAsModuleAttribute(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder) {
     markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.MODULE_ATTRIBUTE);
+  }
+
+  private static void markFirstChildAsKeyword(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder) {
+    markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
   }
 
   private static void markFirstChild(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder,
