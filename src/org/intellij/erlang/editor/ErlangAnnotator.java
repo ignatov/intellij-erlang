@@ -52,13 +52,13 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
         super.visitAtomAttribute(o);
-        setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+        setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.MODULE_ATTRIBUTE);
       }
 
       @Override
       public void visitCallbackSpec(@NotNull ErlangCallbackSpec o) {
         super.visitCallbackSpec(o);
-        markFirstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsModuleAttribute(o, annotationHolder);
       }
 
       @Override
@@ -74,54 +74,54 @@ public class ErlangAnnotator implements Annotator, DumbAware {
           markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.SPECIFICATION);
         }
         else {
-          markFirstChildAsKeyword(o, annotationHolder);
+          markFirstChildAsModuleAttribute(o, annotationHolder);
         }
       }
 
       @Override
       public void visitExport(@NotNull ErlangExport o) {
         super.visitExport(o);
-        markFirstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsModuleAttribute(o, annotationHolder);
       }
 
       @Override
       public void visitExportTypeAttribute(@NotNull ErlangExportTypeAttribute o) {
         super.visitExportTypeAttribute(o);
-        markFirstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsModuleAttribute(o, annotationHolder);
       }
 
       @Override
       public void visitImportDirective(@NotNull ErlangImportDirective o) {
         super.visitImportDirective(o);
-        markFirstChildAsKeyword(o, annotationHolder);
+        markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.MODULE_ATTRIBUTE);
       }
 
       @Override
       public void visitInclude(@NotNull ErlangInclude o) {
         super.visitInclude(o);
-        markFirstChildAsKeyword(o, annotationHolder);
-        markAttributeNameAsKeyword(o, annotationHolder, "include");
-        markAttributeNameAsKeyword(o, annotationHolder, "include_lib");
+        markFirstChildAsModuleAttribute(o, annotationHolder);
+        markAttributeNameAsModuleAttribute(o, annotationHolder, "include");
+        markAttributeNameAsModuleAttribute(o, annotationHolder, "include_lib");
       }
 
       @Override
       public void visitModule(@NotNull ErlangModule o) {
         super.visitModule(o);
-        markFirstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsModuleAttribute(o, annotationHolder);
       }
 
       @Override
       public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
         super.visitRecordDefinition(o);
-        markFirstChildAsKeyword(o, annotationHolder);
-        markAttributeNameAsKeyword(o, annotationHolder, "record");
+        markFirstChildAsModuleAttribute(o, annotationHolder);
+        markAttributeNameAsModuleAttribute(o, annotationHolder, "record");
       }
 
       @Override
       public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
         super.visitMacrosDefinition(o);
-        markFirstChildAsKeyword(o, annotationHolder);
-        markAttributeNameAsKeyword(o, annotationHolder, "define");
+        markFirstChildAsModuleAttribute(o, annotationHolder);
+        markAttributeNameAsModuleAttribute(o, annotationHolder, "define");
       }
 
       @Override
@@ -144,7 +144,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitBehaviour(@NotNull ErlangBehaviour o) {
         super.visitBehaviour(o);
-        markFirstChildAsKeyword(o, annotationHolder);
+        markFirstChildAsModuleAttribute(o, annotationHolder);
       }
 
       @Override
@@ -209,8 +209,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     }
   }
 
-  private static void markAttributeNameAsKeyword(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder, @NotNull String name) {
-    markAttributeName(o, annotationHolder, name, ErlangSyntaxHighlighter.KEYWORD);
+  private static void markAttributeNameAsModuleAttribute(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder, @NotNull String name) {
+    markAttributeName(o, annotationHolder, name, ErlangSyntaxHighlighter.MODULE_ATTRIBUTE);
   }
 
   private static void markAttributeName(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder,
@@ -225,8 +225,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     }
   }
 
-  private static void markFirstChildAsKeyword(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder) {
-    markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.KEYWORD);
+  private static void markFirstChildAsModuleAttribute(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder) {
+    markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.MODULE_ATTRIBUTE);
   }
 
   private static void markFirstChild(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder,
