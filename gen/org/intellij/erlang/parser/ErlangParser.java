@@ -1,18 +1,17 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.parser;
 
-import com.intellij.lang.ASTNode;
+import org.jetbrains.annotations.*;
 import com.intellij.lang.LighterASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiBuilder.Marker;
-import com.intellij.lang.PsiParser;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.tree.TokenSet;
-import org.jetbrains.annotations.NotNull;
-
 import static org.intellij.erlang.ErlangTypes.*;
 import static org.intellij.erlang.parser.ErlangParserUtil.*;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.lang.ASTNode;
+import com.intellij.psi.tree.TokenSet;
+import com.intellij.lang.PsiParser;
 
 @SuppressWarnings({"SimplifiableIfStatement", "UnusedAssignment"})
 public class ErlangParser implements PsiParser {
@@ -399,7 +398,7 @@ public class ErlangParser implements PsiParser {
   }
 
   private static final TokenSet[] EXTENDS_SETS_ = new TokenSet[] {
-    TokenSet.create(ERL_ADDITIVE_EXPRESSION, ERL_ANDALSO_EXPRESSION, ERL_ANONYMOUS_CALL_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION,
+    create_token_set_(ERL_ADDITIVE_EXPRESSION, ERL_ANDALSO_EXPRESSION, ERL_ANONYMOUS_CALL_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION,
       ERL_BEGIN_END_EXPRESSION, ERL_BINARY_EXPRESSION, ERL_CASE_EXPRESSION, ERL_CATCH_EXPRESSION,
       ERL_COLON_QUALIFIED_EXPRESSION, ERL_COMP_OP_EXPRESSION, ERL_CONFIG_CALL_EXPRESSION, ERL_CONFIG_EXPRESSION,
       ERL_EXPRESSION, ERL_FUNCTION_CALL_EXPRESSION, ERL_FUN_EXPRESSION, ERL_GENERIC_FUNCTION_CALL_EXPRESSION,
@@ -411,10 +410,7 @@ public class ErlangParser implements PsiParser {
   };
 
   public static boolean type_extends_(IElementType child_, IElementType parent_) {
-    for (TokenSet set : EXTENDS_SETS_) {
-      if (set.contains(child_) && set.contains(parent_)) return true;
-    }
-    return false;
+    return type_extends_impl_(EXTENDS_SETS_, child_, parent_);
   }
 
   /* ********************************************************** */
@@ -5057,7 +5053,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // record_head (record_field_ref | record_tuple | )
+  // record_head (record_field_ref | record_tuple | ())
   static boolean record_tail(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_tail")) return false;
     if (!nextTokenIs(builder_, ERL_RADIX) && !nextTokenIs(builder_, ERL_QMARK)) return false;
@@ -5078,7 +5074,7 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // record_field_ref | record_tuple | 
+  // record_field_ref | record_tuple | ()
   private static boolean record_tail_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_tail_1")) return false;
     boolean result_ = false;
@@ -5095,6 +5091,7 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
+  // ()
   private static boolean record_tail_1_2(PsiBuilder builder_, int level_) {
     return true;
   }

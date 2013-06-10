@@ -97,6 +97,17 @@ public class GeneratedParserUtilBase {
     return frame == null || frame.errorReportedAt <= builder_.getCurrentOffset();
   }
 
+  public static TokenSet create_token_set_(IElementType... tokenTypes_) {
+    return TokenSet.create(tokenTypes_);
+  }
+
+  public static boolean type_extends_impl_(TokenSet[] extendsSet_, IElementType child_, IElementType parent_) {
+    for (TokenSet set : extendsSet_) {
+      if (set.contains(child_) && set.contains(parent_)) return true;
+    }
+    return false;
+  }
+
   public static boolean consumeTokens(PsiBuilder builder_, int pin_, IElementType... tokens_) {
     ErrorState state = ErrorState.get(builder_);
     if (state.completionState != null && state.predicateSign) {

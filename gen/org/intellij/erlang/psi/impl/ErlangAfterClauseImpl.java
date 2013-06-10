@@ -1,16 +1,14 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi.impl;
 
+import java.util.List;
+import org.jetbrains.annotations.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
-import org.intellij.erlang.psi.ErlangAfterClause;
-import org.intellij.erlang.psi.ErlangAfterClauseBody;
-import org.intellij.erlang.psi.ErlangVisitor;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import static org.intellij.erlang.ErlangTypes.ERL_AFTER;
+import com.intellij.psi.util.PsiTreeUtil;
+import static org.intellij.erlang.ErlangTypes.*;
+import org.intellij.erlang.psi.*;
 
 public class ErlangAfterClauseImpl extends ErlangCompositeElementImpl implements ErlangAfterClause {
 

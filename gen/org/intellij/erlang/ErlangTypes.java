@@ -1,9 +1,9 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang;
 
-import com.intellij.lang.ASTNode;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.PsiElement;
+import com.intellij.lang.ASTNode;
 import org.intellij.erlang.psi.ErlangCompositeElementType;
 import org.intellij.erlang.psi.ErlangTokenType;
 import org.intellij.erlang.psi.impl.*;
