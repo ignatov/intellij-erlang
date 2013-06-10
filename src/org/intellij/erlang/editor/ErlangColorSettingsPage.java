@@ -88,12 +88,12 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
   @NotNull
   public String getDemoText() {
     return "%%% Module fact documentation\n" +
-      "-<m_att>module</m_att>(fact).\n" +
-      "-<m_att>export</m_att>([fac/1]).\n" +
+      "<m_att>-module</m_att>(fact).\n" +
+      "<m_att>-export</m_att>([fac/1]).\n" +
       "\n" +
-      "-<m_att>record</m_att>(state, {id, name}).\n" +
+      "<m_att>-record</m_att>(state, {id, name}).\n" +
       "\n" +
-      "-<m_att>define</m_att>(<m>MACRO</m>, macro_value).\n" +
+      "<m_att>-define</m_att>(<m>MACRO</m>, macro_value).\n" +
       "\n" +
       "<td>-type</td> <t>in</t>() :: ok | hello .\n" +
       "<td>-type</td> <t>out</t>() :: ok | {error, <t>term</t>()}.\n" +
