@@ -358,7 +358,7 @@ list_comprehension ::= '[' expression '||' lc_exprs ']' {
   methods=[processDeclarations]
 }
 lc_exprs ::= lc_expression (',' lc_expression)*
-lc_expression ::= argument_definition [('<-' | '<=') expression] {pin(".*")=1}
+lc_expression ::= [argument_definition ('<-' | '<=')] expression {pin(".*")=2}
 
 binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {
   pin=3

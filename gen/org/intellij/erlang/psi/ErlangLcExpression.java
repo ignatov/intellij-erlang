@@ -7,10 +7,10 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangLcExpression extends ErlangExpression {
 
-  @NotNull
+  @Nullable
   ErlangArgumentDefinition getArgumentDefinition();
 
-  @Nullable
+  @NotNull
   ErlangExpression getExpression();
 
 }

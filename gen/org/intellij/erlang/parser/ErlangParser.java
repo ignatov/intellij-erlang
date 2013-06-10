@@ -3634,17 +3634,22 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // argument_definition [('<-' | '<=') expression]
+  // [argument_definition ('<-' | '<=')] expression
   public static boolean lc_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "lc_expression")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
+    int start_ = builder_.getCurrentOffset();
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, "<expression>");
-    result_ = argument_definition(builder_, level_ + 1);
-    pinned_ = result_; // pin = 1
-    result_ = result_ && lc_expression_1(builder_, level_ + 1);
-    if (result_ || pinned_) {
+    result_ = lc_expression_0(builder_, level_ + 1);
+    result_ = result_ && expression(builder_, level_ + 1, -1);
+    pinned_ = result_; // pin = 2
+    LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;
+    if (last_ != null && last_.getStartOffset() == start_ && type_extends_(last_.getTokenType(), ERL_LC_EXPRESSION)) {
+      marker_.drop();
+    }
+    else if (result_ || pinned_) {
       marker_.done(ERL_LC_EXPRESSION);
     }
     else {
@@ -3654,23 +3659,23 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // [('<-' | '<=') expression]
-  private static boolean lc_expression_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "lc_expression_1")) return false;
-    lc_expression_1_0(builder_, level_ + 1);
+  // [argument_definition ('<-' | '<=')]
+  private static boolean lc_expression_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "lc_expression_0")) return false;
+    lc_expression_0_0(builder_, level_ + 1);
     return true;
   }
 
-  // ('<-' | '<=') expression
-  private static boolean lc_expression_1_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "lc_expression_1_0")) return false;
+  // argument_definition ('<-' | '<=')
+  private static boolean lc_expression_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "lc_expression_0_0")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
-    result_ = lc_expression_1_0_0(builder_, level_ + 1);
-    pinned_ = result_; // pin = 1
-    result_ = result_ && expression(builder_, level_ + 1, -1);
+    result_ = argument_definition(builder_, level_ + 1);
+    result_ = result_ && lc_expression_0_0_1(builder_, level_ + 1);
+    pinned_ = result_; // pin = 2
     if (!result_ && !pinned_) {
       marker_.rollbackTo();
     }
@@ -3682,8 +3687,8 @@ public class ErlangParser implements PsiParser {
   }
 
   // '<-' | '<='
-  private static boolean lc_expression_1_0_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "lc_expression_1_0_0")) return false;
+  private static boolean lc_expression_0_0_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "lc_expression_0_0_1")) return false;
     boolean result_ = false;
     Marker marker_ = builder_.mark();
     result_ = consumeToken(builder_, ERL_OP_LT_MINUS);

@@ -17,15 +17,15 @@ public class ErlangLcExpressionImpl extends ErlangExpressionImpl implements Erla
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangArgumentDefinition getArgumentDefinition() {
-    return findNotNullChildByClass(ErlangArgumentDefinition.class);
+    return findChildByClass(ErlangArgumentDefinition.class);
   }
 
   @Override
-  @Nullable
+  @NotNull
   public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
