@@ -375,6 +375,10 @@ Full-Width Styles
   background: #212121;
 }
 
+.note {
+  border-top: 1px  dotted #aaa;
+  border-bottom: 1px dotted #aaa;
+}
 
 
 /*******************************************************************************
