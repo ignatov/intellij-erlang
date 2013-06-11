@@ -27,6 +27,13 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.4.5
+* Comment based injection
+* Dialyzer integration (experimental)
+* Introduce variable and function quickfixes
+* Faster module completion
+* Bugfixes
+
 ### Version 0.4.4
 * Bugfixes
 
