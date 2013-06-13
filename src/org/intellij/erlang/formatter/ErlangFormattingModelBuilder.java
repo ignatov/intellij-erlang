@@ -49,7 +49,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   private static SpacingBuilder createSpacingBuilder(CommonCodeStyleSettings settings) {
     TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
     TokenSet keywords = TokenSet.create(
-      ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_QUERY, ERL_CATCH, ERL_IF, ERL_RECEIVE,
+      ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_CATCH, ERL_IF, ERL_RECEIVE,
       ERL_TRY, ERL_DIV, ERL_REM, ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND, ERL_BAND);
 
     return new SpacingBuilder(settings.getRootSettings())

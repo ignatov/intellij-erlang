@@ -95,7 +95,6 @@ public interface ErlangTypes {
   IElementType ERL_PARENTHESIZED_EXPRESSION = new ErlangCompositeElementType("ERL_PARENTHESIZED_EXPRESSION");
   IElementType ERL_PREFIX_EXPRESSION = new ErlangCompositeElementType("ERL_PREFIX_EXPRESSION");
   IElementType ERL_QUALIFIED_EXPRESSION = new ErlangCompositeElementType("ERL_QUALIFIED_EXPRESSION");
-  IElementType ERL_QUERY_EXPRESSION = new ErlangCompositeElementType("ERL_QUERY_EXPRESSION");
   IElementType ERL_Q_ATOM = new ErlangCompositeElementType("ERL_Q_ATOM");
   IElementType ERL_Q_VAR = new ErlangCompositeElementType("ERL_Q_VAR");
   IElementType ERL_RECEIVE_EXPRESSION = new ErlangCompositeElementType("ERL_RECEIVE_EXPRESSION");
@@ -191,7 +190,6 @@ public interface ErlangTypes {
   IElementType ERL_PAR_LEFT = new ErlangTokenType("(");
   IElementType ERL_PAR_RIGHT = new ErlangTokenType(")");
   IElementType ERL_QMARK = new ErlangTokenType("?");
-  IElementType ERL_QUERY = new ErlangTokenType("query");
   IElementType ERL_RADIX = new ErlangTokenType("#");
   IElementType ERL_RECEIVE = new ErlangTokenType("receive");
   IElementType ERL_REM = new ErlangTokenType("rem");
@@ -460,9 +458,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_QUALIFIED_EXPRESSION) {
         return new ErlangQualifiedExpressionImpl(node);
-      }
-      else if (type == ERL_QUERY_EXPRESSION) {
-        return new ErlangQueryExpressionImpl(node);
       }
       else if (type == ERL_Q_ATOM) {
         return new ErlangQAtomImpl(node);

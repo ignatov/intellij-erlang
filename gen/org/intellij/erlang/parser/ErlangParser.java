@@ -284,9 +284,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_QUALIFIED_EXPRESSION) {
       result_ = qualified_expression(builder_, level_ + 1);
     }
-    else if (root_ == ERL_QUERY_EXPRESSION) {
-      result_ = query_expression(builder_, level_ + 1);
-    }
     else if (root_ == ERL_RECEIVE_EXPRESSION) {
       result_ = receive_expression(builder_, level_ + 1);
     }
@@ -405,8 +402,8 @@ public class ErlangParser implements PsiParser {
       ERL_GLOBAL_FUNCTION_CALL_EXPRESSION, ERL_IF_EXPRESSION, ERL_LC_EXPRESSION, ERL_LIST_COMPREHENSION,
       ERL_LIST_EXPRESSION, ERL_LIST_OP_EXPRESSION, ERL_MAX_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION,
       ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION,
-      ERL_QUERY_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION,
-      ERL_STRING_LITERAL, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
+      ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION, ERL_STRING_LITERAL,
+      ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
   };
 
   public static boolean type_extends_(IElementType child_, IElementType parent_) {
@@ -4635,29 +4632,6 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // query list_comprehension end
-  public static boolean query_expression(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "query_expression")) return false;
-    if (!nextTokenIs(builder_, ERL_QUERY)) return false;
-    boolean result_ = false;
-    boolean pinned_ = false;
-    Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
-    result_ = consumeToken(builder_, ERL_QUERY);
-    pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, list_comprehension(builder_, level_ + 1));
-    result_ = pinned_ && consumeToken(builder_, ERL_END) && result_;
-    if (result_ || pinned_) {
-      marker_.done(ERL_QUERY_EXPRESSION);
-    }
-    else {
-      marker_.rollbackTo();
-    }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
-    return result_ || pinned_;
-  }
-
-  /* ********************************************************** */
   // receive (after_clause end | cr_clauses after_clause? end)
   public static boolean receive_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "receive_expression")) return false;
@@ -7375,7 +7349,6 @@ public class ErlangParser implements PsiParser {
   //   | receive_expression
   //   | fun_expression
   //   | try_expression
-  //   | query_expression
   //   | binary_expression
   //   | begin_end_expression
   public static boolean max_expression(PsiBuilder builder_, int level_) {
@@ -7396,7 +7369,6 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = receive_expression(builder_, level_ + 1);
     if (!result_) result_ = fun_expression(builder_, level_ + 1);
     if (!result_) result_ = try_expression(builder_, level_ + 1);
-    if (!result_) result_ = query_expression(builder_, level_ + 1);
     if (!result_) result_ = binary_expression(builder_, level_ + 1);
     if (!result_) result_ = begin_end_expression(builder_, level_ + 1);
     LighterASTNode last_ = result_? builder_.getLatestDoneMarker() : null;

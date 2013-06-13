@@ -78,36 +78,24 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars}?)
 
 UniversalPattern = _
 
-/* FullStop = (\. {Whitespace}) | (\. {Whitespace}? {Comment}) */
-FullStop = \.
-
 %%
-
  {ModuleDocComment}            { return ERL_MODULE_DOC_COMMENT; }
  {FunctionDocComment}          { return ERL_FUNCTION_DOC_COMMENT; }
  {Comment}                     { return ERL_COMMENT; }
  {Whitespace}                  { return com.intellij.psi.TokenType.WHITE_SPACE; }
 
-// {FullStop} {Whitespace}       |
-// {FullStop} / {Comment}        { return FULL_STOP; }
-
 /* keywords */
  "after"                       { return ERL_AFTER; }
-// "cond"                        { return ERL_COND; }
-// "let"                         { return ERL_LET; }
  "when"                        { return ERL_WHEN; }
  "begin"                       { return ERL_BEGIN; }
  "end"                         { return ERL_END; }
  "of"                          { return ERL_OF; }
  "case"                        { return ERL_CASE; }
  "fun"                         { return ERL_FUN; }
- "query"                       { return ERL_QUERY; }
  "try"                         { return ERL_TRY; }
  "catch"                       { return ERL_CATCH; }
  "if"                          { return ERL_IF; }
  "receive"                     { return ERL_RECEIVE; }
-// "spec"                        { return ERL_SPEC; }
-// "callback"                    { return ERL_CALLBACK; }
 
 /*Binary tokens*/
  "<<"                           { return ERL_BIN_START; }

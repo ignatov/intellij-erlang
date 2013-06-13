@@ -358,10 +358,6 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
-  public void visitQueryExpression(@NotNull ErlangQueryExpression o) {
-    visitExpression(o);
-  }
-
   public void visitReceiveExpression(@NotNull ErlangReceiveExpression o) {
     visitExpression(o);
   }

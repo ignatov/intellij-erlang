@@ -88,10 +88,6 @@ public class ErlangIndentProcessor {
     if (parentType == ERL_LC_EXPRS) {
       return Indent.getNormalIndent();
     }
-    if (parentType == ERL_QUERY_EXPRESSION) {
-      if (elementType == ERL_QUERY || elementType == ERL_END) return Indent.getNoneIndent();
-      return Indent.getNormalIndent();
-    }
     if (parentType == ERL_RECORD_FIELDS) {
       // todo: not a smart solution
       //noinspection unchecked

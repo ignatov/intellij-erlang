@@ -146,10 +146,6 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBegin2() throws Exception { doEnterTest(); }
   public void testBegin3() throws Exception { doEnterTest(); }
   
-  public void testQuery() throws Exception { doTest(); }  
-  public void testQuery1() throws Exception { doEnterTest(); }
-  public void testQuery2() throws Exception { doEnterTest(); }
-
   public void testRecordFields1() throws Exception { doEnterTest(); }
   public void testRecordFields2() throws Exception { doEnterTest(); }
   
@@ -184,9 +180,6 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBeginParasite1() throws Exception { doEnterParasiteTest(); }
   public void testBeginParasite2() throws Exception { doEnterParasiteTest(); }
   public void testBeginParasite3() throws Exception { doEnterParasiteTest(); }
-  
-  public void testQueryParasite1() throws Exception { doEnterParasiteTest(); }  
-  public void testQueryParasite2() throws Exception { doEnterParasiteTest(); }  
   
   public void testFunExpressionParasite1() throws Exception { doEnterParasiteTest(); }
   public void testFunExpressionParasite2() throws Exception { doEnterParasiteTest(); }

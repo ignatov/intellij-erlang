@@ -108,7 +108,6 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
         ERL_OF == type ||
         ERL_CASE == type ||
         ERL_FUN == type ||
-        ERL_QUERY == type ||
         ERL_CATCH == type ||
         ERL_IF == type ||
         ERL_RECEIVE == type ||

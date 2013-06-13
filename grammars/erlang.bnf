@@ -331,7 +331,6 @@ max_expression ::=
   | receive_expression
   | fun_expression
   | try_expression
-  | query_expression
   | binary_expression
   | begin_end_expression
 
@@ -441,7 +440,6 @@ try_clauses ::= try_clause (';' try_clause)*
 try_clause ::= <<guarded try_argument_definition>> clause_guard? clause_body {pin=1}
 private try_argument_definition ::= [argument_definition ':'] argument_definition
 
-query_expression ::= query list_comprehension end {pin=1}
 argument_list ::= '(' call_exprs? ')'
 
 fake fake_binary_expression ::= expression+ {
