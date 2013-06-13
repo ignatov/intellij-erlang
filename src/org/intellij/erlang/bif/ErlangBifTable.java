@@ -383,6 +383,24 @@ public final class ErlangBifTable {
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "binary_to_float", 1, "Binary"));
     bifMap.putValue("io", new ErlangBifDescriptor("io", "printable_range", 0, ""));
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "hash", 2, "Term, Range"));
+
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "debug",      1, "What"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "info",       1, "What"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "notice",     1, "What"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "warning",    1, "What"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "error",      1, "What"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "critical",   1, "What"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "alert",      1, "What"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "emergency",  1, "What"));
+
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "debug",      2, "Str, Args"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "info",       2, "Str, Args"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "notice",     2, "Str, Args"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "warning",    2, "Str, Args"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "error",      2, "Str, Args"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "critical",   2, "Str, Args"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "alert",      2, "Str, Args"));
+    bifMap.putValue("lager", new ErlangBifDescriptor("lager", "emergency",  2, "Str, Args"));
   }
 
   private ErlangBifTable() {

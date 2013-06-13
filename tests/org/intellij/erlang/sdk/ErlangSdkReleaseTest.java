@@ -22,7 +22,10 @@ import junit.framework.TestCase;
  * @author ignatov
  */
 public class ErlangSdkReleaseTest extends TestCase {
-  public void testNeedCompletion1() throws Exception { assertTrue(ErlangSdkRelease.R15B03.needBifCompletion()); }
-  public void testNeedCompletion2() throws Exception { assertFalse(ErlangSdkRelease.R16A.needBifCompletion()); }
-  public void testNeedCompletion3() throws Exception { assertFalse(ErlangSdkRelease.R16B.needBifCompletion()); }
+  public void testNeedCompletion1() throws Exception { assertTrue(ErlangSdkRelease.R15B03.needBifCompletion("")); }
+  public void testNeedCompletion2() throws Exception { assertFalse(ErlangSdkRelease.R16A.needBifCompletion("")); }
+  public void testNeedCompletion3() throws Exception { assertFalse(ErlangSdkRelease.R16B.needBifCompletion("")); }
+  public void testNeedCompletion4() throws Exception { assertTrue(ErlangSdkRelease.R15B03.needBifCompletion("lager")); }
+  public void testNeedCompletion5() throws Exception { assertTrue(ErlangSdkRelease.R16A.needBifCompletion("lager")); }
+  public void testNeedCompletion6() throws Exception { assertTrue(ErlangSdkRelease.R16B.needBifCompletion("lager")); }
 }

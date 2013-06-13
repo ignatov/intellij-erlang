@@ -388,7 +388,7 @@ public class ErlangPsiImplUtil {
 
         Sdk sdk = ProjectRootManager.getInstance(containingFile.getProject()).getProjectSdk();
         ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
-        if (release == null || release.needBifCompletion()) {
+        if (release == null || release.needBifCompletion(moduleName)) {
           for (ErlangBifDescriptor bif : ErlangBifTable.getBifs(moduleName)) {
             lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
           }

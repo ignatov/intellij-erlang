@@ -123,6 +123,10 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
       "my_local_function");
   }
 
+  public void testLager() throws Throwable {
+    doTestInclude("foo() -> lager:<caret>", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency");
+  }
+
   public void testImportModule() throws Throwable {
     myFixture.configureByFiles("multi-module/a.erl");
     myFixture.configureByFile("multi-module/b.erl");
