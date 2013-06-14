@@ -269,13 +269,22 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangFunctionWithArity o) {
+    ErlangQVar prevVar = PsiTreeUtil.getPrevSiblingOfType(o, ErlangQVar.class);
+    if (prevVar != null) return null;
     ErlangModuleRef moduleReference = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
+    boolean isModule = isModule(moduleReference);
+    if (moduleReference != null && moduleReference.getQAtom().getMacros() != null && !isModule) return null;
     ErlangQAtom moduleAtom = moduleReference == null ? null : moduleReference.getQAtom();
-    ErlangQAtom nameAtom = o.getQAtom();
 
+    ErlangQAtom nameAtom = o.getQAtom();
     PsiElement arity = o.getInteger();
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(nameAtom, moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(nameAtom, isModule ? null : moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
       nameAtom.getText(), getArity(arity));
+  }
+
+  private static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
+    if (moduleReference == null) return false;
+    return moduleReference.getQAtom().getText().equals("?MODULE");
   }
 
   @NotNull
