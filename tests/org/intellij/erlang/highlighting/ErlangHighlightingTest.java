@@ -105,6 +105,7 @@ public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtur
   public void test211()               { doTest(); }
   public void test217()               { doTest(); }
   public void testLager()             { doTest(); }
+  public void test202()               { doTest(); }
 
   public void testUnresolvedMacros()  {
     //noinspection unchecked
