@@ -149,6 +149,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testRecordFields1() throws Exception { doEnterTest(); }
   public void testRecordFields2() throws Exception { doEnterTest(); }
   
+  public void testFunExpression() throws Exception { doTest(); }
 //  public void testFunExpression1() throws Exception { doEnterTest(); }
   public void testFunExpression2() throws Exception { doEnterTest(); }
   public void testFunExpression3() throws Exception { doEnterTest(); }
