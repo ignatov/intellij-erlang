@@ -22,7 +22,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.util.IncorrectOperationException;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangCompositeElement;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangSpecification;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -55,10 +57,7 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
       if (specification != null) {
         specification.getParent().delete();
       }
-      super.delete();
     }
-    else if (this instanceof ErlangRecordDefinition || this instanceof ErlangMacrosDefinition || this instanceof ErlangTypeDefinition || this instanceof ErlangAttribute) {
-      super.delete();
-    }
+    super.delete();
   }
 }

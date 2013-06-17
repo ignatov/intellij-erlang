@@ -207,6 +207,9 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.ErlangCompletionContributor"/>
         <renameInputValidator implementation="org.intellij.erlang.ErlangRenameInputValidator"/>
+
+        <inlineActionHandler implementation="org.intellij.erlang.ErlangInlineVariableHandler"/>
+
         <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler"/>
         <typedHandler implementation="org.intellij.erlang.editor.ErlangBinaryTypedHandler" id="ErlangBinary"/>
         <lang.smartEnterProcessor language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangClausesSmartEnterProcessor" id="ErlangClause"/>
