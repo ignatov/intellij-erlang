@@ -97,6 +97,8 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test191()    throws Exception { doTest(); }
   public void testSimple() throws Exception { doTest(); }
   public void testCaseEx() throws Exception { doTest(); }
+  public void test222_1()  throws Exception { getErlangSettings().INDENT_RELATIVE = true; doTest(); }
+  public void test222_2()  throws Exception { getErlangSettings().INDENT_RELATIVE = false; doTest(); }
 
   public void testAligned() throws Exception {
     getErlangSettings().ALIGN_MULTILINE_BLOCK = true;

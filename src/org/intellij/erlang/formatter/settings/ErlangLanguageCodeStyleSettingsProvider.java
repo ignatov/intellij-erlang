@@ -109,6 +109,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       );
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_MULTILINE_BLOCK", "Blocks (fun...end, etc)", "Alignment");
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_FUNCTION_CLAUSES", "Function clauses", "Alignment");
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "INDENT_RELATIVE", "Honor relative", null);
     }
   }
 
@@ -169,7 +170,12 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       "\n" +
       "start() ->\n" +
       "    Pong_PID = spawn(tut15, pong, []),\n" +
-      "    spawn(tut15, ping, [30, Pong_PID]).";
+      "    spawn(tut15, ping, [30, Pong_PID]).\n" +
+      "\n" +
+      "f() ->\n" +
+      "    X = case 1 of\n" +
+      "        Z -> Z\n" +
+      "    end.";
 
   private static final String BLANK_LINES_CODE_SAMPLE =
     "hello(Name) ->\n" +

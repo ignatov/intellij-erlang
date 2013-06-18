@@ -79,7 +79,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     mySettings = settings;
     myErlangSettings = erlangSettings;
     mySpacingBuilder = spacingBuilder;
-    myIndent = ErlangIndentProcessor.getChildIndent(node);
+    myIndent = new ErlangIndentProcessor(myErlangSettings).getChildIndent(node);
   }
 
   @Override

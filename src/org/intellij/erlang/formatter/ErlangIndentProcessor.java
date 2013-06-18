@@ -22,9 +22,11 @@ import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.psi.ErlangArgumentDefinition;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangParenthesizedExpression;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -42,11 +44,13 @@ public class ErlangIndentProcessor {
     ERL_OP_LT, ERL_OP_EQ_LT, ERL_OP_GT, ERL_OP_GT_EQ, ERL_OP_LT_EQ, ERL_OP_PLUS_PLUS,
     ERL_OP_MINUS_MINUS, ERL_OP_EQ, ERL_OP_EXL, ERL_OP_LT_MINUS, ERL_ANDALSO, ERL_ORELSE
   );
+  private final ErlangCodeStyleSettings myErlangSettings;
 
-  private ErlangIndentProcessor() {
+  public ErlangIndentProcessor(@NotNull ErlangCodeStyleSettings erlangSettings) {
+    myErlangSettings = erlangSettings;
   }
 
-  public static Indent getChildIndent(ASTNode node) {
+  public Indent getChildIndent(ASTNode node) {
     IElementType elementType = node.getElementType();
     ASTNode parent = node.getTreeParent();
     IElementType parentType = parent != null ? parent.getElementType() : null;
@@ -96,10 +100,10 @@ public class ErlangIndentProcessor {
     }
     if (parentType == ERL_CASE_EXPRESSION || parentType == ERL_RECEIVE_EXPRESSION || parentType == ERL_TRY_EXPRESSION) {
       if (elementType == ERL_CR_CLAUSE) {
-        return Indent.getNormalIndent(true);
+        return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
       }
       if (elementType == ERL_END) {
-        return Indent.getSpaceIndent(0, true);
+        return myErlangSettings.INDENT_RELATIVE ? Indent.getSpaceIndent(0, true) : Indent.getNoneIndent();
       }
     }
     if (needIndent(parentType)) {
