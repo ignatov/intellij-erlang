@@ -2203,8 +2203,8 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = builder_.mark();
     enterErrorRecordingSection(builder_, level_, _SECTION_RECOVER_, null);
     result_ = expression(builder_, level_ + 1, -1);
-    pinned_ = result_; // pin = 1
     result_ = result_ && exprs_1(builder_, level_ + 1);
+    pinned_ = result_; // pin = 2
     if (!result_ && !pinned_) {
       marker_.rollbackTo();
     }
@@ -2235,19 +2235,15 @@ public class ErlangParser implements PsiParser {
   private static boolean exprs_1_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "exprs_1_0")) return false;
     boolean result_ = false;
-    boolean pinned_ = false;
     Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
     result_ = exprs_tail(builder_, level_ + 1);
-    pinned_ = result_; // pin = 1
-    if (!result_ && !pinned_) {
+    if (!result_) {
       marker_.rollbackTo();
     }
     else {
       marker_.drop();
     }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
-    return result_ || pinned_;
+    return result_;
   }
 
   /* ********************************************************** */
@@ -5855,7 +5851,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '{' exprs? '}'
+  // '{' (&'}' | exprs) '}'
   public static boolean tuple_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "tuple_expression")) return false;
     if (!nextTokenIs(builder_, ERL_CURLY_LEFT)) return false;
@@ -5877,11 +5873,32 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // exprs?
+  // &'}' | exprs
   private static boolean tuple_expression_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "tuple_expression_1")) return false;
-    exprs(builder_, level_ + 1);
-    return true;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    result_ = tuple_expression_1_0(builder_, level_ + 1);
+    if (!result_) result_ = exprs(builder_, level_ + 1);
+    if (!result_) {
+      marker_.rollbackTo();
+    }
+    else {
+      marker_.drop();
+    }
+    return result_;
+  }
+
+  // &'}'
+  private static boolean tuple_expression_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "tuple_expression_1_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = builder_.mark();
+    enterErrorRecordingSection(builder_, level_, _SECTION_AND_, null);
+    result_ = consumeToken(builder_, ERL_CURLY_RIGHT);
+    marker_.rollbackTo();
+    result_ = exitErrorRecordingSection(builder_, level_, result_, false, _SECTION_AND_, null);
+    return result_;
   }
 
   /* ********************************************************** */

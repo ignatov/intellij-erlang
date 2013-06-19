@@ -364,7 +364,7 @@ binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {
   elementType="list_comprehension"
 }
 
-tuple_expression ::= '{' exprs? '}' {pin=1}
+tuple_expression ::= '{' (&'}' | exprs) '}' {pin=1}
 
 record_expression ::= expression record_tail {
   pin=2
@@ -449,7 +449,7 @@ fake fake_binary_expression ::= expression+ {
   ]
 }
 
-private exprs ::= expression (exprs_tail)* {recoverUntil=exprs_recover}
+private exprs ::= expression (exprs_tail)* {pin=2 recoverUntil=exprs_recover}
 private exprs_tail ::= ',' expression {pin=1 recoverUntil=exprs_recover}
 private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
