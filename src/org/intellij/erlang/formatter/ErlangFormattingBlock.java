@@ -19,6 +19,7 @@ package org.intellij.erlang.formatter;
 import com.intellij.formatting.*;
 import com.intellij.formatting.alignment.AlignmentStrategy;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
@@ -99,23 +100,23 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private List<Block> buildSubBlocks() {
     List<Block> blocks = new ArrayList<Block>();
     Alignment baseAlignment = Alignment.createAlignment();
-    IElementType parentType = getNode().getElementType();
-    PsiElement psi = getNode().getPsi();
     AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
 
     for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
       IElementType childType = child.getElementType();
       if (child.getTextRange().getLength() == 0 || childType == TokenType.WHITE_SPACE) continue;
 
-      Alignment alignment = getAlignment(psi, childType, parentType, baseAlignment);
+      Alignment alignment = getAlignment(getNode(), child, baseAlignment);
       blocks.add(new ErlangFormattingBlock(child, alignment, alignmentStrategy, null, mySettings, myErlangSettings, mySpacingBuilder));
     }
     return Collections.unmodifiableList(blocks);
   }
 
   @Nullable
-  private Alignment getAlignment(PsiElement psi, IElementType childType, IElementType parentType, Alignment baseAlignment) {
-    Alignment fromStrategy = calculateAlignmentFromStrategy(parentType, childType);
+  private Alignment getAlignment(@NotNull ASTNode parent, @NotNull ASTNode child, @Nullable Alignment baseAlignment) {
+    IElementType childType = child.getElementType();
+    IElementType parentType = parent.getElementType();
+    Alignment fromStrategy = calculateAlignmentFromStrategy(parent, child);
     if (fromStrategy != null) return fromStrategy;
 
     if (myErlangSettings.ALIGN_MULTILINE_BLOCK) {
@@ -140,6 +141,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
           return baseAlignment;
         }
       }
+      PsiElement psi = parent.getPsi();
       if (psi instanceof ErlangFakeBinaryExpression) {
         return baseAlignment;
       }
@@ -148,9 +150,14 @@ public class ErlangFormattingBlock extends AbstractBlock {
   }
 
   @Nullable
-  private Alignment calculateAlignmentFromStrategy(@NotNull IElementType parentType, @NotNull IElementType childType) {
+  private Alignment calculateAlignmentFromStrategy(@NotNull ASTNode parent, ASTNode child) {
+    @NotNull IElementType childType = child.getElementType();
+    @NotNull IElementType parentType = parent.getElementType();
     if (myAlignmentStrategy != null) {
-      return myAlignmentStrategy.getAlignment(parentType, childType);
+      Alignment alignment = myAlignmentStrategy.getAlignment(parentType, childType);
+      if (alignment != null && childType == ERL_CLAUSE_BODY && myErlangSettings.ALIGN_FUNCTION_CLAUSES && StringUtil.countNewLines(child.getText()) > 0) return null; // redesign this hack
+
+      return alignment;
     }
     return null;
   }
