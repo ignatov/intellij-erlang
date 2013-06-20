@@ -43,6 +43,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Comment", COMMENT),
       new AttributesDescriptor("String", STRING),
       new AttributesDescriptor("Number", NUMBER),
+      new AttributesDescriptor("Module attributes", MODULE_ATTRIBUTE),
       new AttributesDescriptor("Keyword", KEYWORD),
       new AttributesDescriptor("Parenthesis", PARENTHS),
       new AttributesDescriptor("Braces", BRACES),
@@ -87,12 +88,12 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
   @NotNull
   public String getDemoText() {
     return "%%% Module fact documentation\n" +
-      "-<k>module</k>(fact).\n" +
-      "-<k>export</k>([fac/1]).\n" +
+      "<m_att>-module</m_att>(fact).\n" +
+      "<m_att>-export</m_att>([fac/1]).\n" +
       "\n" +
-      "-<k>record</k>(state, {id, name}).\n" +
+      "<m_att>-record</m_att>(state, {id, name}).\n" +
       "\n" +
-      "-<k>define</k>(<m>MACRO</m>, macro_value).\n" +
+      "<m_att>-define</m_att>(<m>MACRO</m>, macro_value).\n" +
       "\n" +
       "<td>-type</td> <t>in</t>() :: ok | hello .\n" +
       "<td>-type</td> <t>out</t>() :: ok | {error, <t>term</t>()}.\n" +
@@ -120,6 +121,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     map.put("a", ATOM);
     map.put("d", DOC_COMMENT_TAG);
     map.put("k", KEYWORD);
+    map.put("m_att", MODULE_ATTRIBUTE);
     map.put("m", MACRO);
     map.put("r", RECORDS);
     map.put("f", FUNCTION);
