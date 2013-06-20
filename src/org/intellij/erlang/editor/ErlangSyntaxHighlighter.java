@@ -50,6 +50,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey BRACES = createTextAttributesKey("ERL_BRACES", SyntaxHighlighterColors.BRACES.getDefaultAttributes());
   public static final TextAttributesKey BRACKETS = createTextAttributesKey("ERL_BRACKETS", SyntaxHighlighterColors.BRACKETS.getDefaultAttributes());
   public static final TextAttributesKey ATOM = createTextAttributesKey("ERL_ATOM", new TextAttributes(null, null, null, null, Font.BOLD));
+  public static final TextAttributesKey MODULE_ATTRIBUTE = createTextAttributesKey("ERL_ATTRIBUTE", new TextAttributes(KEYWORD_DEFAULTS.getForegroundColor(), KEYWORD_DEFAULTS.getBackgroundColor(), null, null, Font.BOLD));
   public static final TextAttributesKey MACRO = createTextAttributesKey("ERL_MACRO", new TextAttributes(MACRO_DEFAULTS.getForegroundColor(), MACRO_DEFAULTS.getBackgroundColor(), null, null, Font.ITALIC));
   public static final TextAttributesKey VARIABLES = createTextAttributesKey("ERL_VARIABLES", new TextAttributes(RECORD_DEFAULTS.getForegroundColor(), RECORD_DEFAULTS.getBackgroundColor(), null, null, Font.PLAIN));
   public static final TextAttributesKey RECORDS = createTextAttributesKey("ERL_RECORDS", new TextAttributes(RECORD_DEFAULTS.getForegroundColor(), RECORD_DEFAULTS.getBackgroundColor(), null, null, Font.BOLD));
