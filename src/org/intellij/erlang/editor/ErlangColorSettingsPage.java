@@ -43,7 +43,6 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Comment", COMMENT),
       new AttributesDescriptor("String", STRING),
       new AttributesDescriptor("Number", NUMBER),
-      new AttributesDescriptor("Module attributes", MODULE_ATTRIBUTE),
       new AttributesDescriptor("Keyword", KEYWORD),
       new AttributesDescriptor("Parenthesis", PARENTHS),
       new AttributesDescriptor("Braces", BRACES),
@@ -55,9 +54,8 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Operation sign", OP_SIGN),
       new AttributesDescriptor("Edoc tag", DOC_COMMENT_TAG),
       new AttributesDescriptor("Function", FUNCTION),
-      new AttributesDescriptor("Type definition", TYPE_DEFINITION),
       new AttributesDescriptor("Type", TYPE),
-      new AttributesDescriptor("Specification", SPECIFICATION)
+      new AttributesDescriptor("Attribute", ATTRIBUTE)
     };
   }
 
@@ -95,8 +93,8 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "<m_att>-define</m_att>(<m>MACRO</m>, macro_value).\n" +
       "\n" +
-      "<td>-type</td> <t>in</t>() :: ok | hello .\n" +
-      "<td>-type</td> <t>out</t>() :: ok | {error, <t>term</t>()}.\n" +
+      "<m_att>-type</m_att> <t>in</t>() :: ok | hello .\n" +
+      "<m_att>-type</m_att> <t>out</t>() :: ok | {error, <t>term</t>()}.\n" +
       "\n" +
       "%% Factorial implementation\n" +
       "%% <d>@doc</d> Documentation\n" +
@@ -108,7 +106,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "<f>update_state</f>(State) -> State#<r>state</r>{id=10}.\n" +
       "\n" +
-      "<s>-spec</s> simple(<t>in</t>())-> <t>out</t>(). \n"  +
+      "<m_att>-spec</m_att> simple(<t>in</t>())-> <t>out</t>(). \n"  +
       "<f>simple</f>(<a>ok</a>) -> <a>ok</a>.\n" +
       "\n" +
       "<f>use_macro</f>() -> ?<m>MACRO</m>."
@@ -121,13 +119,11 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     map.put("a", ATOM);
     map.put("d", DOC_COMMENT_TAG);
     map.put("k", KEYWORD);
-    map.put("m_att", MODULE_ATTRIBUTE);
     map.put("m", MACRO);
     map.put("r", RECORDS);
     map.put("f", FUNCTION);
-    map.put("td", TYPE_DEFINITION);
     map.put("t", TYPE);
-    map.put("s", SPECIFICATION);
+    map.put("m_att", ATTRIBUTE);
 
     return map;
   }
