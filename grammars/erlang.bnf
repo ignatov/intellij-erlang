@@ -255,7 +255,7 @@ function ::= function_clause (';' function_clause)* {
   ]
 }
 
-function_clause ::= q_atom argument_definition_list clause_guard? clause_body
+function_clause ::= !'?' q_atom argument_definition_list clause_guard? clause_body {pin=3}
 argument_definition_list ::= '(' argument_definition? (',' argument_definition)* ')'
 
 clause_guard ::= when <<guarded guard>> {pin=1}
@@ -396,7 +396,7 @@ function_call_expression ::= q_atom argument_list &not_function_definition {
   methods = [getReference getNameIdentifier getTextOffset]
 }
 private not_function_definition ::= <<isModeOn "GUARD">> | !('->'|when)
-macros_call ::= &('?') generic_function_call_expression {recoverUntil=macros_call_recover}
+macros_call ::= &('?') generic_function_call_expression {recoverUntil=macros_call_recover pin=1}
 private macros_call_recover ::= !'.'
 generic_function_call_expression ::= [q_atom_or_var ':'] (q_atom_or_var | macros) argument_list &not_function_definition
 private q_atom_or_var ::= q_atom | q_var

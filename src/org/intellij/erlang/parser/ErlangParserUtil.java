@@ -24,6 +24,7 @@ import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import gnu.trove.TObjectIntHashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -83,9 +84,9 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   }
 
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
-  public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser) {
-    PsiBuilder result = GeneratedParserUtilBase.adapt_builder_(root, builder, parser);
-    GeneratedParserUtilBase.ErrorState.get(result).altMode = true;
+  public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser, TokenSet[] tokenSets) {
+    PsiBuilder result = GeneratedParserUtilBase.adapt_builder_(root, builder, parser, tokenSets);
+    ErrorState.get(result).altMode = true;
     return result;
   }
 }

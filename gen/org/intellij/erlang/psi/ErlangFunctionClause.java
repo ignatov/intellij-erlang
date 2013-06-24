@@ -1,16 +1,15 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi;
 
-import java.util.List;
-import org.jetbrains.annotations.*;
-import com.intellij.psi.PsiElement;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface ErlangFunctionClause extends ErlangCompositeElement {
 
   @NotNull
   ErlangArgumentDefinitionList getArgumentDefinitionList();
 
-  @NotNull
+  @Nullable
   ErlangClauseBody getClauseBody();
 
   @Nullable

@@ -76,4 +76,3 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBeginEnd()          { doTest(true, true);  }
   public void testBeginEnd2()         { doTest(true, true);  }
 }
-
