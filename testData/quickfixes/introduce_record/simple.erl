@@ -1,0 +1,1 @@
+foo() -> #test_recor<caret>d
