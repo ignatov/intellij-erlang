@@ -26,4 +26,5 @@ public class ErlangIntroduceRecordFixTest extends ErlangQuickFixTestBase {
   public void testWithPrecedingFunctions() throws Throwable   { doIntroduceRecordTest(); }
   public void testWithPrecedingRecords() throws Throwable     { doIntroduceRecordTest(); }
   public void testSurroundedByDeclarations() throws Throwable { doIntroduceRecordTest(); }
+  public void testWithFields() throws Throwable               { doIntroduceRecordTest(); }
 }
