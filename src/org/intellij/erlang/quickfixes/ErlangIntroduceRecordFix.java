@@ -20,12 +20,16 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import org.intellij.erlang.psi.ErlangCompositeElement;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangRecordDefinition;
-import org.intellij.erlang.psi.ErlangRecordRef;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ArrayUtil;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author ignatov
@@ -42,8 +46,9 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
     PsiElement element = descriptor.getPsiElement();
 
     if (element instanceof ErlangRecordRef) {
-      PsiElement record = ErlangElementFactory.createRecordFromText(project, element.getText());
+      PsiElement record = ErlangElementFactory.createRecordFromText(project, element.getText(), ArrayUtil.toStringArray(getFieldNames((ErlangRecordRef) element)));
       PsiFile file = element.getContainingFile();
+
       if (file instanceof ErlangFile) {
         ErlangCompositeElement elementBefore = getAnchorElement((ErlangFile) file);
 
@@ -55,4 +60,22 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
       }
     }
   }
+
+  private static List<String> getFieldNames(@NotNull ErlangRecordRef recordRef) {
+    ErlangRecordTuple tuple = PsiTreeUtil.getNextSiblingOfType(recordRef, ErlangRecordTuple.class);
+    ErlangRecordFields recordFields = tuple != null ? tuple.getRecordFields() : null;
+
+    List<ErlangRecordField> recordFieldList = recordFields != null ? recordFields.getRecordFieldList() : Collections.<ErlangRecordField>emptyList();
+    List<String> fieldNames = new ArrayList<String>(recordFieldList.size());
+
+    for (ErlangRecordField recordField : recordFieldList) {
+      ErlangQAtom fieldNameAtom = recordField.getFieldNameAtom();
+
+      String text = fieldNameAtom != null ? fieldNameAtom.getText() : null;
+      ContainerUtil.addAllNotNull(fieldNames, text);
+    }
+
+    return fieldNames;
+  }
+
 }
