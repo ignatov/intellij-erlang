@@ -60,6 +60,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangIntroduceFunctionFixTest.class);
     suite.addTestSuite(ErlangIntroduceVariableFixTest.class);
     suite.addTestSuite(ErlangIntroduceRecordFixTest.class);
+    suite.addTestSuite(ErlangIntroduceRecordFieldTest.class);
     suite.addTestSuite(ErlangSmartEnterClauseProcessorTest.class);
     suite.addTestSuite(ErlangSdkReleaseTest.class);
     suite.addTestSuite(ErlangBehaviourInspectionsTest.class);
