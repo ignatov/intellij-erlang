@@ -17,6 +17,7 @@
 package org.intellij.erlang.psi.impl;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFileFactory;
 import org.intellij.erlang.ErlangLanguage;
@@ -75,8 +76,9 @@ public class ErlangElementFactory {
   }
 
   @NotNull
-  public static PsiElement createRecordFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-record(" + text + ", {}).");
+  public static PsiElement createRecordFromText(Project project, String text, String ... fields) {
+    String fieldsText = StringUtil.join(fields, ",");
+    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-record(" + text + ", {" + fieldsText + "}).");
     return fileFromText.getRecords().get(0);
   }
 
