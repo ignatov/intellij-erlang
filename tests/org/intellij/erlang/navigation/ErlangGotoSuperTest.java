@@ -32,7 +32,6 @@ import java.util.List;
  * @author savenko
  */
 public class ErlangGotoSuperTest extends LightPlatformCodeInsightFixtureTestCase {
-
   @Override
   protected String getTestDataPath() {
     return "testData/navigation/goto_super/";
@@ -50,32 +49,25 @@ public class ErlangGotoSuperTest extends LightPlatformCodeInsightFixtureTestCase
     doTest(2, getTestName(true) + ".erl", "test_behaviour.erl", "test_behaviour2.erl");
   }
 
-  private void doTest(int expectedCallbacksCount, String ... filesToLoad) throws Throwable {
+  private void doTest(int expectedCallbacksCount, String... filesToLoad) throws Throwable {
     myFixture.configureByFiles(filesToLoad);
 
-    checkGotoSuperHandlerRegistered();
+    LanguageCodeInsightActionHandler handler = CodeInsightActions.GOTO_SUPER.forLanguage(ErlangLanguage.INSTANCE);
+    assertNotNull("GotoSuperHandler for Erlang was not found.", handler);
 
     PsiElement focusedElement = myFixture.getFile().findElementAt(myFixture.getEditor().getCaretModel().getOffset());
-    ErlangFunction function = focusedElement == null ? null : PsiTreeUtil.getParentOfType(focusedElement, ErlangFunction.class);
+    ErlangFunction function = PsiTreeUtil.getParentOfType(focusedElement, ErlangFunction.class);
 
     assertNotNull("Invalid test data. A caret should be placed to function.", function);
-
-    String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
 
     List<ErlangCallbackSpec> callbackSpecFuns = ErlangNavigationUtil.getCallbackSpecs(function);
 
     assertEquals("Unexpected callbacks count.", expectedCallbacksCount, callbackSpecFuns.size());
 
     for (ErlangCallbackSpec callbackSpecFun : callbackSpecFuns) {
-      assertEquals("Unexpected function signature.", presentation, ErlangPsiImplUtil.createFunctionPresentationFromCallbackSpec(callbackSpecFun));
+      assertEquals("Unexpected function signature.",
+        ErlangPsiImplUtil.createFunctionPresentation(function),
+        ErlangPsiImplUtil.createFunctionPresentationFromCallbackSpec(callbackSpecFun));
     }
   }
-
-  private static void checkGotoSuperHandlerRegistered() throws Throwable {
-    LanguageCodeInsightActionHandler handler = CodeInsightActions.GOTO_SUPER.forLanguage(ErlangLanguage.INSTANCE);
-
-    assertNotNull("GotoSuperHandler for Erlang was not found.", handler);
-  }
-
-
 }

@@ -65,15 +65,14 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
     final List<String> fieldNames = new ArrayList<String>();
 
     if (tuple != null) {
-          tuple.accept(new ErlangRecursiveVisitor() {
-            @Override
-            public void visitRecordField(@NotNull ErlangRecordField o) {
-              ErlangQAtom fieldNameAtom = o.getFieldNameAtom();
-              String text = fieldNameAtom != null ? fieldNameAtom.getText() : null;
-
-              ContainerUtil.addIfNotNull(fieldNames, text);
-            }
-          });
+      tuple.accept(new ErlangRecursiveVisitor() {
+        @Override
+        public void visitRecordField(@NotNull ErlangRecordField o) {
+          ErlangQAtom fieldNameAtom = o.getFieldNameAtom();
+          String text = fieldNameAtom != null ? fieldNameAtom.getText() : null;
+          ContainerUtil.addIfNotNull(fieldNames, text);
+        }
+      });
     }
 
     return fieldNames;

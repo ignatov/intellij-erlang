@@ -1058,8 +1058,8 @@ public class ErlangPsiImplUtil {
     String funName = funNameAtom != null ? funNameAtom.getText() : "";
 
     List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : null;
-    ErlangTypeSig typeSig = typeSigList != null && !typeSigList.isEmpty() ? typeSigList.get(0) : null;
-    int arity = typeSig != null ? typeSig.getFunType().getFunTypeArguments().getTopTypeList().size() : 0;
+    ErlangTypeSig first = ContainerUtil.getFirstItem(typeSigList);
+    int arity = first != null ? first.getFunType().getFunTypeArguments().getTopTypeList().size() : 0;
 
     return funName + "/" + arity;
   }

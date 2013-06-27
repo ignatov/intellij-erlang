@@ -43,7 +43,6 @@ import java.util.List;
  * @author ignatov
  */
 public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
-
   @Override
   public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
     if (element instanceof ErlangFunction) {
@@ -92,8 +91,4 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
       GutterIconRenderer.Alignment.RIGHT
     );
   }
-
-
-
-
 }

@@ -17,6 +17,7 @@
 package org.intellij.erlang.navigation;
 
 import com.intellij.navigation.ItemPresentation;
+import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -61,12 +62,11 @@ public class ErlangNavigationUtil {
     return callbackSpecs;
   }
 
-  public static @Nullable ErlangCompositeElementImpl getNavigatableSpecFun(final String presentation, final ErlangCallbackSpec callbackSpec) {
+  @Nullable
+  public static NavigatablePsiElement getNavigatableSpecFun(final String presentation, final PsiElement callbackSpec) {
     ErlangSpecFun specFun = PsiTreeUtil.findChildOfType(callbackSpec, ErlangSpecFun.class);
 
-    if (specFun == null) {
-      return null;
-    }
+    if (specFun == null) return null;
 
     return new ErlangCompositeElementImpl(specFun.getNode()) {
       @Override
@@ -99,5 +99,4 @@ public class ErlangNavigationUtil {
       }
     };
   }
-
 }
