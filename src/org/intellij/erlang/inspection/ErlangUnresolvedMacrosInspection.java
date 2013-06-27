@@ -24,6 +24,7 @@ import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.quickfixes.ErlangIntroduceMacroQuickFix;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -42,7 +43,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(o, "Unresolved macros " + "'" + o.getText() + "'");
+          problemsHolder.registerProblem(o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
         }
       }
     });
