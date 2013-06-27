@@ -1050,6 +1050,21 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  public static String createFunctionPresentationFromCallbackSpec(@NotNull ErlangCallbackSpec callbackSpec) {
+    ErlangFunTypeSigs funTypeSigs = callbackSpec.getFunTypeSigs();
+
+    ErlangSpecFun specFun = funTypeSigs != null ? funTypeSigs.getSpecFun() : null;
+    ErlangQAtom funNameAtom = specFun != null ? specFun.getQAtom() : null;
+    String funName = funNameAtom != null ? funNameAtom.getText() : "";
+
+    List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : null;
+    ErlangTypeSig typeSig = typeSigList != null && !typeSigList.isEmpty() ? typeSigList.get(0) : null;
+    int arity = typeSig != null ? typeSig.getFunType().getFunTypeArguments().getTopTypeList().size() : 0;
+
+    return funName + "/" + arity;
+  }
+
+  @NotNull
   public static String createTypePresentation(@NotNull ErlangTypeDefinition type) {
     return type.getName() + "/" + calculateTypeArity(type);
   }

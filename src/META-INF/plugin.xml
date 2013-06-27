@@ -155,7 +155,7 @@
     </change-notes>
 
     <depends optional="true" config-file="rebar-import.xml">com.intellij.modules.java</depends>
-  
+
     <!--Rebar related extensions -->
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable"/>
@@ -248,6 +248,7 @@
         <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.marker.ErlangBehaviourMarkerProvider"/>
 
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
+        <codeInsight.gotoSuper language="Erlang" implementationClass="org.intellij.erlang.navigation.ErlangGotoSuperHandler"/>
 
         <fileBasedIndex implementation="org.intellij.erlang.ErlangSymbolIndex"/>
         <fileBasedIndex implementation="org.intellij.erlang.ErlangModuleIndex"/>
@@ -308,7 +309,7 @@
         <localInspection language="Erlang" shortName="ErlangDialyzerInspection" displayName="Dialyzer based inspections"
                          groupName="Erlang" enabledByDefault="false" level="WARNING"
                          implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerInspection"/>
-      
+
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
@@ -352,6 +353,6 @@
             <separator/>
             <add-to-group group-id="GenerateGroup" anchor="first"/>
         </group>
-      
+
     </actions>
 </idea-plugin>

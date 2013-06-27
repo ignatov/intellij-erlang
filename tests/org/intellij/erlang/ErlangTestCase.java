@@ -28,6 +28,7 @@ import org.intellij.erlang.highlighting.ErlangBehaviourInspectionsTest;
 import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.highlighting.generate.ErlangGenerateTest;
 import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
+import org.intellij.erlang.navigation.ErlangGotoSuperTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
 import org.intellij.erlang.quickfixes.*;
@@ -68,6 +69,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangCopyFileTest.class);
     suite.addTestSuite(ErlangGenerateTest.class);
     suite.addTestSuite(ErlangInlineVariableTest.class);
+    suite.addTestSuite(ErlangGotoSuperTest.class);
     return suite;
   }
 }
