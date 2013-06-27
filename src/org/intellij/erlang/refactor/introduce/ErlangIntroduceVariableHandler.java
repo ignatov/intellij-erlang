@@ -50,8 +50,23 @@ import java.util.List;
  * @author ignatov
  */
 public class ErlangIntroduceVariableHandler implements RefactoringActionHandler {
+
+  public enum ReplaceStrategy {
+    ALL, SINGLE, ASK
+  }
+
+  private final ReplaceStrategy myReplaceStrategy;
+
+  public ErlangIntroduceVariableHandler(ReplaceStrategy replaceStrategy) {
+    myReplaceStrategy = replaceStrategy;
+  }
+
+  public ErlangIntroduceVariableHandler() {
+    this(ReplaceStrategy.ASK);
+  }
+
   @Override
-  public void invoke(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file, DataContext dataContext) {
+  public void invoke(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file, @Nullable DataContext dataContext) {
     if (!CommonRefactoringUtil.checkReadOnlyStatus(file)) {
       return;
     }
@@ -99,7 +114,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     return PsiTreeUtil.getParentOfType(parent, ErlangExpression.class);
   }
 
-  private static void smartIntroduce(@NotNull final Editor editor, @NotNull PsiFile file) {
+  private void smartIntroduce(@NotNull final Editor editor, @NotNull PsiFile file) {
     int offset = editor.getCaretModel().getOffset();
     PsiElement elementAtCaret = file.findElementAt(offset);
     if (!checkIntroduceContext(file, editor, elementAtCaret)) return;
@@ -137,26 +152,37 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     }
   }
 
-  private static void performActionOnElementOccurrences(@NotNull final Editor editor, @NotNull final ErlangExpression expression) {
-    if (editor.getSettings().isVariableInplaceRenameEnabled()) {
-      OccurrencesChooser.simpleChooser(editor).showChooser(
-        expression,
-        getOccurrences(expression),
-        new Pass<OccurrencesChooser.ReplaceChoice>() {
-          @Override
-          public void pass(OccurrencesChooser.ReplaceChoice replaceChoice) {
-            performInplaceIntroduce(editor, expression, replaceChoice);
-          }
-        });
+  private void performActionOnElementOccurrences(@NotNull final Editor editor, @NotNull final ErlangExpression expression) {
+    if (!editor.getSettings().isVariableInplaceRenameEnabled()) return;
+    switch (myReplaceStrategy) {
+      case ASK: {
+        OccurrencesChooser.simpleChooser(editor).showChooser(
+          expression,
+          getOccurrences(expression),
+          new Pass<OccurrencesChooser.ReplaceChoice>() {
+            @Override
+            public void pass(OccurrencesChooser.ReplaceChoice replaceChoice) {
+              performInplaceIntroduce(editor, expression, replaceChoice == OccurrencesChooser.ReplaceChoice.ALL);
+            }
+          });
+        break;
+      }
+      case ALL: {
+        performInplaceIntroduce(editor, expression, true);
+        break;
+      }
+      case SINGLE: {
+        performInplaceIntroduce(editor, expression, false);
+        break;
+      }
     }
   }
 
-  private static void performOnElement(@NotNull Editor editor, @NotNull ErlangExpression expression) {
+  private void performOnElement(@NotNull Editor editor, @NotNull ErlangExpression expression) {
     performActionOnElementOccurrences(editor, expression);
   }
 
-  private static void performInplaceIntroduce(@NotNull Editor editor, @NotNull ErlangExpression expression, @Nullable OccurrencesChooser.ReplaceChoice replaceChoice) {
-    boolean replaceAll = replaceChoice == OccurrencesChooser.ReplaceChoice.ALL;
+  private static void performInplaceIntroduce(@NotNull Editor editor, @NotNull ErlangExpression expression, boolean replaceAll) {
     List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : ContainerUtil.<PsiElement>list(expression);
     PsiElement declaration = performElement(editor, expression, occurrences);
 
@@ -287,7 +313,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
 
   @NotNull
   private static List<PsiElement> getOccurrences(@NotNull final ErlangExpression expression) {
-    ErlangFunction function = PsiTreeUtil.getParentOfType(expression, ErlangFunction.class);
+    ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
     return ErlangRefactoringUtil.getOccurrences(expression, function);
   }
 
