@@ -16,7 +16,7 @@
 package org.intellij.erlang.template;
 
 import com.intellij.codeInsight.template.impl.DefaultLiveTemplatesProvider;
-import org.apache.commons.lang.ArrayUtils;
+import com.intellij.util.ArrayUtil;
 
 /**
  * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
@@ -31,6 +31,6 @@ public class ErlangLiveTemplateProvider implements DefaultLiveTemplatesProvider 
 
   @Override
   public String[] getHiddenLiveTemplateFiles() {
-    return ArrayUtils.EMPTY_STRING_ARRAY;
+    return ArrayUtil.EMPTY_STRING_ARRAY;
   }
 }

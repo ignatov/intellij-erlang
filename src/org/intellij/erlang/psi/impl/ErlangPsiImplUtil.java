@@ -51,7 +51,6 @@ import com.intellij.util.Function;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
-import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
@@ -1077,7 +1076,7 @@ public class ErlangPsiImplUtil {
       ErlangIncludeString string = include.getIncludeString();
       if (string != null) {
         String includeFilePath = StringUtil.unquoteString(string.getText());
-        boolean isEunit = StringUtils.equals(includeFilePath, "eunit/include/eunit.hrl") || StringUtils.equals(includeFilePath, "eunit.hrl");
+        boolean isEunit = StringUtil.equals(includeFilePath, "eunit/include/eunit.hrl") || StringUtil.equals(includeFilePath, "eunit.hrl");
         if (isEunit) return true;
       }
     }

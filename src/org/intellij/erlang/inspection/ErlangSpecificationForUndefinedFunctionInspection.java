@@ -17,9 +17,9 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFunTypeSigs;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
@@ -29,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangSpecificationForUndefinedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!StringUtils.endsWith(file.getName(), ErlangFileType.MODULE.getDefaultExtension())) return;
+    if (!StringUtil.endsWith(file.getName(), ErlangFileType.MODULE.getDefaultExtension())) return;
 
     file.accept(new ErlangRecursiveVisitor() {
       @Override

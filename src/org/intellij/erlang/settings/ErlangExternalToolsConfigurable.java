@@ -24,6 +24,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ArrayUtil;
 import org.apache.commons.lang.StringUtils;
@@ -62,7 +63,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myPltPathSelector.addBrowseFolderListener("Select dialyzer PLT", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     myPrevEmacsPath = myEmacsSettings.getEmacsPath();
 
-    if (StringUtils.isEmpty(myRebarSettings.getRebarPath())) {
+    if (StringUtil.isEmpty(myRebarSettings.getRebarPath())) {
       VirtualFile baseDir = project.getBaseDir();
       if (baseDir != null) {
         VirtualFile rebar = baseDir.findChild("rebar");
