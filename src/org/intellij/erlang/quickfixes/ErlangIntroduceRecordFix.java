@@ -28,7 +28,6 @@ import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -63,16 +62,18 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
 
   private static List<String> getFieldNames(@NotNull ErlangRecordRef recordRef) {
     ErlangRecordTuple tuple = PsiTreeUtil.getNextSiblingOfType(recordRef, ErlangRecordTuple.class);
-    ErlangRecordFields recordFields = tuple != null ? tuple.getRecordFields() : null;
+    final List<String> fieldNames = new ArrayList<String>();
 
-    List<ErlangRecordField> recordFieldList = recordFields != null ? recordFields.getRecordFieldList() : Collections.<ErlangRecordField>emptyList();
-    List<String> fieldNames = new ArrayList<String>(recordFieldList.size());
+    if (tuple != null) {
+          tuple.accept(new ErlangRecursiveVisitor() {
+            @Override
+            public void visitRecordField(@NotNull ErlangRecordField o) {
+              ErlangQAtom fieldNameAtom = o.getFieldNameAtom();
+              String text = fieldNameAtom != null ? fieldNameAtom.getText() : null;
 
-    for (ErlangRecordField recordField : recordFieldList) {
-      ErlangQAtom fieldNameAtom = recordField.getFieldNameAtom();
-
-      String text = fieldNameAtom != null ? fieldNameAtom.getText() : null;
-      ContainerUtil.addAllNotNull(fieldNames, text);
+              ContainerUtil.addIfNotNull(fieldNames, text);
+            }
+          });
     }
 
     return fieldNames;
