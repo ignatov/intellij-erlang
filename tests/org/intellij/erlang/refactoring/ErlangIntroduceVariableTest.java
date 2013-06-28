@@ -32,7 +32,8 @@ public class ErlangIntroduceVariableTest extends LightCodeInsightFixtureTestCase
   public void testSimple() throws Throwable                   { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
   public void testFunctionArguments() throws Throwable        { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
   public void testFunctionClauseScope() throws Throwable      { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testSingleOccurrenceReplace() throws Throwable  {doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.SINGLE);}
+  public void testSingleOccurrenceReplace() throws Throwable  { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.SINGLE); }
+  public void testParenthesesElimination() throws Throwable   { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
 
   private void doTest(ErlangIntroduceVariableHandler.ReplaceStrategy replaceStrategy) throws Throwable {
     myFixture.configureByFile(getTestName(true) + ".erl");

@@ -1172,4 +1172,46 @@ public class ErlangPsiImplUtil {
     if (exportAll) return false;
     return containingFile instanceof ErlangFile && !((ErlangFile) containingFile).getExportedFunctions().contains(function);
   }
+
+  public static int getExpressionPrecedence(@Nullable PsiElement element) {
+    if (element instanceof ErlangCatchExpression) return 0;
+    if (element instanceof ErlangAssignmentExpression) return 1;
+    if (element instanceof ErlangSendExpression) return 2;
+    if (element instanceof ErlangOrelseExpression) return 3;
+    if (element instanceof ErlangAndalsoExpression) return 4;
+    if (element instanceof ErlangCompOpExpression) return 5;
+    if (element instanceof ErlangListOpExpression) return 6;
+    if (element instanceof ErlangAdditiveExpression) return 7;
+    if (element instanceof ErlangMultiplicativeExpression) return 8;
+    if (element instanceof ErlangPrefixExpression) return 9;
+    if (element instanceof ErlangColonQualifiedExpression) return 10;
+    if (element instanceof ErlangFunctionCallExpression || element instanceof ErlangGlobalFunctionCallExpression || element instanceof ErlangGenericFunctionCallExpression || element instanceof ErlangAnonymousCallExpression || element instanceof ErlangRecordExpression ||  element instanceof ErlangQualifiedExpression) return 11;
+    if (element instanceof ErlangMaxExpression) return 12;
+    if (element instanceof ErlangParenthesizedExpression) return 13;
+    return -1;
+  }
+
+  public static ErlangExpression getOutermostParenthesizedExpression(@NotNull ErlangExpression expression) {
+    while (expression.getParent() instanceof ErlangParenthesizedExpression) {
+      ErlangParenthesizedExpression epe = (ErlangParenthesizedExpression) expression.getParent();
+
+      if (!epe.getExpression().isEquivalentTo(expression)) break;
+
+      expression = epe;
+    }
+
+    return expression;
+  }
+
+  public static ErlangExpression getNotParenthesizedExpression(@NotNull ErlangExpression expression) {
+    while (expression instanceof ErlangParenthesizedExpression) {
+      expression = ((ErlangParenthesizedExpression) expression).getExpression();
+    }
+
+    return expression;
+  }
+
+  public static ErlangExpression wrapWithParentheses(@NotNull ErlangExpression expression) {
+    return ErlangElementFactory.createExpressionFromText(expression.getProject(), "(" + expression.getText() + ")");
+  }
 }

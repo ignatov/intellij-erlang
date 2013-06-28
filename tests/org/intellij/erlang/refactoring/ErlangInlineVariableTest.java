@@ -27,6 +27,7 @@ import org.intellij.erlang.psi.ErlangQVar;
 public class ErlangInlineVariableTest extends LightCodeInsightFixtureTestCase {
   public void testSimple()        throws Exception { doTest(); }
   public void testFunExpression() throws Exception { doTest(); }
+  public void testLowPrecedence() throws Exception { doTest(); }
 
   @Override
   protected String getTestDataPath() {
