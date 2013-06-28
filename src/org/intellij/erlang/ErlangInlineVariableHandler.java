@@ -31,6 +31,7 @@ import com.intellij.refactoring.HelpID;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.Collection;
 
@@ -79,14 +80,20 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
         ApplicationManager.getApplication().runWriteAction(new Runnable() {
           @Override
           public void run() {
+            ErlangExpression rightWithoutParentheses = ErlangPsiImplUtil.getNotParenthesizedExpression(right);
+
             for (PsiReference psiReference : all) {
               PsiElement host = psiReference.getElement();
               PsiElement expr = host.getParent();
               if (expr instanceof ErlangMaxExpression) {
-                expr.replace(right);
+                if (ErlangPsiImplUtil.getExpressionPrecedence(expr.getParent()) > ErlangPsiImplUtil.getExpressionPrecedence(rightWithoutParentheses)) {
+                  expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses));
+                } else {
+                  expr.replace(rightWithoutParentheses);
+                }
               }
               else if (expr instanceof ErlangFunExpression) {
-                host.replace(right);
+                host.replace(rightWithoutParentheses);
               }
             }
 
