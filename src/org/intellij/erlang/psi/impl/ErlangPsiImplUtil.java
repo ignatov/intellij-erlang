@@ -1191,18 +1191,18 @@ public class ErlangPsiImplUtil {
     return -1;
   }
 
+  @NotNull
   public static ErlangExpression getOutermostParenthesizedExpression(@NotNull ErlangExpression expression) {
     while (expression.getParent() instanceof ErlangParenthesizedExpression) {
-      ErlangParenthesizedExpression epe = (ErlangParenthesizedExpression) expression.getParent();
-
-      if (!epe.getExpression().isEquivalentTo(expression)) break;
-
-      expression = epe;
+      ErlangParenthesizedExpression parent = (ErlangParenthesizedExpression) expression.getParent();
+      if (!parent.getExpression().isEquivalentTo(expression)) break;
+      expression = parent;
     }
 
     return expression;
   }
 
+  @NotNull
   public static ErlangExpression getNotParenthesizedExpression(@NotNull ErlangExpression expression) {
     while (expression instanceof ErlangParenthesizedExpression) {
       expression = ((ErlangParenthesizedExpression) expression).getExpression();
@@ -1211,6 +1211,7 @@ public class ErlangPsiImplUtil {
     return expression;
   }
 
+  @NotNull
   public static ErlangExpression wrapWithParentheses(@NotNull ErlangExpression expression) {
     return ErlangElementFactory.createExpressionFromText(expression.getProject(), "(" + expression.getText() + ")");
   }
