@@ -38,6 +38,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.apache.velocity.util.StringUtils;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.refactor.ErlangRefactoringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -201,7 +202,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     VariableTextBuilder builder = new VariableTextBuilder();
     expression.accept(builder);
     String newName = builder.result();
-    String newText = newName + " = " + expression.getText();
+    String newText = newName + " = " + ErlangPsiImplUtil.getNotParenthesizedExpression(expression).getText();
     Project project = expression.getProject();
     PsiElement declaration = null;
     try {
@@ -251,7 +252,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
         }
         PsiElement newExpression = ErlangElementFactory.createQVarFromText(project, newName);
         for (PsiElement occurrence : occurrences) {
-          occurrence.replace(newExpression);
+          ErlangPsiImplUtil.getOutermostParenthesizedExpression((ErlangExpression) occurrence).replace(newExpression);
         }
       }
     }.execute().getResultObject();
