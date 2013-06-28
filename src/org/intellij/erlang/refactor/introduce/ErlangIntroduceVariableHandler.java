@@ -225,6 +225,8 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   private static void modifyDeclaration(@NotNull PsiElement declaration) {
+    if (PsiTreeUtil.getParentOfType(declaration, ErlangArgumentDefinition.class) != null) return;
+
     PsiElement comma = ErlangElementFactory.createLeafFromText(declaration.getProject(), ",\n");
     final PsiElement newLineNode = PsiParserFacade.SERVICE.getInstance(declaration.getProject()).createWhiteSpaceFromText("\n");
     final PsiElement parent = declaration.getParent();
@@ -239,7 +241,10 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     final Project project = declaration.getProject();
     return new WriteCommandAction<PsiElement>(project, "Extract variable", initializer.getContainingFile()) {
       protected void run(@NotNull final Result<PsiElement> result) throws Throwable {
-        final PsiElement createdDeclaration = addDeclaration(declaration, occurrences);
+        PsiElement createdDeclaration = replaceLeftmostArgumentDefinition(declaration, occurrences);
+        if (createdDeclaration == null) {
+          createdDeclaration = addDeclaration(declaration, occurrences);
+        }
         result.setResult(createdDeclaration);
         if (createdDeclaration != null) {
           modifyDeclaration(createdDeclaration);
@@ -257,6 +262,37 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     assert anchor != null;
     final PsiElement parent = anchor.getParent();
     return parent.addBefore(declaration, anchor);
+  }
+
+  @Nullable
+  private static PsiElement replaceLeftmostArgumentDefinition(@NotNull PsiElement declaration, @NotNull List<PsiElement> occurrences) {
+    PsiElement argDef = extractLeftmostArgumentDefinition(occurrences);
+
+    return argDef == null ? argDef : argDef.replace(declaration);
+  }
+
+  @Nullable
+  private static PsiElement extractLeftmostArgumentDefinition(@NotNull List<PsiElement> occurrences) {
+    int occurrenceOffset = Integer.MAX_VALUE;
+    int occurrenceIndex = -1;
+    int currentOccurrenceIndex = 0;
+
+    for (PsiElement occurrence : occurrences) {
+      ErlangArgumentDefinition argDef = PsiTreeUtil.getParentOfType(occurrence, ErlangArgumentDefinition.class);
+
+      if (argDef != null) {
+        int startOffset = argDef.getTextRange().getStartOffset();
+
+        if (startOffset < occurrenceOffset) {
+          occurrenceOffset = startOffset;
+          occurrenceIndex = currentOccurrenceIndex;
+        }
+      }
+
+      currentOccurrenceIndex++;
+    }
+
+    return occurrenceIndex == -1 ? null : occurrences.remove(occurrenceIndex);
   }
 
   private static boolean checkIntroduceContext(@NotNull PsiFile file, @NotNull Editor editor, @Nullable PsiElement element) {
