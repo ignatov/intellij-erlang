@@ -229,6 +229,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
       return Indent.getNormalIndent(true);
     }
 
+    if (type == ERL_BEGIN_END_BODY) return Indent.getNoneIndent();
+
     if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 
     if (BLOCKS_TOKEN_SET.contains(type) || 

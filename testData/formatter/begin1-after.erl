@@ -1,3 +1,4 @@
 foo() ->
   begin
     <caret>
+  end
