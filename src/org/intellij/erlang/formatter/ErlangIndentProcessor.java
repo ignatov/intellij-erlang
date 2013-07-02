@@ -101,7 +101,7 @@ public class ErlangIndentProcessor {
     if (parentType == ERL_BEGIN_END_BODY) {
       return Indent.getNoneIndent();
     }
-    if (parentType == ERL_CASE_EXPRESSION || parentType == ERL_RECEIVE_EXPRESSION || parentType == ERL_TRY_EXPRESSION || parentType == ERL_BEGIN_END_EXPRESSION) {
+    if (parentType == ERL_CASE_EXPRESSION || parentType == ERL_RECEIVE_EXPRESSION || parentType == ERL_TRY_EXPRESSION || parentType == ERL_BEGIN_END_EXPRESSION || parentType == ERL_IF_EXPRESSION) {
       if (elementType == ERL_CR_CLAUSE) {
         return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
       }

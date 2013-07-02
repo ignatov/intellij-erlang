@@ -20,3 +20,4 @@
 foo() ->
   if
     <caret>
+  end

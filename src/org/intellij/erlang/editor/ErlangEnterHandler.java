@@ -34,7 +34,8 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
     if (completeBeginEnd(file, editor) ||
         completeCaseOf(file, editor) ||
-        completeReceive(file, editor)) {
+        completeReceive(file, editor) ||
+        completeIf(file, editor)) {
       return Result.Stop;
     }
 
@@ -51,6 +52,10 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
   private static boolean completeReceive(final @NotNull PsiFile file, final @NotNull Editor editor) {
     return completeExpression(file, editor, ErlangTypes.ERL_RECEIVE, ErlangReceiveExpression.class);
+  }
+
+  private static boolean completeIf(final @NotNull PsiFile file, final @NotNull Editor editor) {
+    return completeExpression(file, editor, ErlangTypes.ERL_IF, ErlangIfExpression.class);
   }
 
   private static boolean completeExpression(final @NotNull PsiFile file, final @NotNull Editor editor, @NotNull IElementType lastElementType, @NotNull Class expectedParentClass) {
@@ -100,6 +105,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     if (expression instanceof ErlangBeginEndExpression) return hasSiblings((ErlangBeginEndExpression) expression);
     if (expression instanceof ErlangCaseExpression)     return hasSiblings((ErlangCaseExpression) expression);
     if (expression instanceof ErlangReceiveExpression)  return hasSiblings((ErlangReceiveExpression) expression);
+    if (expression instanceof ErlangIfExpression)       return hasSiblings((ErlangIfExpression) expression);
 
     return false;
   }
@@ -136,10 +142,22 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     return crClauses.get(0).getClauseBody() == null;
   }
 
+  private static boolean hasSiblings(@NotNull ErlangIfExpression ifExpression) {
+    ErlangIfClauses ifClauses = ifExpression.getIfClauses();
+
+    if (ifClauses == null) return false;
+
+    List<ErlangIfClause> ifClauseList = ifClauses.getIfClauseList();
+
+    if (ifClauseList.isEmpty()) return false;
+
+    return ifClauseList.get(0).getClauseBody() == null;
+  }
+
   private static boolean shouldEndWithEnd(@NotNull PsiElement element) {
     return element instanceof ErlangBeginEndExpression ||
            element instanceof ErlangCaseExpression ||
-           element instanceof ErlangIfClauses ||
+           element instanceof ErlangIfExpression ||
            element instanceof ErlangReceiveExpression ||
            element instanceof ErlangFunExpression && PsiTreeUtil.getChildOfType(element, ErlangFunClauses.class) != null ||
            element instanceof ErlangTryCatch ||

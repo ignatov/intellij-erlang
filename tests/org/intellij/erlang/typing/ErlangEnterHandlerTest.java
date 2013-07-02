@@ -24,10 +24,12 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
   public void testReceiveSimple() throws Throwable                        { doTest(); }
   public void testReceiveWithSucceedingFunctions() throws Throwable       { doTest(); }
 
+  public void testIfSimple() throws Throwable                             { doTest(); }
+  public void testIfWithSucceedingFunctions() throws Throwable            { doTest(); }
+
   private void doTest() throws Throwable {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.type('\n');
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");
   }
-
 }

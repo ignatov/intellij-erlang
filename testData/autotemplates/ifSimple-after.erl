@@ -1,4 +1,4 @@
-test() ->
+foo() ->
   if
     <caret>
   end
