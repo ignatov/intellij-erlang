@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangReceiveExpression extends ErlangExpression {
+public interface ErlangReceiveExpression extends ErlangExpression, ErlangClauseOwner {
 
   @Nullable
   ErlangAfterClause getAfterClause();

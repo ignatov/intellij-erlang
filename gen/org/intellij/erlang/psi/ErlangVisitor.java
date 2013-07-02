@@ -96,6 +96,7 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitCaseExpression(@NotNull ErlangCaseExpression o) {
     visitExpression(o);
+    // visitClauseOwner(o);
   }
 
   public void visitCatchExpression(@NotNull ErlangCatchExpression o) {
@@ -360,6 +361,7 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitReceiveExpression(@NotNull ErlangReceiveExpression o) {
     visitExpression(o);
+    // visitClauseOwner(o);
   }
 
   public void visitRecordDefinition(@NotNull ErlangRecordDefinition o) {
@@ -441,6 +443,7 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitTryExpression(@NotNull ErlangTryExpression o) {
     visitExpression(o);
+    // visitClauseOwner(o);
   }
 
   public void visitTryExpressionsClause(@NotNull ErlangTryExpressionsClause o) {

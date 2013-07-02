@@ -70,6 +70,7 @@
 
   extends("assignment_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal|atomic|q_atom|q_var)")=expression
+
   name(".*_(expression|comprehension|literal|atomic)")=expression
   name(".*attribute")=attribute
   name(".*type|.*_t")=type
@@ -77,6 +78,7 @@
 
   implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
   extends("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  implements("case_expression|try_expression|receive_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
 }
 
 forms ::= console_expression | form_with_period *

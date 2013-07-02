@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangCaseExpression extends ErlangExpression {
+public interface ErlangCaseExpression extends ErlangExpression, ErlangClauseOwner {
 
   @NotNull
   List<ErlangCrClause> getCrClauseList();

@@ -16,6 +16,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -42,25 +43,25 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     return Result.Continue;
   }
 
-  private static boolean completeBeginEnd(final @NotNull PsiFile file, final @NotNull Editor editor) {
+  private static boolean completeBeginEnd(@NotNull PsiFile file, @NotNull Editor editor) {
     return completeExpression(file, editor, ErlangTypes.ERL_BEGIN, ErlangBeginEndExpression.class);
   }
 
-  private static boolean completeCaseOf(final @NotNull PsiFile file, final @NotNull Editor editor) {
+  private static boolean completeCaseOf(@NotNull PsiFile file, @NotNull Editor editor) {
     return completeExpression(file, editor, ErlangTypes.ERL_OF, ErlangCaseExpression.class);
   }
 
-  private static boolean completeReceive(final @NotNull PsiFile file, final @NotNull Editor editor) {
+  private static boolean completeReceive(@NotNull PsiFile file, @NotNull Editor editor) {
     return completeExpression(file, editor, ErlangTypes.ERL_RECEIVE, ErlangReceiveExpression.class);
   }
 
-  private static boolean completeIf(final @NotNull PsiFile file, final @NotNull Editor editor) {
+  private static boolean completeIf(@NotNull PsiFile file, @NotNull Editor editor) {
     return completeExpression(file, editor, ErlangTypes.ERL_IF, ErlangIfExpression.class);
   }
 
-  private static boolean completeExpression(final @NotNull PsiFile file, final @NotNull Editor editor, @NotNull IElementType lastElementType, @NotNull Class expectedParentClass) {
-    final PsiElement lastElement = file.findElementAt(editor.getCaretModel().getOffset() - 1);
-    final PsiElement parent = lastElement != null ? lastElement.getParent() : null;
+  private static boolean completeExpression(@NotNull PsiFile file, @NotNull Editor editor, @NotNull IElementType lastElementType, @NotNull Class expectedParentClass) {
+     PsiElement lastElement = file.findElementAt(editor.getCaretModel().getOffset() - 1);
+     PsiElement parent = lastElement != null ? lastElement.getParent() : null;
 
     if (!(lastElement instanceof LeafPsiElement && ((LeafPsiElement) lastElement).getElementType().equals(lastElementType))) return false;
     if (!(expectedParentClass.isInstance(parent))) return false;
@@ -71,8 +72,8 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     return true;
   }
 
-  private static void appendEndAndMoveCaret(final @NotNull PsiFile file, final @NotNull Editor editor, final int offset, final boolean addComma) {
-    final Project project = editor.getProject();
+  private static void appendEndAndMoveCaret(@NotNull final PsiFile file, @NotNull final Editor editor, final int offset, final boolean addComma) {
+     final Project project = editor.getProject();
 
     if (project == null) return;
     
@@ -103,54 +104,34 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
   private static boolean hasSiblings(@NotNull PsiElement expression) {
     if (expression instanceof ErlangBeginEndExpression) return hasSiblings((ErlangBeginEndExpression) expression);
-    if (expression instanceof ErlangCaseExpression)     return hasSiblings((ErlangCaseExpression) expression);
-    if (expression instanceof ErlangReceiveExpression)  return hasSiblings((ErlangReceiveExpression) expression);
+    if (expression instanceof ErlangClauseOwner)        return hasSiblings((ErlangClauseOwner) expression);
     if (expression instanceof ErlangIfExpression)       return hasSiblings((ErlangIfExpression) expression);
-
     return false;
   }
 
   private static boolean hasSiblings(@NotNull ErlangBeginEndExpression beginEndExpr) {
     ErlangBeginEndBody beginEndBody = beginEndExpr.getBeginEndBody();
-
     if (beginEndBody == null) return false;
-
     ErlangExpression expression = PsiTreeUtil.getChildOfType(beginEndBody, ErlangExpression.class);
 
     if (expression == null) return false;
     if (expression instanceof ErlangCatchExpression) {
       ErlangTryExpression tryExpression = PsiTreeUtil.getParentOfType(beginEndExpr, ErlangTryExpression.class);
-      return tryExpression == null || (tryExpression.getTryCatch() != null);
+      return tryExpression == null || tryExpression.getTryCatch() != null;
     }
-
     return true;
   }
 
-  private static boolean hasSiblings(@NotNull ErlangCaseExpression caseExpression) {
-    List<ErlangCrClause> crClauses = caseExpression.getCrClauseList();
-
+  private static boolean hasSiblings(@NotNull ErlangClauseOwner owner) {
+    List<ErlangCrClause> crClauses = owner.getCrClauseList();
     if (crClauses.isEmpty()) return false;
-
-    return crClauses.get(0).getClauseBody() == null;
-  }
-
-  private static boolean hasSiblings(@NotNull ErlangReceiveExpression receiveExpression) {
-    List<ErlangCrClause> crClauses = receiveExpression.getCrClauseList();
-
-    if (crClauses.isEmpty()) return false;
-
     return crClauses.get(0).getClauseBody() == null;
   }
 
   private static boolean hasSiblings(@NotNull ErlangIfExpression ifExpression) {
     ErlangIfClauses ifClauses = ifExpression.getIfClauses();
-
-    if (ifClauses == null) return false;
-
-    List<ErlangIfClause> ifClauseList = ifClauses.getIfClauseList();
-
+    List<ErlangIfClause> ifClauseList = ifClauses != null ? ifClauses.getIfClauseList() : ContainerUtil.<ErlangIfClause>emptyList();
     if (ifClauseList.isEmpty()) return false;
-
     return ifClauseList.get(0).getClauseBody() == null;
   }
 
