@@ -1185,8 +1185,24 @@ public class ErlangPsiImplUtil {
     if (element instanceof ErlangMultiplicativeExpression) return 8;
     if (element instanceof ErlangPrefixExpression) return 9;
     if (element instanceof ErlangColonQualifiedExpression) return 10;
-    if (element instanceof ErlangFunctionCallExpression || element instanceof ErlangGlobalFunctionCallExpression || element instanceof ErlangGenericFunctionCallExpression || element instanceof ErlangAnonymousCallExpression || element instanceof ErlangRecordExpression ||  element instanceof ErlangQualifiedExpression) return 11;
-    if (element instanceof ErlangMaxExpression) return 12;
+    if (element instanceof ErlangFunctionCallExpression
+      || element instanceof ErlangGlobalFunctionCallExpression
+      || element instanceof ErlangGenericFunctionCallExpression
+      || element instanceof ErlangAnonymousCallExpression
+      || element instanceof ErlangRecordExpression
+      || element instanceof ErlangQualifiedExpression) return 11;
+    if (element instanceof ErlangMaxExpression
+      || element instanceof ErlangTupleExpression
+      || element instanceof ErlangListExpression
+      || element instanceof ErlangCaseExpression
+      || element instanceof ErlangIfExpression
+      || element instanceof ErlangListComprehension
+      || element instanceof ErlangReceiveExpression
+      || element instanceof ErlangFunExpression
+      || element instanceof ErlangTryExpression
+      || element instanceof ErlangBinaryExpression
+      || element instanceof ErlangBeginEndExpression
+      ) return 12;
     if (element instanceof ErlangParenthesizedExpression) return 13;
     return -1;
   }
