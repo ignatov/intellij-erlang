@@ -36,6 +36,7 @@ import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
 import org.intellij.erlang.refactoring.ErlangInlineVariableTest;
 import org.intellij.erlang.refactoring.ErlangIntroduceVariableTest;
 import org.intellij.erlang.sdk.ErlangSdkReleaseTest;
+import org.intellij.erlang.typing.ErlangEnterHandlerTest;
 import org.intellij.erlang.typing.ErlangSmartEnterClauseProcessorTest;
 
 /**
@@ -72,6 +73,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangGenerateTest.class);
     suite.addTestSuite(ErlangInlineVariableTest.class);
     suite.addTestSuite(ErlangGotoSuperTest.class);
+    suite.addTestSuite(ErlangEnterHandlerTest.class);
     return suite;
   }
 }
