@@ -12,11 +12,15 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
     return "testData/autotemplates/";
   }
 
-  public void testBeginEndSimple() throws Throwable { doTest(); }
-  public void testBeginEndNested() throws Throwable { doTest(); }
-  public void testBeginEndWithSucceedingExpressions() throws Throwable { doTest(); }
-  public void testBeginEndWithSucceedingTryCatchBlock() throws Throwable { doTest(); }
-  public void testBeginEndWithSucceedingAfterClause() throws Throwable { doTest(); }
+  public void testBeginEndSimple() throws Throwable                       { doTest(); }
+  public void testBeginEndNested() throws Throwable                       { doTest(); }
+  public void testBeginEndWithSucceedingExpressions() throws Throwable    { doTest(); }
+  public void testBeginEndWithSucceedingTryCatchBlock() throws Throwable  { doTest(); }
+  public void testBeginEndWithSucceedingAfterClause() throws Throwable    { doTest(); }
+
+  public void testCaseOfSimple() throws Throwable                         { doTest(); }
+  public void testCaseOfWithSucceedingFunctions() throws Throwable        { doTest(); }
+
 
   private void doTest() throws Throwable {
     myFixture.configureByFile(getTestName(true) + ".erl");

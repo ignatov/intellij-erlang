@@ -1,4 +1,4 @@
 foo() ->
-  case test() of
+  case something of
     <caret>
   end
