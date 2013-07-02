@@ -1,4 +1,4 @@
-test() ->
+foo() ->
   receive
     <caret>
   end

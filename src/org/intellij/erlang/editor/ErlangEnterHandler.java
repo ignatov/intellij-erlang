@@ -33,7 +33,8 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     if (!(file instanceof ErlangFile)) return Result.Continue;
 
     if (completeBeginEnd(file, editor) ||
-        completeCaseOf(file, editor)) {
+        completeCaseOf(file, editor) ||
+        completeReceive(file, editor)) {
       return Result.Stop;
     }
 
@@ -46,6 +47,10 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
   private static boolean completeCaseOf(final @NotNull PsiFile file, final @NotNull Editor editor) {
     return completeExpression(file, editor, ErlangTypes.ERL_OF, ErlangCaseExpression.class);
+  }
+
+  private static boolean completeReceive(final @NotNull PsiFile file, final @NotNull Editor editor) {
+    return completeExpression(file, editor, ErlangTypes.ERL_RECEIVE, ErlangReceiveExpression.class);
   }
 
   private static boolean completeExpression(final @NotNull PsiFile file, final @NotNull Editor editor, @NotNull IElementType lastElementType, @NotNull Class expectedParentClass) {
@@ -94,6 +99,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   private static boolean hasSiblings(@NotNull PsiElement expression) {
     if (expression instanceof ErlangBeginEndExpression) return hasSiblings((ErlangBeginEndExpression) expression);
     if (expression instanceof ErlangCaseExpression)     return hasSiblings((ErlangCaseExpression) expression);
+    if (expression instanceof ErlangReceiveExpression)  return hasSiblings((ErlangReceiveExpression) expression);
 
     return false;
   }
@@ -116,6 +122,14 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
   private static boolean hasSiblings(@NotNull ErlangCaseExpression caseExpression) {
     List<ErlangCrClause> crClauses = caseExpression.getCrClauseList();
+
+    if (crClauses.isEmpty()) return false;
+
+    return crClauses.get(0).getClauseBody() == null;
+  }
+
+  private static boolean hasSiblings(@NotNull ErlangReceiveExpression receiveExpression) {
+    List<ErlangCrClause> crClauses = receiveExpression.getCrClauseList();
 
     if (crClauses.isEmpty()) return false;
 

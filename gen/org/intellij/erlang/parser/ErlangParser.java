@@ -1,16 +1,16 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.parser;
 
-import com.intellij.lang.ASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiBuilder.Marker;
-import com.intellij.lang.PsiParser;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.tree.TokenSet;
-
 import static org.intellij.erlang.ErlangTypes.*;
 import static org.intellij.erlang.parser.ErlangParserUtil.*;
+import com.intellij.lang.LighterASTNode;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.lang.ASTNode;
+import com.intellij.psi.tree.TokenSet;
+import com.intellij.lang.PsiParser;
 
 @SuppressWarnings({"SimplifiableIfStatement", "UnusedAssignment"})
 public class ErlangParser implements PsiParser {
@@ -3523,7 +3523,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // receive (after_clause end | cr_clauses after_clause? end)
+  // receive (after_clause | cr_clauses after_clause? ) end
   public static boolean receive_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "receive_expression")) return false;
     if (!nextTokenIs(builder_, ERL_RECEIVE)) return false;
@@ -3532,36 +3532,24 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = consumeToken(builder_, ERL_RECEIVE);
     pinned_ = result_; // pin = 1
-    result_ = result_ && receive_expression_1(builder_, level_ + 1);
+    result_ = result_ && report_error_(builder_, receive_expression_1(builder_, level_ + 1));
+    result_ = pinned_ && consumeToken(builder_, ERL_END) && result_;
     exit_section_(builder_, level_, marker_, ERL_RECEIVE_EXPRESSION, result_, pinned_, null);
     return result_ || pinned_;
   }
 
-  // after_clause end | cr_clauses after_clause? end
+  // after_clause | cr_clauses after_clause?
   private static boolean receive_expression_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "receive_expression_1")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
-    result_ = receive_expression_1_0(builder_, level_ + 1);
+    result_ = after_clause(builder_, level_ + 1);
     if (!result_) result_ = receive_expression_1_1(builder_, level_ + 1);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
 
-  // after_clause end
-  private static boolean receive_expression_1_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "receive_expression_1_0")) return false;
-    boolean result_ = false;
-    boolean pinned_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
-    result_ = after_clause(builder_, level_ + 1);
-    pinned_ = result_; // pin = 1
-    result_ = result_ && consumeToken(builder_, ERL_END);
-    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
-    return result_ || pinned_;
-  }
-
-  // cr_clauses after_clause? end
+  // cr_clauses after_clause?
   private static boolean receive_expression_1_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "receive_expression_1_1")) return false;
     boolean result_ = false;
@@ -3569,8 +3557,7 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = cr_clauses(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, receive_expression_1_1_1(builder_, level_ + 1));
-    result_ = pinned_ && consumeToken(builder_, ERL_END) && result_;
+    result_ = result_ && receive_expression_1_1_1(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
   }
