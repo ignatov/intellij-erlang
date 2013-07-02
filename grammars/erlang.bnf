@@ -418,7 +418,7 @@ cr_clause ::= cr_clause_argument_definition clause_guard? clause_body {pin=1}
 private cr_clause_argument_definition ::= <<guarded argument_definition>>
 argument_definition ::= expression
 
-receive_expression ::= receive (after_clause end | cr_clauses after_clause? end) {pin(".*")=1}
+receive_expression ::= receive (after_clause | cr_clauses after_clause? ) end {pin(".*")=1}
 after_clause ::= after after_clause_body {pin=1}
 after_clause_body ::= <<guarded expression>> clause_body {pin=1}
 fun_expression ::= fun (fun_expression_block | fun_expression_lambda) {pin=1}

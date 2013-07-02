@@ -12,16 +12,24 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
     return "testData/autotemplates/";
   }
 
-  public void testBeginEndSimple() throws Throwable { doTest(); }
-  public void testBeginEndNested() throws Throwable { doTest(); }
-  public void testBeginEndWithSucceedingExpressions() throws Throwable { doTest(); }
-  public void testBeginEndWithSucceedingTryCatchBlock() throws Throwable { doTest(); }
-  public void testBeginEndWithSucceedingAfterClause() throws Throwable { doTest(); }
+  public void testBeginEndSimple() throws Throwable                       { doTest(); }
+  public void testBeginEndNested() throws Throwable                       { doTest(); }
+  public void testBeginEndWithSucceedingExpressions() throws Throwable    { doTest(); }
+  public void testBeginEndWithSucceedingTryCatchBlock() throws Throwable  { doTest(); }
+  public void testBeginEndWithSucceedingAfterClause() throws Throwable    { doTest(); }
+
+  public void testCaseOfSimple() throws Throwable                         { doTest(); }
+  public void testCaseOfWithSucceedingFunctions() throws Throwable        { doTest(); }
+
+  public void testReceiveSimple() throws Throwable                        { doTest(); }
+  public void testReceiveWithSucceedingFunctions() throws Throwable       { doTest(); }
+
+  public void testIfSimple() throws Throwable                             { doTest(); }
+  public void testIfWithSucceedingFunctions() throws Throwable            { doTest(); }
 
   private void doTest() throws Throwable {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.type('\n');
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");
   }
-
 }

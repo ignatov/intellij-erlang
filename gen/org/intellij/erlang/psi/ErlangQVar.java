@@ -1,13 +1,14 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi;
 
+import java.util.List;
+import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.psi.ResolveState;
 import com.intellij.psi.search.SearchScope;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.intellij.erlang.psi.impl.ErlangQVarImpl;
 
 public interface ErlangQVar extends ErlangNamedElement {
 
