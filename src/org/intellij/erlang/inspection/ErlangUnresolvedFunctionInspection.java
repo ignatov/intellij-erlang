@@ -77,11 +77,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
           if (o.getQAtom().getMacros() != null) return;
           ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
-
-          LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(o, ErlangModuleRef.class) != null ?
-            new LocalQuickFix[]{} :
-            new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(r.getName(), r.getArity())};
-
+          LocalQuickFix[] qfs = getQuickFixes(o, new ErlangCreateFunctionQuickFix(r.getName(), r.getArity()));
           problemsHolder.registerProblem(o.getQAtom(), "Unresolved function " + "'" + r.getSignature() + "'", qfs);
         }
       }
@@ -93,15 +89,14 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
           if (o.getQAtom().getMacros() != null) return;
           ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
-
-          LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(o, ErlangModuleRef.class) != null ?
-            new LocalQuickFix[]{} :
-            new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(r.getName(), r.getArity())};
-
+          LocalQuickFix[] qfs = getQuickFixes(o, new ErlangCreateFunctionQuickFix(r.getName(), r.getArity()));
           problemsHolder.registerProblem(o.getQAtom(), "Unresolved function " + "'" + r.getSignature() + "'", qfs);
         }
       }
     });
   }
 
+  private static LocalQuickFix[] getQuickFixes(PsiElement o, ErlangCreateFunctionQuickFix fix) {
+    return PsiTreeUtil.getNextSiblingOfType(o, ErlangModuleRef.class) != null ? new LocalQuickFix[]{} : new LocalQuickFix[]{fix};
+  }
 }
