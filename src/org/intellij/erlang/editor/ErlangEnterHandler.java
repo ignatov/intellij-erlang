@@ -29,9 +29,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   public Result preprocessEnter(@NotNull PsiFile file, @NotNull Editor editor, @NotNull Ref<Integer> caretOffset, @NotNull Ref<Integer> caretAdvance, @NotNull DataContext dataContext, EditorActionHandler originalHandler) {
     if (!(file instanceof ErlangFile)) return Result.Continue;
 
-    if (completeBeginEnd(file, editor)) {
-      return Result.Stop;
-    }
+    if (completeBeginEnd(file, editor)) return Result.Stop;
 
     return Result.Continue;
   }
@@ -72,10 +70,8 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
       if (shouldEndWithEnd(element)) {
         if (getEnd(element) == null) return false;
       }
-
       element = element.getParent();
     }
-
     return true;
   }
 
@@ -106,8 +102,9 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   }
 
   @Nullable
-  private static PsiElement getEnd(@NotNull PsiElement element) {
-    if (element instanceof ErlangTryExpression) return getEnd((ErlangTryExpression) element);
+  private static PsiElement getEnd(@Nullable PsiElement element) {
+    if (element == null) return null;
+    if (element instanceof ErlangTryExpression) return getEnd(((ErlangTryExpression) element).getTryCatch());
 
     PsiElement lastChild = element.getLastChild();
 
@@ -115,12 +112,4 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
     return null;
   }
-
-  @Nullable
-  private static PsiElement getEnd(@NotNull ErlangTryExpression element) {
-    ErlangTryCatch tryCatch = element.getTryCatch();
-
-    return tryCatch == null ? null : getEnd(tryCatch);
-  }
-
 }
