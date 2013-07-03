@@ -108,7 +108,7 @@ public class ErlangIndentProcessor {
       if (elementType == ERL_BEGIN_END_BODY) {
         return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
       }
-      if (elementType == ERL_END) {
+      if (elementType == ERL_END || elementType == ERL_TRY_CATCH) {
         return myErlangSettings.INDENT_RELATIVE ? Indent.getSpaceIndent(0, true) : Indent.getNoneIndent();
       }
     }

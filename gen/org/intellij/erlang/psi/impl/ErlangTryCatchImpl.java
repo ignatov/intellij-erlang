@@ -40,12 +40,6 @@ public class ErlangTryCatchImpl extends ErlangCompositeElementImpl implements Er
     return findChildByType(ERL_CATCH);
   }
 
-  @Override
-  @Nullable
-  public PsiElement getEnd() {
-    return findChildByType(ERL_END);
-  }
-
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryCatch(this);
     else super.accept(visitor);

@@ -36,6 +36,12 @@ public class ErlangTryExpressionImpl extends ErlangExpressionImpl implements Erl
 
   @Override
   @Nullable
+  public PsiElement getEnd() {
+    return findChildByType(ERL_END);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getOf() {
     return findChildByType(ERL_OF);
   }

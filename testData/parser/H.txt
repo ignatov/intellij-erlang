@@ -3947,7 +3947,7 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Warning')
                     PsiElement(})('}')
-            PsiElement(end)('end')
+          PsiElement(end)('end')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -12878,7 +12878,7 @@ ERL_FILE
                                 ERL_Q_VAR
                                   PsiElement(var)('State')
                               PsiElement())(')')
-                    PsiElement(end)('end')
+                  PsiElement(end)('end')
               PsiElement(,)(',')
               ERL_ASSIGNMENT_EXPRESSION
                 ERL_TUPLE_EXPRESSION
@@ -12967,7 +12967,7 @@ ERL_FILE
                                 ERL_Q_VAR
                                   PsiElement(var)('State')
                               PsiElement())(')')
-                    PsiElement(end)('end')
+                  PsiElement(end)('end')
               PsiElement(,)(',')
               ERL_CASE_EXPRESSION
                 PsiElement(case)('case')
@@ -13594,7 +13594,7 @@ ERL_FILE
                                 ERL_Q_VAR
                                   PsiElement(var)('State')
                               PsiElement())(')')
-                    PsiElement(end)('end')
+                  PsiElement(end)('end')
               PsiElement(,)(',')
               ERL_ASSIGNMENT_EXPRESSION
                 ERL_TUPLE_EXPRESSION
@@ -13683,7 +13683,7 @@ ERL_FILE
                                 ERL_Q_VAR
                                   PsiElement(var)('State')
                               PsiElement())(')')
-                    PsiElement(end)('end')
+                  PsiElement(end)('end')
               PsiElement(,)(',')
               ERL_CASE_EXPRESSION
                 PsiElement(case)('case')
@@ -16912,7 +16912,7 @@ ERL_FILE
                                     ERL_Q_VAR
                                       PsiElement(var)('GenArgType')
                                   PsiElement(})('}')
-                          PsiElement(end)('end')
+                        PsiElement(end)('end')
                   PsiElement(;)(';')
                   ERL_CR_CLAUSE
                     ERL_ARGUMENT_DEFINITION
@@ -17676,7 +17676,7 @@ ERL_FILE
                               ERL_Q_VAR
                                 PsiElement(var)('AccMaps')
                             PsiElement(})('}')
-                    PsiElement(end)('end')
+                  PsiElement(end)('end')
               PsiElement(,)(',')
               ERL_FUNCTION_CALL_EXPRESSION
                 ERL_Q_ATOM

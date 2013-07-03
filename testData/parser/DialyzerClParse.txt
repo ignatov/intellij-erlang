@@ -410,7 +410,7 @@ ERL_FILE
                               PsiElement(var)('Msg')
                           PsiElement())(')')
                     PsiElement(})('}')
-            PsiElement(end)('end')
+          PsiElement(end)('end')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE

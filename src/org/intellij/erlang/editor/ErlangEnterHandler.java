@@ -36,7 +36,8 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     if (completeBeginEnd(file, editor) ||
         completeCaseOf(file, editor) ||
         completeReceive(file, editor) ||
-        completeIf(file, editor)) {
+        completeIf(file, editor) ||
+        completeTry(file, editor)) {
       return Result.Stop;
     }
 
@@ -57,6 +58,12 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
   private static boolean completeIf(@NotNull PsiFile file, @NotNull Editor editor) {
     return completeExpression(file, editor, ErlangTypes.ERL_IF, ErlangIfExpression.class);
+  }
+
+  private static boolean completeTry(@NotNull PsiFile file, @NotNull Editor editor) {
+    return completeExpression(file, editor, ErlangTypes.ERL_CATCH, ErlangTryCatch.class) ||
+           completeExpression(file, editor, ErlangTypes.ERL_AFTER, ErlangTryCatch.class) ||
+           completeExpression(file, editor, ErlangTypes.ERL_OF, ErlangTryExpression.class);
   }
 
   private static boolean completeExpression(@NotNull PsiFile file, @NotNull Editor editor, @NotNull IElementType lastElementType, @NotNull Class expectedParentClass) {
@@ -141,14 +148,12 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
            element instanceof ErlangIfExpression ||
            element instanceof ErlangReceiveExpression ||
            element instanceof ErlangFunExpression && PsiTreeUtil.getChildOfType(element, ErlangFunClauses.class) != null ||
-           element instanceof ErlangTryCatch ||
-           element instanceof ErlangTryExpression; //try expression does not actually end with end
+           element instanceof ErlangTryExpression;
   }
 
   @Nullable
   private static PsiElement getEnd(@Nullable PsiElement element) {
     if (element == null) return null;
-    if (element instanceof ErlangTryExpression) return getEnd(((ErlangTryExpression) element).getTryCatch());
 
     PsiElement lastChild = element.getLastChild();
 

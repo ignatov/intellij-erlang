@@ -28643,7 +28643,7 @@ ERL_FILE
                         ERL_MAX_EXPRESSION
                           ERL_Q_ATOM
                             PsiElement(atom)('ok')
-                  PsiElement(end)('end')
+                PsiElement(end)('end')
               PsiElement(,)(',')
               ERL_CASE_EXPRESSION
                 PsiElement(case)('case')

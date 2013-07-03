@@ -2597,7 +2597,7 @@ ERL_FILE
                                         PsiElement(])(']')
                                       PsiElement(})('}')
                                     PsiElement())(')')
-                        PsiElement(end)('end')
+                      PsiElement(end)('end')
               PsiElement(end)('end')
             PsiElement())(')')
           ERL_ARGUMENT_LIST
@@ -3233,7 +3233,7 @@ ERL_FILE
                                       ERL_Q_ATOM
                                         PsiElement(atom)('ok')
                                 PsiElement(end)('end')
-                        PsiElement(end)('end')
+                      PsiElement(end)('end')
               PsiElement(end)('end')
             PsiElement())(')')
           ERL_ARGUMENT_LIST
