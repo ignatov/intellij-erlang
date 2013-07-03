@@ -1050,12 +1050,9 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static String createFunctionPresentationFromCallbackSpec(@NotNull ErlangCallbackSpec callbackSpec) {
-    ErlangFunTypeSigs funTypeSigs = callbackSpec.getFunTypeSigs();
-
-    ErlangSpecFun specFun = funTypeSigs != null ? funTypeSigs.getSpecFun() : null;
-    ErlangQAtom funNameAtom = specFun != null ? specFun.getQAtom() : null;
-    String funName = funNameAtom != null ? funNameAtom.getText() : "";
+  public static String createFunctionPresentationFromCallbackSpec(@NotNull ErlangCallbackSpec spec) {
+    ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
+    String funName = getCallbackSpecName(spec);
 
     List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : null;
     ErlangTypeSig first = ContainerUtil.getFirstItem(typeSigList);
@@ -1151,10 +1148,15 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static String getCallbackSpecName(@NotNull ErlangCallbackSpec spec) {
+    ErlangQAtom atom = getCallbackAtom(spec);
+    return atom != null ? atom.getText() : null;
+  }
+
+  @Nullable
+  private static ErlangQAtom getCallbackAtom(ErlangCallbackSpec spec) {
     ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
     ErlangSpecFun specFun = funTypeSigs != null ? funTypeSigs.getSpecFun() : null;
-    ErlangQAtom atom = specFun != null ? specFun.getQAtom() : null;
-    return atom != null ? atom.getText() : null;
+    return specFun != null ? specFun.getQAtom() : null;
   }
 
   @NotNull
