@@ -33,6 +33,7 @@ import com.intellij.refactoring.HelpID;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.Collection;
@@ -97,6 +98,8 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
                 }
               } else if (expr instanceof ErlangFunExpression) {
                 replacementNode = host.replace(rightWithoutParentheses).getNode();
+              } else if (expr instanceof ErlangGenericFunctionCallExpression) {
+                replacementNode = substituteFunctionCall(project, host, rightWithoutParentheses).getNode();
               }
 
               if (replacementNode != null) CodeEditUtil.markToReformat(replacementNode, true);
@@ -113,4 +116,32 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
       }
     }, "Inline variable", null);
   }
+
+  private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {
+    if (!(variableValue instanceof ErlangFunExpression)) return variable.replace(variableValue);
+
+    ErlangFunExpression funExpression = (ErlangFunExpression) variableValue;
+
+    if (null != funExpression.getFunClauses()) return variable.replace(variableValue);
+
+    ErlangFunctionWithArity functionWithArity = funExpression.getFunctionWithArity();
+    PsiElement function = functionWithArity != null ? functionWithArity.getQAtom() : null;
+
+    if (function == null) return variable; //the condition is always false
+
+    function = variable.replace(function);
+
+    PsiElement parent = function.getParent();
+    ErlangModuleRef moduleRef = funExpression.getModuleRef();
+    PsiElement module = moduleRef != null ? moduleRef.getQAtom() : null;
+    if (module == null) module = funExpression.getQVar();
+
+    if (module == null || parent == null) return function;
+
+    parent.addBefore(module, function);
+    parent.addBefore(ErlangElementFactory.createLeafFromText(project, ":"), function);
+
+    return parent;
+  }
+
 }
