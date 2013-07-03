@@ -93,16 +93,21 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
               if (expr instanceof ErlangMaxExpression) {
                 if (ErlangPsiImplUtil.getExpressionPrecedence(expr.getParent()) > ErlangPsiImplUtil.getExpressionPrecedence(rightWithoutParentheses)) {
                   replacementNode = expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses)).getNode();
-                } else {
+                }
+                else {
                   replacementNode = expr.replace(rightWithoutParentheses).getNode();
                 }
-              } else if (expr instanceof ErlangFunExpression) {
+              }
+              else if (expr instanceof ErlangFunExpression) {
                 replacementNode = host.replace(rightWithoutParentheses).getNode();
-              } else if (expr instanceof ErlangGenericFunctionCallExpression) {
+              }
+              else if (expr instanceof ErlangGenericFunctionCallExpression) {
                 replacementNode = substituteFunctionCall(project, host, rightWithoutParentheses).getNode();
               }
 
-              if (replacementNode != null) CodeEditUtil.markToReformat(replacementNode, true);
+              if (replacementNode != null) {
+                CodeEditUtil.markToReformat(replacementNode, true);
+              }
             }
 
             PsiElement comma = PsiTreeUtil.getNextSiblingOfType(assignment, LeafPsiElement.class);
