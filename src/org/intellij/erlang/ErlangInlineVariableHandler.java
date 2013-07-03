@@ -16,6 +16,7 @@
 
 package org.intellij.erlang;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.lang.Language;
 import com.intellij.lang.refactoring.InlineActionHandler;
 import com.intellij.openapi.application.ApplicationManager;
@@ -24,6 +25,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.impl.source.codeStyle.CodeEditUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -31,6 +33,7 @@ import com.intellij.refactoring.HelpID;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.Collection;
@@ -52,7 +55,7 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
   }
 
   @Override
-  public void inlineElement(Project project, Editor editor, PsiElement element) {
+  public void inlineElement(final Project project, final Editor editor, PsiElement element) {
     if (!(element instanceof ErlangQVar)) return;
 
     final PsiElement parent = element.getParent();
@@ -85,26 +88,60 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
             for (PsiReference psiReference : all) {
               PsiElement host = psiReference.getElement();
               PsiElement expr = host.getParent();
+              ASTNode replacementNode = null;
+
               if (expr instanceof ErlangMaxExpression) {
                 if (ErlangPsiImplUtil.getExpressionPrecedence(expr.getParent()) > ErlangPsiImplUtil.getExpressionPrecedence(rightWithoutParentheses)) {
-                  expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses));
+                  replacementNode = expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses)).getNode();
                 } else {
-                  expr.replace(rightWithoutParentheses);
+                  replacementNode = expr.replace(rightWithoutParentheses).getNode();
                 }
+              } else if (expr instanceof ErlangFunExpression) {
+                replacementNode = host.replace(rightWithoutParentheses).getNode();
+              } else if (expr instanceof ErlangGenericFunctionCallExpression) {
+                replacementNode = substituteFunctionCall(project, host, rightWithoutParentheses).getNode();
               }
-              else if (expr instanceof ErlangFunExpression) {
-                host.replace(rightWithoutParentheses);
-              }
+
+              if (replacementNode != null) CodeEditUtil.markToReformat(replacementNode, true);
             }
 
             PsiElement comma = PsiTreeUtil.getNextSiblingOfType(assignment, LeafPsiElement.class);
             if (comma != null && comma.getNode().getElementType() == ErlangTypes.ERL_COMMA) {
               comma.delete();
             }
+
             assignment.delete();
           }
         });
       }
     }, "Inline variable", null);
   }
+
+  private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {
+    if (!(variableValue instanceof ErlangFunExpression)) return variable.replace(variableValue);
+
+    ErlangFunExpression funExpression = (ErlangFunExpression) variableValue;
+
+    if (null != funExpression.getFunClauses()) return variable.replace(variableValue);
+
+    ErlangFunctionWithArity functionWithArity = funExpression.getFunctionWithArity();
+    PsiElement function = functionWithArity != null ? functionWithArity.getQAtom() : null;
+
+    if (function == null) return variable; //the condition is always false
+
+    function = variable.replace(function);
+
+    PsiElement parent = function.getParent();
+    ErlangModuleRef moduleRef = funExpression.getModuleRef();
+    PsiElement module = moduleRef != null ? moduleRef.getQAtom() : null;
+    if (module == null) module = funExpression.getQVar();
+
+    if (module == null || parent == null) return function;
+
+    parent.addBefore(module, function);
+    parent.addBefore(ErlangElementFactory.createLeafFromText(project, ":"), function);
+
+    return parent;
+  }
+
 }

@@ -35,7 +35,6 @@ import com.intellij.refactoring.introduce.inplace.OccurrencesChooser;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import org.apache.velocity.util.StringUtils;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -390,7 +389,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
         return;
       }
       else if (element instanceof ErlangQAtom) {
-        myResult.append(StringUtils.capitalizeFirstLetter(element.getText()));
+        myResult.append(StringUtil.capitalize(element.getText()));
         return;
       }
       else if (element instanceof ErlangFunctionCallExpression) {
