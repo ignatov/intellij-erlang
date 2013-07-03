@@ -47,7 +47,6 @@ public class ErlangFormattingBlock extends AbstractBlock {
   public static final TokenSet BLOCKS_TOKEN_SET = TokenSet.create(
     ERL_CLAUSE_BODY,
     ERL_MACROS_BODY,
-    ERL_ARGUMENT_LIST,
     ERL_TUPLE_EXPRESSION,
     ERL_LIST_EXPRESSION,
     ERL_IF_CLAUSES,
@@ -216,15 +215,16 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
   @Nullable
   private static Indent getChildIndent(@Nullable IElementType type, int newChildIndex) {
-    if (
+      if (
       type == ERL_IF_EXPRESSION ||
       type == ERL_CASE_EXPRESSION ||
-      type == ERL_TRY_EXPRESSION ||
       type == ERL_BEGIN_END_EXPRESSION ||
       type == ERL_AFTER_CLAUSE ||
       type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
       type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||
       type == ERL_TRY_CATCH && newChildIndex == 1 ||
+      type == ERL_TRY_EXPRESSION && newChildIndex == 1 ||
+      type == ERL_TRY_EXPRESSION && newChildIndex == 3 ||
       type == ERL_SEMI) {
       return Indent.getNormalIndent(true);
     }
@@ -233,7 +233,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 
-    if (BLOCKS_TOKEN_SET.contains(type) || 
+    if (BLOCKS_TOKEN_SET.contains(type) ||
       type == ERL_TYPED_RECORD_FIELDS
       ) return Indent.getNormalIndent(false);
 

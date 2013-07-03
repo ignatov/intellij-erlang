@@ -17,6 +17,9 @@ public interface ErlangTryExpression extends ErlangExpression, ErlangClauseOwner
   ErlangTryExpressionsClause getTryExpressionsClause();
 
   @Nullable
+  PsiElement getEnd();
+
+  @Nullable
   PsiElement getOf();
 
   @NotNull

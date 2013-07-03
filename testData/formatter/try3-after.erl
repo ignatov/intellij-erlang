@@ -3,3 +3,4 @@ test() ->
     fail()
   catch
     <caret>
+  end

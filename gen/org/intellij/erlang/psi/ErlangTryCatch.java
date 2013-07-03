@@ -19,7 +19,4 @@ public interface ErlangTryCatch extends ErlangCompositeElement {
   @Nullable
   PsiElement getCatch();
 
-  @Nullable
-  PsiElement getEnd();
-
 }

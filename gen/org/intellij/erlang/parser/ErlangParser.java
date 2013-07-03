@@ -4214,7 +4214,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // catch try_clauses [after try_expressions_clause] end | after try_expressions_clause end
+  // catch try_clauses [after try_expressions_clause] | after try_expressions_clause
   public static boolean try_catch(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "try_catch")) return false;
     if (!nextTokenIs(builder_, ERL_AFTER) && !nextTokenIs(builder_, ERL_CATCH)
@@ -4227,7 +4227,7 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // catch try_clauses [after try_expressions_clause] end
+  // catch try_clauses [after try_expressions_clause]
   private static boolean try_catch_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "try_catch_0")) return false;
     boolean result_ = false;
@@ -4236,8 +4236,7 @@ public class ErlangParser implements PsiParser {
     result_ = consumeToken(builder_, ERL_CATCH);
     pinned_ = result_; // pin = catch|after
     result_ = result_ && report_error_(builder_, try_clauses(builder_, level_ + 1));
-    result_ = pinned_ && report_error_(builder_, try_catch_0_2(builder_, level_ + 1)) && result_;
-    result_ = pinned_ && consumeToken(builder_, ERL_END) && result_;
+    result_ = pinned_ && try_catch_0_2(builder_, level_ + 1) && result_;
     exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
   }
@@ -4262,7 +4261,7 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // after try_expressions_clause end
+  // after try_expressions_clause
   private static boolean try_catch_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "try_catch_1")) return false;
     boolean result_ = false;
@@ -4270,8 +4269,7 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = consumeToken(builder_, ERL_AFTER);
     pinned_ = result_; // pin = catch|after
-    result_ = result_ && report_error_(builder_, try_expressions_clause(builder_, level_ + 1));
-    result_ = pinned_ && consumeToken(builder_, ERL_END) && result_;
+    result_ = result_ && try_expressions_clause(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
   }
@@ -4342,7 +4340,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // try try_expressions_clause [of cr_clauses] try_catch
+  // try try_expressions_clause [of cr_clauses] try_catch end
   public static boolean try_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "try_expression")) return false;
     if (!nextTokenIs(builder_, ERL_TRY)) return false;
@@ -4353,7 +4351,8 @@ public class ErlangParser implements PsiParser {
     pinned_ = result_; // pin = 1
     result_ = result_ && report_error_(builder_, try_expressions_clause(builder_, level_ + 1));
     result_ = pinned_ && report_error_(builder_, try_expression_2(builder_, level_ + 1)) && result_;
-    result_ = pinned_ && try_catch(builder_, level_ + 1) && result_;
+    result_ = pinned_ && report_error_(builder_, try_catch(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_END) && result_;
     exit_section_(builder_, level_, marker_, ERL_TRY_EXPRESSION, result_, pinned_, null);
     return result_ || pinned_;
   }
@@ -4369,11 +4368,13 @@ public class ErlangParser implements PsiParser {
   private static boolean try_expression_2_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "try_expression_2_0")) return false;
     boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = consumeToken(builder_, ERL_OF);
+    pinned_ = result_; // pin = 1
     result_ = result_ && cr_clauses(builder_, level_ + 1);
-    exit_section_(builder_, marker_, null, result_);
-    return result_;
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */
