@@ -215,7 +215,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
   @Nullable
   private static Indent getChildIndent(@Nullable IElementType type, int newChildIndex) {
-      if (
+    if (
       type == ERL_IF_EXPRESSION ||
       type == ERL_CASE_EXPRESSION ||
       type == ERL_BEGIN_END_EXPRESSION ||
