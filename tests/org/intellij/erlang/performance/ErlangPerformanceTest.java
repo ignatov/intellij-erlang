@@ -51,5 +51,5 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
     }).cpuBound().usesAllCPUCores().assertTiming();
   }
 
-  public void testDialyzerDataflow() throws Exception { doTest(3000); }
+  public void testDialyzerDataflow() throws Exception { doTest(5000); }
 }
