@@ -62,7 +62,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.io.IOException;
 import java.util.*;
 
 public class ErlangPsiImplUtil {
@@ -693,7 +692,7 @@ public class ErlangPsiImplUtil {
             atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
           }
         }
-      } catch (IOException ignored) {
+      } catch (Exception ignored) {
       }
     }
     return o;
