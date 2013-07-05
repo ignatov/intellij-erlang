@@ -8,4 +8,4 @@ foo() -> #'msg_full_object'{ action = undefined }.
 foo2() -> #'2'{ action = undefined }.
 foo3() -> #a{ action = undefined }, #a{}, f().
 
-'f'() -> ok.
+<warning>'f'</warning>() -> ok.

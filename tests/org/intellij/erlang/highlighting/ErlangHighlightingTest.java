@@ -18,16 +18,23 @@ package org.intellij.erlang.highlighting;
 
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.inspection.*;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   protected void doTest() {
     myFixture.configureByFile(getTestName(false) + ".erl");
-    //noinspection unchecked
-    myFixture.enableInspections(
+    setUpInspections(myFixture);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public static void setUpInspections(@NotNull CodeInsightTestFixture fixture) {
+    //noinspection unchecked    
+    fixture.enableInspections(
       ErlangUnboundVariableInspection.class,
       ErlangUnresolvedRecordInspection.class,
       ErlangUnresolvedRecordFieldInspection.class,
@@ -41,7 +48,6 @@ public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtur
       ErlangIncorrectModuleNameInspection.class,
       ErlangIoFormatInspection.class
     );
-    myFixture.checkHighlighting(true, false, false);
   }
 
   @Override

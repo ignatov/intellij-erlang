@@ -91,18 +91,18 @@ private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom | bno
 private form ::=
     is_app_config config_expression
   | function
-  | rule
   | record_definition
   | include
   | macros_definition
   | type_definition
   | attribute
   | macros_call // macros support
+  | rule
 
 private is_app_config ::= &<<isApplicationLanguage>>
 private is_console ::= &<<isConsole>>
 
-q_atom ::= macros_arg | macros | atom
+q_atom ::= atom | macros_arg | macros
 q_var ::= '_' | var {
   methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
 }
@@ -455,7 +455,7 @@ private exprs ::= expression (exprs_tail)* {pin=2 recoverUntil=exprs_recover}
 private exprs_tail ::= ',' expression {pin=1 recoverUntil=exprs_recover}
 private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
-private atomic ::= char | integer | float | q_atom !'(' | string_literal+
+private atomic ::= q_atom !'(' | integer | string_literal+ | float | char 
 string_literal ::= string {
   implements = "com.intellij.psi.PsiLanguageInjectionHost"
   methods = [isValidHost updateText createLiteralTextEscaper]

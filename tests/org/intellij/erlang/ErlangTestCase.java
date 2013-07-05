@@ -31,6 +31,7 @@ import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
 import org.intellij.erlang.navigation.ErlangGotoSuperTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
+import org.intellij.erlang.performance.ErlangPerformanceTest;
 import org.intellij.erlang.quickfixes.*;
 import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
 import org.intellij.erlang.refactoring.ErlangInlineVariableTest;
@@ -74,6 +75,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangInlineVariableTest.class);
     suite.addTestSuite(ErlangGotoSuperTest.class);
     suite.addTestSuite(ErlangEnterHandlerTest.class);
+    suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }
 }

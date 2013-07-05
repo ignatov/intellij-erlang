@@ -50,27 +50,29 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
     if (psiElement instanceof ErlangFunction) return false;
     if (psiElement instanceof ErlangSpecification) return false;
+    if (!(psiElement instanceof ErlangQVar)) return true;
+    if (!psiElement.getText().equals(myRequestedName)) return true;
+    if (psiElement.equals(myOrigin)) return true;
+    
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
 
     Map<String, ErlangQVar> variableContext = psiElement.getContainingFile().getOriginalFile().getUserData(ERLANG_VARIABLE_CONTEXT);
     boolean isREPLConsole = variableContext != null;
-    if (!psiElement.equals(myOrigin) && psiElement instanceof ErlangQVar && psiElement.getText().equals(myRequestedName)) {
-      boolean inSpecification = PsiTreeUtil.isAncestor(spec, psiElement, false);
-      boolean inDefinition = inArgumentDefinition(psiElement);
-      boolean inFunctionClauseOrREPL = PsiTreeUtil.isAncestor(functionClause, psiElement, false) || isREPLConsole;
-      boolean inAssignment = inLeftPartOfAssignment(psiElement);
-      boolean inDefinitionOrAssignment = inDefinition || inAssignment;
-      boolean inFunctionOrREPL = inFunctionClauseOrREPL && inDefinitionOrAssignment;
-      if (inFunctionOrREPL || inModule(psiElement) || inSpecification) {
-        boolean inArgumentList = inArgumentList(psiElement);
-        //noinspection unchecked
-        boolean inArgumentListBeforeAssignment =
-          PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
-        if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
-        if (inDifferentCrClauses(psiElement)) return true;
-        myVarList.add((ErlangQVar) psiElement); // put all possible variables to list
-      }
+    boolean inSpecification = PsiTreeUtil.isAncestor(spec, psiElement, false);
+    boolean inDefinition = inArgumentDefinition(psiElement);
+    boolean inFunctionClauseOrREPL = PsiTreeUtil.isAncestor(functionClause, psiElement, false) || isREPLConsole;
+    boolean inAssignment = inLeftPartOfAssignment(psiElement);
+    boolean inDefinitionOrAssignment = inDefinition || inAssignment;
+    boolean inFunctionOrREPL = inFunctionClauseOrREPL && inDefinitionOrAssignment;
+    if (inFunctionOrREPL || inModule(psiElement) || inSpecification) {
+      boolean inArgumentList = inArgumentList(psiElement);
+      //noinspection unchecked
+      boolean inArgumentListBeforeAssignment =
+        PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
+      if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
+      if (inDifferentCrClauses(psiElement)) return true;
+      return !myVarList.add((ErlangQVar) psiElement); // put all possible variables to list
     }
 
     if (isREPLConsole) {

@@ -597,34 +597,34 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // char | integer | float | q_atom !'(' | string_literal+
+  // q_atom !'(' | integer | string_literal+ | float | char
   static boolean atomic(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "atomic")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
-    result_ = consumeToken(builder_, ERL_CHAR);
+    result_ = atomic_0(builder_, level_ + 1);
     if (!result_) result_ = consumeToken(builder_, ERL_INTEGER);
+    if (!result_) result_ = atomic_2(builder_, level_ + 1);
     if (!result_) result_ = consumeToken(builder_, ERL_FLOAT);
-    if (!result_) result_ = atomic_3(builder_, level_ + 1);
-    if (!result_) result_ = atomic_4(builder_, level_ + 1);
+    if (!result_) result_ = consumeToken(builder_, ERL_CHAR);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
 
   // q_atom !'('
-  private static boolean atomic_3(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atomic_3")) return false;
+  private static boolean atomic_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atomic_0")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
     result_ = q_atom(builder_, level_ + 1);
-    result_ = result_ && atomic_3_1(builder_, level_ + 1);
+    result_ = result_ && atomic_0_1(builder_, level_ + 1);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
 
   // !'('
-  private static boolean atomic_3_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atomic_3_1")) return false;
+  private static boolean atomic_0_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atomic_0_1")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NOT_, null);
     result_ = !consumeToken(builder_, ERL_PAR_LEFT);
@@ -633,8 +633,8 @@ public class ErlangParser implements PsiParser {
   }
 
   // string_literal+
-  private static boolean atomic_4(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atomic_4")) return false;
+  private static boolean atomic_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atomic_2")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
     result_ = string_literal(builder_, level_ + 1);
@@ -643,7 +643,7 @@ public class ErlangParser implements PsiParser {
       if (!string_literal(builder_, level_ + 1)) break;
       int next_offset_ = builder_.getCurrentOffset();
       if (offset_ == next_offset_) {
-        empty_element_parsed_guard_(builder_, offset_, "atomic_4");
+        empty_element_parsed_guard_(builder_, offset_, "atomic_2");
         break;
       }
       offset_ = next_offset_;
@@ -1879,26 +1879,26 @@ public class ErlangParser implements PsiParser {
   /* ********************************************************** */
   // is_app_config config_expression
   //   | function
-  //   | rule
   //   | record_definition
   //   | include
   //   | macros_definition
   //   | type_definition
   //   | attribute
-  //   | macros_call
+  //   | macros_call // macros support
+  //   | rule
   static boolean form(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "form")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
     result_ = form_0(builder_, level_ + 1);
     if (!result_) result_ = function(builder_, level_ + 1);
-    if (!result_) result_ = rule(builder_, level_ + 1);
     if (!result_) result_ = record_definition(builder_, level_ + 1);
     if (!result_) result_ = include(builder_, level_ + 1);
     if (!result_) result_ = macros_definition(builder_, level_ + 1);
     if (!result_) result_ = type_definition(builder_, level_ + 1);
     if (!result_) result_ = attribute(builder_, level_ + 1);
     if (!result_) result_ = macros_call(builder_, level_ + 1);
+    if (!result_) result_ = rule(builder_, level_ + 1);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
@@ -3467,16 +3467,16 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // macros_arg | macros | atom
+  // atom | macros_arg | macros
   public static boolean q_atom(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "q_atom")) return false;
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
         && replaceVariants(builder_, 2, "<q atom>")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<q atom>");
-    result_ = macros_arg(builder_, level_ + 1);
+    result_ = consumeToken(builder_, ERL_ATOM);
+    if (!result_) result_ = macros_arg(builder_, level_ + 1);
     if (!result_) result_ = macros(builder_, level_ + 1);
-    if (!result_) result_ = consumeToken(builder_, ERL_ATOM);
     exit_section_(builder_, level_, marker_, ERL_Q_ATOM, result_, false, null);
     return result_;
   }

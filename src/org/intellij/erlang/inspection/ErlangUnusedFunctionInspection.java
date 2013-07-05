@@ -19,7 +19,6 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Condition;
-import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -27,14 +26,14 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.Query;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -47,60 +46,28 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
     if (!(file instanceof ErlangFile)) return;
     if (file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension())) return;
     if (((ErlangFile) file).isExportedAll()) return;
-    final boolean isEunitImported = ErlangPsiImplUtil.isEunitImported((ErlangFile) file);
-    file.accept(new ErlangRecursiveVisitor() {
-      @Override
-      public void visitFunction(@NotNull final ErlangFunction function) {
-        String name = function.getName();
-        if (isEunitImported && (StringUtil.endsWith(name, "_test") || StringUtil.endsWith(name, "_test_"))) return;
-        final Ref<Object> usage = new Ref<Object>();
+    LocalSearchScope scope = new LocalSearchScope(file);
+    
+    boolean isEunitImported = ErlangPsiImplUtil.isEunitImported((ErlangFile) file);
+    for (final ErlangFunction function : ((ErlangFile) file).getFunctions()) {
+      String name = function.getName();
+      if (isEunitImported && (StringUtil.endsWith(name, "_test") || StringUtil.endsWith(name, "_test_"))) continue;
 
-        function.getContainingFile().accept(
-          new ErlangRecursiveVisitor() {
-            @Override
-            public void visitCompositeElement(@NotNull ErlangCompositeElement o) {
-              if (!usage.isNull()) return;
-              super.visitCompositeElement(o);
-            }
-
-            @Override
-            public void visitExportFunction(@NotNull ErlangExportFunction o) {
-              PsiReference reference = o.getReference();
-              if (reference != null && function.equals(reference.resolve())) {
-                usage.set(o);
-              }
-            }
-
-            @Override
-            public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-              PsiReference reference = o.getReference();
-              if (reference != null && function.equals(reference.resolve()) && !ErlangPsiImplUtil.isRecursiveCall(o, function)) {
-                usage.set(o);
-              }
-            }
-          });
-
-        if (usage.get() == null) {
-          Query<PsiReference> search = ReferencesSearch.search(function, new LocalSearchScope(function.getContainingFile()));
-
-          List<PsiReference> refs = ContainerUtil.filter(search.findAll(), new Condition<PsiReference>() { // filtered specs out
-            @Override
-            public boolean value(PsiReference psiReference) {
-              PsiElement element = psiReference.getElement();
-              return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !ErlangPsiImplUtil.isRecursiveCall(element, function);
-            }
-          });
-
-          if (ContainerUtil.getFirstItem(refs) == null) {
-            problemsHolder.registerProblem(function.getNameIdentifier(),
-              "Unused function " + "'" + name + "/" + function.getArity() + "'",
-              ProblemHighlightType.LIKE_UNUSED_SYMBOL,
-              new ErlangRemoveFunctionFix(),
-              new ErlangExportFunctionFix());
-          }
+      List<PsiReference> refs = ContainerUtil.filter(ReferencesSearch.search(function, scope).findAll(), new Condition<PsiReference>() { // filtered specs out
+        @Override
+        public boolean value(PsiReference psiReference) {
+          PsiElement element = psiReference.getElement();
+          return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !ErlangPsiImplUtil.isRecursiveCall(element, function);
         }
-      }
-    });
-  }
+      });
 
+      if (ContainerUtil.getFirstItem(refs) == null) {
+        problemsHolder.registerProblem(function.getNameIdentifier(),
+          "Unused function " + "'" + name + "/" + function.getArity() + "'",
+          ProblemHighlightType.LIKE_UNUSED_SYMBOL,
+          new ErlangRemoveFunctionFix(),
+          new ErlangExportFunctionFix());
+      }
+    }
+  }
 }

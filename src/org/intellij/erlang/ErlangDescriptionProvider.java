@@ -47,7 +47,6 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (o instanceof ErlangFunction) return "Function";
       if (o instanceof ErlangRecordDefinition) return "Record";
       if (o instanceof ErlangQVar) return "Variable";
-      if (o instanceof ErlangQAtom) return "Atom";
       if (o instanceof ErlangMacrosDefinition) return "Macros";
       if (o instanceof ErlangTypedExpr) return "Record field";
       if (o instanceof ErlangTypeDefinition) return "Type";
