@@ -24,14 +24,21 @@ import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtilCore;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
+import com.intellij.util.PathUtil;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.parser.ErlangLexer;
@@ -43,6 +50,8 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -94,6 +103,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
         PsiElement parent = position.getParent().getParent();
         PsiElement originalPosition = parameters.getOriginalPosition();
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
+
+        if (parent instanceof ErlangInclude && originalParent instanceof ErlangIncludeString &&
+            originalPosition instanceof LeafPsiElement && ErlangTypes.ERL_STRING == ((LeafPsiElement) originalPosition).getElementType()) {
+          String includeText = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, parameters.getOffset()).substring(file.getText());
+          result.addAllElements(getModulePathLookupElements(file, includeText));
+        }
 
         if (originalParent instanceof ErlangStringLiteral || originalPosition instanceof PsiComment) return;
 
@@ -160,6 +175,56 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
       }
     });
+  }
+
+  private static List<LookupElement> getModulePathLookupElements(PsiFile file, String includeText) {
+    VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
+    final VirtualFile parentFile = virtualFile != null ? virtualFile.getParent() : null;
+    List<LookupElement> result = new ArrayList<LookupElement>();
+
+    if (FileUtil.isAbsolute(includeText)) return result;
+
+    //search in this module's directory
+    if (parentFile != null) {
+      List<VirtualFile> virtualFiles = new ArrayList<VirtualFile>();
+      addMatchingFiles(parentFile, includeText, virtualFiles);
+      result.addAll(ContainerUtil.map(virtualFiles, new Function<VirtualFile, LookupElement>() {
+        @Override
+        public LookupElement fun(VirtualFile virtualFile) {
+          String slash = virtualFile.isDirectory() ? "/" : "";
+          Icon icon = virtualFile.isDirectory() ? ErlangIcons.MODULE : ErlangFileType.getIconForFile(virtualFile.getName());
+          return LookupElementBuilder.create(VfsUtilCore.getRelativePath(virtualFile, parentFile, '/') + slash)
+                                     .withPresentableText(virtualFile.getName() + slash)
+                                     .withIcon(icon);
+        }
+      }));
+    }
+
+    //TODO search in project scope (it does not conform language spec - do we need it?)
+
+    //TODO search in include directories
+
+    return result;
+  }
+
+  private static void addMatchingFiles(VirtualFile searchRoot, String includeText, List<VirtualFile> result) {
+    String[] split = includeText.split("/");
+
+    if (split.length != 0) {
+      int joinEndIndex = includeText.endsWith("/") ? split.length : split.length - 1;
+      String childPrefix = joinEndIndex == split.length ? "" : split[split.length - 1];
+      String directoryPath = PathUtil.getLocalPath(searchRoot) + "/" + StringUtil.join(split, 0, joinEndIndex, "/");
+      VirtualFile directory = LocalFileSystem.getInstance().findFileByPath(directoryPath);
+      VirtualFile[] children = directory != null ? directory.getChildren() : null;
+
+      if (children == null) return;
+
+      for (VirtualFile child : children) {
+        if (child.getName().startsWith(childPrefix)) {
+          result.add(child);
+        }
+      }
+    }
   }
 
   private static boolean prevIsRadix(@Nullable PsiElement psiElement) {

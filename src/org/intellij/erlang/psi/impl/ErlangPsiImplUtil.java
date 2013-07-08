@@ -1082,8 +1082,8 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean isEunitImported(ErlangFile file) {
-    List<ErlangInclude> includes = file.getIncludes();
-    for (ErlangInclude include : includes) {
+    List<ErlangIncludeLib> includes = file.getIncludeLibs();
+    for (ErlangIncludeLib include : includes) {
       ErlangIncludeString string = include.getIncludeString();
       if (string != null) {
         String includeFilePath = StringUtil.unquoteString(string.getText());

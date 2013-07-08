@@ -207,6 +207,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_INCLUDE) {
       result_ = include(builder_, level_ + 1);
     }
+    else if (root_ == ERL_INCLUDE_LIB) {
+      result_ = include_lib(builder_, level_ + 1);
+    }
     else if (root_ == ERL_INCLUDE_STRING) {
       result_ = include_string(builder_, level_ + 1);
     }
@@ -1880,6 +1883,7 @@ public class ErlangParser implements PsiParser {
   // is_app_config config_expression
   //   | function
   //   | record_definition
+  //   | include_lib
   //   | include
   //   | macros_definition
   //   | type_definition
@@ -1893,6 +1897,7 @@ public class ErlangParser implements PsiParser {
     result_ = form_0(builder_, level_ + 1);
     if (!result_) result_ = function(builder_, level_ + 1);
     if (!result_) result_ = record_definition(builder_, level_ + 1);
+    if (!result_) result_ = include_lib(builder_, level_ + 1);
     if (!result_) result_ = include(builder_, level_ + 1);
     if (!result_) result_ = macros_definition(builder_, level_ + 1);
     if (!result_) result_ = type_definition(builder_, level_ + 1);
@@ -2690,7 +2695,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '-' ('include' | 'include_lib') '(' include_string ')'
+  // '-' 'include' '(' include_string ')'
   public static boolean include(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "include")) return false;
     if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
@@ -2698,7 +2703,7 @@ public class ErlangParser implements PsiParser {
     boolean pinned_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = consumeToken(builder_, ERL_OP_MINUS);
-    result_ = result_ && include_1(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, "include");
     pinned_ = result_; // pin = 2
     result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
     result_ = pinned_ && report_error_(builder_, include_string(builder_, level_ + 1)) && result_;
@@ -2707,15 +2712,22 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // 'include' | 'include_lib'
-  private static boolean include_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "include_1")) return false;
+  /* ********************************************************** */
+  // '-' 'include_lib' '(' include_string ')'
+  public static boolean include_lib(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "include_lib")) return false;
+    if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
     boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
-    result_ = consumeToken(builder_, "include");
-    if (!result_) result_ = consumeToken(builder_, "include_lib");
-    exit_section_(builder_, marker_, null, result_);
-    return result_;
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
+    result_ = consumeToken(builder_, ERL_OP_MINUS);
+    result_ = result_ && consumeToken(builder_, "include_lib");
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, include_string(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    exit_section_(builder_, level_, marker_, ERL_INCLUDE_LIB, result_, pinned_, null);
+    return result_ || pinned_;
   }
 
   /* ********************************************************** */
