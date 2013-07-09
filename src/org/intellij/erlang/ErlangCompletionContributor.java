@@ -111,7 +111,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
           String includeText = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, parameters.getOffset()).substring(file.getText());
           if (parent instanceof ErlangInclude) {
             result.addAllElements(getModulePathLookupElements(file, includeText));
-          } else if (parent instanceof ErlangIncludeLib) {
+          }
+          else if (parent instanceof ErlangIncludeLib) {
             result.addAllElements(getLibPathLookupElements(file, includeText));
           }
         }
@@ -193,13 +194,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
       String appName = split[0];
       String slash = includeText.endsWith("/") ? "/" : "";
       String libRelativePath = split.length > 1 ? StringUtil.join(split, 1, split.length, "/") + slash: "";
-      List<String> appPaths = split.length == 1 && libRelativePath.isEmpty() ?
-        ErlangApplicationIndex.getAllApplicationPaths(file.getProject(), GlobalSearchScope.allScope(file.getProject())) :
-        ErlangApplicationIndex.getApplicationPathsByName(appName, GlobalSearchScope.allScope(file.getProject()));
+      List<VirtualFile> appDirs = split.length == 1 && libRelativePath.isEmpty() ?
+        ErlangApplicationIndex.getAllApplicationDirectories(file.getProject(), GlobalSearchScope.allScope(file.getProject())) :
+        ErlangApplicationIndex.getApplicationDirectoriesByName(appName, GlobalSearchScope.allScope(file.getProject()));
       List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
 
-      for (String appPath : appPaths) {
-        final VirtualFile appRoot = LocalFileSystem.getInstance().findFileByPath(appPath);
+      for (final VirtualFile appRoot : appDirs) {
         final String appFullName = appRoot != null ? appRoot.getName() : null;
         final String appShortName = appFullName != null ? getAppShortName(appFullName) : null;
 
@@ -249,8 +249,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
       }));
     }
-
-    //TODO search in project scope (it does not conform language spec - do we need it?)
 
     //TODO search in include directories
 

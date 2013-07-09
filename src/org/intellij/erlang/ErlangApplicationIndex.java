@@ -20,8 +20,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Processor;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.*;
-import com.intellij.util.io.DataExternalizer;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
 import org.jetbrains.annotations.NotNull;
@@ -35,33 +35,28 @@ import java.util.Map;
 /**
  * @author savenko
  */
-public class ErlangApplicationIndex extends FileBasedIndexExtension<String, String> {
-  public static final ID<String, String> ERLANG_APPLICAION_INDEX = ID.create("ErlangApplicationIndex");
+public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
+  public static final ID<String, Void> ERLANG_APPLICAION_INDEX = ID.create("ErlangApplicationIndex");
 
   private static final FileBasedIndex.InputFilter INPUT_FILTER = new ErlangApplicationInputFilter();
   private static final int INDEX_VERSION = 0;
   private static final KeyDescriptor<String> KEY_DESCRIPTOR = new EnumeratorStringDescriptor();
-  private static final DataIndexer<String, String, FileContent> DATA_INDEXER = new ErlangApplicationDataIndexer();
+  private static final DataIndexer<String, Void, FileContent> DATA_INDEXER = new ErlangApplicationDataIndexer();
 
   @NotNull
   @Override
-  public ID<String, String> getName() {
+  public ID<String, Void> getName() {
     return ERLANG_APPLICAION_INDEX;
   }
 
   @NotNull
   @Override
-  public DataIndexer<String, String, FileContent> getIndexer() {
+  public DataIndexer<String, Void, FileContent> getIndexer() {
     return DATA_INDEXER;
   }
 
   @Override
   public KeyDescriptor<String> getKeyDescriptor() {
-    return KEY_DESCRIPTOR;
-  }
-
-  @Override
-  public DataExternalizer<String> getValueExternalizer() {
     return KEY_DESCRIPTOR;
   }
 
@@ -81,28 +76,55 @@ public class ErlangApplicationIndex extends FileBasedIndexExtension<String, Stri
   }
 
   @NotNull
-  public static List<String> getApplicationPathsByName(@NotNull String appName, @NotNull GlobalSearchScope searchScope) {
-    return FileBasedIndex.getInstance().getValues(ERLANG_APPLICAION_INDEX, appName, searchScope);
+  public static List<VirtualFile> getApplicationDirectoriesByName(@NotNull String appName, @NotNull GlobalSearchScope searchScope) {
+    ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
+
+    FileBasedIndex.getInstance().processValues(ERLANG_APPLICAION_INDEX, appName, null, new ApplicationPathExtractingProcessor(result), searchScope);
+
+    return result;
   }
 
-  public static List<String> getAllApplicationPaths(@NotNull final Project project, @NotNull final GlobalSearchScope searchScope) {
-    final ArrayList<String> result = new ArrayList<String>();
+  public static List<VirtualFile> getAllApplicationDirectories(@NotNull Project project, @NotNull final GlobalSearchScope searchScope) {
+    ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
+    final FileBasedIndex index = FileBasedIndex.getInstance();
+    final ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor(result);
 
-    FileBasedIndex.getInstance().processAllKeys(ERLANG_APPLICAION_INDEX, new Processor<String>() {
+    index.processAllKeys(ERLANG_APPLICAION_INDEX, new Processor<String>() {
       @Override
-      public boolean process(String s) {
-        FileBasedIndex.getInstance().processValues(ERLANG_APPLICAION_INDEX, s, null, new FileBasedIndex.ValueProcessor<String>() {
-          @Override
-          public boolean process(VirtualFile file, String value) {
-            result.add(value);
-            return true;
-          }
-        }, searchScope);
+      public boolean process(String appName) {
+        index.processValues(ERLANG_APPLICAION_INDEX, appName, null, processor, searchScope);
         return true;
       }
     }, project);
 
     return result;
+  }
+
+  @Nullable
+  private static VirtualFile getLibraryDirectory(VirtualFile appFile) {
+    String libName = appFile.getNameWithoutExtension();
+    VirtualFile parent = appFile.getParent();
+    VirtualFile libDir = parent != null ? parent.getParent() : null;
+    String libDirName = libDir != null ? libDir.getName() : null;
+
+    if (parent == null || !"ebin".equals(parent.getName())) return null;
+    if (libDirName == null || !(libDirName.length() == libName.length() ? libDirName.equals(libName) : libDirName.startsWith(libName + "-"))) return null;
+
+    return libDir;
+  }
+
+  private static class ApplicationPathExtractingProcessor implements FileBasedIndex.ValueProcessor<Void> {
+    private List<VirtualFile> myPaths;
+
+    public ApplicationPathExtractingProcessor(List<VirtualFile> paths) {
+      myPaths = paths;
+    }
+
+    @Override
+    public boolean process(VirtualFile appFile, Void value) {
+      ContainerUtil.addIfNotNull(myPaths, getLibraryDirectory(appFile));
+      return true;
+    }
   }
 
   private static class ErlangApplicationInputFilter implements FileBasedIndex.InputFilter {
@@ -112,26 +134,11 @@ public class ErlangApplicationIndex extends FileBasedIndexExtension<String, Stri
     }
   }
 
-  private static class ErlangApplicationDataIndexer implements DataIndexer<String, String, FileContent> {
+  private static class ErlangApplicationDataIndexer implements DataIndexer<String, Void, FileContent> {
     @NotNull
     @Override
-    public Map<String, String> map(FileContent inputData) {
-      String libDirPath = getLibraryDirectoryPath(inputData.getFile());
-
-      return libDirPath == null ? Collections.<String, String>emptyMap() : Collections.singletonMap(inputData.getFile().getNameWithoutExtension(), libDirPath);
-    }
-
-    @Nullable
-    private static String getLibraryDirectoryPath(VirtualFile appFile) {
-      String libName = appFile.getNameWithoutExtension();
-      VirtualFile parent = appFile.getParent();
-      VirtualFile libDir = parent != null ? parent.getParent() : null;
-      String libDirName = libDir != null ? libDir.getName() : null;
-
-      if (parent == null || !"ebin".equals(parent.getName())) return null;
-      if (libDirName == null || !(libDirName.length() == libName.length() ? libDirName.equals(libName) : libDirName.startsWith(libName + "-"))) return null;
-
-      return libDir.getPath();
+    public Map<String, Void> map(FileContent inputData) {
+      return Collections.singletonMap(inputData.getFile().getNameWithoutExtension(), null);
     }
   }
 }
