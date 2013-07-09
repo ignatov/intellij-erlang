@@ -38,10 +38,10 @@ public class ErlangConsoleCommandLineState extends CommandLineState {
                                        @NotNull ExecutionEnvironment env) {
     super(env);
     myConfig = config;
-    final TextConsoleBuilder consoleBuilder = new TextConsoleBuilderImpl(myConfig.getProject()) {
+    TextConsoleBuilder consoleBuilder = new TextConsoleBuilderImpl(myConfig.getProject()) {
       @Override
       public ConsoleView getConsole() {
-        final ErlangConsoleView consoleView = new ErlangConsoleView(myConfig.getProject());
+        ErlangConsoleView consoleView = new ErlangConsoleView(myConfig.getProject());
         ErlangConsoleUtil.attachFilters(myConfig.getProject(), consoleView);
         return consoleView;
       }
@@ -52,16 +52,15 @@ public class ErlangConsoleCommandLineState extends CommandLineState {
   @NotNull
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
-    final Project project = myConfig.getProject();
-    final Module module = myConfig.getConfigurationModule().getModule();
-    final GeneralCommandLine commandLine = new GeneralCommandLine();
+    Project project = myConfig.getProject();
+    Module module = myConfig.getConfigurationModule().getModule();
+    GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setExePath(ErlangConsoleUtil.getErlPath(project, module));
-    final String consoleArgs = myConfig.getConsoleArgs();
+    String consoleArgs = myConfig.getConsoleArgs();
     commandLine.addParameters(StringUtil.split(consoleArgs, " "));
     commandLine.addParameters(ErlangConsoleUtil.getCodePath(project, module));
     commandLine.setWorkDirectory(ErlangConsoleUtil.getWorkingDirPath(project, myConfig.getWorkingDirPath()));
-    final OSProcessHandler handler = new OSProcessHandler(
-      commandLine.createProcess(), commandLine.getCommandLineString());
+    OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
     ProcessTerminatedListener.attach(handler);
     return handler;
   }
