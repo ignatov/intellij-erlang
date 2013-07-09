@@ -254,6 +254,7 @@
 
         <fileBasedIndex implementation="org.intellij.erlang.ErlangSymbolIndex"/>
         <fileBasedIndex implementation="org.intellij.erlang.ErlangModuleIndex"/>
+        <fileBasedIndex implementation="org.intellij.erlang.ErlangApplicationIndex"/>
 
         <gotoSymbolContributor implementation="org.intellij.erlang.go.ErlangSymbolContributor"/>
 

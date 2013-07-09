@@ -35,6 +35,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
@@ -53,6 +54,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
@@ -104,10 +106,14 @@ public class ErlangCompletionContributor extends CompletionContributor {
         PsiElement originalPosition = parameters.getOriginalPosition();
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
 
-        if (parent instanceof ErlangInclude && originalParent instanceof ErlangIncludeString &&
-            originalPosition instanceof LeafPsiElement && ErlangTypes.ERL_STRING == ((LeafPsiElement) originalPosition).getElementType()) {
+        if (originalParent instanceof ErlangIncludeString && originalPosition instanceof LeafPsiElement &&
+            ErlangTypes.ERL_STRING == ((LeafPsiElement) originalPosition).getElementType()) {
           String includeText = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, parameters.getOffset()).substring(file.getText());
-          result.addAllElements(getModulePathLookupElements(file, includeText));
+          if (parent instanceof ErlangInclude) {
+            result.addAllElements(getModulePathLookupElements(file, includeText));
+          } else if (parent instanceof ErlangIncludeLib) {
+            result.addAllElements(getLibPathLookupElements(file, includeText));
+          }
         }
 
         if (originalParent instanceof ErlangStringLiteral || originalPosition instanceof PsiComment) return;
@@ -177,6 +183,54 @@ public class ErlangCompletionContributor extends CompletionContributor {
     });
   }
 
+  private static List<LookupElement> getLibPathLookupElements(PsiFile file, String includeText) {
+    if (FileUtil.isAbsolute(includeText)) return Collections.emptyList();
+
+    List<LookupElement> result = new ArrayList<LookupElement>();
+    String[] split = includeText.split("/");
+
+    if (split.length != 0) {
+      String appName = split[0];
+      String slash = includeText.endsWith("/") ? "/" : "";
+      String libRelativePath = split.length > 1 ? StringUtil.join(split, 1, split.length, "/") + slash: "";
+      List<String> appPaths = split.length == 1 && libRelativePath.isEmpty() ?
+        ErlangApplicationIndex.getAllApplicationPaths(file.getProject(), GlobalSearchScope.allScope(file.getProject())) :
+        ErlangApplicationIndex.getApplicationPathsByName(appName, GlobalSearchScope.allScope(file.getProject()));
+      List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
+
+      for (String appPath : appPaths) {
+        final VirtualFile appRoot = LocalFileSystem.getInstance().findFileByPath(appPath);
+        final String appFullName = appRoot != null ? appRoot.getName() : null;
+        final String appShortName = appFullName != null ? getAppShortName(appFullName) : null;
+
+        if (appRoot == null) continue;
+
+        if (split.length == 1 && !includeText.endsWith("/")) {
+          result.add(getDefaultPathLookupElementBuilder(appRoot, appRoot, appShortName)
+            .withPresentableText(appShortName + "/")
+            .withTypeText("in " + appFullName, true));
+          continue;
+        }
+
+        addMatchingFiles(appRoot, libRelativePath, matchingFiles);
+        result.addAll(ContainerUtil.map(matchingFiles, new Function<VirtualFile, LookupElement>() {
+          @Override
+          public LookupElement fun(VirtualFile f) {
+            return getDefaultPathLookupElementBuilder(f, appRoot, appShortName).withTypeText("in " + appFullName, true);
+          }
+        }));
+        matchingFiles.clear();
+      }
+    }
+
+    return result;
+  }
+
+  private static String getAppShortName(String appFullName) {
+    int dashIdx = appFullName.indexOf('-');
+    return dashIdx != -1 ? appFullName.substring(0, dashIdx) : appFullName;
+  }
+
   private static List<LookupElement> getModulePathLookupElements(PsiFile file, String includeText) {
     VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
     final VirtualFile parentFile = virtualFile != null ? virtualFile.getParent() : null;
@@ -191,11 +245,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       result.addAll(ContainerUtil.map(virtualFiles, new Function<VirtualFile, LookupElement>() {
         @Override
         public LookupElement fun(VirtualFile virtualFile) {
-          String slash = virtualFile.isDirectory() ? "/" : "";
-          Icon icon = virtualFile.isDirectory() ? ErlangIcons.MODULE : ErlangFileType.getIconForFile(virtualFile.getName());
-          return LookupElementBuilder.create(VfsUtilCore.getRelativePath(virtualFile, parentFile, '/') + slash)
-                                     .withPresentableText(virtualFile.getName() + slash)
-                                     .withIcon(icon);
+          return getDefaultPathLookupElementBuilder(virtualFile, parentFile, null);
         }
       }));
     }
@@ -205,6 +255,19 @@ public class ErlangCompletionContributor extends CompletionContributor {
     //TODO search in include directories
 
     return result;
+  }
+
+  private static LookupElementBuilder getDefaultPathLookupElementBuilder(VirtualFile lookedUpFile, VirtualFile lookUpRoot, @Nullable String appName) {
+    String slash = lookedUpFile.isDirectory() ? "/" : "";
+    Icon icon = lookedUpFile.isDirectory() ? ErlangIcons.MODULE : ErlangFileType.getIconForFile(lookedUpFile.getName());
+    String relativePath = VfsUtilCore.getRelativePath(lookedUpFile, lookUpRoot, '/') + slash;
+    if (appName != null)
+      relativePath = appName + (relativePath.startsWith("/") ? "" : "/") + relativePath;
+
+    return LookupElementBuilder.create(relativePath)
+                               .withPresentableText(lookedUpFile.getName() + slash)
+                               .withIcon(icon)
+                               .withInsertHandler(new RunCompletionInsertHandler());
   }
 
   private static void addMatchingFiles(VirtualFile searchRoot, String includeText, List<VirtualFile> result) {
@@ -220,7 +283,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
       if (children == null) return;
 
       for (VirtualFile child : children) {
-        if (child.getName().startsWith(childPrefix)) {
+        ErlangFileType childType = ErlangFileType.getFileType(child.getName());
+        if (child.getName().startsWith(childPrefix) &&
+            (child.isDirectory() || childType == ErlangFileType.HEADER || childType == ErlangFileType.MODULE)) {
           result.add(child);
         }
       }
@@ -265,5 +330,18 @@ public class ErlangCompletionContributor extends CompletionContributor {
     file.putUserData(GeneratedParserUtilBase.COMPLETION_STATE_KEY, state);
     TreeUtil.ensureParsed(file.getNode());
     return state.items;
+  }
+
+  private static class RunCompletionInsertHandler implements InsertHandler<LookupElement> {
+    @Override
+    public void handleInsert(final InsertionContext context, LookupElement item) {
+      if (item.getLookupString().endsWith("/"))
+        context.setLaterRunnable(new Runnable() {
+          @Override
+          public void run() {
+            new CodeCompletionHandlerBase(CompletionType.BASIC).invokeCompletion(context.getProject(), context.getEditor());
+          }
+        });
+    }
   }
 }

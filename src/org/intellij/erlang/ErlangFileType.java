@@ -140,12 +140,18 @@ public class ErlangFileType extends LanguageFileType {
   }
 
   @Nullable
-  public static Icon getIconForFile(String filename) {
+  public static ErlangFileType getFileType(String filename) {
     if (filename == null) return null;
-    if (filename.endsWith(MODULE.getDefaultExtension())) return MODULE.getIcon();
-    if (filename.endsWith(HEADER.getDefaultExtension())) return HEADER.getIcon();
-    if (filename.endsWith(APP.getDefaultExtension())) return APP.getIcon();
-    if (filename.endsWith(TERMS.getDefaultExtension())) return TERMS.getIcon();
+    if (filename.endsWith(MODULE.getDefaultExtension())) return MODULE;
+    if (filename.endsWith(HEADER.getDefaultExtension())) return HEADER;
+    if (filename.endsWith(APP.getDefaultExtension())) return APP;
+    if (filename.endsWith(TERMS.getDefaultExtension())) return TERMS;
     return null;
+  }
+
+  @Nullable
+  public static Icon getIconForFile(String filename) {
+    ErlangFileType fileType = getFileType(filename);
+    return fileType == null ? null : fileType.getIcon();
   }
 }
