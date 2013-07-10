@@ -40,6 +40,8 @@ public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtur
       ErlangUnresolvedRecordFieldInspection.class,
       ErlangUnresolvedExportFunctionInspection.class,
       ErlangHeadMismatchInspection.class,
+      ErlangUnresolvedIncludeInspection.class,
+      ErlangUnresolvedIncludeLibInspection.class,
 
       ErlangUnresolvedFunctionInspection.class,
       ErlangUnusedVariableInspection.class,
@@ -113,6 +115,8 @@ public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtur
   public void testLager()             { doTest(); }
   public void test202()               { doTest(); }
   public void test221()               { doTest(); }
+  public void testInclude()           { doTest(); }
+  public void testIncludeLib()        { doTest(); }
 
   public void testUnresolvedMacros()  {
     //noinspection unchecked
