@@ -78,9 +78,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   @NotNull
   public static List<VirtualFile> getApplicationDirectoriesByName(@NotNull String appName, @NotNull GlobalSearchScope searchScope) {
     ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
-
     FileBasedIndex.getInstance().processValues(ERLANG_APPLICAION_INDEX, appName, null, new ApplicationPathExtractingProcessor(result), searchScope);
-
     return result;
   }
 
@@ -107,10 +105,9 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     VirtualFile libDir = parent != null ? parent.getParent() : null;
     String libDirName = libDir != null ? libDir.getName() : null;
 
-    if (parent == null || !"ebin".equals(parent.getName())) return null;
-    if (libDirName == null || !(libDirName.length() == libName.length() ? libDirName.equals(libName) : libDirName.startsWith(libName + "-"))) return null;
-
-    return libDir;
+    if (parent == null || !"ebin".equals(parent.getName()) || libDirName == null) return null;
+    if (libDirName.equals(libName) || libDirName.startsWith(libName + "-")) return libDir;
+    return null;
   }
 
   private static class ApplicationPathExtractingProcessor implements FileBasedIndex.ValueProcessor<Void> {

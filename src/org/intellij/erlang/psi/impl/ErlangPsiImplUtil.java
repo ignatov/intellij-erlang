@@ -315,16 +315,18 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangTypeRef o) {
-    ErlangQAtom atom = o.getQAtom();
+    return getModuleReference(o, o.getQAtom());
+  }
+
+  @NotNull
+  private static PsiReference getModuleReference(ErlangCompositeElement o, ErlangQAtom atom) {
     ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
     return new ErlangTypeReferenceImpl<ErlangQAtom>(atom, moduleRef, TextRange.from(0, atom.getTextLength()), atom.getText());
   }
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangExportType o) {
-    ErlangQAtom atom = o.getQAtom();
-    ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
-    return new ErlangTypeReferenceImpl<ErlangQAtom>(atom, moduleRef, TextRange.from(0, atom.getTextLength()), atom.getText());
+    return getModuleReference(o, o.getQAtom());
   }
 
   @SuppressWarnings("unchecked")
@@ -1087,7 +1089,7 @@ public class ErlangPsiImplUtil {
       ErlangIncludeString string = include.getIncludeString();
       if (string != null) {
         String includeFilePath = StringUtil.unquoteString(string.getText());
-        return StringUtil.equals(includeFilePath, "eunit/include/eunit.hrl") || StringUtil.equals(includeFilePath, "eunit.hrl");
+        return StringUtil.equals(includeFilePath, "eunit/include/eunit.hrl");
       }
     }
     return false;
