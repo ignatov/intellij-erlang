@@ -84,6 +84,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   private CachedValue<List<ErlangAttribute>> myAttributeValue;
   private CachedValue<List<ErlangRecordDefinition>> myRecordValue;
   private CachedValue<List<ErlangInclude>> myIncludeValue;
+  private CachedValue<List<ErlangIncludeLib>> myIncludeLibValue;
   private CachedValue<MultiMap<String, ErlangFunction>> myFunctionsMap;
   private CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap;
   private CachedValue<List<ErlangMacrosDefinition>> myMacrosValue;
@@ -453,6 +454,20 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return myIncludeValue.getValue();
   }
 
+  @NotNull
+  @Override
+  public List<ErlangIncludeLib> getIncludeLibs() {
+    if (myIncludeLibValue == null) {
+      myIncludeLibValue = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangIncludeLib>>() {
+        @Override
+        public Result<List<ErlangIncludeLib>> compute() {
+          return Result.create(calcIncludeLibs(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myIncludeLibValue.getValue();
+  }
+
   private List<ErlangInclude> calcIncludes() {
     final List<ErlangInclude> result = new ArrayList<ErlangInclude>();
     processChildrenDummyAware(this, new Processor<PsiElement>() {
@@ -460,6 +475,20 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       public boolean process(PsiElement psiElement) {
         if (psiElement instanceof ErlangInclude) {
           result.add((ErlangInclude) psiElement);
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
+  private List<ErlangIncludeLib> calcIncludeLibs() {
+    final List<ErlangIncludeLib> result = new ArrayList<ErlangIncludeLib>();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement psiElement) {
+        if (psiElement instanceof ErlangIncludeLib) {
+          result.add((ErlangIncludeLib) psiElement);
         }
         return true;
       }

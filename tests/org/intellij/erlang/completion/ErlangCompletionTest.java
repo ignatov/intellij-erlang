@@ -18,7 +18,12 @@ package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.psi.impl.source.tree.injected.InjectedLanguageManagerImpl;
 import com.intellij.testFramework.UsefulTestCase;
+import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
+import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
+import com.intellij.testFramework.fixtures.TestFixtureBuilder;
+import com.intellij.testFramework.fixtures.impl.TempDirTestFixtureImpl;
 import com.intellij.util.ArrayUtilRt;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -35,6 +40,11 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
   private enum CheckType { EQUALS, INCLUDES, EXCLUDES }
 
   @Override
+  protected void setUp() throws Exception {
+    System.setProperty("idea.platform.prefix", "Idea");
+    super.setUp();
+  }
+
   protected String getTestDataPath() {
     return "testData/completion/";
   }
@@ -133,9 +143,14 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo"); // means "bar/1", "bar/0", "foo/1", "foo/0"
   }
 
+  public void testModuleCompletion() throws Throwable {
+    myFixture.configureByFiles("module-completion/use_module.erl", "module-completion/test_module.erl");
+    doTestVariantsInner(CompletionType.BASIC, 2, CheckType.INCLUDES, "test_module");
+  }
+
   public void test176() throws Throwable {
-    myFixture.configureByFiles("headers/header.hrl");
-    myFixture.configureByFile("headers/a.erl");
+    myFixture.configureByFiles("headers/a.erl", "headers/header.hrl");
+
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "foo");
   }
 
@@ -162,6 +177,31 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void testNoCompletionInComments() throws Throwable {
     doTestVariants("% <caret>", CompletionType.BASIC, 1, CheckType.EQUALS);
+  }
+
+  private void localFileSystemSetUp() throws Exception {
+    IdeaTestFixtureFactory factory = IdeaTestFixtureFactory.getFixtureFactory();
+    TestFixtureBuilder<IdeaProjectTestFixture> fixtureBuilder = factory.createLightFixtureBuilder(getProjectDescriptor());
+
+    final IdeaProjectTestFixture fixture = fixtureBuilder.getFixture();
+    myFixture = IdeaTestFixtureFactory.getFixtureFactory().createCodeInsightFixture(fixture, new TempDirTestFixtureImpl());
+
+    InjectedLanguageManagerImpl.checkInjectorsAreDisposed(getProject());
+    myFixture.setUp();
+    myFixture.setTestDataPath(getTestDataPath());
+    myModule = myFixture.getModule();
+  }
+
+  public void testIncludeCompletion() throws Throwable {
+    localFileSystemSetUp();
+    myFixture.configureByFiles("include/includeCompletion.erl", "include/include/header.hrl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "include/");
+  }
+
+  public void testIncludeLibCompletion() throws Throwable {
+    myFixture.configureByFiles("include-lib/includeLib.erl", "include-lib/testapp/ebin/testapp.app");
+    myFixture.complete(CompletionType.BASIC);
+    myFixture.checkResultByFile("include-lib/includeLib-after.erl");
   }
 
   private void doTestInclude(String txt, String... variants) throws Throwable {

@@ -34,7 +34,7 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.formatter.FormatterUtil;
@@ -49,7 +49,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.PathUtil;
+import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
@@ -213,11 +213,12 @@ public class ErlangPsiImplUtil {
   @Nullable
   public static PsiReference getReference(@NotNull final ErlangIncludeString o) {
     final PsiElement parent = o.getParent();
-    if (o.getTextLength() >= 2 && parent instanceof ErlangInclude) {
+    if (o.getTextLength() >= 2) {
       return new PsiReferenceBase<PsiElement>(o, TextRange.from(1, o.getTextLength() - 2)) {
         @Override
         public PsiElement resolve() {
-          return ContainerUtil.getFirstItem(filesFromInclude((ErlangInclude) parent));
+          List<ErlangFile> files = parent instanceof ErlangInclude ? filesFromInclude((ErlangInclude) parent) : filesFromIncludeLib((ErlangIncludeLib) parent);
+          return ContainerUtil.getFirstItem(files);
         }
 
         @Override
@@ -780,6 +781,36 @@ public class ErlangPsiImplUtil {
     return filesFromIncludeInner(include, new HashSet<ErlangFile>());
   }
 
+  private static List<ErlangFile> filesFromIncludeLib(ErlangIncludeLib includeLib) {
+    PsiElement string = includeLib.getIncludeString();
+    String[] split = string != null ? StringUtil.unquoteString(string.getText()).split("/") : null;
+
+    if (split != null && split.length >= 2) {
+      String libName = split[0];
+      final String relativePath = StringUtil.join(split, 1, split.length, "/");
+      final Project project = includeLib.getProject();
+      List<VirtualFile> appDirs = ErlangApplicationIndex.getApplicationDirectoriesByName(libName, GlobalSearchScope.allScope(project));
+      final List<ErlangFile> erlangFiles = new ArrayList<ErlangFile>(appDirs.size());
+
+      ContainerUtil.process(appDirs, new Processor<VirtualFile>() {
+        @Override
+        public boolean process(VirtualFile appDir) {
+          VirtualFile file = VfsUtil.findRelativeFile(relativePath, appDir);
+          if (file != null) {
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+            if (psiFile instanceof ErlangFile)
+              erlangFiles.add((ErlangFile) psiFile);
+          }
+          return true;
+        }
+      });
+
+      return erlangFiles;
+    }
+
+    return Collections.emptyList();
+  }
+
   @NotNull
   private static List<ErlangFile> filesFromIncludeInner(@NotNull ErlangInclude include, Set<ErlangFile> alreadyAdded) {
     PsiElement string = include.getIncludeString();
@@ -788,16 +819,16 @@ public class ErlangPsiImplUtil {
     if (string != null) {
       String includeFilePath = string.getText().replaceAll("\"", "");
       List<ErlangFile> result = new ArrayList<ErlangFile>();
-      List<ErlangFile> concat = ContainerUtil.concat(justAppend(containingFile, includeFilePath), findByWildCard(containingFile, includeFilePath));
+      List<ErlangFile> justAppend = justAppend(containingFile, includeFilePath);
       int beforeSize = alreadyAdded.size();
-      for (ErlangFile erlangFile : concat) {
+      for (ErlangFile erlangFile : justAppend) {
         if (!alreadyAdded.contains(erlangFile)) {
           result.add(erlangFile);
           alreadyAdded.add(erlangFile);
         }
       }
       if (beforeSize == alreadyAdded.size()) return result;
-      for (ErlangFile erlangFile : concat) {
+      for (ErlangFile erlangFile : justAppend) {
         for (ErlangInclude i : erlangFile.getIncludes()) {
           List<ErlangFile> erlangFiles = filesFromIncludeInner(i, alreadyAdded);
           result.addAll(erlangFiles);
@@ -860,43 +891,12 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static List<ErlangFile> findByWildCard(@NotNull PsiFile containingFile, @NotNull final String includeFilePath) {
-    List<ErlangFile> erlangFiles = new ArrayList<ErlangFile>();
-    List<String> split = StringUtil.split(includeFilePath, "/");
-    String last = ContainerUtil.iterateAndGetLastItem(split);
-    if (last != null) {
-      PsiFile[] filesByName = FilenameIndex.getFilesByName(containingFile.getProject(), last,
-        GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(containingFile.getProject()), ErlangFileType.HEADER, ErlangFileType.MODULE));
-      List<PsiFile> filter = ContainerUtil.filter(filesByName, new Condition<PsiFile>() {
-        @Override
-        public boolean value(PsiFile psiFile) {
-          VirtualFile virtualFile = psiFile.getVirtualFile();
-          if (virtualFile == null) return false;
-          String canonicalPath = virtualFile.getCanonicalPath();
-          if (canonicalPath == null) return false;
-          return canonicalPath.replaceAll("-[\\d\\.\\w-]+/", "/").endsWith(includeFilePath);
-        }
-      });
-
-      for (PsiFile file : filter) {
-        if (file instanceof ErlangFile) {
-          erlangFiles.add((ErlangFile) file);
-        }
-      }
-    }
-    return erlangFiles;
-  }
-
-  @NotNull
   public static List<ErlangFile> justAppend(@NotNull PsiFile containingFile, @NotNull String includeFilePath) {
     List<ErlangFile> erlangFiles = new ArrayList<ErlangFile>();
     VirtualFile virtualFile = containingFile.getOriginalFile().getVirtualFile();
     VirtualFile parent = virtualFile != null ? virtualFile.getParent() : null;
     if (parent == null) return ContainerUtil.emptyList();
-    String localPath = PathUtil.getLocalPath(parent);
-    String globalPath = localPath + "/" + includeFilePath;
-
-    VirtualFile fileByUrl = LocalFileSystem.getInstance().findFileByPath(globalPath);
+    VirtualFile fileByUrl = VfsUtil.findRelativeFile(includeFilePath, parent);
     if (fileByUrl == null) return ContainerUtil.emptyList();
     PsiFile file = ((PsiManagerEx) PsiManager.getInstance(containingFile.getProject())).getFileManager().findFile(fileByUrl);
     if (file instanceof ErlangFile) {
@@ -1082,13 +1082,12 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean isEunitImported(ErlangFile file) {
-    List<ErlangInclude> includes = file.getIncludes();
-    for (ErlangInclude include : includes) {
+    List<ErlangIncludeLib> includes = file.getIncludeLibs();
+    for (ErlangIncludeLib include : includes) {
       ErlangIncludeString string = include.getIncludeString();
       if (string != null) {
         String includeFilePath = StringUtil.unquoteString(string.getText());
-        boolean isEunit = StringUtil.equals(includeFilePath, "eunit/include/eunit.hrl") || StringUtil.equals(includeFilePath, "eunit.hrl");
-        if (isEunit) return true;
+        return StringUtil.equals(includeFilePath, "eunit/include/eunit.hrl") || StringUtil.equals(includeFilePath, "eunit.hrl");
       }
     }
     return false;

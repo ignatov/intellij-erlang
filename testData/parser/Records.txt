@@ -56,7 +56,7 @@ ERL_FILE
         PsiElement(atom)('mnesia_backup')
       PsiElement())(')')
     PsiElement(.)('.')
-  ERL_INCLUDE
+  ERL_INCLUDE_LIB
     PsiElement(-)('-')
     PsiElement(atom)('include_lib')
     PsiElement(()('(')

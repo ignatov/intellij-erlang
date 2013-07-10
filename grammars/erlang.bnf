@@ -92,6 +92,7 @@ private form ::=
     is_app_config config_expression
   | function
   | record_definition
+  | include_lib
   | include
   | macros_definition
   | type_definition
@@ -126,7 +127,8 @@ macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ','
 }
 macros_body ::= expression ((',' | ';' | '->') expression)* {pin(".*")=1}
 
-include ::= '-' ('include' | 'include_lib') '(' include_string ')' {pin=2}
+include ::= '-' 'include' '(' include_string ')' {pin=2}
+include_lib ::= '-' 'include_lib' '(' include_string ')' {pin=2}
 include_string ::= string {methods = [getReference]}
 
 attribute ::= '-' (

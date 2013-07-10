@@ -18,6 +18,7 @@ package org.intellij.erlang;
 
 import com.intellij.openapi.fileTypes.LanguageFileType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
@@ -136,5 +137,21 @@ public class ErlangFileType extends LanguageFileType {
     public Icon getIcon() {
       return ErlangIcons.TERMS;
     }
+  }
+
+  @Nullable
+  public static ErlangFileType getFileType(String filename) {
+    if (filename == null) return null;
+    if (filename.endsWith(MODULE.getDefaultExtension())) return MODULE;
+    if (filename.endsWith(HEADER.getDefaultExtension())) return HEADER;
+    if (filename.endsWith(APP.getDefaultExtension())) return APP;
+    if (filename.endsWith(TERMS.getDefaultExtension())) return TERMS;
+    return null;
+  }
+
+  @Nullable
+  public static Icon getIconForFile(String filename) {
+    ErlangFileType fileType = getFileType(filename);
+    return fileType == null ? null : fileType.getIcon();
   }
 }

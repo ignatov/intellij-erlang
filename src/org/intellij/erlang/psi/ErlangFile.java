@@ -66,6 +66,9 @@ public interface ErlangFile extends PsiFile {
   List<ErlangInclude> getIncludes();
 
   @NotNull
+  List<ErlangIncludeLib> getIncludeLibs();
+
+  @NotNull
   List<ErlangBehaviour> getBehaviours();
 
   @NotNull

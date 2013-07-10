@@ -96,6 +96,12 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         super.visitInclude(o);
         markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
         markNameAsAttribute(o, annotationHolder, "include");
+      }
+
+      @Override
+      public void visitIncludeLib(@NotNull ErlangIncludeLib o) {
+        super.visitIncludeLib(o);
+        markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
         markNameAsAttribute(o, annotationHolder, "include_lib");
       }
 
