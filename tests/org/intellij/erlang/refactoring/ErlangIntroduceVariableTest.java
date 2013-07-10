@@ -16,24 +16,23 @@
 
 package org.intellij.erlang.refactoring;
 
-import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
 
 /**
  * @author savenko
  */
-public class ErlangIntroduceVariableTest extends LightCodeInsightFixtureTestCase {
-
+public class ErlangIntroduceVariableTest extends LightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {
     return "testData/refactoring/introduce_variable";
   }
 
-  public void testSimple() throws Throwable                   { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testFunctionArguments() throws Throwable        { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testFunctionClauseScope() throws Throwable      { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testSingleOccurrenceReplace() throws Throwable  { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.SINGLE); }
-  public void testParenthesesElimination() throws Throwable   { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testSimple()                  throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testFunctionArguments()       throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testFunctionClauseScope()     throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testSingleOccurrenceReplace() throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.SINGLE); }
+  public void testParenthesesElimination()  throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
 
   private void doTest(ErlangIntroduceVariableHandler.ReplaceStrategy replaceStrategy) throws Throwable {
     myFixture.configureByFile(getTestName(true) + ".erl");
