@@ -18,8 +18,6 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.Processor;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangInclude;
 import org.intellij.erlang.psi.ErlangIncludeString;
@@ -31,29 +29,15 @@ import java.util.List;
  * @author savenko
  */
 public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
-
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
+  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
 
-    ContainerUtil.process(((ErlangFile) file).getIncludes(), new Processor<ErlangInclude>() {
-      @Override
-      public boolean process(ErlangInclude erlangInclude) {
-        List<ErlangFile> includedFiles = ErlangPsiImplUtil.filesFromInclude(erlangInclude);
-        ErlangIncludeString includeString = erlangInclude.getIncludeString();
-
-        if (includeString == null) return true;
-
-        if (includedFiles.size() == 0) {
-          problemsHolder.registerProblem(includeString, "Unresolved include: file not found");
-        }
-        else if (includedFiles.size() > 1) {
-          problemsHolder.registerProblem(includeString, "Unresolved include: ambiguous file reference");
-        }
-
-        return true;
-      }
-    });
+    for (ErlangInclude erlangInclude : ((ErlangFile) file).getIncludes()) {
+      ErlangIncludeString string = erlangInclude.getIncludeString();
+      if (string == null) continue;
+      List<ErlangFile> files = ErlangPsiImplUtil.filesFromInclude(erlangInclude);
+      ErlangUnresolvedIncludeLibInspection.processInclude(problemsHolder, files, string, "include");
+    }
   }
-
 }

@@ -17,9 +17,8 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.Processor;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangIncludeLib;
 import org.intellij.erlang.psi.ErlangIncludeString;
@@ -31,29 +30,24 @@ import java.util.List;
  * @author savenko
  */
 public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
-
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
+  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
 
-    ContainerUtil.process(((ErlangFile) file).getIncludeLibs(), new Processor<ErlangIncludeLib>() {
-      @Override
-      public boolean process(ErlangIncludeLib erlangIncludeLib) {
-        List<ErlangFile> includedFiles = ErlangPsiImplUtil.filesFromIncludeLib(erlangIncludeLib);
-        ErlangIncludeString includeString = erlangIncludeLib.getIncludeString();
-
-        if (includeString == null) return true;
-
-        if (includedFiles.size() == 0) {
-          problemsHolder.registerProblem(includeString, "Unresolved include_lib: file not found");
-        }
-        else if (includedFiles.size() > 1) {
-          problemsHolder.registerProblem(includeString, "Unresolved include_lib: ambiguous file reference");
-        }
-
-        return true;
-      }
-    });
+    for (ErlangIncludeLib erlangIncludeLib : ((ErlangFile) file).getIncludeLibs()) {
+      ErlangIncludeString includeString = erlangIncludeLib.getIncludeString();
+      if (includeString == null) continue;
+      processInclude(problemsHolder, ErlangPsiImplUtil.filesFromIncludeLib(erlangIncludeLib), includeString, "include_lib");
+    }
   }
 
+  static void processInclude(ProblemsHolder problemsHolder, List<ErlangFile> files, ErlangIncludeString string, String what) {
+    TextRange range = string.getTextLength() <= 2 ? TextRange.create(0, string.getTextLength()) : TextRange.create(1, string.getTextLength() - 1);
+    if (files.size() == 0) {
+      problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found");
+    }
+    else if (files.size() > 1) {
+      problemsHolder.registerProblem(string, range, "Unresolved " + what + ": ambiguous file reference");
+    }
+  }
 }
