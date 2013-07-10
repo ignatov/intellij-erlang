@@ -779,11 +779,12 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  static List<ErlangFile> filesFromInclude(@NotNull ErlangInclude include) {
+  public static List<ErlangFile> filesFromInclude(@NotNull ErlangInclude include) {
     return filesFromIncludeInner(include, new HashSet<ErlangFile>());
   }
 
-  private static List<ErlangFile> filesFromIncludeLib(ErlangIncludeLib includeLib) {
+  @NotNull
+  public static List<ErlangFile> filesFromIncludeLib(ErlangIncludeLib includeLib) {
     PsiElement string = includeLib.getIncludeString();
     String[] split = string != null ? StringUtil.unquoteString(string.getText()).split("/") : null;
 
