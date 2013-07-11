@@ -26,8 +26,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author ignatov
@@ -53,6 +56,7 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
 
     Project project = psiElement.getProject();
 
+
     RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(project, context);
     ErlangUnitRunConfiguration configuration = (ErlangUnitRunConfiguration) settings.getConfiguration();
 
@@ -63,16 +67,27 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
 
     final VirtualFile vFile = myFile.getVirtualFile();
     if (vFile == null) return null;
-    String moduleName = vFile.getNameWithoutExtension();
+    String moduleAndFunction = vFile.getNameWithoutExtension();
 
-    configuration.setModuleAndFunction(moduleName);
-    configuration.setName(moduleName);
+    ErlangFunction function = getParentNullaryFunction(psiElement);
+    if (function != null)
+      moduleAndFunction += ":" + function.getName();
+
+    configuration.setModuleAndFunction(moduleAndFunction);
+    configuration.setName(moduleAndFunction);
     return settings;
   }
 
   @Override
   public int compareTo(Object o) {
     return PREFERED;
+  }
+
+  @Nullable
+  private static ErlangFunction getParentNullaryFunction(PsiElement psiElement) {
+    ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
+    int arity = function != null ? function.getArity() : -1;
+    return 0 == arity ? function : null;
   }
 }
 

@@ -70,9 +70,9 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
       protected boolean processServiceMessages(String text, Key outputType, ServiceMessageVisitor visitor) throws ParseException {
         Matcher m;
 
-        Pattern OK = Pattern.compile("  (\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
+        Pattern OK = Pattern.compile("(?:  )?(\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
         Pattern OK_ONE_TEST = Pattern.compile("(\\w+): (\\w+) .*\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
-        Pattern FAILED = Pattern.compile("  (\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
+        Pattern FAILED = Pattern.compile("(?:  )?(\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
         Pattern FAILED_ONE_TEST = Pattern.compile("(\\w+): (\\w+).*\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
 
         if (StringUtil.startsWith(text, (myEunit ? "" : "  ") + "module")) {

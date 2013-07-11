@@ -43,9 +43,13 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
   @Override
   protected void setUpParameters(GeneralCommandLine commandLine) {
+    String testObject = myConfiguration.getModuleAndFunction();
+    if (testObject.contains(":"))
+      testObject = "fun " + testObject + "/0";
+
     commandLine.addParameter("-run");
     commandLine.addParameter("-eval");
-    commandLine.addParameter("eunit:test([" + myConfiguration.getModuleAndFunction() + "], [verbose]).");
+    commandLine.addParameter("eunit:test([" + testObject + "], [verbose]).");
     commandLine.addParameters("-s", "init", "stop", "-noshell");
   }
 
