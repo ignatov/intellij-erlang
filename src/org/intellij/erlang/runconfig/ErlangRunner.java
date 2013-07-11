@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.runner;
+package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
@@ -30,10 +30,9 @@ import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.runners.RunContentBuilder;
 import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
-import org.intellij.erlang.eunit.ErlangUnitRunningState;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -64,7 +63,8 @@ public class ErlangRunner extends DefaultProgramRunner {
 
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
-    return DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && profile instanceof ErlangApplicationConfiguration;
+    return DefaultRunExecutor.EXECUTOR_ID.equals(executorId) &&
+      (profile instanceof ErlangApplicationConfiguration || profile instanceof ErlangUnitRunConfiguration);
   }
 
   @Override
@@ -73,17 +73,8 @@ public class ErlangRunner extends DefaultProgramRunner {
                                            RunProfileState state,
                                            RunContentDescriptor contentToReuse,
                                            ExecutionEnvironment env) throws ExecutionException {
-    final ErlangApplicationConfiguration configuration = (ErlangApplicationConfiguration) env.getRunProfile();
-    final Module module = configuration.getConfigurationModule().getModule();
-
-    if (module == null) {
-      throw new ExecutionException("No Erlang module for run configuration: " + configuration.getName());
-    }
-
-    final ErlangRunningState runningState =
-      configuration instanceof ErlangUnitRunConfiguration ?
-      new ErlangUnitRunningState(env, module, configuration) :
-      new ErlangRunningState(env, module, configuration);
+    final ErlangRunConfigurationBase configuration = (ErlangRunConfigurationBase) env.getRunProfile();
+    final ErlangRunningState runningState = configuration.createRunningState(env);
 
     FileDocumentManager.getInstance().saveAllDocuments();
 

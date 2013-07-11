@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  */
 public class ErlangTestLocationProvider implements TestLocationProvider {
   private static final Pattern MODULE_FUNCTION_PATTERN = Pattern.compile("(\\w+):(\\w+)");
-  private static final Pattern FUNCTION_PATTERN = Pattern.compile("(\\w+)");
+  private static final Pattern MODULE_PATTERN = Pattern.compile("(\\w+)");
 
   @NotNull
   @Override
@@ -71,7 +71,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
     
     if (list.size() > 0) return list;
 
-    matcher = FUNCTION_PATTERN.matcher(locationData);
+    matcher = MODULE_PATTERN.matcher(locationData);
     if (matcher.matches()) {
       String module = matcher.group(1);
 

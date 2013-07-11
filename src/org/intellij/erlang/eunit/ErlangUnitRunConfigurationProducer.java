@@ -22,11 +22,11 @@ import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.junit.RuntimeConfigurationProducer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -51,13 +51,10 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
   protected RunnerAndConfigurationSettings createConfigurationByElement(Location location, ConfigurationContext context) {
     PsiElement psiElement = location.getPsiElement();
     myFile = psiElement.getContainingFile();
-    if (!(myFile instanceof ErlangFile)) return null;
-    if (!ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile)) return null;
 
-    Project project = psiElement.getProject();
+    if (!(myFile instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile)) return null;
 
-
-    RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(project, context);
+    RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(psiElement.getProject(), context);
     ErlangUnitRunConfiguration configuration = (ErlangUnitRunConfiguration) settings.getConfiguration();
 
     Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
@@ -67,14 +64,26 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
 
     final VirtualFile vFile = myFile.getVirtualFile();
     if (vFile == null) return null;
-    String moduleAndFunction = vFile.getNameWithoutExtension();
+    String moduleName = vFile.getNameWithoutExtension();
 
+    //TODO support multiple functions selection
     ErlangFunction function = getParentNullaryFunction(psiElement);
-    if (function != null)
-      moduleAndFunction += ":" + function.getName();
+    String functionName = function != null ? function.getName() : null;
 
-    configuration.setModuleAndFunction(moduleAndFunction);
-    configuration.setName(moduleAndFunction);
+    configuration.getConfigData().setModuleNames(ContainerUtil.set(moduleName));
+
+    if (function != null) {
+      String qualifiedFunctionName = moduleName + ":" + functionName;
+
+      configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
+      configuration.getConfigData().setFunctionNames(ContainerUtil.set(qualifiedFunctionName));
+      configuration.setName(qualifiedFunctionName);
+    }
+    else {
+      configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE);
+      configuration.setName(moduleName);
+    }
+
     return settings;
   }
 

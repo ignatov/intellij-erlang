@@ -1081,6 +1081,11 @@ public class ErlangPsiImplUtil {
     return (StringUtil.endsWith(withoutExtension, "_test") || StringUtil.endsWith(withoutExtension, "_tests")) && isEunitImported(file);
   }
 
+  public static boolean isEunitTestFunction(@NotNull ErlangFunction function) {
+    String name = function.getName();
+    return (StringUtil.endsWith(name, "_test") || StringUtil.endsWith(name, "_test_"));
+  }
+
   public static boolean isEunitImported(ErlangFile file) {
     List<ErlangIncludeLib> includes = file.getIncludeLibs();
     for (ErlangIncludeLib include : includes) {

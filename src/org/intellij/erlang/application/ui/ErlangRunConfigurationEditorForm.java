@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.runner.ui;
+package org.intellij.erlang.application.ui;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -23,7 +23,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.ui.ListCellRendererWrapper;
 import org.intellij.erlang.editor.ErlangModuleType;
-import org.intellij.erlang.runner.ErlangApplicationConfiguration;
+import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -35,6 +35,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
   private JTextField myModuleAndFunctionField;
   private JCheckBox myStopErlangInterpreterCheckBox;
 
+  @SuppressWarnings("unchecked")
   @Override
   protected void resetEditorFrom(ErlangApplicationConfiguration configuration) {
     myComboModules.removeAllItems();

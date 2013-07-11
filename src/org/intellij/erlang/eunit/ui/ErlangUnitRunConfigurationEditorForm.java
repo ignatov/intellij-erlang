@@ -21,43 +21,77 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.ui.ListCellRendererWrapper;
 import org.intellij.erlang.editor.ErlangModuleType;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-
-import static org.intellij.erlang.runner.ui.ErlangRunConfigurationEditorForm.getListCellRendererWrapper;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangUnitRunConfiguration> {
   private JPanel component;
-  private JComboBox myComboModules;
-  private JTextField myModuleAndFunctionField;
+  private JComboBox myModuleComboBox;
+  private JTextField myErlangModulesField;
+  private JTextField myErlangFunctionsField;
+  private JLabel myErlangModulesLabel;
+  private JLabel myErlangFunctionsLabel;
+  private JComboBox myTestKindComboBox;
 
+  public ErlangUnitRunConfigurationEditorForm() {
+    myTestKindComboBox.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        onTestKindSwitch();
+      }
+    });
+  }
+
+  @SuppressWarnings("unchecked")
   @Override
   protected void resetEditorFrom(ErlangUnitRunConfiguration configuration) {
-    myComboModules.removeAllItems();
-
+    myModuleComboBox.removeAllItems();
     final Module[] modules = ModuleManager.getInstance(configuration.getProject()).getModules();
     for (final Module module : modules) {
       if (ModuleType.get(module) == ErlangModuleType.getInstance()) {
-        myComboModules.addItem(module);
+        myModuleComboBox.addItem(module);
       }
     }
-    myComboModules.setSelectedItem(configuration.getConfigurationModule().getModule());
-    myComboModules.setRenderer(getListCellRendererWrapper());
-    myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
+    myModuleComboBox.setSelectedItem(configuration.getConfigurationModule().getModule());
+    myModuleComboBox.setRenderer(getModuleListCellRendererWrapper());
+
+    ErlangUnitRunConfiguration.ErlangUnitConfigData configData = configuration.getConfigData();
+
+    myTestKindComboBox.removeAllItems();
+    ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind[] kinds = ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.values();
+    for (ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind : kinds) {
+      myTestKindComboBox.addItem(kind);
+    }
+    myTestKindComboBox.setSelectedItem(configData.getKind());
+    myTestKindComboBox.setRenderer(getTestKindListCellRendererWrapper());
+
+    myErlangModulesField.setText(getCommaSeparatedNamesString(configData.getModuleNames()));
+    myErlangFunctionsField.setText(getCommaSeparatedNamesString(configData.getFunctionNames()));
   }
 
   @Override
   protected void applyEditorTo(ErlangUnitRunConfiguration configuration) throws ConfigurationException {
     configuration.setModule(getSelectedModule());
-//    configuration.setParams(myParamsField.getText());
-    configuration.setModuleAndFunction(myModuleAndFunctionField.getText());
+
+    ErlangUnitRunConfiguration.ErlangUnitConfigData configData = configuration.getConfigData();
+    configData.setFunctionNames(parseCommaSeparatedNames(myErlangFunctionsField.getText()));
+    configData.setModuleNames(parseCommaSeparatedNames(myErlangModulesField.getText()));
+    configData.setKind((ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind) myTestKindComboBox.getSelectedItem());
   }
 
   private Module getSelectedModule() {
-    return (Module) myComboModules.getSelectedItem();
+    return (Module) myModuleComboBox.getSelectedItem();
   }
 
   @NotNull
@@ -69,5 +103,59 @@ public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangU
   @Override
   protected void disposeEditor() {
     component.setVisible(false);
+  }
+
+  private void onTestKindSwitch() {
+    ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind selectedKind = (ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind) myTestKindComboBox.getSelectedItem();
+    if (selectedKind == null) {
+      selectedKind = ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE;
+    }
+
+    boolean functionTestSelected = selectedKind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION;
+    boolean moduleTestSelected = selectedKind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE;
+
+    myErlangFunctionsLabel.setVisible(functionTestSelected);
+    myErlangFunctionsField.setVisible(functionTestSelected);
+    myErlangModulesLabel.setVisible(moduleTestSelected);
+    myErlangModulesField.setVisible(moduleTestSelected);
+  }
+
+  private static ListCellRendererWrapper<Module> getModuleListCellRendererWrapper() {
+    return new ListCellRendererWrapper<Module>() {
+      @Override
+      public void customize(JList list, Module module, int index, boolean selected, boolean hasFocus) {
+        if (module != null) {
+          setText(module.getName());
+        }
+      }
+    };
+  }
+
+  private static ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> getTestKindListCellRendererWrapper() {
+    return new ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind>() {
+      @Override
+      public void customize(JList list, ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind, int index, boolean selected, boolean hasFocus) {
+        if (kind != null) {
+          String kindName = StringUtil.capitalize(kind.toString().toLowerCase());
+          setText(kindName);
+        }
+      }
+    };
+  }
+
+  private static Set<String> parseCommaSeparatedNames(String names) {
+    if (names == null) return Collections.emptySet();
+
+    List<String> split = StringUtil.split(names, ",", true, true);
+    Set<String> result = new LinkedHashSet<String>(split.size());
+
+    for (String name : split) {
+      result.add(name.trim());
+    }
+    return result;
+  }
+
+  private static String getCommaSeparatedNamesString(Set<String> names) {
+    return StringUtil.join(names, ", ");
   }
 }

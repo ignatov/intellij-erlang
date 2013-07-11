@@ -16,24 +16,36 @@
 
 package org.intellij.erlang.eunit;
 
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ModuleBasedConfiguration;
 import com.intellij.execution.configurations.RunConfiguration;
+import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.InvalidDataException;
+import com.intellij.openapi.util.WriteExternalException;
+import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.eunit.ui.ErlangUnitRunConfigurationEditorForm;
-import org.intellij.erlang.runner.ErlangApplicationConfiguration;
+import org.intellij.erlang.runconfig.ErlangModuleBasedConfiguration;
+import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
+import org.intellij.erlang.runconfig.ErlangRunner;
+import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * @author ignatov
  */
-public class ErlangUnitRunConfiguration extends ErlangApplicationConfiguration {
-  public ErlangUnitRunConfiguration(Project project, String name, ErlangUnitRunConfigurationType configurationType) {
-    super(project, name, configurationType);
-  }
+public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<ErlangUnitRunningState> {
+  private final ErlangUnitConfigData myConfigData = new ErlangUnitConfigData();
 
-  @Override
-  public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new ErlangUnitRunConfigurationEditorForm();
+  public ErlangUnitRunConfiguration(Project project, String name, ErlangUnitRunConfigurationType configurationType) {
+    super(name, new ErlangModuleBasedConfiguration(project), configurationType.getConfigurationFactories()[0]);
   }
 
   @Override
@@ -42,12 +54,67 @@ public class ErlangUnitRunConfiguration extends ErlangApplicationConfiguration {
   }
 
   @Override
-  public boolean isGeneratedName() {
-    return "Unnamed".equals(getName());
+  public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
+    return new ErlangUnitRunConfigurationEditorForm();
   }
 
   @Override
-  public String suggestedName() {
-    return "Unnamed";
+  public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) throws ExecutionException {
+    return ErlangRunner.EMPTY_RUN_STATE; // todo: CommandLineState
+  }
+
+  @Override
+  protected ErlangUnitRunningState newRunningState(ExecutionEnvironment env, Module module) {
+    return new ErlangUnitRunningState(env, module, this);
+  }
+
+  public ErlangUnitConfigData getConfigData() {
+    return myConfigData;
+  }
+
+  @Override
+  public void writeExternal(Element element) throws WriteExternalException {
+    super.writeExternal(element);
+    XmlSerializer.serializeInto(myConfigData, element);
+  }
+
+  @Override
+  public void readExternal(Element element) throws InvalidDataException {
+    super.readExternal(element);
+    XmlSerializer.deserializeInto(myConfigData, element);
+  }
+
+  public enum ErlangUnitRunConfigurationKind {
+    FUNCTION, MODULE
+  }
+
+  public static final class ErlangUnitConfigData {
+    private ErlangUnitRunConfigurationKind myKind = ErlangUnitRunConfigurationKind.MODULE;
+    private Set<String> myModuleNames = new LinkedHashSet<String>();
+    private Set<String> myFunctionNames = new LinkedHashSet<String>();
+
+    public ErlangUnitRunConfigurationKind getKind() {
+      return myKind;
+    }
+
+    public void setKind(ErlangUnitRunConfigurationKind kind) {
+      myKind = kind;
+    }
+
+    public Set<String> getModuleNames() {
+      return myModuleNames;
+    }
+
+    public void setModuleNames(Set<String> moduleNames) {
+      myModuleNames = moduleNames;
+    }
+
+    public Set<String> getFunctionNames() {
+      return myFunctionNames;
+    }
+
+    public void setFunctionNames(Set<String> functionNames) {
+      myFunctionNames = functionNames;
+    }
   }
 }

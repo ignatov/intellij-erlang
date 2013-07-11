@@ -28,28 +28,27 @@ import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
-import org.intellij.erlang.runner.ErlangApplicationConfiguration;
-import org.intellij.erlang.runner.ErlangRunningState;
+import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
 public class ErlangUnitRunningState extends ErlangRunningState {
-  public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangApplicationConfiguration configuration) {
-    super(env, module, configuration);
+  private ErlangUnitRunConfiguration myConfiguration;
+
+  public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
+    super(env, module);
+    myConfiguration = configuration;
   }
 
   @Override
-  protected void setUpParameters(GeneralCommandLine commandLine) {
-    String testObject = myConfiguration.getModuleAndFunction();
-    if (testObject.contains(":"))
-      testObject = "fun " + testObject + "/0";
-
+  protected void setUpCommandLineParameters(GeneralCommandLine commandLine) {
     commandLine.addParameter("-run");
     commandLine.addParameter("-eval");
-    commandLine.addParameter("eunit:test([" + testObject + "], [verbose]).");
+    commandLine.addParameter("eunit:test([" + getTestObjectsString() + "], [verbose]).");
     commandLine.addParameters("-s", "init", "stop", "-noshell");
   }
 
@@ -78,5 +77,30 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       getConfigurationSettings(),
       new ErlangTestLocationProvider()
     );
+  }
+
+  private String getTestObjectsString() {
+    ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = myConfiguration.getConfigData().getKind();
+
+    if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
+      return StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ", ");
+    }
+
+    if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
+      StringBuilder result = new StringBuilder();
+
+      for (String function : myConfiguration.getConfigData().getFunctionNames()) {
+        result.append("fun ");
+        result.append(function);
+        result.append("/0, ");
+      }
+      if (result.length() != 0) {
+        result.setLength(result.length() - 2);
+      }
+
+      return result.toString();
+    }
+
+    return "UNKNOWN RUN CONFIG KIND";
   }
 }
