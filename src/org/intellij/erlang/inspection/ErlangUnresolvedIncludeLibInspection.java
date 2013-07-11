@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiFile;
@@ -42,9 +43,15 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
   }
 
   static void processInclude(ProblemsHolder problemsHolder, List<ErlangFile> files, ErlangIncludeString string, String what) {
-    TextRange range = string.getTextLength() <= 2 ? TextRange.create(0, string.getTextLength()) : TextRange.create(1, string.getTextLength() - 1);
+    boolean empty = string.getTextLength() <= 2;
+    TextRange range = empty ? TextRange.create(0, string.getTextLength()) : TextRange.create(1, string.getTextLength() - 1);
     if (files.size() == 0) {
-      problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found");
+      if (empty) {
+        problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found");
+      }
+      else {
+        problemsHolder.registerProblem(string, "Unresolved " + what + ": file not found", ProblemHighlightType.LIKE_UNKNOWN_SYMBOL, range);
+      }
     }
     else if (files.size() > 1) {
       problemsHolder.registerProblem(string, range, "Unresolved " + what + ": ambiguous file reference");
