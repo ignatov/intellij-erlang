@@ -2,7 +2,7 @@
 -module(<error>e_tests</error>).
 -author("ignatov").
 
--include_lib("<error>eunit/include/eunit.hrl</error>").
+-include_lib("eunit/include/eunit.hrl").
 
 get_num(A) -> A.
 
