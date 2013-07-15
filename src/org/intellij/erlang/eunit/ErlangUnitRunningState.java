@@ -79,7 +79,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       }
     });
 
-    executionResult.setRestartActions(new ToggleAutoTestAction(), rerunFailedAction);
+    executionResult.setRestartActions(rerunFailedAction, new ToggleAutoTestAction());
     return executionResult;
   }
 

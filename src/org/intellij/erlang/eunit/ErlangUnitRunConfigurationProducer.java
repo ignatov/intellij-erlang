@@ -20,17 +20,23 @@ import com.intellij.execution.Location;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.junit.RuntimeConfigurationProducer;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.SmartList;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
 
 /**
  * @author ignatov
@@ -62,29 +68,60 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
       configuration.setModule(module);
     }
 
-    final VirtualFile vFile = myFile.getVirtualFile();
-    if (vFile == null) return null;
-    String moduleName = vFile.getNameWithoutExtension();
+    Collection<ErlangFunction> functions = findFunctionTestElements(psiElement);
 
-    //TODO support multiple functions selection
-    ErlangFunction function = getParentNullaryFunction(psiElement);
-    String functionName = function != null ? function.getName() : null;
-
-    configuration.getConfigData().setModuleNames(ContainerUtil.set(moduleName));
-
-    if (function != null) {
-      String qualifiedFunctionName = moduleName + ":" + functionName;
-
+    if (!functions.isEmpty()) {
+      LinkedHashSet<String> functionNames = new LinkedHashSet<String>();
+      for (ErlangFunction f : functions) {
+        functionNames.add(ErlangPsiImplUtil.getQualifiedFunctionName(f));
+      }
+      configuration.getConfigData().setFunctionNames(functionNames);
       configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
-      configuration.getConfigData().setFunctionNames(ContainerUtil.set(qualifiedFunctionName));
-      configuration.setName(qualifiedFunctionName);
+      configuration.setName(functionNames.size() == 1 ? functionNames.iterator().next() : "multi-function");
     }
     else {
+      LinkedHashSet<String> moduleNames = new LinkedHashSet<String>();
+      for (ErlangFile f : findFileTestElements(context.getProject(), context.getDataContext())) {
+        VirtualFile virtualFile = f.getVirtualFile();
+        if (virtualFile != null) {
+          moduleNames.add(virtualFile.getNameWithoutExtension());
+        }
+      }
+
+      if (moduleNames.isEmpty()) return null;
+
+      configuration.getConfigData().setModuleNames(moduleNames);
       configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE);
-      configuration.setName(moduleName);
+      configuration.setName(moduleNames.size() == 1 ? moduleNames.iterator().next() : "multi-module");
     }
 
     return settings;
+  }
+
+  public static Collection<ErlangFunction> findFunctionTestElements(PsiElement element) {
+    //TODO support multiple functions selection
+    SmartList<ErlangFunction> selectedFunctions = new SmartList<ErlangFunction>();
+    ErlangFunction function = getParentNullaryFunction(element);
+
+    if (function != null) {
+      selectedFunctions.add(function);
+    }
+    return selectedFunctions;
+  }
+
+  public static Collection<ErlangFile> findFileTestElements(Project project, DataContext dataContext) {
+    VirtualFile[] selectedFiles = PlatformDataKeys.VIRTUAL_FILE_ARRAY.getData(dataContext);
+
+    if (selectedFiles == null) return Collections.emptyList();
+
+    List<ErlangFile> testFiles = new ArrayList<ErlangFile>(selectedFiles.length);
+    for (VirtualFile file : selectedFiles) {
+      PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+      if (psiFile instanceof ErlangFile) {
+        testFiles.add((ErlangFile) psiFile);
+      }
+    }
+    return testFiles;
   }
 
   @Override
@@ -94,7 +131,7 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
 
   @Nullable
   private static ErlangFunction getParentNullaryFunction(PsiElement psiElement) {
-    ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
+    ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction)psiElement : PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
     int arity = function != null ? function.getArity() : -1;
     return 0 == arity ? function : null;
   }

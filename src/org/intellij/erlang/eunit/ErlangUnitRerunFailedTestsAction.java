@@ -39,6 +39,7 @@ import java.util.LinkedHashSet;
 /**
  * @author savenko
  */
+@SuppressWarnings("ComponentNotRegistered")
 public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
   public ErlangUnitRerunFailedTestsAction(@NotNull ComponentContainer componentContainer) {
     super(componentContainer);
@@ -74,7 +75,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
         return new ErlangUnitRunningState(env, getModules()[0], runConfiguration);
       }
-      //TODO fix result representation: functions which were run as part of module should be shown underneath the module test item.
+
       private ErlangUnitRunConfiguration createRerunFailedTestsRunConfiguration() {
         Project project = getProject();
         ErlangUnitRunConfiguration configuration = new ErlangUnitRunConfiguration(project, "", ErlangUnitRunConfigurationType.getInstance());
