@@ -47,9 +47,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 final class RebarRunningState extends CommandLineState {
-  private final RebarRunConfiguration myConfiguration;
+  private final RebarRunConfigurationBase myConfiguration;
 
-  public RebarRunningState(@NotNull final ExecutionEnvironment env, @NotNull final RebarRunConfiguration config) {
+  public RebarRunningState(@NotNull final ExecutionEnvironment env, @NotNull final RebarRunConfigurationBase config) {
     super(env);
     myConfiguration = config;
   }
@@ -85,8 +85,7 @@ final class RebarRunningState extends CommandLineState {
 
   @NotNull
   private ConsoleView createConsoleView(Executor executor) throws ExecutionException {
-    final RebarRunConfiguration runConfiguration = (RebarRunConfiguration) getRunnerSettings().getRunProfile();
-    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties(runConfiguration, executor, false);
+    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties((RebarRunConfigurationBase) getRunnerSettings().getRunProfile(), executor, false);
     
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH));

@@ -20,23 +20,17 @@ import com.intellij.execution.Location;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.junit.RuntimeConfigurationProducer;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.SmartList;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 /**
  * @author ignatov
@@ -68,7 +62,7 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
       configuration.setModule(module);
     }
 
-    Collection<ErlangFunction> functions = findFunctionTestElements(psiElement);
+    Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(psiElement);
 
     if (!functions.isEmpty()) {
       LinkedHashSet<String> functionNames = new LinkedHashSet<String>();
@@ -81,7 +75,7 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
     }
     else {
       LinkedHashSet<String> moduleNames = new LinkedHashSet<String>();
-      for (ErlangFile f : findFileTestElements(context.getProject(), context.getDataContext())) {
+      for (ErlangFile f : ErlangUnitTestElementUtil.findFileTestElements(context.getProject(), context.getDataContext())) {
         VirtualFile virtualFile = f.getVirtualFile();
         if (virtualFile != null) {
           moduleNames.add(virtualFile.getNameWithoutExtension());
@@ -98,42 +92,9 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
     return settings;
   }
 
-  public static Collection<ErlangFunction> findFunctionTestElements(PsiElement element) {
-    //TODO support multiple functions selection
-    SmartList<ErlangFunction> selectedFunctions = new SmartList<ErlangFunction>();
-    ErlangFunction function = getParentNullaryFunction(element);
-
-    if (function != null) {
-      selectedFunctions.add(function);
-    }
-    return selectedFunctions;
-  }
-
-  public static Collection<ErlangFile> findFileTestElements(Project project, DataContext dataContext) {
-    VirtualFile[] selectedFiles = PlatformDataKeys.VIRTUAL_FILE_ARRAY.getData(dataContext);
-
-    if (selectedFiles == null) return Collections.emptyList();
-
-    List<ErlangFile> testFiles = new ArrayList<ErlangFile>(selectedFiles.length);
-    for (VirtualFile file : selectedFiles) {
-      PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-      if (psiFile instanceof ErlangFile) {
-        testFiles.add((ErlangFile) psiFile);
-      }
-    }
-    return testFiles;
-  }
-
   @Override
   public int compareTo(Object o) {
     return PREFERED;
-  }
-
-  @Nullable
-  private static ErlangFunction getParentNullaryFunction(PsiElement psiElement) {
-    ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction)psiElement : PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
-    int arity = function != null ? function.getArity() : -1;
-    return 0 == arity ? function : null;
   }
 }
 

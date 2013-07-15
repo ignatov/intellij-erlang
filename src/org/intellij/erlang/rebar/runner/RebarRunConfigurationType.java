@@ -17,45 +17,18 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.configurations.ConfigurationFactory;
-import com.intellij.execution.configurations.ConfigurationType;
+import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.openapi.extensions.Extensions;
 import org.intellij.erlang.ErlangIcons;
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-
-public final class RebarRunConfigurationType implements ConfigurationType {
+public final class RebarRunConfigurationType extends ConfigurationTypeBase {
+  RebarRunConfigurationType() {
+    super("RebarRunConfigurationType", "Erlang Rebar", "Runs a Rebar command", ErlangIcons.REBAR);
+  }
 
   public static RebarRunConfigurationType getInstance() {
     return Extensions.findExtension(CONFIGURATION_TYPE_EP, RebarRunConfigurationType.class);
-  }
-
-  @NotNull
-  @NonNls
-  @Override
-  public String getDisplayName() {
-    return "Erlang Rebar";
-  }
-
-  @NotNull
-  @NonNls
-  @Override
-  public String getConfigurationTypeDescription() {
-    return "Runs a Rebar command";
-  }
-
-  @NotNull
-  @Override
-  public Icon getIcon() {
-    return ErlangIcons.REBAR;
-  }
-
-  @NotNull
-  @NonNls
-  @Override
-  public String getId() {
-    return "RebarRunConfigurationType";
   }
 
   @NotNull

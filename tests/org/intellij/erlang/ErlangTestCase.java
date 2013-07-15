@@ -21,7 +21,7 @@ import junit.framework.TestSuite;
 import org.intellij.erlang.completion.ErlangCompletionTest;
 import org.intellij.erlang.console.FileReferenceFilterTest;
 import org.intellij.erlang.documentation.ErlangDocumentationProviderTest;
-import org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducerTest;
+import org.intellij.erlang.eunit.ErlangUnitTestElementUtilTest;
 import org.intellij.erlang.folding.ErlangFoldingBuilderTest;
 import org.intellij.erlang.formatting.ErlangAutoIndentTest;
 import org.intellij.erlang.formatting.ErlangFormattingTest;
@@ -79,7 +79,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangEnterHandlerTest.class);
     suite.addTestSuite(ErlangIncludeLibResolveTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
-    suite.addTestSuite(ErlangUnitRunConfigurationProducerTest.class);
+    suite.addTestSuite(ErlangUnitTestElementUtilTest.class);
     return suite;
   }
 }

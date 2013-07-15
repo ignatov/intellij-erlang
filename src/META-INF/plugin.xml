@@ -161,7 +161,9 @@
         <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable"/>
         <projectService serviceImplementation="org.intellij.erlang.rebar.settings.RebarSettings"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
+        <configurationType implementation="org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationType"/>
         <programRunner implementation="org.intellij.erlang.rebar.runner.RebarRunner"/>
+        <configurationProducer implementation="org.intellij.erlang.rebar.runner.RebarEunitConfigurationProducer"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">

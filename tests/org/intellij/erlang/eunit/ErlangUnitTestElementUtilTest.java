@@ -15,7 +15,7 @@ import java.util.Collection;
 /**
  * @author savenko
  */
-public class ErlangUnitRunConfigurationProducerTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected void setUp() throws Exception {
     System.setProperty("idea.platform.prefix", "Idea");
@@ -29,7 +29,7 @@ public class ErlangUnitRunConfigurationProducerTest extends ErlangLightPlatformC
 
   public void testFunctionSelection() throws Exception {
     myFixture.configureByFiles("tests1.erl", "tests2.erl");
-    Collection<ErlangFunction> functions = ErlangUnitRunConfigurationProducer.findFunctionTestElements(myFixture.getElementAtCaret());
+    Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(myFixture.getElementAtCaret());
 
     assertNotNull(functions);
     assertEquals(1, functions.size());
@@ -39,7 +39,7 @@ public class ErlangUnitRunConfigurationProducerTest extends ErlangLightPlatformC
   public void testSingleFileSelection() throws Exception {
     myFixture.configureByFiles("tests1.erl", "tests2.erl");
     MyMockDataContext dataContext = new MyMockDataContext(myFixture.getFile().getVirtualFile());
-    Collection<ErlangFile> files = ErlangUnitRunConfigurationProducer.findFileTestElements(myFixture.getProject(), dataContext);
+    Collection<ErlangFile> files = ErlangUnitTestElementUtil.findFileTestElements(myFixture.getProject(), dataContext);
 
     assertNotNull(files);
     assertEquals(1, files.size());
@@ -49,7 +49,7 @@ public class ErlangUnitRunConfigurationProducerTest extends ErlangLightPlatformC
   public void testMultipleFilesSelection() throws Exception {
     PsiFile[] psiFiles = myFixture.configureByFiles("tests1.erl", "tests2.erl");
     MyMockDataContext dataContext = new MyMockDataContext(getVirtualFiles(psiFiles));
-    Collection<ErlangFile> files = ErlangUnitRunConfigurationProducer.findFileTestElements(myFixture.getProject(), dataContext);
+    Collection<ErlangFile> files = ErlangUnitTestElementUtil.findFileTestElements(myFixture.getProject(), dataContext);
 
     assertNotNull(files);
     assertEquals(psiFiles.length, files.size());
