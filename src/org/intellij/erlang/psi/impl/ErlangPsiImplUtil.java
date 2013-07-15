@@ -1047,6 +1047,12 @@ public class ErlangPsiImplUtil {
   public static String createFunctionPresentation(@NotNull ErlangFunction function) {
     return function.getName() + "/" + function.getArity();
   }
+  @NotNull
+  public static String getQualifiedFunctionName(@NotNull ErlangFunction function) {
+    PsiFile containingFile = function.getContainingFile();
+    ErlangModule module = getModule(containingFile);
+    return module != null ? module.getName() + ":" + function.getName() : function.getName();
+  }
 
   @NotNull
   public static String createFunctionPresentationFromCallbackSpec(@NotNull ErlangCallbackSpec spec) {

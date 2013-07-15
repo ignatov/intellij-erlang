@@ -18,7 +18,6 @@ package org.intellij.erlang.eunit;
 
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RuntimeConfiguration;
-import com.intellij.execution.junit.RuntimeConfigurationProducer;
 import com.intellij.execution.testframework.TestConsoleProperties;
 import com.intellij.execution.testframework.sm.SMCustomMessagesParsing;
 import com.intellij.execution.testframework.sm.ServiceMessageBuilder;
@@ -48,7 +47,7 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
   public ErlangUnitConsoleProperties(final RuntimeConfiguration config, final Executor executor, boolean isEunit) {
     super(config, "Erlang", executor);
     myEunit = isEunit;
-    myConfig = new RuntimeConfigurationProducer.DelegatingRuntimeConfiguration<RuntimeConfiguration>(config);
+    myConfig = config;
   }
 
   @Override
@@ -82,11 +81,13 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
           return super.processServiceMessages(builder.toString(), outputType, visitor);
         }
         else if (StringUtil.startsWith(text, "  [done")) {
-          return super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), outputType, visitor);
+          boolean result = super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), outputType, visitor);
+          myCurrentModule = "";
+          return result;
         }
         else if ((m = OK.matcher(text)).find() || (m = OK_ONE_TEST.matcher(text)).find()) {
           String module = m.group(1);
-          String test = m.group(2);
+          String test = myCurrentModule.isEmpty() ? module + ":" + m.group(2) : m.group(2);
           ServiceMessageBuilder serviceMessageBuilder = setLocation(testStarted(test), module, test);
           return super.processServiceMessages(serviceMessageBuilder.toString(), outputType, visitor)
             && super.processServiceMessages(testFinished(test).toString(), outputType, visitor);
@@ -94,7 +95,7 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
         else if ((m = FAILED.matcher(text)).find() || (m = FAILED_ONE_TEST.matcher(text)).find() || text.trim().equals("undefined")) {
           boolean matches = FAILED.matcher(text).find() || FAILED_ONE_TEST.matcher(text).find();
           String module = matches ? m.group(1) : myCurrentModule;
-          String test = matches ? m.group(2) : "undefined";
+          String test = matches ? (myCurrentModule.isEmpty() ? module + ":" + m.group(2) : m.group(2)) : "undefined";
           myFailed = true;
           myStdOut = "";
           myCurrentTest = test;

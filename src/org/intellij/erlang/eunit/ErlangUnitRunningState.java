@@ -24,14 +24,20 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
+import com.intellij.execution.testframework.TestFrameworkRunningModel;
 import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
+import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
+import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.util.Getter;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
 
 /**
  * @author ignatov
@@ -58,12 +64,22 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     ProcessHandler processHandler = startProcess();
     setConsoleBuilder(getConsoleBuilder());
 
-    ConsoleView consoleView = createConsoleView(executor);
+    final ConsoleView consoleView = createConsoleView(executor);
     ErlangConsoleUtil.attachFilters(myConfiguration.getProject(), consoleView);
     consoleView.attachToProcess(processHandler);
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
-    executionResult.setRestartActions(new ToggleAutoTestAction());
+
+    ErlangUnitRerunFailedTestsAction rerunFailedAction = new ErlangUnitRerunFailedTestsAction(consoleView);
+    rerunFailedAction.init(((BaseTestsOutputConsoleView)consoleView).getProperties(), getEnvironment());
+    rerunFailedAction.setModelProvider(new Getter<TestFrameworkRunningModel>() {
+      @Override
+      public TestFrameworkRunningModel get() {
+        return ((SMTRunnerConsoleView)consoleView).getResultsViewer();
+      }
+    });
+
+    executionResult.setRestartActions(new ToggleAutoTestAction(), rerunFailedAction);
     return executionResult;
   }
 
@@ -89,10 +105,23 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
       StringBuilder result = new StringBuilder();
 
-      for (String function : myConfiguration.getConfigData().getFunctionNames()) {
-        result.append("fun ");
-        result.append(function);
-        result.append("/0, ");
+      Map<String, List<String>> modules = groupByModule(myConfiguration.getConfigData().getFunctionNames());
+
+      for (Map.Entry<String, List<String>> e : modules.entrySet()) {
+        String moduleName = e.getKey();
+
+        result.append("{\"module \'");
+        result.append(moduleName);
+        result.append("\'\", [");
+        for (String function : e.getValue()) {
+          result.append("fun ");
+          result.append(moduleName);
+          result.append(':');
+          result.append(function);
+          result.append("/0, ");
+        }
+        result.setLength(result.length() - 2);
+        result.append("]}, ");
       }
       if (result.length() != 0) {
         result.setLength(result.length() - 2);
@@ -102,5 +131,24 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     }
 
     return "UNKNOWN RUN CONFIG KIND";
+  }
+
+  private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {
+    Map<String, List<String>> result = new HashMap<String, List<String>>(qualifiedFunctionNames.size());
+    for (String qualifiedFunctionName : qualifiedFunctionNames) {
+      String[] moduleAndFunction = qualifiedFunctionName.split(":");
+      String module = moduleAndFunction[0];
+      String function = moduleAndFunction[1];
+
+      if (moduleAndFunction.length != 2) continue;
+
+      List<String> functions = result.get(module);
+      if (functions == null) {
+        functions = new ArrayList<String>();
+        result.put(module, functions);
+      }
+      functions.add(function);
+    }
+    return result;
   }
 }
