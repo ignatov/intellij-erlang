@@ -38,7 +38,6 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.formatter.FormatterUtil;
-import com.intellij.psi.impl.PsiManagerEx;
 import com.intellij.psi.impl.ResolveScopeManager;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.FilenameIndex;
@@ -46,10 +45,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.ArrayUtil;
-import com.intellij.util.Function;
-import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.Processor;
+import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
@@ -769,11 +765,11 @@ public class ErlangPsiImplUtil {
 
   private static void addIncludedFiles(@NotNull ErlangFile erlangFile, Set<ErlangFile> alreadyAdded) {
     List<ErlangFile> directlyIncludedFiles = getDirectlyIncludedFiles(erlangFile);
-    int numberOfAddedFiles = alreadyAdded.size();
+    boolean added = false;
     for (ErlangFile f : directlyIncludedFiles) {
-      alreadyAdded.add(f);
+      added |= alreadyAdded.add(f);
     }
-    if (numberOfAddedFiles != alreadyAdded.size()) {
+    if (added) {
       for (ErlangFile f : directlyIncludedFiles) {
         addIncludedFiles(f, alreadyAdded);
       }
@@ -826,30 +822,27 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangInclude include) {
     ErlangFile containingFile = (ErlangFile) include.getContainingFile();
-    List<ErlangFile> erlangFiles = new ArrayList<ErlangFile>();
     VirtualFile virtualFile = containingFile.getOriginalFile().getVirtualFile();
     VirtualFile parent = virtualFile != null ? virtualFile.getParent() : null;
     ErlangIncludeString includeString = include.getIncludeString();
     if (includeString == null || parent == null) return ContainerUtil.emptyList();
-    VirtualFile fileByUrl = VfsUtil.findRelativeFile(StringUtil.unquoteString(includeString.getText()), parent);
-    if (fileByUrl == null) return ContainerUtil.emptyList();
-    PsiFile file = ((PsiManagerEx) PsiManager.getInstance(containingFile.getProject())).getFileManager().findFile(fileByUrl);
-    if (file instanceof ErlangFile) {
-      erlangFiles.add((ErlangFile) file);
-    }
-    return erlangFiles;
+    VirtualFile relativeFile = VfsUtil.findRelativeFile(StringUtil.unquoteString(includeString.getText()), parent);
+    if (relativeFile == null) return ContainerUtil.emptyList();
+    PsiFile file = PsiManager.getInstance(containingFile.getProject()).findFile(relativeFile);
+    if (file instanceof ErlangFile) return new SmartList<ErlangFile>((ErlangFile) file);
+    return ContainerUtil.emptyList();
   }
 
   @NotNull
   static List<ErlangRecordDefinition> getErlangRecordFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
     List<ErlangRecordDefinition> fromIncludes = new ArrayList<ErlangRecordDefinition>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
-        if (!forCompletion) {
-          ContainerUtil.addIfNotNull(fromIncludes, file.getRecord(name));
-        }
-        else {
-          fromIncludes.addAll(file.getRecords());
-        }
+      if (!forCompletion) {
+        ContainerUtil.addIfNotNull(fromIncludes, file.getRecord(name));
+      }
+      else {
+        fromIncludes.addAll(file.getRecords());
+      }
     }
     return fromIncludes;
   }
