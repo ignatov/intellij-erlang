@@ -127,8 +127,9 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
       //applications with no version specification have higher priority
       if (myPath == null || appName.equals(libDir.getName())) {
         myPath = libDir;
-        return false;
+        return true;
       }
+      if (appName.equals(myPath.getName())) return true;
       myPath = myPath.getName().compareTo(libDir.getName()) < 0 ? libDir : myPath;
       return true;
     }
