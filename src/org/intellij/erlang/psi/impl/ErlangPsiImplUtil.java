@@ -45,7 +45,10 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.*;
+import com.intellij.util.ArrayUtil;
+import com.intellij.util.Function;
+import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
@@ -797,21 +800,16 @@ public class ErlangPsiImplUtil {
       String libName = split[0];
       final String relativePath = StringUtil.join(split, 1, split.length, "/");
       final Project project = includeLib.getProject();
-      List<VirtualFile> appDirs = ErlangApplicationIndex.getApplicationDirectoriesByName(libName, GlobalSearchScope.allScope(project));
-      final List<ErlangFile> erlangFiles = new ArrayList<ErlangFile>(appDirs.size());
 
-      ContainerUtil.process(appDirs, new Processor<VirtualFile>() {
-        @Override
-        public boolean process(VirtualFile appDir) {
-          VirtualFile file = VfsUtil.findRelativeFile(relativePath, appDir);
-          if (file != null) {
-            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile instanceof ErlangFile)
-              erlangFiles.add((ErlangFile) psiFile);
-          }
-          return true;
-        }
-      });
+      VirtualFile appDir = ErlangApplicationIndex.getApplicationDirectoryByName(libName, GlobalSearchScope.allScope(project));
+      final List<ErlangFile> erlangFiles = new SmartList<ErlangFile>();
+
+      VirtualFile file = VfsUtil.findRelativeFile(relativePath, appDir);
+      if (file != null) {
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        if (psiFile instanceof ErlangFile)
+          erlangFiles.add((ErlangFile) psiFile);
+      }
 
       return erlangFiles;
     }

@@ -20,7 +20,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Processor;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.*;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
@@ -75,22 +74,23 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     return INDEX_VERSION;
   }
 
-  @NotNull
-  public static List<VirtualFile> getApplicationDirectoriesByName(@NotNull String appName, @NotNull GlobalSearchScope searchScope) {
-    ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
-    FileBasedIndex.getInstance().processValues(ERLANG_APPLICAION_INDEX, appName, null, new ApplicationPathExtractingProcessor(result), searchScope);
-    return result;
+  @Nullable
+  public static VirtualFile getApplicationDirectoryByName(@NotNull String appName, @NotNull GlobalSearchScope searchScope) {
+    ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
+    FileBasedIndex.getInstance().processValues(ERLANG_APPLICAION_INDEX, appName, null, processor, searchScope);
+    return processor.getApplicationPath();
   }
 
   public static List<VirtualFile> getAllApplicationDirectories(@NotNull Project project, @NotNull final GlobalSearchScope searchScope) {
-    ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
+    final ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
     final FileBasedIndex index = FileBasedIndex.getInstance();
-    final ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor(result);
 
     index.processAllKeys(ERLANG_APPLICAION_INDEX, new Processor<String>() {
       @Override
       public boolean process(String appName) {
+        ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
         index.processValues(ERLANG_APPLICAION_INDEX, appName, null, processor, searchScope);
+        result.add(processor.getApplicationPath());
         return true;
       }
     }, project);
@@ -100,27 +100,43 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
 
   @Nullable
   private static VirtualFile getLibraryDirectory(VirtualFile appFile) {
-    String libName = appFile.getNameWithoutExtension();
+    String libName = getApplicationName(appFile);
     VirtualFile parent = appFile.getParent();
-    VirtualFile libDir = parent != null ? parent.getParent() : null;
-    String libDirName = libDir != null ? libDir.getName() : null;
+    VirtualFile grandParent = parent != null ? parent.getParent() : null;
 
-    if (parent == null || !"ebin".equals(parent.getName()) || libDirName == null) return null;
-    if (libDirName.equals(libName) || libDirName.startsWith(libName + "-")) return libDir;
+    if (isAppDirectory(parent, libName)) return parent;
+    if (isAppDirectory(grandParent, libName)) return grandParent;
     return null;
   }
 
-  private static class ApplicationPathExtractingProcessor implements FileBasedIndex.ValueProcessor<Void> {
-    private List<VirtualFile> myPaths;
+  private static boolean isAppDirectory(@Nullable VirtualFile directory, String appName) {
+    String dirName = directory != null ? directory.getName() : null;
+    return directory != null && (dirName.equals(appName) || dirName.startsWith(appName + "-"));
+  }
 
-    public ApplicationPathExtractingProcessor(List<VirtualFile> paths) {
-      myPaths = paths;
+  private static class ApplicationPathExtractingProcessor implements FileBasedIndex.ValueProcessor<Void> {
+    private VirtualFile myPath = null;
+
+    public ApplicationPathExtractingProcessor() {
     }
 
     @Override
     public boolean process(VirtualFile appFile, Void value) {
-      ContainerUtil.addIfNotNull(myPaths, getLibraryDirectory(appFile));
+      VirtualFile libDir = getLibraryDirectory(appFile);
+      if (libDir == null) return true;
+      String appName = getApplicationName(appFile);
+      //applications with no version specification have higher priority
+      if (myPath == null || appName.equals(libDir.getName())) {
+        myPath = libDir;
+        return true;
+      }
+      if (appName.equals(myPath.getName())) return true;
+      myPath = myPath.getName().compareTo(libDir.getName()) < 0 ? libDir : myPath;
       return true;
+    }
+
+    public VirtualFile getApplicationPath() {
+      return myPath;
     }
   }
 
@@ -135,7 +151,13 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     @NotNull
     @Override
     public Map<String, Void> map(FileContent inputData) {
-      return Collections.singletonMap(inputData.getFile().getNameWithoutExtension(), null);
+      return Collections.singletonMap(getApplicationName(inputData.getFile()), null);
     }
+  }
+
+  @NotNull
+  private static String getApplicationName(VirtualFile appFile) {
+    String filename = appFile.getName();
+    return filename.endsWith(".app.src") ? filename.substring(0, filename.length() - ".app.src".length()) : appFile.getNameWithoutExtension();
   }
 }
