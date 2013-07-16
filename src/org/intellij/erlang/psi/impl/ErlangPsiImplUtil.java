@@ -45,7 +45,10 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.*;
+import com.intellij.util.ArrayUtil;
+import com.intellij.util.Function;
+import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
@@ -797,21 +800,16 @@ public class ErlangPsiImplUtil {
       String libName = split[0];
       final String relativePath = StringUtil.join(split, 1, split.length, "/");
       final Project project = includeLib.getProject();
-      List<VirtualFile> appDirs = ErlangApplicationIndex.getApplicationDirectoriesByName(libName, GlobalSearchScope.allScope(project));
-      final List<ErlangFile> erlangFiles = new ArrayList<ErlangFile>(appDirs.size());
 
-      ContainerUtil.process(appDirs, new Processor<VirtualFile>() {
-        @Override
-        public boolean process(VirtualFile appDir) {
-          VirtualFile file = VfsUtil.findRelativeFile(relativePath, appDir);
-          if (file != null) {
-            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile instanceof ErlangFile)
-              erlangFiles.add((ErlangFile) psiFile);
-          }
-          return true;
-        }
-      });
+      VirtualFile appDir = ErlangApplicationIndex.getApplicationDirectoryByName(libName, GlobalSearchScope.allScope(project));
+      final List<ErlangFile> erlangFiles = new SmartList<ErlangFile>();
+
+      VirtualFile file = VfsUtil.findRelativeFile(relativePath, appDir);
+      if (file != null) {
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        if (psiFile instanceof ErlangFile)
+          erlangFiles.add((ErlangFile) psiFile);
+      }
 
       return erlangFiles;
     }
@@ -825,12 +823,30 @@ public class ErlangPsiImplUtil {
     VirtualFile virtualFile = containingFile.getOriginalFile().getVirtualFile();
     VirtualFile parent = virtualFile != null ? virtualFile.getParent() : null;
     ErlangIncludeString includeString = include.getIncludeString();
+    final String relativePath = includeString != null ? StringUtil.unquoteString(includeString.getText()) : null;
+    final Project project = containingFile.getProject();
+
     if (includeString == null || parent == null) return ContainerUtil.emptyList();
-    VirtualFile relativeFile = VfsUtil.findRelativeFile(StringUtil.unquoteString(includeString.getText()), parent);
-    if (relativeFile == null) return ContainerUtil.emptyList();
-    PsiFile file = PsiManager.getInstance(containingFile.getProject()).findFile(relativeFile);
-    if (file instanceof ErlangFile) return new SmartList<ErlangFile>((ErlangFile) file);
-    return ContainerUtil.emptyList();
+
+    ErlangFile includedFile = getRelativeErlangFile(relativePath, parent, project);
+    if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
+
+    //relative to direct parent include file was not found, let's search our source roots...
+    return ContainerUtil.mapNotNull(ProjectRootManager.getInstance(project).getContentSourceRoots(), new Function<VirtualFile, ErlangFile>() {
+      @Override
+      @Nullable
+      public ErlangFile fun(VirtualFile virtualFile) {
+        return getRelativeErlangFile(relativePath, virtualFile, project);
+      }
+    });
+  }
+
+  @Nullable
+  private static ErlangFile getRelativeErlangFile(String relativePath, VirtualFile parent, Project project) {
+    VirtualFile relativeFile = VfsUtil.findRelativeFile(relativePath, parent);
+    if (relativeFile == null) return null;
+    PsiFile file = PsiManager.getInstance(project).findFile(relativeFile);
+    return file instanceof ErlangFile ? (ErlangFile) file : null;
   }
 
   @NotNull

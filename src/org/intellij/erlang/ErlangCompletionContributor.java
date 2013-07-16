@@ -196,7 +196,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       String libRelativePath = split.length > 1 ? StringUtil.join(split, 1, split.length, "/") + slash: "";
       List<VirtualFile> appDirs = split.length == 1 && libRelativePath.isEmpty() ?
         ErlangApplicationIndex.getAllApplicationDirectories(file.getProject(), GlobalSearchScope.allScope(file.getProject())) :
-        ErlangApplicationIndex.getApplicationDirectoriesByName(appName, GlobalSearchScope.allScope(file.getProject()));
+        ContainerUtil.createMaybeSingletonList(ErlangApplicationIndex.getApplicationDirectoryByName(appName, GlobalSearchScope.allScope(file.getProject())));
       List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
 
       for (final VirtualFile appRoot : appDirs) {
