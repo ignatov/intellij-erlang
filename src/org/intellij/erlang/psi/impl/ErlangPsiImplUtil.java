@@ -823,12 +823,30 @@ public class ErlangPsiImplUtil {
     VirtualFile virtualFile = containingFile.getOriginalFile().getVirtualFile();
     VirtualFile parent = virtualFile != null ? virtualFile.getParent() : null;
     ErlangIncludeString includeString = include.getIncludeString();
+    final String relativePath = includeString != null ? StringUtil.unquoteString(includeString.getText()) : null;
+    final Project project = containingFile.getProject();
+
     if (includeString == null || parent == null) return ContainerUtil.emptyList();
-    VirtualFile relativeFile = VfsUtil.findRelativeFile(StringUtil.unquoteString(includeString.getText()), parent);
-    if (relativeFile == null) return ContainerUtil.emptyList();
-    PsiFile file = PsiManager.getInstance(containingFile.getProject()).findFile(relativeFile);
-    if (file instanceof ErlangFile) return new SmartList<ErlangFile>((ErlangFile) file);
-    return ContainerUtil.emptyList();
+
+    ErlangFile includedFile = getRelativeErlangFile(relativePath, parent, project);
+    if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
+
+    //relative to direct parent include file was not found, let's search our source roots...
+    return ContainerUtil.mapNotNull(ProjectRootManager.getInstance(project).getContentSourceRoots(), new Function<VirtualFile, ErlangFile>() {
+      @Override
+      @Nullable
+      public ErlangFile fun(VirtualFile virtualFile) {
+        return getRelativeErlangFile(relativePath, virtualFile, project);
+      }
+    });
+  }
+
+  @Nullable
+  private static ErlangFile getRelativeErlangFile(String relativePath, VirtualFile parent, Project project) {
+    VirtualFile relativeFile = VfsUtil.findRelativeFile(relativePath, parent);
+    if (relativeFile == null) return null;
+    PsiFile file = PsiManager.getInstance(project).findFile(relativeFile);
+    return file instanceof ErlangFile ? (ErlangFile) file : null;
   }
 
   @NotNull
