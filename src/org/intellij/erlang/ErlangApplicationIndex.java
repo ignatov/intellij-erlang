@@ -17,6 +17,7 @@
 package org.intellij.erlang;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Processor;
@@ -41,6 +42,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   private static final int INDEX_VERSION = 0;
   private static final KeyDescriptor<String> KEY_DESCRIPTOR = new EnumeratorStringDescriptor();
   private static final DataIndexer<String, Void, FileContent> DATA_INDEXER = new ErlangApplicationDataIndexer();
+  private static final String APP_SRC = ".app.src";
 
   @NotNull
   @Override
@@ -117,9 +119,6 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   private static class ApplicationPathExtractingProcessor implements FileBasedIndex.ValueProcessor<Void> {
     private VirtualFile myPath = null;
 
-    public ApplicationPathExtractingProcessor() {
-    }
-
     @Override
     public boolean process(VirtualFile appFile, Void value) {
       VirtualFile libDir = getLibraryDirectory(appFile);
@@ -128,9 +127,8 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
       //applications with no version specification have higher priority
       if (myPath == null || appName.equals(libDir.getName())) {
         myPath = libDir;
-        return true;
+        return false;
       }
-      if (appName.equals(myPath.getName())) return true;
       myPath = myPath.getName().compareTo(libDir.getName()) < 0 ? libDir : myPath;
       return true;
     }
@@ -158,6 +156,6 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   @NotNull
   private static String getApplicationName(VirtualFile appFile) {
     String filename = appFile.getName();
-    return filename.endsWith(".app.src") ? filename.substring(0, filename.length() - ".app.src".length()) : appFile.getNameWithoutExtension();
+    return filename.endsWith(APP_SRC) ? StringUtil.trimEnd(filename, APP_SRC) : appFile.getNameWithoutExtension();
   }
 }

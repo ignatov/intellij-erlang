@@ -800,18 +800,8 @@ public class ErlangPsiImplUtil {
       String libName = split[0];
       final String relativePath = StringUtil.join(split, 1, split.length, "/");
       final Project project = includeLib.getProject();
-
       VirtualFile appDir = ErlangApplicationIndex.getApplicationDirectoryByName(libName, GlobalSearchScope.allScope(project));
-      final List<ErlangFile> erlangFiles = new SmartList<ErlangFile>();
-
-      VirtualFile file = VfsUtil.findRelativeFile(relativePath, appDir);
-      if (file != null) {
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile instanceof ErlangFile)
-          erlangFiles.add((ErlangFile) psiFile);
-      }
-
-      return erlangFiles;
+      return ContainerUtil.createMaybeSingletonList(getRelativeErlangFile(project, relativePath, appDir));
     }
 
     return Collections.emptyList();
@@ -828,7 +818,7 @@ public class ErlangPsiImplUtil {
 
     if (includeString == null || parent == null) return ContainerUtil.emptyList();
 
-    ErlangFile includedFile = getRelativeErlangFile(relativePath, parent, project);
+    ErlangFile includedFile = getRelativeErlangFile(project, relativePath, parent);
     if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
 
     //relative to direct parent include file was not found, let's search our source roots...
@@ -836,13 +826,13 @@ public class ErlangPsiImplUtil {
       @Override
       @Nullable
       public ErlangFile fun(VirtualFile virtualFile) {
-        return getRelativeErlangFile(relativePath, virtualFile, project);
+        return getRelativeErlangFile(project, relativePath, virtualFile);
       }
     });
   }
 
   @Nullable
-  private static ErlangFile getRelativeErlangFile(String relativePath, VirtualFile parent, Project project) {
+  private static ErlangFile getRelativeErlangFile(@NotNull Project project, @NotNull String relativePath, @Nullable VirtualFile parent) {
     VirtualFile relativeFile = VfsUtil.findRelativeFile(relativePath, parent);
     if (relativeFile == null) return null;
     PsiFile file = PsiManager.getInstance(project).findFile(relativeFile);
