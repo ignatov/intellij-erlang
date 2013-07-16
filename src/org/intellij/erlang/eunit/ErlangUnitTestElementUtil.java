@@ -8,9 +8,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.SmartList;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -22,19 +23,12 @@ import java.util.List;
  * @author savenko
  */
 public class ErlangUnitTestElementUtil {
-
   private ErlangUnitTestElementUtil() {
   }
 
-  public static Collection<ErlangFunction> findFunctionTestElements(PsiElement element) {
-    //TODO support multiple functions selection
-    SmartList<ErlangFunction> selectedFunctions = new SmartList<ErlangFunction>();
-    ErlangFunction function = getParentNullaryFunction(element);
-
-    if (function != null) {
-      selectedFunctions.add(function);
-    }
-    return selectedFunctions;
+  @NotNull
+  public static Collection<ErlangFunction> findFunctionTestElements(@Nullable PsiElement element) {
+    return ContainerUtil.createMaybeSingletonList(getZeroArityFunction(element));
   }
 
   public static Collection<ErlangFile> findFileTestElements(Project project, DataContext dataContext) {
@@ -53,9 +47,9 @@ public class ErlangUnitTestElementUtil {
   }
 
   @Nullable
-  public static ErlangFunction getParentNullaryFunction(PsiElement psiElement) {
+  public static ErlangFunction getZeroArityFunction(@Nullable PsiElement psiElement) {
     ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction)psiElement : PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
-    int arity = function != null ? function.getArity() : -1;
+    int arity = function == null ? -1 : function.getArity();
     return 0 == arity ? function : null;
   }
 }

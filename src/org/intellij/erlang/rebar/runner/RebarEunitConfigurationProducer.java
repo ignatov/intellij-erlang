@@ -7,6 +7,7 @@ import com.intellij.execution.junit.RuntimeConfigurationProducer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import org.intellij.erlang.eunit.ErlangTestRunConfigProducersUtil;
 import org.intellij.erlang.eunit.ErlangUnitTestElementUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -38,7 +39,8 @@ public class RebarEunitConfigurationProducer extends RuntimeConfigurationProduce
 
     myFile = psiElement.getContainingFile();
 
-    if (!(myFile instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile)) return null;
+    if (!(myFile instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile) ||
+      !ErlangTestRunConfigProducersUtil.shouldProduceRebarTestRunConfiguration(context.getProject(), context.getModule())) return null;
 
     RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(psiElement.getProject(), context);
     RebarEunitRunConfiguration configuration = (RebarEunitRunConfiguration) settings.getConfiguration();
@@ -60,11 +62,17 @@ public class RebarEunitConfigurationProducer extends RuntimeConfigurationProduce
   }
 
   private static String createConfigurationName(Collection<ErlangFunction> functions, Collection<ErlangFile> suites) {
-    if (functions.size() == 1) return functions.iterator().next().getName();
-    if (suites.size() == 1) return suites.iterator().next().getName();
-    if (functions.size() > 1) return "multi-funciton";
-    if (suites.size() > 1) return "multi-suite";
-    return "Rebar eunit";
+    if (suites.isEmpty()) return "Rebar Eunit";
+
+    VirtualFile virtualFile = suites.iterator().next().getVirtualFile();
+    String firstModuleName = virtualFile != null ? virtualFile.getNameWithoutExtension() : "";
+    String firstFuntionName = functions.size() > 0 ? firstModuleName + ":" + functions.iterator().next().getName() : "";
+
+    if (functions.size() == 1) return firstFuntionName;
+    if (suites.size() == 1) return firstModuleName;
+    if (functions.size() > 1) return firstFuntionName + " and " + (functions.size() - 1) + " more";
+
+    return firstModuleName + " and " + (suites.size() - 1) + " more";
   }
 
   private static boolean appendSuitesOption(StringBuilder commandBuilder, Collection<ErlangFile> suites) {
@@ -86,6 +94,7 @@ public class RebarEunitConfigurationProducer extends RuntimeConfigurationProduce
   private static void appendTestsOption(StringBuilder commandBuilder, Collection<ErlangFunction> functions) {
     if (functions.isEmpty()) return;
 
+    commandBuilder.append("tests=");
     for (ErlangFunction f : functions) {
       commandBuilder.append(f.getName());
       commandBuilder.append(",");

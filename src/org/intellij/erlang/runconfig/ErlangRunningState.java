@@ -54,7 +54,7 @@ public abstract class ErlangRunningState extends CommandLineState {
     return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
   }
 
-  private GeneralCommandLine getCommand(Sdk sdk) {
+  private GeneralCommandLine getCommand(Sdk sdk) throws ExecutionException {
     final GeneralCommandLine commandLine = new GeneralCommandLine();
     String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(sdk.getHomePath()).getAbsolutePath());
     commandLine.setExePath(erl);
@@ -68,5 +68,5 @@ public abstract class ErlangRunningState extends CommandLineState {
     return commandLine;
   }
 
-  protected abstract void setUpCommandLineParameters(GeneralCommandLine commandLine);
+  protected abstract void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException;
 }

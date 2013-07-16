@@ -78,8 +78,8 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangGotoSuperTest.class);
     suite.addTestSuite(ErlangEnterHandlerTest.class);
     suite.addTestSuite(ErlangIncludeLibResolveTest.class);
-    suite.addTestSuite(ErlangPerformanceTest.class);
     suite.addTestSuite(ErlangUnitTestElementUtilTest.class);
+    suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }
 }

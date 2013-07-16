@@ -85,7 +85,7 @@ final class RebarRunningState extends CommandLineState {
 
   @NotNull
   private ConsoleView createConsoleView(Executor executor) throws ExecutionException {
-    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties((RebarRunConfigurationBase) getRunnerSettings().getRunProfile(), executor, false);
+    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties((RebarRunConfigurationBase) getRunnerSettings().getRunProfile(), executor);
     
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH));

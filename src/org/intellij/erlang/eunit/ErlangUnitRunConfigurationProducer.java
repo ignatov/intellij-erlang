@@ -28,6 +28,7 @@ import com.intellij.psi.PsiFile;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -52,7 +53,8 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
     PsiElement psiElement = location.getPsiElement();
     myFile = psiElement.getContainingFile();
 
-    if (!(myFile instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile)) return null;
+    if (!(myFile instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile) ||
+      !ErlangTestRunConfigProducersUtil.shouldProduceEunitTestRunConfiguration(context.getProject(), context.getModule())) return null;
 
     RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(psiElement.getProject(), context);
     ErlangUnitRunConfiguration configuration = (ErlangUnitRunConfiguration) settings.getConfiguration();
@@ -71,7 +73,7 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
       }
       configuration.getConfigData().setFunctionNames(functionNames);
       configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
-      configuration.setName(functionNames.size() == 1 ? functionNames.iterator().next() : "multi-function");
+      configuration.setName(functionNames.iterator().next() + (functionNames.size() > 1 ? " and " + (functionNames.size() - 1) + " more" : ""));
     }
     else {
       LinkedHashSet<String> moduleNames = new LinkedHashSet<String>();
@@ -86,14 +88,14 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
 
       configuration.getConfigData().setModuleNames(moduleNames);
       configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE);
-      configuration.setName(moduleNames.size() == 1 ? moduleNames.iterator().next() : "multi-module");
+      configuration.setName(moduleNames.iterator().next() + (moduleNames.size() > 1 ? " and " + (moduleNames.size() - 1) + " more" : ""));
     }
 
     return settings;
   }
 
   @Override
-  public int compareTo(Object o) {
+  public int compareTo(@NotNull Object o) {
     return PREFERED;
   }
 }

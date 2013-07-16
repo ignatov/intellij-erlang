@@ -41,12 +41,10 @@ import static com.intellij.execution.testframework.sm.ServiceMessageBuilder.*;
  */
 public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties implements SMCustomMessagesParsing {
 
-  private final boolean myEunit;
   private RuntimeConfiguration myConfig;
 
-  public ErlangUnitConsoleProperties(final RuntimeConfiguration config, final Executor executor, boolean isEunit) {
+  public ErlangUnitConsoleProperties(final RuntimeConfiguration config, final Executor executor) {
     super(config, "Erlang", executor);
-    myEunit = isEunit;
     myConfig = config;
   }
 
@@ -61,7 +59,11 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
 
       String myCurrentModule = "";
       String myCurrentTest = "";
+      String myCurrentFailedTest = "";
+      Key myCurrentOutputType = null;
+      ServiceMessageVisitor myCurrentVisitor = null;
       boolean myFailed = false;
+      boolean mySingleFunctionModuleTestFailed = false;
       String myStdOut = "";
       Set<String> myFailedTests = new HashSet<String>();
 
@@ -73,53 +75,104 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
         Pattern OK_ONE_TEST = Pattern.compile("(\\w+): (\\w+) .*\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
         Pattern FAILED = Pattern.compile("(?:  )?(\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
         Pattern FAILED_ONE_TEST = Pattern.compile("(\\w+): (\\w+).*\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
+        Pattern MODULE = Pattern.compile("(?:  )?module \'(\\w+)\'" + System.getProperty("line.separator"));
 
-        if (StringUtil.startsWith(text, (myEunit ? "" : "  ") + "module")) {
-          String module = StringUtil.unquoteString(StringUtil.getWordsIn(text).get(1));
-          myCurrentModule = module;
-          ServiceMessageBuilder builder = setLocation(ServiceMessageBuilder.testSuiteStarted(module), module);
-          return super.processServiceMessages(builder.toString(), outputType, visitor);
+        myCurrentOutputType = outputType;
+        myCurrentVisitor = visitor;
+
+        if ((m = MODULE.matcher(text)).matches()) {
+          String module = m.group(1);
+          return startTestSuite(module);
         }
         else if (StringUtil.startsWith(text, "  [done")) {
-          boolean result = super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), outputType, visitor);
-          myCurrentModule = "";
-          return result;
+          return finishTestSuite();
         }
         else if ((m = OK.matcher(text)).find() || (m = OK_ONE_TEST.matcher(text)).find()) {
-          String module = m.group(1);
-          String test = myCurrentModule.isEmpty() ? module + ":" + m.group(2) : m.group(2);
-          ServiceMessageBuilder serviceMessageBuilder = setLocation(testStarted(test), module, test);
-          return super.processServiceMessages(serviceMessageBuilder.toString(), outputType, visitor)
-            && super.processServiceMessages(testFinished(test).toString(), outputType, visitor);
+          String test = m.group(2);
+          if (!isTestingModule()) {
+            String module = m.group(1);
+            return startTestSuite(module) && startTest(test) && finishTest() && finishTestSuite();
+          }
+          return startTest(test) && finishTest();
         }
         else if ((m = FAILED.matcher(text)).find() || (m = FAILED_ONE_TEST.matcher(text)).find() || text.trim().equals("undefined")) {
-          boolean matches = FAILED.matcher(text).find() || FAILED_ONE_TEST.matcher(text).find();
-          String module = matches ? m.group(1) : myCurrentModule;
-          String test = matches ? (myCurrentModule.isEmpty() ? module + ":" + m.group(2) : m.group(2)) : "undefined";
           myFailed = true;
           myStdOut = "";
-          myCurrentTest = test;
-          ServiceMessageBuilder serviceMessageBuilder = setLocation(testStarted(test), module, test);
-          return super.processServiceMessages(serviceMessageBuilder.toString(), outputType, visitor);
+          if (text.trim().equals("undefined")) {
+            myCurrentFailedTest = "undefined";
+            return startTest("undefined");
+          }
+          else {
+            String test = m.group(2);
+            myCurrentFailedTest = test;
+            if (!isTestingModule()) {
+              String module = m.group(1);
+              mySingleFunctionModuleTestFailed = true;
+              return startTestSuite(module) && startTest(test);
+            }
+            return startTest(test);
+          }
         }
-        else if (text.startsWith("ERROR:") && !myFailedTests.contains(myCurrentTest)) {
+        else if (text.startsWith("ERROR:") && !myFailedTests.contains(myCurrentFailedTest)) {
           myStdOut += text;
-          return super.processServiceMessages(testFailed(myCurrentTest).addAttribute("message", myStdOut).toString(), outputType, visitor)
-            && super.processServiceMessages(testFinished(myCurrentTest).toString(), outputType, visitor);
+          boolean result = failTest() && finishTest(myCurrentFailedTest);
+          if (mySingleFunctionModuleTestFailed) {
+            mySingleFunctionModuleTestFailed = false;
+            result &= finishTestSuite();
+          }
+          return result;
         }
         else if (myFailed) {
           if (StringUtil.isEmptyOrSpaces(text)) {
             myFailed = false;
-            myFailedTests.add(myCurrentTest);
-            return super.processServiceMessages(testFailed(myCurrentTest).addAttribute("message", myStdOut).toString(), outputType, visitor)
-              && super.processServiceMessages(testFinished(myCurrentTest).toString(), outputType, visitor);
+            myFailedTests.add(myCurrentFailedTest);
+            boolean result = failTest() && finishTest(myCurrentFailedTest);
+            if (mySingleFunctionModuleTestFailed) {
+              mySingleFunctionModuleTestFailed = false;
+              result &= finishTestSuite();
+            }
+            return result;
           }
         }
         else if (text.startsWith("=======================================================")){
-          return super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), outputType, visitor);
+          return finishTestSuite();
         }
         myStdOut += text;
         return true;
+      }
+
+      private boolean failTest() throws ParseException {
+        return super.processServiceMessages(testFailed(myCurrentFailedTest).addAttribute("message", myStdOut).toString(), myCurrentOutputType, myCurrentVisitor);
+      }
+
+      private boolean isTestingModule() {
+        return !myCurrentModule.isEmpty();
+      }
+
+      private boolean startTest(String test) throws ParseException {
+        myCurrentTest = test;
+        ServiceMessageBuilder serviceMessageBuilder = setLocation(testStarted(test), myCurrentModule, test);
+        return super.processServiceMessages(serviceMessageBuilder.toString(), myCurrentOutputType, myCurrentVisitor);
+      }
+
+      private boolean finishTest() throws ParseException {
+        return finishTest(myCurrentTest);
+      }
+
+      private boolean finishTest(String test) throws ParseException {
+        return super.processServiceMessages(testFinished(test).toString(), myCurrentOutputType, myCurrentVisitor);
+      }
+
+      private boolean startTestSuite(String module) throws ParseException {
+        myCurrentModule = module;
+        ServiceMessageBuilder builder = setLocation(ServiceMessageBuilder.testSuiteStarted(module), module);
+        return super.processServiceMessages(builder.toString(), myCurrentOutputType, myCurrentVisitor);
+      }
+
+      private boolean finishTestSuite() throws ParseException {
+        boolean result = super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), myCurrentOutputType, myCurrentVisitor);
+        myCurrentModule = "";
+        return result;
       }
 
       private ServiceMessageBuilder setLocation(ServiceMessageBuilder builder, String module, String test) {

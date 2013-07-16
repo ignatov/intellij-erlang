@@ -51,7 +51,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @Override
-  protected void setUpCommandLineParameters(GeneralCommandLine commandLine) {
+  protected void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException {
     commandLine.addParameter("-run");
     commandLine.addParameter("-eval");
     commandLine.addParameter("eunit:test([" + getTestObjectsString() + "], [verbose]).");
@@ -70,16 +70,16 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
 
-    ErlangUnitRerunFailedTestsAction rerunFailedAction = new ErlangUnitRerunFailedTestsAction(consoleView);
-    rerunFailedAction.init(((BaseTestsOutputConsoleView)consoleView).getProperties(), getEnvironment());
-    rerunFailedAction.setModelProvider(new Getter<TestFrameworkRunningModel>() {
+    ErlangUnitRerunFailedTestsAction rerunAction = new ErlangUnitRerunFailedTestsAction(consoleView);
+    rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties(), getEnvironment());
+    rerunAction.setModelProvider(new Getter<TestFrameworkRunningModel>() {
       @Override
       public TestFrameworkRunningModel get() {
-        return ((SMTRunnerConsoleView)consoleView).getResultsViewer();
+        return ((SMTRunnerConsoleView) consoleView).getResultsViewer();
       }
     });
 
-    executionResult.setRestartActions(rerunFailedAction, new ToggleAutoTestAction());
+    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());
     return executionResult;
   }
 
@@ -88,14 +88,15 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     final ErlangUnitRunConfiguration runConfiguration = (ErlangUnitRunConfiguration) getRunnerSettings().getRunProfile();
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(
       "Erlang",
-      new ErlangUnitConsoleProperties(runConfiguration, executor, true),
+      new ErlangUnitConsoleProperties(runConfiguration, executor),
       getRunnerSettings(),
       getConfigurationSettings(),
       new ErlangTestLocationProvider()
     );
   }
 
-  private String getTestObjectsString() {
+  @NotNull
+  private String getTestObjectsString() throws ExecutionException {
     ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = myConfiguration.getConfigData().getKind();
 
     if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
@@ -110,15 +111,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       for (Map.Entry<String, List<String>> e : modules.entrySet()) {
         String moduleName = e.getKey();
 
-        result.append("{\"module \'");
-        result.append(moduleName);
-        result.append("\'\", [");
+        result.append("{\"module \'").append(moduleName).append("\'\", [");
         for (String function : e.getValue()) {
-          result.append("fun ");
-          result.append(moduleName);
-          result.append(':');
-          result.append(function);
-          result.append("/0, ");
+          result.append("fun ").append(moduleName).append(':').append(function).append("/0, ");
         }
         result.setLength(result.length() - 2);
         result.append("]}, ");
@@ -130,7 +125,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       return result.toString();
     }
 
-    return "UNKNOWN RUN CONFIG KIND";
+    throw new ExecutionException("Unknown run config kind");
   }
 
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {
