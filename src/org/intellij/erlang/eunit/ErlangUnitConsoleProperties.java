@@ -63,7 +63,6 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
       Key myCurrentOutputType = null;
       ServiceMessageVisitor myCurrentVisitor = null;
       boolean myFailed = false;
-      boolean mySingleFunctionModuleTestFailed = false;
       String myStdOut = "";
       Set<String> myFailedTests = new HashSet<String>();
 
@@ -72,9 +71,9 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
         Matcher m;
 
         Pattern OK = Pattern.compile("(?:  )?(\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
-        Pattern OK_ONE_TEST = Pattern.compile("(\\w+): (\\w+) .*\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
+        Pattern OK_ONE_TEST = Pattern.compile("(\\w+):?\\d*: (\\w+) .*\\.\\.\\.(\\[\\d*\\.\\d+ s] )?ok");
         Pattern FAILED = Pattern.compile("(?:  )?(\\w+):?\\d*: (\\w+)\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
-        Pattern FAILED_ONE_TEST = Pattern.compile("(\\w+): (\\w+).*\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
+        Pattern FAILED_ONE_TEST = Pattern.compile("(\\w+):?\\d*: (\\w+).*\\.\\.\\.(\\[\\d*\\.\\d+ s] )?\\*failed\\*");
         Pattern MODULE = Pattern.compile("(?:  )?module \'(\\w+)\'" + System.getProperty("line.separator"));
 
         myCurrentOutputType = outputType;
@@ -88,50 +87,33 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
           return finishTestSuite();
         }
         else if ((m = OK.matcher(text)).find() || (m = OK_ONE_TEST.matcher(text)).find()) {
+          String module = m.group(1);
           String test = m.group(2);
-          if (!isTestingModule()) {
-            String module = m.group(1);
-            return startTestSuite(module) && startTest(test) && finishTest() && finishTestSuite();
-          }
-          return startTest(test) && finishTest();
+          return startTest(test, module) && finishTest();
         }
         else if ((m = FAILED.matcher(text)).find() || (m = FAILED_ONE_TEST.matcher(text)).find() || text.trim().equals("undefined")) {
           myFailed = true;
           myStdOut = "";
           if (text.trim().equals("undefined")) {
             myCurrentFailedTest = "undefined";
-            return startTest("undefined");
+            return startTest("undefined", myCurrentModule);
           }
           else {
+            String module = m.group(1);
             String test = m.group(2);
             myCurrentFailedTest = test;
-            if (!isTestingModule()) {
-              String module = m.group(1);
-              mySingleFunctionModuleTestFailed = true;
-              return startTestSuite(module) && startTest(test);
-            }
-            return startTest(test);
+            return startTest(test, module);
           }
         }
         else if (text.startsWith("ERROR:") && !myFailedTests.contains(myCurrentFailedTest)) {
           myStdOut += text;
-          boolean result = failTest() && finishTest(myCurrentFailedTest);
-          if (mySingleFunctionModuleTestFailed) {
-            mySingleFunctionModuleTestFailed = false;
-            result &= finishTestSuite();
-          }
-          return result;
+          return failTest() && finishTest(myCurrentFailedTest);
         }
         else if (myFailed) {
           if (StringUtil.isEmptyOrSpaces(text)) {
             myFailed = false;
             myFailedTests.add(myCurrentFailedTest);
-            boolean result = failTest() && finishTest(myCurrentFailedTest);
-            if (mySingleFunctionModuleTestFailed) {
-              mySingleFunctionModuleTestFailed = false;
-              result &= finishTestSuite();
-            }
-            return result;
+            return failTest() && finishTest(myCurrentFailedTest);
           }
         }
         else if (text.startsWith("=======================================================")){
@@ -144,15 +126,17 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
       private boolean failTest() throws ParseException {
         return super.processServiceMessages(testFailed(myCurrentFailedTest).addAttribute("message", myStdOut).toString(), myCurrentOutputType, myCurrentVisitor);
       }
-
-      private boolean isTestingModule() {
-        return !myCurrentModule.isEmpty();
-      }
-
-      private boolean startTest(String test) throws ParseException {
+      private boolean startTest(String test, String module) throws ParseException {
+        boolean result = true;
+        if (!myCurrentModule.equals(module)) {
+          if (!myCurrentModule.isEmpty()) {
+            result = finishTestSuite();
+          }
+          result &= startTestSuite(module);
+        }
         myCurrentTest = test;
-        ServiceMessageBuilder serviceMessageBuilder = setLocation(testStarted(test), myCurrentModule, test);
-        return super.processServiceMessages(serviceMessageBuilder.toString(), myCurrentOutputType, myCurrentVisitor);
+        ServiceMessageBuilder serviceMessageBuilder = setLocation(testStarted(test), module, test);
+        return result && super.processServiceMessages(serviceMessageBuilder.toString(), myCurrentOutputType, myCurrentVisitor);
       }
 
       private boolean finishTest() throws ParseException {
@@ -170,6 +154,8 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
       }
 
       private boolean finishTestSuite() throws ParseException {
+        if (myCurrentModule.isEmpty()) return true;
+
         boolean result = super.processServiceMessages(testSuiteFinished(myCurrentModule).toString(), myCurrentOutputType, myCurrentVisitor);
         myCurrentModule = "";
         return result;

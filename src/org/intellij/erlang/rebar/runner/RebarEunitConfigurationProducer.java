@@ -47,13 +47,11 @@ public class RebarEunitConfigurationProducer extends RuntimeConfigurationProduce
 
     Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(psiElement);
     Collection<ErlangFile> suites = ErlangUnitTestElementUtil.findFileTestElements(context.getProject(), context.getDataContext());
-    StringBuilder commandBuilder = new StringBuilder();
-    commandBuilder.append("eunit ");
-    if (!appendSuitesOption(commandBuilder, suites)) return null;
-    commandBuilder.append(' ');
-    appendTestsOption(commandBuilder, functions);
+    String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, functions, true);
 
-    configuration.setCommand(commandBuilder.toString());
+    if (command.isEmpty()) return null;
+
+    configuration.setCommand(command);
     configuration.setSkipDependencies(true);
     configuration.setUseTestConsole(true);
     configuration.setName(createConfigurationName(functions, suites));
@@ -73,33 +71,6 @@ public class RebarEunitConfigurationProducer extends RuntimeConfigurationProduce
     if (functions.size() > 1) return firstFuntionName + " and " + (functions.size() - 1) + " more";
 
     return firstModuleName + " and " + (suites.size() - 1) + " more";
-  }
-
-  private static boolean appendSuitesOption(StringBuilder commandBuilder, Collection<ErlangFile> suites) {
-    boolean suiteAdded = false;
-
-    commandBuilder.append("suites=");
-    for (ErlangFile suiteFile : suites) {
-      VirtualFile virtualFile = suiteFile.getVirtualFile();
-      if (virtualFile != null) {
-        commandBuilder.append(virtualFile.getNameWithoutExtension());
-        commandBuilder.append(",");
-        suiteAdded = true;
-      }
-    }
-    commandBuilder.setLength(commandBuilder.length() - 1);
-    return suiteAdded;
-  }
-
-  private static void appendTestsOption(StringBuilder commandBuilder, Collection<ErlangFunction> functions) {
-    if (functions.isEmpty()) return;
-
-    commandBuilder.append("tests=");
-    for (ErlangFunction f : functions) {
-      commandBuilder.append(f.getName());
-      commandBuilder.append(",");
-    }
-    commandBuilder.setLength(commandBuilder.length() - 1);
   }
 
   @Override

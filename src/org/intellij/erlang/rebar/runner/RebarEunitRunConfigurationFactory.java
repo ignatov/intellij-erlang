@@ -32,6 +32,6 @@ public class RebarEunitRunConfigurationFactory extends ConfigurationFactory {
 
   @Override
   public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-    return new RebarEunitRunConfiguration("Erlang Rebar Eunit", project);
+    return new RebarEunitRunConfiguration(project, "Erlang Rebar Eunit");
   }
 }

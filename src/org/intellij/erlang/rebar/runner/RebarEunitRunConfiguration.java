@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
  * @author savenko
  */
 public class RebarEunitRunConfiguration extends RebarRunConfigurationBase {
-  protected RebarEunitRunConfiguration(@NotNull String name, @NotNull Project project) {
+  protected RebarEunitRunConfiguration(@NotNull Project project, @NotNull String name) {
     super(name, project, RebarEunitRunConfigurationFactory.getInstance());
   }
 }

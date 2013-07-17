@@ -28,13 +28,17 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
+import com.intellij.execution.testframework.TestFrameworkRunningModel;
 import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
+import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
+import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Getter;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.console.FileReferenceFilter;
@@ -73,12 +77,21 @@ final class RebarRunningState extends CommandLineState {
       ProcessHandler processHandler = startProcess();
       setConsoleBuilder(getConsoleBuilder());
 
-      ConsoleView consoleView = createConsoleView(executor);
+      final ConsoleView consoleView = createConsoleView(executor);
       ErlangConsoleUtil.attachFilters(myConfiguration.getProject(), consoleView);
       consoleView.attachToProcess(processHandler);
 
+      RebarEunitRerunFailedTestsAction rerunAction = new RebarEunitRerunFailedTestsAction(consoleView);
+      rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties(), getEnvironment());
+      rerunAction.setModelProvider(new Getter<TestFrameworkRunningModel>() {
+        @Override
+        public TestFrameworkRunningModel get() {
+          return ((SMTRunnerConsoleView) consoleView).getResultsViewer();
+        }
+      });
+
       DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
-      executionResult.setRestartActions(new ToggleAutoTestAction());
+      executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());
       return executionResult;
     }
   }
@@ -90,7 +103,7 @@ final class RebarRunningState extends CommandLineState {
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_FAILURE_PATH));
-    
+
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(
       "Rebar",
       consoleProperties,
