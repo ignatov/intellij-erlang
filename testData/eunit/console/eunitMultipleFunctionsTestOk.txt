@@ -1,0 +1,7 @@
+======================== EUnit ========================
+module 'aaaaaaa'
+  aaaaaaa: basic_test_...[0.006 s] ok
+  aaaaaaa: simple_2_test...ok
+  [done in 0.012 s]
+=======================================================
+  All 2 tests passed.

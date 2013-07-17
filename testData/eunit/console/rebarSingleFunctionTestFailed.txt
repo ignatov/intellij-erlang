@@ -1,0 +1,18 @@
+==> test-rebar (eunit)
+NOTICE: Using experimental option 'tests'
+    Running test function(s):
+      suite1_tests:foo1_test/0
+======================== EUnit ========================
+suite1_tests: foo1_test...*failed*
+in function suite1_tests:'-foo1_test/0-fun-0-'/0 (test/suite1_tests.erl, line 9)
+**error:{assertion_failed,[{module,suite1_tests},
+                   {line,9},
+                   {expression,"false"},
+                   {expected,true},
+                   {value,false}]}
+
+
+=======================================================
+  Failed: 1.  Skipped: 0.  Passed: 0.
+ERROR: One or more eunit tests failed.
+ERROR: eunit failed while processing /home/user/projects/test-rebar: rebar_abort

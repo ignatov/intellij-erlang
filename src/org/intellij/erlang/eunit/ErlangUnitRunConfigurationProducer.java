@@ -99,4 +99,3 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
     return PREFERED;
   }
 }
-
