@@ -27,7 +27,21 @@ import org.jetbrains.annotations.NotNull;
 
 public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   protected void doTest() {
-    myFixture.configureByFile(getTestName(false) + ".erl");
+    doTest(false);
+  }
+
+  protected void doTestWithApp() {
+    doTest(true);
+  }
+
+  protected void doTest(boolean withApp) {
+    String testDataFile = getTestName(false) + ".erl";
+    if (withApp) {
+      myFixture.configureByFiles(testDataFile, "testapp-1/ebin/testapp.app", "testapp-1/include/testapp.hrl");
+    }
+    else {
+      myFixture.configureByFile(testDataFile);
+    }
     setUpInspections(myFixture);
     myFixture.checkHighlighting(true, false, false);
   }
@@ -119,14 +133,21 @@ public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtur
   public void testIncludeLib()        { doTest(); }
 
   public void testUnresolvedMacros()  {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  private void enableUnresolvedMacroInspection() {
     //noinspection unchecked
     myFixture.enableInspections(
       ErlangUnresolvedMacrosInspection.class
     );
-    doTest();
   }
 
   public void test176() {
     myFixture.configureByText("aaa.hrl", "foo() -> ok.");
   }
+
+  public void testIncludeResolve()       { enableUnresolvedMacroInspection(); doTestWithApp(); }
+  public void testIncludeLibResolve()    { enableUnresolvedMacroInspection(); doTestWithApp(); }
 }
