@@ -38,6 +38,7 @@ parse_header(String) ->
     lists:foldr(F, [], Parts)}.
 
 ctype($\%) -> percent;
+ctype($\,) -> comma;
 ctype($s) -> string;
 ctype($b) -> bin;
 ctype($o) -> oct;
