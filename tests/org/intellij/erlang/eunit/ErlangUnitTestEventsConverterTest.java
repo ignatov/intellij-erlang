@@ -66,8 +66,12 @@ public class ErlangUnitTestEventsConverterTest extends ErlangLightPlatformCodeIn
 
   public void testRebarSingleSuiteTestFailed()        throws Exception { doTest(); }
   public void testRebarSingleSuiteTestOk()            throws Exception { doTest(); }
-  public void testRebarMultipleSuitesTestFailed()      throws Exception { doTest(); }
-  public void testRebarMultipleSuitesTestOk()          throws Exception { doTest(); }
+  public void testRebarMultipleSuitesTestFailed()     throws Exception { doTest(); }
+  public void testRebarMultipleSuitesTestOk()         throws Exception { doTest(); }
+
+  public void testRebarEmptyModule()                  throws Exception { doTest(); }
+  public void testRebarNestedModules()                throws Exception { doTest(); }
+  public void testRebarMultilineTestOutput()          throws Exception { doTest(); }
 
   private static class LoggingServiceMessageVisitor implements ServiceMessageVisitor {
     private static final String MY_INDENT = "  ";
@@ -87,7 +91,8 @@ public class ErlangUnitTestEventsConverterTest extends ErlangLightPlatformCodeIn
     }
 
     private void append(String event, String eventDetails) {
-      myLog.append(myIndent).append(event).append(": ").append(eventDetails).append('\n');
+      String delimiter = StringUtil.isEmpty(eventDetails) || Character.isWhitespace(eventDetails.charAt(0)) ? ":" : ": ";
+      myLog.append(myIndent).append(event).append(delimiter).append(eventDetails).append('\n');
     }
 
     @Override
@@ -121,16 +126,17 @@ public class ErlangUnitTestEventsConverterTest extends ErlangLightPlatformCodeIn
 
     @Override
     public void visitTestStdOut(@NotNull TestStdOut testStdOut) {
+      append("test_output", testStdOut.getStdOut());
     }
 
     @Override
     public void visitTestStdErr(@NotNull TestStdErr testStdErr) {
+      append("failed_test_message", testStdErr.getStdErr());
     }
 
     @Override
     public void visitTestFailed(@NotNull TestFailed testFailed) {
       append("failed_test", testFailed.getTestName());
-      append("failed_test_message", testFailed.getFailureMessage());
     }
 
     @Override

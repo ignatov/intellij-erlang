@@ -1,0 +1,9 @@
+==> meck (eunit)
+======================== EUnit ========================
+module 'meck_performance_test'
+module 'meck_tests'
+  meck_tests: test1...ok
+  meck_tests: test2...ok
+  [done in 0.006 s]
+=======================================================
+  All 2 tests passed.

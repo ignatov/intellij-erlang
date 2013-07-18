@@ -45,5 +45,4 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
   public OutputToGeneralTestEventsConverter createTestEventsConverter(@NotNull final String testFrameworkName, @NotNull final TestConsoleProperties consoleProperties) {
     return new ErlangUnitTestEventsConverter(testFrameworkName, consoleProperties);
   }
-
 }
