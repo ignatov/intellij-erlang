@@ -120,7 +120,6 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         configuration.setCommand(RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false));
         configuration.setName("");
         configuration.setSkipDependencies(true);
-        configuration.setUseTestConsole(true);
 
         return configuration;
       }

@@ -53,7 +53,6 @@ public class RebarEunitConfigurationProducer extends RuntimeConfigurationProduce
 
     configuration.setCommand(command);
     configuration.setSkipDependencies(true);
-    configuration.setUseTestConsole(true);
     configuration.setName(createConfigurationName(functions, suites));
 
     return settings;

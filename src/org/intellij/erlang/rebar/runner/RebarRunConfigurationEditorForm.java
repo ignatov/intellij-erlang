@@ -25,20 +25,17 @@ import javax.swing.*;
 final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfigurationBase> {
   private JPanel myComponent;
   private JTextField myCommandText;
-  private JCheckBox myUseTestConsole;
   private JCheckBox mySkipDependencies;
 
   @Override
   protected void resetEditorFrom(@NotNull RebarRunConfigurationBase rebarRunConfiguration) {
     myCommandText.setText(rebarRunConfiguration.getCommand());
-    myUseTestConsole.setSelected(rebarRunConfiguration.isUseTestConsole());
     mySkipDependencies.setSelected(rebarRunConfiguration.isSkipDependencies());
   }
 
   @Override
   protected void applyEditorTo(@NotNull RebarRunConfigurationBase rebarRunConfiguration) throws ConfigurationException {
     rebarRunConfiguration.setCommand(myCommandText.getText());
-    rebarRunConfiguration.setUseTestConsole(myUseTestConsole.isSelected());
     rebarRunConfiguration.setSkipDependencies(mySkipDependencies.isSelected());
   }
 

@@ -23,4 +23,9 @@ public final class RebarRunConfiguration extends RebarRunConfigurationBase {
   public RebarRunConfiguration(@NotNull String name, @NotNull Project project) {
     super(name, project, RebarRunConfigurationFactory.getInstance());
   }
+
+  @Override
+  boolean isUseTestConsole() {
+    return false;
+  }
 }
