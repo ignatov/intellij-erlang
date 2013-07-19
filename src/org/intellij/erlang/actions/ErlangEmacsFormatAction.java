@@ -45,7 +45,6 @@ import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
 
-import javax.swing.*;
 import java.io.File;
 
 /**
@@ -116,7 +115,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       handler.addProcessListener(new ProcessAdapter() {
         @Override
         public void processTerminated(ProcessEvent event) {
-          SwingUtilities.invokeLater(new Runnable() {
+          ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
               try {
