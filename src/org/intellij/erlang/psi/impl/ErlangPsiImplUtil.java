@@ -414,7 +414,7 @@ public class ErlangPsiImplUtil {
 
         if (!withArity) {
           for (ErlangBifDescriptor bif : ErlangBifTable.getBifs("erlang")) {
-            lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.BIF_PRIORITY));
+            lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), false, ErlangCompletionContributor.BIF_PRIORITY));
           }
         }
       }
@@ -822,7 +822,7 @@ public class ErlangPsiImplUtil {
     if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
     //relative to direct parent include file was not found
     //let's search in include directories
-    List<ErlangFile> fromIncludeDirectories = ContainerUtil.mapNotNull(ProjectRootManager.getInstance(project).getContentRootsFromAllModules(), new Function<VirtualFile, ErlangFile>() {
+    List<ErlangFile> fromIncludeDirectories = ContainerUtil.mapNotNull(ProjectRootManager.getInstance(project).getContentRoots(), new Function<VirtualFile, ErlangFile>() {
       @Override
       @Nullable
       public ErlangFile fun(VirtualFile virtualFile) {

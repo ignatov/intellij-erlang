@@ -91,7 +91,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     return processor.getApplicationPath();
   }
 
-  public static List<VirtualFile> getAllApplicationDirectories(@NotNull final Project project, @NotNull final GlobalSearchScope searchScope) {
+  public static List<VirtualFile> getAllApplicationDirectories(@NotNull Project project, @NotNull final GlobalSearchScope searchScope) {
     final ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
     final FileBasedIndex index = FileBasedIndex.getInstance();
     final List<VirtualFile> appFilesFromEbinDirectories = getAppFilesFromEbinDirectories(project);
