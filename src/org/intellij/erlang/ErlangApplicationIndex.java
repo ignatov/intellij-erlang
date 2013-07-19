@@ -16,7 +16,11 @@
 
 package org.intellij.erlang;
 
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.CompilerModuleExtension;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -80,24 +84,55 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   public static VirtualFile getApplicationDirectoryByName(@NotNull String appName, @NotNull GlobalSearchScope searchScope) {
     ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
     FileBasedIndex.getInstance().processValues(ERLANG_APPLICAION_INDEX, appName, null, processor, searchScope);
+    Project project = searchScope.getProject();
+    if (project != null) {
+      processAppFiles(getAppFilesFromEbinDirectories(project), appName, processor);
+    }
     return processor.getApplicationPath();
   }
 
-  public static List<VirtualFile> getAllApplicationDirectories(@NotNull Project project, @NotNull final GlobalSearchScope searchScope) {
+  public static List<VirtualFile> getAllApplicationDirectories(@NotNull final Project project, @NotNull final GlobalSearchScope searchScope) {
     final ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
     final FileBasedIndex index = FileBasedIndex.getInstance();
+    final List<VirtualFile> appFilesFromEbinDirectories = getAppFilesFromEbinDirectories(project);
 
     index.processAllKeys(ERLANG_APPLICAION_INDEX, new Processor<String>() {
       @Override
       public boolean process(String appName) {
         ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
         index.processValues(ERLANG_APPLICAION_INDEX, appName, null, processor, searchScope);
+        processAppFiles(appFilesFromEbinDirectories, appName, processor);
         result.add(processor.getApplicationPath());
         return true;
       }
     }, project);
 
     return result;
+  }
+
+  private static void processAppFiles(List<VirtualFile> appFiles, String appName, FileBasedIndex.ValueProcessor<Void> processor) {
+    for (VirtualFile appFile : appFiles) {
+      if (appName.equals(getApplicationName(appFile))) {
+        processor.process(appFile, null);
+      }
+    }
+  }
+
+  public static List<VirtualFile> getAppFilesFromEbinDirectories(Project project) {
+    List<VirtualFile> appFiles = new ArrayList<VirtualFile>();
+    for (Module m : ModuleManager.getInstance(project).getModules()) {
+      CompilerModuleExtension moduleExtension = ModuleRootManager.getInstance(m).getModuleExtension(CompilerModuleExtension.class);
+      VirtualFile compilerOutputPath = moduleExtension != null ? moduleExtension.getCompilerOutputPath() : null;
+
+      if (compilerOutputPath == null || !compilerOutputPath.isDirectory()) continue;
+
+      for (VirtualFile file : compilerOutputPath.getChildren()) {
+        if (ErlangApplicationInputFilter.isApplicationFile(file)) {
+          appFiles.add(file);
+        }
+      }
+    }
+    return appFiles;
   }
 
   @Nullable
@@ -120,7 +155,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     private VirtualFile myPath = null;
 
     @Override
-    public boolean process(VirtualFile appFile, Void value) {
+    public boolean process(VirtualFile appFile, @Nullable Void value) {
       VirtualFile libDir = getLibraryDirectory(appFile);
       if (libDir == null) return true;
       String appName = getApplicationName(appFile);
@@ -142,6 +177,10 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   private static class ErlangApplicationInputFilter implements FileBasedIndex.InputFilter {
     @Override
     public boolean acceptInput(VirtualFile file) {
+      return isApplicationFile(file);
+    }
+
+    private static boolean isApplicationFile(VirtualFile file) {
       return file != null && file.getFileType() == ErlangFileType.APP;
     }
   }
