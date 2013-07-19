@@ -9,18 +9,26 @@ import com.intellij.execution.testframework.AbstractTestProxy;
 import com.intellij.execution.testframework.Filter;
 import com.intellij.execution.testframework.TestFrameworkRunningModel;
 import com.intellij.execution.testframework.actions.AbstractRerunFailedTestsAction;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComponentContainer;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -36,43 +44,12 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
   @NotNull
   @Override
   protected Filter getFilter(Project project) {
-    if (allFailedTestsBelongToSingleSuite(project)) {
-      return new Filter() {
-        @Override
-        public boolean shouldAccept(AbstractTestProxy test) {
-          return isFailedTest(test);
-        }
-      };
-    }
-    //disables the action.
     return new Filter() {
       @Override
       public boolean shouldAccept(AbstractTestProxy test) {
-        return false;
+        return !test.isIgnored() && (test.isInterrupted() || test.isDefect());
       }
     };
-  }
-
-  private boolean allFailedTestsBelongToSingleSuite(final Project project) {
-    ErlangFile suite = null;
-    TestFrameworkRunningModel model = getModel();
-    List<? extends AbstractTestProxy> allTests = model != null ? model.getRoot().getAllTests() : ContainerUtil.<AbstractTestProxy>emptyList();
-
-    for (AbstractTestProxy test : allTests) {
-      if (!isFailedTest(test)) continue;
-      Location location = test.getLocation(project);
-      PsiElement psiElement = location != null ? location.getPsiElement() : null;
-      PsiFile containingFile = psiElement != null ? psiElement.getContainingFile() : null;
-      if (!(containingFile instanceof ErlangFile)) continue;
-      if (suite != null && !suite.equals(containingFile)) return false;
-      suite = (ErlangFile) containingFile;
-    }
-
-    return true;
-  }
-
-  private static boolean isFailedTest(AbstractTestProxy test) {
-    return !test.isIgnored() && (test.isInterrupted() || test.isDefect());
   }
 
   @Nullable
@@ -97,14 +74,18 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       private RebarEunitRunConfiguration createRerunFailedTestsRunConfiguration() {
         final Project project = getProject();
         RebarEunitRunConfiguration configuration = new RebarEunitRunConfiguration(project, "");
-
+        final List<ErlangFunction> failedGeneratedTests = new ArrayList<ErlangFunction>();
         List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(getFailedTests(project), new Function<AbstractTestProxy, ErlangFunction>() {
           @Nullable
           @Override
           public ErlangFunction fun(AbstractTestProxy testProxy) {
             Location location = testProxy.getLocation(project);
             PsiElement psiElement = location != null ? location.getPsiElement() : null;
-            return psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
+            ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
+            if (function != null && function.getArity() != 0) {
+              failedGeneratedTests.add(function);
+            }
+            return function;
           }
         });
         Set<ErlangFile> suites = ContainerUtil.map2Set(failedTests, new Function<ErlangFunction, ErlangFile>() {
@@ -117,11 +98,44 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         });
         suites.remove(null);
 
+        if (!failedGeneratedTests.isEmpty()) {
+          notifyGeneratedTestsFailed(failedGeneratedTests);
+        }
+
         configuration.setCommand(RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false));
         configuration.setName("");
         configuration.setSkipDependencies(true);
 
         return configuration;
+      }
+
+      private void notifyGeneratedTestsFailed(final List<ErlangFunction> failedGeneratedTests) {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+          public void run() {
+            Notifications.Bus.notify(
+              new Notification("TestRunner", "Some tests cannot be rerun directly",
+                "Some of failed tests were obtained via generator functions and cannot be rerun directly.\n" +
+                createFailedTestsListMessage(failedGeneratedTests),
+                NotificationType.WARNING));
+          }
+        });
+      }
+
+      private String createFailedTestsListMessage(List<ErlangFunction> failedTests) {
+        final int maxShownTests = 3;
+        List<String> testNames = takeFunctionNames(failedTests, maxShownTests);
+        int notShownTestsCount = failedTests.size() - testNames.size();
+        String more = notShownTestsCount > 0 ? " and " + notShownTestsCount + " more" : "";
+        return "Tests failed: " + StringUtil.join(testNames, ", ") + more;
+      }
+
+      private List<String> takeFunctionNames(List<ErlangFunction> failedFunctions, int n) {
+        ArrayList<String> result = new ArrayList<String>(n);
+        Iterator<ErlangFunction> iterator = failedFunctions.iterator();
+        while (iterator.hasNext() && n > 0) {
+          result.add(ErlangPsiImplUtil.getQualifiedFunctionName(iterator.next()));
+        }
+        return result;
       }
     };
   }
