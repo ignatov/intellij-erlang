@@ -1,0 +1,4 @@
+started_suite: suite1_tests
+  started_test: foo1_test
+  finished_test: foo1_test
+finished_suite: suite1_tests

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.runner;
+package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
@@ -28,28 +28,25 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * @author ignatov
+ * @author savenko
  */
-public class ErlangRunningState extends CommandLineState {
-  private final Module module;
-  protected final ErlangApplicationConfiguration myConfiguration;
+public abstract class ErlangRunningState extends CommandLineState {
+  private final Module myModule;
 
-  public ErlangRunningState(ExecutionEnvironment env, Module module, ErlangApplicationConfiguration configuration) {
+  public ErlangRunningState(ExecutionEnvironment env, Module module) {
     super(env);
-    this.module = module;
-    myConfiguration = configuration;
+    this.myModule = module;
   }
 
   @NotNull
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
-    final Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
+    final Sdk sdk = ModuleRootManager.getInstance(myModule).getSdk();
     assert sdk != null;
 
     GeneralCommandLine commandLine = getCommand(sdk);
@@ -57,27 +54,19 @@ public class ErlangRunningState extends CommandLineState {
     return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
   }
 
-  private GeneralCommandLine getCommand(Sdk sdk) {
+  private GeneralCommandLine getCommand(Sdk sdk) throws ExecutionException {
     final GeneralCommandLine commandLine = new GeneralCommandLine();
     String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(sdk.getHomePath()).getAbsolutePath());
     commandLine.setExePath(erl);
-    commandLine.setWorkDirectory(module.getProject().getBasePath());
-    commandLine.addParameters(ErlangConsoleUtil.getCodePath(module));
-    
-    setUpParameters(commandLine);
+    commandLine.setWorkDirectory(myModule.getProject().getBasePath());
+    commandLine.addParameters(ErlangConsoleUtil.getCodePath(myModule));
 
-    final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(module.getProject());
+    setUpCommandLineParameters(commandLine);
+
+    final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
   }
 
-  protected void setUpParameters(GeneralCommandLine commandLine) {
-    commandLine.addParameters("-run");
-    commandLine.addParameters(StringUtil.split(myConfiguration.getModuleAndFunction(), " "));
-    commandLine.addParameters(StringUtil.split(myConfiguration.getParams(), " "));
-    commandLine.addParameters("-noshell");
-    if (myConfiguration.stopErlang()) {
-      commandLine.addParameters("-s", "init", "stop");
-    }
-  }
+  protected abstract void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException;
 }

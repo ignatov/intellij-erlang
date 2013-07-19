@@ -22,12 +22,16 @@ import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.junit.RuntimeConfigurationProducer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 /**
  * @author ignatov
@@ -48,12 +52,11 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
   protected RunnerAndConfigurationSettings createConfigurationByElement(Location location, ConfigurationContext context) {
     PsiElement psiElement = location.getPsiElement();
     myFile = psiElement.getContainingFile();
-    if (!(myFile instanceof ErlangFile)) return null;
-    if (!ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile)) return null;
 
-    Project project = psiElement.getProject();
+    if (!(myFile instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile) ||
+      !ErlangTestRunConfigProducersUtil.shouldProduceEunitTestRunConfiguration(context.getProject(), context.getModule())) return null;
 
-    RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(project, context);
+    RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(psiElement.getProject(), context);
     ErlangUnitRunConfiguration configuration = (ErlangUnitRunConfiguration) settings.getConfiguration();
 
     Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
@@ -61,18 +64,38 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
       configuration.setModule(module);
     }
 
-    final VirtualFile vFile = myFile.getVirtualFile();
-    if (vFile == null) return null;
-    String moduleName = vFile.getNameWithoutExtension();
+    Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(psiElement);
 
-    configuration.setModuleAndFunction(moduleName);
-    configuration.setName(moduleName);
+    if (!functions.isEmpty()) {
+      LinkedHashSet<String> functionNames = new LinkedHashSet<String>();
+      for (ErlangFunction f : functions) {
+        functionNames.add(ErlangPsiImplUtil.getQualifiedFunctionName(f));
+      }
+      configuration.getConfigData().setFunctionNames(functionNames);
+      configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
+      configuration.setName(functionNames.iterator().next() + (functionNames.size() > 1 ? " and " + (functionNames.size() - 1) + " more" : ""));
+    }
+    else {
+      LinkedHashSet<String> moduleNames = new LinkedHashSet<String>();
+      for (ErlangFile f : ErlangUnitTestElementUtil.findFileTestElements(context.getProject(), context.getDataContext())) {
+        VirtualFile virtualFile = f.getVirtualFile();
+        if (virtualFile != null) {
+          moduleNames.add(virtualFile.getNameWithoutExtension());
+        }
+      }
+
+      if (moduleNames.isEmpty()) return null;
+
+      configuration.getConfigData().setModuleNames(moduleNames);
+      configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE);
+      configuration.setName(moduleNames.iterator().next() + (moduleNames.size() > 1 ? " and " + (moduleNames.size() - 1) + " more" : ""));
+    }
+
     return settings;
   }
 
   @Override
-  public int compareTo(Object o) {
+  public int compareTo(@NotNull Object o) {
     return PREFERED;
   }
 }
-

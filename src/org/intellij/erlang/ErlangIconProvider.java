@@ -43,8 +43,8 @@ public class ErlangIconProvider extends IconProvider implements DumbAware {
       FileType fileType = virtualFile.getFileType();
       if (ErlangFileType.MODULE == fileType) {
         ErlangModule module = ErlangPsiImplUtil.getModule((ErlangFile) element);
-        boolean isEunit = module != null && (StringUtil.endsWith(module.getName(), "_tests") || StringUtil.endsWith(module.getName(), "_test"));
-        return isEunit && ErlangPsiImplUtil.isEunitImported((ErlangFile) element) ? ErlangIcons.EUNIT : getModuleType(((ErlangFile) element)).icon;
+        boolean isEunit = module != null && ErlangPsiImplUtil.isEunitTestFile((ErlangFile) element);
+        return isEunit ? ErlangIcons.EUNIT : getModuleType(((ErlangFile) element)).icon;
       }
       return fileType.getIcon();
     }

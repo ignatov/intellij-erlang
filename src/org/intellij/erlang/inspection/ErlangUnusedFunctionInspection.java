@@ -19,7 +19,6 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Condition;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -50,8 +49,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
     
     boolean isEunitImported = ErlangPsiImplUtil.isEunitImported((ErlangFile) file);
     for (final ErlangFunction function : ((ErlangFile) file).getFunctions()) {
-      String name = function.getName();
-      if (isEunitImported && (StringUtil.endsWith(name, "_test") || StringUtil.endsWith(name, "_test_"))) continue;
+      if (isEunitImported && ErlangPsiImplUtil.isEunitTestFunction(function)) continue;
 
       List<PsiReference> refs = ContainerUtil.filter(ReferencesSearch.search(function, scope).findAll(), new Condition<PsiReference>() { // filtered specs out
         @Override
@@ -63,7 +61,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
 
       if (ContainerUtil.getFirstItem(refs) == null) {
         problemsHolder.registerProblem(function.getNameIdentifier(),
-          "Unused function " + "'" + name + "/" + function.getArity() + "'",
+          "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",
           ProblemHighlightType.LIKE_UNUSED_SYMBOL,
           new ErlangRemoveFunctionFix(),
           new ErlangExportFunctionFix());

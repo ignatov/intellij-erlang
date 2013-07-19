@@ -41,7 +41,7 @@ public final class RebarRunner extends DefaultProgramRunner {
 
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
-    return DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && (profile instanceof RebarRunConfiguration);
+    return DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && (profile instanceof RebarRunConfiguration || profile instanceof RebarEunitRunConfiguration);
   }
 
   @Override

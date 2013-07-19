@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.runner;
+package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.configurations.RunConfigurationModule;
 import com.intellij.openapi.project.Project;
@@ -22,8 +22,8 @@ import com.intellij.openapi.project.Project;
 /**
  * @author ignatov
  */
-public class ErlangApplicationModuleBasedConfiguration extends RunConfigurationModule {
-  public ErlangApplicationModuleBasedConfiguration(Project project) {
+public class ErlangModuleBasedConfiguration extends RunConfigurationModule {
+  public ErlangModuleBasedConfiguration(Project project) {
     super(project);
   }
 }

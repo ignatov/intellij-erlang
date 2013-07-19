@@ -1,0 +1,8 @@
+==> test-rebar (eunit)
+NOTICE: Using experimental option 'tests'
+    Running test function(s):
+      suite1_tests:foo1_test/0
+======================== EUnit ========================
+suite1_tests: foo1_test...[0.001 s] ok
+=======================================================
+  Test passed.

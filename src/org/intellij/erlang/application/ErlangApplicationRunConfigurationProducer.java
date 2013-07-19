@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.runner;
+package org.intellij.erlang.application;
 
 import com.intellij.execution.Location;
 import com.intellij.execution.RunnerAndConfigurationSettings;
@@ -34,11 +34,11 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 /**
  * @author ignatov
  */
-public class ErlangRunConfigurationProducer extends RuntimeConfigurationProducer implements Cloneable {
+public class ErlangApplicationRunConfigurationProducer extends RuntimeConfigurationProducer implements Cloneable {
   private ErlangFunction myFunction;
 
-  public ErlangRunConfigurationProducer() {
-    super(ErlangRunConfigurationType.getInstance());
+  public ErlangApplicationRunConfigurationProducer() {
+    super(ErlangApplicationRunConfigurationType.getInstance());
   }
 
   @Override
@@ -50,13 +50,14 @@ public class ErlangRunConfigurationProducer extends RuntimeConfigurationProducer
   protected RunnerAndConfigurationSettings createConfigurationByElement(Location location, ConfigurationContext context) {
     PsiElement psiElement = location.getPsiElement();
     myFunction = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
-    if (myFunction == null) return null;
-
     Project project = psiElement.getProject();
     PsiFile containingFile = psiElement.getContainingFile();
 
-    if (containingFile instanceof ErlangFile && ErlangPsiImplUtil.isEunitTestFile((ErlangFile) containingFile)) return null;
-    if (ErlangPsiImplUtil.isPrivateFunction(containingFile, myFunction)) return null;
+    if (containingFile instanceof ErlangFile && ErlangPsiImplUtil.isEunitTestFile((ErlangFile) containingFile) ||
+        myFunction == null || ErlangPsiImplUtil.isEunitTestFunction(myFunction) ||
+        ErlangPsiImplUtil.isPrivateFunction(containingFile, myFunction)) {
+      return null;
+    }
 
     RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(project, context);
     ErlangApplicationConfiguration configuration = (ErlangApplicationConfiguration) settings.getConfiguration();

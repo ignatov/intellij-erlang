@@ -161,7 +161,9 @@
         <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable"/>
         <projectService serviceImplementation="org.intellij.erlang.rebar.settings.RebarSettings"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
+        <configurationType implementation="org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationType"/>
         <programRunner implementation="org.intellij.erlang.rebar.runner.RebarRunner"/>
+        <configurationProducer implementation="org.intellij.erlang.rebar.runner.RebarEunitConfigurationProducer"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -229,9 +231,9 @@
         <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
         <compileServer.plugin classpath="jps-plugin.jar"/>
         <!-- run -->
-        <programRunner implementation="org.intellij.erlang.runner.ErlangRunner"/>
-        <configurationType implementation="org.intellij.erlang.runner.ErlangRunConfigurationType"/>
-        <configurationProducer implementation="org.intellij.erlang.runner.ErlangRunConfigurationProducer"/>
+        <programRunner implementation="org.intellij.erlang.runconfig.ErlangRunner"/>
+        <configurationType implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationType"/>
+        <configurationProducer implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationProducer"/>
 
         <!--eunit -->
         <testFinder implementation="org.intellij.erlang.ErlangTestFinder"/>

@@ -1,0 +1,26 @@
+started_suite: meck_performance_test
+finished_suite: meck_performance_test
+started_suite: meck
+  started_test: cover_passthrough_test
+  finished_test: cover_passthrough_test
+  started_test: unload_when_crashed_test
+    test_output:
+=ERROR REPORT==== 18-Jul-2013::13:25:13 ===
+** Generic server mymod_meck terminating
+** Last message in was {'EXIT',<0.145.0>,expected_test_exit}
+** When Server state == {state,mymod,any,
+                               {dict,0,16,16,8,80,48,
+                                     {[],[],[],[],[],[],[],[],[],[],[],[],[],
+                                      [],[],[]},
+                                     {{[],[],[],[],[],[],[],[],[],[],[],[],[],
+                                       [],[],[]}}},
+                               true,[],
+                               {false,no_binary},
+                               false,undefined}
+** Reason for termination ==
+** expected_test_exit
+
+  finished_test: unload_when_crashed_test
+  started_suite: meck_util
+  finished_suite: meck_util
+finished_suite: meck

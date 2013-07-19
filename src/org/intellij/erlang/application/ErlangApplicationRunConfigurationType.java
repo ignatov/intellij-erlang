@@ -14,50 +14,28 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.runner;
+package org.intellij.erlang.application;
 
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
+import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangIcons;
-import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
+public class ErlangApplicationRunConfigurationType extends ConfigurationTypeBase {
 
-public class ErlangRunConfigurationType implements ConfigurationType {
-  public static final String ERLANG_APPLICATION = "Erlang Application";
-  private final ErlangFactory configurationFactory;
-
-  public ErlangRunConfigurationType() {
-    configurationFactory = new ErlangFactory(this);
+  public ErlangApplicationRunConfigurationType() {
+    super("ErlangApplicationRunConfiguration",
+      "Erlang Application",
+      "Erlang application run configuration",
+      ErlangIcons.FILE);
+    addFactory(new ErlangFactory(this));
   }
 
-  public static ErlangRunConfigurationType getInstance() {
-    return ContainerUtil.findInstance(Extensions.getExtensions(CONFIGURATION_TYPE_EP), ErlangRunConfigurationType.class);
-  }
-
-  public String getDisplayName() {
-    return ERLANG_APPLICATION;
-  }
-
-  public String getConfigurationTypeDescription() {
-    return ERLANG_APPLICATION;
-  }
-
-  public Icon getIcon() {
-    return ErlangIcons.FILE;
-  }
-
-  @NotNull
-  public String getId() {
-    return "ErlangApplicationRunConfiguration";
-  }
-
-  public ConfigurationFactory[] getConfigurationFactories() {
-    return new ConfigurationFactory[]{configurationFactory};
+  public static ErlangApplicationRunConfigurationType getInstance() {
+    return Extensions.findExtension(CONFIGURATION_TYPE_EP, ErlangApplicationRunConfigurationType.class);
   }
 
   public static class ErlangFactory extends ConfigurationFactory {
@@ -67,7 +45,7 @@ public class ErlangRunConfigurationType implements ConfigurationType {
     }
 
     public RunConfiguration createTemplateConfiguration(Project project) {
-      return new ErlangApplicationConfiguration(project, ERLANG_APPLICATION, getInstance());
+      return new ErlangApplicationConfiguration(project, "Erlang", getInstance());
     }
   }
 }

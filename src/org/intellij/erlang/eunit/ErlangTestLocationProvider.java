@@ -21,12 +21,12 @@ import com.intellij.execution.PsiLocation;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testIntegration.TestLocationProvider;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  */
 public class ErlangTestLocationProvider implements TestLocationProvider {
   private static final Pattern MODULE_FUNCTION_PATTERN = Pattern.compile("(\\w+):(\\w+)");
-  private static final Pattern FUNCTION_PATTERN = Pattern.compile("(\\w+)");
+  private static final Pattern MODULE_PATTERN = Pattern.compile("(\\w+)");
 
   @NotNull
   @Override
@@ -71,7 +71,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
     
     if (list.size() > 0) return list;
 
-    matcher = FUNCTION_PATTERN.matcher(locationData);
+    matcher = MODULE_PATTERN.matcher(locationData);
     if (matcher.matches()) {
       String module = matcher.group(1);
 
@@ -91,7 +91,8 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
   }
 
   private static PsiFile[] getPsiFiles(Project project, String module) {
-    return FilenameIndex.getFilesByName(project, module + "." + ErlangFileType.MODULE.getDefaultExtension(),
-      GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(project), ErlangFileType.MODULE));
+    List<ErlangFile> fromProject = ErlangModuleIndex.getFilesByName(project, module, 
+      GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.projectScope(project), ErlangFileType.MODULE));
+    return fromProject.toArray(new PsiFile[fromProject.size()]);
   }
 }

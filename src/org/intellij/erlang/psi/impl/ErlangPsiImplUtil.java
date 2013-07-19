@@ -1047,6 +1047,12 @@ public class ErlangPsiImplUtil {
   public static String createFunctionPresentation(@NotNull ErlangFunction function) {
     return function.getName() + "/" + function.getArity();
   }
+  @NotNull
+  public static String getQualifiedFunctionName(@NotNull ErlangFunction function) {
+    PsiFile containingFile = function.getContainingFile();
+    ErlangModule module = getModule(containingFile);
+    return module != null ? module.getName() + ":" + function.getName() : function.getName();
+  }
 
   @NotNull
   public static String createFunctionPresentationFromCallbackSpec(@NotNull ErlangCallbackSpec spec) {
@@ -1079,6 +1085,11 @@ public class ErlangPsiImplUtil {
     VirtualFile virtualFile = file.getVirtualFile();
     String withoutExtension = virtualFile != null ? virtualFile.getNameWithoutExtension() : "";
     return (StringUtil.endsWith(withoutExtension, "_test") || StringUtil.endsWith(withoutExtension, "_tests")) && isEunitImported(file);
+  }
+
+  public static boolean isEunitTestFunction(@NotNull ErlangFunction function) {
+    String name = function.getName();
+    return (StringUtil.endsWith(name, "_test") || StringUtil.endsWith(name, "_test_"));
   }
 
   public static boolean isEunitImported(ErlangFile file) {
