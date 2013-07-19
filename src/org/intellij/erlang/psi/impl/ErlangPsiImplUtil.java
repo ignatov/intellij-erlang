@@ -820,8 +820,18 @@ public class ErlangPsiImplUtil {
 
     ErlangFile includedFile = getRelativeErlangFile(project, relativePath, parent);
     if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
+    //relative to direct parent include file was not found
+    //let's search in include directories
+    List<ErlangFile> fromIncludeDirectories = ContainerUtil.mapNotNull(ProjectRootManager.getInstance(project).getContentRootsFromAllModules(), new Function<VirtualFile, ErlangFile>() {
+      @Override
+      @Nullable
+      public ErlangFile fun(VirtualFile virtualFile) {
+        return getRelativeErlangFile(project, "include/" + relativePath, virtualFile);
+      }
+    });
+    if (!fromIncludeDirectories.isEmpty()) return fromIncludeDirectories;
 
-    //relative to direct parent include file was not found, let's search our source roots...
+    //let's search in source roots...
     return ContainerUtil.mapNotNull(ProjectRootManager.getInstance(project).getContentSourceRoots(), new Function<VirtualFile, ErlangFile>() {
       @Override
       @Nullable

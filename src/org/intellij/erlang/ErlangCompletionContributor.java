@@ -22,11 +22,13 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiComment;
@@ -240,9 +242,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
     //search in this module's directory
     if (parentFile != null) {
-      List<VirtualFile> virtualFiles = new ArrayList<VirtualFile>();
-      addMatchingFiles(parentFile, includeText, virtualFiles);
-      result.addAll(ContainerUtil.map(virtualFiles, new Function<VirtualFile, LookupElement>() {
+      List<VirtualFile> relativeToParent = new ArrayList<VirtualFile>();
+      addMatchingFiles(parentFile, includeText, relativeToParent);
+      result.addAll(ContainerUtil.map(relativeToParent, new Function<VirtualFile, LookupElement>() {
         @Override
         public LookupElement fun(VirtualFile virtualFile) {
           return getDefaultPathLookupElementBuilder(virtualFile, parentFile, null);
@@ -250,7 +252,21 @@ public class ErlangCompletionContributor extends CompletionContributor {
       }));
     }
 
-    //TODO search in include directories
+    //search in include directories
+    List<VirtualFile> relativeToIncludeDirs = new ArrayList<VirtualFile>();
+    for (VirtualFile moduleRoot : ProjectRootManager.getInstance(file.getProject()).getContentRootsFromAllModules()) {
+      final VirtualFile includeDir = VfsUtil.findRelativeFile("include/", moduleRoot);
+      if (includeDir != null && includeDir.isDirectory()) {
+        addMatchingFiles(includeDir, includeText, relativeToIncludeDirs);
+        result.addAll(ContainerUtil.map(relativeToIncludeDirs, new Function<VirtualFile, LookupElement>() {
+          @Override
+          public LookupElement fun(VirtualFile virtualFile) {
+            return getDefaultPathLookupElementBuilder(virtualFile, includeDir, null);
+          }
+        }));
+      }
+      relativeToIncludeDirs.clear();
+    }
 
     return result;
   }
