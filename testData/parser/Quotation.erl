@@ -39,6 +39,8 @@ parse_header(String) ->
 
 ctype($\%) -> percent;
 ctype($\,) -> comma;
+ctype($\.) -> dot;
+ctype($\_) -> underscore;
 ctype($s) -> string;
 ctype($b) -> bin;
 ctype($o) -> oct;

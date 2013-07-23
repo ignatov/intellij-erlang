@@ -553,6 +553,36 @@ ERL_FILE
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
           ERL_MAX_EXPRESSION
+            PsiElement(char)('$\.')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('dot')
+    PsiElement(;)(';')
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('ctype')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_MAX_EXPRESSION
+            PsiElement(char)('$\_')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('underscore')
+    PsiElement(;)(';')
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('ctype')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_MAX_EXPRESSION
             PsiElement(char)('$s')
         PsiElement())(')')
       ERL_CLAUSE_BODY
