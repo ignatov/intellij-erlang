@@ -16,6 +16,7 @@
 
 package org.intellij.erlang;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
@@ -41,6 +42,7 @@ import java.util.Map;
  */
 public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   public static final ID<String, Void> ERLANG_APPLICAION_INDEX = ID.create("ErlangApplicationIndex");
+  public static final Logger LOGGER = Logger.getInstance(ErlangApplicationIndex.class);
 
   private static final FileBasedIndex.InputFilter INPUT_FILTER = new ErlangApplicationInputFilter();
   private static final int INDEX_VERSION = 0;
@@ -88,7 +90,11 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     if (project != null) {
       processAppFiles(getAppFilesFromEbinDirectories(project), appName, processor);
     }
-    return processor.getApplicationPath();
+
+    VirtualFile applicationPath = processor.getApplicationPath();
+    LOGGER.info("getApplicationDirectoryByName: application path for '" + appName + "' is " + applicationPath);
+
+    return applicationPath;
   }
 
   public static List<VirtualFile> getAllApplicationDirectories(@NotNull Project project, @NotNull final GlobalSearchScope searchScope) {

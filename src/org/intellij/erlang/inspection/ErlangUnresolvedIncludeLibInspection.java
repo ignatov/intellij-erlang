@@ -19,7 +19,11 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.Function;
+import org.intellij.erlang.ErlangApplicationIndex;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangIncludeLib;
 import org.intellij.erlang.psi.ErlangIncludeString;
@@ -46,6 +50,7 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
     boolean empty = string.getTextLength() <= 2;
     TextRange range = empty ? TextRange.create(0, string.getTextLength()) : TextRange.create(1, string.getTextLength() - 1);
     if (files.size() == 0) {
+      ErlangApplicationIndex.LOGGER.info(what + ": " + string.getText() + " unresolved");
       if (empty) {
         problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found");
       }
@@ -54,6 +59,15 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
       }
     }
     else if (files.size() > 1) {
+      String resolvedFilesList = StringUtil.join(files, new Function<ErlangFile, String>() {
+        @Override
+        public String fun(ErlangFile erlangFile) {
+          PsiFile originalFile = erlangFile.getOriginalFile();
+          VirtualFile virtualFile = originalFile.getVirtualFile();
+          return virtualFile == null ? "null" : virtualFile.getPath();
+        }
+      }, ", ");
+      ErlangApplicationIndex.LOGGER.info(what + ": " + string.getText() + " resolved to: " + resolvedFilesList);
       problemsHolder.registerProblem(string, range, "Unresolved " + what + ": ambiguous file reference");
     }
   }
