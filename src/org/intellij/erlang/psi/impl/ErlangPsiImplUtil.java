@@ -420,20 +420,22 @@ public class ErlangPsiImplUtil {
       }
 
       functions.addAll(getErlangFunctionsFromIncludes((ErlangFile) containingFile, true, "", 0));
-
-      lookupElements.addAll(ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
-        @Override
-        public LookupElement fun(@NotNull final ErlangFunction function) {
-          return createFunctionLookupElement(function, withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY);
-        }
-      }));
-
+      lookupElements.addAll(createFunctionLookupElements(functions, withArity));
       return lookupElements;
     }
     return Collections.emptyList();
   }
 
-  private static LookupElement createFunctionLookupElement(ErlangFunction function, boolean withArity, double priority) {
+  public static List<LookupElement> createFunctionLookupElements(List<ErlangFunction> functions, final boolean withArity) {
+    return ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
+      @Override
+      public LookupElement fun(@NotNull final ErlangFunction function) {
+        return createFunctionsLookupElement(function, withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY);
+      }
+    });
+  }
+
+  private static LookupElement createFunctionsLookupElement(ErlangFunction function, boolean withArity, double priority) {
     int arity = function.getArity();
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(function)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)

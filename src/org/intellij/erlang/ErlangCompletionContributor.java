@@ -136,8 +136,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (originalParent instanceof ErlangRecordExpression || prevIsRadix(originalPosition) || prevIsRadix(parent)) {
           result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(file));
         }
-        else if (originalParent instanceof ErlangExportFunctions) {
-          result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, true, null));
+        else if (originalParent instanceof ErlangExportFunctions && file instanceof ErlangFile) {
+          result.addAllElements(ErlangPsiImplUtil.createFunctionLookupElements(((ErlangFile) file).getFunctions(), true));
         }
         else {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);

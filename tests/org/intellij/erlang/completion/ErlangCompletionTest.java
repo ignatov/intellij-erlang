@@ -141,6 +141,10 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testExportType()  throws Exception { doCheckResult("-export_t<caret>", "-export_type([<caret>])."); }
   public void testBehaviour()   throws Exception { doCheckResult("-beha<caret>", "-behaviour(<caret>)."); }
 
+  public void testExportFunction() throws Exception {
+    doCheckResult("-export([<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.", Lookup.COMPLETE_STATEMENT_SELECT_CHAR);
+  }
+
   public void testLager() throws Throwable {
     doTestInclude("foo() -> lager:<caret>", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency");
   }
