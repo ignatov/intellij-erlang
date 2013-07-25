@@ -135,17 +135,11 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
       "my_local_function");
   }
 
-  public void testIncludeLib() throws Exception {
-    doCheckResult("-include_<caret>", "-include_lib(\"<caret>\").");
-  }
-
-  public void testInclude() throws Exception {
-    doCheckResult("-inclu<caret>", "-include(\"<caret>\").", '(');
-  }
-
-  public void testExport() throws Exception {
-    doCheckResult("-exp<caret>", "-export(<caret>).", '(');
-  }
+  public void testIncludeLib()  throws Exception { doCheckResult("-include_<caret>", "-include_lib(\"<caret>\")."); }
+  public void testInclude()     throws Exception { doCheckResult("-inclu<caret>", "-include(\"<caret>\").", '('); }
+  public void testExport()      throws Exception { doCheckResult("-exp<caret>", "-export([<caret>]).", '('); }
+  public void testExportType()  throws Exception { doCheckResult("-export_t<caret>", "-export_type([<caret>])."); }
+  public void testBehaviour()   throws Exception { doCheckResult("-beha<caret>", "-behaviour(<caret>)."); }
 
   public void testLager() throws Throwable {
     doTestInclude("foo() -> lager:<caret>", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency");

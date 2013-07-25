@@ -198,8 +198,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static LookupElement createKeywordLookupElement(@NotNull String keyword) {
     boolean needHandler = KEYWORDS_WITH_PARENTHESIS.contains(keyword);
     boolean needQuotas = "include".equalsIgnoreCase(keyword) || "include_lib".equalsIgnoreCase(keyword);
+    boolean needBrackets = "export".equalsIgnoreCase(keyword) || "export_type".equalsIgnoreCase(keyword);
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword)
-      .withInsertHandler(needHandler ? new ErlangKeywordInsertHandler(needQuotas) : null)
+      .withInsertHandler(needHandler ? new ErlangKeywordInsertHandler(needQuotas, needBrackets) : null)
       .withTailText(needHandler ? "()" : null)
       .bold(), KEYWORD_PRIORITY);
   }
@@ -379,9 +380,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
   private static class ErlangKeywordInsertHandler extends ParenthesesInsertHandler<LookupElement> {
     private final boolean myNeedQuotas;
+    private final boolean myInsertBrackets;
 
-    public ErlangKeywordInsertHandler(boolean needQuotas) {
+    public ErlangKeywordInsertHandler(boolean needQuotas, boolean insertBrackets) {
       myNeedQuotas = needQuotas;
+      myInsertBrackets = insertBrackets;
     }
 
     @Override
@@ -395,14 +398,23 @@ public class ErlangCompletionContributor extends CompletionContributor {
       Editor editor = context.getEditor();
       
       Document document = editor.getDocument();
-      document.insertString(context.getTailOffset(), ".");
-
-      if (insertQuotas()) {
-        int offset = editor.getCaretModel().getOffset();
-        document.insertString(offset, "\"");
-        document.insertString(offset + 1, "\"");
-        editor.getCaretModel().moveToOffset(offset + 1);
+      if (!document.getText().substring(context.getTailOffset()).startsWith(".")) {
+        document.insertString(context.getTailOffset(), ".");
       }
+
+      if (insertQuotas()) doInsert(editor, document, "\"", "\"");
+      if (insertBrackets()) doInsert(editor, document, "[", "]");
+    }
+
+    private static void doInsert(Editor editor, Document document, String open, String closed) {
+      int offset = editor.getCaretModel().getOffset();
+      document.insertString(offset, open);
+      document.insertString(offset + 1, closed);
+      editor.getCaretModel().moveToOffset(offset + 1);
+    }
+
+    private boolean insertBrackets() {
+      return myInsertBrackets;
     }
 
     private boolean insertQuotas() {
