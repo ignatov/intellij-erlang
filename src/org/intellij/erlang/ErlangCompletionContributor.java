@@ -17,10 +17,13 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.completion.*;
+import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.IdeActions;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Pair;
@@ -44,6 +47,8 @@ import com.intellij.util.Function;
 import com.intellij.util.PathUtil;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
+import gnu.trove.THashSet;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
@@ -70,6 +75,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
   public static final int KEYWORD_PRIORITY = -10;
   public static final int MODULE_FUNCTIONS_PRIORITY = -4;
   public static final int BIF_PRIORITY = -5;
+  public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE, 
+    "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour"
+  );
 
   @Override
   public void beforeCompletion(@NotNull CompletionInitializationContext context) {
@@ -158,7 +166,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           }
           else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
             for (String keyword : suggestKeywords(position)) {
-              result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword).bold(), KEYWORD_PRIORITY));
+              result.addElement(createKeywordLookupElement(keyword));
             }
             int invocationCount = parameters.getInvocationCount();
             boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;
@@ -184,6 +192,16 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
       }
     });
+  }
+
+  @NotNull
+  private static LookupElement createKeywordLookupElement(@NotNull String keyword) {
+    boolean needHandler = KEYWORDS_WITH_PARENTHESIS.contains(keyword);
+    boolean needQuotas = "include".equalsIgnoreCase(keyword) || "include_lib".equalsIgnoreCase(keyword);
+    return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword)
+      .withInsertHandler(needHandler ? new ErlangKeywordInsertHandler(needQuotas) : null)
+      .withTailText(needHandler ? "()" : null)
+      .bold(), KEYWORD_PRIORITY);
   }
 
   private static List<LookupElement> getLibPathLookupElements(PsiFile file, String includeText) {
@@ -356,6 +374,39 @@ public class ErlangCompletionContributor extends CompletionContributor {
             new CodeCompletionHandlerBase(CompletionType.BASIC).invokeCompletion(context.getProject(), context.getEditor());
           }
         });
+    }
+  }
+
+  private static class ErlangKeywordInsertHandler extends ParenthesesInsertHandler<LookupElement> {
+    private final boolean myNeedQuotas;
+
+    public ErlangKeywordInsertHandler(boolean needQuotas) {
+      myNeedQuotas = needQuotas;
+    }
+
+    @Override
+    protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
+      return true;
+    }
+
+    @Override
+    public void handleInsert(InsertionContext context, LookupElement item) {
+      super.handleInsert(context, item);
+      Editor editor = context.getEditor();
+      
+      Document document = editor.getDocument();
+      document.insertString(context.getTailOffset(), ".");
+
+      if (insertQuotas()) {
+        int offset = editor.getCaretModel().getOffset();
+        document.insertString(offset, "\"");
+        document.insertString(offset + 1, "\"");
+        editor.getCaretModel().moveToOffset(offset + 1);
+      }
+    }
+
+    private boolean insertQuotas() {
+      return myNeedQuotas; 
     }
   }
 }

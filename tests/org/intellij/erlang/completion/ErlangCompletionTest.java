@@ -27,6 +27,8 @@ import com.intellij.testFramework.fixtures.impl.TempDirTestFixtureImpl;
 import com.intellij.util.ArrayUtilRt;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -133,6 +135,18 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
       "my_local_function");
   }
 
+  public void testIncludeLib() throws Exception {
+    doCheckResult("-include_<caret>", "-include_lib(\"<caret>\").");
+  }
+
+  public void testInclude() throws Exception {
+    doCheckResult("-inclu<caret>", "-include(\"<caret>\").", '(');
+  }
+
+  public void testExport() throws Exception {
+    doCheckResult("-exp<caret>", "-export(<caret>).", '(');
+  }
+
   public void testLager() throws Throwable {
     doTestInclude("foo() -> lager:<caret>", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency");
   }
@@ -155,16 +169,11 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
   }
 
   public void testFunctionExpression() throws Throwable {
-    myFixture.configureByText("a.erl", "foo() -> fun f<caret>");
-    myFixture.completeBasic();
-    myFixture.checkResult("foo() -> fun foo/0");
+    doCheckResult("foo() -> fun f<caret>", "foo() -> fun foo/0");
   }
 
   public void testFunctionExpression2() throws Throwable {
-    myFixture.configureByText("a.erl", "foo() -> fun <caret>");
-    myFixture.completeBasic();
-    myFixture.type(Lookup.NORMAL_SELECT_CHAR);
-    myFixture.checkResult("foo() -> fun foo/0");
+    doCheckResult("foo() -> fun <caret>", "foo() -> fun foo/0", Lookup.NORMAL_SELECT_CHAR);
   }
 
   public void test211() throws Throwable {
@@ -190,6 +199,15 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
     myFixture.setUp();
     myFixture.setTestDataPath(getTestDataPath());
     myModule = myFixture.getModule();
+  }
+  
+  private void doCheckResult(@NotNull String before, @NotNull String after) { doCheckResult(before, after, null); }
+  
+  private void doCheckResult(@NotNull String before, @NotNull String after, @Nullable Character c) {
+    myFixture.configureByText("a.erl", before);
+    myFixture.completeBasic();
+    if (c != null) myFixture.type(c);
+    myFixture.checkResult(after);
   }
 
   public void testIncludeCompletion() throws Throwable {
