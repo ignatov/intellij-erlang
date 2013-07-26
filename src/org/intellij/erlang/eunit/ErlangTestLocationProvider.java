@@ -26,6 +26,7 @@ import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testIntegration.TestLocationProvider;
+import com.intellij.util.ArrayUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
@@ -35,12 +36,13 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author ignatov
+ * @author ignatov, savenko
  */
 public class ErlangTestLocationProvider implements TestLocationProvider {
   private static final Pattern LOCATION_PATTERN = Pattern.compile("^(\\w+)(?::(\\w+)(?::(\\d+))?)?$");
@@ -56,7 +58,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
     String function = matcher.group(2);
     String line = matcher.group(3);
     List<Location> locations = new SmartList<Location>();
-    ErlangFile[] erlangFiles = getErlangFiles(project, module);
+    Collection<ErlangFile> erlangFiles = getErlangFiles(project, module);
 
     if (function != null) {
       for (ErlangFile file : erlangFiles) {
@@ -77,7 +79,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
   private static Location getTestLocation(Project project, ErlangFile file, String function, String line) {
     ErlangFunction f = ContainerUtil.getFirstItem(file.getFunctionsByName(function));
     String fileText = file.getText();
-    int lineNumber = parseLineNumber(line);
+    int lineNumber = StringUtil.parseInt(line, -1);
 
     if (f == null) return null;
 
@@ -107,21 +109,14 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
     ASTNode nonWhitespaceSibling = FormatterUtil.getNextNonWhitespaceSibling(node);
     PsiElement psi = nonWhitespaceSibling != null ? nonWhitespaceSibling.getPsi() : null;
     if (psi == null) return null;
+    if (psi instanceof ErlangListExpression) { // in case of first element in generator
+      psi = ArrayUtil.getFirstElement(psi.getChildren());
+    }
     return PsiTreeUtil.getNonStrictParentOfType(psi, ErlangFunctionCallExpression.class, ErlangGenericFunctionCallExpression.class, ErlangFunction.class);
   }
 
-  private static int parseLineNumber(String line) {
-    if (line == null) return -1;
-    try {
-      return Integer.parseInt(line) - 1;
-    } catch (NumberFormatException e) {
-      return -1;
-    }
-  }
-
-  private static ErlangFile[] getErlangFiles(Project project, String module) {
-    List<ErlangFile> fromProject = ErlangModuleIndex.getFilesByName(project, module, 
+  private static Collection<ErlangFile> getErlangFiles(Project project, String module) {
+    return ErlangModuleIndex.getFilesByName(project, module, 
       GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.projectScope(project), ErlangFileType.MODULE));
-    return fromProject.toArray(new ErlangFile[fromProject.size()]);
   }
 }

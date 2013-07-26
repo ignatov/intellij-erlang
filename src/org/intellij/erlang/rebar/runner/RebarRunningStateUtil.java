@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -20,9 +21,9 @@ public class RebarRunningStateUtil {
   private RebarRunningStateUtil() {
   }
 
-  public static GeneralCommandLine getRebarCommandLine(RebarRunConfigurationBase configuration) {
+  public static GeneralCommandLine getRebarCommandLine(@NotNull RebarRunConfigurationBase configuration) {
     Project project = configuration.getProject();
-    final RebarSettings rebarSettings = RebarSettings.getInstance(project);
+    RebarSettings rebarSettings = RebarSettings.getInstance(project);
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
     commandLine.setWorkDirectory(project.getBasePath());
