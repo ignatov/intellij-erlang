@@ -1,4 +1,0 @@
-started_suite: aaaaaaa
-  started_test: basic_test_
-  finished_test: basic_test_
-finished_suite: aaaaaaa

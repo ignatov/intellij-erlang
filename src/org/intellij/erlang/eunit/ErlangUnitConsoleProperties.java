@@ -18,16 +18,12 @@ package org.intellij.erlang.eunit;
 
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RuntimeConfiguration;
-import com.intellij.execution.testframework.TestConsoleProperties;
-import com.intellij.execution.testframework.sm.SMCustomMessagesParsing;
-import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
  */
-public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties implements SMCustomMessagesParsing {
+public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties {
 
   private RuntimeConfiguration myConfig;
 
@@ -39,10 +35,5 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties impl
   @Override
   public RuntimeConfiguration getConfiguration() {
     return myConfig;
-  }
-
-  @Override
-  public OutputToGeneralTestEventsConverter createTestEventsConverter(@NotNull final String testFrameworkName, @NotNull final TestConsoleProperties consoleProperties) {
-    return new ErlangUnitTestEventsConverter(testFrameworkName, consoleProperties);
   }
 }
