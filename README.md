@@ -27,6 +27,17 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
+### Version 0.4.x (work in progress)
+* Rerun failed tests action
+* Native reporter for eunit tests
+* Completion for include and include_lib attributes
+* Better completion for attributes
+* Performance improvements
+* Introduce variable
+* Introduce macros quickfix
+* Better auto indentation for some cases 
+* Bugfixes
+
 ### Version 0.4.5
 * Comment based injection
 * Dialyzer integration (experimental)
