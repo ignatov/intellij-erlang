@@ -68,7 +68,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       @Override
       public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) throws ExecutionException {
         RebarEunitRunConfiguration runConfiguration = createRerunFailedTestsRunConfiguration();
-        return new RebarRunningState(env, runConfiguration);
+        return new RebarEunitRunningState(env, runConfiguration);
       }
 
       private RebarEunitRunConfiguration createRerunFailedTestsRunConfiguration() {

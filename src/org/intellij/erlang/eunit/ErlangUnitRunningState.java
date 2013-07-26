@@ -32,11 +32,14 @@ import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Getter;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -52,9 +55,15 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
   @Override
   protected void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException {
+    try {
+      File reporterDir = createReporterModuleDirectory();
+      commandLine.addParameters("-pa", reporterDir.getPath());
+    } catch (IOException e) {
+      throw new ExecutionException("Failed to setup eunit reports environment", e);
+    }
     commandLine.addParameter("-run");
     commandLine.addParameter("-eval");
-    commandLine.addParameter("eunit:test([" + getTestObjectsString() + "], [verbose]).");
+    commandLine.addParameter("eunit:test([" + getTestObjectsString() + "], [{report, {" + ErlangEunitReporterModule.MODULE_NAME +",[]}}, {no_tty, true}]).");
     commandLine.addParameters("-s", "init", "stop", "-noshell");
   }
 
@@ -145,5 +154,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       functions.add(function);
     }
     return result;
+  }
+
+  private static File createReporterModuleDirectory() throws IOException {
+    File tempDirectory = FileUtil.createTempDirectory(ErlangEunitReporterModule.MODULE_NAME, null);
+    ErlangEunitReporterModule.putReporterModuleTo(tempDirectory);
+    return tempDirectory;
   }
 }

@@ -60,8 +60,6 @@ public abstract class RebarRunConfigurationBase extends RuntimeConfiguration imp
     myCommand = command;
   }
 
-  abstract boolean isUseTestConsole();
-
   public boolean isSkipDependencies() {
     return mySkipDependencies;
   }
