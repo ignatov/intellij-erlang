@@ -43,7 +43,7 @@ public class ErlangFileTypeFactory extends FileTypeFactory {
     public String getPresentableString() {
       return "*" + myDotExtension;
     }
-  };
+  }
 
   @Override
   public void createFileTypes(@NotNull FileTypeConsumer fileTypeConsumer) {
@@ -52,6 +52,10 @@ public class ErlangFileTypeFactory extends FileTypeFactory {
     fileTypeConsumer.consume(ErlangFileType.APP,
       new ExtensionFileNameMatcher(ErlangFileType.APP.getDefaultExtension()),
       new ExtensionFileNameMatcher(ErlangFileType.APP.getDefaultExtension() + ".src"));
-    fileTypeConsumer.consume(ErlangFileType.TERMS);
+    fileTypeConsumer.consume(ErlangFileType.TERMS, 
+      new ExtensionFileNameMatcher("routes"), 
+      new ExtensionFileNameMatcher("config"),
+      new ExtensionFileNameMatcher("rel")
+    );
   }
 }
