@@ -1058,7 +1058,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String createFunctionPresentationFromCallbackSpec(@NotNull ErlangCallbackSpec spec) {
-    ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
+    ErlangFunTypeSigs funTypeSigs = getFunTypeSigs(spec);
     String funName = getCallbackSpecName(spec);
 
     List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : null;
@@ -1165,14 +1165,24 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   private static ErlangQAtom getCallbackAtom(ErlangCallbackSpec spec) {
-    ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
+    ErlangFunTypeSigs funTypeSigs = getFunTypeSigs(spec);
     ErlangSpecFun specFun = funTypeSigs != null ? funTypeSigs.getSpecFun() : null;
     return specFun != null ? specFun.getQAtom() : null;
   }
 
+  @Nullable
+  public static ErlangFunTypeSigs getFunTypeSigs(ErlangCallbackSpec spec) {
+    ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
+    if (funTypeSigs == null) {
+      ErlangFunTypeSigsBraces braces = spec.getFunTypeSigsBraces();
+      funTypeSigs = braces != null ? braces.getFunTypeSigs() : null;
+    }
+    return funTypeSigs;
+  }
+
   @NotNull
   public static List<ErlangTopType> getCallBackSpecArguments(ErlangCallbackSpec spec) {
-    ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
+    ErlangFunTypeSigs funTypeSigs = getFunTypeSigs(spec);
     List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
     ErlangTypeSig typeSig = ContainerUtil.getFirstItem(typeSigList);
     ErlangFunType funType = typeSig != null ? typeSig.getFunType() : null;

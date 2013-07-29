@@ -93,6 +93,11 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
           problemsHolder.registerProblem(o.getQAtom(), "Unresolved function " + "'" + r.getSignature() + "'", qfs);
         }
       }
+
+      //prevents UnresolvedFunction messages in callback specifications
+      @Override
+      public void visitCallbackSpec(@NotNull ErlangCallbackSpec o) {
+      }
     });
   }
 
