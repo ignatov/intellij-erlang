@@ -6,23 +6,26 @@ import com.intellij.execution.process.ProcessEvent;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Key;
-import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.util.CommonProcessors;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.model.JpsErlangModuleType;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
-import org.jetbrains.jps.builders.FileProcessor;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.ProjectBuildException;
 import org.jetbrains.jps.incremental.TargetBuilder;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
+import org.jetbrains.jps.incremental.resources.ResourcesBuilder;
+import org.jetbrains.jps.incremental.resources.StandardResourceBuilderEnabler;
 import org.jetbrains.jps.model.JpsDummyElement;
+import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.JpsModule;
@@ -44,6 +47,15 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
   public ErlangBuilder() {
     super(Arrays.asList(ErlangTargetType.PRODUCTION, ErlangTargetType.TESTS));
+
+    //TODO provide a way to copy erlang resources
+    //disables java resource builder for erlang modules
+    ResourcesBuilder.registerEnabler(new StandardResourceBuilderEnabler() {
+      @Override
+      public boolean isResourceProcessingEnabled(JpsModule module) {
+        return !(module.getModuleType() instanceof JpsErlangModuleType);
+      }
+    });
   }
 
   @Override
@@ -52,15 +64,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
                     @NotNull BuildOutputConsumer outputConsumer, 
                     @NotNull final CompileContext context) throws ProjectBuildException, IOException {
     LOG.debug(target.getPresentableName());
-    final Ref<Boolean> hasDirtyFiles = Ref.create(false);
-    holder.processDirtyFiles(new FileProcessor<ErlangSourceRootDescriptor, ErlangTarget>() {
-      @Override
-      public boolean apply(ErlangTarget target, File file, ErlangSourceRootDescriptor root) throws IOException {
-        hasDirtyFiles.set(true);
-        return true;
-      }
-    });
-    if (!hasDirtyFiles.get() && !holder.hasRemovedFiles()) {
+
+    if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) {
       return;
     }
 
@@ -92,7 +97,13 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
         return !file.isDirectory() && FileUtilRt.extensionEquals(file.getName(), "erl");
       }
     };
-    for (JpsModuleSourceRoot root : module.getSourceRoots()) {
+
+    List<JpsModuleSourceRoot> sourceRoots = new ArrayList<JpsModuleSourceRoot>();
+    ContainerUtil.addAll(sourceRoots, module.getSourceRoots(JavaSourceRootType.SOURCE));
+    if (target.isTests()) {
+      ContainerUtil.addAll(sourceRoots, module.getSourceRoots(JavaSourceRootType.TEST_SOURCE));
+    }
+    for (JpsModuleSourceRoot root : sourceRoots) {
       commandList.add("-I");
       commandList.add(root.getFile().getAbsolutePath());
       FileUtil.processFilesRecursively(root.getFile(), processor);
