@@ -68,6 +68,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @Override
+  protected boolean useTestCodePath() {
+    return true;
+  }
+
+  @Override
   @NotNull
   public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
     ProcessHandler processHandler = startProcess();

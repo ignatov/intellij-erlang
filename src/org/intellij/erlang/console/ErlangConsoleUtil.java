@@ -49,12 +49,12 @@ public final class ErlangConsoleUtil {
   }
 
   @NotNull
-  public static List<String> getCodePath(@NotNull Module module) {
-    return getCodePath(module.getProject(), module);
+  public static List<String> getCodePath(@NotNull Module module, boolean forTests) {
+    return getCodePath(module.getProject(), module, forTests);
   }
 
   @NotNull
-  public static List<String> getCodePath(@NotNull Project project, @Nullable Module module) {
+  public static List<String> getCodePath(@NotNull Project project, @Nullable Module module, boolean useTestOutputPath) {
     final Set<Module> codePathModules = new HashSet<Module>();
     if (module != null) {
       final ModuleRootManager moduleRootMgr = ModuleRootManager.getInstance(module);
@@ -75,10 +75,10 @@ public final class ErlangConsoleUtil {
       final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(codePathModule);
       final CompilerModuleExtension compilerModuleExt =
         moduleRootManager.getModuleExtension(CompilerModuleExtension.class);
-      final VirtualFile compilerOutput = compilerModuleExt.getCompilerOutputPath();
-      if (compilerOutput != null) {
+      final VirtualFile buildOutput = useTestOutputPath ? compilerModuleExt.getCompilerOutputPathForTests() : compilerModuleExt.getCompilerOutputPath();
+      if (buildOutput != null) {
         codePath.add("-pa");
-        codePath.add(compilerOutput.getCanonicalPath());
+        codePath.add(buildOutput.getCanonicalPath());
       }
     }
 

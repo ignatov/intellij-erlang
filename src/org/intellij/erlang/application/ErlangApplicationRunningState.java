@@ -43,4 +43,9 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
       commandLine.addParameters("-s", "init", "stop");
     }
   }
+
+  @Override
+  protected boolean useTestCodePath() {
+    return false;
+  }
 }
