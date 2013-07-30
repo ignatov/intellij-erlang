@@ -119,7 +119,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
             @Override
             public void run() {
               try {
-                final String emacsText = FileUtilRt.loadFile(tmpFile);
+                final String emacsText = FileUtilRt.loadFile(tmpFile, true);
                 if (StringUtil.isEmptyOrSpaces(emacsText)) {
                   Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
                     "Emacs returned an empty file",
