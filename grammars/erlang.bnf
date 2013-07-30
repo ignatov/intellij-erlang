@@ -75,6 +75,7 @@
   name(".*attribute")=attribute
   name(".*type|.*_t")=type
   pin(".*(clauses|exprs|list)(?:_\d.*)?")=1
+  pin("config_.*_expression")=1
 
   implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
   extends("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
@@ -274,12 +275,13 @@ config_expression ::=
   | q_var
 private config_qualified_or_call_expression ::= q_atom left_accessors?
 private left_accessors ::= config_call_expression | qualified_expression+
-left config_call_expression ::= config_argument_list {pin=0}
+left config_call_expression ::= config_argument_list
 config_argument_list ::= '(' config_exprs? ')' {elementType=argument_list}
 config_list_expression ::= '[' config_exprs? ']' {elementType=list_expression}
 config_bin_list_expression ::= '<<' config_exprs? '>>' {elementType=binary_expression}
 config_tuple_expression ::= '{' config_exprs? '}' {elementType=tuple_expression}
-private config_exprs ::= config_expression (',' config_expression)*
+private config_exprs ::= config_expression (',' config_expression)* {recoverUntil=config_expr_recover}
+private config_expr_recover ::= !(')' | '>>' | ']' | '}')
 
 expression ::=
     catch_expression

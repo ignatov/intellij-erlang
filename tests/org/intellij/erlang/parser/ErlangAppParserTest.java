@@ -26,6 +26,7 @@ public class ErlangAppParserTest extends ErlangParserTestBase {
     super("parser", "app", new ErlangParserDefinition());
   }
 
-  public void testRtbCoordinator() throws Exception { doTest(true, false); }
-  public void testRebar() throws Exception { doTest(true, false); }
+  public void testRtbCoordinator()  throws Exception { doTest(true, false); }
+  public void testRebar()           throws Exception { doTest(true, false); }
+  public void test254()             throws Exception { doTest(true, true);  }
 }

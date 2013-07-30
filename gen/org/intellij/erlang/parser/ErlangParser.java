@@ -1211,12 +1211,14 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "config_bin_list_expression")) return false;
     if (!nextTokenIs(builder_, ERL_BIN_START)) return false;
     boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = consumeToken(builder_, ERL_BIN_START);
-    result_ = result_ && config_bin_list_expression_1(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_BIN_END);
-    exit_section_(builder_, marker_, ERL_BINARY_EXPRESSION, result_);
-    return result_;
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, config_bin_list_expression_1(builder_, level_ + 1));
+    result_ = pinned_ && consumeToken(builder_, ERL_BIN_END) && result_;
+    exit_section_(builder_, level_, marker_, ERL_BINARY_EXPRESSION, result_, pinned_, null);
+    return result_ || pinned_;
   }
 
   // config_exprs?
@@ -1232,9 +1234,35 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "config_call_expression")) return false;
     if (!nextTokenIs(builder_, ERL_PAR_LEFT)) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = enter_section_(builder_, level_, _LEFT_, null);
     result_ = config_argument_list(builder_, level_ + 1);
-    exit_section_(builder_, level_, marker_, ERL_CONFIG_CALL_EXPRESSION, result_, false, null);
+    pinned_ = result_; // pin = 1
+    exit_section_(builder_, level_, marker_, ERL_CONFIG_CALL_EXPRESSION, result_, pinned_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // !(')' | '>>' | ']' | '}')
+  static boolean config_expr_recover(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "config_expr_recover")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NOT_, null);
+    result_ = !config_expr_recover_0(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
+  }
+
+  // ')' | '>>' | ']' | '}'
+  private static boolean config_expr_recover_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "config_expr_recover_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = consumeToken(builder_, ERL_PAR_RIGHT);
+    if (!result_) result_ = consumeToken(builder_, ERL_BIN_END);
+    if (!result_) result_ = consumeToken(builder_, ERL_BRACKET_RIGHT);
+    if (!result_) result_ = consumeToken(builder_, ERL_CURLY_RIGHT);
+    exit_section_(builder_, marker_, null, result_);
     return result_;
   }
 
@@ -1287,7 +1315,7 @@ public class ErlangParser implements PsiParser {
     result_ = config_expression(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && config_exprs_1(builder_, level_ + 1);
-    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, config_expr_recover_parser_);
     return result_ || pinned_;
   }
 
@@ -1326,12 +1354,14 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "config_list_expression")) return false;
     if (!nextTokenIs(builder_, ERL_BRACKET_LEFT)) return false;
     boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = consumeToken(builder_, ERL_BRACKET_LEFT);
-    result_ = result_ && config_list_expression_1(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_BRACKET_RIGHT);
-    exit_section_(builder_, marker_, ERL_LIST_EXPRESSION, result_);
-    return result_;
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, config_list_expression_1(builder_, level_ + 1));
+    result_ = pinned_ && consumeToken(builder_, ERL_BRACKET_RIGHT) && result_;
+    exit_section_(builder_, level_, marker_, ERL_LIST_EXPRESSION, result_, pinned_, null);
+    return result_ || pinned_;
   }
 
   // config_exprs?
@@ -1348,11 +1378,13 @@ public class ErlangParser implements PsiParser {
     if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
         && replaceVariants(builder_, 2, "<expression>")) return false;
     boolean result_ = false;
+    boolean pinned_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<expression>");
     result_ = q_atom(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
     result_ = result_ && config_qualified_or_call_expression_1(builder_, level_ + 1);
-    exit_section_(builder_, level_, marker_, null, result_, false, null);
-    return result_;
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
+    return result_ || pinned_;
   }
 
   // left_accessors?
@@ -1368,12 +1400,14 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "config_tuple_expression")) return false;
     if (!nextTokenIs(builder_, ERL_CURLY_LEFT)) return false;
     boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = consumeToken(builder_, ERL_CURLY_LEFT);
-    result_ = result_ && config_tuple_expression_1(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_CURLY_RIGHT);
-    exit_section_(builder_, marker_, ERL_TUPLE_EXPRESSION, result_);
-    return result_;
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, config_tuple_expression_1(builder_, level_ + 1));
+    result_ = pinned_ && consumeToken(builder_, ERL_CURLY_RIGHT) && result_;
+    exit_section_(builder_, level_, marker_, ERL_TUPLE_EXPRESSION, result_, pinned_, null);
+    return result_ || pinned_;
   }
 
   // config_exprs?
@@ -5576,6 +5610,11 @@ public class ErlangParser implements PsiParser {
   final static Parser argument_definition_parser_ = new Parser() {
     public boolean parse(PsiBuilder builder_, int level_) {
       return argument_definition(builder_, level_ + 1);
+    }
+  };
+  final static Parser config_expr_recover_parser_ = new Parser() {
+    public boolean parse(PsiBuilder builder_, int level_) {
+      return config_expr_recover(builder_, level_ + 1);
     }
   };
   final static Parser expression_parser_ = new Parser() {
