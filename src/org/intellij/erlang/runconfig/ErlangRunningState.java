@@ -59,14 +59,14 @@ public abstract class ErlangRunningState extends CommandLineState {
     String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(sdk.getHomePath()).getAbsolutePath());
     commandLine.setExePath(erl);
     commandLine.setWorkDirectory(myModule.getProject().getBasePath());
-    commandLine.addParameters(ErlangConsoleUtil.getCodePath(myModule));
-
+    commandLine.addParameters(ErlangConsoleUtil.getCodePath(myModule, useTestCodePath()));
     setUpCommandLineParameters(commandLine);
-
     final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
   }
 
   protected abstract void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException;
+
+  protected abstract boolean useTestCodePath();
 }
