@@ -1,11 +1,16 @@
 package org.intellij.erlang.jps.model;
 
+import com.intellij.util.xmlb.SkipDefaultValuesSerializationFilters;
+import com.intellij.util.xmlb.XmlSerializer;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.JpsDummyElement;
+import org.jetbrains.jps.model.JpsElement;
 import org.jetbrains.jps.model.JpsElementFactory;
+import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.serialization.JpsModelSerializerExtension;
+import org.jetbrains.jps.model.serialization.facet.JpsFacetConfigurationSerializer;
 import org.jetbrains.jps.model.serialization.library.JpsSdkPropertiesSerializer;
 import org.jetbrains.jps.model.serialization.module.JpsModulePropertiesSerializer;
 
@@ -45,6 +50,22 @@ public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtensi
 
       @Override
       public void saveProperties(@NotNull JpsDummyElement properties, @NotNull Element element) {
+      }
+    });
+  }
+
+  @Override
+  public List<? extends JpsFacetConfigurationSerializer<?>> getFacetConfigurationSerializers() {
+    return Collections.singletonList(new JpsFacetConfigurationSerializer<JpsErlangModuleExtension>(JpsErlangModuleExtension.ROLE, ErlangFacetConstants.ID, ErlangFacetConstants.NAME) {
+      @Override
+      protected JpsErlangModuleExtension loadExtension(@NotNull Element facetConfigurationElement, String name, JpsElement parent, JpsModule module) {
+        ErlangModuleExtensionProperties props = XmlSerializer.deserialize(facetConfigurationElement, ErlangModuleExtensionProperties.class);
+        return new JpsErlangModuleExtension(props == null ? new ErlangModuleExtensionProperties() : props);
+      }
+
+      @Override
+      protected void saveExtension(JpsErlangModuleExtension extension, Element facetConfigurationTag, JpsModule module) {
+        XmlSerializer.serializeInto(extension.getProperties(), facetConfigurationTag, new SkipDefaultValuesSerializationFilters());
       }
     });
   }

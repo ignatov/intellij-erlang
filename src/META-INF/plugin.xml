@@ -167,6 +167,7 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <facetType implementation="org.intellij.erlang.facet.ErlangFacetType"/>
 
         <internalFileTemplate name="Erlang Module"/>
         <internalFileTemplate name="Erlang Header"/>

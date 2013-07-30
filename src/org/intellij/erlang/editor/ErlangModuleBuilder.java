@@ -24,6 +24,7 @@ import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.projectRoots.SdkTypeId;
 import com.intellij.openapi.roots.ModifiableRootModel;
+import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,5 +50,6 @@ public class ErlangModuleBuilder extends JavaModuleBuilder implements SourcePath
 
   @Override
   public void moduleCreated(@NotNull Module module) {
+    ErlangFacet.createFacet(module);
   }
 }

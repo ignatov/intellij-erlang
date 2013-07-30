@@ -3,9 +3,7 @@
   <output url="file://$MODULE_DIR$/ebin" />
   <output-test url="file://$MODULE_DIR$/.eunit" />
   <exclude-output />
-  <content url="file://$MODULE_DIR$">
-    <sourceFolder url="file://$MODULE_DIR$/include" isTestSource="false" />
-  </content>
+  <content url="file://$MODULE_DIR$" />
   <orderEntry type="inheritedJdk" />
   <orderEntry type="sourceFolder" forTests="false" />
 </root>

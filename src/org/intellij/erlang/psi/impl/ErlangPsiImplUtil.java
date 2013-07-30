@@ -28,12 +28,15 @@ import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
@@ -53,6 +56,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
+import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -824,23 +828,16 @@ public class ErlangPsiImplUtil {
     if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
     //relative to direct parent include file was not found
     //let's search in include directories
-    List<ErlangFile> fromIncludeDirectories = ContainerUtil.mapNotNull(ProjectRootManager.getInstance(project).getContentRoots(), new Function<VirtualFile, ErlangFile>() {
-      @Override
-      @Nullable
-      public ErlangFile fun(VirtualFile virtualFile) {
-        return getRelativeErlangFile(project, "include/" + relativePath, virtualFile);
+    Module module = ModuleUtilCore.findModuleForFile(virtualFile, project);
+    ErlangFacet erlangFacet = module != null ? ErlangFacet.getFacet(module) : null;
+    if (erlangFacet != null) {
+      for(String includePath : erlangFacet.getConfiguration().getIncludePaths()) {
+        VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
+        includedFile = getRelativeErlangFile(project, relativePath, includeDir);
+        if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
       }
-    });
-    if (!fromIncludeDirectories.isEmpty()) return fromIncludeDirectories;
-
-    //let's search in source roots...
-    return ContainerUtil.mapNotNull(ProjectRootManager.getInstance(project).getContentSourceRoots(), new Function<VirtualFile, ErlangFile>() {
-      @Override
-      @Nullable
-      public ErlangFile fun(VirtualFile virtualFile) {
-        return getRelativeErlangFile(project, relativePath, virtualFile);
-      }
-    });
+    }
+    return ContainerUtil.emptyList();
   }
 
   @Nullable

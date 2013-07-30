@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.rebar.importWizard;
 
+import com.intellij.facet.FacetManager;
 import com.intellij.ide.projectWizard.ProjectWizardTestCase;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.openapi.application.ApplicationManager;
@@ -31,8 +32,12 @@ import com.intellij.openapi.roots.impl.ModuleRootManagerImpl;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.Consumer;
 import junit.framework.Assert;
+import org.intellij.erlang.facet.ErlangFacet;
+import org.intellij.erlang.facet.ErlangFacetType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jdom.Document;
@@ -41,6 +46,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   private static final String MODULE_DIR = "MODULE_DIR";
@@ -157,11 +164,30 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
     final String projectPath = getProject().getBaseDir().getPath();
     final File expectedImlFile = new File(projectPath + "/expected/" + module.getName() + ".iml");
-    final Element expectedIml = JDOMUtil.loadDocument(expectedImlFile).getRootElement();
+    final Document expectedIml = JDOMUtil.loadDocument(expectedImlFile);
+    final Element expectedImlElement = expectedIml.getRootElement();
 
     final String errorMsg = "Configuration of module " + module.getName() +
-      " does not meet expectations\n" +
+      " does not meet expectations.\nExpected:\n" +
+      new String(JDOMUtil.printDocument(expectedIml, "\n")) +
+      "\nBut got:\n" +
       new String(JDOMUtil.printDocument(new Document(actualImlElement), "\n"));
-    Assert.assertTrue(errorMsg, JDOMUtil.areElementsEqual(expectedIml, actualImlElement));
+    Assert.assertTrue(errorMsg, JDOMUtil.areElementsEqual(expectedImlElement, actualImlElement));
+    validateFacet(module);
+  }
+
+  private static void validateFacet(@NotNull Module module) throws Exception {
+    FacetManager facetManager = FacetManager.getInstance(module);
+    ErlangFacet facet = facetManager.getFacetByType(ErlangFacetType.TYPE_ID);
+    assertNotNull("Erlang facet was not added.", facet);
+    List<String> actualIncludePaths = facet.getConfiguration().getIncludePaths();
+    List<String> expectedIncludePaths = new ArrayList<String>();
+    for (VirtualFile contentRoot : ModuleRootManager.getInstance(module).getContentRoots()) {
+      VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include");
+      if (includeDirectory != null) {
+        expectedIncludePaths.add(includeDirectory.getPath());
+      }
+    }
+    assertSameElements(actualIncludePaths, expectedIncludePaths);
   }
 }
