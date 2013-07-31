@@ -7,15 +7,21 @@ import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.util.CommonProcessors;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.xmlb.XmlSerializationException;
+import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.jps.model.JpsErlangModuleExtension;
 import org.intellij.erlang.jps.model.JpsErlangModuleType;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.jdom.Document;
+import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
@@ -30,7 +36,9 @@ import org.jetbrains.jps.model.JpsDummyElement;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
+import org.jetbrains.jps.model.module.JpsDependencyElement;
 import org.jetbrains.jps.model.module.JpsModule;
+import org.jetbrains.jps.model.module.JpsModuleDependency;
 import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
 
 import java.io.File;
@@ -44,6 +52,7 @@ import java.util.List;
  * @author @nik
  */
 public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
+  public static final String DEPENDENCIES_CONFIG_FILE_PATH = "erlang-builder/deps-config.xml";
   public static final String NAME = "erlc";
   private final static Logger LOG = Logger.getInstance(ErlangBuilder.class);
 
@@ -78,8 +87,10 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
     commandLine.setWorkDirectory(outputDirectory);
     commandLine.setExePath(executable.getAbsolutePath());
+    addCodePath(commandLine, module, target, context);
+    addParseTransforms(commandLine, module);
     addIncludePaths(commandLine, module);
-    addErlangModules(commandLine, module, target);
+    addErlangModules(commandLine, module, target, context);
 
     runBuildProcess(context, commandLine);
   }
@@ -152,7 +163,13 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void addErlangModules(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target) {
+  private static void addErlangModules(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target, CompileContext context) {
+    if (!addErlangModulesFromConfig(commandLine, module, target, context)) {
+      addErlangModulesDefault(commandLine, module, target);
+    }
+  }
+
+  private static void addErlangModulesDefault(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target) {
     CommonProcessors.CollectProcessor<File> erlFilesCollector = new CommonProcessors.CollectProcessor<File>() {
       @Override
       protected boolean accept(File file) {
@@ -170,5 +187,61 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     for (File f : erlFilesCollector.getResults()) {
       commandLine.addParameter(f.getAbsolutePath());
     }
+  }
+
+  private static boolean addErlangModulesFromConfig(GeneralCommandLine commandLine, JpsModule module,
+                                                    ErlangTarget target, CompileContext context) {
+    File dataStorageRoot = context.getProjectDescriptor().dataManager.getDataPaths().getDataStorageRoot();
+    File depsConfigFile = new File(dataStorageRoot, DEPENDENCIES_CONFIG_FILE_PATH);
+    if (!depsConfigFile.exists()) return false;
+    ErlangModuleBuildOrders buildOrders;
+    try {
+      Document document = JDOMUtil.loadDocument(depsConfigFile);
+      buildOrders = XmlSerializer.deserialize(document, ErlangModuleBuildOrders.class);
+    } catch (XmlSerializationException e) {
+      return false;
+    } catch (JDOMException e) {
+      return false;
+    } catch (IOException e) {
+      return false;
+    }
+    if (buildOrders == null) return false;
+    for (ErlangModuleBuildOrderDescriptor buildOrder : buildOrders.myModuleBuildOrderDescriptors) {
+      if (StringUtil.equals(buildOrder.myModuleName, module.getName())) {
+        commandLine.addParameters(buildOrder.myOrderedErlangModulePaths);
+        if (target.isTests()) {
+          commandLine.addParameters(buildOrder.myOrderedErlangTestModulePaths);
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static void addParseTransforms(GeneralCommandLine commandLine, JpsModule module) throws ProjectBuildException {
+    JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
+    List<String> parseTransforms = extension != null ? extension.getParseTransforms() : null;
+    if (parseTransforms == null || parseTransforms.isEmpty()) return;
+    for (String ptModule : parseTransforms) {
+      commandLine.addParameter("+{parse_transform, " + ptModule + "}");
+    }
+  }
+
+  private static void addCodePath(GeneralCommandLine commandLine, JpsModule module,
+                                                 ErlangTarget target, CompileContext context) throws ProjectBuildException {
+    addModuleOutputToCodePath(commandLine, module, target, context);
+    for (JpsDependencyElement dependency : module.getDependenciesList().getDependencies()) {
+      if (!(dependency instanceof JpsModuleDependency)) continue;
+      JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
+      JpsModule depModule = moduleDependency.getModule();
+      if (depModule != null) {
+        addModuleOutputToCodePath(commandLine, depModule, target, context);
+      }
+    }
+  }
+
+  private static void addModuleOutputToCodePath(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target, CompileContext context) throws ProjectBuildException {
+    File outputDirectory = getBuildOutputDirectory(module, target, context);
+    commandLine.addParameters("-pa", outputDirectory.getPath());
   }
 }

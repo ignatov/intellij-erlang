@@ -76,4 +76,12 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
     }
     setIncludePaths(updatedIncludePaths);
   }
+
+  public List<String> getParseTransforms() {
+    return myState.myParseTransforms;
+  }
+
+  public void setParseTransforms(List<String> parseTransforms) {
+    myState.myParseTransforms = parseTransforms;
+  }
 }

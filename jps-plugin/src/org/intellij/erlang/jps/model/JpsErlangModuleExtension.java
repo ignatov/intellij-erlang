@@ -31,12 +31,16 @@ public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangM
     return new JpsErlangModuleExtension(this);
   }
 
+  public ErlangModuleExtensionProperties getProperties() {
+    return myProperties;
+  }
+
   public List<String> getIncludePaths() {
     return myProperties.myIncludePaths;
   }
 
-  public ErlangModuleExtensionProperties getProperties() {
-    return myProperties;
+  public List<String> getParseTransforms() {
+    return myProperties.myParseTransforms;
   }
 
   @Nullable
