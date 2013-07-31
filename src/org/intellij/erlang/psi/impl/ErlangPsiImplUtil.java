@@ -831,7 +831,7 @@ public class ErlangPsiImplUtil {
     Module module = ModuleUtilCore.findModuleForFile(virtualFile, project);
     ErlangFacet erlangFacet = module != null ? ErlangFacet.getFacet(module) : null;
     if (erlangFacet != null) {
-      for(String includePath : erlangFacet.getConfiguration().getIncludePaths()) {
+      for (String includePath : erlangFacet.getConfiguration().getIncludePaths()) {
         VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
         includedFile = getRelativeErlangFile(project, relativePath, includeDir);
         if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
