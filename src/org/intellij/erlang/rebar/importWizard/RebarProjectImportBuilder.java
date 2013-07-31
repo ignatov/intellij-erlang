@@ -50,6 +50,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.apache.log4j.Logger;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.editor.ErlangModuleType;
+import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.rebar.runner.RebarRunConfiguration;
 import org.intellij.erlang.rebar.runner.RebarRunConfigurationFactory;
 import org.intellij.erlang.rebar.settings.RebarSettings;
@@ -245,7 +246,6 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         // Initialize source and test paths.
         final ContentEntry content = rootModel.addContentEntry(importedOtpApp.getRoot());
         addSourceDirToContent(content, ideaModuleDir, "src", false);
-        addSourceDirToContent(content, ideaModuleDir, "include", false);
         addSourceDirToContent(content, ideaModuleDir, "test", true);
         // Exclude standard folders
         excludeDirFromContent(content, ideaModuleDir, "doc");
@@ -257,28 +257,20 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         createdRootModels.add(rootModel);
         // Set inter-module dependencies
         resolveModuleDeps(rootModel, importedOtpApp, projectSdk, selectedAppNames);
-        // Commit module if model is given.
-        if (moduleModel != null) {
-          ApplicationManager.getApplication().runWriteAction(new Runnable() {
-            public void run() {
-              rootModel.commit();
-            }
-          });
-        }
       }
     }
     // Commit project structure.
     LOG.info("Commit project structure");
-    if (moduleModel == null) {
-      ApplicationManager.getApplication().runWriteAction(new Runnable() {
-        public void run() {
-          for (ModifiableRootModel rootModel : createdRootModels) {
-            rootModel.commit();
-          }
-          obtainedModuleModel.commit();
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      public void run() {
+        for (ModifiableRootModel rootModel : createdRootModels) {
+          rootModel.commit();
         }
-      });
-    }
+        obtainedModuleModel.commit();
+      }
+    });
+
+    addErlangFacets(createdModules);
 
     RebarRunConfigurationFactory rebarFactory = RebarRunConfigurationFactory.getInstance();
     final RunManagerEx runManager = RunManagerEx.getInstanceEx(project);
@@ -291,6 +283,19 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
     RebarSettings.getInstance(project).setRebarPath(myRebarPath);
     return createdModules;
+  }
+
+  private static void addErlangFacets(final List<Module> modules) {
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        for (Module module : modules) {
+          if (ErlangFacet.getFacet(module) == null) {
+            ErlangFacet.createFacet(module);
+          }
+        }
+      }
+    });
   }
 
   @Nullable

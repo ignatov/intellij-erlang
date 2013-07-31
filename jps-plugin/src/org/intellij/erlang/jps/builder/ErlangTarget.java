@@ -34,6 +34,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
     return myModule.getName();
   }
 
+  @Override
   public Collection<BuildTarget<?>> computeDependencies(BuildTargetRegistry targetRegistry, TargetOutputIndex outputIndex) {
     return computeDependencies(targetRegistry);
   }
