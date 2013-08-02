@@ -18,6 +18,7 @@ package org.intellij.erlang;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.intellij.erlang.compilation.ErlangParseTransformDependenciesTest;
 import org.intellij.erlang.completion.ErlangCompletionTest;
 import org.intellij.erlang.console.FileReferenceFilterTest;
 import org.intellij.erlang.documentation.ErlangDocumentationProviderTest;
@@ -79,6 +80,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangEnterHandlerTest.class);
     suite.addTestSuite(ErlangIncludeLibResolveTest.class);
     suite.addTestSuite(ErlangUnitTestElementUtilTest.class);
+    suite.addTestSuite(ErlangParseTransformDependenciesTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }

@@ -12,14 +12,21 @@ import java.util.List;
 public class ErlangModuleExtensionProperties {
   public ErlangModuleExtensionProperties() {
     myIncludePaths = new ArrayList<String>();
+    myParseTransforms = new ArrayList<String>();
   }
 
   public ErlangModuleExtensionProperties(ErlangModuleExtensionProperties props) {
     myIncludePaths = new ArrayList<String>(props.myIncludePaths.size());
     myIncludePaths.addAll(props.myIncludePaths);
+    myParseTransforms = new ArrayList<String>(props.myParseTransforms.size());
+    myParseTransforms.addAll(props.myParseTransforms);
   }
 
   @Tag("includePaths")
   @AbstractCollection(surroundWithTag = false, elementTag = "path")
   public List<String> myIncludePaths;
+
+  @Tag("parseTransforms")
+  @AbstractCollection(surroundWithTag = false, elementTag = "transform")
+  public List<String> myParseTransforms;
 }

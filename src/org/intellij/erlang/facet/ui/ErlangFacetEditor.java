@@ -1,6 +1,5 @@
 package org.intellij.erlang.facet.ui;
 
-import com.intellij.facet.Facet;
 import com.intellij.facet.ui.FacetEditorContext;
 import com.intellij.facet.ui.FacetEditorTab;
 import com.intellij.facet.ui.FacetValidatorsManager;
@@ -8,16 +7,20 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.projectRoots.ui.PathEditor;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.text.CharFilter;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.DocumentAdapter;
 import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ErlangFacetConfiguration;
 import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,9 +31,11 @@ import java.util.List;
 public class ErlangFacetEditor extends FacetEditorTab {
   private JPanel myRootPanel;
   private JPanel myIncludePathsEditorPanel;
+  private JTextField myParseTransformsEditorField;
 
   private final ErlangFacetConfiguration myConfiguration;
   private final PathEditor myIncludePathsEditor;
+  private boolean myIsModified = false;
 
   public ErlangFacetEditor(final FacetEditorContext editorContext, final FacetValidatorsManager validatorsManager, ErlangFacetConfiguration configuration) {
     if (editorContext.isNewFacet()) {
@@ -42,8 +47,16 @@ public class ErlangFacetEditor extends FacetEditorTab {
     myIncludePathsEditor = new PathEditor(chooserDescriptor);
     myIncludePathsEditor.setAddBaseDir(ModuleRootManager.getInstance(editorContext.getModule()).getContentRoots()[0]);
 
-    JComponent editorComponent = myIncludePathsEditor.createComponent();
-    myIncludePathsEditorPanel.add(editorComponent, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, editorComponent.getMinimumSize(), editorComponent.getPreferredSize(), editorComponent.getMaximumSize()));
+    JComponent includePathsEditorComponent = myIncludePathsEditor.createComponent();
+    myIncludePathsEditorPanel.add(includePathsEditorComponent, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, includePathsEditorComponent.getMinimumSize(), includePathsEditorComponent.getPreferredSize(), includePathsEditorComponent.getMaximumSize()));
+
+
+    myParseTransformsEditorField.getDocument().addDocumentListener(new DocumentAdapter() {
+      @Override
+      protected void textChanged(DocumentEvent e) {
+        myIsModified = true;
+      }
+    });
   }
 
   @Nls
@@ -61,12 +74,14 @@ public class ErlangFacetEditor extends FacetEditorTab {
 
   @Override
   public boolean isModified() {
-    return myIncludePathsEditor.isModified();
+    return myIncludePathsEditor.isModified() || myIsModified;
   }
 
   @Override
   public void reset() {
     myIncludePathsEditor.resetPath(getConfigurationIncludeDirectories());
+    myParseTransformsEditorField.setText(getConfigurationParseTransforms());
+    myIsModified = false;
   }
 
   @Override
@@ -77,10 +92,8 @@ public class ErlangFacetEditor extends FacetEditorTab {
   public void apply() throws ConfigurationException {
     myIncludePathsEditor.resetPath(Arrays.asList(myIncludePathsEditor.getRoots()));
     myConfiguration.setIncludePaths(getUiIncludeDirectories());
-  }
-
-  @Override
-  public void onFacetInitialized(@NotNull Facet facet) {
+    myConfiguration.setParseTransforms(getUiParseTransforms());
+    myIsModified = false;
   }
 
   private List<VirtualFile> getConfigurationIncludeDirectories() {
@@ -100,5 +113,22 @@ public class ErlangFacetEditor extends FacetEditorTab {
       includePaths.add(includeDir.getPath());
     }
     return includePaths;
+  }
+
+  private String getConfigurationParseTransforms() {
+    return StringUtil.join(myConfiguration.getParseTransforms(), ", ");
+  }
+
+  private List<String> getUiParseTransforms() {
+    String parseTransformsString = myParseTransformsEditorField.getText();
+    List<String> split = StringUtil.split(parseTransformsString, ",");
+    return ContainerUtil.mapNotNull(split, new Function<String, String>() {
+      @Nullable
+      @Override
+      public String fun(String s) {
+        String strippedModuleName = StringUtil.strip(s, CharFilter.NOT_WHITESPACE_FILTER);
+        return StringUtil.isEmpty(strippedModuleName) ? null : strippedModuleName;
+      }
+    });
   }
 }
