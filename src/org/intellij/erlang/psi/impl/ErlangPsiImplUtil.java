@@ -799,8 +799,8 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangIncludeLib includeLib) {
-    PsiElement string = includeLib.getIncludeString();
-    String[] split = string != null ? StringUtil.unquoteString(string.getText()).split("/") : null;
+    ErlangIncludeString includeString = includeLib.getIncludeString();
+    String[] split = includeString != null ? StringUtil.unquoteString(includeString.getText()).split("/") : null;
 
     if (split != null && split.length >= 2) {
       String libName = split[0];
@@ -809,8 +809,8 @@ public class ErlangPsiImplUtil {
       VirtualFile appDir = ErlangApplicationIndex.getApplicationDirectoryByName(libName, GlobalSearchScope.allScope(project));
       return ContainerUtil.createMaybeSingletonList(getRelativeErlangFile(project, relativePath, appDir));
     }
-
-    return Collections.emptyList();
+    //either include_lib does not specify a library, or it was not found, falling back to 'include' behaviour.
+    return getDirectlyIncludedFiles(includeString);
   }
 
   @NotNull
@@ -835,6 +835,34 @@ public class ErlangPsiImplUtil {
         VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
         includedFile = getRelativeErlangFile(project, relativePath, includeDir);
         if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
+      }
+    }
+    return ContainerUtil.emptyList();
+  }
+
+  @NotNull
+  public static List<ErlangFile> getDirectlyIncludedFiles(@Nullable ErlangIncludeString includeString) {
+    if (includeString == null) return ContainerUtil.emptyList();
+    ErlangFile containingPsiFile = (ErlangFile) includeString.getContainingFile();
+    VirtualFile containingVirtualFile = containingPsiFile.getOriginalFile().getVirtualFile();
+    VirtualFile parent = containingVirtualFile != null ? containingVirtualFile.getParent() : null;
+    String relativePath = StringUtil.unquoteString(includeString.getText());
+    Project project = containingPsiFile.getProject();
+    if (parent != null) {
+      ErlangFile includedFile = getRelativeErlangFile(project, relativePath, parent);
+      if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
+    }
+    //relative to direct parent include file was not found
+    //let's search in include directories
+    if (containingVirtualFile != null) {
+      Module module = ModuleUtilCore.findModuleForFile(containingVirtualFile, project);
+      ErlangFacet erlangFacet = module != null ? ErlangFacet.getFacet(module) : null;
+      if (erlangFacet != null) {
+        for (String includePath : erlangFacet.getConfiguration().getIncludePaths()) {
+          VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
+          ErlangFile includedFile = getRelativeErlangFile(project, relativePath, includeDir);
+          if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
+        }
       }
     }
     return ContainerUtil.emptyList();
