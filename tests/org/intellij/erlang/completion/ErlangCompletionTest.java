@@ -215,7 +215,7 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
   }
 
   public void testIncludeLibCompletion() throws Throwable {
-    myFixture.configureByFiles("include-lib/includeLib.erl", "include-lib/testapp/ebin/testapp.app");
+    myFixture.configureByFiles("include-lib/includeLib.erl", "include-lib/testapp/ebin/testapp.app", "include-lib/testapp/include/includefile.hrl");
     myFixture.complete(CompletionType.BASIC);
     myFixture.checkResultByFile("include-lib/includeLib-after.erl");
   }
