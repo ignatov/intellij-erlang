@@ -807,7 +807,10 @@ public class ErlangPsiImplUtil {
       final String relativePath = StringUtil.join(split, 1, split.length, "/");
       final Project project = includeLib.getProject();
       VirtualFile appDir = ErlangApplicationIndex.getApplicationDirectoryByName(libName, GlobalSearchScope.allScope(project));
-      return ContainerUtil.createMaybeSingletonList(getRelativeErlangFile(project, relativePath, appDir));
+      ErlangFile includedFile = getRelativeErlangFile(project, relativePath, appDir);
+      if (includedFile != null) {
+        return new SmartList<ErlangFile>(includedFile);
+      }
     }
     //either include_lib does not specify a library, or it was not found, falling back to 'include' behaviour.
     return getDirectlyIncludedFiles(includeString);
