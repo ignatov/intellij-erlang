@@ -840,6 +840,62 @@ public class ErlangPsiImplUtil {
     return ContainerUtil.emptyList();
   }
 
+  @NotNull
+  public static Set<String> getAppliedParseTransformModuleNames(@NotNull ErlangFile file) {
+    Set<String> parseTransforms = new HashSet<String>();
+    addDeclaredParseTransforms(file, parseTransforms);
+    for (ErlangFile f : getIncludedFiles(file)) {
+      addDeclaredParseTransforms(f, parseTransforms);
+    }
+    return parseTransforms;
+  }
+
+  private static void addDeclaredParseTransforms(@NotNull ErlangFile file, @NotNull Set<String> parseTransforms) {
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+      ErlangQAtom qAtom = null != atomAttribute ? atomAttribute.getQAtom() : null;
+      PsiElement atom = null != qAtom ? qAtom.getAtom() : null;
+      String attributeName = null != atom ? atom.getText() : null;
+      ErlangAttrVal attrVal = atomAttribute != null ? atomAttribute.getAttrVal() : null;
+      if (!"compile".equals(attributeName) || attrVal == null) continue;
+
+      for (ErlangExpression expression : attrVal.getExpressionList()) {
+        //TODO support macros
+        if (expression instanceof ErlangListExpression) {
+          extractParseTransforms((ErlangListExpression) expression, parseTransforms);
+        }
+        if (expression instanceof ErlangTupleExpression) {
+          extractParseTransforms((ErlangTupleExpression) expression, parseTransforms);
+        }
+      }
+    }
+  }
+
+  private static void extractParseTransforms(@NotNull ErlangListExpression list, @NotNull Set<String> parseTransforms) {
+    for (ErlangExpression expr : list.getExpressionList()) {
+      if (expr instanceof ErlangTupleExpression) {
+        extractParseTransforms((ErlangTupleExpression) expr, parseTransforms);
+      }
+    }
+  }
+
+  private static void extractParseTransforms(@NotNull ErlangTupleExpression tuple, @NotNull Set<String> parseTransforms) {
+    List<ErlangExpression> expressionList = tuple.getExpressionList();
+    if (expressionList.size() != 2) return;
+    ErlangExpression first = expressionList.get(0);
+    if (!"parse_transform".equals(getAtomName(first instanceof ErlangMaxExpression ? (ErlangMaxExpression) first : null))) return;
+    ErlangExpression second = expressionList.get(1);
+    String parseTransformModuleName = getAtomName(second instanceof ErlangMaxExpression ? (ErlangMaxExpression) second : null);
+    ContainerUtil.addIfNotNull(parseTransformModuleName, parseTransforms);
+  }
+
+  @Nullable
+  private static String getAtomName(@Nullable ErlangMaxExpression expression) {
+    ErlangQAtom qAtom = expression != null ? expression.getQAtom() : null;
+    PsiElement atom = qAtom != null ? qAtom.getAtom() : null;
+    return atom != null ? atom.getText() : null;
+  }
+
   @Nullable
   private static ErlangFile getRelativeErlangFile(@NotNull Project project, @NotNull String relativePath, @Nullable VirtualFile parent) {
     VirtualFile relativeFile = VfsUtil.findRelativeFile(relativePath, parent);

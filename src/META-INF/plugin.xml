@@ -370,4 +370,9 @@
         </group>
 
     </actions>
+    <project-components>
+      <component>
+        <implementation-class>org.intellij.erlang.compilation.ErlangDependenciesManager</implementation-class>
+      </component>
+    </project-components>
 </idea-plugin>

@@ -11,7 +11,6 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -33,6 +32,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jdom.Document;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,6 +64,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     try {
       Document serializedBuildOrders = new Document(XmlSerializer.serialize(buildOrders, new SkipDefaultValuesSerializationFilters()));
       File file = new File(projectSystemDirectory, ErlangBuilder.DEPENDENCIES_CONFIG_FILE_PATH);
+      //noinspection ResultOfMethodCallIgnored
       file.getParentFile().mkdirs();
       JDOMUtil.writeDocument(serializedBuildOrders, file, SystemProperties.getLineSeparator());
     } catch (XmlSerializationException e) {
@@ -87,7 +88,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     ErlangModuleBuildOrders buildOrders = new ErlangModuleBuildOrders(modulesToCompile.length);
     try {
       for (Module module : modulesToCompile) {
-        buildOrders.myModuleBuildOrderDescriptors.add(getModuleBuildOrder(module));
+        buildOrders.myModuleBuildOrderDescriptors.add(getModuleBuildOrderInner(module));
       }
     } catch (CyclicDependencyFoundException e) {
       context.addMessage(CompilerMessageCategory.ERROR, "Cyclic erlang module dependency detected. Check parse_transform usages.", null, -1, -1);
@@ -97,7 +98,12 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   }
 
   // It's public for test purposes only
+  @TestOnly
   public static ErlangModuleBuildOrderDescriptor getModuleBuildOrder(Module module) throws CyclicDependencyFoundException {
+    return getModuleBuildOrderInner(module);
+  }
+
+  private static ErlangModuleBuildOrderDescriptor getModuleBuildOrderInner(Module module) throws CyclicDependencyFoundException {
     ErlangModuleBuildOrderDescriptor buildOrder = new ErlangModuleBuildOrderDescriptor();
     ErlangFacet erlangFacet = ErlangFacet.getFacet(module);
     List<String> globalParseTransforms = erlangFacet != null ? erlangFacet.getConfiguration().getParseTransforms() : ContainerUtil.<String>emptyList();
@@ -156,12 +162,6 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   }
 
   private static List<String> getTopologicallySortedErlangModulePaths(Collection<ErlangFile> erlangModules, List<String> globalParseTransforms) throws CyclicDependencyFoundException {
-    if (true) return ContainerUtil.map(erlangModules, new Function<ErlangFile, String>() {
-      @Override
-      public String fun(ErlangFile erlangFile) {
-        return FileUtil.getNameWithoutExtension(erlangFile.getName());
-      }
-    });  // todo: tmp
     ErlangModulesDependencyGraph depsGraph = new ErlangModulesDependencyGraph(erlangModules, globalParseTransforms);
     return ContainerUtil.mapNotNull(depsGraph.getSortedModules(), new Function<ErlangFile, String>() {
       @Nullable
@@ -256,7 +256,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       }
 
       String getModuleName() {
-        return StringUtil.trimEnd(myModuleFile.getName(), "." + ErlangFileType.MODULE.getDefaultExtension());
+        return FileUtil.getNameWithoutExtension(myModuleFile.getName());
       }
 
       void addDependency(@Nullable Node dep) {

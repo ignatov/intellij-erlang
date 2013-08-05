@@ -2,7 +2,7 @@ package org.intellij.erlang.compilation;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.ModuleType;
-import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -10,7 +10,6 @@ import com.intellij.testFramework.ModuleTestCase;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.editor.ErlangModuleType;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
 
@@ -106,11 +105,11 @@ public class ErlangParseTransformDependenciesTest extends ModuleTestCase {
     assertSameErlangModules(moduleBuildOrder.myOrderedErlangTestModulePaths, "test_parse_transform", "test");
   }
 
-  private static void assertSameErlangModules(List<String> modulePaths, String ... expectedModules) {
+  private static void assertSameErlangModules(List<String> modulePaths, String... expectedModules) {
     List<String> actualModules = ContainerUtil.map(modulePaths, new Function<String, String>() {
       @Override
       public String fun(String path) {
-        return StringUtil.trimEnd(new File(path).getName(), "." + ErlangFileType.MODULE.getDefaultExtension());
+        return FileUtil.getNameWithoutExtension(new File(path));
       }
     });
     assertOrderedEquals(actualModules, expectedModules);

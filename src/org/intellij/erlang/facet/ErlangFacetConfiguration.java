@@ -28,7 +28,7 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
 
   @Override
   public FacetEditorTab[] createEditorTabs(FacetEditorContext editorContext, FacetValidatorsManager validatorsManager) {
-    return new FacetEditorTab[] {new ErlangFacetEditor(editorContext, validatorsManager, this)};
+    return new FacetEditorTab[] {new ErlangFacetEditor(editorContext, this)};
   }
 
   @Override
@@ -84,5 +84,13 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
       }
     }
     return includeFolderPaths;
+  }
+
+  public List<String> getParseTransforms() {
+    return myState.myParseTransforms;
+  }
+
+  public void setParseTransforms(List<String> parseTransforms) {
+    myState.myParseTransforms = parseTransforms;
   }
 }
