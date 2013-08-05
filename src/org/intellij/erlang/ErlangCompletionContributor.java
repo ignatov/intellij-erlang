@@ -210,19 +210,19 @@ public class ErlangCompletionContributor extends CompletionContributor {
     if (FileUtil.isAbsolute(includeText)) return Collections.emptyList();
 
     List<LookupElement> result = new ArrayList<LookupElement>();
-    String[] split = includeText.split("/");
+    List<String> split = StringUtil.split(includeText, "/");
 
-    if (split.length != 0) {
-      String appName = split[0];
+    if (!split.isEmpty()) {
+      String appName = split.get(0);
       String pathSeparator = includeText.endsWith("/") ? "/" : "";
-      String libRelativePath = split.length > 1 ? StringUtil.join(split, 1, split.length, "/") + pathSeparator: "";
-      boolean completingAppName = split.length == 1 && !includeText.endsWith("/");
+      String libRelativePath = split.size() > 1 ? StringUtil.join(split.subList(1, split.size()), "/") + pathSeparator: "";
+      boolean completingAppName = split.size() == 1 && !includeText.endsWith("/");
       List<VirtualFile> appDirs = getApplicationDirectories(file.getProject(), appName, !completingAppName);
       List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
 
       for (final VirtualFile appRoot : appDirs) {
         final String appFullName = appRoot != null ? appRoot.getName() : null;
-        final String appShortName = appFullName != null ? getAppShortName(appFullName) : null;
+        String appShortName = appFullName != null ? getAppShortName(appFullName) : null;
         if (appRoot == null) continue;
         if (completingAppName) {
           result.add(getDefaultPathLookupElementBuilder(includeText, appRoot, appShortName)

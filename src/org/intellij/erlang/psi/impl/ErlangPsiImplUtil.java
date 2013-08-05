@@ -51,7 +51,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
@@ -809,7 +808,7 @@ public class ErlangPsiImplUtil {
       VirtualFile appDir = ErlangApplicationIndex.getApplicationDirectoryByName(libName, GlobalSearchScope.allScope(project));
       ErlangFile includedFile = getRelativeErlangFile(project, relativePath, appDir);
       if (includedFile != null) {
-        return new SmartList<ErlangFile>(includedFile);
+        return ContainerUtil.newSmartList(includedFile);
       }
     }
     //either include_lib does not specify a library, or it was not found, falling back to 'include' behaviour.
@@ -828,7 +827,7 @@ public class ErlangPsiImplUtil {
     if (includeString == null || parent == null) return ContainerUtil.emptyList();
 
     ErlangFile includedFile = getRelativeErlangFile(project, relativePath, parent);
-    if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
+    if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
     //relative to direct parent include file was not found
     //let's search in include directories
     Module module = ModuleUtilCore.findModuleForFile(virtualFile, project);
@@ -853,7 +852,7 @@ public class ErlangPsiImplUtil {
     Project project = containingPsiFile.getProject();
     if (parent != null) {
       ErlangFile includedFile = getRelativeErlangFile(project, relativePath, parent);
-      if (includedFile != null) return new SmartList<ErlangFile>(includedFile);
+      if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
     }
     //relative to direct parent include file was not found
     //let's search in include directories
