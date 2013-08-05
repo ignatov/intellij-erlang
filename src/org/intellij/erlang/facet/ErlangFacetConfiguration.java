@@ -61,12 +61,7 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
     VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
 
     List<String> updatedIncludePaths = new ArrayList<String>(getIncludePaths().size() + contentRoots.length);
-    for (VirtualFile contentRoot : contentRoots) {
-      VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include");
-      if (includeDirectory != null) {
-        updatedIncludePaths.add(includeDirectory.getPath());
-      }
-    }
+    updatedIncludePaths.addAll(getIncludeFolderPaths(module));
     if (updatedIncludePaths.isEmpty()) return;
 
     for (String includePath : getIncludePaths()) {
@@ -75,5 +70,17 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
       }
     }
     setIncludePaths(updatedIncludePaths);
+  }
+
+  public static List<String> getIncludeFolderPaths(Module module) {
+    List<String> includeFolderPaths = new ArrayList<String>();
+    VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
+    for (VirtualFile contentRoot : contentRoots) {
+      VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include");
+      if (includeDirectory != null) {
+        includeFolderPaths.add(includeDirectory.getPath());
+      }
+    }
+    return includeFolderPaths;
   }
 }

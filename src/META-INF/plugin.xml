@@ -321,7 +321,9 @@
         <localInspection language="Erlang" shortName="ErlangDialyzerInspection" displayName="Dialyzer based inspections"
                          groupName="Erlang" enabledByDefault="false" level="WARNING"
                          implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerInspection"/>
-
+        <localInspection language="Erlang" shortName="ErlangFacetConfigurationIssue" displayName="Facet configuration issues"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangFacetConfigurationIssueInspection"/>
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
