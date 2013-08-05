@@ -14,6 +14,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.facet.ui.ErlangFacetEditor;
 import org.intellij.erlang.jps.model.ErlangModuleExtensionProperties;
 import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
     myState.myIncludePaths = includePaths;
   }
   
-  public void addIncludeDirectories(Module module) {
+  public void addIncludeDirectories(@NotNull Module module) {
     VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
 
     List<String> updatedIncludePaths = new ArrayList<String>(getIncludePaths().size() + contentRoots.length);
@@ -72,7 +73,8 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
     setIncludePaths(updatedIncludePaths);
   }
 
-  public static List<String> getIncludeFolderPaths(Module module) {
+  @NotNull 
+  public static List<String> getIncludeFolderPaths(@NotNull Module module) {
     List<String> includeFolderPaths = new ArrayList<String>();
     VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
     for (VirtualFile contentRoot : contentRoots) {

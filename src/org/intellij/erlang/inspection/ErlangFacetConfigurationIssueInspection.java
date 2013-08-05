@@ -2,7 +2,10 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.*;
 import com.intellij.codeInspection.ex.DisableInspectionToolAction;
-import com.intellij.openapi.module.*;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.module.ModuleType;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -21,7 +24,6 @@ import java.util.List;
  * @author savenko
  */
 public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool {
-
   @Nullable
   @Override
   public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
@@ -30,20 +32,20 @@ public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool
     final Module module = file != null ? ModuleUtilCore.findModuleForFile(file, psiFile.getProject()) : null;
     if (module == null) return ProblemDescriptor.EMPTY_ARRAY;
     ErlangFacet facet = ErlangFacet.getFacet(module);
-    if (facet == null) {
-      return getProblemDescriptors(psiFile, "Erlang facet is not configured.", manager, isOnTheFly);
-    }
+    if (facet == null) return createProblemDescriptors(psiFile, "Erlang facet is not configured.", manager, isOnTheFly);
     List<String> notIncludedPaths = getIncludeFoldersNotInIncludePath(module, facet.getConfiguration());
     if (!notIncludedPaths.isEmpty()) {
-      return getProblemDescriptors(psiFile, "Some 'include' folders are not marked as include paths.", manager, isOnTheFly);
+      return createProblemDescriptors(psiFile, "Some 'include' folders are not marked as include paths.", manager, isOnTheFly);
     }
     return ProblemDescriptor.EMPTY_ARRAY;
   }
 
-  private static ProblemDescriptor[] getProblemDescriptors(PsiFile psiFile, String message, InspectionManager manager, boolean isOnTheFly) {
-    ProblemDescriptor problemDescriptor = manager.createProblemDescriptor(psiFile, message,
-      getQuickFixes(), ProblemHighlightType.GENERIC_ERROR_OR_WARNING, isOnTheFly, false);
-    return new ProblemDescriptor[] { problemDescriptor };
+  private static ProblemDescriptor[] createProblemDescriptors(PsiFile psiFile, String message, InspectionManager manager, boolean isOnTheFly) {
+    return new ProblemDescriptor[]{
+      manager.createProblemDescriptor(
+        psiFile, message, new LocalQuickFix[]{new ErlangFacetQuickFix(true), new ErlangFacetQuickFix(false)},
+        ProblemHighlightType.GENERIC_ERROR_OR_WARNING, isOnTheFly, false)
+    };
   }
 
   private static List<String> getIncludeFoldersNotInIncludePath(Module module, ErlangFacetConfiguration configuration) {
@@ -55,13 +57,6 @@ public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool
         return !includePaths.contains(includeFolderPath);
       }
     });
-  }
-
-  private static LocalQuickFix[] getQuickFixes() {
-    return new LocalQuickFix[]{
-      new ErlangFacetQuickFix(true),
-      new ErlangFacetQuickFix(false),
-    };
   }
 
   private static class ErlangFacetQuickFix implements LocalQuickFix {
@@ -102,7 +97,8 @@ public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool
       ErlangFacet facet = ErlangFacet.getFacet(module);
       if (facet == null) {
         ErlangFacet.createFacet(module);
-      } else {
+      }
+      else {
         ErlangFacetConfiguration configuration = facet.getConfiguration();
         configuration.addIncludeDirectories(module);
       }
