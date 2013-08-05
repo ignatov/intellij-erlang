@@ -2,6 +2,7 @@ package org.intellij.erlang.compilation;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.ModuleType;
+import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
@@ -49,21 +50,18 @@ public class ErlangParseTransformDependenciesTest extends ModuleTestCase {
     doSetUpSourcePath(sourcePath, true);
   }
 
-  private void doSetUpSourcePath(String sourcePath, boolean isTestSource) throws IOException {
-    String sourceDirectoryName = isTestSource ? "test" : "src";
-    VirtualFile moduleFile = myModule.getModuleFile();
+  private void doSetUpSourcePath(final String sourcePath, boolean isTestSource) throws IOException {
+    final String sourceDirectoryName = isTestSource ? "test" : "src";
+    final VirtualFile moduleFile = myModule.getModuleFile();
     assertNotNull(moduleFile);
-    final VirtualFile moduleSourceDir = VfsUtil.createDirectories(moduleFile.getParent().getPath() + "/" + sourceDirectoryName);
-    final VirtualFile originalSourceDir = LocalFileSystem.getInstance().refreshAndFindFileByPath(sourcePath);
-    assertNotNull(originalSourceDir);
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+    VirtualFile moduleSourceDir = ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
       @Override
-      public void run() {
-        try {
-          VfsUtil.copyDirectory(this, originalSourceDir, moduleSourceDir, null);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+      public VirtualFile compute() throws IOException {
+        VirtualFile moduleSourceDir = VfsUtil.createDirectoryIfMissing(moduleFile.getParent(), sourceDirectoryName);
+        VirtualFile originalSourceDir = LocalFileSystem.getInstance().refreshAndFindFileByPath(sourcePath);
+        assertNotNull(originalSourceDir);
+        VfsUtil.copyDirectory(this, originalSourceDir, moduleSourceDir, null);
+        return moduleSourceDir;
       }
     });
     PsiTestUtil.addSourceRoot(myModule, moduleSourceDir, isTestSource);
