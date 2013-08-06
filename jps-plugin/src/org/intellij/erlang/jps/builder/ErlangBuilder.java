@@ -43,10 +43,10 @@ import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author @nik
@@ -80,7 +80,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
 
     JpsModule module = target.getModule();
-    File outputDirectory = getBuildOutputDirectory(module, target, context);
+    File outputDirectory = getBuildOutputDirectory(module, target.isTests(), context);
     JpsSdk<JpsDummyElement> sdk = getSdk(context, module);
     File executable = JpsErlangSdkType.getByteCodeCompilerExecutable(sdk.getHomePath());
     GeneralCommandLine commandLine = new GeneralCommandLine();
@@ -102,9 +102,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   }
 
   @NotNull
-  private static File getBuildOutputDirectory(JpsModule module, ErlangTarget target, CompileContext context) throws ProjectBuildException {
+  private static File getBuildOutputDirectory(JpsModule module, boolean forTests, CompileContext context) throws ProjectBuildException {
     JpsJavaExtensionService instance = JpsJavaExtensionService.getInstance();
-    File outputDirectory = instance.getOutputDirectory(module, target.isTests());
+    File outputDirectory = instance.getOutputDirectory(module, forTests);
     if (outputDirectory == null) {
       context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "No output dir for module " + module.getName()));
       throw new ProjectBuildException();
@@ -229,19 +229,42 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
   private static void addCodePath(GeneralCommandLine commandLine, JpsModule module,
                                                  ErlangTarget target, CompileContext context) throws ProjectBuildException {
-    addModuleOutputToCodePath(commandLine, module, target, context);
-    for (JpsDependencyElement dependency : module.getDependenciesList().getDependencies()) {
-      if (!(dependency instanceof JpsModuleDependency)) continue;
-      JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
-      JpsModule depModule = moduleDependency.getModule();
-      if (depModule != null) {
-        addModuleOutputToCodePath(commandLine, depModule, target, context);
+    ArrayList<JpsModule> codePathModules = new ArrayList<JpsModule>();
+    collectDependentModules(module, codePathModules, new HashSet<String>());
+
+    addModuleToCodePath(commandLine, module, target.isTests(), context);
+    for (JpsModule codePathModule : codePathModules) {
+      if (codePathModule != module) {
+        addModuleToCodePath(commandLine, codePathModule, false, context);
       }
     }
   }
 
-  private static void addModuleOutputToCodePath(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target, CompileContext context) throws ProjectBuildException {
-    File outputDirectory = getBuildOutputDirectory(module, target, context);
+  private static void collectDependentModules(JpsModule module, Collection<JpsModule> addedModules, Set<String> addedModuleNames) {
+    String moduleName = module.getName();
+    if (addedModuleNames.contains(moduleName)) return;
+    addedModuleNames.add(moduleName);
+    addedModules.add(module);
+    for (JpsDependencyElement dependency : module.getDependenciesList().getDependencies()) {
+      if (!(dependency instanceof  JpsModuleDependency)) continue;
+      JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
+      JpsModule depModule = moduleDependency.getModule();
+      if (depModule != null) {
+        collectDependentModules(depModule, addedModules, addedModuleNames);
+      }
+    }
+  }
+
+  private static void addModuleToCodePath(GeneralCommandLine commandLine, JpsModule module, boolean forTests, CompileContext context) throws ProjectBuildException {
+    File outputDirectory = getBuildOutputDirectory(module, forTests, context);
     commandLine.addParameters("-pa", outputDirectory.getPath());
+    for (String rootUrl : module.getContentRootsList().getUrls()) {
+      try {
+        String path = new URL(rootUrl).getPath();
+        commandLine.addParameters("-pa", path);
+      } catch (MalformedURLException e) {
+        context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "Failed to find content root for module: " + module.getName()));
+      }
+    }
   }
 }
