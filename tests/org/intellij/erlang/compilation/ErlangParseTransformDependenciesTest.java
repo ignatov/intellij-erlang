@@ -4,7 +4,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.ModuleTestCase;
@@ -58,12 +57,8 @@ public class ErlangParseTransformDependenciesTest extends ModuleTestCase {
       @Override
       public VirtualFile compute() throws IOException {
         VirtualFile moduleSourceDir = VfsUtil.createDirectoryIfMissing(moduleFile.getParent(), sourceDirectoryName);
-        System.err.println("Attempting to locate source path: " + sourcePath);
-        System.err.println("Directory exists: " + new File(sourcePath).exists());
-        System.err.println("Locating virtual file");
-        VirtualFile originalSourceDir = LocalFileSystem.getInstance().refreshAndFindFileByPath(sourcePath);
-        assertNotNull(originalSourceDir);
-        VfsUtil.copyDirectory(this, originalSourceDir, moduleSourceDir, null);
+        FileUtil.copyDirContent(new File(sourcePath), new File(moduleSourceDir.getPath()));
+        VfsUtil.markDirtyAndRefresh(false, true, true, moduleSourceDir);
         return moduleSourceDir;
       }
     });
