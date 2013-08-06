@@ -18,19 +18,20 @@ package org.intellij.erlang.rebar.settings;
 
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.util.xmlb.XmlSerializerUtil;
+import org.intellij.erlang.jps.rebar.JpsRebarSettingsSerializer;
+import org.intellij.erlang.jps.rebar.RebarSettingsState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @State(
-  name = "RebarSettings",
+  name = JpsRebarSettingsSerializer.REBAR_COMPONENT_NAME,
   storages = {
     @Storage(file = StoragePathMacros.PROJECT_FILE),
-    @Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/rebar.xml", scheme = StorageScheme.DIRECTORY_BASED)
+    @Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/" + JpsRebarSettingsSerializer.REBAR_CONFIG_FILE_NAME, scheme = StorageScheme.DIRECTORY_BASED)
   }
 )
-public final class RebarSettings implements PersistentStateComponent<RebarSettings> {
-  @NotNull private String myRebarPath = "";
+public final class RebarSettings implements PersistentStateComponent<RebarSettingsState> {
+  @NotNull private RebarSettingsState myRebarSettingsState = new RebarSettingsState();
 
   @NotNull
   public static RebarSettings getInstance(@NotNull Project project) {
@@ -40,26 +41,26 @@ public final class RebarSettings implements PersistentStateComponent<RebarSettin
 
   @Nullable
   @Override
-  public RebarSettings getState() {
-    return this;
+  public RebarSettingsState getState() {
+    return myRebarSettingsState;
   }
 
   @Override
-  public void loadState(@NotNull RebarSettings rebarSettings) {
-    XmlSerializerUtil.copyBean(rebarSettings, this);
+  public void loadState(@NotNull RebarSettingsState rebarSettings) {
+    myRebarSettingsState = rebarSettings;
   }
 
   @NotNull
   public String getRebarPath() {
-    return myRebarPath;
+    return myRebarSettingsState.myRebarPath;
   }
 
   public void setRebarPath(@NotNull String rebarPath) {
-    myRebarPath = rebarPath;
+    myRebarSettingsState.myRebarPath = rebarPath;
   }
 
   @Override
   public String toString() {
-    return "RebarSettings(rebarPath='" + myRebarPath + "')";
+    return "RebarSettings(state='" + myRebarSettingsState.toString() + "')";
   }
 }

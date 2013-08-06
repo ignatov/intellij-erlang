@@ -17,9 +17,7 @@ import com.intellij.util.CommonProcessors;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
-import org.intellij.erlang.jps.model.JpsErlangModuleExtension;
-import org.intellij.erlang.jps.model.JpsErlangModuleType;
-import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.intellij.erlang.jps.model.*;
 import org.jdom.Document;
 import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +31,7 @@ import org.jetbrains.jps.incremental.messages.CompilerMessage;
 import org.jetbrains.jps.incremental.resources.ResourcesBuilder;
 import org.jetbrains.jps.incremental.resources.StandardResourceBuilderEnabler;
 import org.jetbrains.jps.model.JpsDummyElement;
+import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
@@ -80,6 +79,10 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
 
     JpsModule module = target.getModule();
+    JpsProject project = module.getProject();
+    ErlangCompilerOptions compilerOptions = JpsErlangCompilerOptionsExtension.getOrCreateExtension(project).getOptions();
+    if (compilerOptions.myUseRebarCompiler) return;
+
     File outputDirectory = getBuildOutputDirectory(module, target.isTests(), context);
     JpsSdk<JpsDummyElement> sdk = getSdk(context, module);
     File executable = JpsErlangSdkType.getByteCodeCompilerExecutable(sdk.getHomePath());
@@ -133,21 +136,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       throw new ProjectBuildException("Failed to launch erlang compiler", e);
     }
     BaseOSProcessHandler handler = new BaseOSProcessHandler(process, commandLine.getCommandLineString(), Charset.defaultCharset());
-    ProcessAdapter adapter = new ProcessAdapter() {
-      @Override
-      public void onTextAvailable(ProcessEvent event, Key outputType) {
-        ErlangCompilerError error = ErlangCompilerError.create("", event.getText());
-        if (error != null) {
-          boolean isError = error.getCategory() == CompilerMessageCategory.ERROR;
-          BuildMessage.Kind kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
-          CompilerMessage msg = new CompilerMessage(
-            NAME, kind,
-            error.getErrorMessage(),
-            VirtualFileManager.extractPath(error.getUrl()), -1, -1, -1, error.getLine(), -1);
-          context.processMessage(msg);
-        }
-      }
-    };
+    ProcessAdapter adapter = new ErlangCompilerProcessAdapter(context, NAME);
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();
