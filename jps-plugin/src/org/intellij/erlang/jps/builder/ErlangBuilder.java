@@ -133,22 +133,21 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       throw new ProjectBuildException("Failed to launch erlang compiler", e);
     }
     BaseOSProcessHandler handler = new BaseOSProcessHandler(process, commandLine.getCommandLineString(), Charset.defaultCharset());
-    ProcessAdapter adapter = new
-      ProcessAdapter() {
-        @Override
-        public void onTextAvailable(ProcessEvent event, Key outputType) {
-          ErlangCompilerError error = ErlangCompilerError.create("", event.getText());
-          if (error != null) {
-            boolean isError = error.getCategory() == CompilerMessageCategory.ERROR;
-            BuildMessage.Kind kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
-            CompilerMessage msg = new CompilerMessage(
-              NAME, kind,
-              error.getErrorMessage(),
-              VirtualFileManager.extractPath(error.getUrl()), -1, -1, -1, error.getLine(), -1);
-            context.processMessage(msg);
-          }
+    ProcessAdapter adapter = new ProcessAdapter() {
+      @Override
+      public void onTextAvailable(ProcessEvent event, Key outputType) {
+        ErlangCompilerError error = ErlangCompilerError.create("", event.getText());
+        if (error != null) {
+          boolean isError = error.getCategory() == CompilerMessageCategory.ERROR;
+          BuildMessage.Kind kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
+          CompilerMessage msg = new CompilerMessage(
+            NAME, kind,
+            error.getErrorMessage(),
+            VirtualFileManager.extractPath(error.getUrl()), -1, -1, -1, error.getLine(), -1);
+          context.processMessage(msg);
         }
-      };
+      }
+    };
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();
@@ -227,8 +226,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void addCodePath(GeneralCommandLine commandLine, JpsModule module,
-                                                 ErlangTarget target, CompileContext context) throws ProjectBuildException {
+  private static void addCodePath(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target, CompileContext context) throws ProjectBuildException {
     ArrayList<JpsModule> codePathModules = new ArrayList<JpsModule>();
     collectDependentModules(module, codePathModules, new HashSet<String>());
 
@@ -246,7 +244,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     addedModuleNames.add(moduleName);
     addedModules.add(module);
     for (JpsDependencyElement dependency : module.getDependenciesList().getDependencies()) {
-      if (!(dependency instanceof  JpsModuleDependency)) continue;
+      if (!(dependency instanceof JpsModuleDependency)) continue;
       JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
       JpsModule depModule = moduleDependency.getModule();
       if (depModule != null) {
