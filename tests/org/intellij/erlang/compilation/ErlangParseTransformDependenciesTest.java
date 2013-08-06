@@ -58,6 +58,9 @@ public class ErlangParseTransformDependenciesTest extends ModuleTestCase {
       @Override
       public VirtualFile compute() throws IOException {
         VirtualFile moduleSourceDir = VfsUtil.createDirectoryIfMissing(moduleFile.getParent(), sourceDirectoryName);
+        System.err.println("Attempting to locate source path: " + sourcePath);
+        System.err.println("Directory exists: " + new File(sourcePath).exists());
+        System.err.println("Locating virtual file");
         VirtualFile originalSourceDir = LocalFileSystem.getInstance().refreshAndFindFileByPath(sourcePath);
         assertNotNull(originalSourceDir);
         VfsUtil.copyDirectory(this, originalSourceDir, moduleSourceDir, null);
