@@ -36,6 +36,7 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.Consumer;
 import junit.framework.Assert;
+import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
@@ -146,10 +147,17 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     final Module firstModule = importProjectFrom(importFromPath, adjuster,
       new RebarProjectImportProvider(new RebarProjectImportBuilder()));
     final Project createdProject = firstModule.getProject();
+    validateProject(createdProject);
     for (Module importedModule : ModuleManager.getInstance(createdProject).getModules()) {
       validateModule(importedModule);
     }
     return createdProject;
+  }
+
+  private static void validateProject(@NotNull Project project) throws Exception {
+    ErlangCompilerSettings compilerSettings = ErlangCompilerSettings.getInstance(project);
+    assertNotNull("Erlang compiler settings are not created.", compilerSettings);
+    assertTrue("Rebar compiler is not set as default compiler.", compilerSettings.isUseRebarCompilerEnabled());
   }
 
   private void validateModule(@NotNull Module module) throws Exception {
