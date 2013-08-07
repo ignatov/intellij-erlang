@@ -871,6 +871,22 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  public static Set<String> getImplementedBehaviourModuleNames(@NotNull ErlangFile file) {
+    final Set<String> behaviours = new HashSet<String>();
+    addDeclaredBehaviourModuleNames(file, behaviours);
+    for (ErlangFile erlangFile : getIncludedFiles(file)) {
+      addDeclaredBehaviourModuleNames(erlangFile, behaviours);
+    }
+    return behaviours;
+  }
+
+  private static void addDeclaredBehaviourModuleNames(@NotNull ErlangFile file, @NotNull Set<String> behaviourNames) {
+    for (ErlangBehaviour behaviour : file.getBehaviours()) {
+      ContainerUtil.addIfNotNull(getName(behaviour), behaviourNames);
+    }
+  }
+
+  @NotNull
   public static Set<String> getAppliedParseTransformModuleNames(@NotNull ErlangFile file) {
     Set<String> parseTransforms = new HashSet<String>();
     addDeclaredParseTransforms(file, parseTransforms);
