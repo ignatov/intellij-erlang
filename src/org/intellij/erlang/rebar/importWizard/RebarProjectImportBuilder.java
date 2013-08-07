@@ -17,9 +17,6 @@
 package org.intellij.erlang.rebar.importWizard;
 
 import com.google.common.collect.Sets;
-import com.intellij.execution.RunManagerEx;
-import com.intellij.execution.RunnerAndConfigurationSettings;
-import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationInfoEx;
 import com.intellij.openapi.module.ModifiableModuleModel;
@@ -49,10 +46,9 @@ import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.apache.log4j.Logger;
 import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.editor.ErlangModuleType;
 import org.intellij.erlang.facet.ErlangFacet;
-import org.intellij.erlang.rebar.runner.RebarRunConfiguration;
-import org.intellij.erlang.rebar.runner.RebarRunConfigurationFactory;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NonNls;
@@ -271,17 +267,9 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     });
 
     addErlangFacets(createdModules);
-
-    RebarRunConfigurationFactory rebarFactory = RebarRunConfigurationFactory.getInstance();
-    final RunManagerEx runManager = RunManagerEx.getInstanceEx(project);
-    RunnerAndConfigurationSettings runnerAndSettings = runManager.createConfiguration("Compile", rebarFactory);
-    RunConfiguration configuration = runnerAndSettings.getConfiguration();
-    if (configuration instanceof RebarRunConfiguration) {
-      ((RebarRunConfiguration)configuration).setCommand("compile");
-    }
-    runManager.addConfiguration(runnerAndSettings, false);
-
     RebarSettings.getInstance(project).setRebarPath(myRebarPath);
+    ErlangCompilerSettings.getInstance(project).setUseRebarCompilerEnabled(true);
+
     return createdModules;
   }
 
