@@ -1,18 +1,21 @@
 package org.intellij.erlang.jps.builder;
 
 import com.intellij.openapi.compiler.CompilerMessageCategory;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author @nik
  */
 public class ErlangCompilerError {
+  private static final Pattern COMPILER_MESSAGE_PATTERN = Pattern.compile("^(.+):(\\d+):(\\s*Warning:)?\\s*(.+)$");
+
   private final String errorMessage;
   private final String url;
   private final int line;
@@ -38,35 +41,20 @@ public class ErlangCompilerError {
   }
 
   @Nullable
-  public static ErlangCompilerError create(String rootPath, final String erlcMessage) {
-    List<String> split = StringUtil.split(erlcMessage, ":");
+  public static ErlangCompilerError create(String rootPath, String erlcMessage) {
+    Matcher matcher = COMPILER_MESSAGE_PATTERN.matcher(StringUtil.trimTrailing(erlcMessage));
+    if (!matcher.matches()) return null;
 
-    // a small hack for such messages: c:\User\test.erl:7:Warning:Message
-    if (SystemInfo.isWindows) {
-      String combine = split.get(0) + ":" + split.get(1);
-      split.remove(0);
-      split.remove(0);
-      split.add(0, combine);
-    }
+    String relativeFilePath = FileUtil.toSystemIndependentName(matcher.group(1));
+    String line = matcher.group(2);
+    String warning = matcher.group(3);
+    String details = matcher.group(4);
 
-    if (split.size() < 3) return null;
-
-    String path = split.get(0);
-    String line = split.get(1);
-
-    String url = FileUtil.toSystemIndependentName(path);
-    if (!StringUtil.startsWithIgnoreCase(path, rootPath)) {
-      url = rootPath + "/" + url;
-    }
-    url = VfsUtil.pathToUrl(url);
-//    if (!ApplicationManager.getApplication().isUnitTestMode() && VirtualFileManager.getInstance().findFileByUrl(url) == null) {
-//      return null;
-//    }
-
-    boolean warning = StringUtil.equalsIgnoreCase(split.get(2).trim(), "warning");
-    String messageForUser = StringUtil.replaceIgnoreCase(erlcMessage, path + ":" + line + (warning ? ": warning: " : ": "), "");
-    return new ErlangCompilerError(messageForUser, url, StringUtil.parseInt(split.get(1), -1),
-      warning ? CompilerMessageCategory.WARNING : CompilerMessageCategory.ERROR);
+    String path = StringUtil.isEmpty(rootPath) ? relativeFilePath : new File(FileUtil.toSystemIndependentName(rootPath), relativeFilePath).getPath();
+    int lineNumber = StringUtil.parseInt(line, -1);
+    CompilerMessageCategory category = warning != null ? CompilerMessageCategory.WARNING : CompilerMessageCategory.ERROR;
+    assert path != null;
+    return new ErlangCompilerError(details, VfsUtilCore.pathToUrl(path), lineNumber, category);
   }
 
   public CompilerMessageCategory getCategory() {
