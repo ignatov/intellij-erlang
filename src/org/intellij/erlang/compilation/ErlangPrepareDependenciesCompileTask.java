@@ -215,16 +215,18 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     }
 
     private void buildDependencies(List<String> globalParseTransforms) {
-      List<Node> globalPtNodes = getParseTransformNodes(globalParseTransforms);
+      List<Node> globalPtNodes = getModuleNodes(globalParseTransforms);
       for (Node module : myNamesToNodesMap.values()) {
-        Set<String> ptModuleNames = ErlangPsiImplUtil.getAppliedParseTransformModuleNames(module.getModuleFile());
-        List<Node> ptNodes = getParseTransformNodes(ptModuleNames);
-        module.addDependencies(ptNodes);
+        Set<String> moduleNames = new HashSet<String>();
+        moduleNames.addAll(ErlangPsiImplUtil.getAppliedParseTransformModuleNames(module.getModuleFile()));
+        moduleNames.addAll(ErlangPsiImplUtil.getImplementedBehaviourModuleNames(module.getModuleFile()));
+        List<Node> dependencies = getModuleNodes(moduleNames);
+        module.addDependencies(dependencies);
         module.addDependencies(globalPtNodes);
       }
     }
 
-    private List<Node> getParseTransformNodes(Collection<String> parseTransforms) {
+    private List<Node> getModuleNodes(Collection<String> parseTransforms) {
       ArrayList<Node> ptNodes = new ArrayList<Node>(parseTransforms.size());
       for (String pt : parseTransforms) {
         ContainerUtil.addIfNotNull(myNamesToNodesMap.get(pt), ptNodes);
