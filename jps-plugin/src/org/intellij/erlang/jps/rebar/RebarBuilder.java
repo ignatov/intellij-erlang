@@ -85,7 +85,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
       throw new ProjectBuildException("Failed to run rebar", e);
     }
     BaseOSProcessHandler handler = new BaseOSProcessHandler(process, commandLine.getCommandLineString(), Charset.defaultCharset());
-    ProcessAdapter adapter = new ErlangCompilerProcessAdapter(context, NAME); //TODO provide rebar messages handling
+    ProcessAdapter adapter = new ErlangCompilerProcessAdapter(context, NAME, commandLine.getWorkDirectory().getPath()); //TODO provide rebar messages handling
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();

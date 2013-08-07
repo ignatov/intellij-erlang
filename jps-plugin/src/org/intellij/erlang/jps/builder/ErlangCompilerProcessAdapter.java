@@ -15,15 +15,17 @@ import org.jetbrains.jps.incremental.messages.CompilerMessage;
 public class ErlangCompilerProcessAdapter extends ProcessAdapter {
   private final CompileContext myContext;
   private final String myBuilderName;
+  private final String myCompileTargetRootPath;
 
-  public ErlangCompilerProcessAdapter(CompileContext context, String builderName) {
+  public ErlangCompilerProcessAdapter(CompileContext context, String builderName, String compileTargetRootPath) {
     myContext = context;
     myBuilderName = builderName;
+    myCompileTargetRootPath = compileTargetRootPath;
   }
 
   @Override
   public void onTextAvailable(ProcessEvent event, Key outputType) {
-    ErlangCompilerError error = ErlangCompilerError.create("", event.getText());
+    ErlangCompilerError error = ErlangCompilerError.create(myCompileTargetRootPath, event.getText());
     if (error != null) {
       boolean isError = error.getCategory() == CompilerMessageCategory.ERROR;
       BuildMessage.Kind kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
