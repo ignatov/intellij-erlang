@@ -145,6 +145,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
         return baseAlignment;
       }
     }
+    if (myErlangSettings.ALIGN_GUARDS && parentType == ERL_GUARD) {
+      if (childType != ERL_COMMA) {
+        return baseAlignment;
+      }
+    }
     return null;
   }
 
@@ -154,8 +159,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
     @NotNull IElementType parentType = parent.getElementType();
     if (myAlignmentStrategy != null) {
       Alignment alignment = myAlignmentStrategy.getAlignment(parentType, childType);
-      if (alignment != null && childType == ERL_CLAUSE_BODY && myErlangSettings.ALIGN_FUNCTION_CLAUSES && StringUtil.countNewLines(child.getText()) > 0) return null; // redesign this hack
-
+      if (alignment != null &&
+        childType == ERL_CLAUSE_BODY && myErlangSettings.ALIGN_FUNCTION_CLAUSES &&
+        StringUtil.countNewLines(child.getText()) > 0) {
+        return null; // redesign this hack
+      }
       return alignment;
     }
     return null;

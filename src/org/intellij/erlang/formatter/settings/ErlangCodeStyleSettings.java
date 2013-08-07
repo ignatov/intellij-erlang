@@ -22,6 +22,7 @@ import com.intellij.psi.codeStyle.CustomCodeStyleSettings;
 public class ErlangCodeStyleSettings extends CustomCodeStyleSettings {
   public boolean ALIGN_MULTILINE_BLOCK = false;
   public boolean ALIGN_FUNCTION_CLAUSES = false;
+  public boolean ALIGN_GUARDS = false;
   public boolean INDENT_RELATIVE = true;
 
   protected ErlangCodeStyleSettings(CodeStyleSettings container) {
