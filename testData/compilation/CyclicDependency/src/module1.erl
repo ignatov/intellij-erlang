@@ -1,3 +1,3 @@
 -module(module1).
 
--compile({parse_transform, module2}).
+-behaviour(behaviour1).

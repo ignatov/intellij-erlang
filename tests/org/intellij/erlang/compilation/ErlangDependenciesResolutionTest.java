@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * @author savenko
  */
-public class ErlangParseTransformDependenciesTest extends ModuleTestCase {
+public class ErlangDependenciesResolutionTest extends ModuleTestCase {
 
   @Override
   protected void setUp() throws Exception {
@@ -92,7 +92,7 @@ public class ErlangParseTransformDependenciesTest extends ModuleTestCase {
 
   public void testDependenciesAreCompiledFirst() throws Exception {
     ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
-    assertSameErlangModules(moduleBuildOrder.myOrderedErlangModulePaths, "parse_transform1", "parse_transform2", "module1");
+    assertSameErlangModules(moduleBuildOrder.myOrderedErlangModulePaths, "parse_transform1", "parse_transform2", "behaviour1", "module1");
   }
 
   public void testTestsDependency() throws Exception {
