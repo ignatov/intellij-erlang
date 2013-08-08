@@ -17,6 +17,7 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -67,13 +68,10 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
 
         if (resolve instanceof ErlangModule) {
           if (MODULE_NAMES.contains(((ErlangModule) resolve).getName())) {
-
             PsiReference reference = expression.getReference();
             PsiElement function = reference != null ? reference.resolve() : null;
-
             if (function instanceof ErlangFunction) {
               if (FUNCTION_NAMES.contains(((ErlangFunction) function).getName())) {
-
                 List<ErlangExpression> reverse = ContainerUtil.reverse(expressionList);
                 ErlangExpression args = reverse.get(0);
                 ErlangExpression str = reverse.get(1);
@@ -85,7 +83,8 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
                   try {
                     expectedArgumentsCount = getExpectedFormatArgsCount(formatString);
                   } catch (InvalidControlSequenceException e) {
-                    problemsHolder.registerProblem(str, "Invalid control sequence starting at: " + (e.getInvalidSequenceStartIdx() + 1));
+                    int start = e.getInvalidSequenceStartIdx() + 1;
+                    problemsHolder.registerProblem(str, TextRange.create(start, str.getTextLength() - 1), "Invalid control sequence");
                     return;
                   }
                   if (args instanceof ErlangListExpression) {

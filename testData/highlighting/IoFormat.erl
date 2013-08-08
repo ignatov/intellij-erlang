@@ -12,7 +12,7 @@ bar() ->
   io_lib:format(1, [1,2]),
   P = 1, Arg = 1, io_lib:format("~." ++ integer_to_list(P) ++ "g", [Arg]),
   io:format("~n~w~x~p~~", Arg),
-  io:format(<warning descr="Invalid control sequence starting at: 1">"~..~"</warning>, Arg),
+  io:format("<warning>~..~</warning>", Arg),
   io:format("~ln", []),
   io:format("~10.10.xw", [1]),
   io:format("~-10.10.xw", [1]),
@@ -20,4 +20,4 @@ bar() ->
   io:format(<warning>"~*w"</warning>, [1]),
   io:format(<warning>"~*.*.xlw"</warning>, [1, 2]),
   io:format("~..\tlp", [1]),
-  io:format(<warning descr="Wrong number of arguments in format call, should be 0">"~..w~"</warning>, [boo]).
+  io:format(<warning>"~..w~"</warning>, [boo]).
