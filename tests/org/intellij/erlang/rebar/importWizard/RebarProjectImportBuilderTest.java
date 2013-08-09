@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.rebar.importWizard;
 
+import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.facet.FacetManager;
 import com.intellij.ide.projectWizard.ProjectWizardTestCase;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
@@ -158,6 +159,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     ErlangCompilerSettings compilerSettings = ErlangCompilerSettings.getInstance(project);
     assertNotNull("Erlang compiler settings are not created.", compilerSettings);
     assertTrue("Rebar compiler is not set as default compiler.", compilerSettings.isUseRebarCompilerEnabled());
+    assertFalse("Clear output directory flag was not unset.", CompilerWorkspaceConfiguration.getInstance(project).CLEAR_OUTPUT_DIRECTORY);
   }
 
   private void validateModule(@NotNull Module module) throws Exception {
