@@ -15,4 +15,7 @@ public class ErlangCompilerOptions {
 
   @Tag("useRebarCompiler")
   public boolean myUseRebarCompiler = false;
+
+  @Tag("useDebugInfo")
+  public boolean myAddDebugInfoEnabled = true;
 }

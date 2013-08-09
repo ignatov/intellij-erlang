@@ -25,6 +25,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   private JPanel myRootPanel;
   private JCheckBox myUseRebarCompilerCheckBox;
   private JButton myConfigureRebarButton;
+  private JCheckBox myAddDebugInfoCheckBox;
   private final ErlangCompilerSettings mySettings;
   private final Project myProject;
 
@@ -81,11 +82,13 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
     myUseRebarCompilerCheckBox.setEnabled(rebarPathIsSet);
     myConfigureRebarButton.setVisible(!rebarPathIsSet);
     myUseRebarCompilerCheckBox.setSelected(rebarPathIsSet && mySettings.isUseRebarCompilerEnabled());
+    myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
   }
 
   @Override
   public void apply() throws ConfigurationException {
     mySettings.setUseRebarCompilerEnabled(myUseRebarCompilerCheckBox.isSelected());
+    mySettings.setAddDebugInfoEnabled(myAddDebugInfoCheckBox.isSelected());
   }
 
   @Override

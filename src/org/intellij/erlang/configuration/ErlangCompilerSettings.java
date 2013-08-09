@@ -39,6 +39,14 @@ public class ErlangCompilerSettings implements PersistentStateComponent<ErlangCo
     myCompilerOptions.myUseRebarCompiler = useRebarCompiler;
   }
 
+  public boolean isAddDebugInfoEnabled() {
+    return myCompilerOptions.myAddDebugInfoEnabled;
+  }
+
+  public void setAddDebugInfoEnabled(boolean useDebugInfo) {
+    myCompilerOptions.myAddDebugInfoEnabled = useDebugInfo;
+  }
+
   @NotNull
   public static ErlangCompilerSettings getInstance(@NotNull Project project) {
     final ErlangCompilerSettings persisted = ServiceManager.getService(project, ErlangCompilerSettings.class);

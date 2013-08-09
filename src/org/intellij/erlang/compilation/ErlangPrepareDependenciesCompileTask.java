@@ -6,24 +6,17 @@ import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.roots.ModuleFileIndex;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.util.Function;
-import com.intellij.util.Processor;
 import com.intellij.util.SystemProperties;
 import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.containers.Convertor;
 import com.intellij.util.xmlb.SkipDefaultValuesSerializationFilters;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
-import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangModulesUtil;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.jps.builder.ErlangBuilder;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
@@ -108,57 +101,9 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     ErlangFacet erlangFacet = ErlangFacet.getFacet(module);
     List<String> globalParseTransforms = erlangFacet != null ? erlangFacet.getConfiguration().getParseTransforms() : ContainerUtil.<String>emptyList();
     buildOrder.myModuleName = module.getName();
-    buildOrder.myOrderedErlangModulePaths = getTopologicallySortedErlangModulePaths(getErlangModules(module, false), globalParseTransforms);
-    buildOrder.myOrderedErlangTestModulePaths = getTopologicallySortedErlangModulePaths(getErlangModules(module, true), ContainerUtil.<String>emptyList());
+    buildOrder.myOrderedErlangModulePaths = getTopologicallySortedErlangModulePaths(ErlangModulesUtil.getErlangModules(module, false), globalParseTransforms);
+    buildOrder.myOrderedErlangTestModulePaths = getTopologicallySortedErlangModulePaths(ErlangModulesUtil.getErlangModules(module, true), ContainerUtil.<String>emptyList());
     return buildOrder;
-  }
-
-  private static Collection<ErlangFile> getErlangModules(Module module, boolean onlyTestModules) {
-    ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
-    ModuleFileIndex moduleFileIndex = rootManager.getFileIndex();
-    Set<ErlangFile> erlangFiles = new HashSet<ErlangFile>();
-
-    Processor<VirtualFile> modulesCollector = getErlangModulesCollector(PsiManager.getInstance(module.getProject()), erlangFiles);
-    Convertor<VirtualFile, Boolean> sourceDirectoriesFilter = onlyTestModules ? getTestDirectoriesFilter(moduleFileIndex) : getSourceDirectoriesFilter(moduleFileIndex);
-
-    for (VirtualFile sourceRoot : rootManager.getSourceRoots(onlyTestModules)) {
-      VfsUtil.processFilesRecursively(sourceRoot, modulesCollector, sourceDirectoriesFilter);
-    }
-
-    return erlangFiles;
-  }
-
-  private static Convertor<VirtualFile, Boolean> getSourceDirectoriesFilter(final ModuleFileIndex moduleFileIndex) {
-    return new Convertor<VirtualFile, Boolean>() {
-      @Override
-      public Boolean convert(VirtualFile dir) {
-        return moduleFileIndex.isInSourceContent(dir);
-      }
-    };
-  }
-
-  private static Convertor<VirtualFile, Boolean> getTestDirectoriesFilter(final ModuleFileIndex moduleFileIndex) {
-    return new Convertor<VirtualFile, Boolean>() {
-      @Override
-      public Boolean convert(VirtualFile dir) {
-        return moduleFileIndex.isInTestSourceContent(dir);
-      }
-    };
-  }
-
-  private static Processor<VirtualFile> getErlangModulesCollector(final PsiManager psiManager, final Collection<ErlangFile> erlangFiles) {
-    return new Processor<VirtualFile>() {
-      @Override
-      public boolean process(VirtualFile virtualFile) {
-        if (virtualFile.getFileType() == ErlangFileType.MODULE) {
-          PsiFile psiFile = psiManager.findFile(virtualFile);
-          if (psiFile instanceof ErlangFile) {
-            erlangFiles.add((ErlangFile) psiFile);
-          }
-        }
-        return true;
-      }
-    };
   }
 
   private static List<String> getTopologicallySortedErlangModulePaths(Collection<ErlangFile> erlangModules, List<String> globalParseTransforms) throws CyclicDependencyFoundException {

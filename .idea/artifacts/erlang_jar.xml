@@ -3,6 +3,7 @@
     <output-path>$PROJECT_DIR$/bin</output-path>
     <root id="archive" name="erlang.jar">
       <element id="module-output" name="Erlang" />
+      <element id="library" level="project" name="OtpErlang" />
     </root>
   </artifact>
 </component>

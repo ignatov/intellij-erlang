@@ -10,6 +10,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.CommonProcessors;
+import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
@@ -17,6 +18,7 @@ import org.intellij.erlang.jps.model.*;
 import org.jdom.Document;
 import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
 import org.jetbrains.jps.incremental.CompileContext;
@@ -44,7 +46,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 /**
- * @author @nik
+ * @author @nik, savenko
  */
 public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   public static final String DEPENDENCIES_CONFIG_FILE_PATH = "erlang-builder/deps-config.xml";
@@ -83,13 +85,15 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     JpsSdk<JpsDummyElement> sdk = getSdk(context, module);
     File executable = JpsErlangSdkType.getByteCodeCompilerExecutable(sdk.getHomePath());
     GeneralCommandLine commandLine = new GeneralCommandLine();
+    List<String> erlangModulePaths = getErlangModulePaths(module, target, context);
 
     commandLine.setWorkDirectory(outputDirectory);
     commandLine.setExePath(executable.getAbsolutePath());
     addCodePath(commandLine, module, target, context);
     addParseTransforms(commandLine, module);
+    addDebugInfo(commandLine, erlangModulePaths, outputDirectory, compilerOptions.myAddDebugInfoEnabled);
     addIncludePaths(commandLine, module);
-    addErlangModules(commandLine, module, target, context);
+    commandLine.addParameters(erlangModulePaths);
 
     runBuildProcess(context, commandLine);
   }
@@ -138,6 +142,20 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     handler.waitFor();
   }
 
+  private static void addDebugInfo(GeneralCommandLine commandLine, List<String> modulePaths, File outputDirectory, boolean addDebugInfoEnabled) throws ProjectBuildException {
+    if (!addDebugInfoEnabled) return;
+    commandLine.addParameter("+debug_info");
+    try {
+      for (String modulePath : modulePaths) {
+        File srcFile = new File(modulePath);
+        File dstFile = new File(outputDirectory, srcFile.getName());
+        FileUtil.copy(srcFile, dstFile);
+      }
+    } catch (IOException e) {
+      throw new ProjectBuildException("Failed to copy sources to output directory.", e);
+    }
+  }
+
   private static void addIncludePaths(GeneralCommandLine commandLine, JpsModule module) {
     JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
     if (extension != null) {
@@ -147,13 +165,12 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void addErlangModules(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target, CompileContext context) {
-    if (!addErlangModulesFromConfig(commandLine, module, target, context)) {
-      addErlangModulesDefault(commandLine, module, target);
-    }
+  private static List<String> getErlangModulePaths(JpsModule module, ErlangTarget target, CompileContext context) {
+    List<String> moduleFiles = getErlangModulePathsFromConfig(module, target, context);
+    return moduleFiles != null ? moduleFiles : getErlangModulePathsDefault(module, target);
   }
 
-  private static void addErlangModulesDefault(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target) {
+  private static List<String> getErlangModulePathsDefault(JpsModule module, ErlangTarget target) {
     CommonProcessors.CollectProcessor<File> erlFilesCollector = new CommonProcessors.CollectProcessor<File>() {
       @Override
       protected boolean accept(File file) {
@@ -168,38 +185,41 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     for (JpsModuleSourceRoot root : sourceRoots) {
       FileUtil.processFilesRecursively(root.getFile(), erlFilesCollector);
     }
-    for (File f : erlFilesCollector.getResults()) {
-      commandLine.addParameter(f.getAbsolutePath());
-    }
+    return ContainerUtil.map(erlFilesCollector.getResults(), new Function<File, String>() {
+      @Override
+      public String fun(File file) {
+        return file.getAbsolutePath();
+      }
+    });
   }
 
-  private static boolean addErlangModulesFromConfig(GeneralCommandLine commandLine, JpsModule module,
-                                                    ErlangTarget target, CompileContext context) {
+  @Nullable
+  private static List<String> getErlangModulePathsFromConfig(JpsModule module, ErlangTarget target, CompileContext context) {
     File dataStorageRoot = context.getProjectDescriptor().dataManager.getDataPaths().getDataStorageRoot();
     File depsConfigFile = new File(dataStorageRoot, DEPENDENCIES_CONFIG_FILE_PATH);
-    if (!depsConfigFile.exists()) return false;
+    if (!depsConfigFile.exists()) return null;
     ErlangModuleBuildOrders buildOrders;
     try {
       Document document = JDOMUtil.loadDocument(depsConfigFile);
       buildOrders = XmlSerializer.deserialize(document, ErlangModuleBuildOrders.class);
     } catch (XmlSerializationException e) {
-      return false;
+      return null;
     } catch (JDOMException e) {
-      return false;
+      return null;
     } catch (IOException e) {
-      return false;
+      return null;
     }
-    if (buildOrders == null) return false;
+    if (buildOrders == null) return null;
     for (ErlangModuleBuildOrderDescriptor buildOrder : buildOrders.myModuleBuildOrderDescriptors) {
       if (StringUtil.equals(buildOrder.myModuleName, module.getName())) {
-        commandLine.addParameters(buildOrder.myOrderedErlangModulePaths);
+        List<String> modules = buildOrder.myOrderedErlangModulePaths;
         if (target.isTests()) {
-          commandLine.addParameters(buildOrder.myOrderedErlangTestModulePaths);
+          modules = ContainerUtil.concat(modules, buildOrder.myOrderedErlangTestModulePaths);
         }
-        return true;
+        return modules;
       }
     }
-    return false;
+    return null;
   }
 
   private static void addParseTransforms(GeneralCommandLine commandLine, JpsModule module) throws ProjectBuildException {

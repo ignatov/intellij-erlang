@@ -1,0 +1,2 @@
+-define(RDEBUG_NOTIFIER, remote_debugger_notifier).
+-define(RDEBUG_LISTENER, remote_debugger_listener).
