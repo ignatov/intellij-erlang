@@ -17,6 +17,7 @@
 package org.intellij.erlang.rebar.importWizard;
 
 import com.google.common.collect.Sets;
+import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationInfoEx;
 import com.intellij.openapi.module.ModifiableModuleModel;
@@ -269,6 +270,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     addErlangFacets(createdModules);
     RebarSettings.getInstance(project).setRebarPath(myRebarPath);
     ErlangCompilerSettings.getInstance(project).setUseRebarCompilerEnabled(true);
+    CompilerWorkspaceConfiguration.getInstance(project).CLEAR_OUTPUT_DIRECTORY = false;
 
     return createdModules;
   }
