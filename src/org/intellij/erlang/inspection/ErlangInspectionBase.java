@@ -64,7 +64,7 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   }
 
   @Override
-  public boolean isSuppressedFor(PsiElement element) {
+  public boolean isSuppressedFor(@NotNull PsiElement element) {
     return isSuppressedForParent(element, ErlangFunction.class) || isSuppressedForParent(element, ErlangAttribute.class);
   }
 
