@@ -155,6 +155,7 @@
     </change-notes>
 
     <depends optional="true" config-file="rebar-import.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="java-deps.xml">com.intellij.modules.java</depends>
 
     <!--Rebar related extensions -->
     <extensions defaultExtensionNs="com.intellij">
@@ -186,7 +187,6 @@
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Expression"/>
 
         <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.editor.ErlangModuleType"/>
-        <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector"/>
 
         <!-- emacs -->
         <projectService serviceImplementation="org.intellij.erlang.emacs.EmacsSettings"/>
@@ -229,8 +229,6 @@
         <lang.foldingBuilder language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangFoldingBuilder"/>
 
         <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
-        <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
-        <compileServer.plugin classpath="jps-plugin.jar"/>
         <!-- run -->
         <programRunner implementation="org.intellij.erlang.runconfig.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationType"/>
@@ -321,9 +319,6 @@
         <localInspection language="Erlang" shortName="ErlangDialyzerInspection" displayName="Dialyzer based inspections"
                          groupName="Erlang" enabledByDefault="false" level="WARNING"
                          implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerInspection"/>
-        <localInspection language="Erlang" shortName="ErlangFacetConfigurationIssue" displayName="Facet configuration issues"
-                         groupName="Erlang" enabledByDefault="true" level="WARNING"
-                         implementationClass="org.intellij.erlang.inspection.ErlangFacetConfigurationIssueInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
 
@@ -370,9 +365,4 @@
         </group>
 
     </actions>
-    <project-components>
-      <component>
-        <implementation-class>org.intellij.erlang.compilation.ErlangDependenciesManager</implementation-class>
-      </component>
-    </project-components>
 </idea-plugin>
