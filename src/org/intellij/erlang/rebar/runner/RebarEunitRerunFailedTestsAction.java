@@ -9,10 +9,14 @@ import com.intellij.execution.testframework.AbstractTestProxy;
 import com.intellij.execution.testframework.Filter;
 import com.intellij.execution.testframework.TestFrameworkRunningModel;
 import com.intellij.execution.testframework.actions.AbstractRerunFailedTestsAction;
+import com.intellij.icons.AllIcons;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComponentContainer;
@@ -37,6 +41,18 @@ import java.util.Set;
  */
 @SuppressWarnings("ComponentNotRegistered")
 public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
+  static {
+    // enables rerun failed tests action in RubyMine
+    final String rerunFailedTestsActionId = "RerunFailedTests";
+    ActionManager actionManager = ActionManager.getInstance();
+    AnAction rerunFailedTestsAction = actionManager.getAction(rerunFailedTestsActionId);
+    if (rerunFailedTestsAction == null) {
+      AbstractRerunFailedTestsAction action = new AbstractRerunFailedTestsAction();
+      actionManager.registerAction(rerunFailedTestsActionId, action, PluginId.getId("org.jetbrains.erlang"));
+      action.getTemplatePresentation().setIcon(AllIcons.RunConfigurations.RerunFailedTests);
+    }
+  }
+
   public RebarEunitRerunFailedTestsAction(@NotNull ComponentContainer componentContainer) {
     super(componentContainer);
   }
