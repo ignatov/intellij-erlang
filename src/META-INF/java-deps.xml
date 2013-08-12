@@ -16,14 +16,16 @@
 
 <idea-plugin version="2">
   <extensions defaultExtensionNs="com.intellij">
+    <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.editor.ErlangModuleType"/>
     <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
     <compileServer.plugin classpath="jps-plugin.jar"/>
-
-    <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector"/>
-
+    <facetType implementation="org.intellij.erlang.facet.ErlangFacetType"/>
     <localInspection language="Erlang" shortName="ErlangFacetConfigurationIssue" displayName="Facet configuration issues"
                      groupName="Erlang" enabledByDefault="true" level="WARNING"
                      implementationClass="org.intellij.erlang.inspection.ErlangFacetConfigurationIssueInspection"/>
+
+    <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector"/>
+
   </extensions>
   <project-components>
     <component>
