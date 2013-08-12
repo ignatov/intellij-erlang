@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.editor;
 
+import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
 import com.intellij.ide.util.projectWizard.ModuleBuilderListener;
 import com.intellij.ide.util.projectWizard.SourcePathsBuilder;
@@ -51,5 +52,6 @@ public class ErlangModuleBuilder extends JavaModuleBuilder implements SourcePath
   @Override
   public void moduleCreated(@NotNull Module module) {
     ErlangFacet.createFacet(module);
+    CompilerWorkspaceConfiguration.getInstance(module.getProject()).CLEAR_OUTPUT_DIRECTORY = false;
   }
 }

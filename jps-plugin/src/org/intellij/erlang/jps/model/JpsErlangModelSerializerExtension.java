@@ -2,6 +2,7 @@ package org.intellij.erlang.jps.model;
 
 import com.intellij.util.xmlb.SkipDefaultValuesSerializationFilters;
 import com.intellij.util.xmlb.XmlSerializer;
+import org.intellij.erlang.jps.rebar.JpsRebarSettingsSerializer;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,10 +11,12 @@ import org.jetbrains.jps.model.JpsElement;
 import org.jetbrains.jps.model.JpsElementFactory;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.serialization.JpsModelSerializerExtension;
+import org.jetbrains.jps.model.serialization.JpsProjectExtensionSerializer;
 import org.jetbrains.jps.model.serialization.facet.JpsFacetConfigurationSerializer;
 import org.jetbrains.jps.model.serialization.library.JpsSdkPropertiesSerializer;
 import org.jetbrains.jps.model.serialization.module.JpsModulePropertiesSerializer;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -68,5 +71,11 @@ public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtensi
         XmlSerializer.serializeInto(extension.getProperties(), facetConfigurationTag, new SkipDefaultValuesSerializationFilters());
       }
     });
+  }
+
+  @NotNull
+  @Override
+  public List<? extends JpsProjectExtensionSerializer> getProjectExtensionSerializers() {
+    return Arrays.asList(new JpsRebarSettingsSerializer(), new JpsErlangCompilerOptionsSerializer());
   }
 }

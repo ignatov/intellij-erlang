@@ -18,6 +18,9 @@
   <extensions defaultExtensionNs="com.intellij">
     <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
     <compileServer.plugin classpath="jps-plugin.jar"/>
+    <projectService serviceImplementation="org.intellij.erlang.configuration.ErlangCompilerSettings" />
+    <projectConfigurable instance="org.intellij.erlang.configuration.ErlangCompilerOptionsConfigurable" parentId="project.propCompiler" id="Erlang compiler"
+                         displayName="Erlang Compiler" />
 
     <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector"/>
 
