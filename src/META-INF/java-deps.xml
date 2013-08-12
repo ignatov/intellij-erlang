@@ -25,7 +25,9 @@
                      implementationClass="org.intellij.erlang.inspection.ErlangFacetConfigurationIssueInspection"/>
 
     <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector"/>
-
+    <projectImportProvider implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportProvider"/>
+    <projectImportBuilder implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilder"/>
+    <projectOpenProcessor implementation="org.intellij.erlang.rebar.importWizard.RebarProjectOpenProcessor"/>
   </extensions>
   <project-components>
     <component>
