@@ -168,10 +168,6 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="org.intellij.erlang.configuration.ErlangCompilerSettings" />
-        <projectConfigurable instance="org.intellij.erlang.configuration.ErlangCompilerOptionsConfigurable" parentId="project.propCompiler" id="Erlang compiler"
-                             displayName="Erlang Compiler" />
-
         <facetType implementation="org.intellij.erlang.facet.ErlangFacetType"/>
 
         <internalFileTemplate name="Erlang Module"/>
