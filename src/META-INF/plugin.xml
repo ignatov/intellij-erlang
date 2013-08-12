@@ -184,6 +184,8 @@
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Statement"/>
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Expression"/>
 
+        <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.editor.ErlangModuleType"/>
+
         <!-- emacs -->
         <projectService serviceImplementation="org.intellij.erlang.emacs.EmacsSettings"/>
         <!-- dialyzer -->

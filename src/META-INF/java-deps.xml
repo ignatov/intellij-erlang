@@ -20,6 +20,10 @@
     <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
     <compileServer.plugin classpath="jps-plugin.jar"/>
     <facetType implementation="org.intellij.erlang.facet.ErlangFacetType"/>
+    <projectService serviceImplementation="org.intellij.erlang.configuration.ErlangCompilerSettings" />
+    <projectConfigurable instance="org.intellij.erlang.configuration.ErlangCompilerOptionsConfigurable" parentId="project.propCompiler" id="Erlang compiler"
+                         displayName="Erlang Compiler" />
+
     <localInspection language="Erlang" shortName="ErlangFacetConfigurationIssue" displayName="Facet configuration issues"
                      groupName="Erlang" enabledByDefault="true" level="WARNING"
                      implementationClass="org.intellij.erlang.inspection.ErlangFacetConfigurationIssueInspection"/>
