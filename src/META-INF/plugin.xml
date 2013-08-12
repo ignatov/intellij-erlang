@@ -168,8 +168,6 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <facetType implementation="org.intellij.erlang.facet.ErlangFacetType"/>
-
         <internalFileTemplate name="Erlang Module"/>
         <internalFileTemplate name="Erlang Header"/>
         <internalFileTemplate name="Erlang EUnit Tests"/>
@@ -185,8 +183,6 @@
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Declaration"/>
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Statement"/>
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Expression"/>
-
-        <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.editor.ErlangModuleType"/>
 
         <!-- emacs -->
         <projectService serviceImplementation="org.intellij.erlang.emacs.EmacsSettings"/>
