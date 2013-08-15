@@ -145,8 +145,9 @@ public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtur
     );
   }
 
-  public void test176() {
+  public void test176() {                    
     myFixture.configureByText("aaa.hrl", "foo() -> ok.");
+    doTest();
   }
 
   public void testIncludeResolve()       { enableUnresolvedMacroInspection(); doTestWithApp(); }
