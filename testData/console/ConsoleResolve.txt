@@ -1,0 +1,19 @@
+ERL_FILE
+  ERL_ASSIGNMENT_EXPRESSION
+    ERL_MAX_EXPRESSION
+      ERL_Q_VAR
+        PsiElement(var)('C')
+    PsiWhiteSpace(' ')
+    PsiElement(=)('=')
+    PsiWhiteSpace(' ')
+    ERL_ADDITIVE_EXPRESSION
+      ERL_MAX_EXPRESSION
+        ERL_Q_VAR
+          PsiElement(var)('A')
+      PsiWhiteSpace(' ')
+      PsiElement(+)('+')
+      PsiWhiteSpace(' ')
+      ERL_MAX_EXPRESSION
+        ERL_Q_VAR
+          PsiElement(var)('B')
+    PsiElement(.)('.')

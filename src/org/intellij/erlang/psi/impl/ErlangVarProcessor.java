@@ -48,6 +48,12 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
 
   @Override
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
+    Map<String, ErlangQVar> variableContext = psiElement.getContainingFile().getOriginalFile().getUserData(ERLANG_VARIABLE_CONTEXT);
+    if (variableContext != null) {
+      ContainerUtil.addIfNotNull(variableContext.get(myRequestedName), myVarList);
+      return true;
+    }
+    
     if (!(psiElement instanceof ErlangQVar)) return true;
     if (psiElement instanceof ErlangFunction) return false;
     if (psiElement instanceof ErlangSpecification) return false;
@@ -57,15 +63,13 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
 
-    Map<String, ErlangQVar> variableContext = psiElement.getContainingFile().getOriginalFile().getUserData(ERLANG_VARIABLE_CONTEXT);
-    boolean isREPLConsole = variableContext != null;
     boolean inSpecification = PsiTreeUtil.isAncestor(spec, psiElement, false);
     boolean inDefinition = inArgumentDefinition(psiElement);
-    boolean inFunctionClauseOrREPL = PsiTreeUtil.isAncestor(functionClause, psiElement, false) || isREPLConsole;
+    boolean inFunctionClause = PsiTreeUtil.isAncestor(functionClause, psiElement, false);
     boolean inAssignment = inLeftPartOfAssignment(psiElement);
     boolean inDefinitionOrAssignment = inDefinition || inAssignment;
-    boolean inFunctionOrREPL = inFunctionClauseOrREPL && inDefinitionOrAssignment;
-    if (inFunctionOrREPL || inModule(psiElement) || inSpecification) {
+    boolean inFunction = inFunctionClause && inDefinitionOrAssignment;
+    if (inFunction || inModule(psiElement) || inSpecification) {
       boolean inArgumentList = inArgumentList(psiElement);
       //noinspection unchecked
       boolean inArgumentListBeforeAssignment =
@@ -73,10 +77,6 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       return !myVarList.add((ErlangQVar) psiElement); // put all possible variables to list
-    }
-
-    if (isREPLConsole) {
-      ContainerUtil.addIfNotNull(variableContext.get(myRequestedName), myVarList);
     }
 
     return true;

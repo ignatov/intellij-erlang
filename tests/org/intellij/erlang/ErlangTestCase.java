@@ -27,6 +27,7 @@ import org.intellij.erlang.folding.ErlangFoldingBuilderTest;
 import org.intellij.erlang.formatting.ErlangAutoIndentTest;
 import org.intellij.erlang.formatting.ErlangFormattingTest;
 import org.intellij.erlang.highlighting.ErlangBehaviourInspectionsTest;
+import org.intellij.erlang.highlighting.ErlangConsoleViewTest;
 import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.highlighting.generate.ErlangGenerateTest;
 import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
@@ -81,6 +82,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangIncludeLibResolveTest.class);
     suite.addTestSuite(ErlangUnitTestElementUtilTest.class);
     suite.addTestSuite(ErlangDependenciesResolutionTest.class);
+    suite.addTestSuite(ErlangConsoleViewTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }

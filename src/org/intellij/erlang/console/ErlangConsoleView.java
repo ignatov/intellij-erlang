@@ -39,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -83,13 +84,13 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
     originalFile.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, new HashMap<String, ErlangQVar>());
   }
 
-
-
   @Override
   public void attachToProcess(@NotNull ProcessHandler processHandler) {
     super.attachToProcess(processHandler);
+    OutputStream processInput = processHandler.getProcessInput();
+    assert processInput != null;
     //noinspection IOResourceOpenedButNotSafelyClosed
-    myProcessInputWriter = new OutputStreamWriter(processHandler.getProcessInput());
+    myProcessInputWriter = new OutputStreamWriter(processInput);
     myConsoleHistoryModel = new ConsoleHistoryModel();
     new ConsoleHistoryController("Erlang", null, getConsole(), myConsoleHistoryModel).install();
     ErlangConsoleViewDirectory.getInstance().addConsole(this);
