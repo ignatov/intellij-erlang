@@ -70,7 +70,7 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     doDoTest(true, false);
     final String testName = getTestName(false);
     checkResultByFile(testName + ".erl");
-    assertEquals(FileUtil.loadFile(new File(getTestDataPath() + testName + ".txt")), DebugUtil.psiToString(file, false));
+    assertEquals(FileUtil.loadFile(new File(getTestDataPath() + testName + ".txt"), true), DebugUtil.psiToString(file, false));
   }
 
   @Override
