@@ -48,9 +48,9 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
 
   @Override
   public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
+    if (!(psiElement instanceof ErlangQVar)) return true;
     if (psiElement instanceof ErlangFunction) return false;
     if (psiElement instanceof ErlangSpecification) return false;
-    if (!(psiElement instanceof ErlangQVar)) return true;
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
     
