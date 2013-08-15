@@ -1006,12 +1006,14 @@ public class ErlangPsiImplUtil {
     return fromIncludes;
   }
 
+  @NotNull
   public static PsiElement getNameIdentifier(ErlangMacrosDefinition o) {
     ErlangMacrosName macrosName = o.getMacrosName();
     if (macrosName == null) return o;
     return macrosName;
   }
 
+  @NotNull
   public static PsiElement getNameIdentifier(ErlangTypeDefinition o) {
     ErlangQAtom atom = o.getQAtom();
     if (atom == null) return o;
@@ -1028,10 +1030,12 @@ public class ErlangPsiImplUtil {
     return getNameIdentifier(o).getTextOffset();
   }
 
+  @NotNull
   public static String getName(ErlangMacrosDefinition o) {
     return o.getNameIdentifier().getText();
   }
 
+  @NotNull
   public static PsiElement setName(ErlangMacrosDefinition o, String newName) {
     ErlangMacrosName macrosName = o.getMacrosName();
     if (macrosName != null) {
@@ -1040,6 +1044,7 @@ public class ErlangPsiImplUtil {
     return o;
   }
 
+  @NotNull
   public static String getName(ErlangBehaviour o) {
     ErlangModuleRef moduleRef = o.getModuleRef();
     ErlangQAtom atom = moduleRef != null ? moduleRef.getQAtom() : null;
@@ -1062,6 +1067,7 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(position, ErlangFunction.class) != null;
   }
 
+  @NotNull
   public static String getName(ErlangTypedExpr o) {
     return o.getNameIdentifier().getText();
   }
@@ -1075,6 +1081,7 @@ public class ErlangPsiImplUtil {
     return o;
   }
 
+  @NotNull
   public static PsiElement getNameIdentifier(ErlangTypedExpr o) {
     return o.getQAtom();
   }

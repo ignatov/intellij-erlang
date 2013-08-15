@@ -34,7 +34,7 @@ public class ErlangImportFunctionImpl extends ErlangCompositeElementImpl impleme
     else super.accept(visitor);
   }
 
-  @Nullable
+  @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
