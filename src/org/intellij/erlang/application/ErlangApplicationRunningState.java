@@ -17,11 +17,15 @@
 package org.intellij.erlang.application;
 
 import com.intellij.execution.ExecutionException;
-import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.Executor;
+import com.intellij.execution.filters.TextConsoleBuilder;
+import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -38,19 +42,18 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
   }
 
   @Override
-  protected void setUpCommandLineParameters(GeneralCommandLine commandLine) {
-    commandLine.addParameters("-run");
-    commandLine.addParameters(StringUtil.split(myConfiguration.getModuleAndFunction(), " "));
-    commandLine.addParameters(StringUtil.split(myConfiguration.getParams(), " "));
-    commandLine.addParameters("-noshell");
-    if (myConfiguration.stopErlang()) {
-      commandLine.addParameters("-s", "init", "stop");
-    }
+  protected boolean useTestCodePath() {
+    return false;
   }
 
   @Override
-  protected boolean useTestCodePath() {
-    return false;
+  protected boolean isNoShellMode() {
+    return true;
+  }
+
+  @Override
+  protected boolean isStopErlang() {
+    return myConfiguration.stopErlang();
   }
 
   @Nullable
@@ -60,7 +63,14 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
     if (split.size() != 2) throw new ExecutionException("Invalid entry point");
     String module = split.get(0);
     String function = split.get(1);
-    String args = "[" + StringUtil.join(StringUtil.split(myConfiguration.getParams(), " "), ",") + "]";
+    List<String> args = StringUtil.split(myConfiguration.getParams(), " ");
     return new ErlangEntryPoint(module, function, args);
+  }
+
+  @NotNull
+  @Override
+  public ConsoleView createConsoleView(Executor executor) throws ExecutionException {
+    final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfiguration.getProject());
+    return consoleBuilder.getConsole();
   }
 }

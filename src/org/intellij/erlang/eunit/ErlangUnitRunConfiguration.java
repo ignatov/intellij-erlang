@@ -68,6 +68,11 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
     return new ErlangUnitRunningState(env, module, this);
   }
 
+  @Override
+  public boolean isTestRunConfiguration() {
+    return true;
+  }
+
   public ErlangUnitConfigData getConfigData() {
     return myConfigData;
   }
