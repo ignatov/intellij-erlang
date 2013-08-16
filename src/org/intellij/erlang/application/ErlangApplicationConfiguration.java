@@ -64,6 +64,11 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
     return new ErlangApplicationRunningState(env, module, this);
   }
 
+  @Override
+  public boolean isTestRunConfiguration() {
+    return false;
+  }
+
   public String getParams() {
     return myParams;
   }

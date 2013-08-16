@@ -20,7 +20,6 @@ import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
@@ -34,6 +33,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Getter;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
@@ -54,17 +54,14 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @Override
-  protected void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException {
+  public List<String> getCodePath() throws ExecutionException {
     try {
       File reporterDir = createReporterModuleDirectory();
-      commandLine.addParameters("-pa", reporterDir.getPath());
+      List<String> reporterModuleCodePath = Arrays.asList("-pa", reporterDir.getPath());
+      return ContainerUtil.concat(reporterModuleCodePath, super.getCodePath());
     } catch (IOException e) {
       throw new ExecutionException("Failed to setup eunit reports environment", e);
     }
-    commandLine.addParameter("-run");
-    commandLine.addParameter("-eval");
-    commandLine.addParameter("eunit:test([" + getTestObjectsString() + "], [{report, {" + ErlangEunitReporterModule.MODULE_NAME +",[]}}, {no_tty, true}]).");
-    commandLine.addParameters("-s", "init", "stop", "-noshell");
   }
 
   @Override
@@ -73,8 +70,19 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @Override
+  protected boolean isNoShellMode() {
+    return true;
+  }
+
+  @Override
+  protected boolean isStopErlang() {
+    return true;
+  }
+
+  @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {
-    return new ErlangEntryPoint("eunit", "test", "[" + getTestObjectsString() + "], [{report, {" + ErlangEunitReporterModule.MODULE_NAME +",[]}}, {no_tty, true}]");
+    List<String> args = Arrays.asList("[" + getTestObjectsString() + "]", "[{report, {" + ErlangEunitReporterModule.MODULE_NAME + ",[]}}, {no_tty, true}]");
+    return new ErlangEntryPoint("eunit", "test", args);
   }
 
   @Override
@@ -102,8 +110,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return executionResult;
   }
 
+  @Override
   @NotNull
-  private ConsoleView createConsoleView(Executor executor) throws ExecutionException {
+  public ConsoleView createConsoleView(Executor executor) throws ExecutionException {
     final ErlangUnitRunConfiguration runConfiguration = (ErlangUnitRunConfiguration) getRunnerSettings().getRunProfile();
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(
       "Erlang",
