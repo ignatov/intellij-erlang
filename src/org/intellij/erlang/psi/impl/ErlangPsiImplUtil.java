@@ -372,11 +372,15 @@ public class ErlangPsiImplUtil {
   public static boolean inColonQualified(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangColonQualifiedExpression.class) != null;
   }
-
+  
   public static boolean inLeftPartOfAssignment(@NotNull PsiElement psiElement) {
+    return inLeftPartOfAssignment(psiElement, true);
+  }
+
+  public static boolean inLeftPartOfAssignment(@NotNull PsiElement psiElement, boolean strict) {
     ErlangAssignmentExpression assignment = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
     if (assignment == null) return false;
-    return PsiTreeUtil.isAncestor(assignment.getLeft(), psiElement, true);
+    return PsiTreeUtil.isAncestor(assignment.getLeft(), psiElement, strict);
   }
 
   public static boolean isMacros(ErlangQVar o) {

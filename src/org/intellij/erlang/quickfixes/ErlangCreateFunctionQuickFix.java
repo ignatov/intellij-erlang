@@ -29,7 +29,7 @@ import com.intellij.psi.util.PsiUtilBase;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
+import org.intellij.erlang.refactor.ErlangRefactoringUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -79,7 +79,7 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase {
           placeHolders = ContainerUtil.map(exrList, new Function<ErlangExpression, String>() {
             @Override
             public String fun(ErlangExpression erlangExpression) {
-              return shorten(erlangExpression);
+              return ErlangRefactoringUtil.shorten(erlangExpression);
             }
           });
         }
@@ -108,11 +108,5 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase {
         templateManager.startTemplate(editor, template);
       }
     }
-  }
-
-  private static String shorten(ErlangExpression o) { // maybe better to return List<String>
-    ErlangIntroduceVariableHandler.VariableTextBuilder visitor = new ErlangIntroduceVariableHandler.VariableTextBuilder();
-    o.accept(visitor);
-    return visitor.result();
   }
 }

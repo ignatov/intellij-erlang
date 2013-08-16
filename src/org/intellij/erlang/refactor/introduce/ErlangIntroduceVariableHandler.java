@@ -18,31 +18,30 @@ package org.intellij.erlang.refactor.introduce;
 
 import com.intellij.codeInsight.CodeInsightUtilBase;
 import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Pass;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiParserFacade;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.refactoring.IntroduceTargetChooser;
 import com.intellij.refactoring.RefactoringActionHandler;
 import com.intellij.refactoring.introduce.inplace.InplaceVariableIntroducer;
 import com.intellij.refactoring.introduce.inplace.OccurrencesChooser;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
-import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.refactor.ErlangRefactoringUtil;
+import org.intellij.erlang.refactor.VariableTextBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -55,7 +54,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     ALL, SINGLE, ASK
   }
 
-  private final ReplaceStrategy myReplaceStrategy;
+  private ReplaceStrategy myReplaceStrategy;
 
   public ErlangIntroduceVariableHandler(ReplaceStrategy replaceStrategy) {
     myReplaceStrategy = replaceStrategy;
@@ -71,23 +70,16 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       return;
     }
 
-    final SelectionModel selectionModel = editor.getSelectionModel();
+    SelectionModel selectionModel = editor.getSelectionModel();
     if (selectionModel.hasSelection()) {
-      PsiElement element1 = file.findElementAt(selectionModel.getSelectionStart());
-      PsiElement element2 = file.findElementAt(selectionModel.getSelectionEnd() - 1);
-      if (element1 instanceof PsiWhiteSpace) {
-        element1 = file.findElementAt(element1.getTextRange().getEndOffset());
-      }
-      if (element2 instanceof PsiWhiteSpace) {
-        element2 = file.findElementAt(element2.getTextRange().getStartOffset() - 1);
-      }
+      Pair<PsiElement, PsiElement> pair = ErlangRefactoringUtil.selectionToElements(file, selectionModel);
 
-      if (element1 == null || element2 == null) {
+      if (pair.first == null || pair.second == null) {
         showCannotPerformError(project, editor);
         return;
       }
 
-      ErlangExpression selectedExpression = getSelectedExpression(element1, element2);
+      ErlangExpression selectedExpression = getSelectedExpression(pair.first, pair.second);
 
       if (selectedExpression == null) {
         showCannotPerformError(project, editor);
@@ -95,7 +87,6 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       else {
         performOnElement(editor, selectedExpression);
       }
-
       return;
     }
 
@@ -115,41 +106,18 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   private void smartIntroduce(@NotNull final Editor editor, @NotNull PsiFile file) {
-    int offset = editor.getCaretModel().getOffset();
-    PsiElement elementAtCaret = file.findElementAt(offset);
-    if (!checkIntroduceContext(file, editor, elementAtCaret)) return;
-    final List<ErlangExpression> expressions = new ArrayList<ErlangExpression>();
-    while (elementAtCaret != null) {
-      if (elementAtCaret instanceof ErlangClauseBody) {
-        break;
-      }
-      else if (elementAtCaret instanceof ErlangExpression && !(elementAtCaret instanceof ErlangAssignmentExpression)) {
-        boolean isQualifiedFunCall = elementAtCaret instanceof ErlangFunctionCallExpression &&
-          elementAtCaret.getParent() instanceof ErlangGlobalFunctionCallExpression;
-        if (!isQualifiedFunCall) {
-          expressions.add((ErlangExpression) elementAtCaret);
+    ErlangRefactoringUtil.smartIntroduce(editor, file,
+      new ErlangRefactoringUtil.Extractor() {
+        @Override
+        public boolean checkContext(@NotNull PsiFile file, @NotNull Editor editor, @Nullable PsiElement element) {
+          return ErlangIntroduceVariableHandler.checkIntroduceContext(file, editor, element);
+        }
+        @Override
+        public void process(@NotNull Editor editor, @NotNull ErlangExpression expression) {
+          performOnElement(editor, expression);
         }
       }
-      elementAtCaret = elementAtCaret.getParent();
-    }
-    if (expressions.size() == 1 || ApplicationManager.getApplication().isUnitTestMode()) {
-      performOnElement(editor, expressions.get(0));
-    }
-    else if (expressions.size() > 1) {
-      IntroduceTargetChooser.showChooser(editor, expressions,
-        new Pass<ErlangExpression>() {
-          @Override
-          public void pass(@NotNull ErlangExpression expression) {
-            performOnElement(editor, expression);
-          }
-        },
-        new Function<ErlangExpression, String>() {
-          public String fun(@NotNull ErlangExpression expression) {
-            return expression.getText();
-          }
-        }
-      );
-    }
+    );
   }
 
   private void performActionOnElementOccurrences(@NotNull final Editor editor, @NotNull final ErlangExpression expression) {
@@ -186,13 +154,13 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : ContainerUtil.<PsiElement>list(expression);
     PsiElement declaration = performElement(editor, expression, occurrences);
 
-    final ErlangQVar target = PsiTreeUtil.findChildOfType(declaration, ErlangQVar.class);
+    ErlangQVar target = PsiTreeUtil.findChildOfType(declaration, ErlangQVar.class);
     if (target == null) {
       return;
     }
 
     editor.getCaretModel().moveToOffset(target.getTextRange().getStartOffset());
-    final InplaceVariableIntroducer<PsiElement> introducer = new ErlangInplaceVariableIntroducer(target, editor, expression.getProject(), occurrences);
+    InplaceVariableIntroducer<PsiElement> introducer = new ErlangInplaceVariableIntroducer(target, editor, expression.getProject(), occurrences);
     introducer.performInplaceRefactoring(new LinkedHashSet<String>());
   }
 
@@ -228,19 +196,19 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     if (PsiTreeUtil.getParentOfType(declaration, ErlangArgumentDefinition.class) != null) return;
 
     PsiElement comma = ErlangElementFactory.createLeafFromText(declaration.getProject(), ",\n");
-    final PsiElement newLineNode = PsiParserFacade.SERVICE.getInstance(declaration.getProject()).createWhiteSpaceFromText("\n");
-    final PsiElement parent = declaration.getParent();
+    PsiElement newLineNode = PsiParserFacade.SERVICE.getInstance(declaration.getProject()).createWhiteSpaceFromText("\n");
+    PsiElement parent = declaration.getParent();
     PsiElement psiElement = parent.addAfter(comma, declaration);
     parent.addAfter(newLineNode, psiElement);
   }
 
   private static PsiElement performReplace(@NotNull final String newName,
                                            @NotNull final PsiElement declaration,
-                                           @NotNull final ErlangExpression initializer,
+                                           @NotNull ErlangExpression initializer,
                                            @NotNull final List<PsiElement> occurrences) {
     final Project project = declaration.getProject();
     return new WriteCommandAction<PsiElement>(project, "Extract variable", initializer.getContainingFile()) {
-      protected void run(@NotNull final Result<PsiElement> result) throws Throwable {
+      protected void run(@NotNull Result<PsiElement> result) throws Throwable {
         PsiElement createdDeclaration = replaceLeftmostArgumentDefinition(declaration, occurrences);
         if (createdDeclaration == null) {
           createdDeclaration = addDeclaration(declaration, occurrences);
@@ -260,7 +228,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   private static PsiElement addDeclaration(@NotNull PsiElement declaration, @NotNull List<PsiElement> occurrences) {
     PsiElement anchor = findAnchor(occurrences);
     assert anchor != null;
-    final PsiElement parent = anchor.getParent();
+    PsiElement parent = anchor.getParent();
     return parent.addBefore(declaration, anchor);
   }
 
@@ -304,7 +272,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   private static void showCannotPerformError(@NotNull Project project, @NotNull Editor editor) {
-    CommonRefactoringUtil.showErrorHint(project, editor, "Cannot perform refactoring", "Cannot Perform Refactoring", "refactoring.extractMethod");
+    CommonRefactoringUtil.showErrorHint(project, editor, "Cannot perform refactoring", "Cannot Perform Refactoring", "refactoring.extractVariable");
   }
 
   private static boolean isValidIntroduceContext(@Nullable PsiElement element) {
@@ -317,7 +285,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     next:
     do {
       //noinspection unchecked
-      final ErlangCompositeElement clause = PsiTreeUtil.getParentOfType(anchor, ErlangClauseBody.class, ErlangTryExpressionsClause.class);
+      ErlangCompositeElement clause = PsiTreeUtil.getParentOfType(anchor, ErlangClauseBody.class, ErlangTryExpressionsClause.class);
 
       int minOffset = Integer.MAX_VALUE;
       for (PsiElement element : occurrences) {
@@ -348,7 +316,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   @NotNull
-  private static List<PsiElement> getOccurrences(@NotNull final ErlangExpression expression) {
+  private static List<PsiElement> getOccurrences(@NotNull ErlangExpression expression) {
     ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
     return ErlangRefactoringUtil.getOccurrences(expression, function);
   }
@@ -358,7 +326,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   private static class ErlangInplaceVariableIntroducer extends InplaceVariableIntroducer<PsiElement> {
-    private final ErlangQVar myTarget;
+    private ErlangQVar myTarget;
 
     public ErlangInplaceVariableIntroducer(ErlangQVar target,
                                            Editor editor,
@@ -371,82 +339,6 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     @Override
     protected PsiElement checkLocalScope() {
       return myTarget.getContainingFile();
-    }
-  }
-
-  public static class VariableTextBuilder extends PsiRecursiveElementVisitor {
-    private final StringBuilder myResult = new StringBuilder();
-
-    @Override
-    public void visitWhiteSpace(@NotNull PsiWhiteSpace space) {
-      myResult.append(space.getText().replace('\n', ' '));
-    }
-
-    @Override
-    public void visitElement(@NotNull PsiElement element) {
-      if (element instanceof ErlangNamedElement) {
-        myResult.append(((ErlangNamedElement) element).getName());
-        return;
-      }
-      else if (element instanceof ErlangQAtom) {
-        myResult.append(StringUtil.capitalize(element.getText()));
-        return;
-      }
-      else if (element instanceof ErlangFunctionCallExpression) {
-        myResult.append(((ErlangFunctionCallExpression) element).getNameIdentifier().getText());
-        return;
-      }
-      else if (element instanceof ErlangCaseExpression) {
-        ErlangExpression expression = ((ErlangCaseExpression) element).getExpression();
-        myResult.append("Case");
-        if (expression != null) {
-          VariableTextBuilder b = new VariableTextBuilder();
-          expression.accept(b);
-          myResult.append(b.result());
-        }
-        return;
-      }
-      else if (element instanceof ErlangFunExpression) {
-        myResult.append("Fun");
-        ErlangFunClauses clauses = ((ErlangFunExpression) element).getFunClauses();
-        List<ErlangFunClause> funClauses = clauses != null ? clauses.getFunClauseList() : ContainerUtil.<ErlangFunClause>emptyList();
-        ErlangFunClause firstItem = ContainerUtil.getFirstItem(funClauses);
-        if (firstItem != null) {
-          VariableTextBuilder b = new VariableTextBuilder();
-          firstItem.getArgumentDefinitionList().accept(b);
-          myResult.append(b.result());
-        }
-        return;
-      }
-      else if (element instanceof ErlangListComprehension || element instanceof ErlangListExpression) {
-        myResult.append("List");
-        return;
-      }
-      else if (element instanceof ErlangTupleExpression || element instanceof ErlangRecordTuple) {
-        myResult.append("Tuple");
-        return;
-      }
-      else if (element instanceof ErlangMaxExpression) {
-        if (((ErlangMaxExpression) element).getInteger() != null) {
-          myResult.append("N");
-        }
-        if (((ErlangMaxExpression) element).getFloat() != null) {
-          myResult.append("F");
-        }
-      }
-      if (element instanceof ErlangStringLiteral) {
-        myResult.append("Str");
-      }
-      super.visitElement(element);
-    }
-
-    @NotNull
-    public String result() {
-      String s = StringUtil.toTitleCase(myResult.toString())
-        .replaceAll("_", "")
-        .replaceAll("\\?", "")
-        .replaceAll(" ", "");
-      return s.isEmpty() ? "PlaceHolder" : s;
     }
   }
 }
