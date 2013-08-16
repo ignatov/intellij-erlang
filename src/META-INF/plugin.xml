@@ -232,6 +232,10 @@
         <configurationType implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationType"/>
         <configurationProducer implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationProducer"/>
 
+        <!-- debug -->
+        <programRunner implementation="org.intellij.erlang.debugger.xdebug.ErlangDebugRunner"/>
+        <xdebugger.breakpointType implementation="org.intellij.erlang.debugger.xdebug.ErlangLineBreakpointType"/>
+
         <!--eunit -->
         <testFinder implementation="org.intellij.erlang.ErlangTestFinder"/>
         <configurationProducer implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer"/>

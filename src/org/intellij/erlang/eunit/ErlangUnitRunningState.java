@@ -73,6 +73,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @Override
+  public ErlangEntryPoint getEntryPoint() throws ExecutionException {
+    return new ErlangEntryPoint("eunit", "test", "[" + getTestObjectsString() + "], [{report, {" + ErlangEunitReporterModule.MODULE_NAME +",[]}}, {no_tty, true}]");
+  }
+
+  @Override
   @NotNull
   public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
     ProcessHandler processHandler = startProcess();

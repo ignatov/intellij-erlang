@@ -62,7 +62,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
       File contentRootDir = new File(contentRootPath);
       File rebarConfigFile = new File(contentRootDir, REBAR_CONFIG_FILE_NAME);
       if (!rebarConfigFile.exists()) continue;
-      runRebar(contentRootPath, rebarExecutablePath, context);
+      runRebar(contentRootPath, rebarExecutablePath, compilerOptions.myAddDebugInfoEnabled, context);
     }
   }
 
@@ -72,11 +72,16 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     return NAME;
   }
 
-  private static void runRebar(String contentRootPath, String rebarPath, final CompileContext context) throws ProjectBuildException {
+  private static void runRebar(String contentRootPath, String rebarPath, boolean addDebugInfo, final CompileContext context) throws ProjectBuildException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setWorkDirectory(contentRootPath);
     commandLine.setExePath(rebarPath);
     commandLine.addParameter("compile");
+
+    if (addDebugInfo) {
+      commandLine.setEnvParams(Collections.singletonMap("ERL_FLAGS", "+debug_info"));
+      //commandLine.setEnvParams(Collections.singletonMap("ERL_COMPILER_OPTIONS", "debug_info"));
+    }
 
     Process process;
     try {

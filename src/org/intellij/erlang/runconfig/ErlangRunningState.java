@@ -32,6 +32,8 @@ import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 /**
  * @author savenko
  */
@@ -59,14 +61,48 @@ public abstract class ErlangRunningState extends CommandLineState {
     String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(sdk.getHomePath()).getAbsolutePath());
     commandLine.setExePath(erl);
     commandLine.setWorkDirectory(myModule.getProject().getBasePath());
-    commandLine.addParameters(ErlangConsoleUtil.getCodePath(myModule, useTestCodePath()));
+    commandLine.addParameters(getCodePath());
     setUpCommandLineParameters(commandLine);
     final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
   }
 
+  public final List<String> getCodePath() {
+    return ErlangConsoleUtil.getCodePath(myModule, useTestCodePath());
+  }
+
+  public Module getModule() {
+    return myModule;
+  }
+
   protected abstract void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException;
 
   protected abstract boolean useTestCodePath();
+
+  public abstract ErlangEntryPoint getEntryPoint() throws ExecutionException;
+
+  public static class ErlangEntryPoint {
+    private final String myModuleName;
+    private final String myFunctionName;
+    private final String myArgsList;
+
+    public ErlangEntryPoint(String moduleName, String functionName, String args) {
+      myModuleName = moduleName;
+      myFunctionName = functionName;
+      myArgsList = args;
+    }
+
+    public String getModuleName() {
+      return myModuleName;
+    }
+
+    public String getFunctionName() {
+      return myFunctionName;
+    }
+
+    public String getArgsList() {
+      return myArgsList;
+    }
+  }
 }

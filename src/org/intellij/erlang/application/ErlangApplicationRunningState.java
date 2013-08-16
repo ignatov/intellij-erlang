@@ -16,11 +16,14 @@
 
 package org.intellij.erlang.application;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
+
+import java.util.List;
 
 /**
  * @author ignatov
@@ -47,5 +50,14 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
   @Override
   protected boolean useTestCodePath() {
     return false;
+  }
+
+  @Override
+  public ErlangEntryPoint getEntryPoint() throws ExecutionException {
+    List<String> split = StringUtil.split(myConfiguration.getModuleAndFunction(), " ");
+    String module = split.get(0);
+    String function = split.get(1);
+    String args = "[" + StringUtil.join(StringUtil.split(myConfiguration.getParams(), " "), ",") + "]";
+    return new ErlangEntryPoint(module, function, args);
   }
 }
