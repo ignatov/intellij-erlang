@@ -22,6 +22,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -52,9 +53,11 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
     return false;
   }
 
+  @Nullable
   @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {
     List<String> split = StringUtil.split(myConfiguration.getModuleAndFunction(), " ");
+    if (split.size() != 2) throw new ExecutionException("Invalid entry point");
     String module = split.get(0);
     String function = split.get(1);
     String args = "[" + StringUtil.join(StringUtil.split(myConfiguration.getParams(), " "), ",") + "]";

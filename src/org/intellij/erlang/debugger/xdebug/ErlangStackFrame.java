@@ -39,11 +39,11 @@ public class ErlangStackFrame extends XStackFrame {
   private final ErlangSourcePosition mySourcePosition;
   private final Collection<ErlangVariableBinding> myBindings;
 
-  public ErlangStackFrame(ErlangTraceElement traceElement) {
+  public ErlangStackFrame(@NotNull ErlangTraceElement traceElement) {
     this(traceElement, new ErlangSourcePosition(traceElement.getModule(), traceElement.getFunction(), traceElement.getFunctionArgs().arity()));
   }
 
-  public ErlangStackFrame(ErlangTraceElement traceElement, ErlangSourcePosition sourcePosition) {
+  public ErlangStackFrame(@NotNull ErlangTraceElement traceElement, @Nullable ErlangSourcePosition sourcePosition) {
     mySourcePosition = sourcePosition;
     myBindings = traceElement.getBindings();
   }

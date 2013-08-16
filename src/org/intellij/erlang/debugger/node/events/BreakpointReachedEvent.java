@@ -21,9 +21,10 @@ import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.intellij.openapi.project.Project;
-import org.intellij.erlang.ErlangModulesUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.debugger.node.*;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,7 +43,7 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
   private final OtpErlangPid myActivePid;
   private final List<ErlangProcessSnapshot> mySnapshots;
 
-  public BreakpointReachedEvent(Project project, OtpErlangTuple breakpointReachedMessage) throws DebuggerEventFormatException {
+  public BreakpointReachedEvent(@NotNull Project project, OtpErlangTuple breakpointReachedMessage) throws DebuggerEventFormatException {
     OtpErlangPid activePid = getPidValue(elementAt(breakpointReachedMessage, 1));
     OtpErlangList snapshots = getListValue(elementAt(breakpointReachedMessage, 2));
     if (activePid == null || snapshots == null) throw new DebuggerEventFormatException();
@@ -50,7 +51,7 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
     myActivePid = activePid;
     mySnapshots = new ArrayList<ErlangProcessSnapshot>(snapshots.arity());
     for (OtpErlangObject snapshot : snapshots) {
-      OtpErlangTuple snapshotTuple = getTupleValue(snapshot); //{Pid, Function, Status, Info, Stack}
+      OtpErlangTuple snapshotTuple = getTupleValue(snapshot); // {Pid, Function, Status, Info, Stack}
 
       OtpErlangPid pid = getPidValue(elementAt(snapshotTuple, 0));
       ErlangTraceElement init = getTraceElement(project, getTupleValue(elementAt(snapshotTuple, 1)), null);
@@ -81,7 +82,7 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
   }
 
   @Override
-  public void process(ErlangDebuggerNode debuggerNode, ErlangDebuggerEventListener eventListener) {
+  public void process(@NotNull ErlangDebuggerNode debuggerNode, @NotNull ErlangDebuggerEventListener eventListener) {
     debuggerNode.processSuspended(myActivePid);
     eventListener.breakpointReached(myActivePid, mySnapshots);
   }
@@ -92,7 +93,7 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
     List<ErlangTraceElement> stack = new ArrayList<ErlangTraceElement>(traceElementsList.arity());
     for (OtpErlangObject traceElementObject : traceElementsList) {
       OtpErlangTuple traceElementTuple = getTupleValue(traceElementObject);
-      //ignoring SP at 0
+      // ignoring SP at 0
       OtpErlangTuple moduleFunctionArgsTuple = getTupleValue(elementAt(traceElementTuple, 1));
       OtpErlangList bindingsList = getListValue(elementAt(traceElementTuple, 2));
       ErlangTraceElement traceElement = getTraceElement(project, moduleFunctionArgsTuple, bindingsList);
@@ -111,19 +112,19 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
     String functionName = getAtomText(elementAt(moduleFunctionArgsTuple, 1));
     OtpErlangList args = getListValue(elementAt(moduleFunctionArgsTuple, 2));
     Collection<ErlangVariableBinding> bindings = getBindings(bindingsList);
-    if (module == null || functionName == null || args == null) return null; //bindings are not necessarily present
+    if (module == null || functionName == null || args == null) return null; // bindings are not necessarily present
     return new ErlangTraceElement(module, functionName, args, bindings);
   }
 
-  @Nullable
+  @NotNull
   private static Collection<ErlangVariableBinding> getBindings(@Nullable OtpErlangList bindingsList) {
-    if (bindingsList == null) return null;
+    if (bindingsList == null) return ContainerUtil.<ErlangVariableBinding>emptyList();
     Collection<ErlangVariableBinding> bindings = new ArrayList<ErlangVariableBinding>(bindingsList.arity());
     for (OtpErlangObject bindingObject : bindingsList) {
       OtpErlangTuple bindingTuple = getTupleValue(bindingObject);
       String variableName = getAtomText(elementAt(bindingTuple, 0));
       OtpErlangObject variableValue = elementAt(bindingTuple, 1);
-      if (variableName == null || variableValue == null) return null;
+      if (variableName == null || variableValue == null) return ContainerUtil.<ErlangVariableBinding>emptyList();
       bindings.add(new ErlangVariableBinding(variableName, variableValue));
     }
     return bindings;

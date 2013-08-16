@@ -4,7 +4,7 @@ import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.intellij.openapi.project.Project;
-import org.intellij.erlang.ErlangModulesUtil;
+import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 import org.intellij.erlang.psi.ErlangModule;

@@ -1,9 +1,9 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.*;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.intellij.erlang.debugger.node.commands.ErlangDebuggerCommand;
 import org.intellij.erlang.debugger.node.commands.ErlangDebuggerCommandsProducer;
 import org.intellij.erlang.debugger.node.events.ErlangDebuggerEvent;
 import org.intellij.erlang.debugger.node.events.ErlangDebuggerEventsProducer;
@@ -33,7 +33,7 @@ public class ErlangDebuggerNode {
 
   private final ErlangDebuggerEventsProducer myDebuggerEventsProducer;
 
-  private final Queue<ErlangDebuggerCommand> myCommandsQueue = new LinkedList<ErlangDebuggerCommand>();
+  private final Queue<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand> myCommandsQueue = new LinkedList<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand>();
   private ErlangDebuggerEventListener myEventsListener;
 
   public ErlangDebuggerNode(@Nullable Project project) {
@@ -51,8 +51,12 @@ public class ErlangDebuggerNode {
       LOG.debug(failedToConnectMessage, e);
       throw new ErlangDebuggerNodeException(failedToConnectMessage, e);
     }
-    //TODO ask Sergey what's the proper way to spawn threads
-    new Thread(getRunnable()).start();
+    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+      @Override
+      public void run() {
+        loop();
+      }
+    });
   }
 
   public String getName() {
@@ -116,13 +120,13 @@ public class ErlangDebuggerNode {
     addCommand(ErlangDebuggerCommandsProducer.getContinueCommand(myLastSuspendedPid));
   }
 
-  private void addCommand(ErlangDebuggerCommand command) {
+  private void addCommand(ErlangDebuggerCommandsProducer.ErlangDebuggerCommand command) {
     synchronized (myCommandsQueue) {
       myCommandsQueue.add(command);
     }
   }
 
-  private void run() {
+  private void loop() {
     while (!isStopped()) {
       if (!isStopped()) {
         receiveMessage();
@@ -132,15 +136,6 @@ public class ErlangDebuggerNode {
       }
     }
     myOtpNode.close();
-  }
-
-  private Runnable getRunnable() {
-    return new Runnable() {
-      @Override
-      public void run() {
-        ErlangDebuggerNode.this.run();
-      }
-    };
   }
 
   private void receiveMessage() {

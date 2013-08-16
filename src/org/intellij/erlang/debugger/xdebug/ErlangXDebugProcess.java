@@ -7,6 +7,8 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -16,6 +18,7 @@ import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.Function;
 import com.intellij.util.ResourceUtil;
 import com.intellij.util.containers.ContainerUtil;
@@ -25,9 +28,10 @@ import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
+import com.intellij.xdebugger.evaluation.EvaluationMode;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.ErlangModulesUtil;
+import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNodeException;
@@ -53,7 +57,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
   private final ExecutionEnvironment myExecutionEnvironment;
   @NotNull private ErlangDebuggerNode myDebuggerNode;
   private ProcessHandler myErlangProcessHandler;
-  private XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[] { new ErlangLineBreakpointHandler(this) };
+  private XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>>();
 
@@ -77,7 +81,6 @@ public class ErlangXDebugProcess extends XDebugProcess {
       @Override
       public void failedToInterpretModules(List<ErlangModule> modules) {
         String messagePrefix = "Failed to interpret modules: ";
-        //TODO take first 3 modules
         String modulesString = StringUtil.join(modules, new Function<ErlangModule, String>() {
           @Override
           public String fun(ErlangModule erlangModule) {
@@ -167,6 +170,14 @@ public class ErlangXDebugProcess extends XDebugProcess {
       public FileType getFileType() {
         return ErlangFileType.MODULE;
       }
+
+      @NotNull
+      @Override
+      public Document createDocument(@NotNull Project project, @NotNull String text, @Nullable XSourcePosition sourcePosition, @NotNull EvaluationMode mode) {
+        final LightVirtualFile file = new LightVirtualFile("plain-text-erlang-debugger.txt", text);
+        //noinspection ConstantConditions
+        return FileDocumentManager.getInstance().getDocument(file);
+      }
     };
   }
 
@@ -220,23 +231,23 @@ public class ErlangXDebugProcess extends XDebugProcess {
   }
 
   void addBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
-    Project project = myExecutionEnvironment.getProject();
-    XSourcePosition sourcePosition = breakpoint.getSourcePosition();
-    assert project != null;
-    assert sourcePosition != null;
-    ErlangSourcePosition breakpointPosition = new ErlangSourcePosition(project, sourcePosition);
+    ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
     myPositionToLineBreakpointMap.put(breakpointPosition, breakpoint);
     myDebuggerNode.setBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
   }
 
-  void removeBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint, boolean temporary) {
+  void removeBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint, @SuppressWarnings("UnusedParameters") boolean temporary) {
+    ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
+    myPositionToLineBreakpointMap.remove(breakpointPosition);
+    myDebuggerNode.removeBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+  }
+
+  private ErlangSourcePosition getErlangSourcePosition(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
     Project project = myExecutionEnvironment.getProject();
     XSourcePosition sourcePosition = breakpoint.getSourcePosition();
     assert project != null;
     assert sourcePosition != null;
-    ErlangSourcePosition breakpointPosition = new ErlangSourcePosition(project, sourcePosition);
-    myPositionToLineBreakpointMap.remove(breakpointPosition);
-    myDebuggerNode.removeBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    return new ErlangSourcePosition(project, sourcePosition);
   }
 
   private void failDebugProcess(String message) {
@@ -272,14 +283,14 @@ public class ErlangXDebugProcess extends XDebugProcess {
     setEntryPoint(runningState.getEntryPoint());
   }
 
-  private void setEntryPoint(ErlangRunningState.ErlangEntryPoint entryPoint) {
+  private void setEntryPoint(@NotNull ErlangRunningState.ErlangEntryPoint entryPoint) throws ExecutionException {
     myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
   }
 
   private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
     try {
       final String[] beams = {"debugnode.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
-      File tempDirectory = FileUtil.createTempDirectory("erlang_debugger_", null);
+      File tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
       for (String beam : beams) {
         copyBeamTo(beam, tempDirectory);
       }

@@ -35,9 +35,12 @@ public class ErlangProcessSnapshot {
   private final String myExitReason;
   private final List<ErlangTraceElement> myStack;
 
-  public ErlangProcessSnapshot(@NotNull OtpErlangPid pid, @NotNull ErlangTraceElement init,
-                               @NotNull String status, @Nullable ErlangFile breakModule,
-                               int breakLine, @Nullable String exitReason,
+  public ErlangProcessSnapshot(@NotNull OtpErlangPid pid, 
+                               @NotNull ErlangTraceElement init,
+                               @NotNull String status, 
+                               @Nullable ErlangFile breakModule,
+                               int breakLine, 
+                               @Nullable String exitReason,
                                @NotNull List<ErlangTraceElement> stack) {
     myPid = pid;
     myInit = init;

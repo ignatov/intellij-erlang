@@ -16,7 +16,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.SkipDefaultValuesSerializationFilters;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
-import org.intellij.erlang.ErlangModulesUtil;
+import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.jps.builder.ErlangBuilder;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;

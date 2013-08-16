@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.utils;
 
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.application.Result;
@@ -31,6 +31,8 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.Convertor;
+import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.jetbrains.annotations.Nullable;

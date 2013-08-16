@@ -24,22 +24,12 @@ public final class ErlangDebuggerEventsProducer {
     if (messageName == null) return null;
 
     try {
-      if (RegisterListenerEvent.NAME.equals(messageName)) {
-        return new RegisterListenerEvent(messageTuple);
-      }
-      if (InterpretModulesResponseEvent.NAME.equals(messageName)) {
-        return new InterpretModulesResponseEvent(myProject, messageTuple);
-      }
-      if (SetBreakpointResponseEvent.NAME.equals(messageName)) {
-        return new SetBreakpointResponseEvent(myProject, messageTuple);
-      }
-      if (BreakpointReachedEvent.NAME.equals(messageName)) {
-        return new BreakpointReachedEvent(myProject, messageTuple);
-      }
-    } catch (DebuggerEventFormatException e) {
-      //TODO process exception
+      if (RegisterListenerEvent.NAME.equals(messageName))         return new RegisterListenerEvent(messageTuple);
+      if (InterpretModulesResponseEvent.NAME.equals(messageName)) return new InterpretModulesResponseEvent(myProject, messageTuple);
+      if (SetBreakpointResponseEvent.NAME.equals(messageName))    return new SetBreakpointResponseEvent(myProject, messageTuple);
+      if (BreakpointReachedEvent.NAME.equals(messageName))        return new BreakpointReachedEvent(myProject, messageTuple);
+    } catch (DebuggerEventFormatException e) { // todo: process exception
     }
-
     return new UnknownMessageEvent(messageTuple);
   }
 

@@ -3,6 +3,7 @@ package org.intellij.erlang.debugger.xdebug;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.xdebugger.breakpoints.XLineBreakpointType;
+import org.intellij.erlang.ErlangFileType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,7 +26,7 @@ public class ErlangLineBreakpointType extends XLineBreakpointType<ErlangLineBrea
 
   @Override
   public boolean canPutAt(@NotNull VirtualFile file, int line, @NotNull Project project) {
-    //TODO check if line breakpoint can be set here (see "Executable Lines" at http://www.erlang.org/doc/apps/debugger/debugger_chapter.html)
-    return true;
+    // todo: check if line breakpoint can be set here (see "Executable Lines" at http://www.erlang.org/doc/apps/debugger/debugger_chapter.html)
+    return file.getFileType() == ErlangFileType.MODULE;
   }
 }

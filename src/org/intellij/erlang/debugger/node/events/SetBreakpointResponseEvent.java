@@ -3,11 +3,12 @@ package org.intellij.erlang.debugger.node.events;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.intellij.openapi.project.Project;
-import org.intellij.erlang.ErlangModulesUtil;
+import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author savenko
@@ -19,7 +20,7 @@ class SetBreakpointResponseEvent implements ErlangDebuggerEvent {
   private final int myLine;
   private final String myError;
 
-  public SetBreakpointResponseEvent(Project project, OtpErlangTuple message) throws DebuggerEventFormatException {
+  public SetBreakpointResponseEvent(@NotNull Project project, @NotNull OtpErlangTuple message) throws DebuggerEventFormatException {
     String moduleName = OtpErlangTermUtil.getAtomText(message.elementAt(1));
     ErlangModule module = moduleName != null ? ErlangModulesUtil.getErlangModule(project, moduleName) : null;
     ErlangFile file = module != null ? (ErlangFile) module.getContainingFile() : null;
@@ -45,7 +46,7 @@ class SetBreakpointResponseEvent implements ErlangDebuggerEvent {
   }
 
   @Override
-  public void process(ErlangDebuggerNode debuggerNode, ErlangDebuggerEventListener eventListener) {
+  public void process(ErlangDebuggerNode debuggerNode, @NotNull ErlangDebuggerEventListener eventListener) {
     if (myError == null) {
       eventListener.breakpointIsSet(myFile, myLine);
     }

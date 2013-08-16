@@ -20,11 +20,11 @@ public class ErlangTraceElement {
   public ErlangTraceElement(@NotNull ErlangFile module,
                             @NotNull String function,
                             @NotNull OtpErlangList functionArgs,
-                            @Nullable Collection<ErlangVariableBinding> bindings) {
+                            @NotNull Collection<ErlangVariableBinding> bindings) {
     myModule = module;
     myFunction = function;
     myFunctionArgs = functionArgs;
-    myBindings = bindings == null ? ContainerUtil.<ErlangVariableBinding>emptyList() : bindings;
+    myBindings = bindings;
   }
 
   @NotNull

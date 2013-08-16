@@ -50,8 +50,10 @@ public class ErlangExecutionStack extends XExecutionStack {
     if (myStack.isEmpty()) {
       List<ErlangTraceElement> traceElements = myProcessSnapshot.getStack();
       for (ErlangTraceElement traceElement : traceElements) {
-        boolean isTopStackFrame = myStack.isEmpty(); //if it's a top stack frame we can set a line that's being executed.
-        ErlangStackFrame stackFrame = isTopStackFrame ? new ErlangStackFrame(traceElement, myProcessSnapshot.getBreakPosition()) : new ErlangStackFrame(traceElement);
+        boolean isTopStackFrame = myStack.isEmpty(); // if it's a top stack frame we can set a line that's being executed.
+        ErlangStackFrame stackFrame = isTopStackFrame ? 
+          new ErlangStackFrame(traceElement, myProcessSnapshot.getBreakPosition()) : 
+          new ErlangStackFrame(traceElement);
         myStack.add(stackFrame);
       }
       container.addStackFrames(myStack, true);

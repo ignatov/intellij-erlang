@@ -72,9 +72,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
                     @NotNull BuildOutputConsumer outputConsumer, 
                     @NotNull final CompileContext context) throws ProjectBuildException, IOException {
     LOG.debug(target.getPresentableName());
-    if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) {
-      return;
-    }
+    if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) return;
 
     JpsModule module = target.getModule();
     JpsProject project = module.getProject();
