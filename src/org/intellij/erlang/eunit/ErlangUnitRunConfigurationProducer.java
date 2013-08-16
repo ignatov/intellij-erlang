@@ -22,9 +22,11 @@ import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.junit.RuntimeConfigurationProducer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -66,6 +68,12 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
 
     Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(psiElement);
 
+    functions = ContainerUtil.filter(functions, new Condition<ErlangFunction>() {
+      @Override
+      public boolean value(ErlangFunction erlangFunction) {
+        return ErlangPsiImplUtil.isEunitTestFunction(erlangFunction);
+      }
+    });
     if (!functions.isEmpty()) {
       LinkedHashSet<String> functionNames = new LinkedHashSet<String>();
       for (ErlangFunction f : functions) {

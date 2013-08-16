@@ -238,7 +238,7 @@
 
         <!--eunit -->
         <testFinder implementation="org.intellij.erlang.ErlangTestFinder"/>
-        <configurationProducer implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer"/>
+        <configurationProducer implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer" order="first"/>
         <configurationType implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationType"/>
 
         <!-- Tool Runners -->

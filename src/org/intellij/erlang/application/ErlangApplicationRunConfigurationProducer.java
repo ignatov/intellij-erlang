@@ -53,7 +53,7 @@ public class ErlangApplicationRunConfigurationProducer extends RuntimeConfigurat
     Project project = psiElement.getProject();
     PsiFile containingFile = psiElement.getContainingFile();
 
-    if (containingFile instanceof ErlangFile && ErlangPsiImplUtil.isEunitTestFile((ErlangFile) containingFile) ||
+    if (!(containingFile instanceof ErlangFile) ||
         myFunction == null || ErlangPsiImplUtil.isEunitTestFunction(myFunction) ||
         ErlangPsiImplUtil.isPrivateFunction(containingFile, myFunction)) {
       return null;
