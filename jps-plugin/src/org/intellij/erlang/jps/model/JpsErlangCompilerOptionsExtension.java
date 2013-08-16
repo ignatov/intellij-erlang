@@ -14,7 +14,6 @@ public class JpsErlangCompilerOptionsExtension extends JpsCompositeElementBase<J
 
   private ErlangCompilerOptions myOptions;
 
-
   public JpsErlangCompilerOptionsExtension(ErlangCompilerOptions options) {
     myOptions = options;
   }

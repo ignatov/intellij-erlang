@@ -1,10 +1,10 @@
 package org.intellij.erlang.jps.builder;
 
-import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.builders.BuildTargetType;
 import org.jetbrains.jps.incremental.BuilderService;
 import org.jetbrains.jps.incremental.TargetBuilder;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 
 import java.util.Arrays;
 import java.util.List;

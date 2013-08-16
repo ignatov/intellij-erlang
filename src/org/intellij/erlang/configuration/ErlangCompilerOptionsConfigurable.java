@@ -9,11 +9,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
+import org.intellij.erlang.utils.AncestorAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -45,16 +45,10 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
         optionsEditor.select(erlangExternalToolsConfigurable);
       }
     });
-    myRootPanel.addAncestorListener(new AncestorListener() {
+    myRootPanel.addAncestorListener(new AncestorAdapter() {
       @Override
       public void ancestorAdded(AncestorEvent event) {
         reset();
-      }
-      @Override
-      public void ancestorRemoved(AncestorEvent event) {
-      }
-      @Override
-      public void ancestorMoved(AncestorEvent event) {
       }
     });
   }

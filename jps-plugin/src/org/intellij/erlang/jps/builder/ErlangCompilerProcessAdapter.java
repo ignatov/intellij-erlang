@@ -5,6 +5,7 @@ import com.intellij.execution.process.ProcessEvent;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
@@ -17,14 +18,14 @@ public class ErlangCompilerProcessAdapter extends ProcessAdapter {
   private final String myBuilderName;
   private final String myCompileTargetRootPath;
 
-  public ErlangCompilerProcessAdapter(CompileContext context, String builderName, String compileTargetRootPath) {
+  public ErlangCompilerProcessAdapter(@NotNull CompileContext context, @NotNull String builderName, @NotNull String compileTargetRootPath) {
     myContext = context;
     myBuilderName = builderName;
     myCompileTargetRootPath = compileTargetRootPath;
   }
 
   @Override
-  public void onTextAvailable(ProcessEvent event, Key outputType) {
+  public void onTextAvailable(@NotNull ProcessEvent event, Key outputType) {
     ErlangCompilerError error = ErlangCompilerError.create(myCompileTargetRootPath, event.getText());
     if (error != null) {
       boolean isError = error.getCategory() == CompilerMessageCategory.ERROR;
