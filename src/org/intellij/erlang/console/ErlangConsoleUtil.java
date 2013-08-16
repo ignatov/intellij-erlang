@@ -75,7 +75,9 @@ public final class ErlangConsoleUtil {
       final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(codePathModule);
       final CompilerModuleExtension compilerModuleExt =
         moduleRootManager.getModuleExtension(CompilerModuleExtension.class);
-      final VirtualFile buildOutput = useTestOutputPath && codePathModule == module ? compilerModuleExt.getCompilerOutputPathForTests() : compilerModuleExt.getCompilerOutputPath();
+      final VirtualFile buildOutput = useTestOutputPath && codePathModule == module ?
+        getCompilerOutputPathForTests(compilerModuleExt) : 
+        compilerModuleExt.getCompilerOutputPath();
       if (buildOutput != null) {
         codePath.add("-pa");
         codePath.add(buildOutput.getCanonicalPath());
@@ -87,6 +89,12 @@ public final class ErlangConsoleUtil {
     }
 
     return codePath;
+  }
+
+  @Nullable
+  private static VirtualFile getCompilerOutputPathForTests(CompilerModuleExtension module) {
+    final VirtualFile testPath = module.getCompilerOutputPathForTests();
+    return testPath == null || !testPath.exists() ? module.getCompilerOutputPath() : testPath;
   }
 
   @NotNull
