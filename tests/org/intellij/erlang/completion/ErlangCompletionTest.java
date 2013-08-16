@@ -220,6 +220,13 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
     myFixture.checkResultByFile("include-lib/includeLib-after.erl");
   }
 
+  public void testIncludeLibEmptyCompletion() throws Throwable {
+    myFixture.configureByFiles("include-lib-empty/includeLib.erl",
+                               "include-lib-empty/testapp/ebin/testapp.app",
+                               "include-lib-empty/testapp/include/includefile.hrl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "testapp/");
+  }
+
   private void doTestInclude(String txt, String... variants) throws Throwable {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
   }
