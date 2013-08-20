@@ -4,6 +4,8 @@ Erlang Plugin turns [IntelliJ IDEA](http://www.jetbrains.com/idea/) to a conveni
 # Pre-release builds
 You can manually set up the plugin latest version from the [intellij-erlang-builds](https://www.dropbox.com/sh/4sbgxzjto5fa21b/1cpM3Nb-yF) folder.
 
+Note for **Mac OS X** users: you need to download the entire zip file, not a several jars (see [Apple discussion forum](https://discussions.apple.com/thread/1483114)). 
+
 ## Contributing
 If you would like to help, you may check out issues [for collaboration](https://github.com/ignatov/intellij-erlang/issues?labels=for+collaboration&state=open).
 Before sending a pull request please check that the **ErlangTestCase** is successfully passed. Moreover, new tests will be gladly accepted.
