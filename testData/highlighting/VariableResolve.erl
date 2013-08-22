@@ -1,4 +1,4 @@
--export([get_profile/2, name_to_pid/1, do_receive/6]).
+-export([get_profile/2, name_to_pid/1, do_receive/6, error/0]).
 
 name_to_pid(Name) ->
   case Name of
@@ -81,3 +81,7 @@ find_in_binary() ->
 
 unbound_test() ->
   <warning>Var1</warning> = <error>Var2</error>.
+
+error()->
+    {_FWver,_FWcrc,[_P0 | _Parts] = AllParts} = {1,1,[1,2,3]},
+    AllParts.

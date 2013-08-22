@@ -376,6 +376,9 @@ public class ErlangPsiImplUtil {
   public static boolean inLeftPartOfAssignment(@NotNull PsiElement psiElement) {
     ErlangAssignmentExpression assignment = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
     if (assignment == null) return false;
+    PsiElement parent = assignment.getParent();
+    ErlangAssignmentExpression topAssignment = parent instanceof ErlangTupleExpression ? PsiTreeUtil.getParentOfType(parent, ErlangAssignmentExpression.class) : null;
+    assignment = topAssignment != null ? topAssignment : assignment;
     return PsiTreeUtil.isAncestor(assignment.getLeft(), psiElement, true);
   }
 
