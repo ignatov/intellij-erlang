@@ -21,15 +21,16 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.*;
-import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiRecursiveElementVisitor;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.LocalSearchScope;
@@ -58,12 +59,9 @@ import java.util.*;
 public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   @Override
   public void invoke(@NotNull final Project project, Editor editor, PsiFile file, DataContext dataContext) {
-    if (!CommonRefactoringUtil.checkReadOnlyStatus(file)) {
-      return;
-    }
+    if (!CommonRefactoringUtil.checkReadOnlyStatus(file)) return;
 
     SelectionModel selectionModel = editor.getSelectionModel();
-
     if (selectionModel.hasSelection()) {
       Pair<PsiElement, PsiElement> pair = ErlangRefactoringUtil.selectionToElements(file, selectionModel);
 
@@ -81,22 +79,25 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
         perform(editor, selection);
       }
     }
-    ErlangRefactoringUtil.smartIntroduce(editor, file,
-      new ErlangRefactoringUtil.Extractor() {
-        @Override
-        public boolean checkContext(@NotNull PsiFile file, @NotNull Editor editor, @Nullable PsiElement element) {
-          boolean ok = PsiTreeUtil.getParentOfType(element, ErlangClauseBody.class) != null;
-          if (!ok) {
-            showCannotPerformError(project, editor);
+    else {
+      ErlangRefactoringUtil.smartIntroduce(editor, file,
+        new ErlangRefactoringUtil.Extractor() {
+          @Override
+          public boolean checkContext(@NotNull PsiFile file, @NotNull Editor editor, @Nullable PsiElement element) {
+            boolean ok = PsiTreeUtil.getParentOfType(element, ErlangClauseBody.class) != null;
+            if (!ok) {
+              showCannotPerformError(project, editor);
+            }
+            return ok;
           }
-          return ok;
-        }
 
-        @Override
-        public void process(@NotNull Editor editor, @NotNull ErlangExpression expression) {
-          perform(editor, ContainerUtil.newSmartList(expression));
-        }
-      });
+          @Override
+          public void process(@NotNull Editor editor, @NotNull ErlangExpression expression) {
+            perform(editor, ContainerUtil.newSmartList(expression));
+          }
+        });
+    }
+    selectionModel.removeSelection();
   }
 
   @NotNull
@@ -119,7 +120,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
     if (e == null) return Collections.emptyList();
     if (e.getTextOffset() < first.getTextOffset()) return Collections.emptyList();
-    
+
     List<ErlangExpression> res = ContainerUtil.newArrayList();
     for (PsiElement i = e; i != null && i.getTextOffset() <= second.getTextOffset(); i = i.getNextSibling()) {
       if (i instanceof ErlangExpression) res.add(((ErlangExpression) i));
@@ -137,8 +138,8 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     assert last != null;
 
     Pair<List<ErlangNamedElement>, List<ErlangNamedElement>> analyze = analyze(selection);
-   
-    final Project project = function.getProject();
+
+    final Project project = first.getProject();
     List<ErlangNamedElement> inParams = analyze.first;
     List<ErlangNamedElement> outParams = analyze.second;
 
@@ -150,31 +151,45 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     if (dialog.isOK()) {
       final String functionName = dialog.getFunctionName();
       final String bindings = bindings(outParams);
-      final String bindingsEx = StringUtil.isEmpty(bindings) ? bindings : ",\n" + bindings; 
-      final String bindingsS = StringUtil.isEmpty(bindings) ? bindings : bindings + " = "; 
-      
+      final String bindingsEx = StringUtil.isEmpty(bindings) ? bindings : ",\n" + bindings;
+      final String bindingsS = StringUtil.isEmpty(bindings) ? bindings : bindings + " = ";
+
       final String signature = generateSignature(functionName, inParams);
-      final String newFunctionText = "\n\n" + signature + " ->\n" +
+      final String functionText = signature + " ->\n" +
         StringUtil.join(selection, new Function<ErlangExpression, String>() {
           @Override
           public String fun(ErlangExpression erlangExpression) {
             return erlangExpression.getText();
           }
-        }, ",\n") + bindingsEx + ".\n\n";
+        }, ",\n") + bindingsEx + ".";
 
       try {
-        final PsiFile file = function.getContainingFile();
+        final PsiFile file = first.getContainingFile();
         new WriteCommandAction(editor.getProject(), "Extract function", file) {
           @Override
           protected void run(Result result) throws Throwable {
+
+
+            ErlangFunction nf = ErlangElementFactory.createFunctionFromText(project, functionText);
+            PsiElement nn = ErlangElementFactory.createLeafFromText(project, "\n");
+            PsiElement n = ErlangElementFactory.createLeafFromText(project, "\n");
+
+
+
+            PsiElement functionParent = function.getParent();
+            PsiElement anchor = function.getNextSibling();
+            PsiElement ffff = functionParent.addAfter(nf, function);
+            functionParent.addBefore(nn, ffff);
+            functionParent.addAfter(n,  function);
+
             PsiElement parent = first.getParent();
             parent.addBefore(ErlangElementFactory.createExpressionFromText(getProject(), bindingsS + signature), first);
             parent.deleteChildRange(first, last);
-            Document document = editor.getDocument();
-            PsiDocumentManager.getInstance(getProject()).doPostponedOperationsAndUnblockDocument(document);
-            int offset = function.getTextRange().getEndOffset();
-            document.insertString(offset, newFunctionText);
-            CodeStyleManager.getInstance(project).reformatText(file, offset, offset + newFunctionText.length());
+
+//            editor.getDocument();
+//            PsiDocumentManager.getInstance(getProject()).doPostponedOperationsAndUnblockDocument(document);
+//
+//            CodeStyleManager.getInstance(project).reformat(ffff);
           }
         }.execute();
       } catch (Throwable throwable) {
@@ -193,7 +208,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     }, ", ") + ")";
   }
 
-  @NotNull 
+  @NotNull
   private static String bindings(@NotNull List<ErlangNamedElement> out) {
     if (out.isEmpty()) return "";
     String join = StringUtil.join(out, new Function<ErlangNamedElement, String>() {
