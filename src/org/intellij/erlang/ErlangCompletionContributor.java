@@ -211,34 +211,35 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
     List<LookupElement> result = new ArrayList<LookupElement>();
     List<String> split = StringUtil.split(includeText, "/");
+    if (split.isEmpty()) {
+      split = Collections.singletonList("");
+    }
 
-    if (!split.isEmpty()) {
-      String appName = split.get(0);
-      String pathSeparator = includeText.endsWith("/") ? "/" : "";
-      String libRelativePath = split.size() > 1 ? StringUtil.join(split.subList(1, split.size()), "/") + pathSeparator: "";
-      boolean completingAppName = split.size() == 1 && !includeText.endsWith("/");
-      List<VirtualFile> appDirs = getApplicationDirectories(file.getProject(), appName, !completingAppName);
-      List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
+    String appName = split.get(0);
+    String pathSeparator = includeText.endsWith("/") ? "/" : "";
+    String libRelativePath = split.size() > 1 ? StringUtil.join(split.subList(1, split.size()), "/") + pathSeparator : "";
+    boolean completingAppName = split.size() == 1 && !includeText.endsWith("/");
+    List<VirtualFile> appDirs = getApplicationDirectories(file.getProject(), appName, !completingAppName);
+    List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
 
-      for (final VirtualFile appRoot : appDirs) {
-        final String appFullName = appRoot != null ? appRoot.getName() : null;
-        String appShortName = appFullName != null ? getAppShortName(appFullName) : null;
-        if (appRoot == null) continue;
-        if (completingAppName) {
-          result.add(getDefaultPathLookupElementBuilder(includeText, appRoot, appShortName)
-            .withPresentableText(appShortName + "/")
-            .withTypeText("in " + appFullName, true));
-          continue;
-        }
-        addMatchingFiles(appRoot, libRelativePath, matchingFiles);
-        result.addAll(ContainerUtil.map(matchingFiles, new Function<VirtualFile, LookupElement>() {
-          @Override
-          public LookupElement fun(VirtualFile f) {
-            return getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true);
-          }
-        }));
-        matchingFiles.clear();
+    for (final VirtualFile appRoot : appDirs) {
+      final String appFullName = appRoot != null ? appRoot.getName() : null;
+      String appShortName = appFullName != null ? getAppShortName(appFullName) : null;
+      if (appRoot == null) continue;
+      if (completingAppName) {
+        result.add(getDefaultPathLookupElementBuilder(includeText, appRoot, appShortName)
+          .withPresentableText(appShortName + "/")
+          .withTypeText("in " + appFullName, true));
+        continue;
       }
+      addMatchingFiles(appRoot, libRelativePath, matchingFiles);
+      result.addAll(ContainerUtil.map(matchingFiles, new Function<VirtualFile, LookupElement>() {
+        @Override
+        public LookupElement fun(VirtualFile f) {
+          return getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true);
+        }
+      }));
+      matchingFiles.clear();
     }
     result.addAll(getModulePathLookupElements(file, includeText));
     return result;
