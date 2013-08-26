@@ -19,6 +19,7 @@ package org.intellij.erlang.refactor.introduce;
 import com.google.common.base.CaseFormat;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
@@ -42,7 +43,6 @@ import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.Function;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
-import gnu.trove.THashSet;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
@@ -58,7 +58,7 @@ import java.util.*;
  */
 public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   @Override
-  public void invoke(@NotNull final Project project, Editor editor, PsiFile file, DataContext dataContext) {
+  public void invoke(@NotNull final Project project, Editor editor, PsiFile file, @Nullable DataContext dataContext) {
     if (!CommonRefactoringUtil.checkReadOnlyStatus(file)) return;
 
     SelectionModel selectionModel = editor.getSelectionModel();
@@ -119,7 +119,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     while (e != null && e.getParent() != commonParent) e = e.getParent();
 
     if (e == null) return Collections.emptyList();
-    if (e.getTextOffset() < first.getTextOffset()) return Collections.emptyList();
+    if (e.getTextRange().getStartOffset() < first.getTextRange().getStartOffset()) return Collections.emptyList();
 
     List<ErlangExpression> res = ContainerUtil.newArrayList();
     for (PsiElement i = e; i != null && i.getTextOffset() <= second.getTextOffset(); i = i.getNextSibling()) {
@@ -144,11 +144,10 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     List<ErlangNamedElement> outParams = analyze.second;
 
     String shorten = ErlangRefactoringUtil.shorten(last, "extracted");
-    String to = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, shorten);
-    ErlangExtractFunctionDialog dialog = new ErlangExtractFunctionDialog(project, to, inParams);
-    dialog.show();
+    String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, shorten);
+    ErlangExtractFunctionDialog dialog = new ErlangExtractFunctionDialog(project, name, inParams);
 
-    if (dialog.isOK()) {
+    if (ApplicationManager.getApplication().isUnitTestMode() || dialog.showAndGet()) {
       final String functionName = dialog.getFunctionName();
       final String bindings = bindings(outParams);
       final String bindingsEx = StringUtil.isEmpty(bindings) ? bindings : ",\n" + bindings;
@@ -263,7 +262,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   }
 
   public static Set<ErlangNamedElement> getSimpleDeclarations(List<? extends PsiElement> children) {
-    final Set<ErlangNamedElement> result = new THashSet<ErlangNamedElement>();
+    final Set<ErlangNamedElement> result = ContainerUtil.newLinkedHashSet();
     for (PsiElement child : children) {
       child.accept(new ErlangRecursiveVisitor() {
         @Override

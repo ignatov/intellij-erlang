@@ -37,6 +37,7 @@ import org.intellij.erlang.parser.ErlangParserTest;
 import org.intellij.erlang.performance.ErlangPerformanceTest;
 import org.intellij.erlang.quickfixes.*;
 import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
+import org.intellij.erlang.refactoring.ErlangExtractFunctionTest;
 import org.intellij.erlang.refactoring.ErlangInlineVariableTest;
 import org.intellij.erlang.refactoring.ErlangIntroduceVariableTest;
 import org.intellij.erlang.resolve.ErlangIncludeLibResolveTest;
@@ -71,6 +72,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangIntroduceRecordFieldTest.class);
     suite.addTestSuite(ErlangIntroduceMacroQuickFixTest.class);
     suite.addTestSuite(ErlangIntroduceVariableTest.class);
+    suite.addTestSuite(ErlangExtractFunctionTest.class);
     suite.addTestSuite(ErlangSmartEnterClauseProcessorTest.class);
     suite.addTestSuite(ErlangSdkReleaseTest.class);
     suite.addTestSuite(ErlangBehaviourInspectionsTest.class);
