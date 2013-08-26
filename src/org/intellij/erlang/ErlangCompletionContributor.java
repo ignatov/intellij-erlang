@@ -76,7 +76,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
   public static final int KEYWORD_PRIORITY = -10;
   public static final int MODULE_FUNCTIONS_PRIORITY = -4;
   public static final int BIF_PRIORITY = -5;
-  public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE, 
+  public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
     "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour"
   );
 
@@ -206,9 +206,10 @@ public class ErlangCompletionContributor extends CompletionContributor {
       .bold(), KEYWORD_PRIORITY);
   }
 
-  private static List<LookupElement> getLibPathLookupElements(PsiFile file, final String includeText) {
+  private static List<LookupElement> getLibPathLookupElements(final PsiFile file, final String includeText) {
     if (FileUtil.isAbsolute(includeText)) return Collections.emptyList();
 
+    final VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
     List<LookupElement> result = new ArrayList<LookupElement>();
     List<String> split = StringUtil.split(includeText, "/");
     if (split.isEmpty()) {
@@ -233,10 +234,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
         continue;
       }
       addMatchingFiles(appRoot, libRelativePath, matchingFiles);
-      result.addAll(ContainerUtil.map(matchingFiles, new Function<VirtualFile, LookupElement>() {
+      result.addAll(ContainerUtil.mapNotNull(matchingFiles, new Function<VirtualFile, LookupElement>() {
+        @Nullable
         @Override
         public LookupElement fun(VirtualFile f) {
-          return getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true);
+          return f == virtualFile ? null : getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true);
         }
       }));
       matchingFiles.clear();
@@ -264,7 +266,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
   }
 
   private static List<LookupElement> getModulePathLookupElements(PsiFile file, final String includeText) {
-    VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
+    final VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
     VirtualFile parentFile = virtualFile != null ? virtualFile.getParent() : null;
     List<LookupElement> result = new ArrayList<LookupElement>();
 
@@ -274,10 +276,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
     if (parentFile != null) {
       List<VirtualFile> relativeToParent = new ArrayList<VirtualFile>();
       addMatchingFiles(parentFile, includeText, relativeToParent);
-      result.addAll(ContainerUtil.map(relativeToParent, new Function<VirtualFile, LookupElement>() {
+      result.addAll(ContainerUtil.mapNotNull(relativeToParent, new Function<VirtualFile, LookupElement>() {
+        @Nullable
         @Override
-        public LookupElement fun(VirtualFile virtualFile) {
-          return getDefaultPathLookupElementBuilder(includeText, virtualFile, null);
+        public LookupElement fun(VirtualFile f) {
+          return f == virtualFile ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
         }
       }));
     }
@@ -291,10 +294,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
         final VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
         if (includeDir != null && includeDir.isDirectory()) {
           addMatchingFiles(includeDir, includeText, relativeToIncludeDirs);
-          result.addAll(ContainerUtil.map(relativeToIncludeDirs, new Function<VirtualFile, LookupElement>() {
+          result.addAll(ContainerUtil.mapNotNull(relativeToIncludeDirs, new Function<VirtualFile, LookupElement>() {
+            @Nullable
             @Override
-            public LookupElement fun(VirtualFile virtualFile) {
-              return getDefaultPathLookupElementBuilder(includeText, virtualFile, null);
+            public LookupElement fun(VirtualFile f) {
+              return f == virtualFile ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
             }
           }));
         }
@@ -413,7 +417,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     public void handleInsert(InsertionContext context, LookupElement item) {
       super.handleInsert(context, item);
       Editor editor = context.getEditor();
-      
+
       Document document = editor.getDocument();
       if (!document.getText().substring(context.getTailOffset()).startsWith(".")) {
         document.insertString(context.getTailOffset(), ".");
@@ -435,7 +439,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     }
 
     private boolean insertQuotas() {
-      return myNeedQuotas; 
+      return myNeedQuotas;
     }
   }
 }
