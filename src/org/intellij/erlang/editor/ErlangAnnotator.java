@@ -220,7 +220,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       String tag = pair.first;
       if (edocTags.contains(tag)) {
         TextRange range = TextRange.from(comment.getTextOffset() + offset, tag.length());
-        setHighlighting(range, annotationHolder, ErlangSyntaxHighlighter.DOC_COMMENT_TAG);
+        setHighlighting(range, annotationHolder, ErlangSyntaxHighlighter.DOC_TAG);
       }
     }
   }

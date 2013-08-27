@@ -334,6 +334,9 @@
           <className>org.intellij.erlang.intention.ErlangExportTypeIntention</className>
           <category>Erlang</category>
         </intentionAction>
+      
+        <additionalTextAttributes scheme="Default" file="colorSchemes/ErlangDefault.xml"/>
+        <additionalTextAttributes scheme="Darcula" file="colorSchemes/ErlangDarcula.xml"/>
     </extensions>
     <actions>
         <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"

@@ -44,7 +44,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("String", STRING),
       new AttributesDescriptor("Number", NUMBER),
       new AttributesDescriptor("Keyword", KEYWORD),
-      new AttributesDescriptor("Parenthesis", PARENTHS),
+      new AttributesDescriptor("Parenthesis", PARENTHESES),
       new AttributesDescriptor("Braces", BRACES),
       new AttributesDescriptor("Brackets", BRACKETS),
       new AttributesDescriptor("Atom", ATOM),
@@ -52,7 +52,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Variable", VARIABLES),
       new AttributesDescriptor("Records", RECORDS),
       new AttributesDescriptor("Operation sign", OP_SIGN),
-      new AttributesDescriptor("Edoc tag", DOC_COMMENT_TAG),
+      new AttributesDescriptor("Edoc tag", DOC_TAG),
       new AttributesDescriptor("Function", FUNCTION),
       new AttributesDescriptor("Type", TYPE),
       new AttributesDescriptor("Attribute", ATTRIBUTE)
@@ -117,7 +117,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     @NonNls
     final Map<String, TextAttributesKey> map = new THashMap<String, TextAttributesKey>();
     map.put("a", ATOM);
-    map.put("d", DOC_COMMENT_TAG);
+    map.put("d", DOC_TAG);
     map.put("k", KEYWORD);
     map.put("m", MACRO);
     map.put("r", RECORDS);
