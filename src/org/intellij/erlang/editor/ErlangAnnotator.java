@@ -99,6 +99,18 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       }
 
       @Override
+      public void visitFunctionWithArity(@NotNull ErlangFunctionWithArity o) {
+        super.visitFunctionWithArity(o);
+        setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.FUNCTION);        
+      }
+
+      @Override
+      public void visitExportFunction(@NotNull ErlangExportFunction o) {
+        super.visitExportFunction(o);
+        setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.FUNCTION);
+      }
+
+      @Override
       public void visitIncludeLib(@NotNull ErlangIncludeLib o) {
         super.visitIncludeLib(o);
         markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
@@ -181,8 +193,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitFunction(@NotNull ErlangFunction o) {
         super.visitFunction(o);
-
-        for (ErlangFunctionClause erlangFunClause :  o.getFunctionClauseList()) {
+        for (ErlangFunctionClause erlangFunClause : o.getFunctionClauseList()) {
           setHighlighting(erlangFunClause.getFirstChild(), annotationHolder, ErlangSyntaxHighlighter.FUNCTION);
         }
       }

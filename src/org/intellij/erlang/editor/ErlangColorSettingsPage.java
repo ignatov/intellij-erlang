@@ -87,7 +87,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
   public String getDemoText() {
     return "%%% Module fact documentation\n" +
       "<m_att>-module</m_att>(fact).\n" +
-      "<m_att>-export</m_att>([fac/1]).\n" +
+      "<m_att>-export</m_att>([<f>fac</f>/1]).\n" +
       "\n" +
       "<m_att>-record</m_att>(<r>state</r>, {id, name}).\n" +
       "\n" +
