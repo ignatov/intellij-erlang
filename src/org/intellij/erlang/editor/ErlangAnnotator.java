@@ -29,11 +29,13 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.documentation.ErlangDocUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
@@ -108,6 +110,24 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       public void visitExportFunction(@NotNull ErlangExportFunction o) {
         super.visitExportFunction(o);
         setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.FUNCTION);
+      }
+
+      @Override
+      public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
+        super.visitFunctionCallExpression(o);
+        markCall(o.getQAtom(), annotationHolder);
+      }
+
+      @Override
+      public void visitGenericFunctionCallExpression(@NotNull ErlangGenericFunctionCallExpression o) {
+        super.visitGenericFunctionCallExpression(o);
+        markCall(PsiTreeUtil.getPrevSiblingOfType(o.getArgumentList(), ErlangQAtom.class), annotationHolder);        
+      }
+
+      @Override
+      public void visitModuleRef(@NotNull ErlangModuleRef o) {
+        super.visitModuleRef(o);
+        setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.MODULE_REF);
       }
 
       @Override
@@ -198,6 +218,12 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         }
       }
     });
+  }
+
+  private static void markCall(@Nullable ErlangQAtom atom, @NotNull AnnotationHolder annotationHolder) {
+    if (atom != null && atom.getMacros() == null) {
+      setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.FUNCTION_CALL);
+    }
   }
 
   private static void highlightEdocTags(@NotNull PsiComment comment, @NotNull AnnotationHolder annotationHolder) {

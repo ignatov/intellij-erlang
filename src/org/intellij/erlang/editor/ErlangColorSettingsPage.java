@@ -55,7 +55,9 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Edoc tag", DOC_TAG),
       new AttributesDescriptor("Function", FUNCTION),
       new AttributesDescriptor("Type", TYPE),
-      new AttributesDescriptor("Attribute", ATTRIBUTE)
+      new AttributesDescriptor("Attribute", ATTRIBUTE),
+      new AttributesDescriptor("Function call", FUNCTION_CALL),
+      new AttributesDescriptor("Module reference", MODULE_REF)
     };
   }
 
@@ -99,7 +101,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "%% Factorial implementation\n" +
       "%% <d>@doc</d> Documentation\n" +
       "<f>fac</f>(0) -> 1;\n" +
-      "<f>fac</f>(N) when N > 0, is_integer(N) -> N * fac(N-1).\n" +
+      "<f>fac</f>(N) when N > 0, is_integer(N) -> N * <c>fac</c>(N-1).\n" +
       "\n" +
       "<f>string_sample</f>(A) -> \"string\n" +
       "  second line\".\n" +
@@ -109,7 +111,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "<m_att>-spec</m_att> simple(<t>in</t>())-> <t>out</t>(). \n"  +
       "<f>simple</f>(<a>ok</a>) -> <a>ok</a>.\n" +
       "\n" +
-      "<f>use_macro</f>() -> ?<m>MACRO</m>."
+      "<f>use_macro</f>() -> <mr>io</mr>:<c>format</c>(?<m>MACRO</m>)."
       ;
   }
 
@@ -124,6 +126,8 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     map.put("f", FUNCTION);
     map.put("t", TYPE);
     map.put("m_att", ATTRIBUTE);
+    map.put("c", FUNCTION_CALL);
+    map.put("mr", MODULE_REF);
 
     return map;
   }
