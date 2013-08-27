@@ -22,6 +22,7 @@ import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.psi.ErlangArgumentDefinition;
 import org.intellij.erlang.psi.ErlangExpression;
@@ -111,6 +112,9 @@ public class ErlangIndentProcessor {
       if (elementType == ERL_END || elementType == ERL_TRY_CATCH) {
         return myErlangSettings.INDENT_RELATIVE ? Indent.getSpaceIndent(0, true) : Indent.getNoneIndent();
       }
+    }
+    if (ErlangParserDefinition.COMMENTS.contains(elementType) && (parentType == ERL_TRY_CATCH || parentType == ERL_TRY_EXPRESSION)) {
+      return Indent.getNormalIndent();
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();
