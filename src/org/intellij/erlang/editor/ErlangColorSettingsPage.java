@@ -89,7 +89,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "<m_att>-module</m_att>(fact).\n" +
       "<m_att>-export</m_att>([fac/1]).\n" +
       "\n" +
-      "<m_att>-record</m_att>(state, {id, name}).\n" +
+      "<m_att>-record</m_att>(<r>state</r>, {id, name}).\n" +
       "\n" +
       "<m_att>-define</m_att>(<m>MACRO</m>, macro_value).\n" +
       "\n" +

@@ -116,6 +116,10 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         super.visitRecordDefinition(o);
         markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
         markNameAsAttribute(o, annotationHolder, "record");
+        ErlangQAtom nameAtom = o.getQAtom();
+        if (nameAtom != null) {
+          setHighlighting(nameAtom, annotationHolder, ErlangSyntaxHighlighter.RECORDS);
+        }
       }
 
       @Override
