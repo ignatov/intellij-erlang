@@ -17,9 +17,8 @@
 package org.intellij.erlang.editor;
 
 import com.intellij.codeInsight.editorActions.smartEnter.SmartEnterProcessor;
-import com.intellij.codeInsight.template.Template;
-import com.intellij.codeInsight.template.TemplateManager;
-import com.intellij.codeInsight.template.impl.TextExpression;
+import com.intellij.codeInsight.template.*;
+import com.intellij.codeInsight.template.impl.VariableNode;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
@@ -72,7 +71,7 @@ public class ErlangClausesSmartEnterProcessor extends SmartEnterProcessor {
   private static boolean processCrClause(@NotNull Project project, @NotNull Editor editor) {
     TemplateManager templateManager = TemplateManager.getInstance(project);
     Template template = templateManager.createTemplate("", "", "\n$variable$ ->$END$");
-    TextExpression var = new TextExpression("_");
+    Expression var = new MyTextExpressionNode("_");
     template.addVariable("variable", var, var, true);
 
     editor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
@@ -97,7 +96,7 @@ public class ErlangClausesSmartEnterProcessor extends SmartEnterProcessor {
       }
       ErlangExpression expression = argumentDefinitionList.get(i).getExpression();
 
-      TextExpression foo = new TextExpression(expression.getText());
+      Expression foo = new MyTextExpressionNode(expression.getText());
       template.addVariable("variable" + i, foo, foo, true);
     }
 
@@ -112,5 +111,16 @@ public class ErlangClausesSmartEnterProcessor extends SmartEnterProcessor {
 
     templateManager.startTemplate(editor, template);
     return true;
+  }
+
+  private static class MyTextExpressionNode extends VariableNode {
+    public MyTextExpressionNode(@NotNull String name) {
+      super(name, null);
+    }
+
+    @Override
+    public Result calculateResult(ExpressionContext context) {
+      return new TextResult(getName());
+    }
   }
 }
