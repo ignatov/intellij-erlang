@@ -16,17 +16,29 @@
 
 package org.intellij.erlang.settings;
 
+import com.intellij.openapi.application.AccessToken;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.*;
+import com.intellij.openapi.roots.libraries.Library;
+import com.intellij.openapi.roots.libraries.LibraryTable;
+import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.TitledSeparator;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.ObjectUtils;
+import com.intellij.util.PlatformUtils;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.dialyzer.DialyzerSettings;
 import org.intellij.erlang.emacs.EmacsSettings;
@@ -44,7 +56,9 @@ import java.io.File;
  * @author Maxim Vladimirsky, ignatov
  */
 public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
-  public static String ERLANG_RELATED_TOOLS = "Erlang External Tools";
+  public static final String ERLANG_RELATED_TOOLS = "Erlang External Tools";
+  public static final String ERLANG_LIBRARY_NAME = "Erlang SDK";
+  private final Project myProject;
   private JPanel myPanel;
   private TextFieldWithBrowseButton myEmacsPathSelector;
   private JTextField myEmacsVersionText;
@@ -54,13 +68,18 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   private EmacsSettings myEmacsSettings;
   private RebarSettings myRebarSettings;
   private DialyzerSettings myDialyzerSettings;
+  private TextFieldWithBrowseButton mySdkPathSelector;
+  private TitledSeparator mySdkTitledSeparator;
+  private JLabel mySdkPathLabel;
 
   public ErlangExternalToolsConfigurable(@NotNull Project project) {
+    myProject = project;
     myRebarSettings = RebarSettings.getInstance(project);
     myEmacsSettings = EmacsSettings.getInstance(project);
     myDialyzerSettings = DialyzerSettings.getInstance(project);
     myEmacsPathSelector.addBrowseFolderListener("Select Emacs executable", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     myPltPathSelector.addBrowseFolderListener("Select dialyzer PLT", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
+    mySdkPathSelector.addBrowseFolderListener("Select Erlang SDK path", "", null, FileChooserDescriptorFactory.getDirectoryChooserDescriptor("Erlang SDK root"));
     myPrevEmacsPath = myEmacsSettings.getEmacsPath();
 
     if (StringUtil.isEmpty(myRebarSettings.getRebarPath())) {
@@ -82,6 +101,12 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
       if (file.exists() && FileUtil.canExecute(file)) {
         myEmacsSettings.setEmacsPath(suggestedPath);
       }
+    }
+    
+    if (!isSmallIde()) {
+      mySdkPathSelector.setVisible(false);
+      mySdkTitledSeparator.setVisible(false);
+      mySdkPathLabel.setVisible(false);
     }
 
     reset();
@@ -126,7 +151,8 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     return
          !myRebarSettings.getRebarPath().equals(myRebarConfigurationForm.getPath())
       || !myEmacsSettings.getEmacsPath().equals(emacsSelectedPath)
-      || !myDialyzerSettings.getCurrentPltPath().equals(myPltPathSelector.getText());
+      || !myDialyzerSettings.getCurrentPltPath().equals(myPltPathSelector.getText())
+      || !getErlangSdkPath().equals(mySdkPathSelector.getText());
   }
 
   @Override
@@ -134,6 +160,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myRebarSettings.setRebarPath(myRebarConfigurationForm.getPath());
     myEmacsSettings.setEmacsPath(myEmacsPathSelector.getText());
     myDialyzerSettings.setCurrentPltPath(myPltPathSelector.getText());
+    setUpOrUpdateSdk(mySdkPathSelector.getText());
   }
 
   @Override
@@ -141,6 +168,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myRebarConfigurationForm.setPath(myRebarSettings.getRebarPath());
     myEmacsPathSelector.setText(myEmacsSettings.getEmacsPath());
     myPltPathSelector.setText(myDialyzerSettings.getCurrentPltPath());
+    mySdkPathSelector.setText(getErlangSdkPath());
     validateEmacsPath();
   }
 
@@ -156,6 +184,77 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     }
     else {
       myEmacsVersionText.setText("N/A");
+    }
+  }
+  
+  private static boolean isSmallIde() {
+    return PlatformUtils.isRubyMine() || PlatformUtils.isPyCharm() || PlatformUtils.isPhpStorm() || PlatformUtils.isWebStorm();
+  }
+  
+  @NotNull
+  private String getErlangSdkPath() {
+    AccessToken token = ApplicationManager.getApplication().acquireReadActionLock();
+    try {
+      LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(myProject);
+      Library lib = table.getLibraryByName(ERLANG_LIBRARY_NAME);
+      String[] urls = lib == null ? ArrayUtil.EMPTY_STRING_ARRAY : lib.getUrls(OrderRootType.CLASSES);
+      return VfsUtilCore.urlToPath(ObjectUtils.notNull(ArrayUtil.getFirstElement(urls), ""));
+    }
+    finally {
+      token.finish();
+    }
+  }
+  
+  private void setUpOrUpdateSdk(@NotNull final String path) {
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(myProject);
+        Library get = table.getLibraryByName(ERLANG_LIBRARY_NAME);
+        Library lib = get != null ? get : table.createLibrary(ERLANG_LIBRARY_NAME);
+
+        Library.ModifiableModel libraryModel = lib.getModifiableModel();
+        String libUrl = ArrayUtil.getFirstElement(lib.getUrls(OrderRootType.CLASSES));
+        if (libUrl != null) {
+          libraryModel.removeRoot(libUrl, OrderRootType.CLASSES);
+        }
+
+        String url = VfsUtilCore.pathToUrl(path);
+        libraryModel.addRoot(url, OrderRootType.CLASSES);
+        libraryModel.commit();
+        
+        boolean remove = path.isEmpty();
+        if (remove) {
+          updateModules(lib, true);
+          table.removeLibrary(lib);
+        }
+
+        table.getModifiableModel().commit();
+
+        if (!remove) {
+          updateModules(lib, false);
+        }
+      }
+    });
+  }
+
+  private void updateModules(@NotNull Library lib, boolean remove) {
+    Module[] modules = ModuleManager.getInstance(myProject).getModules();
+    for (Module module : modules) {
+      ModifiableRootModel model = ModuleRootManager.getInstance(module).getModifiableModel();
+      if (!remove) {
+        if (model.findLibraryOrderEntry(lib) == null) {
+          LibraryOrderEntry entry = model.addLibraryEntry(lib);
+          entry.setScope(DependencyScope.PROVIDED);
+        }
+      }
+      else {
+        LibraryOrderEntry entry = model.findLibraryOrderEntry(lib);
+        if (entry != null) {
+          model.removeOrderEntry(entry);
+        }
+      }
+      model.commit();
     }
   }
 }
