@@ -24,6 +24,7 @@ public class ErlangCodeStyleSettings extends CustomCodeStyleSettings {
   public boolean ALIGN_FUNCTION_CLAUSES = false;
   public boolean ALIGN_GUARDS = false;
   public boolean INDENT_RELATIVE = true;
+  public boolean NEW_LINE_BEFORE_COMMA = false;
 
   protected ErlangCodeStyleSettings(CodeStyleSettings container) {
     super("ErlangCodeStyleSettings", container);
