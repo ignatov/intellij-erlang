@@ -57,7 +57,8 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Type", TYPE),
       new AttributesDescriptor("Attribute", ATTRIBUTE),
       new AttributesDescriptor("Function call", FUNCTION_CALL),
-      new AttributesDescriptor("Module reference", MODULE_REF)
+      new AttributesDescriptor("Module reference", MODULE_REF),
+      new AttributesDescriptor("Guards", GUARD)
     };
   }
 
@@ -101,7 +102,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "%% Factorial implementation\n" +
       "%% <d>@doc</d> Documentation\n" +
       "<f>fac</f>(0) -> 1;\n" +
-      "<f>fac</f>(N) when N > 0, is_integer(N) -> N * <c>fac</c>(N-1).\n" +
+      "<f>fac</f>(N) when N > 0, <g>is_integer</g>(N) -> N * <c>fac</c>(N-1).\n" +
       "\n" +
       "<f>string_sample</f>(A) -> \"string\n" +
       "  second line\".\n" +
@@ -128,6 +129,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     map.put("m_att", ATTRIBUTE);
     map.put("c", FUNCTION_CALL);
     map.put("mr", MODULE_REF);
+    map.put("g", GUARD);
 
     return map;
   }

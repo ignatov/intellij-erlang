@@ -115,13 +115,14 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       @Override
       public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
         super.visitFunctionCallExpression(o);
-        markCall(o.getQAtom(), annotationHolder);
+        TextAttributesKey key = o.getParent() instanceof ErlangGuard ? ErlangSyntaxHighlighter.GUARD : ErlangSyntaxHighlighter.FUNCTION_CALL;
+        markCall(o.getQAtom(), annotationHolder, key);
       }
 
       @Override
       public void visitGenericFunctionCallExpression(@NotNull ErlangGenericFunctionCallExpression o) {
         super.visitGenericFunctionCallExpression(o);
-        markCall(PsiTreeUtil.getPrevSiblingOfType(o.getArgumentList(), ErlangQAtom.class), annotationHolder);        
+        markCall(PsiTreeUtil.getPrevSiblingOfType(o.getArgumentList(), ErlangQAtom.class), annotationHolder, ErlangSyntaxHighlighter.FUNCTION_CALL);        
       }
 
       @Override
@@ -220,9 +221,9 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     });
   }
 
-  private static void markCall(@Nullable ErlangQAtom atom, @NotNull AnnotationHolder annotationHolder) {
+  private static void markCall(@Nullable ErlangQAtom atom, @NotNull AnnotationHolder annotationHolder, TextAttributesKey key) {
     if (atom != null && atom.getMacros() == null) {
-      setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.FUNCTION_CALL);
+      setHighlighting(atom, annotationHolder, key);
     }
   }
 
