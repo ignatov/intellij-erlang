@@ -1,5 +1,9 @@
   -module  (   simple )  .
 
-  -record(i, {    }  ).
+  -record(i, {    }  )  .
 
-  f(  )    ->    f(   ).
+-spec convert(tuple()) -> list()  ;
+        (  list()  ) -> tuple().
+
+  f( [] )    ->    f(   )  ;
+  f(A  )    ->    f(   )   .

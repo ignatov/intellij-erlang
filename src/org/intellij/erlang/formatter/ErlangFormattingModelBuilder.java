@@ -55,6 +55,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
     return new SpacingBuilder(settings.getRootSettings())
       .before(ERL_COMMA).spaceIf(settings.SPACE_BEFORE_COMMA)
       .after(ERL_COMMA).spaceIf(settings.SPACE_AFTER_COMMA)
+      .before(ERL_SEMI).none()
 
 //      .betweenInside(ERL_OP_EQ, ERL_BINARY_EXPRESSION, ERL_RECORD_FIELD).spaces(1)
 //      .betweenInside(ERL_OP_EQ, ERL_BINARY_TYPE, ERL_RECORD_FIELD).spaces(1)
