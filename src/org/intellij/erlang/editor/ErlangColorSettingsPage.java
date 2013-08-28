@@ -55,6 +55,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Edoc tag", DOC_TAG),
       new AttributesDescriptor("Function", FUNCTION),
       new AttributesDescriptor("Type", TYPE),
+      new AttributesDescriptor("Built-in type", BUILT_IN_TYPE),
       new AttributesDescriptor("Attribute", ATTRIBUTE),
       new AttributesDescriptor("Function call", FUNCTION_CALL),
       new AttributesDescriptor("Module reference", MODULE_REF),
@@ -99,7 +100,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "<m_att>-define</m_att>(<m>MACRO</m>, macro_value).\n" +
       "\n" +
       "<m_att>-type</m_att> <t>in</t>() :: ok | hello .\n" +
-      "<m_att>-type</m_att> <t>out</t>() :: ok | {error, <t>term</t>()}.\n" +
+      "<m_att>-type</m_att> <t>out</t>() :: ok | {error, <bt>term</bt>()}.\n" +
       "\n" +
       "%% Factorial implementation\n" +
       "%% <d>@doc</d> Documentation\n" +
@@ -116,7 +117,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "<f>use_macro</f>() -> <mr>io</mr>:<c>format</c>(?<m>MACRO</m>).\n" +
       "\n" +
-      "<m_att>-callback</m_att> <cb>start_service</cb>() -> {<a>ok</a>, <t>pid</t>()}."
+      "<m_att>-callback</m_att> <cb>start_service</cb>() -> {<a>ok</a>, <bt>pid</bt>()}."
       ;
   }
 
@@ -130,6 +131,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     map.put("r", RECORDS);
     map.put("f", FUNCTION);
     map.put("t", TYPE);
+    map.put("bt", BUILT_IN_TYPE);
     map.put("m_att", ATTRIBUTE);
     map.put("c", FUNCTION_CALL);
     map.put("mr", MODULE_REF);

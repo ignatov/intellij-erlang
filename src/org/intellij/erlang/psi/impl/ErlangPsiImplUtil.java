@@ -68,10 +68,10 @@ import java.util.*;
 
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_MACROS = ContainerUtil.set("MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE");
-  public static final Set<String> BUILT_IN_TYPES = ContainerUtil.set("term", "boolean", "byte", "char",
-    "non_neg_integer", "pos_integer", "neg_integer", "number", "integer", "float",
-    "list", "any", "maybe_improper_list", "string", "char", "nonempty_string",
-    "iolist", "module", "atom", "mfa", "node", "timeout", "no_return", "none"
+  public static final Set<String> BUILT_IN_TYPES = ContainerUtil.set(
+    "any", "atom", "boolean", "byte", "char", "float", "integer", "iolist", "list", "maybe_improper_list", "mfa",
+    "module", "neg_integer", "no_return", "node", "non_neg_integer", "none", "nonempty_string", "number", "pid", "port",
+    "pos_integer", "ref", "string", "term", "timeout"
   );
   public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 

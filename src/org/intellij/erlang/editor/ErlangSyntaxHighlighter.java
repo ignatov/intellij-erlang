@@ -50,6 +50,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey DOC_TAG       = createTextAttributesKey("ERL_DOC_TAG", DefaultLanguageHighlighterColors.DOC_COMMENT_TAG);
   public static final TextAttributesKey FUNCTION      = createTextAttributesKey("ERL_FUNCTION", CodeInsightColors.METHOD_DECLARATION_ATTRIBUTES);
   public static final TextAttributesKey TYPE          = createTextAttributesKey("ERL_TYPE", CodeInsightColors.ANNOTATION_ATTRIBUTE_NAME_ATTRIBUTES);
+  public static final TextAttributesKey BUILT_IN_TYPE = createTextAttributesKey("ERL_BUILT_IN_TYPE", CodeInsightColors.ANNOTATION_ATTRIBUTE_NAME_ATTRIBUTES);
   public static final TextAttributesKey ATTRIBUTE     = createTextAttributesKey("ERL_ATTRIBUTE", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
   public static final TextAttributesKey FUNCTION_CALL = createTextAttributesKey("ERL_FUNCTION_CALL", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
   public static final TextAttributesKey GUARD         = createTextAttributesKey("ERL_GUARD", CodeInsightColors.METHOD_CALL_ATTRIBUTES);

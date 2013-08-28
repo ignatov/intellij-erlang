@@ -34,6 +34,7 @@ import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.documentation.ErlangDocUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -207,7 +208,10 @@ public class ErlangAnnotator implements Annotator, DumbAware {
           setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.ATOM);
         }
         else if (parent instanceof ErlangTypeRef || parent instanceof ErlangTypeDefinition) {
-          if (atom != null) setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.TYPE);
+          if (atom != null) {
+            boolean builtIn = ErlangPsiImplUtil.BUILT_IN_TYPES.contains(atom.getText());
+            setHighlighting(atom, annotationHolder, builtIn ? ErlangSyntaxHighlighter.BUILT_IN_TYPE : ErlangSyntaxHighlighter.TYPE);
+          }
         }
       }
 
