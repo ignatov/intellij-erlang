@@ -53,6 +53,8 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey ATTRIBUTE     = createTextAttributesKey("ERL_ATTRIBUTE", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
   public static final TextAttributesKey FUNCTION_CALL = createTextAttributesKey("ERL_FUNCTION_CALL", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
   public static final TextAttributesKey GUARD         = createTextAttributesKey("ERL_GUARD", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
+  public static final TextAttributesKey SPEC          = createTextAttributesKey("ERL_SPEC", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
+  public static final TextAttributesKey CALLBACK      = createTextAttributesKey("ERL_CALLBACK", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
   public static final TextAttributesKey MODULE_REF    = createTextAttributesKey("ERL_MODULE_REF", DefaultLanguageHighlighterColors.CLASS_NAME);
 
   @NotNull

@@ -218,6 +218,20 @@ public class ErlangAnnotator implements Annotator, DumbAware {
           setHighlighting(erlangFunClause.getFirstChild(), annotationHolder, ErlangSyntaxHighlighter.FUNCTION);
         }
       }
+
+      @Override
+      public void visitSpecFun(@NotNull ErlangSpecFun o) {
+        super.visitSpecFun(o);
+        //noinspection unchecked
+        ErlangCompositeElement parent = PsiTreeUtil.getParentOfType(o, ErlangSpecification.class, ErlangCallbackSpec.class);
+        ErlangQAtom qAtom = o.getQAtom();
+        if (parent instanceof ErlangSpecification) {
+          setHighlighting(qAtom, annotationHolder, ErlangSyntaxHighlighter.SPEC);
+        }
+        else if (parent instanceof ErlangCallbackSpec) {
+          setHighlighting(qAtom, annotationHolder, ErlangSyntaxHighlighter.CALLBACK);
+        }
+      }
     });
   }
 

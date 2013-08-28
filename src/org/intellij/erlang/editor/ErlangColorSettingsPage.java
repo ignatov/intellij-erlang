@@ -58,7 +58,9 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       new AttributesDescriptor("Attribute", ATTRIBUTE),
       new AttributesDescriptor("Function call", FUNCTION_CALL),
       new AttributesDescriptor("Module reference", MODULE_REF),
-      new AttributesDescriptor("Guards", GUARD)
+      new AttributesDescriptor("Guards", GUARD),
+      new AttributesDescriptor("Callbacks", CALLBACK),
+      new AttributesDescriptor("Specifications", SPEC),
     };
   }
 
@@ -109,10 +111,12 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       "\n" +
       "<f>update_state</f>(State) -> State#<r>state</r>{id=10}.\n" +
       "\n" +
-      "<m_att>-spec</m_att> simple(<t>in</t>())-> <t>out</t>(). \n"  +
+      "<m_att>-spec</m_att> <s>simple</s>(<t>in</t>())-> <t>out</t>(). \n"  +
       "<f>simple</f>(<a>ok</a>) -> <a>ok</a>.\n" +
       "\n" +
-      "<f>use_macro</f>() -> <mr>io</mr>:<c>format</c>(?<m>MACRO</m>)."
+      "<f>use_macro</f>() -> <mr>io</mr>:<c>format</c>(?<m>MACRO</m>).\n" +
+      "\n" +
+      "<m_att>-callback</m_att> <cb>start_service</cb>() -> {<a>ok</a>, <t>pid</t>()}."
       ;
   }
 
@@ -130,6 +134,8 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     map.put("c", FUNCTION_CALL);
     map.put("mr", MODULE_REF);
     map.put("g", GUARD);
+    map.put("s", SPEC);
+    map.put("cb", CALLBACK);
 
     return map;
   }
