@@ -218,13 +218,19 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
     Indent childIndent = getChildIndent(myNode.getElementType(), newChildIndex);
-
-    if (childIndent != null) return new ChildAttributes(childIndent, null);
-
     IElementType type = newChildIndex > 0 ? getIElementType(newChildIndex) : null;
+    Alignment alignment = getChildAlignment(type);
+    if (childIndent != null) return new ChildAttributes(childIndent, alignment);
     if (type != null) childIndent = getChildIndent(type, newChildIndex);
-    
-    return new ChildAttributes(childIndent == null ? Indent.getNoneIndent() : childIndent, null);
+    return new ChildAttributes(childIndent == null ? Indent.getNoneIndent() : childIndent, alignment);
+  }
+
+  @Nullable
+  private Alignment getChildAlignment(@Nullable IElementType type) {
+    if (type != ERL_COMMA && myErlangSettings.NEW_LINE_BEFORE_COMMA && BRACKETS_CONTAINERS.contains(getNode().getElementType())) {
+      return getSubBlocks().get(0).getAlignment();
+    }
+    return null;
   }
 
   @Nullable

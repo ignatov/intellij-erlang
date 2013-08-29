@@ -197,6 +197,14 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testFunExpressionParasite3() throws Exception { doEnterParasiteTest(); }
   public void testFunExpressionParasite4() throws Exception { doEnterParasiteTest(); }
 
+  public void testCommaFirstEnter() throws Exception { setUpCommaFirst(); doEnterTest(); }
+  public void testCommaFirstEnter2() throws Exception { setUpCommaFirst(); doEnterTest(); }
+
+  private void setUpCommaFirst() {
+    getErlangSettings().NEW_LINE_BEFORE_COMMA = true;
+    getErlangSettings().ALIGN_MULTILINE_BLOCK = true;
+  }
+
   private ErlangCodeStyleSettings getErlangSettings() {
     return myTemporarySettings.getCustomSettings(ErlangCodeStyleSettings.class);
   }
