@@ -26,7 +26,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
-import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
@@ -43,31 +42,17 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
     CommonCodeStyleSettings commonSettings = settings.getCommonSettings(ErlangLanguage.INSTANCE);
     ErlangCodeStyleSettings erlangSettings = settings.getCustomSettings(ErlangCodeStyleSettings.class);
-    final ErlangFormattingBlock block = new ErlangFormattingBlock(element.getNode(), null, null, null, commonSettings, erlangSettings, createSpacingBuilder(commonSettings, erlangSettings));
+    final ErlangFormattingBlock block = new ErlangFormattingBlock(element.getNode(), null, null, null, commonSettings, erlangSettings, createSpacingBuilder(commonSettings));
     return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
   }
 
-  private static SpacingBuilder createSpacingBuilder(CommonCodeStyleSettings settings, ErlangCodeStyleSettings erlangSettings) {
+  private static SpacingBuilder createSpacingBuilder(CommonCodeStyleSettings settings) {
     TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
     TokenSet keywords = TokenSet.create(
       ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_CATCH, ERL_IF, ERL_RECEIVE,
       ERL_TRY, ERL_DIV, ERL_REM, ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND, ERL_BAND);
 
-    SpacingBuilder builder = new SpacingBuilder(settings.getRootSettings());
-
-    IElementType[] types = {ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES};
-    if (erlangSettings.NEW_LINE_BEFORE_COMMA) {
-      for (IElementType container : types) {
-        builder.beforeInside(ERL_COMMA, container).lineBreakInCode();
-      }
-    }
-    else {
-      for (IElementType type : types) {
-        builder.beforeInside(ERL_COMMA, type).spacing(settings.SPACE_BEFORE_COMMA ? 1 : 0, 0, 0, false, 0);
-      }
-    }
-    
-    return builder
+    return new SpacingBuilder(settings.getRootSettings())
       .before(ERL_COMMA).spaceIf(settings.SPACE_BEFORE_COMMA)
       .after(ERL_COMMA).spaceIf(settings.SPACE_AFTER_COMMA)
       .before(ERL_SEMI).none()

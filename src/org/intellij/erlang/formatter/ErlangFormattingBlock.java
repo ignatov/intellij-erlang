@@ -185,11 +185,33 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Nullable
   public Spacing getSpacing(@Nullable Block child1, @NotNull Block child2) {
     if (child2 instanceof ErlangFormattingBlock) {
-      if (COMMENTS.contains(((ErlangFormattingBlock) child2).getNode().getElementType()) && mySettings.KEEP_FIRST_COLUMN_COMMENT) {
+      ASTNode node = ((ErlangFormattingBlock) child2).getNode();
+      if (COMMENTS.contains(node.getElementType()) && mySettings.KEEP_FIRST_COLUMN_COMMENT) {
         return Spacing.createKeepingFirstColumnSpacing(0, Integer.MAX_VALUE, true, mySettings.KEEP_BLANK_LINES_IN_CODE);
+      }
+      if (commaInsideMultilineList(node)) {
+        if (myErlangSettings.NEW_LINE_BEFORE_COMMA) {
+          return Spacing.createSpacing(0, 0, 1, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
+        }
+        else {
+          return Spacing.createSpacing(mySettings.SPACE_BEFORE_COMMA ? 1 : 0, 0, 0, false, 0);
+        }
+      }
+    }
+    if (child1 instanceof ErlangFormattingBlock) {
+      if (commaInsideMultilineList(((ErlangFormattingBlock) child1).getNode())) {
+        if (myErlangSettings.NEW_LINE_BEFORE_COMMA) {
+          return Spacing.createSpacing(mySettings.SPACE_AFTER_COMMA ? 1 : 0, 0, 0, false, 0);
+        }
       }
     }
     return mySpacingBuilder.getSpacing(this, child1, child2);
+  }
+
+  private static boolean commaInsideMultilineList(@NotNull ASTNode node) {
+    ASTNode parent = node.getTreeParent();
+    IElementType type = node.getElementType();
+    return type == ERL_COMMA && BRACKETS_CONTAINERS.contains(parent.getElementType()) && StringUtil.countNewLines(parent.getText()) > 0;
   }
 
   @NotNull
