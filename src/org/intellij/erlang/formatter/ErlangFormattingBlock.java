@@ -66,7 +66,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_PARENTHESIZED_EXPRESSION, ERL_ARGUMENT_LIST, ERL_ARGUMENT_DEFINITION_LIST, ERL_FUN_TYPE
   );
   public static final TokenSet BRACKETS_CONTAINERS = TokenSet.create(
-    ERL_LIST_EXPRESSION, ERL_LIST_COMPREHENSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES
+    ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES
   );
 
   private final Indent myIndent;
@@ -130,19 +130,19 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (myErlangSettings.ALIGN_MULTILINE_BLOCK) {
       if (PARENTHESIS_CONTAINERS.contains(parentType)) {
-        boolean special = childType == ERL_PAR_LEFT || childType == ERL_PAR_RIGHT || childType == ERL_COMMA;
-        if (!special) return baseAlignment;
-        if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
+        if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT && childType != ERL_COMMA) return baseAlignment;
       }
       if (CURLY_CONTAINERS.contains(parentType)) {
-        boolean special = childType == ERL_CURLY_LEFT || childType == ERL_CURLY_RIGHT || childType == ERL_COMMA;
-        if (!special) return baseAlignment;
-        if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
+        if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT && childType != ERL_COMMA) return baseAlignment;
       }
       if (BRACKETS_CONTAINERS.contains(parentType)) {
         boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA;
-        if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) return baseAlignment;
+        if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END) return baseAlignment;
         if (myErlangSettings.NEW_LINE_BEFORE_COMMA && bracketsAndComma) return baseAlignment2;
+      }
+      if (parentType == ERL_LIST_COMPREHENSION) {
+        boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA;
+        if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) return baseAlignment;
       }
       if (parentType == ERL_FUN_TYPE_SIGS && childType == ERL_TYPE_SIG) {
         return baseAlignment;

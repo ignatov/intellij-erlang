@@ -55,11 +55,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
 
     SpacingBuilder builder = new SpacingBuilder(settings.getRootSettings());
 
-    IElementType[] types = {
-      ERL_LIST_EXPRESSION, ERL_LIST_COMPREHENSION, ERL_EXPORT_FUNCTIONS,
-      ERL_TUPLE_EXPRESSION, ERL_TYPED_RECORD_FIELDS,
-//        ERL_GUARD,
-    };
+    IElementType[] types = {ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES};
     if (erlangSettings.NEW_LINE_BEFORE_COMMA) {
       for (IElementType container : types) {
         builder.beforeInside(ERL_COMMA, container).lineBreakInCode();
@@ -183,7 +179,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .before(ERL_END).spaces(1)
 
       .before(ERL_OPT_BIT_TYPE_LIST).none()
-      .betweenInside(ERL_OP_AR_DIV ,ERL_BIT_TYPE, ERL_OPT_BIT_TYPE_LIST).none()
+      .betweenInside(ERL_OP_AR_DIV, ERL_BIT_TYPE, ERL_OPT_BIT_TYPE_LIST).none()
       .afterInside(ERL_OP_MINUS, ERL_RECORD_DEFINITION).none()
       .afterInside(ERL_OP_MINUS, ERL_TYPE_DEFINITION).none()
       .afterInside(ERL_OP_MINUS, ERL_INCLUDE_LIB).none()
