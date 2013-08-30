@@ -111,6 +111,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_FUNCTION_CLAUSES", "Function clauses", "Alignment");
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_GUARDS", "Guards", "Alignment");
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "INDENT_RELATIVE", "Honor relative", null);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "NEW_LINE_BEFORE_COMMA", "Comma first style", null);
     }
   }
 

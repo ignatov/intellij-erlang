@@ -59,6 +59,15 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_TYPE_SIG_GUARD,
     ERL_AFTER_CLAUSE
   );
+  public static final TokenSet CURLY_CONTAINERS = TokenSet.create(
+    ERL_TUPLE_EXPRESSION, ERL_RECORD_TUPLE, ERL_TYPED_RECORD_FIELDS, ERL_RECORD_FIELDS
+  );
+  public static final TokenSet PARENTHESIS_CONTAINERS = TokenSet.create(
+    ERL_PARENTHESIZED_EXPRESSION, ERL_ARGUMENT_LIST, ERL_ARGUMENT_DEFINITION_LIST, ERL_FUN_TYPE
+  );
+  public static final TokenSet BRACKETS_CONTAINERS = TokenSet.create(
+    ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES
+  );
 
   private final Indent myIndent;
   private final AlignmentStrategy myAlignmentStrategy;
@@ -98,58 +107,52 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
   private List<Block> buildSubBlocks() {
     List<Block> blocks = new ArrayList<Block>();
-    Alignment baseAlignment = Alignment.createAlignment();
+    Alignment baseAlignment = Alignment.createAlignment(true);
+    Alignment baseAlignment2 = Alignment.createAlignment(true);
     AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
 
     for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
       IElementType childType = child.getElementType();
       if (child.getTextRange().getLength() == 0 || childType == TokenType.WHITE_SPACE) continue;
 
-      Alignment alignment = getAlignment(getNode(), child, baseAlignment);
+      Alignment alignment = getAlignment(getNode(), child, baseAlignment, baseAlignment2);
       blocks.add(new ErlangFormattingBlock(child, alignment, alignmentStrategy, null, mySettings, myErlangSettings, mySpacingBuilder));
     }
     return Collections.unmodifiableList(blocks);
   }
 
   @Nullable
-  private Alignment getAlignment(@NotNull ASTNode parent, @NotNull ASTNode child, @Nullable Alignment baseAlignment) {
+  private Alignment getAlignment(@NotNull ASTNode parent, @NotNull ASTNode child, @Nullable Alignment baseAlignment, @Nullable Alignment baseAlignment2) {
     IElementType childType = child.getElementType();
     IElementType parentType = parent.getElementType();
     Alignment fromStrategy = calculateAlignmentFromStrategy(parent, child);
     if (fromStrategy != null) return fromStrategy;
 
     if (myErlangSettings.ALIGN_MULTILINE_BLOCK) {
-      if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_LIST
-        || parentType == ERL_ARGUMENT_DEFINITION_LIST || parentType == ERL_FUN_TYPE) {
-        if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT) {
-          return baseAlignment;
-        }
+      if (PARENTHESIS_CONTAINERS.contains(parentType)) {
+        if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT && childType != ERL_COMMA) return baseAlignment;
       }
-      if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS || parentType == ERL_RECORD_FIELDS) {
-        if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT) {
-          return baseAlignment;
-        }
+      if (CURLY_CONTAINERS.contains(parentType)) {
+        if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT && childType != ERL_COMMA) return baseAlignment;
       }
-      if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS || parentType == ERL_EXPORT_TYPES) {
-        if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) {
-          return baseAlignment;
-        }
+      if (BRACKETS_CONTAINERS.contains(parentType)) {
+        boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA;
+        if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END) return baseAlignment;
+        if (myErlangSettings.NEW_LINE_BEFORE_COMMA && bracketsAndComma) return baseAlignment2;
       }
-      if (parentType == ERL_FUN_TYPE_SIGS) {
-        if (childType == ERL_TYPE_SIG) {
-          return baseAlignment;
-        }
+      if (parentType == ERL_LIST_COMPREHENSION) {
+        boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA;
+        if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) return baseAlignment;
+      }
+      if (parentType == ERL_FUN_TYPE_SIGS && childType == ERL_TYPE_SIG) {
+        return baseAlignment;
       }
       PsiElement psi = parent.getPsi();
       if (psi instanceof ErlangFakeBinaryExpression) {
         return baseAlignment;
       }
     }
-    if (myErlangSettings.ALIGN_GUARDS && parentType == ERL_GUARD) {
-      if (childType != ERL_COMMA) {
-        return baseAlignment;
-      }
-    }
+    if (myErlangSettings.ALIGN_GUARDS && parentType == ERL_GUARD && childType != ERL_COMMA) return baseAlignment;
     return null;
   }
 
@@ -182,24 +185,52 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Nullable
   public Spacing getSpacing(@Nullable Block child1, @NotNull Block child2) {
     if (child2 instanceof ErlangFormattingBlock) {
-      if (COMMENTS.contains(((ErlangFormattingBlock) child2).getNode().getElementType()) && mySettings.KEEP_FIRST_COLUMN_COMMENT) {
+      ASTNode node = ((ErlangFormattingBlock) child2).getNode();
+      if (COMMENTS.contains(node.getElementType()) && mySettings.KEEP_FIRST_COLUMN_COMMENT) {
         return Spacing.createKeepingFirstColumnSpacing(0, Integer.MAX_VALUE, true, mySettings.KEEP_BLANK_LINES_IN_CODE);
+      }
+      if (commaInsideMultilineList(node)) {
+        if (myErlangSettings.NEW_LINE_BEFORE_COMMA) {
+          return Spacing.createSpacing(0, 0, 1, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
+        }
+        else {
+          return Spacing.createSpacing(mySettings.SPACE_BEFORE_COMMA ? 1 : 0, 0, 0, false, 0);
+        }
+      }
+    }
+    if (child1 instanceof ErlangFormattingBlock) {
+      if (commaInsideMultilineList(((ErlangFormattingBlock) child1).getNode())) {
+        if (myErlangSettings.NEW_LINE_BEFORE_COMMA) {
+          return Spacing.createSpacing(mySettings.SPACE_AFTER_COMMA ? 1 : 0, 0, 0, false, 0);
+        }
       }
     }
     return mySpacingBuilder.getSpacing(this, child1, child2);
+  }
+
+  private static boolean commaInsideMultilineList(@NotNull ASTNode node) {
+    ASTNode parent = node.getTreeParent();
+    IElementType type = node.getElementType();
+    return type == ERL_COMMA && BRACKETS_CONTAINERS.contains(parent.getElementType()) && StringUtil.countNewLines(parent.getText()) > 0;
   }
 
   @NotNull
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
     Indent childIndent = getChildIndent(myNode.getElementType(), newChildIndex);
-
-    if (childIndent != null) return new ChildAttributes(childIndent, null);
-
     IElementType type = newChildIndex > 0 ? getIElementType(newChildIndex) : null;
+    Alignment alignment = getChildAlignment(type);
+    if (childIndent != null) return new ChildAttributes(childIndent, alignment);
     if (type != null) childIndent = getChildIndent(type, newChildIndex);
-    
-    return new ChildAttributes(childIndent == null ? Indent.getNoneIndent() : childIndent, null);
+    return new ChildAttributes(childIndent == null ? Indent.getNoneIndent() : childIndent, alignment);
+  }
+
+  @Nullable
+  private Alignment getChildAlignment(@Nullable IElementType type) {
+    if (type != ERL_COMMA && myErlangSettings.NEW_LINE_BEFORE_COMMA && BRACKETS_CONTAINERS.contains(getNode().getElementType())) {
+      return getSubBlocks().get(0).getAlignment();
+    }
+    return null;
   }
 
   @Nullable

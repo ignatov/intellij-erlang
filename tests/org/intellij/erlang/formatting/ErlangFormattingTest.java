@@ -101,6 +101,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test222_1()  throws Exception { getErlangSettings().INDENT_RELATIVE = true; doTest(); }
   public void test222_2()  throws Exception { getErlangSettings().INDENT_RELATIVE = false; doTest(); }
   public void test273()    throws Exception { getErlangSettings().ALIGN_GUARDS = true; doTest(); }
+  
+  public void test292()    throws Exception { 
+    getErlangSettings().ALIGN_MULTILINE_BLOCK = true; 
+    getErlangSettings().NEW_LINE_BEFORE_COMMA = true; 
+    doTest(); 
+  }
 
   public void testAligned() throws Exception {
     getErlangSettings().ALIGN_MULTILINE_BLOCK = true;
@@ -190,6 +196,14 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testFunExpressionParasite2() throws Exception { doEnterParasiteTest(); }
   public void testFunExpressionParasite3() throws Exception { doEnterParasiteTest(); }
   public void testFunExpressionParasite4() throws Exception { doEnterParasiteTest(); }
+
+  public void testCommaFirstEnter() throws Exception { setUpCommaFirst(); doEnterTest(); }
+  public void testCommaFirstEnter2() throws Exception { setUpCommaFirst(); doEnterTest(); }
+
+  private void setUpCommaFirst() {
+    getErlangSettings().NEW_LINE_BEFORE_COMMA = true;
+    getErlangSettings().ALIGN_MULTILINE_BLOCK = true;
+  }
 
   private ErlangCodeStyleSettings getErlangSettings() {
     return myTemporarySettings.getCustomSettings(ErlangCodeStyleSettings.class);
