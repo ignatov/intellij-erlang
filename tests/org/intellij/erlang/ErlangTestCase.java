@@ -20,6 +20,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.intellij.erlang.compilation.ErlangDependenciesResolutionTest;
 import org.intellij.erlang.completion.ErlangCompletionTest;
+import org.intellij.erlang.completion.ErlangCompletionWithSdkTest;
 import org.intellij.erlang.console.FileReferenceFilterTest;
 import org.intellij.erlang.documentation.ErlangDocumentationProviderTest;
 import org.intellij.erlang.eunit.ErlangUnitTestElementUtilTest;
@@ -57,6 +58,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangFormattingTest.class);
     suite.addTestSuite(ErlangAutoIndentTest.class);
     suite.addTestSuite(ErlangCompletionTest.class);
+    suite.addTestSuite(ErlangCompletionWithSdkTest.class);
     suite.addTestSuite(RebarProjectImportBuilderTest.class);
     suite.addTestSuite(FileReferenceFilterTest.class);
     suite.addTestSuite(ErlangDocumentationProviderTest.class);

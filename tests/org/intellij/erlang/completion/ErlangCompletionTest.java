@@ -19,40 +19,16 @@ package org.intellij.erlang.completion;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.openapi.util.Condition;
-import com.intellij.psi.impl.source.tree.injected.InjectedLanguageManagerImpl;
-import com.intellij.testFramework.UsefulTestCase;
-import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
-import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
-import com.intellij.testFramework.fixtures.TestFixtureBuilder;
-import com.intellij.testFramework.fixtures.impl.TempDirTestFixtureImpl;
 import com.intellij.util.ArrayUtilRt;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
  * @author ignatov
  */
-public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  private enum CheckType { EQUALS, INCLUDES, EXCLUDES }
-
-  @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
-  protected String getTestDataPath() {
-    return "testData/completion/";
-  }
-
+public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testKeywords1() throws Throwable { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() throws Throwable { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() throws Throwable { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
@@ -218,28 +194,6 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
     doTestVariants("% <caret>", CompletionType.BASIC, 1, CheckType.EQUALS);
   }
 
-  private void localFileSystemSetUp() throws Exception {
-    IdeaTestFixtureFactory factory = IdeaTestFixtureFactory.getFixtureFactory();
-    TestFixtureBuilder<IdeaProjectTestFixture> fixtureBuilder = factory.createLightFixtureBuilder(getProjectDescriptor());
-
-    final IdeaProjectTestFixture fixture = fixtureBuilder.getFixture();
-    myFixture = IdeaTestFixtureFactory.getFixtureFactory().createCodeInsightFixture(fixture, new TempDirTestFixtureImpl());
-
-    InjectedLanguageManagerImpl.checkInjectorsAreDisposed(getProject());
-    myFixture.setUp();
-    myFixture.setTestDataPath(getTestDataPath());
-    myModule = myFixture.getModule();
-  }
-  
-  private void doCheckResult(@NotNull String before, @NotNull String after) { doCheckResult(before, after, null); }
-  
-  private void doCheckResult(@NotNull String before, @NotNull String after, @Nullable Character c) {
-    myFixture.configureByText("a.erl", before);
-    myFixture.completeBasic();
-    if (c != null) myFixture.type(c);
-    myFixture.checkResult(after);
-  }
-
   public void testIncludeCompletion() throws Throwable {
     localFileSystemSetUp();
     myFixture.configureByFiles("include/includeCompletion.erl", "include/include/header.hrl");
@@ -257,36 +211,5 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
                                "include-lib-empty/testapp/ebin/testapp.app",
                                "include-lib-empty/testapp/include/includefile.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "testapp/");
-  }
-
-  private void doTestInclude(String txt, String... variants) throws Throwable {
-    doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
-  }
-  
-  private void doTestEquals(String txt, String... variants) throws Throwable {
-    doTestVariants(txt, CompletionType.BASIC, 1, CheckType.EQUALS, variants);
-  }
-
-  protected void doTestVariants(String txt, CompletionType type, int count, CheckType checkType, String... variants) throws Throwable {
-    myFixture.configureByText("a.erl", txt);
-    doTestVariantsInner(type, count, checkType, variants);
-  }
-
-  protected void doTestVariantsInner(CompletionType type, int count, CheckType checkType, String... variants) throws Throwable {
-    myFixture.complete(type, count);
-    List<String> stringList = myFixture.getLookupElementStrings();
-    assertNotNull(stringList);
-    Collection<String> varList = new ArrayList<String>(Arrays.asList(variants));
-    if (checkType == CheckType.EQUALS) {
-      UsefulTestCase.assertSameElements(stringList, variants);
-    }
-    else if (checkType == CheckType.INCLUDES) {
-      varList.removeAll(stringList);
-      assertTrue("Missing variants: " + varList, varList.isEmpty());
-    }
-    else if (checkType == CheckType.EXCLUDES) {
-      varList.retainAll(stringList);
-      assertTrue("Unexpected variants: " + varList, varList.isEmpty());
-    }
   }
 }
