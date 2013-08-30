@@ -40,8 +40,8 @@ ERL_FILE
                   PsiElement(atom)('id')
                 PsiErrorElement:'=' expected, got ','
                   <empty list>
-        PsiElement(,)(',')
-        PsiErrorElement:<expression> or <record field> expected, got '}'
-          <empty list>
-    PsiElement(})('}')
+              PsiElement(,)(',')
+              PsiErrorElement:<record field> expected, got '}'
+                <empty list>
+            PsiElement(})('}')
     PsiElement(.)('.')

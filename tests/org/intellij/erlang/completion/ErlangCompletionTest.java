@@ -66,6 +66,18 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
       "-record(foo, {id}).\n" +
       "-record(buz, {id}).\n" +
       "bar(A)-> A#<caret>", "foo", "buz");
+  }  
+  
+  public void testRecordFields() throws Throwable {
+    doTestEquals(
+      "-record(foo, {id, two}).\n" +
+      "bar(A)-> #foo{<caret>}", "id", "two");
+  }
+  
+  public void testRecordFields2() throws Throwable {
+    doTestEquals(
+      "-record(foo, {id, two}).\n" +
+      "bar(A)-> #foo{two=1,<caret>}", "id", "two");
   }
 
   public void testMacros() throws Throwable {
@@ -229,6 +241,10 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
 
   private void doTestInclude(String txt, String... variants) throws Throwable {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
+  }
+  
+  private void doTestEquals(String txt, String... variants) throws Throwable {
+    doTestVariants(txt, CompletionType.BASIC, 1, CheckType.EQUALS, variants);
   }
 
   protected void doTestVariants(String txt, CompletionType type, int count, CheckType checkType, String... variants) throws Throwable {

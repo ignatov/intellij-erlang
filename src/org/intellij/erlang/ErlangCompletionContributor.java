@@ -147,17 +147,17 @@ public class ErlangCompletionContributor extends CompletionContributor {
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, qAtom));
           }
           else if (originalParent instanceof ErlangRecordFields || parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
-            Pair<List<ErlangTypedExpr>,List<ErlangQAtom>> recordFields = ErlangPsiImplUtil.getRecordFields(parent);
+            Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = ErlangPsiImplUtil.getRecordFields(parent);
             result.addAllElements(ContainerUtil.map(recordFields.first, new Function<ErlangTypedExpr, LookupElement>() {
               @Override
               public LookupElement fun(ErlangTypedExpr a) {
-                return LookupElementBuilder.create(a.getName()).withIcon(ErlangIcons.FIELD);
+                return createFieldLookupElement(a.getName());
               }
             }));
             result.addAllElements(ContainerUtil.map(recordFields.second, new Function<ErlangQAtom, LookupElement>() {
               @Override
               public LookupElement fun(ErlangQAtom a) {
-                return LookupElementBuilder.create(a.getText()).withIcon(ErlangIcons.FIELD);
+                return createFieldLookupElement(a.getText());
               }
             }));
             return;
@@ -193,6 +193,10 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
       }
     });
+  }
+
+  private static LookupElement createFieldLookupElement(String text) {
+    return LookupElementBuilder.create(text).withIcon(ErlangIcons.FIELD).withInsertHandler(new SingleCharInsertHandler('='));
   }
 
   @NotNull
