@@ -16,6 +16,11 @@ public class ErlangTypedAttrValImpl extends ErlangCompositeElementImpl implement
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedAttrVal(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangExpression getExpression() {
@@ -32,11 +37,6 @@ public class ErlangTypedAttrValImpl extends ErlangCompositeElementImpl implement
   @Nullable
   public ErlangTypedRecordFields getTypedRecordFields() {
     return findChildByClass(ErlangTypedRecordFields.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedAttrVal(this);
-    else super.accept(visitor);
   }
 
 }

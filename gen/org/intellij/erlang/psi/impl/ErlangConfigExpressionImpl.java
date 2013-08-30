@@ -16,6 +16,11 @@ public class ErlangConfigExpressionImpl extends ErlangExpressionImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitConfigExpression(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangQAtom getQAtom() {
@@ -56,11 +61,6 @@ public class ErlangConfigExpressionImpl extends ErlangExpressionImpl implements 
   @Nullable
   public PsiElement getNot() {
     return findChildByType(ERL_NOT);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitConfigExpression(this);
-    else super.accept(visitor);
   }
 
 }

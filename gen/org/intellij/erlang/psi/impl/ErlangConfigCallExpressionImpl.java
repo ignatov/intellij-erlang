@@ -16,6 +16,11 @@ public class ErlangConfigCallExpressionImpl extends ErlangExpressionImpl impleme
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitConfigCallExpression(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangArgumentList getArgumentList() {
@@ -26,11 +31,6 @@ public class ErlangConfigCallExpressionImpl extends ErlangExpressionImpl impleme
   @NotNull
   public ErlangQAtom getQAtom() {
     return findNotNullChildByClass(ErlangQAtom.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitConfigCallExpression(this);
-    else super.accept(visitor);
   }
 
 }

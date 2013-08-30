@@ -16,15 +16,15 @@ public class ErlangParenthesizedExpressionImpl extends ErlangExpressionImpl impl
     super(node);
   }
 
-  @Override
-  @NotNull
-  public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
-  }
-
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitParenthesizedExpression(this);
     else super.accept(visitor);
+  }
+
+  @Override
+  @Nullable
+  public ErlangExpression getExpression() {
+    return findChildByClass(ErlangExpression.class);
   }
 
 }

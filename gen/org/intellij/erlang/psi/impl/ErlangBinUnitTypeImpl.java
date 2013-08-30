@@ -16,6 +16,11 @@ public class ErlangBinUnitTypeImpl extends ErlangCompositeElementImpl implements
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinUnitType(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangQVar> getQVarList() {
@@ -26,11 +31,6 @@ public class ErlangBinUnitTypeImpl extends ErlangCompositeElementImpl implements
   @NotNull
   public PsiElement getInteger() {
     return findNotNullChildByType(ERL_INTEGER);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinUnitType(this);
-    else super.accept(visitor);
   }
 
 }

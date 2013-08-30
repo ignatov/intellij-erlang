@@ -17,15 +17,15 @@ public class ErlangTypeRefImpl extends ErlangCompositeElementImpl implements Erl
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeRef(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangQAtom getQAtom() {
     return findNotNullChildByClass(ErlangQAtom.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeRef(this);
-    else super.accept(visitor);
   }
 
   @Nullable

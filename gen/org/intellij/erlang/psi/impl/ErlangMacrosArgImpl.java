@@ -16,15 +16,15 @@ public class ErlangMacrosArgImpl extends ErlangCompositeElementImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosArg(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangMacrosName getMacrosName() {
     return findNotNullChildByClass(ErlangMacrosName.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosArg(this);
-    else super.accept(visitor);
   }
 
 }

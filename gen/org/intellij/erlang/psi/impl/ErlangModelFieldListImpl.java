@@ -16,15 +16,15 @@ public class ErlangModelFieldListImpl extends ErlangCompositeElementImpl impleme
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitModelFieldList(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangArgumentDefinition> getArgumentDefinitionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangArgumentDefinition.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitModelFieldList(this);
-    else super.accept(visitor);
   }
 
 }

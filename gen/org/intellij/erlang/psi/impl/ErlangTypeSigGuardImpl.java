@@ -16,6 +16,11 @@ public class ErlangTypeSigGuardImpl extends ErlangCompositeElementImpl implement
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeSigGuard(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangTypeGuard> getTypeGuardList() {
@@ -26,11 +31,6 @@ public class ErlangTypeSigGuardImpl extends ErlangCompositeElementImpl implement
   @NotNull
   public PsiElement getWhen() {
     return findNotNullChildByType(ERL_WHEN);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeSigGuard(this);
-    else super.accept(visitor);
   }
 
 }

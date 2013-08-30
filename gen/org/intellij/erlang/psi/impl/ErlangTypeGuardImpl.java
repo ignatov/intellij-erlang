@@ -16,6 +16,11 @@ public class ErlangTypeGuardImpl extends ErlangCompositeElementImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeGuard(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangQAtom getQAtom() {
@@ -26,11 +31,6 @@ public class ErlangTypeGuardImpl extends ErlangCompositeElementImpl implements E
   @NotNull
   public List<ErlangTopType> getTopTypeList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeGuard(this);
-    else super.accept(visitor);
   }
 
 }

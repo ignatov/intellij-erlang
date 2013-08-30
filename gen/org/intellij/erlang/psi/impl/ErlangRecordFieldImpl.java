@@ -17,6 +17,11 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordField(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangExpression getExpression() {
@@ -27,11 +32,6 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
   @NotNull
   public List<ErlangQAtom> getQAtomList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordField(this);
-    else super.accept(visitor);
   }
 
   @Nullable

@@ -16,6 +16,11 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitType(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangBinaryType getBinaryType() {
@@ -74,11 +79,6 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
   @Nullable
   public PsiElement getFun() {
     return findChildByType(ERL_FUN);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitType(this);
-    else super.accept(visitor);
   }
 
 }

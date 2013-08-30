@@ -16,15 +16,15 @@ public class ErlangExportFunctionsImpl extends ErlangCompositeElementImpl implem
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExportFunctions(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangExportFunction> getExportFunctionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExportFunction.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExportFunctions(this);
-    else super.accept(visitor);
   }
 
 }

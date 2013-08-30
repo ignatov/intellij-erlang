@@ -18,6 +18,11 @@ public class ErlangModuleImpl extends ErlangNamedElementImpl implements ErlangMo
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitModule(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangArgumentDefinition getArgumentDefinition() {
@@ -34,11 +39,6 @@ public class ErlangModuleImpl extends ErlangNamedElementImpl implements ErlangMo
   @Nullable
   public ErlangQAtom getQAtom() {
     return findChildByClass(ErlangQAtom.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitModule(this);
-    else super.accept(visitor);
   }
 
   @NotNull

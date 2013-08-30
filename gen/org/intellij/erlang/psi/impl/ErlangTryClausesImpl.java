@@ -16,15 +16,15 @@ public class ErlangTryClausesImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryClauses(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangTryClause> getTryClauseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTryClause.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryClauses(this);
-    else super.accept(visitor);
   }
 
 }

@@ -16,6 +16,11 @@ public class ErlangMacrosNameImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosName(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public PsiElement getAtom() {
@@ -26,11 +31,6 @@ public class ErlangMacrosNameImpl extends ErlangCompositeElementImpl implements 
   @Nullable
   public PsiElement getVar() {
     return findChildByType(ERL_VAR);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosName(this);
-    else super.accept(visitor);
   }
 
 }

@@ -17,15 +17,15 @@ public class ErlangIncludeStringImpl extends ErlangCompositeElementImpl implemen
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIncludeString(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public PsiElement getString() {
     return findNotNullChildByType(ERL_STRING);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIncludeString(this);
-    else super.accept(visitor);
   }
 
   @Nullable

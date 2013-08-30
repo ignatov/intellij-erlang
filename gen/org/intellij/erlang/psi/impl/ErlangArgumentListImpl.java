@@ -16,6 +16,11 @@ public class ErlangArgumentListImpl extends ErlangCompositeElementImpl implement
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitArgumentList(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangClauseGuard> getClauseGuardList() {
@@ -26,11 +31,6 @@ public class ErlangArgumentListImpl extends ErlangCompositeElementImpl implement
   @NotNull
   public List<ErlangExpression> getExpressionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitArgumentList(this);
-    else super.accept(visitor);
   }
 
 }

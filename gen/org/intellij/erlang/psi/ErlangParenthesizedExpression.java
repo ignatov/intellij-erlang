@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangParenthesizedExpression extends ErlangExpression {
 
-  @NotNull
+  @Nullable
   ErlangExpression getExpression();
 
 }

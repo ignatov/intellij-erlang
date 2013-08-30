@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangPrefixExpression extends ErlangExpression {
 
-  @NotNull
+  @Nullable
   ErlangExpression getExpression();
 
   @Nullable

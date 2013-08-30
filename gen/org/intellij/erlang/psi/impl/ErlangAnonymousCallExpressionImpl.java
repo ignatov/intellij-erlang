@@ -16,6 +16,11 @@ public class ErlangAnonymousCallExpressionImpl extends ErlangExpressionImpl impl
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAnonymousCallExpression(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangArgumentList getArgumentList() {
@@ -26,11 +31,6 @@ public class ErlangAnonymousCallExpressionImpl extends ErlangExpressionImpl impl
   @NotNull
   public ErlangExpression getExpression() {
     return findNotNullChildByClass(ErlangExpression.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAnonymousCallExpression(this);
-    else super.accept(visitor);
   }
 
 }

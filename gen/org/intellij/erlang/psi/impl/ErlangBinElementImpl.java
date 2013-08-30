@@ -16,6 +16,11 @@ public class ErlangBinElementImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinElement(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangExpression> getExpressionList() {
@@ -38,11 +43,6 @@ public class ErlangBinElementImpl extends ErlangCompositeElementImpl implements 
   @Nullable
   public PsiElement getNot() {
     return findChildByType(ERL_NOT);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinElement(this);
-    else super.accept(visitor);
   }
 
 }

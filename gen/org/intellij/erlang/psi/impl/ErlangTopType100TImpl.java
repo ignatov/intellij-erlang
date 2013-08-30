@@ -16,6 +16,11 @@ public class ErlangTopType100TImpl extends ErlangCompositeElementImpl implements
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTopType100T(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangTopType100T getTopType100T() {
@@ -26,11 +31,6 @@ public class ErlangTopType100TImpl extends ErlangCompositeElementImpl implements
   @NotNull
   public ErlangType getType() {
     return findNotNullChildByClass(ErlangType.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTopType100T(this);
-    else super.accept(visitor);
   }
 
 }

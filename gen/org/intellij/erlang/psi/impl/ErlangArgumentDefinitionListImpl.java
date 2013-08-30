@@ -16,15 +16,15 @@ public class ErlangArgumentDefinitionListImpl extends ErlangCompositeElementImpl
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitArgumentDefinitionList(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangArgumentDefinition> getArgumentDefinitionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangArgumentDefinition.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitArgumentDefinitionList(this);
-    else super.accept(visitor);
   }
 
 }

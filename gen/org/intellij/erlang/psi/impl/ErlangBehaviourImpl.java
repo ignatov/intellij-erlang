@@ -16,15 +16,15 @@ public class ErlangBehaviourImpl extends ErlangCompositeElementImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBehaviour(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangModuleRef getModuleRef() {
     return findChildByClass(ErlangModuleRef.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBehaviour(this);
-    else super.accept(visitor);
   }
 
   @NotNull

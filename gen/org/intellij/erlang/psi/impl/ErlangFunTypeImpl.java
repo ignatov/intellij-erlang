@@ -16,6 +16,11 @@ public class ErlangFunTypeImpl extends ErlangCompositeElementImpl implements Erl
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunType(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangFunTypeArguments getFunTypeArguments() {
@@ -26,11 +31,6 @@ public class ErlangFunTypeImpl extends ErlangCompositeElementImpl implements Erl
   @Nullable
   public ErlangTopTypeClause getTopTypeClause() {
     return findChildByClass(ErlangTopTypeClause.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunType(this);
-    else super.accept(visitor);
   }
 
 }

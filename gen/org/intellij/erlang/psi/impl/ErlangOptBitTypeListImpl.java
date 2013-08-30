@@ -16,15 +16,15 @@ public class ErlangOptBitTypeListImpl extends ErlangCompositeElementImpl impleme
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitOptBitTypeList(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangBitType> getBitTypeList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangBitType.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitOptBitTypeList(this);
-    else super.accept(visitor);
   }
 
 }

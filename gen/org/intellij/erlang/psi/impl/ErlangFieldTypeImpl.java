@@ -17,6 +17,11 @@ public class ErlangFieldTypeImpl extends ErlangCompositeElementImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFieldType(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangQAtom getQAtom() {
@@ -27,11 +32,6 @@ public class ErlangFieldTypeImpl extends ErlangCompositeElementImpl implements E
   @Nullable
   public ErlangTopType getTopType() {
     return findChildByClass(ErlangTopType.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFieldType(this);
-    else super.accept(visitor);
   }
 
   @Nullable

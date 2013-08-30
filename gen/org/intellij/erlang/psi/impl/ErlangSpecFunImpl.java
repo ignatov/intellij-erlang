@@ -17,6 +17,11 @@ public class ErlangSpecFunImpl extends ErlangCompositeElementImpl implements Erl
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitSpecFun(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangQAtom getQAtom() {
@@ -27,11 +32,6 @@ public class ErlangSpecFunImpl extends ErlangCompositeElementImpl implements Erl
   @Nullable
   public PsiElement getInteger() {
     return findChildByType(ERL_INTEGER);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitSpecFun(this);
-    else super.accept(visitor);
   }
 
   @Nullable

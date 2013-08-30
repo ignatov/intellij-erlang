@@ -16,6 +16,11 @@ public class ErlangTypeDefinitionImpl extends ErlangNamedElementImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeDefinition(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangArgumentDefinitionList getArgumentDefinitionList() {
@@ -32,11 +37,6 @@ public class ErlangTypeDefinitionImpl extends ErlangNamedElementImpl implements 
   @Nullable
   public ErlangTopType getTopType() {
     return findChildByClass(ErlangTopType.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeDefinition(this);
-    else super.accept(visitor);
   }
 
   @NotNull

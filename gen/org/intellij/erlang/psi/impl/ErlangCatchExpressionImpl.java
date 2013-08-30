@@ -16,6 +16,11 @@ public class ErlangCatchExpressionImpl extends ErlangExpressionImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCatchExpression(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangExpression getExpression() {
@@ -26,11 +31,6 @@ public class ErlangCatchExpressionImpl extends ErlangExpressionImpl implements E
   @NotNull
   public PsiElement getCatch() {
     return findNotNullChildByType(ERL_CATCH);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCatchExpression(this);
-    else super.accept(visitor);
   }
 
 }

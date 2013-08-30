@@ -16,6 +16,11 @@ public class ErlangBeginEndExpressionImpl extends ErlangExpressionImpl implement
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBeginEndExpression(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangBeginEndBody getBeginEndBody() {
@@ -32,11 +37,6 @@ public class ErlangBeginEndExpressionImpl extends ErlangExpressionImpl implement
   @Nullable
   public PsiElement getEnd() {
     return findChildByType(ERL_END);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBeginEndExpression(this);
-    else super.accept(visitor);
   }
 
 }

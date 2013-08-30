@@ -16,15 +16,15 @@ public class ErlangFunClausesImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunClauses(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangFunClause> getFunClauseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangFunClause.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunClauses(this);
-    else super.accept(visitor);
   }
 
 }

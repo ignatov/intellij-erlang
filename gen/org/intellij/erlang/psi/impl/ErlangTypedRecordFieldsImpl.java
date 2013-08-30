@@ -16,6 +16,11 @@ public class ErlangTypedRecordFieldsImpl extends ErlangCompositeElementImpl impl
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedRecordFields(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangGenericFunctionCallExpression> getGenericFunctionCallExpressionList() {
@@ -26,11 +31,6 @@ public class ErlangTypedRecordFieldsImpl extends ErlangCompositeElementImpl impl
   @NotNull
   public List<ErlangTypedExpr> getTypedExprList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTypedExpr.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedRecordFields(this);
-    else super.accept(visitor);
   }
 
 }

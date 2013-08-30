@@ -16,6 +16,11 @@ public class ErlangGlobalFunctionCallExpressionImpl extends ErlangExpressionImpl
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitGlobalFunctionCallExpression(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangFunctionCallExpression getFunctionCallExpression() {
@@ -32,11 +37,6 @@ public class ErlangGlobalFunctionCallExpressionImpl extends ErlangExpressionImpl
   @Nullable
   public ErlangQAtom getQAtom() {
     return findChildByClass(ErlangQAtom.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitGlobalFunctionCallExpression(this);
-    else super.accept(visitor);
   }
 
 }

@@ -16,6 +16,11 @@ public class ErlangBinaryTypeImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinaryType(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangBinBaseType getBinBaseType() {
@@ -26,11 +31,6 @@ public class ErlangBinaryTypeImpl extends ErlangCompositeElementImpl implements 
   @Nullable
   public ErlangBinUnitType getBinUnitType() {
     return findChildByClass(ErlangBinUnitType.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinaryType(this);
-    else super.accept(visitor);
   }
 
 }

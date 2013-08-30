@@ -16,6 +16,11 @@ public class ErlangMaxExpressionImpl extends ErlangExpressionImpl implements Erl
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMaxExpression(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangQAtom getQAtom() {
@@ -44,11 +49,6 @@ public class ErlangMaxExpressionImpl extends ErlangExpressionImpl implements Erl
   @Nullable
   public PsiElement getInteger() {
     return findChildByType(ERL_INTEGER);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMaxExpression(this);
-    else super.accept(visitor);
   }
 
 }

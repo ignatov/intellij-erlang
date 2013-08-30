@@ -16,15 +16,15 @@ public class ErlangFunTypeArgumentsImpl extends ErlangCompositeElementImpl imple
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeArguments(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangTopType> getTopTypeList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeArguments(this);
-    else super.accept(visitor);
   }
 
 }

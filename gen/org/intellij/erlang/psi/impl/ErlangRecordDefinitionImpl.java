@@ -16,6 +16,11 @@ public class ErlangRecordDefinitionImpl extends ErlangNamedElementImpl implement
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordDefinition(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangQAtom getQAtom() {
@@ -26,11 +31,6 @@ public class ErlangRecordDefinitionImpl extends ErlangNamedElementImpl implement
   @Nullable
   public ErlangTypedRecordFields getTypedRecordFields() {
     return findChildByClass(ErlangTypedRecordFields.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordDefinition(this);
-    else super.accept(visitor);
   }
 
   @NotNull

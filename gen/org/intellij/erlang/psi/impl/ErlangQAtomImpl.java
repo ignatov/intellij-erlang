@@ -16,6 +16,11 @@ public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements Erlan
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQAtom(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @Nullable
   public ErlangMacros getMacros() {
@@ -32,11 +37,6 @@ public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements Erlan
   @Nullable
   public PsiElement getAtom() {
     return findChildByType(ERL_ATOM);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQAtom(this);
-    else super.accept(visitor);
   }
 
 }

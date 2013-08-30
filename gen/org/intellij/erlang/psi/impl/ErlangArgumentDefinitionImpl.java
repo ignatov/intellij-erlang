@@ -16,15 +16,15 @@ public class ErlangArgumentDefinitionImpl extends ErlangCompositeElementImpl imp
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitArgumentDefinition(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangExpression getExpression() {
     return findNotNullChildByClass(ErlangExpression.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitArgumentDefinition(this);
-    else super.accept(visitor);
   }
 
 }

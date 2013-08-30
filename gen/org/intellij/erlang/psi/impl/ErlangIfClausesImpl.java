@@ -16,15 +16,15 @@ public class ErlangIfClausesImpl extends ErlangCompositeElementImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIfClauses(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangIfClause> getIfClauseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangIfClause.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIfClauses(this);
-    else super.accept(visitor);
   }
 
 }

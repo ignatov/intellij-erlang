@@ -17,6 +17,11 @@ public class ErlangImportFunctionImpl extends ErlangCompositeElementImpl impleme
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitImportFunction(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public ErlangQAtom getQAtom() {
@@ -27,11 +32,6 @@ public class ErlangImportFunctionImpl extends ErlangCompositeElementImpl impleme
   @Nullable
   public PsiElement getInteger() {
     return findChildByType(ERL_INTEGER);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitImportFunction(this);
-    else super.accept(visitor);
   }
 
   @NotNull

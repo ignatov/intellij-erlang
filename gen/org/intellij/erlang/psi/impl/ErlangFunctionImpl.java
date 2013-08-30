@@ -18,15 +18,15 @@ public class ErlangFunctionImpl extends ErlangNamedElementImpl implements Erlang
     super(node);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunction(this);
+    else super.accept(visitor);
+  }
+
   @Override
   @NotNull
   public List<ErlangFunctionClause> getFunctionClauseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangFunctionClause.class);
-  }
-
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunction(this);
-    else super.accept(visitor);
   }
 
   @Override
