@@ -32,7 +32,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
@@ -397,12 +397,13 @@ public class ErlangPsiImplUtil {
 
       List<LookupElement> lookupElements = ContainerUtil.newArrayList();
 
+      Module module = ModuleUtilCore.findModuleForPsiElement(containingFile);
+      Sdk sdk = module == null ? null : ModuleRootManager.getInstance(module).getSdk();
+      ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
       if (qAtom != null) {
         String moduleName = qAtom.getText();
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
 
-        Sdk sdk = ProjectRootManager.getInstance(containingFile.getProject()).getProjectSdk();
-        ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
         if (release == null || release.needBifCompletion(moduleName)) {
           for (ErlangBifDescriptor bif : ErlangBifTable.getBifs(moduleName)) {
             lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
@@ -418,7 +419,7 @@ public class ErlangPsiImplUtil {
           lookupElements.add(createFunctionLookupElement(importFunction.getQAtom().getText(), getArity(importFunction.getInteger()), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
         }
 
-        if (!withArity) {
+        if (!withArity && (release == null || release.needBifCompletion("erlang"))) {
           for (ErlangBifDescriptor bif : ErlangBifTable.getBifs("erlang")) {
             lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), false, ErlangCompletionContributor.BIF_PRIORITY));
           }
