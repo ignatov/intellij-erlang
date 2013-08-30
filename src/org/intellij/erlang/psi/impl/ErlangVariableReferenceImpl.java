@@ -24,12 +24,15 @@ import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
+import gnu.trove.THashSet;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -64,14 +67,20 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
   public Object[] getVariants() {
     if (PsiTreeUtil.getParentOfType(myElement, ErlangArgumentDefinition.class) != null) return new Object[]{};
 
+    
     final List<LookupElement> result = new ArrayList<LookupElement>();
+    final Collection<String> vars = new THashSet<String>(CaseInsensitiveStringHashingStrategy.INSTANCE);
     if (!(myElement.getParent() instanceof ErlangRecordExpression)) {
       final ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myElement, ErlangFunctionClause.class);
-      ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(clause, false, result));
+      ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(clause, false, vars));
 
       ErlangModule module = getModule(myElement.getContainingFile());
       if (module != null) {
-        module.processDeclarations(new MyBaseScopeProcessor(clause, true, result), ResolveState.initial(), module, module);
+        module.processDeclarations(new MyBaseScopeProcessor(clause, true, vars), ResolveState.initial(), module, module);
+      }
+
+      for (String var : vars) {
+        result.add(LookupElementBuilder.create(var).withIcon(ErlangIcons.VARIABLE));
       }
 
       ErlangQAtom qAtom = getQAtom(PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class));
@@ -79,7 +88,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     }
 
     PsiFile file = myElement.getContainingFile();
-    Map<String,ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
+    Map<String, ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
     if (context != null && PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class) == null) {
       for (String var : context.keySet()) {
         result.add(LookupElementBuilder.create(var).withIcon(ErlangIcons.VARIABLE));
@@ -98,9 +107,9 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
   private class MyBaseScopeProcessor extends BaseScopeProcessor {
     private final ErlangFunctionClause myClause;
     private final boolean myForce;
-    private final List<LookupElement> myResult;
+    private final Collection<String> myResult;
 
-    public MyBaseScopeProcessor(@Nullable ErlangFunctionClause clause, boolean force, List<LookupElement> result) {
+    public MyBaseScopeProcessor(@Nullable ErlangFunctionClause clause, boolean force, Collection<String> result) {
       myClause = clause;
       myForce = force;
       myResult = result;
@@ -111,7 +120,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
       if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_") && !inColonQualified(myElement)) {
         boolean ancestor = PsiTreeUtil.isAncestor(myClause, psiElement, false);
         if ((ancestor || myForce) && (inArgumentDefinition(psiElement) || inLeftPartOfAssignment(psiElement))) {
-          myResult.add(LookupElementBuilder.create((PsiNamedElement) psiElement).withIcon(ErlangIcons.VARIABLE));
+          myResult.add(((ErlangQVar) psiElement).getName());
         }
       }
       return true;

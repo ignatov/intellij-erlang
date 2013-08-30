@@ -18,6 +18,7 @@ package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.openapi.util.Condition;
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageManagerImpl;
 import com.intellij.testFramework.UsefulTestCase;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
@@ -25,6 +26,7 @@ import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
 import com.intellij.testFramework.fixtures.TestFixtureBuilder;
 import com.intellij.testFramework.fixtures.impl.TempDirTestFixtureImpl;
 import com.intellij.util.ArrayUtilRt;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
@@ -145,6 +147,24 @@ public class ErlangCompletionTest extends ErlangLightPlatformCodeInsightFixtureT
       "ok.\n" +
       "my_local_function() -> not_so_ok.",
       "my_local_function");
+  }
+
+  public void testNoVariableDuplicates() throws Exception {
+    myFixture.configureByText("a.erl", 
+      "foo() ->\n" +
+      "    case {1, 1} of\n" +
+      "        {A, A} -> <caret>\n" +
+      "    end.");
+    myFixture.complete(CompletionType.BASIC, 1);
+    List<String> stringList = myFixture.getLookupElementStrings();
+    assertNotNull(stringList);
+    List<String> vars = ContainerUtil.filter(stringList, new Condition<String>() {
+      @Override
+      public boolean value(String s) {
+        return s.equals("A");
+      }
+    });
+    assertSize(1, vars);
   }
 
   public void testIncludeLib()  throws Exception { doCheckResult("-include_<caret>", "-include_lib(\"<caret>\")."); }
