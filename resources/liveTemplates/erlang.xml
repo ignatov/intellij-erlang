@@ -24,15 +24,14 @@
         <option name="OTHER" value="false" />
       </context>
     </template>
-    <template name="inc" value="-include(&quot;$FILE$.hrl&quot;).$END$" description="Include file" toReformat="true" toShortenFQNames="true">
+    <template name="inc" value="-include(&quot;$FILE$&quot;).$END$" description="Include file" toReformat="true" toShortenFQNames="true">
       <variable name="FILE" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
         <option name="ERLANG_DECLARATION" value="true" />
         <option name="OTHER" value="false" />
       </context>
     </template>
-    <template name="incl" value="-include_lib(&quot;$LIB$/include/$FILE$.hrl&quot;).$END$" description="Include library" toReformat="true" toShortenFQNames="true">
-      <variable name="LIB" expression="" defaultValue="" alwaysStopAt="true" />
+    <template name="incl" value="-include_lib(&quot;$FILE$&quot;).$END$" description="Include library" toReformat="true" toShortenFQNames="true">
       <variable name="FILE" expression="" defaultValue="" alwaysStopAt="true" />
       <context>
         <option name="ERLANG_DECLARATION" value="true" />
