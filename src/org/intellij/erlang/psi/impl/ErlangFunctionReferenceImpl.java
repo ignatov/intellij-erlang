@@ -79,7 +79,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
       for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
         PsiReference reference = importFunction.getReference();
-        PsiElement resolve = reference != null ? reference.resolve() : null;
+        PsiElement resolve = reference.resolve();
         if (resolve instanceof ErlangFunction) {
           ErlangFunction function = (ErlangFunction) resolve;
           if (function.getName().equals(myReferenceName) && function.getArity() == myArity) {
@@ -112,7 +112,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
         for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
           PsiReference reference = importFunction.getReference();
-          PsiElement resolve = reference != null ? reference.resolve() : null;
+          PsiElement resolve = reference.resolve();
           if (resolve instanceof ErlangFunction && ((ErlangFunction) resolve).getName().equals(myReferenceName)) {
             result.add((ErlangFunction) resolve);
           }
