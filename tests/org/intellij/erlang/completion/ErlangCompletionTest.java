@@ -57,6 +57,26 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "-record(foo, {id, two}).\n" +
       "bar(A)-> #foo{two=1,<caret>}", "id", "two");
   }
+  
+  public void testRecordFields3() throws Throwable {
+    doTestInclude(
+      "-record(foo, {id, two}).\n" +
+      "bar(A, B)-> #foo{two= <caret>}", "A", "B");
+  }
+  
+  public void testRecordFields4() throws Throwable {
+    doTestInclude(
+      "-record(foo, {id, two}).\n" +
+      "bar(A, B)-> #foo{two=<caret>}", "A", "B");
+  }  
+  
+  public void testRecordFields5() throws Throwable {
+    doCheckResult(
+      "-record(foo, {id, two}).\n" +
+      "bar(A, B)-> A#foo.tw<caret>", 
+      "-record(foo, {id, two}).\n" +
+        "bar(A, B)-> A#foo.two");
+  }
 
   public void testMacros() throws Throwable {
     doTestInclude(

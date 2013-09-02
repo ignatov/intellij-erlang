@@ -39,6 +39,7 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -90,18 +91,22 @@ public class ErlangCompletionContributor extends CompletionContributor {
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
     ErlangExportTypeAttribute exportType = PsiTreeUtil.getParentOfType(elementAt, ErlangExportTypeAttribute.class);
     ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
-    PsiElement previousByOffset = startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
+    PsiElement previousByOffset = elementAt != null ? PsiTreeUtil.prevVisibleLeaf(elementAt) : startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
     //noinspection unchecked
     ErlangCompositeElement typeParent = PsiTreeUtil.getParentOfType(elementAt, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class);
     if (parent instanceof ErlangExport || parent instanceof ErlangExportFunctions
       || parent instanceof ErlangImportDirective || parent instanceof ErlangImportFunctions
       || exportType != null || export != null || prevIsRadix(elementAt)
-      || (previousByOffset != null && previousByOffset.getNode().getElementType() == ErlangTypes.ERL_RADIX)
-      || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField)
-      || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField
+      || is(previousByOffset, ErlangTypes.ERL_RADIX)
+      || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField
+      || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) && !is(previousByOffset, ErlangTypes.ERL_OP_EQ)
       || typeParent != null) {
       context.setDummyIdentifier("a");
     }
+  }
+
+  private static boolean is(@Nullable PsiElement element, IElementType type) {
+    return element != null && element.getNode().getElementType() == type;
   }
 
   public ErlangCompletionContributor() {
@@ -146,18 +151,19 @@ public class ErlangCompletionContributor extends CompletionContributor {
             ErlangQAtom qAtom = ErlangPsiImplUtil.getQAtom(colonQualified);
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, qAtom));
           }
-          else if (originalParent instanceof ErlangRecordFields || parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
+          else if (parent instanceof ErlangRecordField || parent instanceof ErlangRecordFields) {
             Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = ErlangPsiImplUtil.getRecordFields(parent);
+            final boolean withoutEq = is(parent.getFirstChild(), ErlangTypes.ERL_DOT);
             result.addAllElements(ContainerUtil.map(recordFields.first, new Function<ErlangTypedExpr, LookupElement>() {
               @Override
               public LookupElement fun(ErlangTypedExpr a) {
-                return createFieldLookupElement(a.getName());
+                return createFieldLookupElement(a.getName(), withoutEq);
               }
             }));
             result.addAllElements(ContainerUtil.map(recordFields.second, new Function<ErlangQAtom, LookupElement>() {
               @Override
               public LookupElement fun(ErlangQAtom a) {
-                return createFieldLookupElement(a.getText());
+                return createFieldLookupElement(a.getText(), withoutEq);
               }
             }));
             return;
@@ -195,8 +201,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
     });
   }
 
-  private static LookupElement createFieldLookupElement(String text) {
-    return LookupElementBuilder.create(text).withIcon(ErlangIcons.FIELD).withInsertHandler(new SingleCharInsertHandler('='));
+  private static LookupElement createFieldLookupElement(@NotNull String text, boolean withoutEq) {
+    return LookupElementBuilder.create(text).withIcon(ErlangIcons.FIELD).withInsertHandler(withoutEq ? null : new SingleCharInsertHandler('='));
   }
 
   @NotNull
@@ -350,10 +356,10 @@ public class ErlangCompletionContributor extends CompletionContributor {
     }
   }
 
-  private static boolean prevIsRadix(@Nullable PsiElement psiElement) {
-    PsiElement prevSibling = psiElement != null ? psiElement.getPrevSibling() : null;
-    ASTNode prevSiblingNode = prevSibling != null ? prevSibling.getNode() : null;
-    return (prevSiblingNode != null ? prevSiblingNode.getElementType() : null) == ErlangTypes.ERL_RADIX;
+  private static boolean prevIsRadix(@Nullable PsiElement element) {
+    if (element == null) return false;
+    ASTNode prev = FormatterUtil.getPreviousNonWhitespaceSibling(element.getNode());
+    return prev != null && prev.getElementType() == ErlangTypes.ERL_RADIX;
   }
 
   private static void suggestModules(CompletionResultSet result, PsiElement position, boolean withColon) {
