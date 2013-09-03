@@ -1348,7 +1348,7 @@ public class ErlangPsiImplUtil {
   public static ErlangExpression getOutermostParenthesizedExpression(@NotNull ErlangExpression expression) {
     while (expression.getParent() instanceof ErlangParenthesizedExpression) {
       ErlangParenthesizedExpression parent = (ErlangParenthesizedExpression) expression.getParent();
-      if (!parent.getExpression().isEquivalentTo(expression)) break;
+      if (!expression.isEquivalentTo(parent.getExpression())) break;
       expression = parent;
     }
 
@@ -1360,7 +1360,6 @@ public class ErlangPsiImplUtil {
     while (expression instanceof ErlangParenthesizedExpression) {
       expression = ((ErlangParenthesizedExpression) expression).getExpression();
     }
-
     return expression;
   }
 
