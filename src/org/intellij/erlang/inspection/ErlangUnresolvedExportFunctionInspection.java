@@ -37,7 +37,7 @@ public class ErlangUnresolvedExportFunctionInspection extends ErlangInspectionBa
       @Override
       public void visitExportFunction(@NotNull ErlangExportFunction o) {
         PsiReference reference = o.getReference();
-        if (o.getQAtom().getMacros() == null && reference.resolve() == null) {
+        if (reference.resolve() == null) {
           String name = o.getQAtom().getText();
           int arity = ErlangPsiImplUtil.getArity(o.getInteger());
           problemsHolder.registerProblem(o, "Unresolved function " + "'" + o.getText() + "'", new ErlangCreateFunctionQuickFix(name, arity));
