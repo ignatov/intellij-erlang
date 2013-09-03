@@ -28,9 +28,9 @@ public class ErlangFunctionClauseImpl extends ErlangCompositeElementImpl impleme
   }
 
   @Override
-  @Nullable
+  @NotNull
   public ErlangClauseBody getClauseBody() {
-    return findChildByClass(ErlangClauseBody.class);
+    return findNotNullChildByClass(ErlangClauseBody.class);
   }
 
   @Override

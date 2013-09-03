@@ -8,5 +8,5 @@ ERL_FILE
         PsiElement(atom)('foo')
       PsiElement())(')')
     PsiElement(.)('.')
-    PsiErrorElement:'.' unexpected
-      PsiElement(.)('.')
+  PsiErrorElement:'-', <function>, <rule> or '?' expected, got '.'
+    PsiElement(ERROR_ELEMENT)('.')

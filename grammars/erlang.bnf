@@ -88,7 +88,7 @@ private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
 private form_with_period ::= form period {recoverUntil=form_recover pin=1}
 private left period ::= '.'
-private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom | bnot | char | float | integer | not | string | var)
+private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom | bnot | char | float | integer | not | string | var | '.')
 private form ::=
     is_app_config config_expression
   | function
@@ -100,6 +100,7 @@ private form ::=
   | attribute
   | macros_call // macros support
   | rule
+  | !<<eofOrSpace>> /*&(!'.')*/
 
 private is_app_config ::= &<<isApplicationLanguage>>
 private is_console ::= &<<isConsole>>
@@ -260,7 +261,7 @@ function ::= function_clause (';' function_clause)* {
   ]
 }
 
-function_clause ::= !'?' q_atom argument_definition_list clause_guard? clause_body {pin=3}
+function_clause ::= q_atom argument_definition_list clause_guard? clause_body
 argument_definition_list ::= '(' argument_definition? (',' argument_definition)* ')'
 
 clause_guard ::= when <<guarded guard>> {pin=1}

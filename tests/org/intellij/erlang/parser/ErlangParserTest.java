@@ -75,4 +75,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testRecover2()          { doTest(true, true);  }
   public void testBeginEnd()          { doTest(true, true);  }
   public void testBeginEnd2()         { doTest(true, true);  }
+  public void test296()               { doTest(true, true); }
 }

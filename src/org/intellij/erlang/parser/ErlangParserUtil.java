@@ -22,11 +22,13 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.TokenType;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import gnu.trove.TObjectIntHashMap;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -89,4 +91,17 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     ErrorState.get(result).altMode = true;
     return result;
   }
+  
+  @SuppressWarnings("UnusedParameters")
+  public static boolean eofOrSpace(PsiBuilder builder_, int level_) {
+    if (builder_.eof()) return true;
+    IElementType one = builder_.rawLookup(1);
+    IElementType two = builder_.rawLookup(2);
+    if (one == TokenType.WHITE_SPACE && (two == ErlangTypes.ERL_DOT || two == null) || one == null && builder_.getTokenType() == ErlangTypes.ERL_DOT) {
+      builder_.remapCurrentToken(TokenType.ERROR_ELEMENT);
+      return true;
+    }
+    return false;
+  }
+  
 }
