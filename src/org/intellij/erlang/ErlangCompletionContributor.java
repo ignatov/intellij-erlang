@@ -124,7 +124,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
         if (originalParent instanceof ErlangIncludeString && originalPosition instanceof LeafPsiElement &&
             ErlangTypes.ERL_STRING == ((LeafPsiElement) originalPosition).getElementType()) {
-          String includeText = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, parameters.getOffset()).substring(file.getText());
+          TextRange range = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, parameters.getOffset());
+          String includeText = range.getLength() >=0 ? range.substring(file.getText()) : "";
           if (parent instanceof ErlangInclude) {
             result.addAllElements(getModulePathLookupElements(file, includeText));
           }
