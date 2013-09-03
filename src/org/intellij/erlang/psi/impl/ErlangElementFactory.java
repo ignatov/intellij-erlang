@@ -23,6 +23,7 @@ import com.intellij.psi.PsiFileFactory;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangMaxExpression;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,62 +36,72 @@ public class ErlangElementFactory {
   }
 
   @NotNull
-  public static PsiElement createQAtomFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-" + text + ".");
+  public static PsiElement createQAtomFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, "-" + text + ".");
     return fileFromText.getAttributes().get(0).getAtomAttribute().getQAtom().getAtom();
   }
 
   @NotNull
-  public static PsiElement createQVarFromText(Project project, String text) {
+  public static PsiElement createQVarFromText(@NotNull Project project, @NotNull String text) {
     return ((ErlangMaxExpression) createExpressionFromText(project, text)).getQVar();
   }
 
   @NotNull
-  public static ErlangExpression createExpressionFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "f(" + text + ") -> " + text + ".");
+  public static ErlangExpression createExpressionFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, "f(" + text + ") -> " + text + ".");
     return fileFromText.getFunctions().get(0).getFunctionClauseList().get(0).getClauseBody().getExpressionList().get(0);
   }
 
   @NotNull
-  public static PsiElement createMacrosFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-define(" + text + ", 1).");
+  public static ErlangFunction createFunctionFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, text);
+    return fileFromText.getFunctions().get(0);
+  }
+
+  @NotNull
+  public static PsiElement createMacrosFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, "-define(" + text + ", 1).");
     return fileFromText.getMacroses().get(0).getMacrosName();
   }
 
   @NotNull
-  public static PsiElement createStringFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-include(\"" + text + "\").");
+  public static PsiElement createStringFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, "-include(\"" + text + "\").");
     return fileFromText.getIncludes().get(0).getIncludeString().getString();
   }
 
   @NotNull
-  public static PsiElement createExportFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-export([" + text + "]).");
+  public static PsiElement createExportFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, "-export([" + text + "]).");
     return fileFromText.getAttributes().get(0);
   }
 
   @NotNull
-  public static PsiElement createExportTypeFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-export_type([" + text + "]).");
+  public static PsiElement createExportTypeFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, "-export_type([" + text + "]).");
     return fileFromText.getAttributes().get(0);
   }
 
   @NotNull
-  public static PsiElement createRecordFromText(Project project, String text, String ... fields) {
+  public static PsiElement createRecordFromText(@NotNull Project project, @NotNull String text, @NotNull String ... fields) {
     String fieldsText = StringUtil.join(fields, ",");
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-record(" + text + ", {" + fieldsText + "}).");
+    ErlangFile fileFromText = createFileFromText(project, "-record(" + text + ", {" + fieldsText + "}).");
     return fileFromText.getRecords().get(0);
   }
 
   @NotNull
-  public static PsiElement createRecordFieldsFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, "-record(text{" + text + "}).");
+  public static PsiElement createRecordFieldsFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, "-record(text{" + text + "}).");
     return fileFromText.getRecords().get(0).getTypedRecordFields();
   }
 
   @NotNull
-  public static PsiElement createLeafFromText(Project project, String text) {
-    ErlangFile fileFromText = (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, text);
-    return fileFromText.getFirstChild();
+  public static PsiElement createLeafFromText(@NotNull Project project, @NotNull String text) {
+    return createFileFromText(project, text).getFirstChild();
+  }
+
+  @NotNull
+  private static ErlangFile createFileFromText(@NotNull Project project, @NotNull String text) {
+    return (ErlangFile) PsiFileFactory.getInstance(project).createFileFromText("a.erl", ErlangLanguage.INSTANCE, text);
   }
 }

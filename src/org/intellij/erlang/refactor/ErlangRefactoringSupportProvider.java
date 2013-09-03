@@ -24,6 +24,7 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangNamedElement;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
+import org.intellij.erlang.refactor.introduce.ErlangExtractFunctionHandler;
 import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,5 +51,11 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
   @Override
   public boolean isMemberInplaceRenameAvailable(PsiElement element, PsiElement context) {
     return element instanceof ErlangNamedElement;
+  }
+
+  @Nullable
+  @Override
+  public RefactoringActionHandler getExtractMethodHandler() {
+    return new ErlangExtractFunctionHandler();
   }
 }
