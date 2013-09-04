@@ -16,13 +16,13 @@
 
 package org.intellij.erlang.refactoring;
 
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.refactor.introduce.ErlangExtractFunctionHandler;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 /**
  * @author ignatov
  */
-public class ErlangExtractFunctionTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangExtractFunctionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {
     return "testData/refactoring/extract_function";
