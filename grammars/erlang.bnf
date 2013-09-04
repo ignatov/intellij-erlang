@@ -227,8 +227,9 @@ type ::=
   | binary_type
   | q_var ['::' top_type]
   | '[' [top_type [',' '...']] ']'
-  | '{' top_type_list? '}'
+  | record_like_type
   | '#' record_ref '{' field_type_list? '}' {pin(".*") = 1}
+record_like_type ::= '{' top_type_list? '}' {extends=type}
 
 int_type ::= '-'? (integer | macros argument_list?)
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {pin(".*")=1}

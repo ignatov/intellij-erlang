@@ -84,7 +84,7 @@ ERL_FILE
     PsiElement(::)('::')
     ERL_TOP_TYPE
       ERL_TOP_TYPE_100_T
-        ERL_TYPE
+        ERL_RECORD_LIKE_TYPE
           PsiElement({)('{')
           ERL_TOP_TYPE
             ERL_TOP_TYPE_100_T
@@ -105,7 +105,7 @@ ERL_FILE
           PsiElement(})('}')
         PsiElement(|)('|')
         ERL_TOP_TYPE_100_T
-          ERL_TYPE
+          ERL_RECORD_LIKE_TYPE
             PsiElement({)('{')
             ERL_TOP_TYPE
               ERL_TOP_TYPE_100_T
@@ -126,7 +126,7 @@ ERL_FILE
             PsiElement(})('}')
           PsiElement(|)('|')
           ERL_TOP_TYPE_100_T
-            ERL_TYPE
+            ERL_RECORD_LIKE_TYPE
               PsiElement({)('{')
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
@@ -147,11 +147,11 @@ ERL_FILE
               PsiElement(})('}')
             PsiElement(|)('|')
             ERL_TOP_TYPE_100_T
-              ERL_TYPE
+              ERL_RECORD_LIKE_TYPE
                 PsiElement({)('{')
                 ERL_TOP_TYPE
                   ERL_TOP_TYPE_100_T
-                    ERL_TYPE
+                    ERL_RECORD_LIKE_TYPE
                       PsiElement({)('{')
                       ERL_TOP_TYPE
                         ERL_TOP_TYPE_100_T
@@ -186,7 +186,7 @@ ERL_FILE
                 PsiElement(})('}')
               PsiElement(|)('|')
               ERL_TOP_TYPE_100_T
-                ERL_TYPE
+                ERL_RECORD_LIKE_TYPE
                   PsiElement({)('{')
                   ERL_TOP_TYPE
                     ERL_TOP_TYPE_100_T
@@ -3589,7 +3589,7 @@ ERL_FILE
               PsiElement(->)('->')
               ERL_TOP_TYPE
                 ERL_TOP_TYPE_100_T
-                  ERL_TYPE
+                  ERL_RECORD_LIKE_TYPE
                     PsiElement({)('{')
                     ERL_TOP_TYPE
                       ERL_TOP_TYPE_100_T

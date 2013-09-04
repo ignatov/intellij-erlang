@@ -77,7 +77,7 @@ public class ErlangIndentProcessor {
       if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) return Indent.getNoneIndent();
       return Indent.getNormalIndent();
     }
-    if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS) {
+    if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS || parentType == ERL_RECORD_LIKE_TYPE) {
       if (elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT) return Indent.getNoneIndent();
       return Indent.getNormalIndent();
     }

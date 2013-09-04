@@ -1,9 +1,8 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.psi;
 
-import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElementVisitor;
-import com.intellij.psi.PsiLanguageInjectionHost;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangVisitor extends PsiElementVisitor {
 
@@ -383,6 +382,10 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitRecordFields(@NotNull ErlangRecordFields o) {
     visitCompositeElement(o);
+  }
+
+  public void visitRecordLikeType(@NotNull ErlangRecordLikeType o) {
+    visitType(o);
   }
 
   public void visitRecordRef(@NotNull ErlangRecordRef o) {

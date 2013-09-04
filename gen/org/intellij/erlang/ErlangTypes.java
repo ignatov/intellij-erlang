@@ -1,9 +1,9 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang;
 
-import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.PsiElement;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.psi.ErlangCompositeElementType;
 import org.intellij.erlang.psi.ErlangTokenType;
 import org.intellij.erlang.psi.impl.*;
@@ -103,6 +103,7 @@ public interface ErlangTypes {
   IElementType ERL_RECORD_EXPRESSION = new ErlangCompositeElementType("ERL_RECORD_EXPRESSION");
   IElementType ERL_RECORD_FIELD = new ErlangCompositeElementType("ERL_RECORD_FIELD");
   IElementType ERL_RECORD_FIELDS = new ErlangCompositeElementType("ERL_RECORD_FIELDS");
+  IElementType ERL_RECORD_LIKE_TYPE = new ErlangCompositeElementType("ERL_RECORD_LIKE_TYPE");
   IElementType ERL_RECORD_REF = new ErlangCompositeElementType("ERL_RECORD_REF");
   IElementType ERL_RECORD_TUPLE = new ErlangCompositeElementType("ERL_RECORD_TUPLE");
   IElementType ERL_RULE = new ErlangCompositeElementType("ERL_RULE");
@@ -483,6 +484,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_RECORD_FIELDS) {
         return new ErlangRecordFieldsImpl(node);
+      }
+      else if (type == ERL_RECORD_LIKE_TYPE) {
+        return new ErlangRecordLikeTypeImpl(node);
       }
       else if (type == ERL_RECORD_REF) {
         return new ErlangRecordRefImpl(node);

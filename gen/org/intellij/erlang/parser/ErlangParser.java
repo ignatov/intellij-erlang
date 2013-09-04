@@ -1,16 +1,16 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.parser;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiBuilder.Marker;
+import com.intellij.lang.PsiParser;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
+
 import static org.intellij.erlang.ErlangTypes.*;
 import static org.intellij.erlang.parser.ErlangParserUtil.*;
-import com.intellij.lang.LighterASTNode;
-import com.intellij.psi.tree.IElementType;
-import com.intellij.lang.ASTNode;
-import com.intellij.psi.tree.TokenSet;
-import com.intellij.lang.PsiParser;
 
 @SuppressWarnings({"SimplifiableIfStatement", "UnusedAssignment"})
 public class ErlangParser implements PsiParser {
@@ -300,6 +300,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_RECORD_FIELDS) {
       result_ = record_fields(builder_, level_ + 1);
     }
+    else if (root_ == ERL_RECORD_LIKE_TYPE) {
+      result_ = record_like_type(builder_, level_ + 1);
+    }
     else if (root_ == ERL_RECORD_REF) {
       result_ = record_ref(builder_, level_ + 1);
     }
@@ -403,6 +406,7 @@ public class ErlangParser implements PsiParser {
       ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION,
       ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION, ERL_STRING_LITERAL,
       ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
+    create_token_set_(ERL_RECORD_LIKE_TYPE, ERL_TYPE),
   };
 
   /* ********************************************************** */
@@ -3835,6 +3839,27 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // '{' top_type_list? '}'
+  public static boolean record_like_type(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_like_type")) return false;
+    if (!nextTokenIs(builder_, ERL_CURLY_LEFT)) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = consumeToken(builder_, ERL_CURLY_LEFT);
+    result_ = result_ && record_like_type_1(builder_, level_ + 1);
+    result_ = result_ && consumeToken(builder_, ERL_CURLY_RIGHT);
+    exit_section_(builder_, marker_, ERL_RECORD_LIKE_TYPE, result_);
+    return result_;
+  }
+
+  // top_type_list?
+  private static boolean record_like_type_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_like_type_1")) return false;
+    top_type_list(builder_, level_ + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
   // q_atom
   public static boolean record_ref(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_ref")) return false;
@@ -4507,12 +4532,12 @@ public class ErlangParser implements PsiParser {
   //   | binary_type
   //   | q_var ['::' top_type]
   //   | '[' [top_type [',' '...']] ']'
-  //   | '{' top_type_list? '}'
+  //   | record_like_type
   //   | '#' record_ref '{' field_type_list? '}'
   public static boolean type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "type")) return false;
     boolean result_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<type>");
+    Marker marker_ = enter_section_(builder_, level_, _COLLAPSE_, "<type>");
     result_ = type_0(builder_, level_ + 1);
     if (!result_) result_ = type_1(builder_, level_ + 1);
     if (!result_) result_ = type_2(builder_, level_ + 1);
@@ -4520,7 +4545,7 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = binary_type(builder_, level_ + 1);
     if (!result_) result_ = type_5(builder_, level_ + 1);
     if (!result_) result_ = type_6(builder_, level_ + 1);
-    if (!result_) result_ = type_7(builder_, level_ + 1);
+    if (!result_) result_ = record_like_type(builder_, level_ + 1);
     if (!result_) result_ = type_8(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_TYPE, result_, false, null);
     return result_;
@@ -4721,27 +4746,6 @@ public class ErlangParser implements PsiParser {
     result_ = result_ && consumeToken(builder_, ERL_DOT_DOT_DOT);
     exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
-  }
-
-  // '{' top_type_list? '}'
-  private static boolean type_7(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_7")) return false;
-    boolean result_ = false;
-    boolean pinned_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
-    result_ = consumeToken(builder_, ERL_CURLY_LEFT);
-    pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, type_7_1(builder_, level_ + 1));
-    result_ = pinned_ && consumeToken(builder_, ERL_CURLY_RIGHT) && result_;
-    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
-    return result_ || pinned_;
-  }
-
-  // top_type_list?
-  private static boolean type_7_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_7_1")) return false;
-    top_type_list(builder_, level_ + 1);
-    return true;
   }
 
   // '#' record_ref '{' field_type_list? '}'
