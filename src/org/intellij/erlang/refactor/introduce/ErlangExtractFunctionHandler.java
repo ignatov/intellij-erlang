@@ -110,6 +110,11 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
       }
     }
     PsiElement commonParent = PsiTreeUtil.findCommonParent(first, second);
+    
+    if (commonParent != null && commonParent.getParent() instanceof ErlangQAtom) {
+      commonParent = commonParent.getParent().getParent();
+    }
+    
     if (commonParent instanceof ErlangExpression) {
       if (ErlangPsiImplUtil.inLeftPartOfAssignment(commonParent, false)) return Collections.emptyList();
       return ContainerUtil.newSmartList(((ErlangExpression) commonParent));
