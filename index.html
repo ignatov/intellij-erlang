@@ -96,41 +96,70 @@
                       <a href="https://github.com/ignatov/intellij-erlang/issues/189#issuecomment-15285262">#189 issue</a>.</p>
               </div>
               <div>
-                  After that you may create the new one Rebar run configuration (<strong>Run > Edit run configurations...</strong>), <br/>
+                  After you have set your rebar path up you can create a new Rebar run configuration(<strong>Run > Edit run configurations...</strong>), <br/>
                   use a little green button on the top left corner:
                   <img src="images/new_rebar_run_configuration.png"/>
               </div>
 
               <div>
-                  Or execute existing (<strong>Run > Run...</strong>)
+                  Or execute an existing one (<strong>Run > Run...</strong>)
                   <br/>
                   <img src="images/run_configuration_popup.png"/></div>
               <div>
-                  You may create run configuration for every command which Rebar supports, e.g. <code>compile</code> or <code>eunit</code>, etc.
-                  <img src="images/compile_run_configuration.png"/>
+                  You may create run configuration for every command which Rebar supports, e.g. <code>compile</code> or <code>clean</code>, etc.
+                  <img src="images/clean_run_configuration.png"/>
               </div>
 
               <div>
                   <strong>Skip dependencies</strong> checkbox adds <code>skip_deps=true</code> command for Rebar executable. <br/>
-                  <strong>Use test runner console</strong> checkbox attaches Eunit console which allows use graphical runner for your tests.
               </div>
 
               <div>
+	      	  To run eunit tests with rebar you can either create a Rebar Eunit run configuration or use a right-click context menu item '<strong>Run ...</strong>' or '<strong>Create ...</strong>' having clicked on a module(s), a unit test or a generator function you want to run.
                   <img src="images/eunit_run_configuration.png"/>
               </div>
 
               <div>
-                  Rebar-based Eunit test runner (with <code>eunit</code> command): <br/>
+                  Rebar-based Eunit test runner: <br/>
                   <img src="images/rebar_eunit.png"/>
               </div>
+	      <div>
+	      	  To set rebar as a default build action make sure you have checked <strong>Compile project with rebar</strong> checkbox:
+		  <img src="images/erlang_compiler_settings.png"/>
+	      </div>
               <div>
-                  Compilation result (with <code>compile</code> command): <br/>
+	      	  After that your project will be built with 'rebar compile' command when you run <strong>Build > Make Project</strong>.
+                  Compilation result: <br/>
                   <img src="images/rebar_compile_result.png"/>
               </div>
           </div>
 
+<h3><a name="Project structure" href="#project-structure">Project structure</a></h3>
+
+          <div>
+	      In version 0.5 we've added additonal per-module configuration parameters(see <strong>Project Structure > Modules</strong>).<br/>
+	      There you can setup your modules' include paths and global parse transformations.
+	      <img src="images/facet.png"/>
+	  </div>
+
+
+<h3><a name="Debugger" href="#debugger">Debugger</a></h3>
+
+          <div>
+	     Version 0.5 introduces experimental Erlang debugger support.<br/>
+	     In order to use debugger you need to have <strong>Add debug_info</strong> checkbox under <strong>Settings > Compiler > Erlang Compiler</strong> checked.<br/>
+	     You also need an Erlang Application run configuration which will be used by debugger. Such configuration can be created by right-clicking on entry point function.<br/>
+	     <img src="images/debug_run_configuration.png"/><br/>
+	     Then you can use this configuration to debug your program:<br/>
+	     <img src="images/debugger.png"/><br/>
+	     The debugger requires Erlang Port Mapper Daemon (epmd) to be running. If it's not up, a warning will be issued.
+	     To start the daemon run any Erlang node on your machine, for example with "erl -sname foo -s init stop -noshell" command.
+	  </div>
+
+      
       </section>
     </div>
+
 
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
