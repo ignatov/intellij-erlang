@@ -667,13 +667,12 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(::)('::')
     ERL_TOP_TYPE
-      ERL_TOP_TYPE_100_T
-        ERL_TYPE
-          ERL_TYPE_REF
-            ERL_Q_ATOM
-              PsiElement(atom)('any')
-          PsiElement(()('(')
-          PsiElement())(')')
+      ERL_TYPE
+        ERL_TYPE_REF
+          ERL_Q_ATOM
+            PsiElement(atom)('any')
+        PsiElement(()('(')
+        PsiElement())(')')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
     PsiElement(-)('-')
@@ -685,18 +684,16 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(::)('::')
     ERL_TOP_TYPE
-      ERL_TOP_TYPE_100_T
-        ERL_TYPE
-          PsiElement([)('[')
-          ERL_TOP_TYPE
-            ERL_TOP_TYPE_100_T
-              ERL_TYPE
-                ERL_TYPE_REF
-                  ERL_Q_ATOM
-                    PsiElement(atom)('form')
-                PsiElement(()('(')
-                PsiElement())(')')
-          PsiElement(])(']')
+      ERL_TYPE
+        PsiElement([)('[')
+        ERL_TOP_TYPE
+          ERL_TYPE
+            ERL_TYPE_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('form')
+            PsiElement(()('(')
+            PsiElement())(')')
+        PsiElement(])(']')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
     PsiElement(-)('-')
@@ -708,32 +705,28 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(::)('::')
     ERL_TOP_TYPE
-      ERL_TOP_TYPE_100_T
-        ERL_TYPE
-          PsiElement([)('[')
-          ERL_TOP_TYPE
-            ERL_TOP_TYPE_100_T
-              ERL_RECORD_LIKE_TYPE
-                PsiElement({)('{')
-                ERL_TOP_TYPE
-                  ERL_TOP_TYPE_100_T
-                    ERL_TYPE
-                      ERL_TYPE_REF
-                        ERL_Q_ATOM
-                          PsiElement(atom)('atom')
-                      PsiElement(()('(')
-                      PsiElement())(')')
-                PsiElement(,)(',')
-                ERL_TOP_TYPE
-                  ERL_TOP_TYPE_100_T
-                    ERL_TYPE
-                      ERL_TYPE_REF
-                        ERL_Q_ATOM
-                          PsiElement(atom)('any')
-                      PsiElement(()('(')
-                      PsiElement())(')')
-                PsiElement(})('}')
-          PsiElement(])(']')
+      ERL_TYPE
+        PsiElement([)('[')
+        ERL_TOP_TYPE
+          ERL_RECORD_LIKE_TYPE
+            PsiElement({)('{')
+            ERL_TOP_TYPE
+              ERL_TYPE
+                ERL_TYPE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('atom')
+                PsiElement(()('(')
+                PsiElement())(')')
+            PsiElement(,)(',')
+            ERL_TOP_TYPE
+              ERL_TYPE
+                ERL_TYPE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('any')
+                PsiElement(()('(')
+                PsiElement())(')')
+            PsiElement(})('}')
+        PsiElement(])(']')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -815,33 +808,30 @@ ERL_FILE
             ERL_FUN_TYPE_ARGUMENTS
               PsiElement(()('(')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    ERL_TYPE_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('forms')
-                    PsiElement(()('(')
-                    PsiElement())(')')
+                ERL_TYPE
+                  ERL_TYPE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('forms')
+                  PsiElement(()('(')
+                  PsiElement())(')')
               PsiElement(,)(',')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    ERL_TYPE_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('options')
-                    PsiElement(()('(')
-                    PsiElement())(')')
+                ERL_TYPE
+                  ERL_TYPE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('options')
+                  PsiElement(()('(')
+                  PsiElement())(')')
               PsiElement())(')')
             ERL_TOP_TYPE_CLAUSE
               PsiElement(->)('->')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    ERL_TYPE_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('forms')
-                    PsiElement(()('(')
-                    PsiElement())(')')
+                ERL_TYPE
+                  ERL_TYPE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('forms')
+                  PsiElement(()('(')
+                  PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -16026,34 +16016,31 @@ ERL_FILE
             ERL_FUN_TYPE_ARGUMENTS
               PsiElement(()('(')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    ERL_TYPE_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('atom')
-                    PsiElement(()('(')
-                    PsiElement())(')')
+                ERL_TYPE
+                  ERL_TYPE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('atom')
+                  PsiElement(()('(')
+                  PsiElement())(')')
               PsiElement(,)(',')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    PsiElement(#)('#')
-                    ERL_RECORD_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('context')
-                    PsiElement({)('{')
-                    PsiElement(})('}')
+                ERL_TYPE
+                  PsiElement(#)('#')
+                  ERL_RECORD_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('context')
+                  PsiElement({)('{')
+                  PsiElement(})('}')
               PsiElement())(')')
             ERL_TOP_TYPE_CLAUSE
               PsiElement(->)('->')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    ERL_TYPE_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('term')
-                    PsiElement(()('(')
-                    PsiElement())(')')
+                ERL_TYPE
+                  ERL_TYPE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('term')
+                  PsiElement(()('(')
+                  PsiElement())(')')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% @hidden')
   ERL_FUNCTION
@@ -16335,38 +16322,34 @@ ERL_FILE
             ERL_FUN_TYPE_ARGUMENTS
               PsiElement(()('(')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_RECORD_LIKE_TYPE
-                    PsiElement({)('{')
-                    ERL_TOP_TYPE
-                      ERL_TOP_TYPE_100_T
-                        ERL_TYPE
-                          ERL_TYPE_REF
-                            ERL_Q_ATOM
-                              PsiElement(atom)('atom')
-                          PsiElement(()('(')
-                          PsiElement())(')')
-                    PsiElement(,)(',')
-                    ERL_TOP_TYPE
-                      ERL_TOP_TYPE_100_T
-                        ERL_TYPE
-                          ERL_TYPE_REF
-                            ERL_Q_ATOM
-                              PsiElement(atom)('term')
-                          PsiElement(()('(')
-                          PsiElement())(')')
-                    PsiElement(})('}')
+                ERL_RECORD_LIKE_TYPE
+                  PsiElement({)('{')
+                  ERL_TOP_TYPE
+                    ERL_TYPE
+                      ERL_TYPE_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('atom')
+                      PsiElement(()('(')
+                      PsiElement())(')')
+                  PsiElement(,)(',')
+                  ERL_TOP_TYPE
+                    ERL_TYPE
+                      ERL_TYPE_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('term')
+                      PsiElement(()('(')
+                      PsiElement())(')')
+                  PsiElement(})('}')
               PsiElement())(')')
             ERL_TOP_TYPE_CLAUSE
               PsiElement(->)('->')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    ERL_TYPE_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('iolist')
-                    PsiElement(()('(')
-                    PsiElement())(')')
+                ERL_TYPE
+                  ERL_TYPE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('iolist')
+                  PsiElement(()('(')
+                  PsiElement())(')')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% @hidden')
   ERL_FUNCTION

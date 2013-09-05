@@ -431,7 +431,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitTopType100T(@NotNull ErlangTopType100T o) {
-    visitCompositeElement(o);
+    visitType(o);
   }
 
   public void visitTopTypeClause(@NotNull ErlangTopTypeClause o) {

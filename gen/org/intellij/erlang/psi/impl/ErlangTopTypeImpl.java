@@ -29,8 +29,8 @@ public class ErlangTopTypeImpl extends ErlangCompositeElementImpl implements Erl
 
   @Override
   @NotNull
-  public ErlangTopType100T getTopType100T() {
-    return findNotNullChildByClass(ErlangTopType100T.class);
+  public ErlangType getType() {
+    return findNotNullChildByClass(ErlangType.class);
   }
 
 }

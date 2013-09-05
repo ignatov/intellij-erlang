@@ -179,7 +179,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         if (typesAvailable) {
 
           ErlangTopType topType = topTypeList.get(i);
-          ErlangType type = topType.getTopType100T().getType();
+          ErlangType type = topType.getType();
           final ErlangQVar var = type.getQVar();
           if (var != null) {
             if (specification != null) {
@@ -192,7 +192,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
                   PsiReference reference = qVar == null ? null : qVar.getReference();
                   PsiElement resolve = reference == null ? null : reference.resolve();
                   if (var.equals(resolve)) {
-                    itemTypeRef.setIfNull(item.getTopType100T().getType());
+                    itemTypeRef.setIfNull(item.getType());
                   }
                 }
               });

@@ -218,7 +218,7 @@ private type_guard_list ::= type_guard (',' type_guard)*
 type_guard ::= q_atom '(' top_type_list ')' | top_type
 private top_type_list ::= top_type (',' top_type)*
 top_type ::= [q_var '::'] top_type_100_t
-top_type_100_t ::= type ['|' top_type_100_t] {pin(".*")=1}
+top_type_100_t ::= type ['|' top_type_100_t] {pin(".*")=1 extends=type}
 type ::=
   '(' top_type ')'
   | int_type ['..' int_type]

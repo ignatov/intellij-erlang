@@ -43,13 +43,12 @@ ERL_FILE
           PsiElement(atom)('strategy')
         PsiElement(::)('::')
         ERL_TOP_TYPE
-          ERL_TOP_TYPE_100_T
-            ERL_TYPE
-              ERL_TYPE_REF
-                ERL_Q_ATOM
-                  PsiElement(atom)('strategy')
-              PsiElement(()('(')
-              PsiElement())(')')
+          ERL_TYPE
+            ERL_TYPE_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('strategy')
+            PsiElement(()('(')
+            PsiElement())(')')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
@@ -60,18 +59,16 @@ ERL_FILE
           PsiElement(])(']')
         PsiElement(::)('::')
         ERL_TOP_TYPE
-          ERL_TOP_TYPE_100_T
-            ERL_TYPE
-              PsiElement([)('[')
-              ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    ERL_TYPE_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('child_rec')
-                    PsiElement(()('(')
-                    PsiElement())(')')
-              PsiElement(])(']')
+          ERL_TYPE
+            PsiElement([)('[')
+            ERL_TOP_TYPE
+              ERL_TYPE
+                ERL_TYPE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('child_rec')
+                PsiElement(()('(')
+                PsiElement())(')')
+            PsiElement(])(']')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
@@ -88,15 +85,14 @@ ERL_FILE
                 PsiElement(()('(')
                 PsiElement())(')')
             PsiElement(|)('|')
-            ERL_TOP_TYPE_100_T
-              ERL_INT_TYPE
-                ERL_MACROS
-                  PsiElement(?)('?')
-                  ERL_MACROS_NAME
-                    PsiElement(var)('SET')
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  PsiElement())(')')
+            ERL_INT_TYPE
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  PsiElement(var)('SET')
+              ERL_ARGUMENT_LIST
+                PsiElement(()('(')
+                PsiElement())(')')
       PsiElement(,)(',')
       PsiComment(ERL_LINE_COMMENT)('% Compiler fails here')
       ERL_TYPED_EXPR
@@ -104,26 +100,24 @@ ERL_FILE
           PsiElement(atom)('intensity')
         PsiElement(::)('::')
         ERL_TOP_TYPE
-          ERL_TOP_TYPE_100_T
-            ERL_TYPE
-              ERL_TYPE_REF
-                ERL_Q_ATOM
-                  PsiElement(atom)('non_neg_integer')
-              PsiElement(()('(')
-              PsiElement())(')')
+          ERL_TYPE
+            ERL_TYPE_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('non_neg_integer')
+            PsiElement(()('(')
+            PsiElement())(')')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
           PsiElement(atom)('period')
         PsiElement(::)('::')
         ERL_TOP_TYPE
-          ERL_TOP_TYPE_100_T
-            ERL_TYPE
-              ERL_TYPE_REF
-                ERL_Q_ATOM
-                  PsiElement(atom)('pos_integer')
-              PsiElement(()('(')
-              PsiElement())(')')
+          ERL_TYPE
+            ERL_TYPE_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('pos_integer')
+            PsiElement(()('(')
+            PsiElement())(')')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM

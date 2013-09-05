@@ -11,6 +11,6 @@ public interface ErlangTopType extends ErlangCompositeElement {
   ErlangQVar getQVar();
 
   @NotNull
-  ErlangTopType100T getTopType100T();
+  ErlangType getType();
 
 }

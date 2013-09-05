@@ -406,7 +406,7 @@ public class ErlangParser implements PsiParser {
       ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION,
       ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION, ERL_STRING_LITERAL,
       ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
-    create_token_set_(ERL_INT_TYPE, ERL_RECORD_LIKE_TYPE, ERL_TYPE),
+    create_token_set_(ERL_INT_TYPE, ERL_RECORD_LIKE_TYPE, ERL_TOP_TYPE_100_T, ERL_TYPE),
   };
 
   /* ********************************************************** */
@@ -4174,7 +4174,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "top_type_100_t")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<type>");
+    Marker marker_ = enter_section_(builder_, level_, _COLLAPSE_, "<type>");
     result_ = type(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && top_type_100_t_1(builder_, level_ + 1);

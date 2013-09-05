@@ -31,13 +31,12 @@ ERL_FILE
               PsiElement({)('{')
               PsiElement(})('}')
             PsiElement(|)('|')
-            ERL_TOP_TYPE_100_T
-              ERL_TYPE
-                ERL_TYPE_REF
-                  ERL_Q_ATOM
-                    PsiElement(atom)('string')
-                PsiElement(()('(')
-                PsiElement())(')')
+            ERL_TYPE
+              ERL_TYPE_REF
+                ERL_Q_ATOM
+                  PsiElement(atom)('string')
+              PsiElement(()('(')
+              PsiElement())(')')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
@@ -48,13 +47,12 @@ ERL_FILE
             PsiElement(atom)('undefined')
         PsiElement(::)('::')
         ERL_TOP_TYPE
-          ERL_TOP_TYPE_100_T
-            ERL_TYPE
-              ERL_TYPE_REF
-                ERL_Q_ATOM
-                  PsiElement(atom)('symbol_info_type')
-              PsiElement(()('(')
-              PsiElement())(')')
+          ERL_TYPE
+            ERL_TYPE_REF
+              ERL_Q_ATOM
+                PsiElement(atom)('symbol_info_type')
+            PsiElement(()('(')
+            PsiElement())(')')
       PsiElement(})('}')
     PsiElement())(')')
     PsiElement(.)('.')
