@@ -35,12 +35,6 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
 
   @Override
   @Nullable
-  public ErlangFunType100T getFunType100T() {
-    return findChildByClass(ErlangFunType100T.class);
-  }
-
-  @Override
-  @Nullable
   public ErlangModuleRef getModuleRef() {
     return findChildByClass(ErlangModuleRef.class);
   }

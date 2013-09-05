@@ -14,9 +14,6 @@ public interface ErlangType extends ErlangCompositeElement {
   List<ErlangFieldType> getFieldTypeList();
 
   @Nullable
-  ErlangFunType100T getFunType100T();
-
-  @Nullable
   ErlangModuleRef getModuleRef();
 
   @Nullable

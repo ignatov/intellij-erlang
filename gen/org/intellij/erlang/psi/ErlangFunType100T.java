@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangFunType100T extends ErlangCompositeElement {
+public interface ErlangFunType100T extends ErlangType {
 
   @NotNull
   List<ErlangTopType> getTopTypeList();
