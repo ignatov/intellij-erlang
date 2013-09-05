@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangBinBaseTypeImpl extends ErlangCompositeElementImpl implements ErlangBinBaseType {
+public class ErlangBinBaseTypeImpl extends ErlangTypeImpl implements ErlangBinBaseType {
 
   public ErlangBinBaseTypeImpl(ASTNode node) {
     super(node);

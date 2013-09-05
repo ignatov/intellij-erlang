@@ -8,9 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ErlangType extends ErlangCompositeElement {
 
   @Nullable
-  ErlangBinaryType getBinaryType();
-
-  @Nullable
   ErlangModuleRef getModuleRef();
 
   @Nullable

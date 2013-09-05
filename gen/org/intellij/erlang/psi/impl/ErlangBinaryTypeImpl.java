@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangBinaryTypeImpl extends ErlangCompositeElementImpl implements ErlangBinaryType {
+public class ErlangBinaryTypeImpl extends ErlangTypeImpl implements ErlangBinaryType {
 
   public ErlangBinaryTypeImpl(ASTNode node) {
     super(node);
@@ -22,15 +22,9 @@ public class ErlangBinaryTypeImpl extends ErlangCompositeElementImpl implements 
   }
 
   @Override
-  @Nullable
-  public ErlangBinBaseType getBinBaseType() {
-    return findChildByClass(ErlangBinBaseType.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangBinUnitType getBinUnitType() {
-    return findChildByClass(ErlangBinUnitType.class);
+  @NotNull
+  public List<ErlangType> getTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
   }
 
 }

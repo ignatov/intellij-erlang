@@ -23,12 +23,6 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
 
   @Override
   @Nullable
-  public ErlangBinaryType getBinaryType() {
-    return findChildByClass(ErlangBinaryType.class);
-  }
-
-  @Override
-  @Nullable
   public ErlangModuleRef getModuleRef() {
     return findChildByClass(ErlangModuleRef.class);
   }

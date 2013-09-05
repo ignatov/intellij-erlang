@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangBinUnitType extends ErlangCompositeElement {
+public interface ErlangBinUnitType extends ErlangType {
 
   @NotNull
   List<ErlangQVar> getQVarList();

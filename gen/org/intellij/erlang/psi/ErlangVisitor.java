@@ -68,7 +68,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitBinBaseType(@NotNull ErlangBinBaseType o) {
-    visitCompositeElement(o);
+    visitType(o);
   }
 
   public void visitBinElement(@NotNull ErlangBinElement o) {
@@ -76,7 +76,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitBinUnitType(@NotNull ErlangBinUnitType o) {
-    visitCompositeElement(o);
+    visitType(o);
   }
 
   public void visitBinaryExpression(@NotNull ErlangBinaryExpression o) {
@@ -84,7 +84,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitBinaryType(@NotNull ErlangBinaryType o) {
-    visitCompositeElement(o);
+    visitType(o);
   }
 
   public void visitBitType(@NotNull ErlangBitType o) {

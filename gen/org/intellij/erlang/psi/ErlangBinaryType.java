@@ -5,12 +5,9 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangBinaryType extends ErlangCompositeElement {
+public interface ErlangBinaryType extends ErlangType {
 
-  @Nullable
-  ErlangBinBaseType getBinBaseType();
-
-  @Nullable
-  ErlangBinUnitType getBinUnitType();
+  @NotNull
+  List<ErlangType> getTypeList();
 
 }
