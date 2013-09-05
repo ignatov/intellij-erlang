@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangFunTypeImpl extends ErlangCompositeElementImpl implements ErlangFunType {
+public class ErlangFunTypeImpl extends ErlangTypeImpl implements ErlangFunType {
 
   public ErlangFunTypeImpl(ASTNode node) {
     super(node);
