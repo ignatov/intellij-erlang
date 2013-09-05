@@ -228,7 +228,7 @@ type ::=
   | q_var ['::' top_type]
   | '[' [top_type [',' '...']] ']'
   | record_like_type
-  | '#' record_ref '{' field_type_list? '}' {pin(".*") = 1}
+  | '#' record_ref '{' field_type_list? '}' {pin(".*")=1}
 record_like_type ::= '{' top_type_list? '}' {extends=type}
 
 int_type ::= '-'? (integer | macros argument_list?) {extends=type}
@@ -237,11 +237,7 @@ fun_type ::= fun_type_arguments top_type_clause {extends=type pin=1}
 top_type_clause ::= '->' top_type {pin=1}
 fun_type_arguments ::= '(' top_type_list? ')' {pin=1}
 private field_type_list ::= field_type (',' field_type)*
-field_type ::= q_atom '::' top_type {
-  pin=1
-  methods=[getReference]
-  extends=type
-}
+field_type ::= q_atom '::' top_type {extends=type pin=1 methods=[getReference]}
 
 binary_type ::= '<<' [bin_base_type | bin_unit_type | bin_base_type_list] '>>' {extends=type pin=1}
 private bin_base_type_list ::= bin_base_type ',' bin_unit_type
@@ -251,7 +247,7 @@ bin_unit_type ::= q_var ':' q_var '*' integer {extends=type}
 attr_val ::= '(' exprs ')' | exprs {name="attribute value"}
 
 function ::= function_clause (';' function_clause)* {
-  pin(".*") = 1
+  pin(".*")=1
   methods = [
     atom_name = "function_clause[0]/q_atom"
     getName
