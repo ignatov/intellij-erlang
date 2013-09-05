@@ -269,7 +269,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitIntType(@NotNull ErlangIntType o) {
-    visitCompositeElement(o);
+    visitType(o);
   }
 
   public void visitLcExpression(@NotNull ErlangLcExpression o) {

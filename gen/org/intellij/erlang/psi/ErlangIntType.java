@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangIntType extends ErlangCompositeElement {
+public interface ErlangIntType extends ErlangType {
 
   @Nullable
   ErlangArgumentList getArgumentList();
