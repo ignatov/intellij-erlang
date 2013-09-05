@@ -1,16 +1,16 @@
 // This is a generated file. Not intended for manual editing.
 package org.intellij.erlang.parser;
 
-import com.intellij.lang.ASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiBuilder.Marker;
-import com.intellij.lang.PsiParser;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.tree.TokenSet;
-
 import static org.intellij.erlang.ErlangTypes.*;
 import static org.intellij.erlang.parser.ErlangParserUtil.*;
+import com.intellij.lang.LighterASTNode;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.lang.ASTNode;
+import com.intellij.psi.tree.TokenSet;
+import com.intellij.lang.PsiParser;
 
 @SuppressWarnings({"SimplifiableIfStatement", "UnusedAssignment"})
 public class ErlangParser implements PsiParser {
