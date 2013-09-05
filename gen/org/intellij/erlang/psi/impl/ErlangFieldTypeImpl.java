@@ -11,7 +11,7 @@ import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.PsiReference;
 
-public class ErlangFieldTypeImpl extends ErlangCompositeElementImpl implements ErlangFieldType {
+public class ErlangFieldTypeImpl extends ErlangTypeImpl implements ErlangFieldType {
 
   public ErlangFieldTypeImpl(ASTNode node) {
     super(node);

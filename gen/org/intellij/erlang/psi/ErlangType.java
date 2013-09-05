@@ -10,9 +10,6 @@ public interface ErlangType extends ErlangCompositeElement {
   @Nullable
   ErlangBinaryType getBinaryType();
 
-  @NotNull
-  List<ErlangFieldType> getFieldTypeList();
-
   @Nullable
   ErlangModuleRef getModuleRef();
 

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 
-public interface ErlangFieldType extends ErlangCompositeElement {
+public interface ErlangFieldType extends ErlangType {
 
   @NotNull
   ErlangQAtom getQAtom();

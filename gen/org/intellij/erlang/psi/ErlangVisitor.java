@@ -165,7 +165,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitFieldType(@NotNull ErlangFieldType o) {
-    visitCompositeElement(o);
+    visitType(o);
   }
 
   public void visitFunClause(@NotNull ErlangFunClause o) {
