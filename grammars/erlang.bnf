@@ -87,7 +87,7 @@ private console_expression ::= is_console empty console_expression_or_empty {pin
 private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
 private form_with_period ::= form period {recoverUntil=form_recover pin=1}
-private left period ::= '.'
+private left period ::= '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
 private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom | bnot | char | float | integer | not | string | var | '.')
 private form ::=
     is_app_config config_expression
@@ -134,13 +134,14 @@ include_lib ::= '-' 'include_lib' '(' include_string ')' {pin=2}
 include_string ::= string {methods = [getReference]}
 
 attribute ::= '-' (
-  module
+    module
   | export
   | export_type_attribute
   | import_directive
   | specification
   | callback_spec
   | behaviour
+  | atom_attribute_strict <<enterMode "ELSE">>
   | atom_attribute
   ) {pin=1}
 callback_spec ::= 'callback' type_spec {pin=1}
@@ -175,6 +176,7 @@ type_ref ::= q_atom {
   methods = [getReference]
 }
 
+atom_attribute_strict ::= &'else' q_atom {elementType=atom_attribute}
 atom_attribute ::= q_atom ['(' typed_attr_val ')' | typed_attr_val | attr_val]
 export_functions ::= '[' export_function_list? ']' {pin=1}
 private export_function_list ::= export_function (',' export_function)*

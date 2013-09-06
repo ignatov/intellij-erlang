@@ -591,6 +591,28 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // &'else' q_atom
+  public static boolean atom_attribute_strict(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atom_attribute_strict")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<atom attribute strict>");
+    result_ = atom_attribute_strict_0(builder_, level_ + 1);
+    result_ = result_ && q_atom(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, ERL_ATOM_ATTRIBUTE, result_, false, null);
+    return result_;
+  }
+
+  // &'else'
+  private static boolean atom_attribute_strict_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "atom_attribute_strict_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _AND_, null);
+    result_ = consumeToken(builder_, "else");
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
+  }
+
+  /* ********************************************************** */
   // q_atom '/' integer
   public static boolean atom_with_arity_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "atom_with_arity_expression")) return false;
@@ -687,13 +709,14 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // '-' (
-  //   module
+  //     module
   //   | export
   //   | export_type_attribute
   //   | import_directive
   //   | specification
   //   | callback_spec
   //   | behaviour
+  //   | atom_attribute_strict <<enterMode "ELSE">>
   //   | atom_attribute
   //   )
   public static boolean attribute(PsiBuilder builder_, int level_) {
@@ -716,6 +739,7 @@ public class ErlangParser implements PsiParser {
   //   | specification
   //   | callback_spec
   //   | behaviour
+  //   | atom_attribute_strict <<enterMode "ELSE">>
   //   | atom_attribute
   private static boolean attribute_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "attribute_1")) return false;
@@ -728,7 +752,19 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = specification(builder_, level_ + 1);
     if (!result_) result_ = callback_spec(builder_, level_ + 1);
     if (!result_) result_ = behaviour(builder_, level_ + 1);
+    if (!result_) result_ = attribute_1_7(builder_, level_ + 1);
     if (!result_) result_ = atom_attribute(builder_, level_ + 1);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  // atom_attribute_strict <<enterMode "ELSE">>
+  private static boolean attribute_1_7(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "attribute_1_7")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = atom_attribute_strict(builder_, level_ + 1);
+    result_ = result_ && enterMode(builder_, level_ + 1, "ELSE");
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
@@ -3495,14 +3531,25 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '.'
+  // '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
   static boolean period(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "period")) return false;
-    if (!nextTokenIs(builder_, ERL_DOT)) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _LEFT_INNER_, null);
     result_ = consumeToken(builder_, ERL_DOT);
+    if (!result_) result_ = period_1(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
+  }
+
+  // <<isModeOn "ELSE">> <<exitMode "ELSE">>
+  private static boolean period_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "period_1")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = isModeOn(builder_, level_ + 1, "ELSE");
+    result_ = result_ && exitMode(builder_, level_ + 1, "ELSE");
+    exit_section_(builder_, marker_, null, result_);
     return result_;
   }
 
