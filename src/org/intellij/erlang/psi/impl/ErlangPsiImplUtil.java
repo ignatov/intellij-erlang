@@ -381,9 +381,10 @@ public class ErlangPsiImplUtil {
     ErlangAssignmentExpression assignment = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
     if (assignment == null) return false;
     PsiElement parent = assignment.getParent();
-    ErlangAssignmentExpression topAssignment = parent instanceof ErlangTupleExpression ? PsiTreeUtil.getParentOfType(parent, ErlangAssignmentExpression.class) : null;
+    ErlangAssignmentExpression topAssignment = parent instanceof ErlangTupleExpression || parent instanceof ErlangListExpression ?
+      PsiTreeUtil.getParentOfType(parent, ErlangAssignmentExpression.class) : null;
     assignment = topAssignment != null ? topAssignment : assignment;
-    return PsiTreeUtil.isAncestor(assignment.getLeft(), psiElement, true);    
+    return PsiTreeUtil.isAncestor(assignment.getLeft(), psiElement, true);
   }
 
   public static boolean isMacros(ErlangQVar o) {

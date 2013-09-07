@@ -1,4 +1,4 @@
--export([get_profile/2, name_to_pid/1, do_receive/6, error/0]).
+-export([get_profile/2, name_to_pid/1, do_receive/6, error/0, foo/0, foo2/0]).
 
 name_to_pid(Name) ->
   case Name of
@@ -85,3 +85,7 @@ unbound_test() ->
 error()->
     {_FWver,_FWcrc,[_P0 | _Parts] = AllParts} = {1,1,[1,2,3]},
     AllParts.
+
+foo() -> [{1,2} = Rec, {1,2}=Rec ] = [{1,2}, {1,2}].
+
+foo2() -> [{1,2} = <warning>Rec</warning>] = [{1,2}].
