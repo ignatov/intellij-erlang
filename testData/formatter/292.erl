@@ -1,7 +1,8 @@
--export([ foo/0 , 
-          bar_test/0, simple/1]).
+-export([ foo/0
+, bar_test/0, simple/1]).
 
--export_type([card/0, out/0]).
+-export_type([card/0
+, out/0]).
 
 
 
@@ -43,4 +44,31 @@ foo() ->
         asd = 1,
         asd = 1,
         Bar = [X || X <- [ 1 , 2 , a , 3 , 4 ,
-                           b , 5 ,              6], is_integer(X), X > 3].
+                           b , 5 ,              6], is_integer(X), X > 3],
+                           Bar2 = [1,2,3
+                           ,4,5,6].
+
+
+foo1() ->
+    [{1, 2} = Rec, {1, 2} = Rec] = [{ 1
+                                    , 2}, { 1
+                                          , 2}].
+
+
+-spec handle_result( flow_result()
+                         , [service_spec()]) ->
+                       flow_result() | { ok
+                                            , cowboy_req:req()}.
+
+handle_result({       flow, FlowName
+                    , Context}, _) ->
+    ok;
+
+handle_result(      {flow, FlowName, Context}
+                   , _) -> ok.
+
+foo() ->
+       Context = 1,
+    { ok
+         , Flows} = unrest_context:get( flows
+                                 , Context).

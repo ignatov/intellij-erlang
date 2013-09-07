@@ -57,13 +57,14 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_FUN_CLAUSES,
     ERL_TRY_EXPRESSIONS_CLAUSE,
     ERL_TYPE_SIG_GUARD,
-    ERL_AFTER_CLAUSE
+    ERL_AFTER_CLAUSE,
+    ERL_TOP_TYPE_CLAUSE
   );
   public static final TokenSet CURLY_CONTAINERS = TokenSet.create(
-    ERL_TUPLE_EXPRESSION, ERL_RECORD_TUPLE, ERL_TYPED_RECORD_FIELDS, ERL_RECORD_FIELDS
+    ERL_TUPLE_EXPRESSION, ERL_RECORD_TUPLE, ERL_TYPED_RECORD_FIELDS, ERL_RECORD_FIELDS, ERL_RECORD_LIKE_TYPE
   );
   public static final TokenSet PARENTHESIS_CONTAINERS = TokenSet.create(
-    ERL_PARENTHESIZED_EXPRESSION, ERL_ARGUMENT_LIST, ERL_ARGUMENT_DEFINITION_LIST, ERL_FUN_TYPE
+    ERL_PARENTHESIZED_EXPRESSION, ERL_ARGUMENT_LIST, ERL_ARGUMENT_DEFINITION_LIST, ERL_FUN_TYPE, ERL_FUN_TYPE_ARGUMENTS
   );
   public static final TokenSet BRACKETS_CONTAINERS = TokenSet.create(
     ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES
@@ -128,18 +129,21 @@ public class ErlangFormattingBlock extends AbstractBlock {
     Alignment fromStrategy = calculateAlignmentFromStrategy(parent, child);
     if (fromStrategy != null) return fromStrategy;
 
+
+    if (PARENTHESIS_CONTAINERS.contains(parentType)) {
+      if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT && childType != ERL_COMMA) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
+      else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
+    }
+    if (CURLY_CONTAINERS.contains(parentType)) {
+      if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT && childType != ERL_COMMA) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
+      else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
+    }
+    if (BRACKETS_CONTAINERS.contains(parentType)) {
+      boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA;
+      if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
+      else if (myErlangSettings.NEW_LINE_BEFORE_COMMA && bracketsAndComma) return baseAlignment2;
+    }
     if (myErlangSettings.ALIGN_MULTILINE_BLOCK) {
-      if (PARENTHESIS_CONTAINERS.contains(parentType)) {
-        if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT && childType != ERL_COMMA) return baseAlignment;
-      }
-      if (CURLY_CONTAINERS.contains(parentType)) {
-        if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT && childType != ERL_COMMA) return baseAlignment;
-      }
-      if (BRACKETS_CONTAINERS.contains(parentType)) {
-        boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA;
-        if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END) return baseAlignment;
-        if (myErlangSettings.NEW_LINE_BEFORE_COMMA && bracketsAndComma) return baseAlignment2;
-      }
       if (parentType == ERL_LIST_COMPREHENSION) {
         boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA;
         if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) return baseAlignment;
@@ -189,29 +193,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
       if (COMMENTS.contains(node.getElementType()) && mySettings.KEEP_FIRST_COLUMN_COMMENT) {
         return Spacing.createKeepingFirstColumnSpacing(0, Integer.MAX_VALUE, true, mySettings.KEEP_BLANK_LINES_IN_CODE);
       }
-      if (commaInsideMultilineList(node)) {
-        if (myErlangSettings.NEW_LINE_BEFORE_COMMA) {
-          return Spacing.createSpacing(0, 0, 1, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
-        }
-        else {
-          return Spacing.createSpacing(mySettings.SPACE_BEFORE_COMMA ? 1 : 0, 0, 0, false, 0);
-        }
-      }
-    }
-    if (child1 instanceof ErlangFormattingBlock) {
-      if (commaInsideMultilineList(((ErlangFormattingBlock) child1).getNode())) {
-        if (myErlangSettings.NEW_LINE_BEFORE_COMMA) {
-          return Spacing.createSpacing(mySettings.SPACE_AFTER_COMMA ? 1 : 0, 0, 0, false, 0);
-        }
-      }
     }
     return mySpacingBuilder.getSpacing(this, child1, child2);
-  }
-
-  private static boolean commaInsideMultilineList(@NotNull ASTNode node) {
-    ASTNode parent = node.getTreeParent();
-    IElementType type = node.getElementType();
-    return type == ERL_COMMA && BRACKETS_CONTAINERS.contains(parent.getElementType()) && StringUtil.countNewLines(parent.getText()) > 0;
   }
 
   @NotNull
