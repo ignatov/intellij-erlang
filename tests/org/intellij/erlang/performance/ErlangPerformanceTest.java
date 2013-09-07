@@ -48,7 +48,7 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
         myFixture.configureByFile(getTestName(false) + ".erl");
         myFixture.doHighlighting();
       }
-    }).cpuBound().usesAllCPUCores().assertTiming();
+    }).attempts(100).cpuBound().usesAllCPUCores().assertTiming();
   }
 
   public void testDialyzerDataflow() throws Exception { doTest(5000); }
