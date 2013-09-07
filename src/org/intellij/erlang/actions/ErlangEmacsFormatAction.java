@@ -115,7 +115,8 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
 
       ApplicationManager.getApplication().saveAll();
 
-      OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
+      final String commandLineString = commandLine.getCommandLineString();
+      OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLineString);
       handler.addProcessListener(new ProcessAdapter() {
         @Override
         public void processTerminated(ProcessEvent event) {
@@ -128,6 +129,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
                   Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
                     "Emacs returned an empty file",
                     NotificationType.WARNING), project);
+                  LOG.warn("Emacs returned an empty file:\n" + commandLineString);
                   return;
                 }
                 final Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
