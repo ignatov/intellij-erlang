@@ -38,12 +38,12 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ObjectUtils;
-import com.intellij.util.PlatformUtils;
 import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.dialyzer.DialyzerSettings;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
 import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -103,7 +103,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
       }
     }
     
-    if (!isSmallIde()) {
+    if (!ErlangSystemUtil.isSmallIde()) {
       mySdkPathSelector.setVisible(false);
       mySdkTitledSeparator.setVisible(false);
       mySdkPathLabel.setVisible(false);
@@ -186,16 +186,17 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
       myEmacsVersionText.setText("N/A");
     }
   }
-  
-  private static boolean isSmallIde() {
-    return PlatformUtils.isRubyMine() || PlatformUtils.isPyCharm() || PlatformUtils.isPhpStorm() || PlatformUtils.isWebStorm();
-  }
-  
+
   @NotNull
-  private String getErlangSdkPath() {
+  public String getErlangSdkPath() {
+    return getErlangSdkPath(myProject);
+  }
+
+  @NotNull
+  public static String getErlangSdkPath(@NotNull Project project) {
     AccessToken token = ApplicationManager.getApplication().acquireReadActionLock();
     try {
-      LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(myProject);
+      LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
       Library lib = table.getLibraryByName(ERLANG_LIBRARY_NAME);
       String[] urls = lib == null ? ArrayUtil.EMPTY_STRING_ARRAY : lib.getUrls(OrderRootType.CLASSES);
       return VfsUtilCore.urlToPath(ObjectUtils.notNull(ArrayUtil.getFirstElement(urls), ""));

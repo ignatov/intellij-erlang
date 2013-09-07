@@ -24,6 +24,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.PlatformUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -85,5 +86,9 @@ public class ErlangSystemUtil {
       cmd.addParameter("-I");
       cmd.addParameter(path);
     }
+  }
+
+  public static boolean isSmallIde() {
+    return PlatformUtils.isRubyMine() || PlatformUtils.isPyCharm() || PlatformUtils.isPhpStorm() || PlatformUtils.isWebStorm();
   }
 }

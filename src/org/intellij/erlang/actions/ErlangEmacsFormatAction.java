@@ -43,7 +43,10 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.ExceptionUtil;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
+import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
@@ -87,8 +90,9 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       commandLine.setExePath(emacsPath);
       commandLine.addParameters("--batch", "--eval");
 
-      final Sdk projectSdk = ProjectRootManager.getInstance(project).getProjectSdk();
-      if (projectSdk == null) {
+      String homePath = getSdkPath(project);
+
+      if (StringUtil.isEmpty(homePath)) {
         Notifications.Bus.notify(
           new Notification(groupId, NOTIFICATION_TITLE, "Erlang project SDK is not configured",
             NotificationType.WARNING), project);
@@ -96,7 +100,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       }
       String s = "\n" +
         "(progn (find-file \"" + virtualFile.getCanonicalPath() + "\")\n" +
-        "    (setq erlang-root-dir \"" + projectSdk.getHomePath() +"\")\n" +
+        "    (setq erlang-root-dir \"" + homePath +"\")\n" +
         "    (setq load-path (cons (car (file-expand-wildcards (concat erlang-root-dir \"/lib/tools-*/emacs\")))\n" +
         "                          load-path))\n" +
         "    (require 'erlang-start)\n" +
@@ -163,4 +167,14 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
     }
   }
 
+  @NotNull
+  private static String getSdkPath(@NotNull Project project) {
+    if (ErlangSystemUtil.isSmallIde()) {
+      return ErlangExternalToolsConfigurable.getErlangSdkPath(project);
+    }
+    else {
+      Sdk projectSdk = ProjectRootManager.getInstance(project).getProjectSdk();
+      return projectSdk != null ? StringUtil.notNullize(projectSdk.getHomePath()) : "";
+    }
+  }
 }
