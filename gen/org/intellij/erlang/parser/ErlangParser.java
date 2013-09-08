@@ -591,28 +591,6 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // &'else' q_atom
-  public static boolean atom_attribute_strict(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_strict")) return false;
-    boolean result_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<atom attribute strict>");
-    result_ = atom_attribute_strict_0(builder_, level_ + 1);
-    result_ = result_ && q_atom(builder_, level_ + 1);
-    exit_section_(builder_, level_, marker_, ERL_ATOM_ATTRIBUTE, result_, false, null);
-    return result_;
-  }
-
-  // &'else'
-  private static boolean atom_attribute_strict_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "atom_attribute_strict_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _AND_, null);
-    result_ = consumeToken(builder_, "else");
-    exit_section_(builder_, level_, marker_, null, result_, false, null);
-    return result_;
-  }
-
-  /* ********************************************************** */
   // q_atom '/' integer
   public static boolean atom_with_arity_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "atom_with_arity_expression")) return false;
@@ -716,7 +694,7 @@ public class ErlangParser implements PsiParser {
   //   | specification
   //   | callback_spec
   //   | behaviour
-  //   | atom_attribute_strict <<enterMode "ELSE">>
+  //   | else_atom_attribute <<enterMode "ELSE">>
   //   | atom_attribute
   //   )
   public static boolean attribute(PsiBuilder builder_, int level_) {
@@ -739,7 +717,7 @@ public class ErlangParser implements PsiParser {
   //   | specification
   //   | callback_spec
   //   | behaviour
-  //   | atom_attribute_strict <<enterMode "ELSE">>
+  //   | else_atom_attribute <<enterMode "ELSE">>
   //   | atom_attribute
   private static boolean attribute_1(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "attribute_1")) return false;
@@ -758,12 +736,12 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // atom_attribute_strict <<enterMode "ELSE">>
+  // else_atom_attribute <<enterMode "ELSE">>
   private static boolean attribute_1_7(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "attribute_1_7")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
-    result_ = atom_attribute_strict(builder_, level_ + 1);
+    result_ = else_atom_attribute(builder_, level_ + 1);
     result_ = result_ && enterMode(builder_, level_ + 1, "ELSE");
     exit_section_(builder_, marker_, null, result_);
     return result_;
@@ -1568,6 +1546,28 @@ public class ErlangParser implements PsiParser {
     result_ = result_ && cr_clause(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // &'else' q_atom
+  public static boolean else_atom_attribute(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "else_atom_attribute")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<attribute>");
+    result_ = else_atom_attribute_0(builder_, level_ + 1);
+    result_ = result_ && q_atom(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, ERL_ATOM_ATTRIBUTE, result_, false, null);
+    return result_;
+  }
+
+  // &'else'
+  private static boolean else_atom_attribute_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "else_atom_attribute_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _AND_, null);
+    result_ = consumeToken(builder_, "else");
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
   }
 
   /* ********************************************************** */

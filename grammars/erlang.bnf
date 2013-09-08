@@ -141,7 +141,7 @@ attribute ::= '-' (
   | specification
   | callback_spec
   | behaviour
-  | atom_attribute_strict <<enterMode "ELSE">>
+  | else_atom_attribute <<enterMode "ELSE">>
   | atom_attribute
   ) {pin=1}
 callback_spec ::= 'callback' type_spec {pin=1}
@@ -176,7 +176,7 @@ type_ref ::= q_atom {
   methods = [getReference]
 }
 
-atom_attribute_strict ::= &'else' q_atom {elementType=atom_attribute}
+else_atom_attribute ::= &'else' q_atom {elementType=atom_attribute}
 atom_attribute ::= q_atom ['(' typed_attr_val ')' | typed_attr_val | attr_val]
 export_functions ::= '[' export_function_list? ']' {pin=1}
 private export_function_list ::= export_function (',' export_function)*
