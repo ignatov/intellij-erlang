@@ -141,6 +141,7 @@ attribute ::= '-' (
   | specification
   | callback_spec
   | behaviour
+  | on_load
   | else_atom_attribute <<enterMode "ELSE">>
   | atom_attribute
   ) {pin=1}
@@ -177,6 +178,7 @@ type_ref ::= q_atom {
 }
 
 else_atom_attribute ::= &'else' q_atom {elementType=atom_attribute}
+on_load ::= &'on_load' q_atom '(' function_with_arity ')'{pin=2 elementType=atom_attribute}
 atom_attribute ::= q_atom ['(' typed_attr_val ')' | typed_attr_val | attr_val]
 export_functions ::= '[' export_function_list? ']' {pin=1}
 private export_function_list ::= export_function (',' export_function)*
@@ -432,10 +434,7 @@ fun_expression ::= fun (fun_expression_block | fun_expression_lambda) {pin=1}
 private fun_expression_lambda ::= [(module_ref | q_var) ':'] (function_with_arity | function_with_arity_variables)
 private fun_expression_block ::= fun_clauses end {pin=1}
 
-function_with_arity ::= q_atom '/' integer {
-  pin= 1
-  methods = [getReference]
-}
+function_with_arity ::= q_atom '/' integer {pin=1 methods=[getReference]}
 function_with_arity_variables ::= q_var '/' (integer|q_var) {pin=1}
 fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= argument_definition_list clause_guard? clause_body {pin=1}

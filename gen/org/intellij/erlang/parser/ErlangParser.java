@@ -694,6 +694,7 @@ public class ErlangParser implements PsiParser {
   //   | specification
   //   | callback_spec
   //   | behaviour
+  //   | on_load
   //   | else_atom_attribute <<enterMode "ELSE">>
   //   | atom_attribute
   //   )
@@ -717,6 +718,7 @@ public class ErlangParser implements PsiParser {
   //   | specification
   //   | callback_spec
   //   | behaviour
+  //   | on_load
   //   | else_atom_attribute <<enterMode "ELSE">>
   //   | atom_attribute
   private static boolean attribute_1(PsiBuilder builder_, int level_) {
@@ -730,15 +732,16 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = specification(builder_, level_ + 1);
     if (!result_) result_ = callback_spec(builder_, level_ + 1);
     if (!result_) result_ = behaviour(builder_, level_ + 1);
-    if (!result_) result_ = attribute_1_7(builder_, level_ + 1);
+    if (!result_) result_ = on_load(builder_, level_ + 1);
+    if (!result_) result_ = attribute_1_8(builder_, level_ + 1);
     if (!result_) result_ = atom_attribute(builder_, level_ + 1);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
 
   // else_atom_attribute <<enterMode "ELSE">>
-  private static boolean attribute_1_7(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "attribute_1_7")) return false;
+  private static boolean attribute_1_8(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "attribute_1_8")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
     result_ = else_atom_attribute(builder_, level_ + 1);
@@ -3512,6 +3515,33 @@ public class ErlangParser implements PsiParser {
     result_ = consumeToken(builder_, ERL_ARROW);
     if (!result_) result_ = consumeToken(builder_, ERL_WHEN);
     exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // &'on_load' q_atom '(' function_with_arity ')'
+  public static boolean on_load(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "on_load")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<on load>");
+    result_ = on_load_0(builder_, level_ + 1);
+    result_ = result_ && q_atom(builder_, level_ + 1);
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
+    result_ = pinned_ && report_error_(builder_, function_with_arity(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    exit_section_(builder_, level_, marker_, ERL_ATOM_ATTRIBUTE, result_, pinned_, null);
+    return result_ || pinned_;
+  }
+
+  // &'on_load'
+  private static boolean on_load_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "on_load_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _AND_, null);
+    result_ = consumeToken(builder_, "on_load");
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
     return result_;
   }
 
