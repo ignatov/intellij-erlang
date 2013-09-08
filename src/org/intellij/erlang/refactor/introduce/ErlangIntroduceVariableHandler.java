@@ -169,21 +169,13 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     VariableTextBuilder builder = new VariableTextBuilder();
     expression.accept(builder);
     String newName = builder.result();
-    String newText = newName + " = " + ErlangPsiImplUtil.getNotParenthesizedExpression(expression).getText();
+    ErlangExpression initializer = ErlangPsiImplUtil.getNotParenthesizedExpression(expression);
+    String newText = initializer != null ? newName + " = " + initializer.getText() : null;
     Project project = expression.getProject();
-    PsiElement declaration = null;
-    try {
-      try {
-        declaration = ErlangElementFactory.createExpressionFromText(project, newText);
-      } catch (Exception e) {
-        declaration = ErlangElementFactory.createExpressionFromText(project, "PlaceHolder" + " = " + expression.getText());
-      }
-    } catch (Exception e) { //
-    }
-
+    PsiElement declaration = newText != null ? ErlangElementFactory.createExpressionFromText(project, newText) : null;
     if (declaration == null) {
       showCannotPerformError(project, editor);
-      return declaration;
+      return null;
     }
 
     declaration = performReplace(newName, declaration, expression, occurrences);
