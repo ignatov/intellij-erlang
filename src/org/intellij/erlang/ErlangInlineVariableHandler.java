@@ -83,8 +83,6 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
         ApplicationManager.getApplication().runWriteAction(new Runnable() {
           @Override
           public void run() {
-
-
             for (PsiReference psiReference : all) {
               PsiElement host = psiReference.getElement();
               PsiElement expr = host.getParent();
@@ -148,5 +146,4 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
 
     return parent;
   }
-
 }
