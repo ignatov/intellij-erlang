@@ -1356,8 +1356,8 @@ public class ErlangPsiImplUtil {
     return expression;
   }
 
-  @NotNull
-  public static ErlangExpression getNotParenthesizedExpression(@NotNull ErlangExpression expression) {
+  @Nullable
+  public static ErlangExpression getNotParenthesizedExpression(@Nullable ErlangExpression expression) {
     while (expression instanceof ErlangParenthesizedExpression) {
       expression = ((ErlangParenthesizedExpression) expression).getExpression();
     }

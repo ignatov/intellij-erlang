@@ -68,10 +68,10 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
 
     if (((ErlangAssignmentExpression) assignment).getLeft() != parent) return;
 
-    final ErlangExpression right = ((ErlangAssignmentExpression) assignment).getRight();
+    final ErlangExpression rightWithoutParentheses = ErlangPsiImplUtil.getNotParenthesizedExpression(((ErlangAssignmentExpression) assignment).getRight());
 
-    if (right == null) {
-      CommonRefactoringUtil.showErrorHint(project, editor, "Should have an initializer.", REFACTORING_NAME, HelpID.INLINE_VARIABLE);
+    if (rightWithoutParentheses == null) {
+      CommonRefactoringUtil.showErrorHint(project, editor, "Cannot perform 'inline variable': variable should have an initializer.", REFACTORING_NAME, HelpID.INLINE_VARIABLE);
       return;
     }
 
@@ -83,7 +83,7 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
         ApplicationManager.getApplication().runWriteAction(new Runnable() {
           @Override
           public void run() {
-            ErlangExpression rightWithoutParentheses = ErlangPsiImplUtil.getNotParenthesizedExpression(right);
+
 
             for (PsiReference psiReference : all) {
               PsiElement host = psiReference.getElement();
