@@ -355,7 +355,8 @@ private tail ::= ']' | '|' expression ']' | ',' expression tail {pin(".*")=1}
 
 binary_expression ::= '<<' bin_element_list? '>>' {pin=1}
 private bin_element_list ::= bin_element (',' bin_element)*
-bin_element ::= prefix_op? expression [':' expression] opt_bit_type_list? {name="binary element"}
+private bin_expression ::= max_expression | parenthesized_expression
+bin_element ::= prefix_op? bin_expression [':' bin_expression] opt_bit_type_list? {name="binary element"}
 
 opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*

@@ -825,13 +825,13 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // prefix_op? expression [':' expression] opt_bit_type_list?
+  // prefix_op? bin_expression [':' bin_expression] opt_bit_type_list?
   public static boolean bin_element(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bin_element")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<binary element>");
     result_ = bin_element_0(builder_, level_ + 1);
-    result_ = result_ && expression(builder_, level_ + 1, -1);
+    result_ = result_ && bin_expression(builder_, level_ + 1);
     result_ = result_ && bin_element_2(builder_, level_ + 1);
     result_ = result_ && bin_element_3(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_BIN_ELEMENT, result_, false, null);
@@ -845,20 +845,20 @@ public class ErlangParser implements PsiParser {
     return true;
   }
 
-  // [':' expression]
+  // [':' bin_expression]
   private static boolean bin_element_2(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bin_element_2")) return false;
     bin_element_2_0(builder_, level_ + 1);
     return true;
   }
 
-  // ':' expression
+  // ':' bin_expression
   private static boolean bin_element_2_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bin_element_2_0")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
     result_ = consumeToken(builder_, ERL_COLON);
-    result_ = result_ && expression(builder_, level_ + 1, -1);
+    result_ = result_ && bin_expression(builder_, level_ + 1);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
@@ -911,6 +911,18 @@ public class ErlangParser implements PsiParser {
     result_ = result_ && bin_element(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // max_expression | parenthesized_expression
+  static boolean bin_expression(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bin_expression")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<expression>");
+    result_ = max_expression(builder_, level_ + 1);
+    if (!result_) result_ = parenthesized_expression(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
   }
 
   /* ********************************************************** */
