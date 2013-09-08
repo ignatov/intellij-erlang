@@ -16,11 +16,6 @@ public class ErlangTryExpressionImpl extends ErlangExpressionImpl implements Erl
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangCrClause> getCrClauseList() {
@@ -55,6 +50,11 @@ public class ErlangTryExpressionImpl extends ErlangExpressionImpl implements Erl
   @NotNull
   public PsiElement getTry() {
     return findNotNullChildByType(ERL_TRY);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryExpression(this);
+    else super.accept(visitor);
   }
 
 }

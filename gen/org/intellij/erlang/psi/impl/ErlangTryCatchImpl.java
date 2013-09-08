@@ -16,11 +16,6 @@ public class ErlangTryCatchImpl extends ErlangCompositeElementImpl implements Er
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryCatch(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangTryClauses getTryClauses() {
@@ -43,6 +38,11 @@ public class ErlangTryCatchImpl extends ErlangCompositeElementImpl implements Er
   @Nullable
   public PsiElement getCatch() {
     return findChildByType(ERL_CATCH);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryCatch(this);
+    else super.accept(visitor);
   }
 
 }

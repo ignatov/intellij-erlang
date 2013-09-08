@@ -16,15 +16,15 @@ public class ErlangRecordFieldsImpl extends ErlangCompositeElementImpl implement
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordFields(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangRecordField> getRecordFieldList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangRecordField.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordFields(this);
+    else super.accept(visitor);
   }
 
 }

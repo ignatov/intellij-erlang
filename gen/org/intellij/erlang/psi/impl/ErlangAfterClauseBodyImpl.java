@@ -16,11 +16,6 @@ public class ErlangAfterClauseBodyImpl extends ErlangCompositeElementImpl implem
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAfterClauseBody(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangClauseBody getClauseBody() {
@@ -31,6 +26,11 @@ public class ErlangAfterClauseBodyImpl extends ErlangCompositeElementImpl implem
   @Nullable
   public ErlangExpression getExpression() {
     return findChildByClass(ErlangExpression.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAfterClauseBody(this);
+    else super.accept(visitor);
   }
 
 }

@@ -16,11 +16,6 @@ public class ErlangIntTypeImpl extends ErlangTypeImpl implements ErlangIntType {
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIntType(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangArgumentList getArgumentList() {
@@ -37,6 +32,11 @@ public class ErlangIntTypeImpl extends ErlangTypeImpl implements ErlangIntType {
   @Nullable
   public PsiElement getInteger() {
     return findChildByType(ERL_INTEGER);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIntType(this);
+    else super.accept(visitor);
   }
 
 }

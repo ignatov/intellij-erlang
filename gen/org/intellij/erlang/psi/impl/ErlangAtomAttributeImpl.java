@@ -16,11 +16,6 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAtomAttribute(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangAttrVal getAttrVal() {
@@ -37,6 +32,11 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
   @Nullable
   public ErlangTypedAttrVal getTypedAttrVal() {
     return findChildByClass(ErlangTypedAttrVal.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAtomAttribute(this);
+    else super.accept(visitor);
   }
 
 }

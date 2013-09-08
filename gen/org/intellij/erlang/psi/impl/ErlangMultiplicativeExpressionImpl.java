@@ -16,11 +16,6 @@ public class ErlangMultiplicativeExpressionImpl extends ErlangFakeBinaryExpressi
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMultiplicativeExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangExpression> getExpressionList() {
@@ -49,6 +44,11 @@ public class ErlangMultiplicativeExpressionImpl extends ErlangFakeBinaryExpressi
   @Nullable
   public PsiElement getRem() {
     return findChildByType(ERL_REM);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMultiplicativeExpression(this);
+    else super.accept(visitor);
   }
 
 }

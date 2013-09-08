@@ -16,15 +16,15 @@ public class ErlangExportImpl extends ErlangCompositeElementImpl implements Erla
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExport(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangExportFunctions getExportFunctions() {
     return findChildByClass(ErlangExportFunctions.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExport(this);
+    else super.accept(visitor);
   }
 
 }

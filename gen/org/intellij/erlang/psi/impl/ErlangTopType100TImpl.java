@@ -16,15 +16,15 @@ public class ErlangTopType100TImpl extends ErlangTypeImpl implements ErlangTopTy
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTopType100T(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangType> getTypeList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTopType100T(this);
+    else super.accept(visitor);
   }
 
 }

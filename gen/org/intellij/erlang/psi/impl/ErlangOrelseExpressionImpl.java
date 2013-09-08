@@ -16,11 +16,6 @@ public class ErlangOrelseExpressionImpl extends ErlangFakeBinaryExpressionImpl i
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitOrelseExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangExpression> getExpressionList() {
@@ -31,6 +26,11 @@ public class ErlangOrelseExpressionImpl extends ErlangFakeBinaryExpressionImpl i
   @NotNull
   public PsiElement getOrelse() {
     return findNotNullChildByType(ERL_ORELSE);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitOrelseExpression(this);
+    else super.accept(visitor);
   }
 
 }

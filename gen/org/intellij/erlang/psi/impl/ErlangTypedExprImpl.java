@@ -16,11 +16,6 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedExpr(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangExpression getExpression() {
@@ -39,11 +34,17 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
     return findChildByClass(ErlangTopType.class);
   }
 
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedExpr(this);
+    else super.accept(visitor);
+  }
+
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @NotNull
   public PsiElement setName(String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }

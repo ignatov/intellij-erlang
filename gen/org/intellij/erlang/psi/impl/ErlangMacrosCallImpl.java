@@ -16,15 +16,15 @@ public class ErlangMacrosCallImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosCall(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangGenericFunctionCallExpression getGenericFunctionCallExpression() {
     return findChildByClass(ErlangGenericFunctionCallExpression.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosCall(this);
+    else super.accept(visitor);
   }
 
 }

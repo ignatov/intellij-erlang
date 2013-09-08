@@ -16,11 +16,6 @@ public class ErlangMacrosDefinitionImpl extends ErlangNamedElementImpl implement
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosDefinition(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangArgumentDefinitionList getArgumentDefinitionList() {
@@ -37,6 +32,11 @@ public class ErlangMacrosDefinitionImpl extends ErlangNamedElementImpl implement
   @Nullable
   public ErlangMacrosName getMacrosName() {
     return findChildByClass(ErlangMacrosName.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosDefinition(this);
+    else super.accept(visitor);
   }
 
   @NotNull

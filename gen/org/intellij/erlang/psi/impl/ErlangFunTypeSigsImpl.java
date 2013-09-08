@@ -16,11 +16,6 @@ public class ErlangFunTypeSigsImpl extends ErlangCompositeElementImpl implements
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeSigs(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangModuleRef getModuleRef() {
@@ -37,6 +32,11 @@ public class ErlangFunTypeSigsImpl extends ErlangCompositeElementImpl implements
   @NotNull
   public List<ErlangTypeSig> getTypeSigList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTypeSig.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeSigs(this);
+    else super.accept(visitor);
   }
 
 }

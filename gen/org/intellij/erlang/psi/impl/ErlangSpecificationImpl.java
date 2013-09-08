@@ -16,11 +16,6 @@ public class ErlangSpecificationImpl extends ErlangCompositeElementImpl implemen
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitSpecification(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangFunTypeSigs getFunTypeSigs() {
@@ -31,6 +26,11 @@ public class ErlangSpecificationImpl extends ErlangCompositeElementImpl implemen
   @Nullable
   public ErlangFunTypeSigsBraces getFunTypeSigsBraces() {
     return findChildByClass(ErlangFunTypeSigsBraces.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitSpecification(this);
+    else super.accept(visitor);
   }
 
   @Nullable

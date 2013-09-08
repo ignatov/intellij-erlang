@@ -16,11 +16,6 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangFunClauses getFunClauses() {
@@ -61,6 +56,11 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   @NotNull
   public PsiElement getFun() {
     return findNotNullChildByType(ERL_FUN);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunExpression(this);
+    else super.accept(visitor);
   }
 
 }

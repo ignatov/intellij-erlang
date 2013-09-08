@@ -16,11 +16,6 @@ public class ErlangRuleClauseImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRuleClause(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public ErlangArgumentList getArgumentList() {
@@ -43,6 +38,11 @@ public class ErlangRuleClauseImpl extends ErlangCompositeElementImpl implements 
   @NotNull
   public ErlangRuleBody getRuleBody() {
     return findNotNullChildByClass(ErlangRuleBody.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRuleClause(this);
+    else super.accept(visitor);
   }
 
 }

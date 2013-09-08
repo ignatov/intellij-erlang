@@ -14,7 +14,7 @@ public interface ErlangExportFunction extends ErlangCompositeElement {
   @Nullable
   PsiElement getInteger();
 
-  @NotNull
+  @Nullable
   PsiReference getReference();
 
 }

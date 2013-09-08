@@ -16,15 +16,15 @@ public class ErlangTopTypeClauseImpl extends ErlangCompositeElementImpl implemen
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTopTypeClause(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangTopType getTopType() {
     return findChildByClass(ErlangTopType.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTopTypeClause(this);
+    else super.accept(visitor);
   }
 
 }

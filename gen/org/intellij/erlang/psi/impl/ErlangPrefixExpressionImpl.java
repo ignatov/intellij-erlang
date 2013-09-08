@@ -16,15 +16,10 @@ public class ErlangPrefixExpressionImpl extends ErlangExpressionImpl implements 
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitPrefixExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
-  @Nullable
+  @NotNull
   public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+    return findNotNullChildByClass(ErlangExpression.class);
   }
 
   @Override
@@ -37,6 +32,11 @@ public class ErlangPrefixExpressionImpl extends ErlangExpressionImpl implements 
   @Nullable
   public PsiElement getNot() {
     return findChildByType(ERL_NOT);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitPrefixExpression(this);
+    else super.accept(visitor);
   }
 
 }

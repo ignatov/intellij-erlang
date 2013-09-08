@@ -16,11 +16,6 @@ public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements Er
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCaseExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangCrClause> getCrClauseList() {
@@ -49,6 +44,11 @@ public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements Er
   @Nullable
   public PsiElement getOf() {
     return findChildByType(ERL_OF);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCaseExpression(this);
+    else super.accept(visitor);
   }
 
 }

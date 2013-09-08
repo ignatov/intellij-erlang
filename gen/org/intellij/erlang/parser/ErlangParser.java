@@ -1019,33 +1019,28 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom [':' integer]
+  // bit_type_type | bit_type_signedness | bit_type_endianness | bit_type_unit
   public static boolean bit_type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bit_type")) return false;
-    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)
-        && replaceVariants(builder_, 2, "<type>")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<type>");
-    result_ = q_atom(builder_, level_ + 1);
-    result_ = result_ && bit_type_1(builder_, level_ + 1);
+    result_ = bit_type_type(builder_, level_ + 1);
+    if (!result_) result_ = bit_type_signedness(builder_, level_ + 1);
+    if (!result_) result_ = bit_type_endianness(builder_, level_ + 1);
+    if (!result_) result_ = bit_type_unit(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_BIT_TYPE, result_, false, null);
     return result_;
   }
 
-  // [':' integer]
-  private static boolean bit_type_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "bit_type_1")) return false;
-    bit_type_1_0(builder_, level_ + 1);
-    return true;
-  }
-
-  // ':' integer
-  private static boolean bit_type_1_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "bit_type_1_0")) return false;
+  /* ********************************************************** */
+  // 'bit' | 'little' | 'native'
+  static boolean bit_type_endianness(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bit_type_endianness")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
-    result_ = consumeToken(builder_, ERL_COLON);
-    result_ = result_ && consumeToken(builder_, ERL_INTEGER);
+    result_ = consumeToken(builder_, "bit");
+    if (!result_) result_ = consumeToken(builder_, "little");
+    if (!result_) result_ = consumeToken(builder_, "native");
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
@@ -1054,7 +1049,6 @@ public class ErlangParser implements PsiParser {
   // bit_type ('-' bit_type)*
   static boolean bit_type_list(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bit_type_list")) return false;
-    if (!nextTokenIs(builder_, ERL_QMARK) && !nextTokenIs(builder_, ERL_ATOM)) return false;
     boolean result_ = false;
     boolean pinned_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
@@ -1092,6 +1086,44 @@ public class ErlangParser implements PsiParser {
     result_ = result_ && bit_type(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // 'signed' | 'unsigned'
+  static boolean bit_type_signedness(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bit_type_signedness")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = consumeToken(builder_, "signed");
+    if (!result_) result_ = consumeToken(builder_, "unsigned");
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // 'integer' | 'float' | 'binary'
+  static boolean bit_type_type(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bit_type_type")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<type>");
+    result_ = consumeToken(builder_, "integer");
+    if (!result_) result_ = consumeToken(builder_, "float");
+    if (!result_) result_ = consumeToken(builder_, "binary");
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // 'unit' ':' integer
+  static boolean bit_type_unit(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bit_type_unit")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = consumeToken(builder_, "unit");
+    result_ = result_ && consumeToken(builder_, ERL_COLON);
+    result_ = result_ && consumeToken(builder_, ERL_INTEGER);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
   }
 
   /* ********************************************************** */
@@ -5433,13 +5465,14 @@ public class ErlangParser implements PsiParser {
     return result_ || pinned_;
   }
 
-  // mult_op &(!(atom (',' | '>>')))
+  // mult_op &(!(atom (',' | '>>'))) &(!bit_type_list)
   private static boolean multiplicative_expression_0(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "multiplicative_expression_0")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
     result_ = mult_op(builder_, level_ + 1);
     result_ = result_ && multiplicative_expression_0_1(builder_, level_ + 1);
+    result_ = result_ && multiplicative_expression_0_2(builder_, level_ + 1);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
@@ -5483,6 +5516,26 @@ public class ErlangParser implements PsiParser {
     result_ = consumeToken(builder_, ERL_COMMA);
     if (!result_) result_ = consumeToken(builder_, ERL_BIN_END);
     exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  // &(!bit_type_list)
+  private static boolean multiplicative_expression_0_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "multiplicative_expression_0_2")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _AND_, null);
+    result_ = multiplicative_expression_0_2_0(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
+  }
+
+  // !bit_type_list
+  private static boolean multiplicative_expression_0_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "multiplicative_expression_0_2_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NOT_, null);
+    result_ = !bit_type_list(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
     return result_;
   }
 
