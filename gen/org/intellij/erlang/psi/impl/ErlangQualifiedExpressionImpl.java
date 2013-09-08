@@ -16,15 +16,15 @@ public class ErlangQualifiedExpressionImpl extends ErlangExpressionImpl implemen
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQualifiedExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangQAtom> getQAtomList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQualifiedExpression(this);
+    else super.accept(visitor);
   }
 
 }

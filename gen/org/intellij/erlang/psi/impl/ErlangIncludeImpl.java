@@ -16,15 +16,15 @@ public class ErlangIncludeImpl extends ErlangCompositeElementImpl implements Erl
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitInclude(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangIncludeString getIncludeString() {
     return findChildByClass(ErlangIncludeString.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitInclude(this);
+    else super.accept(visitor);
   }
 
 }

@@ -16,11 +16,6 @@ public class ErlangReceiveExpressionImpl extends ErlangExpressionImpl implements
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitReceiveExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangAfterClause getAfterClause() {
@@ -43,6 +38,11 @@ public class ErlangReceiveExpressionImpl extends ErlangExpressionImpl implements
   @NotNull
   public PsiElement getReceive() {
     return findNotNullChildByType(ERL_RECEIVE);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitReceiveExpression(this);
+    else super.accept(visitor);
   }
 
 }

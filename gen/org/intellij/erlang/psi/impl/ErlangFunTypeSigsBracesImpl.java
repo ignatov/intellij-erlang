@@ -16,15 +16,15 @@ public class ErlangFunTypeSigsBracesImpl extends ErlangCompositeElementImpl impl
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeSigsBraces(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangFunTypeSigs getFunTypeSigs() {
     return findChildByClass(ErlangFunTypeSigs.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeSigsBraces(this);
+    else super.accept(visitor);
   }
 
 }

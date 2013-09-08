@@ -20,15 +20,15 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQVar(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public PsiElement getVar() {
     return findChildByType(ERL_VAR);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQVar(this);
+    else super.accept(visitor);
   }
 
   @Nullable

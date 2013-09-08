@@ -16,15 +16,15 @@ public class ErlangRecordTupleImpl extends ErlangCompositeElementImpl implements
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordTuple(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangRecordFields getRecordFields() {
     return findChildByClass(ErlangRecordFields.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordTuple(this);
+    else super.accept(visitor);
   }
 
 }

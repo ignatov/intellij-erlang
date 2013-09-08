@@ -17,11 +17,6 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public ErlangExpression getExpression() {
@@ -50,6 +45,11 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
   @Nullable
   public ErlangRecordTuple getRecordTuple() {
     return findChildByClass(ErlangRecordTuple.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordExpression(this);
+    else super.accept(visitor);
   }
 
   @Nullable

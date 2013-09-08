@@ -16,11 +16,6 @@ public class ErlangIfExpressionImpl extends ErlangExpressionImpl implements Erla
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIfExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangIfClauses getIfClauses() {
@@ -37,6 +32,11 @@ public class ErlangIfExpressionImpl extends ErlangExpressionImpl implements Erla
   @NotNull
   public PsiElement getIf() {
     return findNotNullChildByType(ERL_IF);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIfExpression(this);
+    else super.accept(visitor);
   }
 
 }

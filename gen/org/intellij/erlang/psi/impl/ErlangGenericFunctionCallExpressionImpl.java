@@ -16,11 +16,6 @@ public class ErlangGenericFunctionCallExpressionImpl extends ErlangExpressionImp
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitGenericFunctionCallExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public ErlangArgumentList getArgumentList() {
@@ -43,6 +38,11 @@ public class ErlangGenericFunctionCallExpressionImpl extends ErlangExpressionImp
   @NotNull
   public List<ErlangQVar> getQVarList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQVar.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitGenericFunctionCallExpression(this);
+    else super.accept(visitor);
   }
 
 }

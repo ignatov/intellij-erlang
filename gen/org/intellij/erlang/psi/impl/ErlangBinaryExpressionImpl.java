@@ -16,15 +16,15 @@ public class ErlangBinaryExpressionImpl extends ErlangExpressionImpl implements 
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinaryExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangBinElement> getBinElementList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangBinElement.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinaryExpression(this);
+    else super.accept(visitor);
   }
 
 }

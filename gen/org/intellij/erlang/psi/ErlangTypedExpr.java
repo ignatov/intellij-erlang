@@ -19,6 +19,7 @@ public interface ErlangTypedExpr extends ErlangNamedElement {
   @NotNull
   String getName();
 
+  @NotNull
   PsiElement setName(String newName);
 
   @NotNull

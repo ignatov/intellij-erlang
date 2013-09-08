@@ -16,15 +16,15 @@ public class ErlangTryExpressionsClauseImpl extends ErlangCompositeElementImpl i
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryExpressionsClause(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangExpression> getExpressionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTryExpressionsClause(this);
+    else super.accept(visitor);
   }
 
 }

@@ -164,6 +164,8 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .before(ERL_END).spaces(1)
 
       .before(ERL_OPT_BIT_TYPE_LIST).none()
+      .betweenInside(ERL_OP_MINUS, ERL_BIT_TYPE, ERL_OPT_BIT_TYPE_LIST).none()
+      .betweenInside(ERL_BIT_TYPE, ERL_OP_MINUS, ERL_OPT_BIT_TYPE_LIST).none()
       .betweenInside(ERL_OP_AR_DIV, ERL_BIT_TYPE, ERL_OPT_BIT_TYPE_LIST).none()
       .afterInside(ERL_OP_MINUS, ERL_RECORD_DEFINITION).none()
       .afterInside(ERL_OP_MINUS, ERL_TYPE_DEFINITION).none()

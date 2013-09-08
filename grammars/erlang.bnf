@@ -310,7 +310,7 @@ orelse_expression ::= expression orelse expression
 andalso_expression ::= expression andalso expression
 comp_op_expression ::= expression comp_op expression
 list_op_expression ::= expression list_op expression
-multiplicative_expression ::= expression mult_op &(!(atom (',' | '>>'))) expression // for #141
+multiplicative_expression ::= expression mult_op &(!(atom (',' | '>>'))) &(!bit_type_list) expression // for #141
 additive_expression ::= expression add_op expression
 parenthesized_expression ::= '(' expression ')'
 
@@ -359,7 +359,11 @@ bin_element ::= prefix_op? expression [':' expression] opt_bit_type_list? {name=
 
 opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*
-bit_type ::= q_atom [':' integer]
+bit_type ::= bit_type_type | bit_type_signedness | bit_type_endianness | bit_type_unit
+private bit_type_type ::= 'integer' | 'float' | 'binary'
+private bit_type_signedness ::= 'signed' | 'unsigned'
+private bit_type_endianness ::= 'bit' | 'little' | 'native'
+private bit_type_unit ::= 'unit' ':' integer
 
 list_comprehension ::= '[' expression '||' lc_exprs ']' {
   pin=3

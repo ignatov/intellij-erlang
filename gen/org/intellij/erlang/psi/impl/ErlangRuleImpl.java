@@ -16,15 +16,15 @@ public class ErlangRuleImpl extends ErlangCompositeElementImpl implements Erlang
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRule(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangRuleClause> getRuleClauseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangRuleClause.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRule(this);
+    else super.accept(visitor);
   }
 
 }

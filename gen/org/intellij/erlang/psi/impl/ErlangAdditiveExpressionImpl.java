@@ -16,11 +16,6 @@ public class ErlangAdditiveExpressionImpl extends ErlangFakeBinaryExpressionImpl
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAdditiveExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangExpression> getExpressionList() {
@@ -61,6 +56,11 @@ public class ErlangAdditiveExpressionImpl extends ErlangFakeBinaryExpressionImpl
   @Nullable
   public PsiElement getXor() {
     return findChildByType(ERL_XOR);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAdditiveExpression(this);
+    else super.accept(visitor);
   }
 
 }

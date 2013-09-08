@@ -16,15 +16,15 @@ public class ErlangImportFunctionsImpl extends ErlangCompositeElementImpl implem
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitImportFunctions(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangImportFunction> getImportFunctionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangImportFunction.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitImportFunctions(this);
+    else super.accept(visitor);
   }
 
 }

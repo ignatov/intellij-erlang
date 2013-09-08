@@ -7,9 +7,6 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangBitType extends ErlangCompositeElement {
 
-  @NotNull
-  ErlangQAtom getQAtom();
-
   @Nullable
   PsiElement getInteger();
 

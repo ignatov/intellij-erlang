@@ -16,21 +16,15 @@ public class ErlangBitTypeImpl extends ErlangCompositeElementImpl implements Erl
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBitType(this);
-    else super.accept(visitor);
-  }
-
-  @Override
-  @NotNull
-  public ErlangQAtom getQAtom() {
-    return findNotNullChildByClass(ErlangQAtom.class);
-  }
-
   @Override
   @Nullable
   public PsiElement getInteger() {
     return findChildByType(ERL_INTEGER);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBitType(this);
+    else super.accept(visitor);
   }
 
 }

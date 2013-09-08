@@ -16,15 +16,15 @@ public class ErlangExportTypesImpl extends ErlangCompositeElementImpl implements
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExportTypes(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangExportType> getExportTypeList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExportType.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExportTypes(this);
+    else super.accept(visitor);
   }
 
 }

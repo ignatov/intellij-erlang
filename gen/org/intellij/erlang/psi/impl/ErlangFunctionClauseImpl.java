@@ -16,11 +16,6 @@ public class ErlangFunctionClauseImpl extends ErlangCompositeElementImpl impleme
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunctionClause(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public ErlangArgumentDefinitionList getArgumentDefinitionList() {
@@ -43,6 +38,11 @@ public class ErlangFunctionClauseImpl extends ErlangCompositeElementImpl impleme
   @NotNull
   public ErlangQAtom getQAtom() {
     return findNotNullChildByClass(ErlangQAtom.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunctionClause(this);
+    else super.accept(visitor);
   }
 
 }

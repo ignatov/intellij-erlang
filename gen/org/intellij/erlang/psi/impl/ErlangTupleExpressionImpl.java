@@ -16,15 +16,15 @@ public class ErlangTupleExpressionImpl extends ErlangExpressionImpl implements E
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTupleExpression(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public List<ErlangExpression> getExpressionList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTupleExpression(this);
+    else super.accept(visitor);
   }
 
 }

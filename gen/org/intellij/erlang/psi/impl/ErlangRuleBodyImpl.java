@@ -16,15 +16,15 @@ public class ErlangRuleBodyImpl extends ErlangCompositeElementImpl implements Er
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRuleBody(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @Nullable
   public ErlangLcExprs getLcExprs() {
     return findChildByClass(ErlangLcExprs.class);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRuleBody(this);
+    else super.accept(visitor);
   }
 
 }

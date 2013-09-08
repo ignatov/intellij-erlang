@@ -17,11 +17,6 @@ public class ErlangFunctionWithArityImpl extends ErlangCompositeElementImpl impl
     super(node);
   }
 
-  public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunctionWithArity(this);
-    else super.accept(visitor);
-  }
-
   @Override
   @NotNull
   public ErlangQAtom getQAtom() {
@@ -32,6 +27,11 @@ public class ErlangFunctionWithArityImpl extends ErlangCompositeElementImpl impl
   @Nullable
   public PsiElement getInteger() {
     return findChildByType(ERL_INTEGER);
+  }
+
+  public void accept(@NotNull PsiElementVisitor visitor) {
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunctionWithArity(this);
+    else super.accept(visitor);
   }
 
   @Nullable
