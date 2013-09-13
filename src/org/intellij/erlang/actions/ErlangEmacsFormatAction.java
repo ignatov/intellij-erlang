@@ -101,7 +101,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       String s = "\n" +
         "(progn (find-file \"" + virtualFile.getCanonicalPath() + "\")\n" +
         "    (setq erlang-root-dir \"" + homePath +"\")\n" +
-        "    (setq load-path (cons (car (file-expand-wildcards (concat erlang-root-dir \"/lib/tools-*/emacs\")))\n" +
+        "    (setq load-path (cons (car (file-expand-wildcards (concat erlang-root-dir \"/lib/erlang/lib/tools-*/emacs\")))\n" +
         "                          load-path))\n" +
         "    (require 'erlang-start)\n" +
         "    (erlang-mode)\n" +
