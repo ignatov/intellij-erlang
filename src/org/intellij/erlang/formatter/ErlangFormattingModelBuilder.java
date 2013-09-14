@@ -144,6 +144,10 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .beforeInside(ERL_PAR_LEFT, ERL_FUN_TYPE).spaces(1)
       .afterInside(ERL_PAR_RIGHT, ERL_FUN_TYPE).spaces(1)
 
+      .aroundInside(ERL_COLON, ERL_BIN_ELEMENT).none()
+      .aroundInside(ERL_COLON, ERL_BIT_TYPE).none()
+      .betweenInside(ERL_BIT_TYPE, ERL_OP_MINUS, ERL_OPT_BIT_TYPE_LIST).none()
+      .betweenInside(ERL_OP_MINUS, ERL_BIT_TYPE, ERL_OPT_BIT_TYPE_LIST).none()
       .aroundInside(ERL_COLON, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION).none()
       .around(ERL_COLON_COLON).spaces(1)
       .aroundInside(ERL_DOT, ERL_RECORD_FIELD).none()
