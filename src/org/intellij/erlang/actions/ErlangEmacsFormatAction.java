@@ -90,18 +90,21 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       commandLine.setExePath(emacsPath);
       commandLine.addParameters("--batch", "--eval");
 
-      String homePath = getSdkPath(project);
+      String sdkPath = getSdkPath(project);
 
-      if (StringUtil.isEmpty(homePath)) {
+      if (StringUtil.isEmpty(sdkPath)) {
         Notifications.Bus.notify(
           new Notification(groupId, NOTIFICATION_TITLE, "Erlang project SDK is not configured",
             NotificationType.WARNING), project);
         return;
       }
-      String s = "\n" +
+
+      boolean exists = new File(sdkPath, "lib/erlang/lib").exists();
+
+      String emacsCommand = "\n" +
         "(progn (find-file \"" + virtualFile.getCanonicalPath() + "\")\n" +
-        "    (setq erlang-root-dir \"" + homePath +"\")\n" +
-        "    (setq load-path (cons (car (file-expand-wildcards (concat erlang-root-dir \"/lib/erlang/lib/tools-*/emacs\")))\n" +
+        "    (setq erlang-root-dir \"" + sdkPath + "\")\n" +
+        "    (setq load-path (cons (car (file-expand-wildcards (concat erlang-root-dir \"/lib/" + (exists ? "erlang/lib/" : "") + "tools-*/emacs\")))\n" +
         "                          load-path))\n" +
         "    (require 'erlang-start)\n" +
         "    (erlang-mode)\n" +
@@ -111,7 +114,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
         "    (write-region (point-min) (point-max) \"" + tmpFile.getCanonicalPath() + "\")\n" +
         "    (kill-emacs))";
 
-      commandLine.addParameter(s);
+      commandLine.addParameter(emacsCommand);
 
       ApplicationManager.getApplication().saveAll();
 
