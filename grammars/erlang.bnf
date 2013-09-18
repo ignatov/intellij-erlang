@@ -74,7 +74,7 @@
   name(".*_(expression|comprehension|literal|atomic)")=expression
   name(".*attribute")=attribute
   name(".*type|.*_t")=type
-  pin(".*(clauses|exprs|list)(?:_\d.*)?")=1
+  pin(".*(clauses|_exprs|list)(?:_\d.*)?")=1
   pin("config_.*_expression")=1
 
   implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
