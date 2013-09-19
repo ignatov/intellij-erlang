@@ -179,7 +179,7 @@ public class ErlangPsiImplUtil {
   public static PsiReference getReference(@NotNull ErlangRecordField o) {
     return getRecordFieldReference(o.getFieldNameAtom());
   }
-  
+
   @Nullable
   public static PsiReference getReference(@NotNull ErlangFieldType o) {
     return getRecordFieldReference(o.getQAtom());
@@ -372,7 +372,7 @@ public class ErlangPsiImplUtil {
   public static boolean inColonQualified(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangColonQualifiedExpression.class) != null;
   }
-  
+
   public static boolean inLeftPartOfAssignment(@NotNull PsiElement psiElement) {
     return inLeftPartOfAssignment(psiElement, true);
   }
@@ -1210,6 +1210,16 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean isEunitImported(ErlangFile file) {
+    return isEunitDirectlyImported(file) ||
+      ContainerUtil.find(getIncludedFiles(file), new Condition<ErlangFile>() {
+        @Override
+        public boolean value(ErlangFile includedFile) {
+          return isEunitDirectlyImported(includedFile);
+        }
+      }) != null;
+  }
+
+  private static boolean isEunitDirectlyImported(ErlangFile file) {
     List<ErlangIncludeLib> includes = file.getIncludeLibs();
     for (ErlangIncludeLib include : includes) {
       ErlangIncludeString string = include.getIncludeString();
