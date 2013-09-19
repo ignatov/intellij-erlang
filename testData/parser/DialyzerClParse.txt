@@ -2093,19 +2093,19 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_LIST_OP_EXPRESSION
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"Dialyzer version "')
+                PsiElement(++)('++')
                 ERL_LIST_OP_EXPRESSION
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Dialyzer version "')
-                  PsiElement(++)('++')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       ERL_MACROS
                         PsiElement(?)('?')
                         ERL_MACROS_NAME
                           PsiElement(var)('VSN')
-                PsiElement(++)('++')
-                ERL_STRING_LITERAL
-                  PsiElement(string)('"\n"')
+                  PsiElement(++)('++')
+                  ERL_STRING_LITERAL
+                    PsiElement(string)('"\n"')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -2155,19 +2155,19 @@ ERL_FILE
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_LIST_OP_EXPRESSION
+                ERL_STRING_LITERAL
+                  PsiElement(string)('"Dialyzer version "')
+                PsiElement(++)('++')
                 ERL_LIST_OP_EXPRESSION
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Dialyzer version "')
-                  PsiElement(++)('++')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       ERL_MACROS
                         PsiElement(?)('?')
                         ERL_MACROS_NAME
                           PsiElement(var)('VSN')
-                PsiElement(++)('++')
-                ERL_STRING_LITERAL
-                  PsiElement(string)('"\n"')
+                  PsiElement(++)('++')
+                  ERL_STRING_LITERAL
+                    PsiElement(string)('"\n"')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION

@@ -5382,7 +5382,7 @@ public class ErlangParser implements PsiParser {
         left_marker_.precede().done(ERL_COMP_OP_EXPRESSION);
       }
       else if (priority_ < 6 && list_op(builder_, level_ + 1)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 6));
+        result_ = report_error_(builder_, expression(builder_, level_, 5));
         marker_.drop();
         left_marker_.precede().done(ERL_LIST_OP_EXPRESSION);
       }

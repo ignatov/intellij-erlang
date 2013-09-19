@@ -2380,26 +2380,10 @@ ERL_FILE
                                           PsiElement(atom)('pattern')
                                       PsiElement(,)(',')
                                       ERL_LIST_OP_EXPRESSION
+                                        ERL_STRING_LITERAL
+                                          PsiElement(string)('"{ "')
+                                        PsiElement(++)('++')
                                         ERL_LIST_OP_EXPRESSION
-                                          ERL_LIST_OP_EXPRESSION
-                                            ERL_LIST_OP_EXPRESSION
-                                              ERL_STRING_LITERAL
-                                                PsiElement(string)('"{ "')
-                                              PsiElement(++)('++')
-                                              ERL_PARENTHESIZED_EXPRESSION
-                                                PsiElement(()('(')
-                                                ERL_MAX_EXPRESSION
-                                                  ERL_Q_ATOM
-                                                    ERL_MACROS_ARG
-                                                      PsiElement(?)('?')
-                                                      PsiElement(?)('?')
-                                                      ERL_MACROS_NAME
-                                                        PsiElement(var)('Class')
-                                                PsiElement())(')')
-                                            PsiElement(++)('++')
-                                            ERL_STRING_LITERAL
-                                              PsiElement(string)('" , "')
-                                          PsiElement(++)('++')
                                           ERL_PARENTHESIZED_EXPRESSION
                                             PsiElement(()('(')
                                             ERL_MAX_EXPRESSION
@@ -2408,11 +2392,27 @@ ERL_FILE
                                                   PsiElement(?)('?')
                                                   PsiElement(?)('?')
                                                   ERL_MACROS_NAME
-                                                    PsiElement(var)('Term')
+                                                    PsiElement(var)('Class')
                                             PsiElement())(')')
-                                        PsiElement(++)('++')
-                                        ERL_STRING_LITERAL
-                                          PsiElement(string)('" , [...] }"')
+                                          PsiElement(++)('++')
+                                          ERL_LIST_OP_EXPRESSION
+                                            ERL_STRING_LITERAL
+                                              PsiElement(string)('" , "')
+                                            PsiElement(++)('++')
+                                            ERL_LIST_OP_EXPRESSION
+                                              ERL_PARENTHESIZED_EXPRESSION
+                                                PsiElement(()('(')
+                                                ERL_MAX_EXPRESSION
+                                                  ERL_Q_ATOM
+                                                    ERL_MACROS_ARG
+                                                      PsiElement(?)('?')
+                                                      PsiElement(?)('?')
+                                                      ERL_MACROS_NAME
+                                                        PsiElement(var)('Term')
+                                                PsiElement())(')')
+                                              PsiElement(++)('++')
+                                              ERL_STRING_LITERAL
+                                                PsiElement(string)('" , [...] }"')
                                       PsiElement(})('}')
                                     PsiElement(,)(',')
                                     ERL_TUPLE_EXPRESSION
@@ -2530,26 +2530,10 @@ ERL_FILE
                                               PsiElement(atom)('pattern')
                                           PsiElement(,)(',')
                                           ERL_LIST_OP_EXPRESSION
+                                            ERL_STRING_LITERAL
+                                              PsiElement(string)('"{ "')
+                                            PsiElement(++)('++')
                                             ERL_LIST_OP_EXPRESSION
-                                              ERL_LIST_OP_EXPRESSION
-                                                ERL_LIST_OP_EXPRESSION
-                                                  ERL_STRING_LITERAL
-                                                    PsiElement(string)('"{ "')
-                                                  PsiElement(++)('++')
-                                                  ERL_PARENTHESIZED_EXPRESSION
-                                                    PsiElement(()('(')
-                                                    ERL_MAX_EXPRESSION
-                                                      ERL_Q_ATOM
-                                                        ERL_MACROS_ARG
-                                                          PsiElement(?)('?')
-                                                          PsiElement(?)('?')
-                                                          ERL_MACROS_NAME
-                                                            PsiElement(var)('Class')
-                                                    PsiElement())(')')
-                                                PsiElement(++)('++')
-                                                ERL_STRING_LITERAL
-                                                  PsiElement(string)('" , "')
-                                              PsiElement(++)('++')
                                               ERL_PARENTHESIZED_EXPRESSION
                                                 PsiElement(()('(')
                                                 ERL_MAX_EXPRESSION
@@ -2558,11 +2542,27 @@ ERL_FILE
                                                       PsiElement(?)('?')
                                                       PsiElement(?)('?')
                                                       ERL_MACROS_NAME
-                                                        PsiElement(var)('Term')
+                                                        PsiElement(var)('Class')
                                                 PsiElement())(')')
-                                            PsiElement(++)('++')
-                                            ERL_STRING_LITERAL
-                                              PsiElement(string)('" , [...] }"')
+                                              PsiElement(++)('++')
+                                              ERL_LIST_OP_EXPRESSION
+                                                ERL_STRING_LITERAL
+                                                  PsiElement(string)('" , "')
+                                                PsiElement(++)('++')
+                                                ERL_LIST_OP_EXPRESSION
+                                                  ERL_PARENTHESIZED_EXPRESSION
+                                                    PsiElement(()('(')
+                                                    ERL_MAX_EXPRESSION
+                                                      ERL_Q_ATOM
+                                                        ERL_MACROS_ARG
+                                                          PsiElement(?)('?')
+                                                          PsiElement(?)('?')
+                                                          ERL_MACROS_NAME
+                                                            PsiElement(var)('Term')
+                                                    PsiElement())(')')
+                                                  PsiElement(++)('++')
+                                                  ERL_STRING_LITERAL
+                                                    PsiElement(string)('" , [...] }"')
                                           PsiElement(})('}')
                                         PsiElement(,)(',')
                                         ERL_TUPLE_EXPRESSION
@@ -3142,26 +3142,10 @@ ERL_FILE
                                                           PsiElement(atom)('pattern')
                                                       PsiElement(,)(',')
                                                       ERL_LIST_OP_EXPRESSION
+                                                        ERL_STRING_LITERAL
+                                                          PsiElement(string)('"{ "')
+                                                        PsiElement(++)('++')
                                                         ERL_LIST_OP_EXPRESSION
-                                                          ERL_LIST_OP_EXPRESSION
-                                                            ERL_LIST_OP_EXPRESSION
-                                                              ERL_STRING_LITERAL
-                                                                PsiElement(string)('"{ "')
-                                                              PsiElement(++)('++')
-                                                              ERL_PARENTHESIZED_EXPRESSION
-                                                                PsiElement(()('(')
-                                                                ERL_MAX_EXPRESSION
-                                                                  ERL_Q_ATOM
-                                                                    ERL_MACROS_ARG
-                                                                      PsiElement(?)('?')
-                                                                      PsiElement(?)('?')
-                                                                      ERL_MACROS_NAME
-                                                                        PsiElement(var)('Class')
-                                                                PsiElement())(')')
-                                                            PsiElement(++)('++')
-                                                            ERL_STRING_LITERAL
-                                                              PsiElement(string)('" , "')
-                                                          PsiElement(++)('++')
                                                           ERL_PARENTHESIZED_EXPRESSION
                                                             PsiElement(()('(')
                                                             ERL_MAX_EXPRESSION
@@ -3170,11 +3154,27 @@ ERL_FILE
                                                                   PsiElement(?)('?')
                                                                   PsiElement(?)('?')
                                                                   ERL_MACROS_NAME
-                                                                    PsiElement(var)('Term')
+                                                                    PsiElement(var)('Class')
                                                             PsiElement())(')')
-                                                        PsiElement(++)('++')
-                                                        ERL_STRING_LITERAL
-                                                          PsiElement(string)('" , [...] }"')
+                                                          PsiElement(++)('++')
+                                                          ERL_LIST_OP_EXPRESSION
+                                                            ERL_STRING_LITERAL
+                                                              PsiElement(string)('" , "')
+                                                            PsiElement(++)('++')
+                                                            ERL_LIST_OP_EXPRESSION
+                                                              ERL_PARENTHESIZED_EXPRESSION
+                                                                PsiElement(()('(')
+                                                                ERL_MAX_EXPRESSION
+                                                                  ERL_Q_ATOM
+                                                                    ERL_MACROS_ARG
+                                                                      PsiElement(?)('?')
+                                                                      PsiElement(?)('?')
+                                                                      ERL_MACROS_NAME
+                                                                        PsiElement(var)('Term')
+                                                                PsiElement())(')')
+                                                              PsiElement(++)('++')
+                                                              ERL_STRING_LITERAL
+                                                                PsiElement(string)('" , [...] }"')
                                                       PsiElement(})('}')
                                                     PsiElement(,)(',')
                                                     ERL_TUPLE_EXPRESSION

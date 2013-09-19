@@ -26,6 +26,7 @@ import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.psi.ErlangArgumentDefinition;
 import org.intellij.erlang.psi.ErlangExpression;
+import org.intellij.erlang.psi.ErlangListOpExpression;
 import org.intellij.erlang.psi.ErlangParenthesizedExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,8 +43,8 @@ public class ErlangIndentProcessor {
     ERL_OP_PLUS, ERL_OP_MINUS, ERL_OP_AR_MUL, ERL_OP_AR_DIV, ERL_REM,
     ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND,
     ERL_BAND, ERL_OP_EQ_EQ, ERL_OP_DIV_EQ, ERL_OP_EQ_COL_EQ, ERL_OP_EQ_DIV_EQ,
-    ERL_OP_LT, ERL_OP_EQ_LT, ERL_OP_GT, ERL_OP_GT_EQ, ERL_OP_LT_EQ, ERL_OP_PLUS_PLUS,
-    ERL_OP_MINUS_MINUS, ERL_OP_EQ, ERL_OP_EXL, ERL_OP_LT_MINUS, ERL_ANDALSO, ERL_ORELSE
+    ERL_OP_LT, ERL_OP_EQ_LT, ERL_OP_GT, ERL_OP_GT_EQ, ERL_OP_LT_EQ,
+    ERL_OP_EQ, ERL_OP_EXL, ERL_OP_LT_MINUS, ERL_ANDALSO, ERL_ORELSE
   );
   private final ErlangCodeStyleSettings myErlangSettings;
 
@@ -118,6 +119,12 @@ public class ErlangIndentProcessor {
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();
+    }
+    if (node.getPsi() instanceof ErlangListOpExpression) {
+      return Indent.getNoneIndent();
+    }
+    if (parent.getPsi() instanceof ErlangListOpExpression && (grandfather == null || grandfather.getPsi() instanceof ErlangExpression)) {
+      return node.getPsi() instanceof ErlangListOpExpression ? Indent.getNoneIndent() : Indent.getNormalIndent();
     }
     if (parent.getPsi() instanceof ErlangExpression && (BIN_OPERATORS.contains(elementType) || BIN_OPERATORS.contains(prevSiblingElementType))) {
       return Indent.getNormalIndent();
