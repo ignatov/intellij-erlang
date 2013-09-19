@@ -100,7 +100,7 @@ public class ErlangDebuggerNode {
     addCommand(ErlangDebuggerCommandsProducer.getInterpretModulesCommand(moduleNames));
   }
 
-  public void runDebugger(String module, String function, String args) {
+  public void runDebugger(String module, String function, List<String> args) {
     addCommand(ErlangDebuggerCommandsProducer.getRunDebuggerCommand(module, function, args));
   }
 

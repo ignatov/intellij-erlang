@@ -1,6 +1,7 @@
 package org.intellij.erlang.debugger.node.commands;
 
 import com.ericsson.otp.erlang.*;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
@@ -26,7 +27,7 @@ public final class ErlangDebuggerCommandsProducer {
   }
 
   @NotNull
-  public static ErlangDebuggerCommand getRunDebuggerCommand(@NotNull String module, @NotNull String function, @NotNull String args) {
+  public static ErlangDebuggerCommand getRunDebuggerCommand(@NotNull String module, @NotNull String function, @NotNull List<String> args) {
     return new RunDebuggerCommand(module, function, args);
   }
 
@@ -64,9 +65,9 @@ public final class ErlangDebuggerCommandsProducer {
   private static class RunDebuggerCommand implements ErlangDebuggerCommand {
     private final String myModule;
     private final String myFunction;
-    private final String myArgs;
+    private final List<String> myArgs;
 
-    RunDebuggerCommand(@NotNull String module, @NotNull String function, @NotNull String args) {
+    RunDebuggerCommand(@NotNull String module, @NotNull String function, @NotNull List<String> args) {
       myModule = module;
       myFunction = function;
       myArgs = args;
@@ -79,7 +80,7 @@ public final class ErlangDebuggerCommandsProducer {
         new OtpErlangAtom("run_debugger"),
         new OtpErlangAtom(myModule),
         new OtpErlangAtom(myFunction),
-        new OtpErlangString(myArgs)
+        new OtpErlangString("[" + StringUtil.join(myArgs, ",") + "]")
       });
     }
   }
