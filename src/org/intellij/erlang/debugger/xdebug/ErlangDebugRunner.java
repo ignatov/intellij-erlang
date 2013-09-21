@@ -27,7 +27,7 @@ public class ErlangDebugRunner extends GenericProgramRunner {
   @Nullable
   @Override
   protected RunContentDescriptor doExecute(Project project,
-                                           Executor executor,
+                                           final Executor executor,
                                            RunProfileState state,
                                            RunContentDescriptor contentToReuse,
                                            final ExecutionEnvironment env) throws ExecutionException {
@@ -36,7 +36,7 @@ public class ErlangDebugRunner extends GenericProgramRunner {
       @NotNull
       @Override
       public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-        return new ErlangXDebugProcess(session, env);
+        return new ErlangXDebugProcess(session, executor, env);
       }
     }).getRunContentDescriptor();
   }
