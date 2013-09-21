@@ -89,6 +89,10 @@ public abstract class ErlangRunningState extends CommandLineState {
 
   public abstract ErlangEntryPoint getEntryPoint() throws ExecutionException;
 
+  public ErlangEntryPoint getDebugEntryPoint() throws ExecutionException {
+    return getEntryPoint();
+  }
+
   private void setStopErlang(GeneralCommandLine commandLine) {
     if (isStopErlang())  {
       commandLine.addParameters("-s", "init", "stop");

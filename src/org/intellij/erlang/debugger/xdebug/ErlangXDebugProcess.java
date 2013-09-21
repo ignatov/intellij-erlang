@@ -315,7 +315,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
     myErlangProcessHandler = new OSProcessHandler(process);
     myErlangProcessHandler.startNotify();
     getSession().getConsoleView().attachToProcess(myErlangProcessHandler);
-    setEntryPoint(runningState.getEntryPoint());
+    setEntryPoint(runningState.getDebugEntryPoint());
   }
 
   private void setEntryPoint(@NotNull ErlangRunningState.ErlangEntryPoint entryPoint) throws ExecutionException {

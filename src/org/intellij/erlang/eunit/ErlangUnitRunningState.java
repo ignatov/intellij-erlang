@@ -46,6 +46,7 @@ import java.util.*;
  * @author ignatov
  */
 public class ErlangUnitRunningState extends ErlangRunningState {
+  private static int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
   private ErlangUnitRunConfiguration myConfiguration;
 
   public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
@@ -81,8 +82,12 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
   @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {
-    List<String> args = Arrays.asList("[" + getTestObjectsString() + "]", "[{report, {" + ErlangEunitReporterModule.MODULE_NAME + ",[]}}, {no_tty, true}]");
-    return new ErlangEntryPoint("eunit", "test", args);
+    return getEntryPointInternal(false);
+  }
+
+  @Override
+  public ErlangEntryPoint getDebugEntryPoint() throws ExecutionException {
+    return getEntryPointInternal(true);
   }
 
   @Override
@@ -123,19 +128,21 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     );
   }
 
+  private ErlangEntryPoint getEntryPointInternal(boolean debug) throws ExecutionException {
+    List<String> args = Arrays.asList("[" + getTestObjectsString(debug) + "]", "[{report, {" + ErlangEunitReporterModule.MODULE_NAME + ",[]}}, {no_tty, true}]");
+    return new ErlangEntryPoint("eunit", "test", args);
+  }
+
   @NotNull
-  private String getTestObjectsString() throws ExecutionException {
+  private String getTestObjectsString(boolean debug) throws ExecutionException {
     ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = myConfiguration.getConfigData().getKind();
-
+    String tests;
     if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
-      return StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ", ");
+      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ", ");
     }
-
-    if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
+    else if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
       StringBuilder result = new StringBuilder();
-
       Map<String, List<String>> modules = groupByModule(myConfiguration.getConfigData().getFunctionNames());
-
       for (Map.Entry<String, List<String>> e : modules.entrySet()) {
         String moduleName = e.getKey();
 
@@ -149,11 +156,12 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       if (result.length() != 0) {
         result.setLength(result.length() - 2);
       }
-
-      return result.toString();
+      tests = result.toString();
     }
-
-    throw new ExecutionException("Unknown run config kind");
+    else {
+      throw new ExecutionException("Unknown run config kind");
+    }
+    return debug ? "{timeout, " + DEBUG_TEST_TIMEOUT + ", [" + tests + "]}" : tests;
   }
 
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {
