@@ -177,7 +177,6 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         if (index == i) start = builder.length();
         builder.append(args.get(i).getExpression().getText().replaceAll(" ", "").trim());
         if (typesAvailable) {
-
           ErlangTopType topType = topTypeList.get(i);
           ErlangType type = topType.getType();
           final ErlangQVar var = type.getQVar();

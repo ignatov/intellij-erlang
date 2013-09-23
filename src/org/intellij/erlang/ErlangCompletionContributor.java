@@ -35,6 +35,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.*;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -59,16 +60,15 @@ import org.intellij.erlang.parser.GeneratedParserUtilBase;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
+import org.intellij.erlang.types.ErlangExpressionType;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 import static com.intellij.patterns.StandardPatterns.instanceOf;
@@ -208,6 +208,83 @@ public class ErlangCompletionContributor extends CompletionContributor {
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, null));
           }
         }
+      }
+    });
+    extend(CompletionType.SMART, psiElement().inside(true, psiElement(ErlangArgumentList.class)), new CompletionProvider<CompletionParameters>() {
+      @Override
+      protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
+        PsiElement position = parameters.getPosition();
+        ErlangQVar var = PsiTreeUtil.getParentOfType(position, ErlangQVar.class);
+        PsiReference reference = var == null ? null : var.getReference();
+        ErlangExpression expression = PsiTreeUtil.getParentOfType(position, ErlangExpression.class);
+        if (expression == null || !(reference instanceof ErlangVariableReferenceImpl)) return;
+        PsiElement argList = expression.getParent();
+        if (argList == null || !(argList instanceof ErlangArgumentList)) return;
+
+        int pos = 0;
+        for (PsiElement ch : argList.getChildren()) {
+          if (ch.equals(expression)) break;
+          pos++;
+        }
+
+        Set<ErlangExpressionType> expectedTypes = getExpectedTypes(argList, pos);
+        if (expectedTypes.isEmpty()) return;
+
+        Collection<ErlangQVar> vars = new THashSet<ErlangQVar>();
+        ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
+        ((ErlangVariableReferenceImpl) reference).populateVariables(clause, vars);
+
+        for (ErlangQVar v : vars) {
+          if (ErlangPsiImplUtil.inLeftPartOfAssignment(v, true)) {
+            ErlangAssignmentExpression assign = PsiTreeUtil.getParentOfType(v, ErlangAssignmentExpression.class);
+            ErlangExpression right = assign != null ? assign.getRight() : null;
+            ErlangExpressionType varType = ErlangExpressionType.create(right);
+
+            if (expectedTypes.contains(varType)) result.addElement(LookupElementBuilder.create(v).withIcon(ErlangIcons.VARIABLE));
+          }
+        }
+
+        List<LookupElement> functionLookupElements = ErlangPsiImplUtil.getFunctionLookupElements(clause.getContainingFile(), false, null);
+        for (LookupElement lookupElement : functionLookupElements) {
+          PsiElement psiElement = lookupElement.getPsiElement();
+          if (psiElement instanceof ErlangFunction) {
+            ErlangExpressionType erlangExpressionType = ErlangExpressionType.calculateFunctionType((ErlangFunction) psiElement);
+            if (expectedTypes.contains(erlangExpressionType)) result.addElement(lookupElement);
+          }
+        }
+      }
+
+      @NotNull
+      private Set<ErlangExpressionType> getExpectedTypes(@NotNull PsiElement argList, int pos) {
+        Set<ErlangExpressionType> expectedTypes = ContainerUtil.newHashSet();
+
+        PsiElement call = argList.getParent();
+        if (!(call instanceof ErlangFunctionCallExpression)) return expectedTypes;
+        try {
+          PsiReference callReference = call.getReference();
+          //noinspection ConstantConditions
+          ResolveResult[] resolveResults = ((PsiPolyVariantReference) callReference).multiResolve(true);
+
+          for (ResolveResult r : resolveResults) {
+            PsiElement element = r.getElement();
+            if (element instanceof ErlangFunction) {
+              ErlangSpecification spec = ErlangPsiImplUtil.getSpecification((ErlangFunction) element);
+              if (spec == null) return expectedTypes;
+              ErlangFunTypeSigs signature = ErlangPsiImplUtil.getSignature(spec);
+              List<ErlangTypeSig> typeSigList = signature != null ? signature.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
+              for (ErlangTypeSig sig : typeSigList) {
+                ErlangFunTypeArguments arguments = sig.getFunType().getFunTypeArguments();
+                ErlangType type = arguments.getTopTypeList().get(pos).getType();
+
+                ErlangTypeRef typeRef = type.getTypeRef();
+                ErlangExpressionType et = typeRef != null ? ErlangExpressionType.TYPE_MAP.get(typeRef.getText()) : null;
+                ContainerUtil.addIfNotNull(expectedTypes, et);
+              }
+            }
+          }
+        } catch (Exception ignored) {
+        }
+        return expectedTypes;
       }
     });
   }

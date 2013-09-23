@@ -1164,7 +1164,8 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static ErlangFunTypeSigs getSignature(@NotNull ErlangSpecification o) {
+  public static ErlangFunTypeSigs getSignature(@Nullable ErlangSpecification o) {
+    if (o == null) return null;
     ErlangFunTypeSigsBraces sigsBraces = o.getFunTypeSigsBraces();
     if (sigsBraces != null) {
       return sigsBraces.getFunTypeSigs();

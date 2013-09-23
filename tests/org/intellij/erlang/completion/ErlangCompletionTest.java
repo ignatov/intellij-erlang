@@ -253,4 +253,16 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                                "include-lib-empty/testapp/include/includefile.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "testapp/");
   }
+
+  public void testSmartInteger() throws Throwable {
+    doTestVariants(
+      "-spec g(A :: integer()) -> integer().\n" +
+      "g(A) -> 1.\n" +
+      "foo() ->\n" +
+      "    B = 2 / 1,\n" +
+      "    B2 = \"\",\n" +
+      "    B4 = (1),\n" +
+      "    B3 = 1 + 1*1,\n" +
+      "    g(<caret>);", CompletionType.SMART, 1, CheckType.EQUALS, "B4", "B3", "g");
+  }
 }

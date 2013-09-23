@@ -98,7 +98,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     if (suppressResolve()) return ResolveResult.EMPTY_ARRAY; // for #132
 
     // todo: use incompleteCode
-    if (resolve() != null) return ResolveResult.EMPTY_ARRAY;
+    if (resolve() != null && !incompleteCode) return ResolveResult.EMPTY_ARRAY;
 
     Collection<ErlangFunction> result;
     if (myModuleAtom != null) {
