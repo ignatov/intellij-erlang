@@ -1,1 +1,1 @@
--author("${USER}").
+-author("${FULLNAME}").
