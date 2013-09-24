@@ -7,4 +7,5 @@ The following people have made contributions (in no particular order):
 * Sergey Evstifeev (github @sergeyevstifeev)
 * Nikolay Chashnikov
 * Marcus Nilsson (github @Enouk, tandy.nilsson@gmail.com)
-* Sergey Savenko (github @deadok22) 
+* Sergey Savenko (github @deadok22)
+* David Robakowski (github @drobakowski)
