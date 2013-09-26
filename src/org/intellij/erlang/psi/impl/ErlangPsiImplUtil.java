@@ -1378,4 +1378,21 @@ public class ErlangPsiImplUtil {
   public static ErlangExpression wrapWithParentheses(@NotNull ErlangExpression expression) {
     return ErlangElementFactory.createExpressionFromText(expression.getProject(), "(" + expression.getText() + ")");
   }
+
+  @Nullable
+  public static ErlangFunExpression findFunExpression(@NotNull ErlangFunction function, final int funExpressionNumber) {
+    final Ref<ErlangFunExpression> result = new Ref<ErlangFunExpression>();
+    final Ref<Integer> currentFunExpressionNumber = new Ref<Integer>(0);
+    function.accept(new ErlangRecursiveVisitor() {
+      @Override
+      public void visitFunExpression(@NotNull ErlangFunExpression funExpression) {
+        if (funExpressionNumber == currentFunExpressionNumber.get()) {
+          result.set(funExpression);
+        }
+        currentFunExpressionNumber.set(currentFunExpressionNumber.get() + 1);
+        super.visitFunExpression(funExpression);
+      }
+    });
+    return result.get();
+  }
 }

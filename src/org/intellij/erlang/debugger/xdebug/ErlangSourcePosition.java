@@ -8,22 +8,30 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.xdebugger.XSourcePosition;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunExpression;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author savenko
  */
 public class ErlangSourcePosition {
+  private static final Pattern FUN_PATTERN = Pattern.compile("^-(.*)/(\\d+)-fun-(\\d+)-$");
   private final ErlangFile myErlangFile;
   private final int myLine;
   private final ErlangFunction myFunction;
+  private final ErlangFunExpression myFunExpression;
 
   public ErlangSourcePosition(ErlangFile erlangFile, int line) {
     myErlangFile = erlangFile;
     myLine = line;
     myFunction = null;
+    myFunExpression = null;
   }
 
   public ErlangSourcePosition(Project project, XSourcePosition sourcePosition) {
@@ -32,13 +40,31 @@ public class ErlangSourcePosition {
     myErlangFile = (ErlangFile) psiFile;
     myLine = sourcePosition.getLine();
     myFunction = null;
+    myFunExpression = null;
   }
 
-  public ErlangSourcePosition(ErlangFile module, String functionName, int arity) {
-    myFunction = module.getFunction(functionName, arity);
-    if (myFunction == null) throw  new IllegalArgumentException("Function not found.");
+  public ErlangSourcePosition(ErlangFile module, String functionOrFunExpression, int arity) {
+    Matcher matcher = FUN_PATTERN.matcher(functionOrFunExpression);
+    boolean inFunExpression = matcher.matches();
+    String functionName = functionOrFunExpression;
+    int functionArity = arity;
+    int funExpressionArity = -1;
+    if (inFunExpression) {
+      functionName = matcher.group(1);
+      functionArity = Integer.parseInt(matcher.group(2));
+      funExpressionArity = Integer.parseInt(matcher.group(3));
+    }
     myErlangFile = module;
-    myLine = StringUtil.offsetToLineNumber(module.getText(), myFunction.getTextOffset());
+    myFunction = module.getFunction(functionName, functionArity);
+    if (myFunction != null) {
+      myFunExpression = inFunExpression ? ErlangPsiImplUtil.findFunExpression(myFunction, funExpressionArity) : null;
+      int offset = myFunExpression != null ? myFunExpression.getTextOffset() : myFunction.getTextOffset();
+      myLine = StringUtil.offsetToLineNumber(module.getText(), offset);
+    }
+    else {
+      myLine = 0;
+      myFunExpression = null;
+    }
   }
 
   @NotNull
@@ -58,6 +84,11 @@ public class ErlangSourcePosition {
   @Nullable
   public ErlangFunction getFunction() {
     return myFunction;
+  }
+
+  @Nullable
+  public ErlangFunExpression getFunExpression() {
+    return myFunExpression;
   }
 
   @Override

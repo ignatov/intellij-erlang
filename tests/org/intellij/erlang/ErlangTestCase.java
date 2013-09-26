@@ -22,6 +22,7 @@ import org.intellij.erlang.compilation.ErlangDependenciesResolutionTest;
 import org.intellij.erlang.completion.ErlangCompletionTest;
 import org.intellij.erlang.completion.ErlangCompletionWithSdkTest;
 import org.intellij.erlang.console.FileReferenceFilterTest;
+import org.intellij.erlang.debugger.ErlangSourcePositionTest;
 import org.intellij.erlang.documentation.ErlangDocumentationProviderTest;
 import org.intellij.erlang.eunit.ErlangEunitDetectionTest;
 import org.intellij.erlang.eunit.ErlangUnitTestElementUtilTest;
@@ -89,6 +90,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangEunitDetectionTest.class);
     suite.addTestSuite(ErlangDependenciesResolutionTest.class);
     suite.addTestSuite(ErlangConsoleViewTest.class);
+    suite.addTestSuite(ErlangSourcePositionTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }
