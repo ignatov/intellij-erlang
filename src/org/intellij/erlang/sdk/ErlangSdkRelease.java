@@ -20,6 +20,7 @@ import com.intellij.util.text.VersionComparatorUtil;
 import org.jetbrains.annotations.NotNull;
 
 public enum ErlangSdkRelease {
+  R16B03("5.10.3"),
   R16B01("5.10.2"),
   R16B("5.10.1"),
   R16A("5.10"),
