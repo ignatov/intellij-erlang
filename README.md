@@ -29,7 +29,12 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ## Change log
 
-### Version 0.4.x (work in progress)
+### Version 0.5.x (Work in progress)
+* Type aware completion
+* Enhanced debugger
+* Preprocessing support
+
+### Version 0.5
 * Rerun failed tests action
 * Native reporter for eunit tests
 * Completion for include and include_lib attributes
