@@ -313,8 +313,8 @@ public class ErlangXDebugProcess extends XDebugProcess {
     commandLine.addParameters("-s", "init", "stop");
     Process process = commandLine.createProcess();
     myErlangProcessHandler = new OSProcessHandler(process);
-    myErlangProcessHandler.startNotify();
     getSession().getConsoleView().attachToProcess(myErlangProcessHandler);
+    myErlangProcessHandler.startNotify();
     setEntryPoint(runningState.getDebugEntryPoint());
   }
 
