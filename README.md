@@ -44,11 +44,11 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 * Introduce macros quickfix
 * Better auto indentation for some cases
 * Debugger (experimental)
-* Introduce funtcion refactoring (experimental)
+* Introduce function refactoring (experimental)
 * RubyMine and other "small IDEs" compatibility
 * Go to super action for callback implementations
 * Better EUnit support: run single test and rerun failed tests action
-* Enhanced native compililation: parse_transform and behaviour detection
+* Enhanced native compilation: parse_transform and behaviour detection
 * Comma-first style support
 * Enhanced color schema settings
 * Rebar-based compilation
