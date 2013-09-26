@@ -86,12 +86,20 @@ continue(Pid) ->
 parse_args(ArgsString) ->
   case erl_scan:string(ArgsString ++ ".") of
     {ok, Tokens, _} ->
-      case erl_parse:parse_term(Tokens) of
-        {ok, ArgsList} when is_list(ArgsList) ->
-          ArgsList;
+      case erl_parse:parse_exprs(Tokens) of
+        {ok, ExprList}  ->
+          eval_argslist(ExprList);
         _ ->
           error
       end;
+    _ ->
+      error
+  end.
+
+eval_argslist(ExprList) ->
+  case erl_eval:expr_list(ExprList, erl_eval:new_bindings()) of
+    {[ArgsList|_], _} ->
+      ArgsList;
     _ ->
       error
   end.

@@ -20,7 +20,6 @@ import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
@@ -34,6 +33,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Getter;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +46,7 @@ import java.util.*;
  * @author ignatov
  */
 public class ErlangUnitRunningState extends ErlangRunningState {
+  private static int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
   private ErlangUnitRunConfiguration myConfiguration;
 
   public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
@@ -54,17 +55,14 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @Override
-  protected void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException {
+  public List<String> getCodePath() throws ExecutionException {
     try {
       File reporterDir = createReporterModuleDirectory();
-      commandLine.addParameters("-pa", reporterDir.getPath());
+      List<String> reporterModuleCodePath = Arrays.asList("-pa", reporterDir.getPath());
+      return ContainerUtil.concat(reporterModuleCodePath, super.getCodePath());
     } catch (IOException e) {
       throw new ExecutionException("Failed to setup eunit reports environment", e);
     }
-    commandLine.addParameter("-run");
-    commandLine.addParameter("-eval");
-    commandLine.addParameter("eunit:test([" + getTestObjectsString() + "], [{report, {" + ErlangEunitReporterModule.MODULE_NAME +",[]}}, {no_tty, true}]).");
-    commandLine.addParameters("-s", "init", "stop", "-noshell");
   }
 
   @Override
@@ -73,8 +71,23 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @Override
+  protected boolean isNoShellMode() {
+    return true;
+  }
+
+  @Override
+  protected boolean isStopErlang() {
+    return true;
+  }
+
+  @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {
-    return new ErlangEntryPoint("eunit", "test", "[" + getTestObjectsString() + "], [{report, {" + ErlangEunitReporterModule.MODULE_NAME +",[]}}, {no_tty, true}]");
+    return getEntryPointInternal(false);
+  }
+
+  @Override
+  public ErlangEntryPoint getDebugEntryPoint() throws ExecutionException {
+    return getEntryPointInternal(true);
   }
 
   @Override
@@ -102,8 +115,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return executionResult;
   }
 
+  @Override
   @NotNull
-  private ConsoleView createConsoleView(Executor executor) throws ExecutionException {
+  public ConsoleView createConsoleView(Executor executor) throws ExecutionException {
     final ErlangUnitRunConfiguration runConfiguration = (ErlangUnitRunConfiguration) getRunnerSettings().getRunProfile();
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(
       "Erlang",
@@ -114,19 +128,21 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     );
   }
 
+  private ErlangEntryPoint getEntryPointInternal(boolean debug) throws ExecutionException {
+    List<String> args = Arrays.asList("[" + getTestObjectsString(debug) + "]", "[{report, {" + ErlangEunitReporterModule.MODULE_NAME + ",[]}}, {no_tty, true}]");
+    return new ErlangEntryPoint("eunit", "test", args);
+  }
+
   @NotNull
-  private String getTestObjectsString() throws ExecutionException {
+  private String getTestObjectsString(boolean debug) throws ExecutionException {
     ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = myConfiguration.getConfigData().getKind();
-
+    String tests;
     if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
-      return StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ", ");
+      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ", ");
     }
-
-    if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
+    else if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
       StringBuilder result = new StringBuilder();
-
       Map<String, List<String>> modules = groupByModule(myConfiguration.getConfigData().getFunctionNames());
-
       for (Map.Entry<String, List<String>> e : modules.entrySet()) {
         String moduleName = e.getKey();
 
@@ -140,11 +156,12 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       if (result.length() != 0) {
         result.setLength(result.length() - 2);
       }
-
-      return result.toString();
+      tests = result.toString();
     }
-
-    throw new ExecutionException("Unknown run config kind");
+    else {
+      throw new ExecutionException("Unknown run config kind");
+    }
+    return debug ? "{timeout, " + DEBUG_TEST_TIMEOUT + ", [" + tests + "]}" : tests;
   }
 
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {

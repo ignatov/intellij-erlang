@@ -17,6 +17,7 @@
 package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.filters.TextConsoleBuilder;
@@ -24,10 +25,12 @@ import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
@@ -62,13 +65,15 @@ public abstract class ErlangRunningState extends CommandLineState {
     commandLine.setExePath(erl);
     commandLine.setWorkDirectory(myModule.getProject().getBasePath());
     commandLine.addParameters(getCodePath());
-    setUpCommandLineParameters(commandLine);
+    setEntryPoint(commandLine);
+    setStopErlang(commandLine);
+    setNoShellMode(commandLine);
     final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
   }
 
-  public final List<String> getCodePath() {
+  public List<String> getCodePath() throws ExecutionException {
     return ErlangConsoleUtil.getCodePath(myModule, useTestCodePath());
   }
 
@@ -76,18 +81,49 @@ public abstract class ErlangRunningState extends CommandLineState {
     return myModule;
   }
 
-  protected abstract void setUpCommandLineParameters(GeneralCommandLine commandLine) throws ExecutionException;
-
   protected abstract boolean useTestCodePath();
 
+  protected abstract boolean isNoShellMode();
+
+  protected abstract boolean isStopErlang();
+
   public abstract ErlangEntryPoint getEntryPoint() throws ExecutionException;
+
+  public ErlangEntryPoint getDebugEntryPoint() throws ExecutionException {
+    return getEntryPoint();
+  }
+
+  private void setStopErlang(GeneralCommandLine commandLine) {
+    if (isStopErlang())  {
+      commandLine.addParameters("-s", "init", "stop");
+    }
+  }
+
+  private void setNoShellMode(GeneralCommandLine commandLine) {
+    if (isNoShellMode()) commandLine.addParameters("-noshell");
+  }
+
+  private void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
+    ErlangEntryPoint entryPoint = getEntryPoint();
+    StringBuilder evalExpr = new StringBuilder();
+    evalExpr.append(entryPoint.getModuleName())
+            .append(":")
+            .append(entryPoint.getFunctionName())
+            .append("(")
+            .append(StringUtil.join(entryPoint.getArgsList(), ", "))
+            .append(").");
+    commandLine.addParameters("-eval", evalExpr.toString());
+  }
+
+  @NotNull
+  public abstract ConsoleView createConsoleView(Executor executor) throws ExecutionException;
 
   public static class ErlangEntryPoint {
     private final String myModuleName;
     private final String myFunctionName;
-    private final String myArgsList;
+    private final List<String> myArgsList;
 
-    public ErlangEntryPoint(String moduleName, String functionName, String args) {
+    public ErlangEntryPoint(String moduleName, String functionName, List<String> args) {
       myModuleName = moduleName;
       myFunctionName = functionName;
       myArgsList = args;
@@ -101,7 +137,7 @@ public abstract class ErlangRunningState extends CommandLineState {
       return myFunctionName;
     }
 
-    public String getArgsList() {
+    public List<String> getArgsList() {
       return myArgsList;
     }
   }

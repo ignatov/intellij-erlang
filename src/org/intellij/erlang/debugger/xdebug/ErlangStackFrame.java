@@ -18,6 +18,7 @@ package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.xdebugger.XDebuggerUtil;
@@ -25,6 +26,7 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.frame.*;
 import org.intellij.erlang.debugger.node.ErlangTraceElement;
 import org.intellij.erlang.debugger.node.ErlangVariableBinding;
+import org.intellij.erlang.psi.ErlangFunExpression;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -59,14 +61,21 @@ public class ErlangStackFrame extends XStackFrame {
 
   @Override
   public void customizePresentation(ColoredTextContainer component) {
-    ErlangFunction function = mySourcePosition != null ? mySourcePosition.getFunction() : null;
-    if (function == null) {
-      super.customizePresentation(component);
+    if (mySourcePosition != null) {
+      ErlangFunction function = mySourcePosition.getFunction();
+      ErlangFunExpression funExpression = mySourcePosition.getFunExpression();
+      if (function != null) {
+        String title = ErlangPsiImplUtil.getQualifiedFunctionName(function);
+        if (funExpression != null) {
+          int line = 1 + StringUtil.offsetToLineNumber(funExpression.getContainingFile().getText(), funExpression.getTextOffset());
+          title += ": fun at line " + line;
+        }
+        component.append(title, SimpleTextAttributes.REGULAR_ATTRIBUTES);
+        component.setIcon(AllIcons.Debugger.StackFrame);
+        return;
+      }
     }
-    else {
-      component.append(ErlangPsiImplUtil.getQualifiedFunctionName(function), SimpleTextAttributes.REGULAR_ATTRIBUTES);
-      component.setIcon(AllIcons.Debugger.StackFrame);
-    }
+    super.customizePresentation(component);
   }
 
   @Override
