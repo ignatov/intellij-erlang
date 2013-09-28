@@ -1,0 +1,35 @@
+ERL_FILE
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_EXPORT
+      PsiElement(atom)('export')
+      PsiElement(()('(')
+      ERL_EXPORT_FUNCTIONS
+        PsiElement([)('[')
+        ERL_EXPORT_FUNCTION
+          ERL_Q_ATOM
+            PsiElement(atom)('main')
+          PsiElement(/)('/')
+          PsiElement(integer)('1')
+        PsiElement(])(']')
+      PsiElement())(')')
+    PsiElement(.)('.')
+    PsiErrorElement:'#!/usr/bin/env escript' unexpected
+      PsiElement(ERROR_ELEMENT)('#!/usr/bin/env escript')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('main')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_MAX_EXPRESSION
+            ERL_Q_VAR
+              PsiElement(var)('_Args')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            PsiElement(atom)('ok')
+    PsiElement(.)('.')
