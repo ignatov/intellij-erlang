@@ -31,6 +31,7 @@ import static org.intellij.erlang.ErlangParserDefinition.*;
 /* This hex range is the same as octal \O00 - \O37 */
 ControlCharacter = [\000 - \037]
 
+ShebangLine = "#!"[^\r\n]*
 ModuleDocCommentLine = "%%%"[^\r\n]*
 FunctionDocCommentLine = "%%"[^\r\n]*
 CommentLine = "%"[^\r\n]*
@@ -79,6 +80,7 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars}?)
 UniversalPattern = _
 
 %%
+ {ShebangLine}                 { return getTokenStart() == 0 ? ERL_SHEBANG : com.intellij.psi.TokenType.ERROR_ELEMENT; }
  {ModuleDocComment}            { return ERL_MODULE_DOC_COMMENT; }
  {FunctionDocComment}          { return ERL_FUNCTION_DOC_COMMENT; }
  {Comment}                     { return ERL_COMMENT; }
