@@ -194,7 +194,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
               }
             }
           }
-          if (colonQualified == null && parent instanceof ErlangExpression && ErlangPsiImplUtil.inFunction(position)) {
+          if (colonQualified == null && parent instanceof ErlangExpression && (ErlangPsiImplUtil.inFunction(position) || inConsole)) {
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, null));
           }
         }
