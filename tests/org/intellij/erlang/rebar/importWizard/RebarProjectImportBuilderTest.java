@@ -132,6 +132,14 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     doTest(null);
   }
 
+  public void testRebarDependencies() throws Exception {
+    doTest(null);
+  }
+
+  public void testTransitiveRebarDependencies() throws Exception {
+    doTest(null);
+  }
+
   private static void createMockSdk() {
     final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR);
     ApplicationManager.getApplication().runWriteAction(new Runnable() {

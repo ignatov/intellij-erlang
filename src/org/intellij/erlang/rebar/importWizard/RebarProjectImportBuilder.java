@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.rebar.importWizard;
 
-import com.google.common.collect.Sets;
 import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationInfoEx;
@@ -60,14 +59,10 @@ import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpApp> {
   private static final Logger LOG = Logger.getLogger(RebarProjectImportBuilder.class);
-
-  private static final Pattern APP_NAME_PATTERN = Pattern.compile("\\{\\s*application\\s*,\\s*(.*?)\\s*,");
-  private static final Pattern APP_DEPS_LIST_PATTERN = Pattern.compile("\\{\\s*applications\\s*,\\s*\\[\\s*(.*?)\\s*\\]", Pattern.DOTALL);
 
   private boolean myOpenProjectSettingsAfter = false;
   @Nullable private VirtualFile myProjectRoot = null;
@@ -222,7 +217,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
                              @Nullable ModifiableModuleModel moduleModel,
                              @NotNull ModulesProvider modulesProvider,
                              @Nullable ModifiableArtifactModel modifiableArtifactModel) {
-    final Set<String> selectedAppNames = Sets.newHashSet();
+    final Set<String> selectedAppNames = ContainerUtil.newHashSet();
     for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
       selectedAppNames.add(importedOtpApp.getName());
     }
@@ -354,27 +349,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     if (appResourceFile == null) {
       return null;
     }
-    final String content;
-    try {
-      content = new String(appResourceFile.contentsToByteArray());
-    } catch (IOException e) {
-      return null;
-    }
-    final Matcher appNameMatcher = APP_NAME_PATTERN.matcher(content);
-    if (!appNameMatcher.find()) {
-      return null;
-    }
-    final String appName = appNameMatcher.group(1);
-    final Matcher appDepsMatcher = APP_DEPS_LIST_PATTERN.matcher(content);
-    final Set<String> appDeps = new HashSet<String>();
-    if (appDepsMatcher.find()) {
-      for (String appDepName : appDepsMatcher.group(1).trim().split("\\s*,\\s*")) {
-        if (!appDepName.isEmpty()) {
-          appDeps.add(appDepName);
-        }
-      }
-    }
-    return new ImportedOtpApp(appName, appRoot, appDeps);
+    return new ImportedOtpApp(appRoot, appResourceFile);
   }
 
   @Nullable
@@ -453,7 +428,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
                                                @NotNull ImportedOtpApp importedOtpApp,
                                                @Nullable Sdk projectSdk,
                                                @NotNull Set<String> allImportedAppNames) {
-    final HashSet<String> unresolvedAppNames = Sets.newHashSet();
+    final HashSet<String> unresolvedAppNames = ContainerUtil.newHashSet();
     for (String depAppName : importedOtpApp.getDeps()) {
       if (allImportedAppNames.contains(depAppName)) {
         rootModel.addInvalidModuleEntry(depAppName);
