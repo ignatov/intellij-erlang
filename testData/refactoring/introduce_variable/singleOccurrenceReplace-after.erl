@@ -1,2 +1,1 @@
-foo(expr, expr) -> <caret>Expr = expr,
-  Expr.
+foo(expr, expr) -> <caret>Expr = expr.

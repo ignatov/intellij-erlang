@@ -205,17 +205,25 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     final Project project = declaration.getProject();
     return new WriteCommandAction<PsiElement>(project, "Extract variable", initializer.getContainingFile()) {
       protected void run(@NotNull Result<PsiElement> result) throws Throwable {
+        boolean alone = occurrences.size() == 1 && occurrences.get(0).getParent() instanceof ErlangClauseBody;
         PsiElement createdDeclaration = replaceLeftmostArgumentDefinition(declaration, occurrences);
         if (createdDeclaration == null) {
           createdDeclaration = addDeclaration(declaration, occurrences);
         }
         result.setResult(createdDeclaration);
-        if (createdDeclaration != null) {
-          modifyDeclaration(createdDeclaration);
+        if (alone) {
+          PsiElement firstItem = ContainerUtil.getFirstItem(occurrences);
+          if (firstItem != null) firstItem.delete();
         }
-        PsiElement newExpression = ErlangElementFactory.createQVarFromText(project, newName);
-        for (PsiElement occurrence : occurrences) {
-          ErlangPsiImplUtil.getOutermostParenthesizedExpression((ErlangExpression) occurrence).replace(newExpression);
+        else {
+          if (createdDeclaration != null) {
+            modifyDeclaration(createdDeclaration);
+          }
+
+          PsiElement newExpression = ErlangElementFactory.createQVarFromText(project, newName);
+          for (PsiElement occurrence : occurrences) {
+            ErlangPsiImplUtil.getOutermostParenthesizedExpression((ErlangExpression) occurrence).replace(newExpression);
+          }
         }
       }
     }.execute().getResultObject();
