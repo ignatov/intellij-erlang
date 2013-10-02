@@ -110,7 +110,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       new ErlangRefactoringUtil.Extractor() {
         @Override
         public boolean checkContext(@NotNull PsiFile file, @NotNull Editor editor, @Nullable PsiElement element) {
-          return ErlangIntroduceVariableHandler.checkIntroduceContext(file, editor, element);
+          return checkIntroduceContext(file, editor, element);
         }
         @Override
         public void process(@NotNull Editor editor, @NotNull ErlangExpression expression) {
@@ -227,8 +227,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   @Nullable
   private static PsiElement replaceLeftmostArgumentDefinition(@NotNull PsiElement declaration, @NotNull List<PsiElement> occurrences) {
     PsiElement argDef = extractLeftmostArgumentDefinition(occurrences);
-
-    return argDef == null ? argDef : argDef.replace(declaration);
+    return argDef == null ? null : argDef.replace(declaration);
   }
 
   @Nullable
