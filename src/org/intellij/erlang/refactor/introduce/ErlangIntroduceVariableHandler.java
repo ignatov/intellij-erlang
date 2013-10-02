@@ -172,6 +172,10 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     ErlangExpression initializer = ErlangPsiImplUtil.getNotParenthesizedExpression(expression);
     String newText = initializer != null ? newName + " = " + initializer.getText() : null;
     Project project = expression.getProject();
+    if (PsiTreeUtil.hasErrorElements(expression)) {
+      showCannotPerformError(project, editor, "Selected expression contains errors");
+      return null;
+    }
     PsiElement declaration = newText != null ? ErlangElementFactory.createExpressionFromText(project, newText) : null;
     if (declaration == null) {
       showCannotPerformError(project, editor);
@@ -263,7 +267,11 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   private static void showCannotPerformError(@NotNull Project project, @NotNull Editor editor) {
-    CommonRefactoringUtil.showErrorHint(project, editor, "Cannot perform refactoring", "Cannot Perform Refactoring", "refactoring.extractVariable");
+    showCannotPerformError(project, editor, "Cannot Perform Refactoring");
+  }
+
+  private static void showCannotPerformError(@NotNull Project project, @NotNull Editor editor, @NotNull String message) {
+    CommonRefactoringUtil.showErrorHint(project, editor, message, "Cannot Perform Refactoring", "refactoring.extractVariable");
   }
 
   private static boolean isValidIntroduceContext(@Nullable PsiElement element) {
