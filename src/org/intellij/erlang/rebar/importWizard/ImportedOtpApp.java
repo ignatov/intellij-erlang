@@ -37,6 +37,7 @@ final class ImportedOtpApp {
   private final VirtualFile myRoot;
   private final Set<String> myDeps = ContainerUtil.newHashSet();
   private final Set<String> myIncludePaths = ContainerUtil.newHashSet();
+  private final Set<String> myParseTransforms = ContainerUtil.newHashSet();
   private VirtualFile myIdeaModuleFile;
   private Module myModule;
 
@@ -83,6 +84,10 @@ final class ImportedOtpApp {
     myModule = module;
   }
 
+  public Set<String> getParseTransforms() {
+    return myParseTransforms;
+  }
+
   @Override
   public String toString() {
     return myName + " (" + myRoot + ')';
@@ -114,6 +119,7 @@ final class ImportedOtpApp {
     if (rebarConfigPsi == null) return;
     addDependenciesFromRebarConfig(rebarConfigPsi);
     addIncludePathsFromRebarConfig(rebarConfigPsi);
+    addParseTransformsFromRebarConfig(rebarConfigPsi);
   }
 
   private void addDependenciesFromAppFile(@NotNull VirtualFile appFile) {
@@ -167,6 +173,26 @@ final class ImportedOtpApp {
               for (ErlangStringLiteral includePath : PsiTreeUtil.findChildrenOfType(includeOptionValue, ErlangStringLiteral.class)) {
                 addIncludePath(includePath);
               }
+            }
+            return true;
+          }
+        });
+        return true;
+      }
+    });
+  }
+
+  private void addParseTransformsFromRebarConfig(PsiFile rebarConfig) {
+    processConfigSection(rebarConfig, "erl_opts", new Processor<ErlangExpression>() {
+      @Override
+      public boolean process(ErlangExpression section) {
+        processConfigSection(section, "parse_transform", new Processor<ErlangExpression>() {
+          @Override
+          public boolean process(ErlangExpression configExpression) {
+            ErlangQAtom parseTranform = PsiTreeUtil.getChildOfType(configExpression, ErlangQAtom.class);
+            PsiElement parseTransformAtom = parseTranform != null ? parseTranform.getAtom() : null;
+            if (parseTransformAtom != null) {
+              myParseTransforms.add(parseTransformAtom.getText());
             }
             return true;
           }

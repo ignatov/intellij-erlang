@@ -49,6 +49,7 @@ import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.editor.ErlangModuleType;
 import org.intellij.erlang.facet.ErlangFacet;
+import org.intellij.erlang.facet.ErlangFacetConfiguration;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NonNls;
@@ -284,7 +285,9 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
             facet = ErlangFacet.getFacet(module);
           }
           if (facet != null) {
-            facet.getConfiguration().addIncludePaths(app.getIncludePaths());
+            ErlangFacetConfiguration configuration = facet.getConfiguration();
+            configuration.addIncludePaths(app.getIncludePaths());
+            configuration.addParseTransforms(app.getParseTransforms());
           }
         }
       }

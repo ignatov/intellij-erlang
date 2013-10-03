@@ -66,7 +66,7 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
   }
   
   public void addIncludePaths(Collection<String> newIncludePaths) {
-    if (newIncludePaths.size() == 0) return;
+    if (newIncludePaths.isEmpty()) return;
     //noinspection unchecked
     setIncludePathsFrom(ContainerUtil.concat(myState.myIncludePaths, newIncludePaths));
   }
@@ -90,5 +90,11 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
 
   public void setParseTransformsFrom(Iterable<String> parseTransforms) {
     myState.myParseTransforms = ContainerUtil.newArrayList(ContainerUtil.newLinkedHashSet(parseTransforms));
+  }
+  
+  public void addParseTransforms(Collection<String> newParseTransforms) {
+    if (newParseTransforms.isEmpty()) return;
+    //noinspection unchecked
+    setParseTransformsFrom(ContainerUtil.concat(myState.myParseTransforms, newParseTransforms));
   }
 }

@@ -148,6 +148,15 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     doRebarIncludePathsTest();
   }
 
+  public void testParseTransformInRebarConfig() throws Exception {
+    Project project = doTest(null);
+    Module[] modules = ModuleManager.getInstance(project).getModules();
+    assertEquals(1, modules.length);
+    ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
+    assertNotNull(facet);
+    assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
   private void doRebarIncludePathsTest() throws Exception {
     String projectPath = getProject().getBaseDir().getPath();
     String importFromPath = projectPath + "/test/";
