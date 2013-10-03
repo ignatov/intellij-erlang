@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -61,11 +62,13 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
   }
   
   public void addIncludeDirectoriesToIncludePath(@NotNull Module module) {
-    List<String> includeFolderPaths = getIncludeFolderPaths(module);
-    if (!includeFolderPaths.isEmpty()) {
-      //noinspection unchecked
-      setIncludePathsFrom(ContainerUtil.concat(myState.myIncludePaths, includeFolderPaths));
-    }
+    addIncludePaths(getIncludeFolderPaths(module));
+  }
+  
+  public void addIncludePaths(Collection<String> newIncludePaths) {
+    if (newIncludePaths.size() == 0) return;
+    //noinspection unchecked
+    setIncludePathsFrom(ContainerUtil.concat(myState.myIncludePaths, newIncludePaths));
   }
 
   @NotNull 

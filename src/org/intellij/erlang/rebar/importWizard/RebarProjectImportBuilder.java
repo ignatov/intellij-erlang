@@ -231,6 +231,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       final String ideaModuleFile = ideaModuleDir.getCanonicalPath() + File.separator + importedOtpApp.getName() + ".iml";
       final Module module = obtainedModuleModel.newModule(ideaModuleFile, ErlangModuleType.getInstance().getId());
       createdModules.add(module);
+      importedOtpApp.setModule(module);
       if (importedOtpApp.getIdeaModuleFile() == null) {
         final ModifiableRootModel rootModel = ModuleRootManager.getInstance(module).getModifiableModel();
         // Make it inherit SDK from the project.
@@ -262,7 +263,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       }
     });
 
-    addErlangFacets(createdModules);
+    addErlangFacets(mySelectedOtpApps);
     RebarSettings.getInstance(project).setRebarPath(myRebarPath);
     ErlangCompilerSettings.getInstance(project).setUseRebarCompilerEnabled(true);
     CompilerWorkspaceConfiguration.getInstance(project).CLEAR_OUTPUT_DIRECTORY = false;
@@ -270,13 +271,20 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     return createdModules;
   }
 
-  private static void addErlangFacets(final List<Module> modules) {
+  private static void addErlangFacets(final List<ImportedOtpApp> apps) {
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {
-        for (Module module : modules) {
-          if (ErlangFacet.getFacet(module) == null) {
+        for (ImportedOtpApp app : apps) {
+          Module module = app.getModule();
+          if (module == null) continue;
+          ErlangFacet facet = ErlangFacet.getFacet(module);
+          if (facet == null) {
             ErlangFacet.createFacet(module);
+            facet = ErlangFacet.getFacet(module);
+          }
+          if (facet != null) {
+            facet.getConfiguration().addIncludePaths(app.getIncludePaths());
           }
         }
       }
