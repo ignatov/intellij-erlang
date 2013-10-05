@@ -12,7 +12,9 @@ main(TargetNodeName, TargetProcessName) ->
       exit(1);
     _ ->
       %%TODO check if node name contains host part
-      run({list_to_atom(TargetProcessName), list_to_atom(TargetNodeName ++ [$@|net_adm:localhost()])})
+      {ok, Host} = inet:gethostname(),
+      run({list_to_atom(TargetProcessName),
+           list_to_atom(TargetNodeName ++ [$@ | Host])})
   end.
 
 run(Debugger) ->

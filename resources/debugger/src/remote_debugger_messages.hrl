@@ -8,6 +8,7 @@
 -record(step_over, {pid}).
 -record(step_out, {pid}).
 -record(continue, {pid}).
+-record(evaluate, {pid, expression}). % TODO consider adding a stack pointer as third param
 
 % Messages which can be sent to remote debugger.
 % Debugger implementation should handle all messages listed here.
@@ -16,6 +17,7 @@
 -record(register_listener, {pid}).
 -record(interpret_modules_response, {statuses=[]}). % list of pairs {module_name, ok|{error, reason}}
 -record(set_breakpoint_response, {module, line, status}). % status=ok|{error, reason}
+-record(evaluate_response, {result}).
 -record(breakpoint_reached, {pid, snapshot}). % (see int:snapshot/0).
                                               % each snapshot has additional tuple element:
                                               % stack: [{SP,{Module, Function, ArgsList}, Bindings}] where bindings is [{atom(), term()}].
