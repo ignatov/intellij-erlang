@@ -5,7 +5,6 @@ import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Tag;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,10 +13,12 @@ import java.util.List;
 public class ErlangModuleExtensionProperties {
   @Tag("includePaths")
   @AbstractCollection(surroundWithTag = false, elementTag = "path")
+  //should not contain duplicate elements
   public List<String> myIncludePaths = ContainerUtil.newArrayList();
 
   @Tag("parseTransforms")
   @AbstractCollection(surroundWithTag = false, elementTag = "transform")
+  //should not contain duplicate elements
   public List<String> myParseTransforms = ContainerUtil.newArrayList();
 
   public ErlangModuleExtensionProperties() {

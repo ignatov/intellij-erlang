@@ -222,8 +222,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
   private static void addParseTransforms(GeneralCommandLine commandLine, JpsModule module) throws ProjectBuildException {
     JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
-    List<String> parseTransforms = extension != null ? extension.getParseTransforms() : null;
-    if (parseTransforms == null || parseTransforms.isEmpty()) return;
+    List<String> parseTransforms = extension != null ? extension.getParseTransforms() : Collections.<String>emptyList();
+    if (parseTransforms.isEmpty()) return;
     for (String ptModule : parseTransforms) {
       commandLine.addParameter("+{parse_transform, " + ptModule + "}");
     }

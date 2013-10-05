@@ -7,6 +7,7 @@ import org.jetbrains.jps.model.ex.JpsCompositeElementBase;
 import org.jetbrains.jps.model.ex.JpsElementChildRoleBase;
 import org.jetbrains.jps.model.module.JpsModule;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,11 +37,11 @@ public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangM
   }
 
   public List<String> getIncludePaths() {
-    return myProperties.myIncludePaths;
+    return Collections.unmodifiableList(myProperties.myIncludePaths);
   }
 
   public List<String> getParseTransforms() {
-    return myProperties.myParseTransforms;
+    return Collections.unmodifiableList(myProperties.myParseTransforms);
   }
 
   @Nullable
