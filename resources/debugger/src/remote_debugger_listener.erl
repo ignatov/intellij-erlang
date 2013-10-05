@@ -6,6 +6,7 @@
 
 -include("process_names.hrl").
 -include("remote_debugger_messages.hrl").
+-include("trace_utils.hrl").
 
 run(Debugger) ->
   register(?RDEBUG_LISTENER, self()),
@@ -14,31 +15,44 @@ run(Debugger) ->
 
 loop() ->
   receive
-    {set_breakpoint, Module, Line} when is_atom(Module),
-                                        is_integer(Line) ->
-      set_breakpoint(Module, Line);
-    {remove_breakpoint, Module, Line} when is_atom(Module),
-                                           is_integer(Line) ->
-      remove_breakpoint(Module, Line);
-    {interpret_modules, Modules} when is_list(Modules) ->
-      interpret_modules(Modules);
-    {run_debugger, Module, Function, Args} when is_atom(Module),
-                                                is_atom(Function),
-                                                is_list(Args) ->
-      run_debugger(Module, Function, Args);
-    {step_into, Pid} when is_pid(Pid) ->
-      step_into(Pid);
-    {step_over, Pid} when is_pid(Pid) ->
-      step_over(Pid);
-    {step_out, Pid} when is_pid(Pid) ->
-      step_out(Pid);
-    {continue, Pid} when is_pid(Pid) ->
-      continue(Pid);
-    {'DOWN', _, _, _, _} -> exit(normal); % this means the process being debugged has quit
-    UnknownMessage ->
-      io:format("unknown message: ~p", [UnknownMessage])
+    Message ->
+      ?trace_message(Message),
+      process_message(Message)
   end,
   loop().
+
+% commands from remote debugger
+process_message({set_breakpoint, Module, Line}) when is_atom(Module),
+                                                     is_integer(Line) ->
+  set_breakpoint(Module, Line);
+process_message({remove_breakpoint, Module, Line}) when is_atom(Module),
+                                                        is_integer(Line) ->
+  remove_breakpoint(Module, Line);
+process_message({interpret_modules, Modules}) when is_list(Modules) ->
+  interpret_modules(Modules);
+process_message({run_debugger, Module, Function, Args}) when is_atom(Module),
+                                                             is_atom(Function),
+                                                             is_list(Args) ->
+  run_debugger(Module, Function, Args);
+process_message({step_into, Pid}) when is_pid(Pid) ->
+  step_into(Pid);
+process_message({step_over, Pid}) when is_pid(Pid) ->
+  step_over(Pid);
+process_message({step_out, Pid}) when is_pid(Pid) ->
+  step_out(Pid);
+process_message({continue, Pid}) when is_pid(Pid) ->
+  continue(Pid);
+process_message({evaluate, Pid, Expression}) when is_pid(Pid),
+                                                  is_list(Expression) ->
+  evaluate(Pid, Expression);
+% responses from interpreter
+process_message({_Meta, {eval_rsp, EvalResponse}}) ->
+  evaluate_response(EvalResponse);
+% other
+process_message({'DOWN', _, _, _, _}) ->
+  exit(normal); % this means the process being debugged has quit
+process_message(UnknownMessage) ->
+  io:format("unknown message: ~p", [UnknownMessage]).
 
 set_breakpoint(Module, Line) ->
   Response = #set_breakpoint_response{
@@ -83,11 +97,18 @@ step_out(Pid) ->
 continue(Pid) ->
   int:continue(Pid).
 
+evaluate(Pid, Expression) ->
+  {ok, Meta} = dbg_iserver:call({get_meta, Pid}),
+  int:meta(Meta, eval, {undefined, Expression}). % Current module should be passed instead of 'undefined'
+
+evaluate_response(Response) ->
+  ?RDEBUG_NOTIFIER ! #evaluate_response{result = Response}.
+
 parse_args(ArgsString) ->
   case erl_scan:string(ArgsString ++ ".") of
     {ok, Tokens, _} ->
       case erl_parse:parse_exprs(Tokens) of
-        {ok, ExprList}  ->
+        {ok, ExprList} ->
           eval_argslist(ExprList);
         _ ->
           error
