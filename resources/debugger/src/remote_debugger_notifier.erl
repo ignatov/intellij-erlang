@@ -2,6 +2,7 @@
 
 -include("process_names.hrl").
 -include("remote_debugger_messages.hrl").
+-include("trace_utils.hrl").
 
 -export([run/1, breakpoint_reached/1]).
 
@@ -13,6 +14,7 @@ run(Debugger) ->
 loop(Debugger) ->
   receive
     MessageToSend ->
+      ?trace_message(MessageToSend),
       Debugger ! MessageToSend
   end,
   loop(Debugger).
