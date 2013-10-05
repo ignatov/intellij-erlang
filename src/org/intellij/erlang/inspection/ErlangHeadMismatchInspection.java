@@ -48,6 +48,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
       if (clauses.size() > 1) {
         for (ErlangFunctionClause clause : clauses) {
           ErlangQAtom clauseHead = clause.getQAtom();
+          if (clauseHead.getMacros() != null) return;
           String clauseSignature = ErlangPsiImplUtil.createFunctionClausePresentation(clause);
           String functionSignature = ErlangPsiImplUtil.createFunctionPresentation(function);
 
