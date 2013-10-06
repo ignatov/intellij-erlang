@@ -39,11 +39,8 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
   @Override
   public String getCodeSample(@NotNull SettingsType settingsType) {
-    if (settingsType == SettingsType.SPACING_SETTINGS) {
-      return SPACING_CODE_SAMPLE;
-    }
-    if (settingsType == SettingsType.WRAPPING_AND_BRACES_SETTINGS) {
-      return WRAPPING_CODE_SAMPLE;
+    if (settingsType == SettingsType.SPACING_SETTINGS || settingsType == SettingsType.WRAPPING_AND_BRACES_SETTINGS) {
+      return DEFAULT_CODE_SAMPLE;
     }
     if (settingsType == SettingsType.INDENT_SETTINGS) {
       return INDENT_CODE_SAMPLE;
@@ -122,42 +119,13 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
     }
   }
 
-  private static final String SPACING_CODE_SAMPLE =
-    "ping(0, Pong_PID) ->\n" +
-      "    Pong_PID ! finished,\n" +
-      "    tut15:pong(),\n" +
-      "    io:format(\"Ping finished~n\", []);\n" +
-      "\n" +
-      "ping(N, Pong_PID)->\n" +
-      "    Pong_PID ! {ping, self()},\n" +
-      "    receive\n" +
-      "        pong ->\n" +
-      "            io:format(\"Ping received pong~n\", [])\n" +
-      "    end,\n" +
-      "    ping(N - 1, Pong_PID).\n" +
-      "\n" +
-      "pong() ->\n" +
-      "    receive\n" +
-      "        finished ->\n" +
-      "            io:format(\"Pong finished~n\", []);\n" +
-      "        {ping, Ping_PID} ->\n" +
-      "            io:format(\"Pong received ping~n\", []),\n" +
-      "            Ping_PID ! pong,\n" +
-      "            pong()\n" +
-      "    end.\n" +
-      "\n" +
-      "start() ->\n" +
-      "    Pong_PID = spawn(tut15, pong, []),\n" +
-      "    spawn(tut15, ping, [30, Pong_PID]).";
-
-  private static final String WRAPPING_CODE_SAMPLE =
+  private static final String DEFAULT_CODE_SAMPLE =
     "%% ping comment\n" +
       "ping(0, Pong_PID) ->\n" +
       "    Pong_PID ! finished,\n" +
       "    tut15:pong(),\n" +
       "    io:format(\"Ping finished~n\", []);\n" +
       "\n" +
-      "" +
       "%% pong comment\n" +
       "ping(N, Pong_PID)->\n" +
       "    Pong_PID ! {ping, self()},\n" +
@@ -179,12 +147,23 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       "\n" +
       "start() ->\n" +
       "    Pong_PID = spawn(tut15, pong, []),\n" +
-      "    spawn(tut15, ping, [30, Pong_PID]).\n" +
+      "    spawn(tut15, ping, [30 * 1000, Pong_PID]).\n" +
+      "\n" +
+      "-record(rec, {id, name=\"Default\", binary}).\n" +
       "\n" +
       "f() ->\n" +
+      "    Ok = true == false," +
+      "    Ok = true =:= false," +
+      "    #rec{id = 1, binary = <<\"BINARY\">>},\n" +
       "    X = case 1 of\n" +
       "        Z -> Z\n" +
-      "    end.";
+      "    end.\n" +
+      "    \n" +
+      "sort([Pivot|T]) ->\n" +
+      "    sort([ X || X <- T, X < Pivot]) ++\n" +
+      "    [Pivot] ++\n" +
+      "    sort([ X || X <- T, X >= Pivot]);\n" +
+      "sort([]) -> [].";
 
   private static final String BLANK_LINES_CODE_SAMPLE =
     "hello(Name) ->\n" +
