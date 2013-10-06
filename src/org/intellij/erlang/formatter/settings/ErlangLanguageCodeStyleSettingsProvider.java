@@ -152,8 +152,8 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       "-record(rec, {id, name=\"Default\", binary}).\n" +
       "\n" +
       "f() ->\n" +
-      "    Ok = true == false," +
-      "    Ok = true =:= false," +
+      "    Ok = true == false,\n" +
+      "    Ok = true =:= false,\n" +
       "    #rec{id = 1, binary = <<\"BINARY\">>},\n" +
       "    X = case 1 of\n" +
       "        Z -> Z\n" +
