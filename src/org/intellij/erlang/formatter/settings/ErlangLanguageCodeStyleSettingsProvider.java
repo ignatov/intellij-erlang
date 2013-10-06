@@ -29,6 +29,8 @@ import org.jetbrains.annotations.NotNull;
  * @author ignatov
  */
 public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSettingsProvider {
+  public static final String AROUND_OPERATORS = "Around Operators";
+
   @NotNull
   @Override
   public Language getLanguage() {
@@ -80,11 +82,16 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
         "SPACE_AFTER_COMMA",
         "SPACE_BEFORE_COMMA"
       );
-      consumer.renameStandardOption("SPACE_AROUND_ASSIGNMENT_OPERATORS", "Assignment and receive operators");
+      consumer.renameStandardOption("SPACE_AROUND_ASSIGNMENT_OPERATORS", "Assignment operator");
       consumer.renameStandardOption("SPACE_AROUND_LOGICAL_OPERATORS", "Logical operators");
       consumer.renameStandardOption("SPACE_AROUND_EQUALITY_OPERATORS", "Equality operators");
       consumer.renameStandardOption("SPACE_AROUND_ADDITIVE_OPERATORS", "Additive operators");
       consumer.renameStandardOption("SPACE_AROUND_MULTIPLICATIVE_OPERATORS", "Multiplicative operators");
+
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "SPACE_AROUND_EQ_IN_RECORDS", "= inside records", AROUND_OPERATORS);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "SPACE_AROUND_SEND", "Send operator", AROUND_OPERATORS);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "SPACE_AROUND_ARROW", "Right arrow", AROUND_OPERATORS);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "SPACE_AROUND_LEFT_ARROW", "Left arrow", AROUND_OPERATORS);
     }
     else if (settingsType == SettingsType.BLANK_LINES_SETTINGS) {
       consumer.showStandardOptions("KEEP_BLANK_LINES_IN_CODE");

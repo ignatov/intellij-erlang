@@ -42,11 +42,12 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
     CommonCodeStyleSettings commonSettings = settings.getCommonSettings(ErlangLanguage.INSTANCE);
     ErlangCodeStyleSettings erlangSettings = settings.getCustomSettings(ErlangCodeStyleSettings.class);
-    final ErlangFormattingBlock block = new ErlangFormattingBlock(element.getNode(), null, null, null, commonSettings, erlangSettings, createSpacingBuilder(commonSettings));
+    SpacingBuilder spacingBuilder = createSpacingBuilder(commonSettings, erlangSettings);
+    final ErlangFormattingBlock block = new ErlangFormattingBlock(element.getNode(), null, null, null, commonSettings, erlangSettings, spacingBuilder);
     return FormattingModelProvider.createFormattingModelForPsiFile(element.getContainingFile(), block, settings);
   }
 
-  private static SpacingBuilder createSpacingBuilder(CommonCodeStyleSettings settings) {
+  private static SpacingBuilder createSpacingBuilder(@NotNull CommonCodeStyleSettings settings, @NotNull ErlangCodeStyleSettings erlangSettings) {
     TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
     TokenSet keywords = TokenSet.create(
       ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_CATCH, ERL_IF, ERL_RECEIVE,
@@ -57,18 +58,17 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .after(ERL_COMMA).spaceIf(settings.SPACE_AFTER_COMMA)
       .before(ERL_SEMI).none()
 
-//      .betweenInside(ERL_OP_EQ, ERL_BINARY_EXPRESSION, ERL_RECORD_FIELD).spaces(1)
-//      .betweenInside(ERL_OP_EQ, ERL_BINARY_TYPE, ERL_RECORD_FIELD).spaces(1)
-//      .betweenInside(ERL_OP_EQ, ERL_LIST_COMPREHENSION, ERL_RECORD_FIELD).spaces(1)
+      .between(ERL_OP_EQ, ERL_BINARY_EXPRESSION).spaces(1)
+      .between(ERL_OP_EQ, ERL_BINARY_TYPE).spaces(1)
 
-//      .aroundInside(ERL_OP_EQ, ERL_RECORD_FIELD).none()
-//      .aroundInside(ERL_OP_EQ, ERL_TYPED_EXPR).none()
+      .aroundInside(ERL_OP_EQ, ERL_RECORD_FIELD).spaceIf(erlangSettings.SPACE_AROUND_EQ_IN_RECORDS)
+      .aroundInside(ERL_OP_EQ, ERL_TYPED_EXPR).spaceIf(erlangSettings.SPACE_AROUND_EQ_IN_RECORDS)
       .around(ERL_OP_EQ).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
-      .around(ERL_OP_LT_MINUS).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
-      .around(ERL_OP_EXL).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+      .around(ERL_OP_LT_MINUS).spaceIf(erlangSettings.SPACE_AROUND_LEFT_ARROW)
+      .around(ERL_OP_EXL).spaceIf(erlangSettings.SPACE_AROUND_SEND)
 
-      .after(ERL_ARROW).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
-      .before(ERL_CLAUSE_BODY).spaceIf(settings.SPACE_AROUND_ASSIGNMENT_OPERATORS)
+      .after(ERL_ARROW).spaceIf(erlangSettings.SPACE_AROUND_ARROW)
+      .before(ERL_CLAUSE_BODY).spaceIf(erlangSettings.SPACE_AROUND_ARROW)
 
       .around(ERL_OP_PLUS).spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
       .around(ERL_OP_PLUS_PLUS).spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
