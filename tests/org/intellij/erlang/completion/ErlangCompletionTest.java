@@ -78,6 +78,14 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         "bar(A, B)-> A#foo.two");
   }
 
+  public void testRecordFields6() throws Throwable {
+    doCheckResult(
+      "-record(foo, {id, two}).\n" +
+        "bar(A, B)-> A#foo{tw<caret>}",
+      "-record(foo, {id, two}).\n" +
+        "bar(A, B)-> A#foo{two = }");
+  }
+
   public void testMacros() throws Throwable {
     doTestInclude(
       "-define(foo, 1).\n" +

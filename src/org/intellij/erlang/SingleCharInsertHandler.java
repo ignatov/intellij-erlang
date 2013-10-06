@@ -26,21 +26,30 @@ import com.intellij.openapi.editor.Editor;
  * @author ignatov
  */
 public class SingleCharInsertHandler extends BasicInsertHandler<LookupElement> {
-  private char myChar;
+  private final char myChar;
+  private final boolean mySurroundWithSpaces;
 
   public SingleCharInsertHandler(char aChar) {
     myChar = aChar;
+    mySurroundWithSpaces = false;
+  }
+
+  public SingleCharInsertHandler(char aChar, boolean surroundWithSpaces) {
+    myChar = aChar;
+    mySurroundWithSpaces = surroundWithSpaces;
   }
 
   @Override
   public void handleInsert(InsertionContext context, LookupElement item) {
     if (context.getCompletionChar() != myChar) {
-      final Editor editor = context.getEditor();
-      final Document document = editor.getDocument();
+      Editor editor = context.getEditor();
+      Document document = editor.getDocument();
       context.commitDocument();
       int tailOffset = context.getTailOffset();
-      document.insertString(tailOffset, String.valueOf(myChar));
-      editor.getCaretModel().moveToOffset(tailOffset + 1);
+      String base = String.valueOf(myChar);
+      String toInsert = mySurroundWithSpaces ? " " + base + " " : base;
+      document.insertString(tailOffset, toInsert);
+      editor.getCaretModel().moveToOffset(tailOffset + toInsert.length());
     }
   }
 }

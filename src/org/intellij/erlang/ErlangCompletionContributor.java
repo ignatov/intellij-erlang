@@ -39,6 +39,7 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
@@ -51,6 +52,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashSet;
 import org.intellij.erlang.facet.ErlangFacet;
+import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.parser.GeneratedParserUtilBase;
@@ -158,13 +160,13 @@ public class ErlangCompletionContributor extends CompletionContributor {
             result.addAllElements(ContainerUtil.map(recordFields.first, new Function<ErlangTypedExpr, LookupElement>() {
               @Override
               public LookupElement fun(ErlangTypedExpr a) {
-                return createFieldLookupElement(a.getName(), withoutEq);
+                return createFieldLookupElement(a.getProject(), a.getName(), withoutEq);
               }
             }));
             result.addAllElements(ContainerUtil.map(recordFields.second, new Function<ErlangQAtom, LookupElement>() {
               @Override
               public LookupElement fun(ErlangQAtom a) {
-                return createFieldLookupElement(a.getText(), withoutEq);
+                return createFieldLookupElement(a.getProject(), a.getText(), withoutEq);
               }
             }));
             return;
@@ -202,8 +204,10 @@ public class ErlangCompletionContributor extends CompletionContributor {
     });
   }
 
-  private static LookupElement createFieldLookupElement(@NotNull String text, boolean withoutEq) {
-    return LookupElementBuilder.create(text).withIcon(ErlangIcons.FIELD).withInsertHandler(withoutEq ? null : new SingleCharInsertHandler('='));
+  private static LookupElement createFieldLookupElement(@NotNull Project project, @NotNull String text, boolean withoutEq) {
+    ErlangCodeStyleSettings customSettings = CodeStyleSettingsManager.getSettings(project).getCustomSettings(ErlangCodeStyleSettings.class);
+    boolean surroundWithSpaces = customSettings.SPACE_AROUND_EQ_IN_RECORDS;
+    return LookupElementBuilder.create(text).withIcon(ErlangIcons.FIELD).withInsertHandler(withoutEq ? null : new SingleCharInsertHandler('=', surroundWithSpaces));
   }
 
   @NotNull
