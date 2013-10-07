@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root inherit-compiler-output="false">
+  <output url="file://$MODULE_DIR$/ebin" />
+  <output-test url="file://$MODULE_DIR$/.eunit" />
+  <exclude-output />
+  <content url="file://$MODULE_DIR$" />
+  <orderEntry type="inheritedJdk" />
+  <orderEntry type="sourceFolder" forTests="false" />
+  <orderEntry type="module" module-name="c" />
+</root>

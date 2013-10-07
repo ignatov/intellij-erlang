@@ -132,6 +132,53 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     doTest(null);
   }
 
+  public void testRebarDependencies() throws Exception {
+    doTest(null);
+  }
+
+  public void testTransitiveRebarDependencies() throws Exception {
+    doTest(null);
+  }
+
+  public void testIncludePathsInRebarConfig1() throws Exception {
+    doRebarIncludePathsTest();
+  }
+
+  public void testIncludePathsInRebarConfig2() throws Exception {
+    doRebarIncludePathsTest();
+  }
+
+  public void testParseTransformInRebarConfig() throws Exception {
+    Project project = doTest(null);
+    Module[] modules = ModuleManager.getInstance(project).getModules();
+    assertEquals(1, modules.length);
+    ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
+    assertNotNull(facet);
+    assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
+  private void doRebarIncludePathsTest() throws Exception {
+    String projectPath = getProject().getBaseDir().getPath();
+    String importFromPath = projectPath + "/test/";
+    Module module = importProjectFrom(importFromPath, null,
+      new RebarProjectImportProvider(new RebarProjectImportBuilder()));
+    ErlangFacet facet = ErlangFacet.getFacet(module);
+    assertNotNull(facet);
+    List<String> actualIncludePaths = facet.getConfiguration().getIncludePaths();
+    List<String> expectedIncludePaths = new ArrayList<String>();
+    for (VirtualFile contentRoot : ModuleRootManager.getInstance(module).getContentRoots()) {
+      VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include1");
+      if (includeDirectory != null) {
+        expectedIncludePaths.add(includeDirectory.getPath());
+      }
+      includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include2");
+      if (includeDirectory != null) {
+        expectedIncludePaths.add(includeDirectory.getPath());
+      }
+    }
+    assertSameElements(actualIncludePaths, expectedIncludePaths);
+  }
+
   private static void createMockSdk() {
     final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR);
     ApplicationManager.getApplication().runWriteAction(new Runnable() {

@@ -100,7 +100,7 @@ public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool
       }
       else {
         ErlangFacetConfiguration configuration = facet.getConfiguration();
-        configuration.addIncludeDirectories(module);
+        configuration.addIncludeDirectoriesToIncludePath(module);
       }
     }
   }
