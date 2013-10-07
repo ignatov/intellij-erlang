@@ -20,6 +20,7 @@ import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.openapi.util.Condition;
 import com.intellij.util.ArrayUtilRt;
+import com.intellij.util.PlatformUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
@@ -226,6 +227,20 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     localFileSystemSetUp();
     myFixture.configureByFiles("include/includeCompletion.erl", "include/include/header.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "include/");
+  }
+
+  public void testIncludeOtpIncludeDirectoryCompletion() throws Throwable {
+    System.setProperty(PlatformUtils.PLATFORM_PREFIX_KEY, PlatformUtils.PHP_PREFIX);
+    myFixture.configureByFiles("otp-include-directory/src/includeuser.erl", "otp-include-directory/include/include.hrl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "include.hrl");
+  }
+
+  public void testIncludeRebarConfigIncludePath() throws Throwable {
+    System.setProperty(PlatformUtils.PLATFORM_PREFIX_KEY, PlatformUtils.PHP_PREFIX);
+    myFixture.configureByFiles("rebar-config-include-path/src/includeuser.erl",
+                               "rebar-config-include-path/include/for-include-user/include.hrl",
+                               "rebar-config-include-path/rebar.config");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "include.hrl");
   }
 
   public void testIncludeLibCompletion() throws Throwable {

@@ -59,6 +59,8 @@ import org.intellij.erlang.parser.GeneratedParserUtilBase;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.rebar.util.RebarConfigUtil;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -281,47 +283,47 @@ public class ErlangCompletionContributor extends CompletionContributor {
   }
 
   private static List<LookupElement> getModulePathLookupElements(PsiFile file, final String includeText) {
-    final VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
-    VirtualFile parentFile = virtualFile != null ? virtualFile.getParent() : null;
+    VirtualFile includeOwner = file.getOriginalFile().getVirtualFile();
+    VirtualFile parentFile = includeOwner != null ? includeOwner.getParent() : null;
     List<LookupElement> result = new ArrayList<LookupElement>();
-
     if (FileUtil.isAbsolute(includeText)) return result;
-
     //search in this module's directory
-    if (parentFile != null) {
-      List<VirtualFile> relativeToParent = new ArrayList<VirtualFile>();
-      addMatchingFiles(parentFile, includeText, relativeToParent);
-      result.addAll(ContainerUtil.mapNotNull(relativeToParent, new Function<VirtualFile, LookupElement>() {
-        @Nullable
-        @Override
-        public LookupElement fun(VirtualFile f) {
-          return f == virtualFile ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
-        }
-      }));
-    }
-
+    result.addAll(getModulePathLookupElements(parentFile, includeOwner, includeText));
     //search in include directories
     Module module = ModuleUtilCore.findModuleForPsiElement(file);
     ErlangFacet facet = module != null ? ErlangFacet.getFacet(module) : null;
     if (facet != null) {
-      List<VirtualFile> relativeToIncludeDirs = new ArrayList<VirtualFile>();
       for (String includePath : facet.getConfiguration().getIncludePaths()) {
-        final VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
-        if (includeDir != null && includeDir.isDirectory()) {
-          addMatchingFiles(includeDir, includeText, relativeToIncludeDirs);
-          result.addAll(ContainerUtil.mapNotNull(relativeToIncludeDirs, new Function<VirtualFile, LookupElement>() {
-            @Nullable
-            @Override
-            public LookupElement fun(VirtualFile f) {
-              return f == virtualFile ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
-            }
-          }));
-        }
-        relativeToIncludeDirs.clear();
+        VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
+        result.addAll(getModulePathLookupElements(includeDir, includeOwner, includeText));
       }
     }
-
+    if (ErlangSystemUtil.isSmallIde()) {
+      VirtualFile otpAppRoot = parentFile != null ? parentFile.getParent() : null;
+      VirtualFile otpIncludeDirectory = otpAppRoot != null ? otpAppRoot.findChild("include") : null;
+      result.addAll(getModulePathLookupElements(otpIncludeDirectory, includeOwner, includeText));
+      ErlangFile rebarConfigPsi = RebarConfigUtil.getRebarConfig(file.getProject(), otpAppRoot);
+      if (rebarConfigPsi != null && otpAppRoot != null) {
+        for (String relativeIncludePath : ContainerUtil.reverse(RebarConfigUtil.getIncludePaths(rebarConfigPsi))) {
+          VirtualFile includePath = VfsUtil.findRelativeFile(relativeIncludePath, otpAppRoot);
+          result.addAll(getModulePathLookupElements(includePath, includeOwner, includeText));
+        }
+      }
+    }
     return result;
+  }
+
+  private static List<LookupElement> getModulePathLookupElements(@Nullable VirtualFile includeDir, @Nullable final VirtualFile includeOwner, @NotNull final String includeText) {
+    if (includeDir == null || !includeDir.isDirectory()) return ContainerUtil.emptyList();
+    List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
+    addMatchingFiles(includeDir, includeText, matchingFiles);
+    return ContainerUtil.mapNotNull(matchingFiles, new Function<VirtualFile, LookupElement>() {
+      @Nullable
+      @Override
+      public LookupElement fun(VirtualFile f) {
+        return f == includeOwner ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
+      }
+    });
   }
 
   private static LookupElementBuilder getDefaultPathLookupElementBuilder(String includeText, VirtualFile lookedUpFile, @Nullable String appName) {
