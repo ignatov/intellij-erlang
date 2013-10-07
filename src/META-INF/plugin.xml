@@ -308,7 +308,7 @@
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangSpecificationForUndefinedFunctionInspection"/>
         <localInspection language="Erlang" shortName="ErlangUnresolvedInclude" displayName="Unresolved include"
-                         groupName="Erlang" enabledByDefault="false" level="ERROR"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedIncludeInspection"/>
         <localInspection language="Erlang" shortName="ErlangUnresolvedIncludeLib" displayName="Unresolved include_lib"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"

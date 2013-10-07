@@ -1,4 +1,4 @@
-package org.intellij.erlang.rebar.importWizard;
+package org.intellij.erlang.rebar.util;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -7,6 +7,8 @@ import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Consumer;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
@@ -20,7 +22,7 @@ import java.util.List;
 /**
  * @author savenko
  */
-abstract class ErlangTermFileUtil {
+public final class ErlangTermFileUtil {
   private ErlangTermFileUtil() {
   }
 
@@ -67,6 +69,16 @@ abstract class ErlangTermFileUtil {
       return (ErlangFile) PsiFileFactory.getInstance(defaultProject).createFileFromText(file.getName(), file.getFileType(), text);
     } catch (IOException e) {
       return null;
+    }
+  }
+
+  public static void processConfigSection(@Nullable PsiElement configRoot, @NotNull String sectionName, @NotNull Consumer<ErlangExpression> sectionConsumer) {
+    List<ErlangTupleExpression> erlOptTuples = findNamedTuples(PsiTreeUtil.getChildrenOfTypeAsList(configRoot, ErlangExpression.class), sectionName);
+    for (ErlangTupleExpression erlOptTuple : erlOptTuples) {
+      List<ErlangExpression> expressions = erlOptTuple.getExpressionList();
+      ErlangExpression optionsList = expressions.size() >= 2 ? expressions.get(1) : null;
+      if (optionsList == null) continue;
+      sectionConsumer.consume(optionsList);
     }
   }
 }
