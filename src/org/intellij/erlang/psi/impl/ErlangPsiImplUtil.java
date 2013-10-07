@@ -60,6 +60,7 @@ import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -838,10 +839,8 @@ public class ErlangPsiImplUtil {
     VirtualFile parent = containingVirtualFile != null ? containingVirtualFile.getParent() : null;
     String relativePath = StringUtil.unquoteString(includeString.getText());
     Project project = containingPsiFile.getProject();
-    if (parent != null) {
-      ErlangFile includedFile = getRelativeErlangFile(project, relativePath, parent);
-      if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
-    }
+    ErlangFile relativeToDirectParent = getRelativeErlangFile(project, relativePath, parent);
+    if (relativeToDirectParent != null) return ContainerUtil.newSmartList(relativeToDirectParent);
     //relative to direct parent include file was not found
     //let's search in include directories
     if (containingVirtualFile != null) {
@@ -854,6 +853,12 @@ public class ErlangPsiImplUtil {
           if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
         }
       }
+    }
+    if (ErlangSystemUtil.isSmallIde()) {
+      VirtualFile otpAppRoot = parent != null ? parent.getParent() : null;
+      VirtualFile otpIncludeDirectory = otpAppRoot != null ? otpAppRoot.findChild("include") : null;
+      ErlangFile relativeToOtpIncludeDirectory = getRelativeErlangFile(project, relativePath, otpIncludeDirectory);
+      if (relativeToOtpIncludeDirectory != null) return ContainerUtil.newSmartList(relativeToOtpIncludeDirectory);
     }
     return ContainerUtil.emptyList();
   }
