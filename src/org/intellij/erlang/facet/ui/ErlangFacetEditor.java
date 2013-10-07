@@ -38,7 +38,7 @@ public class ErlangFacetEditor extends FacetEditorTab {
 
   public ErlangFacetEditor(FacetEditorContext editorContext, ErlangFacetConfiguration configuration) {
     if (editorContext.isNewFacet()) {
-      configuration.addIncludeDirectories(editorContext.getModule());
+      configuration.addIncludeDirectoriesToIncludePath(editorContext.getModule());
     }
     myConfiguration = configuration;
 
@@ -89,8 +89,8 @@ public class ErlangFacetEditor extends FacetEditorTab {
   @Override
   public void apply() throws ConfigurationException {
     myIncludePathsEditor.resetPath(Arrays.asList(myIncludePathsEditor.getRoots()));
-    myConfiguration.setIncludePaths(getUiIncludeDirectories());
-    myConfiguration.setParseTransforms(getUiParseTransforms());
+    myConfiguration.setIncludePathsFrom(getUiIncludeDirectories());
+    myConfiguration.setParseTransformsFrom(getUiParseTransforms());
     myIsModified = false;
   }
 

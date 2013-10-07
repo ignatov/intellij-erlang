@@ -11,6 +11,7 @@ import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ui.ErlangFacetEditor;
 import org.intellij.erlang.jps.model.ErlangModuleExtensionProperties;
 import org.jdom.Element;
@@ -18,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -51,26 +54,21 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
   }
 
   public List<String> getIncludePaths() {
-    return myState.myIncludePaths;
+    return Collections.unmodifiableList(myState.myIncludePaths);
   }
 
-  public void setIncludePaths(List<String> includePaths) {
-    myState.myIncludePaths = includePaths;
+  public void setIncludePathsFrom(Iterable<String> includePaths) {
+    myState.myIncludePaths = ContainerUtil.newArrayList(ContainerUtil.newLinkedHashSet(includePaths));
   }
   
-  public void addIncludeDirectories(@NotNull Module module) {
-    VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
-
-    List<String> updatedIncludePaths = new ArrayList<String>(getIncludePaths().size() + contentRoots.length);
-    updatedIncludePaths.addAll(getIncludeFolderPaths(module));
-    if (updatedIncludePaths.isEmpty()) return;
-
-    for (String includePath : getIncludePaths()) {
-      if (!updatedIncludePaths.contains(includePath)) {
-        updatedIncludePaths.add(includePath);
-      }
-    }
-    setIncludePaths(updatedIncludePaths);
+  public void addIncludeDirectoriesToIncludePath(@NotNull Module module) {
+    addIncludePaths(getIncludeFolderPaths(module));
+  }
+  
+  public void addIncludePaths(Collection<String> newIncludePaths) {
+    if (newIncludePaths.isEmpty()) return;
+    //noinspection unchecked
+    setIncludePathsFrom(ContainerUtil.concat(myState.myIncludePaths, newIncludePaths));
   }
 
   @NotNull 
@@ -87,10 +85,16 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
   }
 
   public List<String> getParseTransforms() {
-    return myState.myParseTransforms;
+    return Collections.unmodifiableList(myState.myParseTransforms);
   }
 
-  public void setParseTransforms(List<String> parseTransforms) {
-    myState.myParseTransforms = parseTransforms;
+  public void setParseTransformsFrom(Iterable<String> parseTransforms) {
+    myState.myParseTransforms = ContainerUtil.newArrayList(ContainerUtil.newLinkedHashSet(parseTransforms));
+  }
+  
+  public void addParseTransforms(Collection<String> newParseTransforms) {
+    if (newParseTransforms.isEmpty()) return;
+    //noinspection unchecked
+    setParseTransformsFrom(ContainerUtil.concat(myState.myParseTransforms, newParseTransforms));
   }
 }

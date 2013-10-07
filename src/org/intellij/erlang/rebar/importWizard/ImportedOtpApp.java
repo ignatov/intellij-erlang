@@ -16,27 +16,36 @@
 
 package org.intellij.erlang.rebar.importWizard;
 
-import com.google.common.collect.ImmutableSet;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Processor;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Set;
 
 final class ImportedOtpApp {
-  @NotNull
   private final String myName;
-  @NotNull
   private final VirtualFile myRoot;
-  @NotNull
-  private final ImmutableSet<String> myDeps;
-  @Nullable
+  private final Set<String> myDeps = ContainerUtil.newHashSet();
+  private final Set<String> myIncludePaths = ContainerUtil.newHashSet();
+  private final Set<String> myParseTransforms = ContainerUtil.newHashSet();
   private VirtualFile myIdeaModuleFile;
+  private Module myModule;
 
-  public ImportedOtpApp(@NotNull String name, @NotNull VirtualFile root, @NotNull Set<String> deps) {
-    myName = name;
+  public ImportedOtpApp(@NotNull VirtualFile root, @NotNull VirtualFile appConfig) {
+    myName = StringUtil.trimEnd(StringUtil.trimEnd(appConfig.getName(), ".src"), ".app");
     myRoot = root;
-    myDeps = ImmutableSet.copyOf(deps);
+    addDependenciesFromAppFile(appConfig);
+    addInfoFromRebarConfig();
   }
 
   @NotNull
@@ -50,8 +59,12 @@ final class ImportedOtpApp {
   }
 
   @NotNull
-  public ImmutableSet<String> getDeps() {
+  public Set<String> getDeps() {
     return myDeps;
+  }
+
+  public Set<String> getIncludePaths() {
+    return myIncludePaths;
   }
 
   public void setIdeaModuleFile(@Nullable VirtualFile ideaModuleFile) {
@@ -61,6 +74,18 @@ final class ImportedOtpApp {
   @Nullable
   public VirtualFile getIdeaModuleFile() {
     return myIdeaModuleFile;
+  }
+
+  public Module getModule() {
+    return myModule;
+  }
+
+  public void setModule(Module module) {
+    myModule = module;
+  }
+
+  public Set<String> getParseTransforms() {
+    return myParseTransforms;
   }
 
   @Override
@@ -86,5 +111,112 @@ final class ImportedOtpApp {
     int result = myName.hashCode();
     result = 31 * result + myRoot.hashCode();
     return result;
+  }
+
+  private void addInfoFromRebarConfig() {
+    VirtualFile rebarConfig = myRoot.findChild("rebar.config");
+    ErlangFile rebarConfigPsi = rebarConfig != null ? ErlangTermFileUtil.createPsi(rebarConfig) : null;
+    if (rebarConfigPsi == null) return;
+    addDependenciesFromRebarConfig(rebarConfigPsi);
+    addIncludePathsFromRebarConfig(rebarConfigPsi);
+    addParseTransformsFromRebarConfig(rebarConfigPsi);
+  }
+
+  private void addDependenciesFromAppFile(@NotNull VirtualFile appFile) {
+    ErlangFile appConfigPsi = ErlangTermFileUtil.createPsi(appFile);
+    if (appConfigPsi == null) return;
+    List<ErlangTupleExpression> applicationDescriptors =
+      ErlangTermFileUtil.findNamedTuples(PsiTreeUtil.getChildrenOfTypeAsList(appConfigPsi, ErlangExpression.class), "application");
+    ErlangListExpression appAttributes = PsiTreeUtil.getChildOfType(ContainerUtil.getFirstItem(applicationDescriptors), ErlangListExpression.class);
+    processConfigSection(appAttributes, "applications", new Processor<ErlangExpression>() {
+      @Override
+      public boolean process(ErlangExpression deps) {
+        ErlangListExpression dependencyAppsList = deps instanceof ErlangListExpression ? (ErlangListExpression) deps : null;
+        if (dependencyAppsList != null) {
+          for (ErlangExpression depExpression : dependencyAppsList.getExpressionList()) {
+            ErlangQAtom depApp = PsiTreeUtil.getChildOfType(depExpression, ErlangQAtom.class);
+            PsiElement appNameAtom = depApp != null ? depApp.getAtom() : null;
+            if (appNameAtom != null) {
+              myDeps.add(appNameAtom.getText());
+            }
+          }
+        }
+        return true;
+      }
+    });
+  }
+
+  private void addDependenciesFromRebarConfig(PsiFile rebarConfig) {
+    processConfigSection(rebarConfig, "deps", new Processor<ErlangExpression>() {
+      @Override
+      public boolean process(ErlangExpression tuplesList) {
+        List<ErlangTupleExpression> dependencyTuples = ErlangTermFileUtil.findNamedTuples(tuplesList);
+        for (ErlangTupleExpression namedTuple : dependencyTuples) {
+          myDeps.add(ErlangTermFileUtil.getNameOfNamedTuple(namedTuple));
+        }
+        return true;
+      }
+    });
+  }
+
+  private void addIncludePathsFromRebarConfig(PsiFile rebarConfig) {
+    processConfigSection(rebarConfig, "erl_opts", new Processor<ErlangExpression>() {
+      @Override
+      public boolean process(ErlangExpression section) {
+        processConfigSection(section, "i", new Processor<ErlangExpression>() {
+          @Override
+          public boolean process(ErlangExpression includeOptionValue) {
+            if (includeOptionValue instanceof ErlangStringLiteral) {
+              addIncludePath((ErlangStringLiteral) includeOptionValue);
+            }
+            else {
+              for (ErlangStringLiteral includePath : PsiTreeUtil.findChildrenOfType(includeOptionValue, ErlangStringLiteral.class)) {
+                addIncludePath(includePath);
+              }
+            }
+            return true;
+          }
+        });
+        return true;
+      }
+    });
+  }
+
+  private void addParseTransformsFromRebarConfig(PsiFile rebarConfig) {
+    processConfigSection(rebarConfig, "erl_opts", new Processor<ErlangExpression>() {
+      @Override
+      public boolean process(ErlangExpression section) {
+        processConfigSection(section, "parse_transform", new Processor<ErlangExpression>() {
+          @Override
+          public boolean process(ErlangExpression configExpression) {
+            ErlangQAtom parseTranform = PsiTreeUtil.getChildOfType(configExpression, ErlangQAtom.class);
+            PsiElement parseTransformAtom = parseTranform != null ? parseTranform.getAtom() : null;
+            if (parseTransformAtom != null) {
+              myParseTransforms.add(parseTransformAtom.getText());
+            }
+            return true;
+          }
+        });
+        return true;
+      }
+    });
+  }
+
+  private static void processConfigSection(@Nullable PsiElement configRoot, String sectionName, Processor<ErlangExpression> sectionProcessor) {
+    List<ErlangTupleExpression> erlOptTuples = ErlangTermFileUtil.findNamedTuples(PsiTreeUtil.getChildrenOfTypeAsList(configRoot, ErlangExpression.class), sectionName);
+    for (ErlangTupleExpression erlOptTuple : erlOptTuples) {
+      List<ErlangExpression> expressions = erlOptTuple.getExpressionList();
+      ErlangExpression optionsList = expressions.size() >= 2 ? expressions.get(1) : null;
+      if (optionsList == null) continue;
+      sectionProcessor.process(optionsList);
+    }
+  }
+
+  private void addIncludePath(ErlangStringLiteral includePath) {
+    String relativeIncludePath = StringUtil.unquoteString(includePath.getString().getText());
+    VirtualFile path = VfsUtil.findRelativeFile(relativeIncludePath, myRoot);
+    if (path != null) {
+      myIncludePaths.add(path.getPath());
+    }
   }
 }
