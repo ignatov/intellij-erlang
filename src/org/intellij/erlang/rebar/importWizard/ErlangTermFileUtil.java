@@ -2,6 +2,7 @@ package org.intellij.erlang.rebar.importWizard;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -61,7 +62,7 @@ abstract class ErlangTermFileUtil {
   public static ErlangFile createPsi(@NotNull VirtualFile file) {
     if (file.getFileType() != ErlangFileType.APP && file.getFileType() != ErlangFileType.TERMS) return null;
     try {
-      String text = VfsUtilCore.loadText(file);
+      String text = StringUtil.convertLineSeparators(VfsUtilCore.loadText(file));
       Project defaultProject = ProjectManager.getInstance().getDefaultProject();
       return (ErlangFile) PsiFileFactory.getInstance(defaultProject).createFileFromText(file.getName(), file.getFileType(), text);
     } catch (IOException e) {
