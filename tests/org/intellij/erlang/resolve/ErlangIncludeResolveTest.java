@@ -33,6 +33,10 @@ public class ErlangIncludeResolveTest extends ErlangLightPlatformCodeInsightFixt
     doSmallIdeTest("src/testmodule.erl", "include/testinclude.hrl");
   }
 
+  public void testIncludePathsInRebarConfig() throws Exception {
+    doSmallIdeTest("src/testmodule.erl", "include/forTestModule/testinclude.hrl", "rebar.config");
+  }
+
   private void doSmallIdeTest(String... files) throws Exception {
     doTest(true, files);
   }

@@ -58,6 +58,7 @@ import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
@@ -856,9 +857,25 @@ public class ErlangPsiImplUtil {
     }
     if (ErlangSystemUtil.isSmallIde()) {
       VirtualFile otpAppRoot = parent != null ? parent.getParent() : null;
-      VirtualFile otpIncludeDirectory = otpAppRoot != null ? otpAppRoot.findChild("include") : null;
-      ErlangFile relativeToOtpIncludeDirectory = getRelativeErlangFile(project, relativePath, otpIncludeDirectory);
-      if (relativeToOtpIncludeDirectory != null) return ContainerUtil.newSmartList(relativeToOtpIncludeDirectory);
+      return getDirectlyIncludedFilesForSmallIde(project, relativePath, otpAppRoot);
+    }
+    return ContainerUtil.emptyList();
+  }
+
+  @NotNull
+  private static List<ErlangFile> getDirectlyIncludedFilesForSmallIde(@NotNull Project project, @NotNull String includeStringPath, @Nullable VirtualFile otpAppRoot) {
+    if (otpAppRoot == null) return ContainerUtil.emptyList();
+    VirtualFile otpIncludeDirectory = otpAppRoot.findChild("include");
+    ErlangFile relativeToOtpIncludeDirectory = getRelativeErlangFile(project, includeStringPath, otpIncludeDirectory);
+    if (relativeToOtpIncludeDirectory != null) return ContainerUtil.newSmartList(relativeToOtpIncludeDirectory);
+    //we haven't found it in 'include' directory, let's try include paths listed in rebar.config
+    ErlangFile rebarConfigPsi = RebarConfigUtil.getRebarConfig(project, otpAppRoot);
+    if (rebarConfigPsi != null) {
+      for(String includePath : ContainerUtil.reverse(RebarConfigUtil.getIncludePaths(rebarConfigPsi))) {
+        VirtualFile includePathVirtualFile = VfsUtil.findRelativeFile(includePath, otpAppRoot);
+        ErlangFile includedFile = getRelativeErlangFile(project, includeStringPath, includePathVirtualFile);
+        if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
+      }
     }
     return ContainerUtil.emptyList();
   }
