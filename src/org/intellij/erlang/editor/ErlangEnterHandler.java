@@ -80,10 +80,9 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   }
 
   private static void appendEndAndMoveCaret(@NotNull final PsiFile file, @NotNull final Editor editor, final int offset, final boolean addComma) {
-     final Project project = editor.getProject();
-
+    final Project project = editor.getProject();
     if (project == null) return;
-    
+
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {
