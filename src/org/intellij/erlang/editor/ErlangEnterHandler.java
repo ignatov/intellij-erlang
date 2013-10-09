@@ -1,5 +1,6 @@
 package org.intellij.erlang.editor;
 
+import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.editorActions.enter.EnterHandlerDelegateAdapter;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
@@ -32,6 +33,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   @Override
   public Result preprocessEnter(@NotNull PsiFile file, @NotNull Editor editor, @NotNull Ref<Integer> caretOffset, @NotNull Ref<Integer> caretAdvance, @NotNull DataContext dataContext, EditorActionHandler originalHandler) {
     if (!(file instanceof ErlangFile)) return Result.Continue;
+    if (!CodeInsightSettings.getInstance().INSERT_BRACE_ON_ENTER) return Result.Continue;
 
     if (completeBeginEnd(file, editor) ||
         completeCaseOf(file, editor) ||
