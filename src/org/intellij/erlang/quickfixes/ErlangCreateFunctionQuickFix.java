@@ -64,8 +64,7 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase {
       PsiElement topmost = PsiTreeUtil.getParentOfType(call,
         ErlangFunction.class, ErlangRecordDefinition.class, ErlangMacros.class, ErlangAttribute.class, ErlangModule.class);
 
-      boolean fromExport = call instanceof ErlangExportFunction;
-      if (fromExport) {
+      if (call instanceof ErlangExportFunction) {
         topmost = call.getContainingFile().getLastChild();
       }
 
@@ -84,12 +83,10 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase {
           });
         }
 
-        boolean addBelow = topmost instanceof ErlangAttribute || fromExport;
-
         TemplateManager templateManager = TemplateManager.getInstance(project);
         Template template = templateManager.createTemplate("", "");
         template.setToReformat(true);
-        template.addTextSegment(addBelow ? "\n" + (fromExport ? "\n" : "") : "");
+        template.addTextSegment("\n\n");
         template.addTextSegment(myName + "(");
         int size = placeHolders.size();
         for (int i = 0; i < placeHolders.size(); i++) {
@@ -99,12 +96,9 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase {
         }
         template.addTextSegment(") ->\n");
         template.addEndVariable();
-        template.addTextSegment("erlang:error(not_implemented)");
-        template.addTextSegment("." + (fromExport ? "" : "\n") + (addBelow ? "" : "\n"));
+        template.addTextSegment("error(not_implemented).");
 
-        editor.getCaretModel().moveToOffset(addBelow ?
-          topmost.getTextRange().getEndOffset() :
-          topmost.getTextOffset());
+        editor.getCaretModel().moveToOffset(topmost.getTextRange().getEndOffset());
         templateManager.startTemplate(editor, template);
       }
     }
