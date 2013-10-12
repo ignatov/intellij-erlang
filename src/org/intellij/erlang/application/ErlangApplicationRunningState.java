@@ -56,6 +56,11 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
     return myConfiguration.stopErlang();
   }
 
+  @Override
+  protected List<String> getErlFlags() {
+    return StringUtil.split(myConfiguration.getErlFlags(), " ");
+  }
+
   @Nullable
   @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {

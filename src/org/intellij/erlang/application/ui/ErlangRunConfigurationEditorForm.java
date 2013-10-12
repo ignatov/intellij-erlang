@@ -33,6 +33,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
   private JComboBox myComboModules;
   private JTextField myParamsField;
   private JTextField myModuleAndFunctionField;
+  private JTextField myErlFlagsTextField;
   private JCheckBox myStopErlangInterpreterCheckBox;
 
   @SuppressWarnings("unchecked")
@@ -51,6 +52,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
     myParamsField.setText(configuration.getParams());
     myStopErlangInterpreterCheckBox.setSelected(configuration.stopErlang());
     myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
+    myErlFlagsTextField.setText(configuration.getErlFlags());
   }
   
   public static ListCellRendererWrapper getListCellRendererWrapper() {
@@ -70,6 +72,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
     configuration.setModule(getSelectedModule());
     configuration.setParams(myParamsField.getText());
     configuration.setModuleAndFunction(myModuleAndFunctionField.getText());
+    configuration.setErlFlags(myErlFlagsTextField.getText());
     configuration.setStopErlang(myStopErlangInterpreterCheckBox.isSelected());
   }
 
