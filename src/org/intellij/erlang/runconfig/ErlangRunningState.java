@@ -31,6 +31,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
@@ -68,6 +69,7 @@ public abstract class ErlangRunningState extends CommandLineState {
     setEntryPoint(commandLine);
     setStopErlang(commandLine);
     setNoShellMode(commandLine);
+    setErlangFlags(commandLine);
     final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
@@ -86,6 +88,10 @@ public abstract class ErlangRunningState extends CommandLineState {
   protected abstract boolean isNoShellMode();
 
   protected abstract boolean isStopErlang();
+
+  protected List<String> getErlFlags() {
+    return ContainerUtil.emptyList();
+  }
 
   public abstract ErlangEntryPoint getEntryPoint() throws ExecutionException;
 
@@ -113,6 +119,10 @@ public abstract class ErlangRunningState extends CommandLineState {
             .append(StringUtil.join(entryPoint.getArgsList(), ", "))
             .append(").");
     commandLine.addParameters("-eval", evalExpr.toString());
+  }
+
+  private void setErlangFlags(GeneralCommandLine commandLine) {
+    commandLine.addParameters(getErlFlags());
   }
 
   @NotNull

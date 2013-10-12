@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<ErlangApplicationRunningState> {
   private String myParams = "";
   private String myModuleAndFunction = "";
+  private String myErlFlags = "";
   private boolean myStopErlang = true;
 
   public ErlangApplicationConfiguration(Project project, String name, ConfigurationType configurationType) {
@@ -91,5 +92,13 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
 
   public void setStopErlang(boolean stopErlang) {
     myStopErlang = stopErlang;
+  }
+
+  public String getErlFlags() {
+    return myErlFlags;
+  }
+
+  public void setErlFlags(String erlFlags) {
+    myErlFlags = erlFlags;
   }
 }
