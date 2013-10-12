@@ -76,7 +76,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     if (!(expectedParentClass.isInstance(parent))) return false;
     if (hasEnd(parent)) return false;
 
-    appendEndAndMoveCaret(file, editor, lastElement.getTextRange().getEndOffset(), hasSiblings(parent));
+    appendEndAndMoveCaret(file, editor, lastElement.getTextRange().getEndOffset(), needCommaAfter(parent));
 
     return true;
   }
@@ -84,7 +84,6 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   private static void appendEndAndMoveCaret(@NotNull final PsiFile file, @NotNull final Editor editor, final int offset, final boolean addComma) {
     final Project project = editor.getProject();
     if (project == null) return;
-
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {
@@ -92,7 +91,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
         editor.getDocument().insertString(offset, endText);
 
         PsiDocumentManager.getInstance(project).commitDocument(editor.getDocument());
-        CodeStyleManager.getInstance(project).adjustLineIndent(file, TextRange.from(offset, offset + endText.length()));
+        CodeStyleManager.getInstance(project).adjustLineIndent(file, TextRange.from(offset, endText.length()));
         CaretModel caretModel = editor.getCaretModel();
         caretModel.moveCaretRelatively(0, 1, false, false, true);
         CodeStyleManager.getInstance(project).adjustLineIndent(file, caretModel.getOffset());
@@ -110,14 +109,14 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     return true;
   }
 
-  private static boolean hasSiblings(@NotNull PsiElement expression) {
-    if (expression instanceof ErlangBeginEndExpression) return hasSiblings((ErlangBeginEndExpression) expression);
-    if (expression instanceof ErlangClauseOwner)        return hasSiblings((ErlangClauseOwner) expression);
-    if (expression instanceof ErlangIfExpression)       return hasSiblings((ErlangIfExpression) expression);
+  private static boolean needCommaAfter(@NotNull PsiElement parent) {
+    if (parent instanceof ErlangBeginEndExpression) return needCommaAfter((ErlangBeginEndExpression) parent);
+    if (parent instanceof ErlangClauseOwner)        return needCommaAfter((ErlangClauseOwner) parent);
+    if (parent instanceof ErlangIfExpression)       return needCommaAfter((ErlangIfExpression) parent);
     return false;
   }
 
-  private static boolean hasSiblings(@NotNull ErlangBeginEndExpression beginEndExpr) {
+  private static boolean needCommaAfter(@NotNull ErlangBeginEndExpression beginEndExpr) {
     ErlangBeginEndBody beginEndBody = beginEndExpr.getBeginEndBody();
     if (beginEndBody == null) return false;
     ErlangExpression expression = PsiTreeUtil.getChildOfType(beginEndBody, ErlangExpression.class);
@@ -130,17 +129,19 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     return true;
   }
 
-  private static boolean hasSiblings(@NotNull ErlangClauseOwner owner) {
+  private static boolean needCommaAfter(@NotNull ErlangClauseOwner owner) {
     List<ErlangCrClause> crClauses = owner.getCrClauseList();
     if (crClauses.isEmpty()) return false;
     return crClauses.get(0).getClauseBody() == null;
   }
 
-  private static boolean hasSiblings(@NotNull ErlangIfExpression ifExpression) {
+  private static boolean needCommaAfter(@NotNull ErlangIfExpression ifExpression) {
     ErlangIfClauses ifClauses = ifExpression.getIfClauses();
     List<ErlangIfClause> ifClauseList = ifClauses != null ? ifClauses.getIfClauseList() : ContainerUtil.<ErlangIfClause>emptyList();
     if (ifClauseList.isEmpty()) return false;
-    return ifClauseList.get(0).getClauseBody() == null;
+    ErlangIfClause firstIfClause = ifClauseList.get(0);
+    return firstIfClause.getClauseBody() == null ||
+      PsiTreeUtil.findChildOfType(firstIfClause, ErlangIfExpression.class) != null;
   }
 
   private static boolean shouldEndWithEnd(@NotNull PsiElement element) {
