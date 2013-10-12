@@ -16,81 +16,11 @@
 
 package org.intellij.erlang.highlighting;
 
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.testFramework.LightProjectDescriptor;
-import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
-import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import org.intellij.erlang.inspection.*;
-import org.intellij.erlang.sdk.ErlangSdkType;
-import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
-import org.jetbrains.annotations.NotNull;
+import com.intellij.util.PlatformUtils;
 
-public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  protected void doTest() {
-    doTest(false);
-  }
-
-  protected void doTestWithApp() {
-    doTest(true);
-  }
-
-  protected void doTest(boolean withApp) {
-    String testDataFile = getTestName(false) + ".erl";
-    if (withApp) {
-      myFixture.configureByFiles(testDataFile, "testapp-1/ebin/testapp.app", "testapp-1/include/testapp.hrl");
-    }
-    else {
-      myFixture.configureByFile(testDataFile);
-    }
-    setUpInspections(myFixture);
-    myFixture.checkHighlighting(true, false, false);
-  }
-
-  public static void setUpInspections(@NotNull CodeInsightTestFixture fixture) {
-    //noinspection unchecked    
-    fixture.enableInspections(
-      ErlangUnboundVariableInspection.class,
-      ErlangUnresolvedRecordInspection.class,
-      ErlangUnresolvedRecordFieldInspection.class,
-      ErlangUnresolvedExportFunctionInspection.class,
-      ErlangHeadMismatchInspection.class,
-      ErlangUnresolvedIncludeInspection.class,
-      ErlangUnresolvedIncludeLibInspection.class,
-
-      ErlangUnresolvedFunctionInspection.class,
-      ErlangUnusedVariableInspection.class,
-      ErlangUnusedFunctionInspection.class,
-      ErlangDuplicateFunctionInspection.class,
-      ErlangIncorrectModuleNameInspection.class,
-      ErlangIoFormatInspection.class
-    );
-  }
-
-  @Override
-  protected LightProjectDescriptor getProjectDescriptor() {
-    return new DefaultLightProjectDescriptor() {
-      @Override
-      public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
-      }
-    };
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-    setUpProjectSdk();
-  }
-
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
-  @Override
-  protected String getTestDataPath() {
-    return "testData/highlighting/";
+public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
+  public ErlangHighlightingTest() {
+    super(PlatformUtils.COMMUNITY_PREFIX);
   }
 
   public void testHelloWorld()        { doTest(); }
@@ -136,13 +66,6 @@ public class ErlangHighlightingTest extends ErlangLightPlatformCodeInsightFixtur
   public void testUnresolvedMacros()  {
     enableUnresolvedMacroInspection();
     doTest();
-  }
-
-  private void enableUnresolvedMacroInspection() {
-    //noinspection unchecked
-    myFixture.enableInspections(
-      ErlangUnresolvedMacrosInspection.class
-    );
   }
 
   public void test176() {                    
