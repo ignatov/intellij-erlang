@@ -36,10 +36,11 @@ import java.util.List;
 * @author ignatov
 */
 abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
+  protected ErlangCompletionTestBase() {
+  }
+
+  protected ErlangCompletionTestBase(String platformPrefix) {
+    super(platformPrefix);
   }
 
   protected String getTestDataPath() {
