@@ -5,7 +5,7 @@ import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ThrowableRunnable;
-import org.intellij.erlang.highlighting.ErlangHighlightingTest;
+import org.intellij.erlang.highlighting.ErlangHighlightingTestBase;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -32,7 +32,7 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
   protected void setUp() throws Exception {
     System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
-    ErlangHighlightingTest.setUpInspections(myFixture);
+    ErlangHighlightingTestBase.setUpInspections(myFixture);
     setUpProjectSdk();
   }
 

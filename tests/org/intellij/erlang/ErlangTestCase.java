@@ -33,6 +33,7 @@ import org.intellij.erlang.formatting.ErlangFormattingTest;
 import org.intellij.erlang.highlighting.ErlangBehaviourInspectionsTest;
 import org.intellij.erlang.highlighting.ErlangConsoleViewTest;
 import org.intellij.erlang.highlighting.ErlangHighlightingTest;
+import org.intellij.erlang.highlighting.ErlangSmallIdeHighlightingTest;
 import org.intellij.erlang.highlighting.generate.ErlangGenerateTest;
 import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
 import org.intellij.erlang.navigation.ErlangGotoSuperTest;
@@ -61,6 +62,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangParserTest.class);
     suite.addTestSuite(ErlangAppParserTest.class);
     suite.addTestSuite(ErlangHighlightingTest.class);
+    suite.addTestSuite(ErlangSmallIdeHighlightingTest.class);
     suite.addTestSuite(ErlangFormattingTest.class);
     suite.addTestSuite(ErlangAutoIndentTest.class);
     suite.addTestSuite(ErlangCompletionTest.class);
