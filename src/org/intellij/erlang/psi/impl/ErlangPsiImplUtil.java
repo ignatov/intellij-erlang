@@ -38,6 +38,7 @@ import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.formatter.FormatterUtil;
@@ -856,8 +857,8 @@ public class ErlangPsiImplUtil {
       }
     }
     if (ErlangSystemUtil.isSmallIde()) {
-      VirtualFile otpAppRoot = parent != null ? parent.getParent() : null;
-      return getDirectlyIncludedFilesForSmallIde(project, relativePath, otpAppRoot);
+      VirtualFile appRoot = getContainingOtpAppRoot(project, parent);
+      return getDirectlyIncludedFilesForSmallIde(project, relativePath, appRoot);
     }
     return ContainerUtil.emptyList();
   }
@@ -878,6 +879,26 @@ public class ErlangPsiImplUtil {
       }
     }
     return ContainerUtil.emptyList();
+  }
+
+  @Nullable
+  private static VirtualFile getContainingOtpAppRoot(@NotNull Project project, @Nullable final VirtualFile file) {
+    if (file == null) return null;
+    List<VirtualFile> allOtpAppRoots = ErlangApplicationIndex.getAllApplicationDirectories(project, GlobalSearchScope.allScope(project));
+    List<VirtualFile> containingOtpAppRoots = ContainerUtil.filter(allOtpAppRoots, new Condition<VirtualFile>() {
+      @Override
+      public boolean value(VirtualFile appRoot) {
+        return VfsUtilCore.isAncestor(appRoot, file, true);
+      }
+    });
+    //sort it in order to have longest path first
+    ContainerUtil.sort(containingOtpAppRoots, new Comparator<VirtualFile>() {
+      @Override
+      public int compare(VirtualFile o1, VirtualFile o2) {
+        return o2.getPath().length() - o1.getPath().length();
+      }
+    });
+    return ContainerUtil.getFirstItem(containingOtpAppRoots);
   }
 
   @NotNull
