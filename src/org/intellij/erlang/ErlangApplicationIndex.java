@@ -26,6 +26,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Processor;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.*;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
@@ -108,7 +109,11 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
         ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
         index.processValues(ERLANG_APPLICAION_INDEX, appName, null, processor, searchScope);
         processAppFiles(appFilesFromEbinDirectories, appName, processor);
-        result.add(processor.getApplicationPath());
+        //TODO examine: processor does not get called for some appNames when running
+        //              ErlangSmallIdeHighlightingTest.testIncludeFromOtpIncludeDirResolve()
+        //              it seems, that index is reused for different tests, thus we obtain keys (appNames)
+        //              which are not valid anymore...
+        ContainerUtil.addIfNotNull(processor.getApplicationPath(), result);
         return true;
       }
     }, project);
@@ -143,18 +148,8 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
 
   @Nullable
   private static VirtualFile getLibraryDirectory(VirtualFile appFile) {
-    String libName = getApplicationName(appFile);
     VirtualFile parent = appFile.getParent();
-    VirtualFile grandParent = parent != null ? parent.getParent() : null;
-
-    if (isAppDirectory(parent, libName)) return parent;
-    if (isAppDirectory(grandParent, libName)) return grandParent;
-    return null;
-  }
-
-  private static boolean isAppDirectory(@Nullable VirtualFile directory, String appName) {
-    String dirName = directory != null ? directory.getName() : null;
-    return directory != null && (dirName.equals(appName) || dirName.startsWith(appName + "-"));
+    return parent != null ? parent.getParent() : null;
   }
 
   private static class ApplicationPathExtractingProcessor implements FileBasedIndex.ValueProcessor<Void> {

@@ -28,13 +28,16 @@ public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
 
   public void testIncludeFromOtpIncludeDirResolve() throws Exception {
     enableUnresolvedMacroInspection();
-    doTest("smallIdeOtpInclude/src/IncludeResolve.erl", "smallIdeOtpInclude/include/testapp.hrl");
+    doTest("smallIdeOtpInclude/src/IncludeResolve.erl",
+      "smallIdeOtpInclude/include/testapp.hrl",
+      "smallIdeOtpInclude/src/test.app.src");
   }
 
   public void testIncludeFromRebarConfigIncludeDirResolve() throws Exception {
     enableUnresolvedMacroInspection();
     doTest("smallIdeRebarConfigInclude/src/IncludeResolve.erl",
       "smallIdeRebarConfigInclude/include/custom/testapp.hrl",
+      "smallIdeRebarConfigInclude/src/test.app.src",
       "smallIdeRebarConfigInclude/rebar.config");
   }
 }
