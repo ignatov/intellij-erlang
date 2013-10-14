@@ -28,14 +28,31 @@ public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testIncludeOtpIncludeDirectoryCompletion() throws Throwable {
-    myFixture.configureByFiles("otp-include-directory/src/includeuser.erl", "otp-include-directory/include/include.hrl");
+    myFixture.configureByFiles("otp-include-directory/src/includeuser.erl",
+      "otp-include-directory/include/include.hrl",
+      "otp-include-directory/src/test.app.src");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "include.hrl");
   }
 
   public void testIncludeRebarConfigIncludePath() throws Throwable {
     myFixture.configureByFiles("rebar-config-include-path/src/includeuser.erl",
       "rebar-config-include-path/include/for-include-user/include.hrl",
-      "rebar-config-include-path/rebar.config");
+      "rebar-config-include-path/rebar.config",
+      "rebar-config-include-path/src/test.app.src");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "include.hrl");
+  }
+
+  public void testIncludeOtpIncludeDirectoryNested() throws Throwable {
+    myFixture.configureByFiles("otp-include-directory-nested/src/directory/includeuser.erl",
+      "otp-include-directory-nested/include/include.hrl",
+      "otp-include-directory-nested/src/test.app.src");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "include.hrl");
+  }
+  
+  public void testIncludeOtpIncludeDirectoryNotInRoot() throws Throwable {
+    myFixture.configureByFiles("otp-include-not-in-root/src/directory/src/includeuser.erl",
+      "otp-include-not-in-root/src/directory/include/include.hrl",
+      "otp-include-not-in-root/src/test.app.src");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EXCLUDES, "include.hrl");
   }
 }
