@@ -36,9 +36,17 @@ public abstract class ErlangIncludeResolveTestBase extends ErlangLightPlatformCo
   }
 
   protected void doTest(String... files) throws Exception {
+    doTest(1, files);
+  }
+
+  protected void doTestWithExpectedResolveFailure(String... files) throws Exception {
+    doTest(0, files);
+  }
+
+  private void doTest(int expectedIncludedFiles, String... files) throws Exception {
     myFixture.configureByFiles(files);
     ErlangFile file = (ErlangFile) myFixture.getFile();
     List<ErlangFile> directlyIncludedFiles = ErlangPsiImplUtil.getDirectlyIncludedFiles(file);
-    assertEquals(1, directlyIncludedFiles.size());
+    assertEquals("Include attribute resolved to unexpected number of files.", expectedIncludedFiles, directlyIncludedFiles.size());
   }
 }

@@ -299,7 +299,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       }
     }
     if (ErlangSystemUtil.isSmallIde()) {
-      VirtualFile otpAppRoot = parentFile != null ? parentFile.getParent() : null;
+      VirtualFile otpAppRoot = ErlangPsiImplUtil.getContainingOtpAppRoot(file.getProject(), includeOwner);
       VirtualFile otpIncludeDirectory = otpAppRoot != null ? otpAppRoot.findChild("include") : null;
       result.addAll(getModulePathLookupElements(otpIncludeDirectory, includeOwner, includeText));
       ErlangFile rebarConfigPsi = RebarConfigUtil.getRebarConfig(file.getProject(), otpAppRoot);
