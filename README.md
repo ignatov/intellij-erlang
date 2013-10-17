@@ -34,6 +34,14 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 * Enhanced debugger
 * Preprocessing support
 
+### Version 0.5.1
+* Erlang/OTP R16B02 support
+* Enhanced introduce variable refactoring
+* Improved code formatting in some cases
+* Enhanced include paths resolution
+* Enhanced Rebar support: deps, include paths, parse_transforms parsing from rebar.config
+* Bugfixes
+
 ### Version 0.5
 * Rerun failed tests action
 * Native reporter for eunit tests
