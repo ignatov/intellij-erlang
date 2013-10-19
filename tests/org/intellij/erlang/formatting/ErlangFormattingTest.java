@@ -101,6 +101,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test299()    throws Exception { doTest(); }
   public void test305()    throws Exception { doTest(); }
   public void test350()    throws Exception { doTest(); }
+  public void test351()    throws Exception { getErlangSettings().INDENT_RELATIVE = true; doTest(); }
   public void test222_1()  throws Exception { getErlangSettings().INDENT_RELATIVE = true; doTest(); }
   public void test222_2()  throws Exception { getErlangSettings().INDENT_RELATIVE = false; doTest(); }
   public void test273()    throws Exception { getErlangSettings().ALIGN_GUARDS = true; doTest(); }
