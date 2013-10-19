@@ -17,7 +17,6 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -136,8 +135,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   }
 
   private static boolean needCommaAfter(@NotNull ErlangIfExpression ifExpression) {
-    ErlangIfClauses ifClauses = ifExpression.getIfClauses();
-    List<ErlangIfClause> ifClauseList = ifClauses != null ? ifClauses.getIfClauseList() : ContainerUtil.<ErlangIfClause>emptyList();
+    List<ErlangIfClause> ifClauseList = ifExpression.getIfClauseList();
     if (ifClauseList.isEmpty()) return false;
     ErlangIfClause firstIfClause = ifClauseList.get(0);
     return firstIfClause.getClauseBody() == null ||

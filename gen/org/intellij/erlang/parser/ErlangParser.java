@@ -189,9 +189,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_IF_CLAUSE) {
       result_ = if_clause(builder_, level_ + 1);
     }
-    else if (root_ == ERL_IF_CLAUSES) {
-      result_ = if_clauses(builder_, level_ + 1);
-    }
     else if (root_ == ERL_IF_EXPRESSION) {
       result_ = if_expression(builder_, level_ + 1);
     }
@@ -2630,15 +2627,15 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // if_clause (';' if_clause)*
-  public static boolean if_clauses(PsiBuilder builder_, int level_) {
+  static boolean if_clauses(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "if_clauses")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<if clauses>");
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = if_clause(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && if_clauses_1(builder_, level_ + 1);
-    exit_section_(builder_, level_, marker_, ERL_IF_CLAUSES, result_, pinned_, null);
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
   }
 

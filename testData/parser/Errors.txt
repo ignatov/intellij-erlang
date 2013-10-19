@@ -72,43 +72,41 @@ ERL_FILE
           PsiElement(:)(':')
           ERL_IF_EXPRESSION
             PsiElement(if)('if')
-            ERL_IF_CLAUSES
-              ERL_IF_CLAUSE
-                ERL_GUARD
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('true')
-                ERL_CLAUSE_BODY
-                  PsiElement(->)('->')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('false')
+            ERL_IF_CLAUSE
+              ERL_GUARD
+                ERL_MAX_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('true')
+              ERL_CLAUSE_BODY
+                PsiElement(->)('->')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('false')
             PsiElement(end)('end')
         PsiElement(,)(',')
         ERL_IF_EXPRESSION
           PsiElement(if)('if')
-          ERL_IF_CLAUSES
-            ERL_IF_CLAUSE
-              ERL_GUARD
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('guard')
-              ERL_CLAUSE_BODY
-                PsiElement(->)('->')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('body')
-            PsiElement(;)(';')
-            ERL_IF_CLAUSE
-              ERL_GUARD
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('guard')
-              ERL_CLAUSE_BODY
-                PsiElement(->)('->')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('body')
+          ERL_IF_CLAUSE
+            ERL_GUARD
+              ERL_MAX_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('guard')
+            ERL_CLAUSE_BODY
+              PsiElement(->)('->')
+              ERL_MAX_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('body')
+          PsiElement(;)(';')
+          ERL_IF_CLAUSE
+            ERL_GUARD
+              ERL_MAX_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('guard')
+            ERL_CLAUSE_BODY
+              PsiElement(->)('->')
+              ERL_MAX_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('body')
           PsiElement(end)('end')
         PsiElement(,)(',')
         ERL_MAX_EXPRESSION

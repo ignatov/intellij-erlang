@@ -417,7 +417,7 @@ private expr_with_guard ::= expression clause_guard? {pin=1}
 private call_exprs ::= expr_with_guard (',' expr_with_guard)*
 
 if_expression ::= if if_clauses end {pin=1}
-if_clauses ::= if_clause (';' if_clause)*
+private if_clauses ::= if_clause (';' if_clause)*
 if_clause ::= guard_with_mode clause_body {pin=1}
 private meta guarded ::= <<enterMode "GUARD">> (<<p1>> <<exitMode "GUARD">>|<<exitMode "GUARD">> !())
 private guard_with_mode ::= <<guarded guard>>

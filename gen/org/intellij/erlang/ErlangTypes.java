@@ -66,7 +66,6 @@ public interface ErlangTypes {
   IElementType ERL_GLOBAL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GLOBAL_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GUARD = new ErlangCompositeElementType("ERL_GUARD");
   IElementType ERL_IF_CLAUSE = new ErlangCompositeElementType("ERL_IF_CLAUSE");
-  IElementType ERL_IF_CLAUSES = new ErlangCompositeElementType("ERL_IF_CLAUSES");
   IElementType ERL_IF_EXPRESSION = new ErlangCompositeElementType("ERL_IF_EXPRESSION");
   IElementType ERL_IMPORT_DIRECTIVE = new ErlangCompositeElementType("ERL_IMPORT_DIRECTIVE");
   IElementType ERL_IMPORT_FUNCTION = new ErlangCompositeElementType("ERL_IMPORT_FUNCTION");
@@ -373,9 +372,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_IF_CLAUSE) {
         return new ErlangIfClauseImpl(node);
-      }
-      else if (type == ERL_IF_CLAUSES) {
-        return new ErlangIfClausesImpl(node);
       }
       else if (type == ERL_IF_EXPRESSION) {
         return new ErlangIfExpressionImpl(node);

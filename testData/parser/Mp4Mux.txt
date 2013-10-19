@@ -6457,45 +6457,44 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_IF_EXPRESSION
             PsiElement(if)('if')
-            ERL_IF_CLAUSES
-              ERL_IF_CLAUSE
-                ERL_GUARD
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('is_number')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Sizes')
-                      PsiElement())(')')
-                ERL_CLAUSE_BODY
-                  PsiElement(->)('->')
-                  ERL_MULTIPLICATIVE_EXPRESSION
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('SampleCount')
-                    PsiElement(*)('*')
+            ERL_IF_CLAUSE
+              ERL_GUARD
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('is_number')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
                         PsiElement(var)('Sizes')
-              PsiElement(;)(';')
-              ERL_IF_CLAUSE
-                ERL_GUARD
+                    PsiElement())(')')
+              ERL_CLAUSE_BODY
+                PsiElement(->)('->')
+                ERL_MULTIPLICATIVE_EXPRESSION
                   ERL_MAX_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('true')
-                ERL_CLAUSE_BODY
-                  PsiElement(->)('->')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('stsz_size')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('SampleSizeData')
-                      PsiElement())(')')
+                    ERL_Q_VAR
+                      PsiElement(var)('SampleCount')
+                  PsiElement(*)('*')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Sizes')
+            PsiElement(;)(';')
+            ERL_IF_CLAUSE
+              ERL_GUARD
+                ERL_MAX_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('true')
+              ERL_CLAUSE_BODY
+                PsiElement(->)('->')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('stsz_size')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('SampleSizeData')
+                    PsiElement())(')')
             PsiElement(end)('end')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
@@ -7041,103 +7040,75 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_IF_EXPRESSION
             PsiElement(if)('if')
-            ERL_IF_CLAUSES
-              ERL_IF_CLAUSE
-                ERL_GUARD
+            ERL_IF_CLAUSE
+              ERL_GUARD
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('is_number')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('STSZ')
+                    PsiElement())(')')
+              ERL_CLAUSE_BODY
+                PsiElement(->)('->')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      PsiElement(atom)('lists')
+                  PsiElement(:)(':')
                   ERL_FUNCTION_CALL_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('is_number')
+                      PsiElement(atom)('zipwith')
                     ERL_ARGUMENT_LIST
                       PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('STSZ')
-                      PsiElement())(')')
-                ERL_CLAUSE_BODY
-                  PsiElement(->)('->')
-                  ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                    ERL_MODULE_REF
-                      ERL_Q_ATOM
-                        PsiElement(atom)('lists')
-                    PsiElement(:)(':')
-                    ERL_FUNCTION_CALL_EXPRESSION
-                      ERL_Q_ATOM
-                        PsiElement(atom)('zipwith')
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_FUN_EXPRESSION
-                          PsiElement(fun)('fun')
-                          ERL_FUN_CLAUSES
-                            ERL_FUN_CLAUSE
-                              ERL_ARGUMENT_DEFINITION_LIST
-                                PsiElement(()('(')
-                                ERL_ARGUMENT_DEFINITION
+                      ERL_FUN_EXPRESSION
+                        PsiElement(fun)('fun')
+                        ERL_FUN_CLAUSES
+                          ERL_FUN_CLAUSE
+                            ERL_ARGUMENT_DEFINITION_LIST
+                              PsiElement(()('(')
+                              ERL_ARGUMENT_DEFINITION
+                                ERL_MAX_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('ChunkOffset')
+                              PsiElement(,)(',')
+                              ERL_ARGUMENT_DEFINITION
+                                ERL_MAX_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('SamplesPerChunk')
+                              PsiElement())(')')
+                            ERL_CLAUSE_BODY
+                              PsiElement(->)('->')
+                              ERL_BINARY_EXPRESSION
+                                PsiElement(<<)('<<')
+                                ERL_BIN_ELEMENT
                                   ERL_MAX_EXPRESSION
                                     ERL_Q_VAR
                                       PsiElement(var)('ChunkOffset')
-                                PsiElement(,)(',')
-                                ERL_ARGUMENT_DEFINITION
+                                  PsiElement(:)(':')
                                   ERL_MAX_EXPRESSION
-                                    ERL_Q_VAR
-                                      PsiElement(var)('SamplesPerChunk')
-                                PsiElement())(')')
-                              ERL_CLAUSE_BODY
-                                PsiElement(->)('->')
-                                ERL_BINARY_EXPRESSION
-                                  PsiElement(<<)('<<')
-                                  ERL_BIN_ELEMENT
-                                    ERL_MAX_EXPRESSION
-                                      ERL_Q_VAR
-                                        PsiElement(var)('ChunkOffset')
-                                    PsiElement(:)(':')
-                                    ERL_MAX_EXPRESSION
-                                      PsiElement(integer)('32')
-                                  PsiElement(,)(',')
-                                  ERL_BIN_ELEMENT
-                                    ERL_PARENTHESIZED_EXPRESSION
-                                      PsiElement(()('(')
-                                      ERL_MULTIPLICATIVE_EXPRESSION
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('SamplesPerChunk')
-                                        PsiElement(*)('*')
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('STSZ')
-                                      PsiElement())(')')
-                                    PsiElement(:)(':')
-                                    ERL_MAX_EXPRESSION
-                                      PsiElement(integer)('32')
-                                  PsiElement(>>)('>>')
-                          PsiElement(end)('end')
-                        PsiElement(,)(',')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('ChunkOffsets')
-                        PsiElement(,)(',')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('ChunkSizes')
-                        PsiElement())(')')
-              PsiElement(;)(';')
-              ERL_IF_CLAUSE
-                ERL_GUARD
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('is_binary')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('STSZ')
-                      PsiElement())(')')
-                ERL_CLAUSE_BODY
-                  PsiElement(->)('->')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('collapse_chunks_with_samples')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
+                                    PsiElement(integer)('32')
+                                PsiElement(,)(',')
+                                ERL_BIN_ELEMENT
+                                  ERL_PARENTHESIZED_EXPRESSION
+                                    PsiElement(()('(')
+                                    ERL_MULTIPLICATIVE_EXPRESSION
+                                      ERL_MAX_EXPRESSION
+                                        ERL_Q_VAR
+                                          PsiElement(var)('SamplesPerChunk')
+                                      PsiElement(*)('*')
+                                      ERL_MAX_EXPRESSION
+                                        ERL_Q_VAR
+                                          PsiElement(var)('STSZ')
+                                    PsiElement())(')')
+                                  PsiElement(:)(':')
+                                  ERL_MAX_EXPRESSION
+                                    PsiElement(integer)('32')
+                                PsiElement(>>)('>>')
+                        PsiElement(end)('end')
+                      PsiElement(,)(',')
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('ChunkOffsets')
@@ -7145,15 +7116,42 @@ ERL_FILE
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
                           PsiElement(var)('ChunkSizes')
-                      PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('STSZ')
-                      PsiElement(,)(',')
-                      ERL_LIST_EXPRESSION
-                        PsiElement([)('[')
-                        PsiElement(])(']')
                       PsiElement())(')')
+            PsiElement(;)(';')
+            ERL_IF_CLAUSE
+              ERL_GUARD
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('is_binary')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('STSZ')
+                    PsiElement())(')')
+              ERL_CLAUSE_BODY
+                PsiElement(->)('->')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('collapse_chunks_with_samples')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('ChunkOffsets')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('ChunkSizes')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('STSZ')
+                    PsiElement(,)(',')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      PsiElement(])(']')
+                    PsiElement())(')')
             PsiElement(end)('end')
         PsiElement(,)(',')
         ERL_FUNCTION_CALL_EXPRESSION

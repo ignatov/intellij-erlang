@@ -49,7 +49,6 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_MACROS_BODY,
     ERL_TUPLE_EXPRESSION,
     ERL_LIST_EXPRESSION,
-    ERL_IF_CLAUSES,
     ERL_TRY_CLAUSES,
     ERL_CATCH_EXPRESSION,
     ERL_BEGIN_END_BODY,

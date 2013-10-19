@@ -236,10 +236,6 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
-  public void visitIfClauses(@NotNull ErlangIfClauses o) {
-    visitCompositeElement(o);
-  }
-
   public void visitIfExpression(@NotNull ErlangIfExpression o) {
     visitExpression(o);
   }
