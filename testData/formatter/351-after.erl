@@ -1,8 +1,8 @@
 foo() ->
   %% if is not
   Y = if
-    1 -> true;
-    true -> false
+        1 -> true;
+        true -> false
       end,
 
   %%after clause is not
