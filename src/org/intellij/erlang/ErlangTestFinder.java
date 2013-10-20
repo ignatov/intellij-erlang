@@ -23,10 +23,11 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testIntegration.TestFinder;
-import gnu.trove.THashSet;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -35,7 +36,8 @@ import java.util.Collections;
  * @author ignatov
  */
 public class ErlangTestFinder implements TestFinder {
-  public static final String[] SUFFIXES = new String[]{"_test", "_tests"};
+  public static final String EXT = "." + ErlangFileType.MODULE.getDefaultExtension();
+  public static String[] SUFFIXES = new String[]{"_test", "_tests"};
 
   @Override
   public PsiFile findSourceElement(@NotNull PsiElement from) {
@@ -45,17 +47,13 @@ public class ErlangTestFinder implements TestFinder {
   @NotNull
   @Override
   public Collection<PsiElement> findTestsForClass(@NotNull PsiElement element) {
-    final PsiFile file = findSourceElement(element);
-    if (file == null) {
-      return Collections.emptyList();
-    }
-    final Collection<PsiElement> result = new THashSet<PsiElement>();
+    VirtualFile virtualFile = getVirtualFile(element);
+    if (virtualFile == null) return ContainerUtil.emptyList();
+    Collection<PsiElement> result = ContainerUtil.newTroveSet();
     Project project = element.getProject();
-    final GlobalSearchScope searchScope = GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(project), ErlangFileType.MODULE);
-    VirtualFile virtualFile = file.getVirtualFile();
-    if (virtualFile == null) return result;
     for (String suffix : SUFFIXES) {
-      Collections.addAll(result, FilenameIndex.getFilesByName(project, virtualFile.getNameWithoutExtension() + suffix + "." + ErlangFileType.MODULE.getDefaultExtension(), searchScope));
+      Collections.addAll(result,
+        FilenameIndex.getFilesByName(project, virtualFile.getNameWithoutExtension() + suffix + EXT, getScope(project)));
     }
     return result;
   }
@@ -63,23 +61,30 @@ public class ErlangTestFinder implements TestFinder {
   @NotNull
   @Override
   public Collection<PsiElement> findClassesForTest(@NotNull PsiElement element) {
-    final PsiFile file = findSourceElement(element);
-    if (file == null) {
-      return Collections.emptyList();
-    }
-    final Collection<PsiElement> result = new THashSet<PsiElement>();
+    VirtualFile virtualFile = getVirtualFile(element);
+    if (virtualFile == null) return ContainerUtil.emptyList();
+    Collection<PsiElement> result = ContainerUtil.newTroveSet();
     Project project = element.getProject();
-    final GlobalSearchScope searchScope = GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(project), ErlangFileType.MODULE);
-    VirtualFile virtualFile = file.getVirtualFile();
-    if (virtualFile == null) return result;
     String name = virtualFile.getNameWithoutExtension();
     int length = name.length();
     for (String suffix : SUFFIXES) {
       if (name.endsWith(suffix)) {
-        Collections.addAll(result, FilenameIndex.getFilesByName(project, name.substring(0, length - suffix.length()) + "." + ErlangFileType.MODULE.getDefaultExtension(), searchScope));
+        Collections.addAll(result,
+          FilenameIndex.getFilesByName(project, name.substring(0, length - suffix.length()) + EXT, getScope(project)));
       }
     }
     return result;
+  }
+
+  private static GlobalSearchScope getScope(Project project) {
+    return GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.allScope(project), ErlangFileType.MODULE);
+  }
+
+  @Nullable
+  private VirtualFile getVirtualFile(PsiElement element) {
+    PsiFile file = findSourceElement(element);
+    if (file == null) return null;
+    return file.getVirtualFile();
   }
 
   @Override
