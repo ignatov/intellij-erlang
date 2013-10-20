@@ -27,9 +27,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.ErlangLanguage;
-import org.intellij.erlang.psi.ErlangAttribute;
-import org.intellij.erlang.psi.ErlangCompositeElement;
-import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,30 +57,45 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   public SuppressIntentionAction[] getSuppressActions(@Nullable PsiElement element) {
     return new SuppressIntentionAction[]{
       new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for function", ErlangFunction.class),
-      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for attribute", ErlangAttribute.class)
+      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for attribute", ErlangAttribute.class),
+      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for expression", ErlangExpression.class)
     };
   }
 
   @Override
   public boolean isSuppressedFor(@NotNull PsiElement element) {
-    return isSuppressedForParent(element, ErlangFunction.class) || isSuppressedForParent(element, ErlangAttribute.class);
+    return isSuppressedForParent(element, ErlangFunction.class) ||
+      isSuppressedForParent(element, ErlangAttribute.class) ||
+      isSuppressedForExpression(element);
+  }
+
+  private boolean isSuppressedForExpression(@Nullable PsiElement element) {
+    return isSuppressedForElement(getTopmostExpression(element));
+  }
+
+  @Nullable
+  private static ErlangExpression getTopmostExpression(@Nullable PsiElement element) {
+    ErlangExpression expression = PsiTreeUtil.getParentOfType(element, ErlangExpression.class);
+    while (expression != null && !(expression.getParent() instanceof ErlangClauseBody)) {
+      expression = PsiTreeUtil.getParentOfType(expression, ErlangExpression.class);
+    }
+    return expression;
   }
 
   private boolean isSuppressedForParent(PsiElement element, final Class<? extends ErlangCompositeElement> parentClass) {
     PsiElement parent = PsiTreeUtil.getParentOfType(element, parentClass, false);
-    if (parent == null) {
-      return false;
-    }
+    if (parent == null) return false;
     return isSuppressedForElement(parent);
   }
   
-  private boolean isSuppressedForElement(@NotNull PsiElement element) {
+  private boolean isSuppressedForElement(@Nullable PsiElement element) {
+    if (element == null) return false;
     Commenter commenter = LanguageCommenters.INSTANCE.forLanguage(ErlangLanguage.INSTANCE);
     String prefix = ObjectUtils.notNull(commenter == null ? null : commenter.getLineCommentPrefix(), "");
     
     PsiElement prevSibling = element.getPrevSibling();
     if (prevSibling == null) {
-      final PsiElement parent = element.getParent();
+      PsiElement parent = element.getParent();
       if (parent != null) {
         prevSibling = parent.getPrevSibling();
       }
@@ -119,7 +132,9 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     }
   
     @Override
+    @Nullable
     protected PsiElement getContainer(PsiElement context) {
+      if (myContainerClass == ErlangExpression.class) return getTopmostExpression(context);
       return PsiTreeUtil.getParentOfType(context, myContainerClass);
     }
     
