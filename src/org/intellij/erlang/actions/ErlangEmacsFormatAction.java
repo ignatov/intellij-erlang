@@ -37,6 +37,7 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
@@ -75,8 +76,6 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
 
     final String groupId = e.getPresentation().getText();
     try {
-      final File tmpFile = FileUtil.createTempFile("emacs", ".erl", true);
-
       final GeneralCommandLine commandLine = new GeneralCommandLine();
       String emacsPath = EmacsSettings.getInstance(project).getEmacsPath();
       if (emacsPath.isEmpty()) {
@@ -99,6 +98,15 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
         return;
       }
 
+      final File tmpFile = FileUtil.createTempFile("emacs", ".erl", true);
+      VirtualFile virtualTmpFile = LocalFileSystem.getInstance().findFileByIoFile(tmpFile);
+      if (virtualTmpFile == null) {
+        Notifications.Bus.notify(
+          new Notification(groupId, NOTIFICATION_TITLE, "Failed to create a temporary file",
+            NotificationType.WARNING), project);
+        return;
+      }
+
       boolean exists = new File(sdkPath, "lib/erlang/lib").exists();
 
       String emacsCommand = "\n" +
@@ -111,7 +119,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
         "    (erlang-indent-current-buffer)\n" +
         "    (delete-trailing-whitespace)\n" +
         "    (untabify (point-min) (point-max))\n" +
-        "    (write-region (point-min) (point-max) \"" + tmpFile.getCanonicalPath() + "\")\n" +
+        "    (write-region (point-min) (point-max) \"" + virtualTmpFile.getCanonicalPath() + "\")\n" +
         "    (kill-emacs))";
 
       commandLine.addParameter(emacsCommand);
