@@ -22,6 +22,12 @@ public class ErlangFunClauseImpl extends ErlangCompositeElementImpl implements E
   }
 
   @Override
+  @Nullable
+  public ErlangArgumentDefinition getArgumentDefinition() {
+    return findChildByClass(ErlangArgumentDefinition.class);
+  }
+
+  @Override
   @NotNull
   public ErlangArgumentDefinitionList getArgumentDefinitionList() {
     return findNotNullChildByClass(ErlangArgumentDefinitionList.class);

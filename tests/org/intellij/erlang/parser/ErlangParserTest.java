@@ -81,4 +81,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void test306()               { doTest(true, true);  }
   public void testEscriptShebang1()   { doTest(true, false); }
   public void testEscriptShebang2()   { doTest(true, true);  }
+  public void test325()               { doTest(true, true);  }
 }
