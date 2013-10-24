@@ -31,9 +31,10 @@
 %% initialize. To ensure a synchronized start-up procedure, this
 %% function does not return until Module:init/1 has returned.
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec(start_link() ->
+    {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
 start_link() ->
     gen_fsm:start_link({local, ?SERVER}, ?MODULE, [], []).
 
@@ -48,12 +49,14 @@ start_link() ->
 %% gen_fsm:start_link/[3,4], this function is called by the new
 %% process to initialize.
 %%
-%% @spec init(Args) -> {ok, StateName, State} |
-%%                     {ok, StateName, State, Timeout} |
-%%                     ignore |
-%%                     {stop, StopReason}
 %% @end
 %%--------------------------------------------------------------------
+-spec(init(Args :: term()) ->
+    {ok, StateName :: atom(), State :: #state{}} |
+    {ok, StateName :: atom(), State :: #state{},
+        Timeout :: pos_integer() | infinity} |
+    ignore |
+    {stop, Reason :: term()}).
 init([]) ->
     {ok, state_name, #state{}}.
 
@@ -66,12 +69,15 @@ init([]) ->
 %% name as the current state name StateName is called to handle
 %% the event. It is also called if a timeout occurs.
 %%
-%% @spec state_name(Event, State) ->
-%%                   {next_state, NextStateName, NextState} |
-%%                   {next_state, NextStateName, NextState, Timeout} |
-%%                   {stop, Reason, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec(state_name(Event, State) ->
+    {next_state, NextStateName :: atom(), NextState :: #state{}} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        Timeout :: pos_integer() | infinity} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        hibernate} |
+    {stop, Reason :: term(), NewState :: #state{}}).
 state_name(_Event, State) ->
     {next_state, state_name, State}.
 
@@ -84,15 +90,23 @@ state_name(_Event, State) ->
 %% the same name as the current state name StateName is called to
 %% handle the event.
 %%
-%% @spec state_name(Event, From, State) ->
-%%                   {next_state, NextStateName, NextState} |
-%%                   {next_state, NextStateName, NextState, Timeout} |
-%%                   {reply, Reply, NextStateName, NextState} |
-%%                   {reply, Reply, NextStateName, NextState, Timeout} |
-%%                   {stop, Reason, NewState} |
-%%                   {stop, Reason, Reply, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec(state_name(Event :: term(), From :: {pid(), term()},
+        State :: #state{}) ->
+    {next_state, NextStateName :: atom(), NextState :: #state{}} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        Timeout :: pos_integer() | infinity} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        hibernate} |
+    {reply, Reply, NextStateName :: atom(), NextState :: #state{}} |
+    {reply, Reply, NextStateName :: atom(), NextState :: #state{},
+        Timeout :: pos_integer() | infinity} |
+    {reply, Reply, NextStateName :: atom(), NextState :: #state{},
+        hibernate} |
+    {stop, Reason :: normal | term(), NewState :: #state{}} |
+    {stop, Reason :: normal | term(), Reply :: term(),
+        NewState :: #state{}}).
 state_name(_Event, _From, State) ->
     Reply = ok,
     {reply, Reply, state_name, State}.
@@ -104,12 +118,15 @@ state_name(_Event, _From, State) ->
 %% gen_fsm:send_all_state_event/2, this function is called to handle
 %% the event.
 %%
-%% @spec handle_event(Event, StateName, State) ->
-%%                   {next_state, NextStateName, NextState} |
-%%                   {next_state, NextStateName, NextState, Timeout} |
-%%                   {stop, Reason, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec(handle_event(Event :: term(), StateName :: atom(),
+        State :: #state{}) ->
+    {next_state, NextStateName :: atom(), NextState :: #state{}} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        Timeout :: pos_integer() | infinity} |
+    {next_state, NextStateName :: atom(), NextState :: #state{}, hibernate} |
+    {stop, Reason :: term(), NewState :: #state{}}).
 handle_event(_Event, StateName, State) ->
     {next_state, StateName, State}.
 
@@ -120,15 +137,23 @@ handle_event(_Event, StateName, State) ->
 %% gen_fsm:sync_send_all_state_event/[2,3], this function is called
 %% to handle the event.
 %%
-%% @spec handle_sync_event(Event, From, StateName, State) ->
-%%                   {next_state, NextStateName, NextState} |
-%%                   {next_state, NextStateName, NextState, Timeout} |
-%%                   {reply, Reply, NextStateName, NextState} |
-%%                   {reply, Reply, NextStateName, NextState, Timeout} |
-%%                   {stop, Reason, NewState} |
-%%                   {stop, Reason, Reply, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec(handle_sync_event(Event :: term(), From :: {pid(), term()},
+        StateName :: atom(), State :: #state{}) ->
+    {next_state, NextStateName :: atom(), NextState :: #state{}} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        Timeout :: pos_integer() | infinity} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        hibernate} |
+    {reply, Reply, NextStateName :: atom(), NextState :: #state{}} |
+    {reply, Reply, NextStateName :: atom(), NextState :: #state{},
+        Timeout :: pos_integer() | infinity} |
+    {reply, Reply, NextStateName :: atom(), NextState :: #state{},
+        hibernate} |
+    {stop, Reason :: normal | term(), NewState :: #state{}} |
+    {stop, Reason :: normal | term(), Reply :: term(),
+        NewState :: #state{}}).
 handle_sync_event(_Event, _From, StateName, State) ->
     Reply = ok,
     {reply, Reply, StateName, State}.
@@ -140,12 +165,16 @@ handle_sync_event(_Event, _From, StateName, State) ->
 %% message other than a synchronous or asynchronous event
 %% (or a system message).
 %%
-%% @spec handle_info(Info,StateName,State)->
-%%                   {next_state, NextStateName, NextState} |
-%%                   {next_state, NextStateName, NextState, Timeout} |
-%%                   {stop, Reason, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec(handle_info(Info :: term(), StateName :: atom(),
+        State :: #state{}) ->
+    {next_state, NextStateName :: atom(), NextState :: #state{}} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        Timeout :: pos_integer() | infinity} |
+    {next_state, NextStateName :: atom(), NextState :: #state{},
+        hibernate} |
+    {stop, Reason :: normal | term(), NewState :: #state{}}).
 handle_info(_Info, StateName, State) ->
     {next_state, StateName, State}.
 
@@ -157,9 +186,10 @@ handle_info(_Info, StateName, State) ->
 %% necessary cleaning up. When it returns, the gen_fsm terminates with
 %% Reason. The return value is ignored.
 %%
-%% @spec terminate(Reason, StateName, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
+-spec(terminate(Reason :: term(), StateName :: atom(),
+        State :: #state{}) -> term()).
 terminate(_Reason, _StateName, _State) ->
     ok.
 
@@ -168,10 +198,11 @@ terminate(_Reason, _StateName, _State) ->
 %% @doc
 %% Convert process state when code is changed
 %%
-%% @spec code_change(OldVsn, StateName, State, Extra) ->
-%%                   {ok, StateName, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec(code_change(OldVsn :: term() | {down, term()},
+        StateName :: atom(), State :: #state{}, Extra :: term()) ->
+    {ok, NextStateName :: atom(), NewState :: #state{}}).
 code_change(_OldVsn, StateName, State, _Extra) ->
     {ok, StateName, State}.
 

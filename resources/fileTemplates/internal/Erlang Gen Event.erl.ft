@@ -28,9 +28,11 @@
 %% @doc
 %% Creates an event manager
 %%
-%% @spec start_link() -> {ok, Pid} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec(start_link() ->
+    {ok, Pid :: pid()} |
+    {error, {already_started, Pid :: pid()}}).
 start_link() ->
     gen_event:start_link({local, ?SERVER}).
 
@@ -38,9 +40,9 @@ start_link() ->
 %% @doc
 %% Adds an event handler
 %%
-%% @spec add_handler() -> ok | {'EXIT', Reason} | term()
 %% @end
 %%--------------------------------------------------------------------
+-spec(add_handler() -> ok | {'EXIT', Reason :: term()} | term()).
 add_handler() ->
     gen_event:add_handler(?SERVER, ?MODULE, []).
 
@@ -54,9 +56,9 @@ add_handler() ->
 %% Whenever a new event handler is added to an event manager,
 %% this function is called to initialize the event handler.
 %%
-%% @spec init(Args) -> {ok, State}
 %% @end
 %%--------------------------------------------------------------------
+-spec(init(Args :: term()) -> {ok, State :: #state{}}).
 init([]) ->
     {ok, #state{}}.
 
@@ -67,12 +69,14 @@ init([]) ->
 %% gen_event:notify/2 or gen_event:sync_notify/2, this function is
 %% called for each installed event handler to handle the event.
 %%
-%% @spec handle_event(Event, State) ->
-%%                          {ok, State} |
-%%                          {swap_handler, Args1, State1, Mod2, Args2} |
-%%                          remove_handler
 %% @end
 %%--------------------------------------------------------------------
+-spec(handle_event(Event :: term(), State :: #state{}) ->
+    {ok, NewState :: #stae{}} |
+    {swap_handler, Args1 :: term(), NewState :: #state{},
+        Handler2 :: atom() | {atom(), Id :: term()},
+        Args2 :: term()} |
+    remove_handler).
 handle_event(_Event, State) ->
     {ok, State}.
 
@@ -83,12 +87,14 @@ handle_event(_Event, State) ->
 %% gen_event:call/3,4, this function is called for the specified
 %% event handler to handle the request.
 %%
-%% @spec handle_call(Request, State) ->
-%%                   {ok, Reply, State} |
-%%                   {swap_handler, Reply, Args1, State1, Mod2, Args2} |
-%%                   {remove_handler, Reply}
 %% @end
 %%--------------------------------------------------------------------
+-spec(handle_call(Request :: term(), State :: #state{}) ->
+    {ok, Reply :: term(), NewState :: #state{}} |
+    {swap_handler, Reply :: term(), Args1 :: term(),
+        NewState :: #state{},
+        Handler2 :: atom() | {atom(), Id :: term()}, Args2 :: term()} |
+    {remove_handler, Reply :: term()}).
 handle_call(_Request, State) ->
     Reply = ok,
     {ok, Reply, State}.
@@ -100,12 +106,14 @@ handle_call(_Request, State) ->
 %% an event manager receives any other message than an event or a
 %% synchronous request (or a system message).
 %%
-%% @spec handle_info(Info, State) ->
-%%                         {ok, State} |
-%%                         {swap_handler, Args1, State1, Mod2, Args2} |
-%%                         remove_handler
 %% @end
 %%--------------------------------------------------------------------
+-spec(handle_info(Info :: term(), State :: #state{}) ->
+    {ok, NewState :: #state{}} |
+    {swap_handler, Args1 :: term(), NewState :: #state{},
+        Handler2 :: atom() | {atom(), Id :: term()},
+        Args2 :: term()} |
+    remove_handler).
 handle_info(_Info, State) ->
     {ok, State}.
 
@@ -119,7 +127,11 @@ handle_info(_Info, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, _State) ->
+-spec(terminate(Arg, State :: #state{}) -> term()
+    when Arg :: term() | {stop, Reason :: term()} | stop |
+        remove_handler | {error, {'EXIT', Reason :: term()}} |
+        {error, Reason :: term()}).
+terminate(_Arg, _State) ->
     ok.
 
 %%--------------------------------------------------------------------
@@ -127,9 +139,11 @@ terminate(_Reason, _State) ->
 %% @doc
 %% Convert process state when code is changed
 %%
-%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
 %% @end
 %%--------------------------------------------------------------------
+-spec(code_change(OldVsn :: term() | {down, term()}, State :: #state{},
+        Extra :: term()) ->
+    {ok, NewState :: #state{}}).
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
