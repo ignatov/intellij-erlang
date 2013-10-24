@@ -306,6 +306,9 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_RECORD_TUPLE) {
       result_ = record_tuple(builder_, level_ + 1);
     }
+    else if (root_ == ERL_RECORD_TYPE) {
+      result_ = record_type(builder_, level_ + 1);
+    }
     else if (root_ == ERL_RULE) {
       result_ = rule(builder_, level_ + 1);
     }
@@ -405,7 +408,7 @@ public class ErlangParser implements PsiParser {
       ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
     create_token_set_(ERL_BINARY_TYPE, ERL_BIN_BASE_TYPE, ERL_BIN_UNIT_TYPE, ERL_FIELD_TYPE,
       ERL_FUN_TYPE, ERL_FUN_TYPE_100_T, ERL_INT_TYPE, ERL_RECORD_LIKE_TYPE,
-      ERL_TOP_TYPE_100_T, ERL_TYPE),
+      ERL_RECORD_TYPE, ERL_TOP_TYPE_100_T, ERL_TYPE),
   };
 
   /* ********************************************************** */
@@ -4034,6 +4037,31 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // '#' record_ref '{' field_type_list? '}'
+  public static boolean record_type(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_type")) return false;
+    if (!nextTokenIs(builder_, ERL_RADIX)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
+    result_ = consumeToken(builder_, ERL_RADIX);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && report_error_(builder_, record_ref(builder_, level_ + 1));
+    result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_CURLY_LEFT)) && result_;
+    result_ = pinned_ && report_error_(builder_, record_type_3(builder_, level_ + 1)) && result_;
+    result_ = pinned_ && consumeToken(builder_, ERL_CURLY_RIGHT) && result_;
+    exit_section_(builder_, level_, marker_, ERL_RECORD_TYPE, result_, pinned_, null);
+    return result_ || pinned_;
+  }
+
+  // field_type_list?
+  private static boolean record_type_3(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "record_type_3")) return false;
+    field_type_list(builder_, level_ + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
   // rule_clause (';' rule_clause)*
   public static boolean rule(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "rule")) return false;
@@ -4639,7 +4667,7 @@ public class ErlangParser implements PsiParser {
   //   | q_var ['::' top_type]
   //   | '[' [top_type [',' '...']] ']'
   //   | record_like_type
-  //   | '#' record_ref '{' field_type_list? '}'
+  //   | record_type
   public static boolean type(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "type")) return false;
     boolean result_ = false;
@@ -4652,7 +4680,7 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = type_5(builder_, level_ + 1);
     if (!result_) result_ = type_6(builder_, level_ + 1);
     if (!result_) result_ = record_like_type(builder_, level_ + 1);
-    if (!result_) result_ = type_8(builder_, level_ + 1);
+    if (!result_) result_ = record_type(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_TYPE, result_, false, null);
     return result_;
   }
@@ -4852,29 +4880,6 @@ public class ErlangParser implements PsiParser {
     result_ = result_ && consumeToken(builder_, ERL_DOT_DOT_DOT);
     exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
-  }
-
-  // '#' record_ref '{' field_type_list? '}'
-  private static boolean type_8(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_8")) return false;
-    boolean result_ = false;
-    boolean pinned_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
-    result_ = consumeToken(builder_, ERL_RADIX);
-    pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, record_ref(builder_, level_ + 1));
-    result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_CURLY_LEFT)) && result_;
-    result_ = pinned_ && report_error_(builder_, type_8_3(builder_, level_ + 1)) && result_;
-    result_ = pinned_ && consumeToken(builder_, ERL_CURLY_RIGHT) && result_;
-    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
-    return result_ || pinned_;
-  }
-
-  // field_type_list?
-  private static boolean type_8_3(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_8_3")) return false;
-    field_type_list(builder_, level_ + 1);
-    return true;
   }
 
   /* ********************************************************** */

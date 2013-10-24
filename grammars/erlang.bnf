@@ -232,7 +232,8 @@ type ::=
   | q_var ['::' top_type]
   | '[' [top_type [',' '...']] ']'
   | record_like_type
-  | '#' record_ref '{' field_type_list? '}' {pin(".*")=1}
+  | record_type {pin(".*")=1}
+record_type ::= '#' record_ref '{' field_type_list? '}' {extends=type pin=1}
 record_like_type ::= '{' top_type_list? '}' {extends=type}
 
 int_type ::= '-'? (integer | macros argument_list?) {extends=type}

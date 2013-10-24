@@ -17,14 +17,13 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangRecordExpression;
-import org.intellij.erlang.psi.ErlangRecordRef;
-import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFix;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author ignatov
@@ -37,16 +36,25 @@ public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
       @Override
       public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
         if (o.getMacros() != null) return;
-        ErlangRecordRef ref = o.getRecordRef();
-        if (ref != null && ref.getQAtom().getMacros() != null) return;
-        PsiReference reference = ref != null ? ref.getReference() : null;
-        if (reference == null || reference.resolve() == null) {
-          problemsHolder.registerProblem(ref != null ? ref : o,
-            "Unresolved record " + "'" + (ref != null ? ref.getText() : "") + "'",
-            new ErlangIntroduceRecordFix());
-        }
+        processRef(o, o.getRecordRef(), problemsHolder);
         super.visitRecordExpression(o);
       }
+
+      @Override
+      public void visitRecordType(@NotNull ErlangRecordType o) {
+        processRef(o, o.getRecordRef(), problemsHolder);
+        super.visitRecordType(o);
+      }
     });
+  }
+
+  private static void processRef(@NotNull PsiElement o, @Nullable ErlangRecordRef ref, @NotNull ProblemsHolder problemsHolder) {
+    if (ref != null && ref.getQAtom().getMacros() != null) return;
+    PsiReference reference = ref != null ? ref.getReference() : null;
+    if (reference == null || reference.resolve() == null) {
+      problemsHolder.registerProblem(ref != null ? ref : o,
+        "Unresolved record " + "'" + (ref != null ? ref.getText() : "") + "'",
+        new ErlangIntroduceRecordFix());
+    }
   }
 }
