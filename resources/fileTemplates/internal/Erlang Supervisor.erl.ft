@@ -42,16 +42,9 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 -spec(init(Args :: term()) ->
-    {ok, {SupFlags :: {one_for_all | one_for_one |
-    rest_for_one | simple_one_for_one,
-        MaxR :: non_neg_integer(), MaxT :: pos_integer()},
-        [{Id :: term(),
-            StartFunc :: {M :: module(), F :: atom(),
-                A :: [term()] | undefined},
-            Restart :: permanent | transient | temporary,
-            Shutdown :: brutal_kill | Timeout :: pos_integer(),
-            Type :: worker | supervisor,
-            [module()] | dynamic}]
+    {ok, {SupFlags :: {RestartStrategy :: supervisor:strategy(),
+        MaxR :: non_neg_integer(), MaxT :: non_neg_integer()},
+        [ChildSpec :: supervisor:child_spec()]
     }} |
     ignore |
     {error, Reason :: term()}).

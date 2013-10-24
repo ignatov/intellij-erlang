@@ -30,9 +30,7 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(start_link() ->
-    {ok, Pid :: pid()} |
-    {error, {already_started, Pid :: pid()}}).
+-spec(start_link() -> {ok, pid()} | {error, {already_started, pid()}}).
 start_link() ->
     gen_event:start_link({local, ?SERVER}).
 
@@ -58,7 +56,10 @@ add_handler() ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(init(Args :: term()) -> {ok, State :: #state{}}).
+-spec(init(InitArgs :: term()) ->
+    {ok, State :: #state{}} |
+    {ok, State :: #state{}, hibernate} |
+    {error, Reason :: term()}).
 init([]) ->
     {ok, #state{}}.
 
@@ -72,10 +73,10 @@ init([]) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec(handle_event(Event :: term(), State :: #state{}) ->
-    {ok, NewState :: #stae{}} |
+    {ok, NewState :: #state{}} |
+    {ok, NewState :: #state{}, hibernate} |
     {swap_handler, Args1 :: term(), NewState :: #state{},
-        Handler2 :: atom() | {atom(), Id :: term()},
-        Args2 :: term()} |
+        Handler2 :: (atom() | {atom(), Id :: term()}), Args2 :: term()} |
     remove_handler).
 handle_event(_Event, State) ->
     {ok, State}.
@@ -91,9 +92,9 @@ handle_event(_Event, State) ->
 %%--------------------------------------------------------------------
 -spec(handle_call(Request :: term(), State :: #state{}) ->
     {ok, Reply :: term(), NewState :: #state{}} |
-    {swap_handler, Reply :: term(), Args1 :: term(),
-        NewState :: #state{},
-        Handler2 :: atom() | {atom(), Id :: term()}, Args2 :: term()} |
+    {ok, Reply :: term(), NewState :: #state{}, hibernate} |
+    {swap_handler, Reply :: term(), Args1 :: term(), NewState :: #state{},
+        Handler2 :: (atom() | {atom(), Id :: term()}), Args2 :: term()} |
     {remove_handler, Reply :: term()}).
 handle_call(_Request, State) ->
     Reply = ok,
@@ -110,9 +111,9 @@ handle_call(_Request, State) ->
 %%--------------------------------------------------------------------
 -spec(handle_info(Info :: term(), State :: #state{}) ->
     {ok, NewState :: #state{}} |
+    {ok, NewState :: #state{}, hibernate} |
     {swap_handler, Args1 :: term(), NewState :: #state{},
-        Handler2 :: atom() | {atom(), Id :: term()},
-        Args2 :: term()} |
+        Handler2 :: (atom() | {atom(), Id :: term()}), Args2 :: term()} |
     remove_handler).
 handle_info(_Info, State) ->
     {ok, State}.
@@ -127,10 +128,9 @@ handle_info(_Info, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
--spec(terminate(Arg, State :: #state{}) -> term()
-    when Arg :: term() | {stop, Reason :: term()} | stop |
+-spec(terminate(Args :: (term() | {stop, Reason :: term()} | stop |
         remove_handler | {error, {'EXIT', Reason :: term()}} |
-        {error, Reason :: term()}).
+    {error, term()}), State :: term()) -> term()).
 terminate(_Arg, _State) ->
     ok.
 
