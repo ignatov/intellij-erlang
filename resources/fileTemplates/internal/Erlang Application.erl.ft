@@ -23,12 +23,11 @@
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(start(StartType, StartArgs) ->
-    {ok, Pid} | {ok, Pid, State} | {error, Reason}
-    when StartType :: normal | {takeover, node()} | {failover, node()},
-    StartArgs :: term(),
-    State :: term(),
-    Reason :: term()).
+-spec(start(StartType :: normal | {takeover, node()} | {failover, node()},
+        StartArgs :: term()) ->
+    {ok, Pid :: pid()} |
+    {ok, Pid :: pid(), State :: term()} |
+    {error, Reason :: term()}).
 start(_StartType, _StartArgs) ->
     case 'TopSupervisor':start_link() of
         {ok, Pid} ->
@@ -46,7 +45,7 @@ start(_StartType, _StartArgs) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
--spec(stop(State) -> term() when State :: term()).
+-spec(stop(State :: term()) -> term()).
 stop(_State) ->
     ok.
 
