@@ -1,0 +1,3 @@
+form ('-module('twoForms').')
+WHITE_SPACE ('\n\n')
+form ('-define(X, 3).')

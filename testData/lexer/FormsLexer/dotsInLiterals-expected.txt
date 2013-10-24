@@ -1,0 +1,7 @@
+form ('-module('dotsInStringLiterals').')
+WHITE_SPACE ('\n\n')
+form ('foo() -> "  .   .    .".')
+WHITE_SPACE ('\n\n')
+form ('bar() -> '\n.\n'.')
+WHITE_SPACE ('\n\n')
+form ('f() -> $.\n.')

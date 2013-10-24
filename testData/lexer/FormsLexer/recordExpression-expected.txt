@@ -1,0 +1,5 @@
+form ('-module('recordExpression').')
+WHITE_SPACE ('\n\n')
+form ('-record(rec, {field}).')
+WHITE_SPACE ('\n\n')
+form ('foo(X) -> X#rec.field.')

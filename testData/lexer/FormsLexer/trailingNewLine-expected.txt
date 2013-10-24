@@ -1,0 +1,2 @@
+form ('-module('trailingNewLine').')
+WHITE_SPACE ('\n')
