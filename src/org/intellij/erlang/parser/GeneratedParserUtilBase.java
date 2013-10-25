@@ -675,7 +675,7 @@ public class GeneratedParserUtilBase {
       state.completionState = file == null? null: file.getUserData(COMPLETION_STATE_KEY);
       Language language = file == null? root.getLanguage() : file.getLanguage();
       state.caseSensitive = language.isCaseSensitive();
-      PairedBraceMatcher matcher = ApplicationManager.getApplication().isUnitTestMode() ? null : LanguageBraceMatching.INSTANCE.forLanguage(language);
+      PairedBraceMatcher matcher = LanguageBraceMatching.INSTANCE.forLanguage(language);
       state.braces = matcher == null ? null : matcher.getPairs();
       if (state.braces != null && state.braces.length == 0) state.braces = null;
     }

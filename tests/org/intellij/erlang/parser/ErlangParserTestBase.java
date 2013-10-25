@@ -16,7 +16,10 @@
 
 package org.intellij.erlang.parser;
 
+import com.intellij.core.CoreApplicationEnvironment;
+import com.intellij.lang.LanguageExtensionPoint;
 import com.intellij.lang.ParserDefinition;
+import com.intellij.openapi.extensions.Extensions;
 import com.intellij.testFramework.ParsingTestCase;
 
 /**
@@ -46,4 +49,11 @@ public abstract class ErlangParserTestBase extends ParsingTestCase {
       );
     }
   }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    CoreApplicationEnvironment.registerExtensionPoint(Extensions.getRootArea(), "com.intellij.lang.braceMatcher", LanguageExtensionPoint.class);
+  }
+
 }
