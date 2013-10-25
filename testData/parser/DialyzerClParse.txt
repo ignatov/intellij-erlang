@@ -93,7 +93,7 @@ ERL_FILE
                   PsiElement(atom)(''check_init'')
           PsiElement(,)(',')
           ERL_TOP_TYPE
-            ERL_RECORD_TYPE
+            ERL_TYPE
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
@@ -112,7 +112,7 @@ ERL_FILE
                     PsiElement(atom)(''plt_info'')
             PsiElement(,)(',')
             ERL_TOP_TYPE
-              ERL_RECORD_TYPE
+              ERL_TYPE
                 PsiElement(#)('#')
                 ERL_RECORD_REF
                   ERL_Q_ATOM
@@ -131,7 +131,7 @@ ERL_FILE
                       PsiElement(atom)(''cl'')
               PsiElement(,)(',')
               ERL_TOP_TYPE
-                ERL_RECORD_TYPE
+                ERL_TYPE
                   PsiElement(#)('#')
                   ERL_RECORD_REF
                     ERL_Q_ATOM
@@ -166,7 +166,7 @@ ERL_FILE
                     PsiElement(})('}')
                 PsiElement(,)(',')
                 ERL_TOP_TYPE
-                  ERL_RECORD_TYPE
+                  ERL_TYPE
                     PsiElement(#)('#')
                     ERL_RECORD_REF
                       ERL_Q_ATOM

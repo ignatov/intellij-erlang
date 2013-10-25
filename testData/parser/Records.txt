@@ -990,7 +990,7 @@ ERL_FILE
           ERL_TYPE
             PsiElement([)('[')
             ERL_TOP_TYPE
-              ERL_RECORD_TYPE
+              ERL_TYPE
                 PsiElement(#)('#')
                 ERL_RECORD_REF
                   ERL_Q_ATOM

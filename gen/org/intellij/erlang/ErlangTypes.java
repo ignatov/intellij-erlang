@@ -105,7 +105,6 @@ public interface ErlangTypes {
   IElementType ERL_RECORD_LIKE_TYPE = new ErlangCompositeElementType("ERL_RECORD_LIKE_TYPE");
   IElementType ERL_RECORD_REF = new ErlangCompositeElementType("ERL_RECORD_REF");
   IElementType ERL_RECORD_TUPLE = new ErlangCompositeElementType("ERL_RECORD_TUPLE");
-  IElementType ERL_RECORD_TYPE = new ErlangCompositeElementType("ERL_RECORD_TYPE");
   IElementType ERL_RULE = new ErlangCompositeElementType("ERL_RULE");
   IElementType ERL_RULE_BODY = new ErlangCompositeElementType("ERL_RULE_BODY");
   IElementType ERL_RULE_CLAUSE = new ErlangCompositeElementType("ERL_RULE_CLAUSE");
@@ -490,9 +489,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_RECORD_TUPLE) {
         return new ErlangRecordTupleImpl(node);
-      }
-      else if (type == ERL_RECORD_TYPE) {
-        return new ErlangRecordTypeImpl(node);
       }
       else if (type == ERL_RULE) {
         return new ErlangRuleImpl(node);

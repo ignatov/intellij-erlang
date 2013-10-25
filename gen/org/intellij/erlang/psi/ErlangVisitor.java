@@ -393,10 +393,6 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
-  public void visitRecordType(@NotNull ErlangRecordType o) {
-    visitType(o);
-  }
-
   public void visitRule(@NotNull ErlangRule o) {
     visitCompositeElement(o);
   }

@@ -35,6 +35,12 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
 
   @Override
   @Nullable
+  public ErlangRecordRef getRecordRef() {
+    return findChildByClass(ErlangRecordRef.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangTopType getTopType() {
     return findChildByClass(ErlangTopType.class);
   }
