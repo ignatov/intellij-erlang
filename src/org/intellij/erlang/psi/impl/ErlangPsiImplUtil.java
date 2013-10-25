@@ -40,9 +40,12 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.patterns.PatternCondition;
+import com.intellij.patterns.PsiElementPattern;
 import com.intellij.psi.*;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.ResolveScopeManager;
+import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -52,6 +55,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
@@ -68,6 +72,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.*;
+
+import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_MACROS = ContainerUtil.set("MODULE", "MODULE_NAME", "FILE", "LINE", "MACHINE");
@@ -89,6 +95,11 @@ public class ErlangPsiImplUtil {
   @Nullable
   public static PsiReference getReference(@NotNull ErlangQVar o) {
     return new ErlangVariableReferenceImpl(o, TextRange.from(0, o.getTextLength()));
+  }
+  
+  @Nullable
+  public static PsiReference getReference(@NotNull ErlangQAtom o) {
+    return ArrayUtil.getFirstElement(ReferenceProvidersRegistry.getReferencesFromProviders(o));
   }
 
   public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
@@ -639,7 +650,10 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangRecordRef o) {
-    ErlangQAtom atom = o.getQAtom();
+    return createRecordRef(o.getQAtom());
+  }
+
+  public static ErlangRecordReferenceImpl<ErlangQAtom> createRecordRef(@NotNull ErlangQAtom atom) {
     return new ErlangRecordReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getMacros() == null ? atom.getTextLength() : 1), atom.getText());
   }
 
@@ -728,6 +742,11 @@ public class ErlangPsiImplUtil {
     return o.getNameIdentifier().getTextOffset();
   }
 
+  @NotNull
+  public static String getName(@NotNull ErlangFunctionCallExpression o) {
+    return o.getNameIdentifier().getText();
+  }
+  
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangFunctionCallExpression o) {
     return o.getQAtom();
@@ -1416,5 +1435,40 @@ public class ErlangPsiImplUtil {
       }
     });
     return result.get();
+  }
+
+  public static PsiElementPattern.Capture<ErlangQAtom> secondAtomInIsRecord() {
+    return psiElement(ErlangQAtom.class).with(inIsRecord(1));
+  }
+
+  public static <T extends PsiElement >ErlangFunctionCallParameter<T> inIsRecord(int position) {
+    return new ErlangFunctionCallParameter<T>("is_record", position);
+  }
+
+  public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {
+    private final String myFunName;
+    private final int myPosition;
+
+    public ErlangFunctionCallParameter(@NotNull String funName, int position) {
+      super("functionCallParameter");
+      myFunName = funName;
+      myPosition = position;
+    }
+
+    @Override
+    public boolean accepts(@NotNull T element, ProcessingContext context) {
+      ErlangExpression expr = PsiTreeUtil.getParentOfType(element, ErlangExpression.class, false);
+      if (expr == null) return false;
+      PsiElement list = expr.getParent();
+      if (list instanceof ErlangArgumentList) {
+        PsiElement funCall = list.getParent();
+        List<ErlangExpression> expressions = ((ErlangArgumentList) list).getExpressionList();
+        if (!(expressions.size() > myPosition && expressions.get(myPosition) == expr)) return false;
+        if (funCall instanceof ErlangFunctionCallExpression) {
+          return ((ErlangFunctionCallExpression) funCall).getQAtom().getText().equals(myFunName);
+        }
+      }
+      return false;
+    }
   }
 }

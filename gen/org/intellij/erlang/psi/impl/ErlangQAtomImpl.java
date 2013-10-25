@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements ErlangQAtom {
 
@@ -37,6 +38,11 @@ public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements Erlan
   @Nullable
   public PsiElement getAtom() {
     return findChildByType(ERL_ATOM);
+  }
+
+  @Nullable
+  public PsiReference getReference() {
+    return ErlangPsiImplUtil.getReference(this);
   }
 
 }

@@ -105,7 +105,7 @@ private form ::=
 private is_app_config ::= &<<isApplicationLanguage>>
 private is_console ::= &<<isConsole>>
 
-q_atom ::= atom | macros_arg | macros
+q_atom ::= atom | macros_arg | macros {methods=[getReference]}
 q_var ::= '_' | var {
   methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
 }

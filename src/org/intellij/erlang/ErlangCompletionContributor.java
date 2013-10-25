@@ -104,9 +104,15 @@ public class ErlangCompletionContributor extends CompletionContributor {
       || is(previousByOffset, ErlangTypes.ERL_RADIX)
       || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField
       || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) && !is(previousByOffset, ErlangTypes.ERL_OP_EQ)
-      || typeParent != null) {
+      || typeParent != null || isRecordFunctionCallCompletion(previousByOffset)) {
       context.setDummyIdentifier("a");
     }
+  }
+
+  private static boolean isRecordFunctionCallCompletion(@Nullable PsiElement previousByOffset) {
+    PsiElement prevSibling = previousByOffset != null ? previousByOffset.getPrevSibling() : null;
+    if (prevSibling == null) return false;
+    return is(previousByOffset, ErlangTypes.ERL_COMMA) && ErlangPsiImplUtil.inIsRecord(0).accepts(prevSibling, new ProcessingContext());
   }
 
   private static boolean is(@Nullable PsiElement element, IElementType type) {
