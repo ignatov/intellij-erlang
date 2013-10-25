@@ -76,5 +76,4 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
 
     return fieldNames;
   }
-
 }
