@@ -51,6 +51,7 @@ import org.intellij.erlang.resolve.ErlangSmallIdeIncludeResolveTest;
 import org.intellij.erlang.sdk.ErlangSdkReleaseTest;
 import org.intellij.erlang.typing.ErlangEnterHandlerTest;
 import org.intellij.erlang.typing.ErlangSmartEnterClauseProcessorTest;
+import org.intellij.erlang.typing.ErlangTypedHandlerTest;
 
 /**
  * @author ignatov
@@ -90,6 +91,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangGenerateTest.class);
     suite.addTestSuite(ErlangInlineVariableTest.class);
     suite.addTestSuite(ErlangGotoSuperTest.class);
+    suite.addTestSuite(ErlangTypedHandlerTest.class);
     suite.addTestSuite(ErlangEnterHandlerTest.class);
     suite.addTestSuite(ErlangIncludeLibResolveTest.class);
     suite.addTestSuite(ErlangIncludeResolveTest.class);

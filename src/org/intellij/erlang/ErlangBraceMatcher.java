@@ -19,6 +19,7 @@ package org.intellij.erlang;
 import com.intellij.lang.BracePair;
 import com.intellij.lang.PairedBraceMatcher;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,8 +47,15 @@ public class ErlangBraceMatcher implements PairedBraceMatcher {
   }
 
   @Override
-  public boolean isPairedBracesAllowedBeforeType(@NotNull IElementType lbraceType, @Nullable IElementType contextType) {
-    return true;
+  public boolean isPairedBracesAllowedBeforeType(@NotNull IElementType lbraceType, @Nullable IElementType type) {
+    return TokenType.WHITE_SPACE == type
+      || ErlangParserDefinition.COMMENTS.contains(type)
+      || type == ErlangTypes.ERL_SEMI
+      || type == ErlangTypes.ERL_COMMA
+      || type == ErlangTypes.ERL_PAR_RIGHT
+      || type == ErlangTypes.ERL_BRACKET_RIGHT
+      || type == ErlangTypes.ERL_CURLY_RIGHT
+      || null == type;
   }
 
   @Override
