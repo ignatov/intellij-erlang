@@ -44,18 +44,17 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
     PsiElement element = descriptor.getPsiElement();
 
-    if (element instanceof ErlangRecordRef) {
-      PsiElement record = ErlangElementFactory.createRecordFromText(project, element.getText(), ArrayUtil.toStringArray(getFieldNames((ErlangRecordRef) element)));
-      PsiFile file = element.getContainingFile();
+    List<String> fieldNames = element instanceof ErlangRecordRef ? getFieldNames((ErlangRecordRef) element) : ContainerUtil.<String>emptyList();
+    PsiElement record = ErlangElementFactory.createRecordFromText(project, element.getText(), ArrayUtil.toStringArray(fieldNames));
+    PsiFile file = element.getContainingFile();
 
-      if (file instanceof ErlangFile) {
-        ErlangCompositeElement elementBefore = getAnchorElement((ErlangFile) file);
+    if (file instanceof ErlangFile) {
+      ErlangCompositeElement elementBefore = getAnchorElement((ErlangFile) file);
 
-        if (elementBefore != null) {
-          file.addBefore(record, elementBefore);
-          String newLines = elementBefore instanceof ErlangRecordDefinition ? "\n" : "\n\n";
-          file.addBefore(ErlangElementFactory.createLeafFromText(project, newLines), elementBefore);
-        }
+      if (elementBefore != null) {
+        file.addBefore(record, elementBefore);
+        String newLines = elementBefore instanceof ErlangRecordDefinition ? "\n" : "\n\n";
+        file.addBefore(ErlangElementFactory.createLeafFromText(project, newLines), elementBefore);
       }
     }
   }
