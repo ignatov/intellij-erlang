@@ -831,8 +831,6 @@ get_apply_fail_msg(Fun, Args, ArgTypes, NewArgTypes,
 %% returns 'true' if we are running with opaque on (not checked yet),
 %% and there is either a contract or hard-coded type information with
 %% opaque types
-%% TODO: check that we are running with opaque types
-%% TODO: check the return type also
 prefer_opaque_types(CArgs, BifArgs) ->
   t_contains_opaque(t_product(CArgs))
     orelse t_contains_opaque(t_product(BifArgs)).

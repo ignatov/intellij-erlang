@@ -223,7 +223,7 @@ write(Io, Term) ->
               | {'error', ErrorInfo :: erl_scan:error_info()}.
 
 % Read does not use get_until as erl_scan does not work with unicode
-% XXX:PaN fixme?
+% XXX:PaN
 read(Prompt) ->
     read(default_input(), Prompt).
 

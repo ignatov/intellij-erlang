@@ -11770,8 +11770,6 @@ ERL_FILE
   PsiComment(function_doc_comment)('%% returns 'true' if we are running with opaque on (not checked yet),')
   PsiComment(function_doc_comment)('%% and there is either a contract or hard-coded type information with')
   PsiComment(function_doc_comment)('%% opaque types')
-  PsiComment(function_doc_comment)('%% TODO: check that we are running with opaque types')
-  PsiComment(function_doc_comment)('%% TODO: check the return type also')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

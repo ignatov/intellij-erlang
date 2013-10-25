@@ -23,7 +23,7 @@ get_profile(APIKey, DeviceID) when is_binary(APIKey),
     [{_, _, _, Pid}] ->
       case is_process_alive(Pid) of
         true ->
-          gen_server:<warning>call</warning>(Pid, {get_profile, DeviceID}); % todo: mock it
+          gen_server:<warning>call</warning>(Pid, {get_profile, DeviceID}); % mock it
         false ->
           lager:error("Cache worker is no longer alive! APIKey=~p", [APIKey]),
           invalid_pid

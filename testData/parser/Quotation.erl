@@ -18,7 +18,6 @@ read_chunk_length() ->
 %% @doc  Parse a Content-Type like header, return the main Content-Type
 %%       and a property list of options.
 parse_header(String) ->
-  %% TODO: This is exactly as broken as Python's cgi module.
   %%       Should parse properly like mochiweb_cookies.
   [Type | Parts] = [string:strip(S) || S <- string:tokens(String, ";")],
   F = fun (S, Acc) ->

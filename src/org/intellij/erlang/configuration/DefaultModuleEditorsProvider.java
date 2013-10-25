@@ -53,8 +53,7 @@ public class DefaultModuleEditorsProvider implements ModuleConfigurationEditorPr
 
     protected JComponent createComponentImpl() {
       JComponent component = super.createComponentImpl();
-      component.remove(1);
-//      component.remove(1); // todo: looks ugly
+      component.remove(1); // todo: looks ugly
       return component;
     }
   }
