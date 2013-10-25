@@ -24,12 +24,14 @@ import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.codeStyle.LanguageCodeStyleSettingsProvider;
 import org.intellij.erlang.ErlangLanguage;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author ignatov
  */
 public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSettingsProvider {
   public static final String AROUND_OPERATORS = "Around Operators";
+  public static final String ALIGNMENT = "Alignment";
 
   @NotNull
   @Override
@@ -96,27 +98,37 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
     else if (settingsType == SettingsType.WRAPPING_AND_BRACES_SETTINGS) {
       consumer.showStandardOptions(
 //        "KEEP_LINE_BREAKS",
-        "KEEP_FIRST_COLUMN_COMMENT"//,
-//        "CALL_PARAMETERS_WRAP",
+        "KEEP_FIRST_COLUMN_COMMENT",
+        "CALL_PARAMETERS_WRAP",
 //        "CALL_PARAMETERS_LPAREN_ON_NEXT_LINE",
 //        "CALL_PARAMETERS_RPAREN_ON_NEXT_LINE",
-//        "METHOD_PARAMETERS_WRAP",
+        "METHOD_PARAMETERS_WRAP",
 //        "METHOD_PARAMETERS_LPAREN_ON_NEXT_LINE",
 //        "METHOD_PARAMETERS_RPAREN_ON_NEXT_LINE",
 //        "ALIGN_MULTILINE_PARAMETERS",
 //        "ALIGN_MULTILINE_PARAMETERS_IN_CALLS",
 //        "ALIGN_MULTILINE_BINARY_OPERATION",
-//        "BINARY_OPERATION_WRAP",
+        "BINARY_OPERATION_WRAP"
 //        "BINARY_OPERATION_SIGN_ON_NEXT_LINE",
 //        "PARENTHESES_EXPRESSION_LPAREN_WRAP",
 //        "PARENTHESES_EXPRESSION_RPAREN_WRAP"
       );
-      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_MULTILINE_BLOCK", "Blocks (fun...end, etc)", "Alignment");
-      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_FUNCTION_CLAUSES", "Function clauses", "Alignment");
-      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_GUARDS", "Guards", "Alignment");
+      
+      consumer.renameStandardOption("CALL_PARAMETERS_WRAP", "Call arguments");
+      consumer.renameStandardOption("METHOD_PARAMETERS_WRAP", "Function parameters");
+      
+      showCustomWrapOption(consumer, "EXPRESSION_IN_CLAUSE_WRAP", "Expression in clause", null);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_MULTILINE_BLOCK", "Blocks (fun...end, etc)", ALIGNMENT);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_FUNCTION_CLAUSES", "Function clauses", ALIGNMENT);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_GUARDS", "Guards", ALIGNMENT);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "INDENT_RELATIVE", "Honor relative", null);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "NEW_LINE_BEFORE_COMMA", "Comma first style", null);
     }
+  }
+
+  private static void showCustomWrapOption(CodeStyleSettingsCustomizable consumer, String name, String title, @Nullable String groupName) {
+    consumer.showCustomOption(ErlangCodeStyleSettings.class, name, title, groupName, 
+      CodeStyleSettingsCustomizable.WRAP_OPTIONS, CodeStyleSettingsCustomizable.WRAP_VALUES);
   }
 
   private static final String DEFAULT_CODE_SAMPLE =

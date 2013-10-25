@@ -18,7 +18,9 @@ package org.intellij.erlang.formatter.settings;
 
 import com.intellij.application.options.CodeStyleAbstractConfigurable;
 import com.intellij.application.options.CodeStyleAbstractPanel;
+import com.intellij.application.options.TabbedLanguageCodeStylePanel;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
+import org.intellij.erlang.ErlangLanguage;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -37,5 +39,11 @@ public class ErlangCodeStyleConfigurable extends CodeStyleAbstractConfigurable {
   @Override
   public String getHelpTopic() {
     return null;
+  }
+
+  private static class ErlangCodeStyleMainPanel extends TabbedLanguageCodeStylePanel {
+    private ErlangCodeStyleMainPanel(CodeStyleSettings currentSettings, CodeStyleSettings settings) {
+      super(ErlangLanguage.INSTANCE, currentSettings, settings);
+    }
   }
 }

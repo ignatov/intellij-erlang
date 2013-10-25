@@ -23,6 +23,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.formatter.WrappingUtil;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
@@ -111,14 +112,47 @@ public class ErlangFormattingBlock extends AbstractBlock {
     Alignment baseAlignment2 = Alignment.createAlignment(true);
     AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
 
+    Wrap chopDownIfLongWrap = null;
     for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
       IElementType childType = child.getElementType();
       if (child.getTextRange().getLength() == 0 || childType == TokenType.WHITE_SPACE) continue;
 
       Alignment alignment = getAlignment(getNode(), child, baseAlignment, baseAlignment2);
-      blocks.add(new ErlangFormattingBlock(child, alignment, alignmentStrategy, null, mySettings, myErlangSettings, mySpacingBuilder));
+      
+      WrapType wrapType = calculateWrapType(getNode(), child);
+      
+      Wrap wrap;
+      if (wrapType == WrapType.CHOP_DOWN_IF_LONG) {
+        chopDownIfLongWrap = chopDownIfLongWrap == null ? Wrap.createWrap(wrapType, true) : chopDownIfLongWrap;
+        wrap = chopDownIfLongWrap;
+      }
+      else if (wrapType == null) {
+        wrap = null;
+      }
+      else {
+        wrap = Wrap.createWrap(wrapType, true);
+      }
+      
+      blocks.add(new ErlangFormattingBlock(child, alignment, alignmentStrategy, wrap, mySettings, myErlangSettings, mySpacingBuilder));
     }
     return Collections.unmodifiableList(blocks);
+  }
+
+  @Nullable
+  private WrapType calculateWrapType(@NotNull ASTNode parent, @NotNull ASTNode node) {
+    IElementType parentType = parent.getElementType();
+    PsiElement nodePsi = node.getPsi();
+    PsiElement parentPsi = parent.getPsi();
+    if (parentType == ERL_CLAUSE_BODY && nodePsi instanceof ErlangExpression) {
+      return WrappingUtil.getWrapType(myErlangSettings.EXPRESSION_IN_CLAUSE_WRAP);
+    }
+    if (parentType == ERL_ARGUMENT_LIST && nodePsi instanceof ErlangExpression) {
+      return WrappingUtil.getWrapType(mySettings.CALL_PARAMETERS_WRAP);
+    }
+    if (parentPsi instanceof ErlangFakeBinaryExpression && nodePsi instanceof ErlangExpression) {
+      return WrappingUtil.getWrapType(mySettings.BINARY_OPERATION_WRAP);
+    }
+    return null;
   }
 
   @Nullable
