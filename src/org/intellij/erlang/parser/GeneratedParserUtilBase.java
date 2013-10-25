@@ -20,6 +20,7 @@ import com.intellij.lang.*;
 import com.intellij.lang.impl.PsiBuilderAdapter;
 import com.intellij.lang.impl.PsiBuilderImpl;
 import com.intellij.lexer.Lexer;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
@@ -674,7 +675,7 @@ public class GeneratedParserUtilBase {
       state.completionState = file == null? null: file.getUserData(COMPLETION_STATE_KEY);
       Language language = file == null? root.getLanguage() : file.getLanguage();
       state.caseSensitive = language.isCaseSensitive();
-      PairedBraceMatcher matcher = LanguageBraceMatching.INSTANCE.forLanguage(language);
+      PairedBraceMatcher matcher = ApplicationManager.getApplication().isUnitTestMode() ? null : LanguageBraceMatching.INSTANCE.forLanguage(language);
       state.braces = matcher == null ? null : matcher.getPairs();
       if (state.braces != null && state.braces.length == 0) state.braces = null;
     }
