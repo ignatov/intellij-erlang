@@ -100,5 +100,7 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
     }
   }
 
+  protected void doSmartTest(String text, CheckType type, String... variants) throws Throwable { doTestVariants(text, CompletionType.SMART, 1, type, variants); }
+
   protected enum CheckType { EQUALS, INCLUDES, EXCLUDES }
 }

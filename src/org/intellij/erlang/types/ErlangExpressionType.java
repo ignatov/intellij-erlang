@@ -49,6 +49,10 @@ public abstract class ErlangExpressionType {
     return "ErlangExpressionType{'" + myName + "'}";
   }
 
+  public boolean accept(ErlangExpressionType type) {
+    return equals(type);
+  }
+
   public static class ErlangPrimitiveType extends ErlangExpressionType {
     public ErlangPrimitiveType(@NotNull String name) {
       super(name);
@@ -59,22 +63,28 @@ public abstract class ErlangExpressionType {
   public static final ErlangExpressionType FUN        = new ErlangPrimitiveType("FUN");
   public static final ErlangExpressionType INTEGER    = new ErlangPrimitiveType("INTEGER");
   public static final ErlangExpressionType CHAR       = new ErlangPrimitiveType("CHAR");
-  public static final ErlangExpressionType LIST       = new ErlangPrimitiveType("LIST");
   public static final ErlangExpressionType IOLIST     = new ErlangPrimitiveType("IOLIST");
   public static final ErlangExpressionType TUPLE      = new ErlangPrimitiveType("TUPLE");
   public static final ErlangExpressionType ATOM       = new ErlangPrimitiveType("ATOM");
   public static final ErlangExpressionType BINARY     = new ErlangPrimitiveType("BINARY");
   public static final ErlangExpressionType BITSTRING  = new ErlangPrimitiveType("BITSTRING");
+  public static final ErlangExpressionType STRING     = new ErlangPrimitiveType("STRING");
   public static final ErlangExpressionType PID        = new ErlangPrimitiveType("PID");
   public static final ErlangExpressionType PORT       = new ErlangPrimitiveType("PORT");
   public static final ErlangExpressionType REF        = new ErlangPrimitiveType("REF");
   public static final ErlangExpressionType TERM       = new ErlangPrimitiveType("TERM");
   public static final ErlangExpressionType BOOLEAN    = new ErlangPrimitiveType("BOOLEAN");
   public static final ErlangExpressionType UNKNOWN    = new ErlangPrimitiveType("UNKNOWN");
+  public static final ErlangExpressionType LIST       = new ErlangPrimitiveType("LIST") {
+    @Override
+    public boolean accept(ErlangExpressionType type) {
+      return super.accept(type) || type.equals(STRING);
+    }
+  };
 
   public static final Map<String , ErlangExpressionType> TYPE_MAP = ContainerUtil.newMapFromValues(
     ContainerUtil.<ErlangExpressionType>list(
-      FLOAT, FUN, INTEGER, LIST, IOLIST, TUPLE, ATOM, BINARY, BITSTRING, PID, PORT, REF, TERM, BOOLEAN
+      FLOAT, FUN, INTEGER, LIST, IOLIST, TUPLE, ATOM, BINARY, BITSTRING, STRING, PID, PORT, REF, TERM, BOOLEAN
     ).iterator(), new Convertor<ErlangExpressionType, String>() {
       @Override
       public String convert(ErlangExpressionType erlangExpressionType) {
@@ -148,7 +158,7 @@ public abstract class ErlangExpressionType {
 
       @Override
       public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
-        ref.set(LIST);
+        ref.set(STRING);
       }
 
       @Override
@@ -176,5 +186,19 @@ public abstract class ErlangExpressionType {
       if (expressionType != null) return expressionType;
     }
     return UNKNOWN;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ErlangExpressionType that = (ErlangExpressionType) o;
+    if (myName != null ? !myName.equals(that.myName) : that.myName != null) return false;
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return myName != null ? myName.hashCode() : 0;
   }
 }

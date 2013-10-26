@@ -240,18 +240,28 @@ public class ErlangCompletionContributor extends CompletionContributor {
             ErlangExpression right = assign != null ? assign.getRight() : null;
             ErlangExpressionType varType = ErlangExpressionType.create(right);
 
-            if (expectedTypes.contains(varType)) result.addElement(LookupElementBuilder.create(v).withIcon(ErlangIcons.VARIABLE));
+            if (contains(expectedTypes, varType)) {
+              result.addElement(LookupElementBuilder.create(v).withIcon(ErlangIcons.VARIABLE));
+            }
           }
         }
 
+        if (clause == null) return;
         List<LookupElement> functionLookupElements = ErlangPsiImplUtil.getFunctionLookupElements(clause.getContainingFile(), false, null);
         for (LookupElement lookupElement : functionLookupElements) {
           PsiElement psiElement = lookupElement.getPsiElement();
           if (psiElement instanceof ErlangFunction) {
             ErlangExpressionType erlangExpressionType = ErlangExpressionType.calculateFunctionType((ErlangFunction) psiElement);
-            if (expectedTypes.contains(erlangExpressionType)) result.addElement(lookupElement);
+            if (contains(expectedTypes, erlangExpressionType)) result.addElement(lookupElement);
           }
         }
+      }
+
+      private boolean contains(Set<ErlangExpressionType> expectedTypes, ErlangExpressionType varType) {
+        for (ErlangExpressionType type : expectedTypes) {
+          if (type.accept(varType)) return true;
+        }
+        return false;
       }
 
       @NotNull
@@ -275,16 +285,23 @@ public class ErlangCompletionContributor extends CompletionContributor {
               for (ErlangTypeSig sig : typeSigList) {
                 ErlangFunTypeArguments arguments = sig.getFunType().getFunTypeArguments();
                 ErlangType type = arguments.getTopTypeList().get(pos).getType();
-
-                ErlangTypeRef typeRef = type.getTypeRef();
-                ErlangExpressionType et = typeRef != null ? ErlangExpressionType.TYPE_MAP.get(typeRef.getText()) : null;
-                ContainerUtil.addIfNotNull(expectedTypes, et);
+                processType(type, expectedTypes);
               }
             }
           }
         } catch (Exception ignored) {
         }
         return expectedTypes;
+      }
+
+      private void processType(@NotNull ErlangType type, @NotNull Set<ErlangExpressionType> expectedTypes) {
+        for (PsiElement childType : type.getChildren()) {
+          if (childType instanceof ErlangType) processType((ErlangType) childType, expectedTypes);
+        }
+        ErlangTypeRef typeRef = type.getTypeRef();
+        String key = typeRef != null ? typeRef.getText() : type.getFirstChild().getText();
+        ErlangExpressionType et = ErlangExpressionType.TYPE_MAP.get(key);
+        ContainerUtil.addIfNotNull(expectedTypes, et);
       }
     });
   }

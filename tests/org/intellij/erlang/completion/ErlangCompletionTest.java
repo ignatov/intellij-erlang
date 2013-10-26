@@ -255,14 +255,27 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testSmartInteger() throws Throwable {
-    doTestVariants(
-      "-spec g(A :: integer()) -> integer().\n" +
+    doSmartTest("-spec g(A :: integer()) -> integer().\n" +
       "g(A) -> 1.\n" +
       "foo() ->\n" +
       "    B = 2 / 1,\n" +
       "    B2 = \"\",\n" +
       "    B4 = (1),\n" +
       "    B3 = 1 + 1*1,\n" +
-      "    g(<caret>);", CompletionType.SMART, 1, CheckType.EQUALS, "B4", "B3", "g");
+      "    g(<caret>);",
+      CheckType.EQUALS, "B4", "B3", "g");
+  }
+
+  public void testSmartCompositeTypes() throws Throwable {
+    doSmartTest(
+      "-spec new(Func::atom(), fun() | string()) -> integer().\n" +
+        "new(Func, StubFun) ->\n" +
+        "    Str = \"\",\n" +
+        "    Fun = fun () -> ok end,\n" +
+        "    Fun2 = fun () -> ok end,\n" +
+        "    new(atom, <caret>);\n" +
+        "new(Func, ClauseSpecs) -> ok.",
+      CheckType.EQUALS, "Fun", "Fun2" , "Str"
+    );
   }
 }
