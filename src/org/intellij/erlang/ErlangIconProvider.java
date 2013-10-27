@@ -28,6 +28,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
@@ -37,22 +38,24 @@ import javax.swing.*;
 public class ErlangIconProvider extends IconProvider implements DumbAware {
   @Override
   public Icon getIcon(@NotNull PsiElement element, @Iconable.IconFlags int flags) {
-    if (element instanceof ErlangFile) {
-      if (!element.isValid()) return null;
-      VirtualFile virtualFile = ((ErlangFile) element).getViewProvider().getVirtualFile();
-      FileType fileType = virtualFile.getFileType();
-      if (ErlangFileType.MODULE == fileType) {
-        ErlangModule module = ErlangPsiImplUtil.getModule((ErlangFile) element);
-        boolean isEunit = module != null && ErlangPsiImplUtil.isEunitTestFile((ErlangFile) element);
-        return isEunit ? ErlangIcons.EUNIT : getModuleType(((ErlangFile) element)).icon;
-      }
-      return fileType.getIcon();
+    return element instanceof ErlangFile ? getIcon((ErlangFile) element) : null;
+  }
+
+  @Nullable
+  public static Icon getIcon(@NotNull ErlangFile element) {
+    if (!element.isValid()) return null;
+    VirtualFile virtualFile = element.getViewProvider().getVirtualFile();
+    FileType fileType = virtualFile.getFileType();
+    if (ErlangFileType.MODULE == fileType) {
+      ErlangModule module = ErlangPsiImplUtil.getModule(element);
+      boolean isEunit = module != null && ErlangPsiImplUtil.isEunitTestFile(element);
+      return isEunit ? ErlangIcons.EUNIT : getModuleType(element).icon;
     }
-    return null;
+    return fileType.getIcon();
   }
 
   @NotNull
-  public static ModuleType getModuleType(ErlangFile file) {
+  public static ModuleType getModuleType(@NotNull ErlangFile file) {
     ModuleType type = ModuleType.REGULAR;
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       type = ModuleType.getType(behaviour.getName());

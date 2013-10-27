@@ -25,6 +25,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiNamedElement;
 import com.intellij.ui.RowIcon;
 import com.intellij.util.Function;
 import com.intellij.util.PlatformIcons;
@@ -186,6 +187,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       else if (myElement instanceof ErlangTypeDefinition) {
         return ErlangPsiImplUtil.createTypePresentation((ErlangTypeDefinition) myElement);
       }
+      else if (myElement instanceof PsiNamedElement) {
+        return ((PsiNamedElement) myElement).getName();
+      }
       throw new AssertionError(myElement.getClass().getName());
     }
 
@@ -217,6 +221,10 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       }
       else if (myElement instanceof ErlangTypeDefinition) {
         return ErlangIcons.TYPE;
+      }
+      else if (myElement instanceof ErlangModule) {
+        PsiFile file = myElement.getContainingFile();
+        return file instanceof ErlangFile ? ErlangIconProvider.getIcon((ErlangFile) file) : ErlangIcons.FILE;
       }
       return myElement.getIcon(0);
     }
