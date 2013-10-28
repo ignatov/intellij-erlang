@@ -7,7 +7,4 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangMacrosBody extends ErlangCompositeElement {
 
-  @NotNull
-  List<ErlangExpression> getExpressionList();
-
 }

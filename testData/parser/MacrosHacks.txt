@@ -15,25 +15,13 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_ADDITIVE_EXPRESSION
-        ERL_MULTIPLICATIVE_EXPRESSION
-          ERL_COLON_QUALIFIED_EXPRESSION
-            ERL_MAX_EXPRESSION
-              ERL_Q_VAR
-                PsiElement(var)('N')
-            PsiElement(:)(':')
-            ERL_MAX_EXPRESSION
-              PsiElement(integer)('32')
-          PsiElement(/)('/')
-          ERL_MAX_EXPRESSION
-            ERL_Q_ATOM
-              ERL_ATOM
-                PsiElement(atom_name)('signed')
-        PsiElement(-)('-')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('little')
+      PsiElement(var)('N')
+      PsiElement(:)(':')
+      PsiElement(integer)('32')
+      PsiElement(/)('/')
+      PsiElement(atom_name)('signed')
+      PsiElement(-)('-')
+      PsiElement(atom_name)('little')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION

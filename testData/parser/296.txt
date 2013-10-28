@@ -41,10 +41,7 @@ ERL_FILE
         PsiElement(atom_name)('test_func_macro')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_MAX_EXPRESSION
-        ERL_Q_ATOM
-          ERL_ATOM
-            PsiElement(atom_name)('test')
+      PsiElement(atom_name)('test')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
@@ -55,10 +52,7 @@ ERL_FILE
       PsiElement(var)('TRUE')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_MAX_EXPRESSION
-        ERL_Q_ATOM
-          ERL_ATOM
-            PsiElement(atom_name)('true')
+      PsiElement(atom_name)('true')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
@@ -100,8 +94,7 @@ ERL_FILE
         PsiElement(atom_name)('a')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_MAX_EXPRESSION
-        PsiElement(integer)('1')
+      PsiElement(integer)('1')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION

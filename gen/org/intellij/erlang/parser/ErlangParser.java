@@ -3094,51 +3094,13 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // expression ((',' | ';' | '->') expression)*
+  // <<consumeMacroBody>>
   public static boolean macros_body(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_body")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<macros body>");
-    r = expression(b, l + 1, -1);
-    p = r; // pin = 1
-    r = r && macros_body_1(b, l + 1);
-    exit_section_(b, l, m, ERL_MACROS_BODY, r, p, null);
-    return r || p;
-  }
-
-  // ((',' | ';' | '->') expression)*
-  private static boolean macros_body_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_1")) return false;
-    int c = current_position_(b);
-    while (true) {
-      if (!macros_body_1_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "macros_body_1", c)) break;
-      c = current_position_(b);
-    }
-    return true;
-  }
-
-  // (',' | ';' | '->') expression
-  private static boolean macros_body_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_1_0")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, null);
-    r = macros_body_1_0_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && expression(b, l + 1, -1);
-    exit_section_(b, l, m, null, r, p, null);
-    return r || p;
-  }
-
-  // ',' | ';' | '->'
-  private static boolean macros_body_1_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_1_0_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_COMMA);
-    if (!r) r = consumeToken(b, ERL_SEMI);
-    if (!r) r = consumeToken(b, ERL_ARROW);
-    exit_section_(b, m, null, r);
+    Marker m = enter_section_(b, l, _NONE_, "<macros body>");
+    r = consumeMacroBody(b, l + 1);
+    exit_section_(b, l, m, ERL_MACROS_BODY, r, false, null);
     return r;
   }
 

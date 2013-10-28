@@ -16,15 +16,9 @@
 
 package org.intellij.erlang.lexer;
 
-import com.intellij.psi.tree.IElementType;
-import org.intellij.erlang.psi.ErlangTokenType;
-
 /**
  * @author savenko
  */
-public interface ErlangInterimTokenTypes {
-  IElementType ANY = new ErlangTokenType("any");
-  IElementType FORM = new ErlangTokenType("form");
-  IElementType ERL_MACRO_BODY_BEGIN = new ErlangTokenType("macro_body_begin");
-  IElementType ERL_MACRO_BODY_END = new ErlangTokenType("macro_body_end");
+public class ErlangMacro {
+  //TODO implement me
 }

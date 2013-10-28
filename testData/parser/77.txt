@@ -14,25 +14,13 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-        ERL_MODULE_REF
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('erlang')
-        PsiElement(:)(':')
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('display')
-          ERL_ARGUMENT_LIST
-            PsiElement(()('(')
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                ERL_MACROS_ARG
-                  PsiElement(?)('?')
-                  PsiElement(?)('?')
-                  ERL_Q_VAR
-                    PsiElement(var)('A')
-            PsiElement())(')')
+      PsiElement(atom_name)('erlang')
+      PsiElement(:)(':')
+      PsiElement(atom_name)('display')
+      PsiElement(()('(')
+      PsiElement(?)('?')
+      PsiElement(?)('?')
+      PsiElement(var)('A')
+      PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')

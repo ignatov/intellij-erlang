@@ -45,26 +45,14 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-        ERL_MODULE_REF
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('io')
-        PsiElement(:)(':')
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('format')
-          ERL_ARGUMENT_LIST
-            PsiElement(()('(')
-            ERL_LIST_OP_EXPRESSION
-              ERL_STRING_LITERAL
-                PsiElement(string)('"dbg"')
-              PsiElement(++)('++')
-              ERL_MAX_EXPRESSION
-                ERL_Q_VAR
-                  PsiElement(var)('S')
-            PsiElement())(')')
+      PsiElement(atom_name)('io')
+      PsiElement(:)(':')
+      PsiElement(atom_name)('format')
+      PsiElement(()('(')
+      PsiElement(string)('"dbg"')
+      PsiElement(++)('++')
+      PsiElement(var)('S')
+      PsiElement())(')')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
@@ -86,10 +74,7 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_MAX_EXPRESSION
-        ERL_Q_ATOM
-          ERL_ATOM
-            PsiElement(atom_name)('ok')
+      PsiElement(atom_name)('ok')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_ATTRIBUTE

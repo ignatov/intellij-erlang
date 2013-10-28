@@ -137,7 +137,7 @@ macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ','
   methods = [getName setName getNameIdentifier getTextOffset]
   stubClass="org.intellij.erlang.stubs.ErlangMacrosDefinitionStub"
 }
-macros_body ::= expression ((',' | ';' | '->') expression)* {pin(".*")=1}
+macros_body ::= <<consumeMacroBody>>
 
 include ::= '-' 'include' '(' include_string ')' {
   pin=2

@@ -365,28 +365,16 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_GENERIC_FUNCTION_CALL_EXPRESSION
-        ERL_Q_VAR
-          PsiElement(var)('X')
-        ERL_ARGUMENT_LIST
-          PsiElement(()('(')
-          PsiElement())(')')
+      PsiElement(var)('X')
+      PsiElement(()('(')
+      PsiElement())(')')
       PsiElement(->)('->')
-      ERL_FUNCTION_CALL_EXPRESSION
-        ERL_Q_ATOM
-          ERL_ATOM
-            PsiElement(atom_name)('test_file')
-        ERL_ARGUMENT_LIST
-          PsiElement(()('(')
-          ERL_MAX_EXPRESSION
-            ERL_Q_VAR
-              PsiElement(var)('X')
-          PsiElement())(')')
+      PsiElement(atom_name)('test_file')
+      PsiElement(()('(')
+      PsiElement(var)('X')
+      PsiElement())(')')
       PsiElement(,)(',')
-      ERL_MAX_EXPRESSION
-        ERL_Q_ATOM
-          ERL_ATOM
-            PsiElement(atom_name)('ok')
+      PsiElement(atom_name)('ok')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_CALL

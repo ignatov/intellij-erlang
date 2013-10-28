@@ -51,13 +51,9 @@ ERL_FILE
         PsiElement(atom_name)('mmmm')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_TUPLE_EXPRESSION
-        PsiElement({)('{')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('id')
-        PsiElement(})('}')
+      PsiElement({)('{')
+      PsiElement(atom_name)('id')
+      PsiElement(})('}')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION

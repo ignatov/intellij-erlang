@@ -1288,12 +1288,8 @@ ERL_FILE
       PsiElement(var)('DEFAULT_ACCESS')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_MAX_EXPRESSION
-        ERL_Q_ATOM
-          ERL_MACROS
-            PsiElement(?)('?')
-            ERL_MACROS_NAME
-              PsiElement(var)('MODULE')
+      PsiElement(?)('?')
+      PsiElement(var)('MODULE')
     PsiElement())(')')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Select ')
@@ -1312,29 +1308,20 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_LIST_EXPRESSION
-        PsiElement([)('[')
-        ERL_TUPLE_EXPRESSION
-          PsiElement({)('{')
-          ERL_MAX_EXPRESSION
-            ERL_Q_VAR
-              PsiElement(var)('Pat')
-          PsiElement(,)(',')
-          ERL_LIST_EXPRESSION
-            PsiElement([)('[')
-            PsiElement(])(']')
-          PsiElement(,)(',')
-          ERL_LIST_EXPRESSION
-            PsiElement([)('[')
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                ERL_ATOM
-                  PsiElement(single_quote)(''')
-                  PsiElement(atom_name)('$_')
-                  PsiElement(single_quote)(''')
-            PsiElement(])(']')
-          PsiElement(})('}')
-        PsiElement(])(']')
+      PsiElement([)('[')
+      PsiElement({)('{')
+      PsiElement(var)('Pat')
+      PsiElement(,)(',')
+      PsiElement([)('[')
+      PsiElement(])(']')
+      PsiElement(,)(',')
+      PsiElement([)('[')
+      PsiElement(single_quote)(''')
+      PsiElement(atom_name)('$_')
+      PsiElement(single_quote)(''')
+      PsiElement(])(']')
+      PsiElement(})('}')
+      PsiElement(])(']')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
@@ -1352,29 +1339,20 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_LIST_EXPRESSION
-        PsiElement([)('[')
-        ERL_TUPLE_EXPRESSION
-          PsiElement({)('{')
-          ERL_MAX_EXPRESSION
-            ERL_Q_VAR
-              PsiElement(var)('Pat')
-          PsiElement(,)(',')
-          ERL_LIST_EXPRESSION
-            PsiElement([)('[')
-            PsiElement(])(']')
-          PsiElement(,)(',')
-          ERL_LIST_EXPRESSION
-            PsiElement([)('[')
-            ERL_MAX_EXPRESSION
-              ERL_Q_ATOM
-                ERL_ATOM
-                  PsiElement(single_quote)(''')
-                  PsiElement(atom_name)('$$')
-                  PsiElement(single_quote)(''')
-            PsiElement(])(']')
-          PsiElement(})('}')
-        PsiElement(])(']')
+      PsiElement([)('[')
+      PsiElement({)('{')
+      PsiElement(var)('Pat')
+      PsiElement(,)(',')
+      PsiElement([)('[')
+      PsiElement(])(']')
+      PsiElement(,)(',')
+      PsiElement([)('[')
+      PsiElement(single_quote)(''')
+      PsiElement(atom_name)('$$')
+      PsiElement(single_quote)(''')
+      PsiElement(])(']')
+      PsiElement(})('}')
+      PsiElement(])(']')
     PsiElement())(')')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%% Local function in order to avoid external function call')

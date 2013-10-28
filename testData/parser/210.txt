@@ -7,8 +7,7 @@ ERL_FILE
       PsiElement(var)('MACRO')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_STRING_LITERAL
-        PsiElement(string)('"macro"')
+      PsiElement(string)('"macro"')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION

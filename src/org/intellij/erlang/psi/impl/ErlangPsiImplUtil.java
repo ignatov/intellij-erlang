@@ -216,32 +216,33 @@ public class ErlangPsiImplUtil {
   }
 
    // for #149: Nitrogen support
-  private static void processRecordFields(@NotNull ErlangMacros macros, @NotNull List<ErlangQAtom> atoms) {
-    PsiReference psiReference = macros.getReference();
-    PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
-    if (macrosDefinition instanceof ErlangMacrosDefinition) {
-      ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
-      List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
-      for (ErlangExpression ee : expressionList) {
-        if (ee instanceof ErlangMaxExpression) {
-          ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
-          ContainerUtil.addIfNotNull(atoms, qAtom);
-        }
-        else if (ee instanceof ErlangAssignmentExpression) {
-          ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
-          if (left instanceof ErlangMaxExpression) {
-            ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
-            ContainerUtil.addIfNotNull(atoms, qAtom);
-          }
-        }
-        else if (ee instanceof ErlangFunctionCallExpression) {
-          ErlangMacros m = ((ErlangFunctionCallExpression) ee).getQAtom().getMacros();
-          if (m != null) {
-            processRecordFields(m, atoms);
-          }
-        }
-      }
-    }
+  private static void processRecordFields(ErlangMacros macros, List<ErlangQAtom> atoms) {
+//TODO provide alternative implementation
+//    PsiReference psiReference = macros.getReference();
+//    PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
+//    if (macrosDefinition instanceof ErlangMacrosDefinition) {
+//      ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
+//      List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
+//      for (ErlangExpression ee : expressionList) {
+//        if (ee instanceof ErlangMaxExpression){
+//          ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
+//          ContainerUtil.addIfNotNull(atoms, qAtom);
+//        }
+//        else if (ee instanceof ErlangAssignmentExpression) {
+//          ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
+//          if (left instanceof ErlangMaxExpression){
+//            ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
+//            ContainerUtil.addIfNotNull(atoms, qAtom);
+//          }
+//        }
+//        else if (ee instanceof ErlangFunctionCallExpression) {
+//          ErlangMacros m = ((ErlangFunctionCallExpression) ee).getQAtom().getMacros();
+//          if (m != null) {
+//            processRecordFields(m, atoms);
+//          }
+//        }
+//      }
+//    }
   }
 
   @Nullable

@@ -30,6 +30,7 @@ import com.intellij.psi.tree.TokenSet;
 import gnu.trove.TObjectLongHashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.lexer.ErlangInterimTokenTypes;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -122,5 +123,21 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       return true;
     }
     return false;
+  }
+
+  public static boolean consumeMacroBody(PsiBuilder builder_, int level_) {
+    if (builder_.getTokenType() != ErlangInterimTokenTypes.ERL_MACRO_BODY_BEGIN) return false;
+    PsiBuilder.Marker beforeMacroBody = builder_.mark();
+    builder_.advanceLexer();
+    while (builder_.getTokenType() != ErlangInterimTokenTypes.ERL_MACRO_BODY_END
+      && builder_.getTokenType() != null) {
+      if (!consumeToken(builder_, builder_.getTokenType())) {
+        beforeMacroBody.rollbackTo();
+        return false;
+      }
+    }
+    beforeMacroBody.drop();
+    builder_.advanceLexer();
+    return true;
   }
 }

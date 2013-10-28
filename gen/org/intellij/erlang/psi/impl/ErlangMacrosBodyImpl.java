@@ -21,10 +21,4 @@ public class ErlangMacrosBodyImpl extends ErlangCompositeElementImpl implements 
     else super.accept(visitor);
   }
 
-  @Override
-  @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
-  }
-
 }

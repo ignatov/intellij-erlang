@@ -7,12 +7,8 @@ ERL_FILE
       PsiElement(var)('VNODE_REQ')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_RECORD_EXPRESSION
-        PsiElement(#)('#')
-        ERL_RECORD_REF
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('riak_vnode_req_v1')
+      PsiElement(#)('#')
+      PsiElement(atom_name)('riak_vnode_req_v1')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
@@ -23,12 +19,8 @@ ERL_FILE
       PsiElement(var)('COVERAGE_REQ')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_RECORD_EXPRESSION
-        PsiElement(#)('#')
-        ERL_RECORD_REF
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('riak_coverage_req_v1')
+      PsiElement(#)('#')
+      PsiElement(atom_name)('riak_coverage_req_v1')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
@@ -39,12 +31,8 @@ ERL_FILE
       PsiElement(var)('FOLD_REQ')
     PsiElement(,)(',')
     ERL_MACROS_BODY
-      ERL_RECORD_EXPRESSION
-        PsiElement(#)('#')
-        ERL_RECORD_REF
-          ERL_Q_ATOM
-            ERL_ATOM
-              PsiElement(atom_name)('riak_core_fold_req_v1')
+      PsiElement(#)('#')
+      PsiElement(atom_name)('riak_core_fold_req_v1')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
