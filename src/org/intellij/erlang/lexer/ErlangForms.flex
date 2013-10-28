@@ -49,6 +49,8 @@ CharLiteral = \$.
 
 FormToken = {StringLiteral} | {QuotedAtomLiteral} | {CharLiteral} | .
 
+ElseAttribute = "-" ({Whitespace} | {ModuleDocCommentLine} | {FunctionDocCommentLine} | {CommentLine})* "else" \.?
+
 %state FORM
 
 %%
@@ -59,6 +61,7 @@ FormToken = {StringLiteral} | {QuotedAtomLiteral} | {CharLiteral} | .
 <YYINITIAL, FORM> {CommentLine}                 { return ERL_COMMENT; }
 <YYINITIAL, FORM> {Whitespace}                  { return com.intellij.psi.TokenType.WHITE_SPACE; }
 <YYINITIAL, FORM> {FormToken}                   { yybegin(FORM); return ANY; }
+<YYINITIAL>       {ElseAttribute}               { return org.intellij.erlang.lexer.ErlangInterimTokenTypes.FORM; }
 
 <FORM>            "."/ ({WhitespaceChar} | "%") { yybegin(YYINITIAL); return ANY; }
 <FORM>            <<EOF>>                       { yybegin(YYINITIAL); return null; }

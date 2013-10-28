@@ -44,6 +44,7 @@ public class ErlangFormsLexerTest extends LexerTestCase {
   public void testDotsInLiterals()   throws Exception { doTest(); }
   public void testIncompleteForm()   throws Exception { doTest(); }
   public void testCommentaries()     throws Exception { doTest(); }
+  public void testElseWithNoDot()    throws Exception { doTest(); } // see #304
 
   private void doTest() throws Exception {
     doTest(loadTestFile(), loadExpectedFile());
