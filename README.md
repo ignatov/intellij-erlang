@@ -11,7 +11,7 @@ If you would like to help, you may check out issues [for collaboration](https://
 Before sending a pull request please check that the **ErlangTestCase** is successfully passed. Moreover, new tests will be gladly accepted.
 
 ## Getting started with plugin development
-1. [Download](http://www.jetbrains.com/idea/download/) the latest 12.1 IntelliJ IDEA build and install it
+1. [Download](http://www.jetbrains.com/idea/download/) the latest 13 IntelliJ IDEA EAP build and install it
 1. Checkout plugin repo and open the project
 1. Setup [IDEA SDK](http://confluence.jetbrains.net/display/IDEADEV/Getting+Started+with+Plugin+Development#GettingStartedwithPluginDevelopment-anchor2):
 select the IDEA installation directory as SDK root
