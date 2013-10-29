@@ -73,7 +73,7 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 ### Version 0.4.5
 * Comment based injection
 * Dialyzer integration (experimental)
-* Introduce variable and function quickfixes
+* Introduce variable and function quick fixes
 * Faster module completion
 * Bugfixes
 
