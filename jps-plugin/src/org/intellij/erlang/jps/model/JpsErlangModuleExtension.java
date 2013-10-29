@@ -18,6 +18,10 @@ public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangM
 
   private final ErlangModuleExtensionProperties myProperties;
 
+  public JpsErlangModuleExtension() {
+    myProperties = new ErlangModuleExtensionProperties();
+  }
+
   public JpsErlangModuleExtension(ErlangModuleExtensionProperties properties) {
     myProperties = properties;
   }

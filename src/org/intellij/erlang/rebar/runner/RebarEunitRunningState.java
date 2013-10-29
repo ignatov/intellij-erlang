@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 
 /**
  * @author savenko
@@ -63,25 +62,17 @@ public class RebarEunitRunningState extends CommandLineState {
     });
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
-    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());
+    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction(getEnvironment()));
     return executionResult;
   }
 
   @NotNull
   private ConsoleView createConsoleView(Executor executor) throws ExecutionException {
-    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties((RebarRunConfigurationBase) getRunnerSettings().getRunProfile(), executor);
-
+    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties(myConfiguration, executor);
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_FAILURE_PATH));
-
-    return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(
-      "Rebar",
-      consoleProperties,
-      getRunnerSettings(),
-      getConfigurationSettings(),
-      new ErlangTestLocationProvider() // todo: new provider?
-    );
+    return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator("Rebar", consoleProperties, getEnvironment(), new ErlangTestLocationProvider());
   }
 
   @NotNull
@@ -101,7 +92,7 @@ public class RebarEunitRunningState extends CommandLineState {
   }
 
   private static void addEnvParams(GeneralCommandLine commandLine, File reportsRoot) {
-    commandLine.setEnvParams(Collections.singletonMap("ERL_FLAGS", "-pa " + reportsRoot.getPath()));
+    commandLine.getEnvironment().put("ERL_FLAGS", "-pa " + reportsRoot.getPath());
   }
 
   private File createEunitReportsEnvironment() throws ExecutionException {

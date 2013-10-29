@@ -3,6 +3,7 @@ package org.intellij.erlang.rebar.runner;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.Location;
+import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.testframework.AbstractTestProxy;
@@ -23,6 +24,7 @@ import com.intellij.openapi.ui.ComponentContainer;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
@@ -59,7 +61,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
   @NotNull
   @Override
-  protected Filter getFilter(Project project) {
+  protected Filter getFilter(Project project, GlobalSearchScope globalSearchScope) {
     return new Filter() {
       @Override
       public boolean shouldAccept(AbstractTestProxy test) {
@@ -73,7 +75,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
   public MyRunProfile getRunProfile() {
     TestFrameworkRunningModel model = getModel();
     if (model == null) return null;
-    return new MyRunProfile(model.getProperties().getConfiguration()) {
+    return new MyRunProfile((RunConfigurationBase) model.getProperties().getConfiguration()) {
       @NotNull
       @Override
       public Module[] getModules() {
@@ -95,7 +97,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
           @Nullable
           @Override
           public ErlangFunction fun(AbstractTestProxy testProxy) {
-            Location location = testProxy.getLocation(project);
+            Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
             PsiElement psiElement = location != null ? location.getPsiElement() : null;
             ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
             if (function != null && function.getArity() != 0) {

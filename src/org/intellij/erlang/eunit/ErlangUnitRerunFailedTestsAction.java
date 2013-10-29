@@ -19,6 +19,7 @@ package org.intellij.erlang.eunit;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.Location;
+import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.testframework.AbstractTestProxy;
@@ -29,6 +30,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComponentContainer;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +49,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
   @NotNull
   @Override
-  protected Filter getFilter(Project project) {
+  protected Filter getFilter(Project project, GlobalSearchScope scope) {
     return new Filter() {
       @Override
       public boolean shouldAccept(AbstractTestProxy test) {
@@ -61,7 +63,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
   public MyRunProfile getRunProfile() {
     TestFrameworkRunningModel model = getModel();
     if (model == null) return null;
-    return new MyRunProfile(model.getProperties().getConfiguration()) {
+    return new MyRunProfile((RunConfigurationBase) model.getProperties().getConfiguration()) {
       @NotNull
       @Override
       public Module[] getModules() {
@@ -84,7 +86,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
         LinkedHashSet<String> testsToRerun = new LinkedHashSet<String>();
         for (AbstractTestProxy testProxy : getFailedTests(project)) {
-          Location location = testProxy.getLocation(project);
+          Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
           PsiElement psiElement = location != null ? location.getPsiElement() : null;
 
           if (!(psiElement instanceof ErlangFunction)) continue;

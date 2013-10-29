@@ -53,8 +53,9 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
 
     String rebarExecutablePath = getRebarExecutablePath(project);
     if (rebarExecutablePath == null) {
-      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "Rebar path is not set"));
-      throw new ProjectBuildException();
+      String errorMessage = "Rebar path is not set";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, errorMessage));
+      throw new ProjectBuildException(errorMessage);
     }
 
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
@@ -79,8 +80,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     commandLine.addParameter("compile");
 
     if (addDebugInfo) {
-      commandLine.setEnvParams(Collections.singletonMap("ERL_FLAGS", "+debug_info"));
-      //commandLine.setEnvParams(Collections.singletonMap("ERL_COMPILER_OPTIONS", "debug_info"));
+      commandLine.getEnvironment().put("ERL_FLAGS", "+debug_info");
     }
 
     Process process;
