@@ -30,9 +30,17 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 ## Change log
 
 ### Version 0.5.x (Work in progress)
-* Type aware completion
 * Enhanced debugger
 * Preprocessing support
+
+### Version 0.5.2
+* Go to module action (Ctrl+N, Cmd+N for Mac OS X)
+* Better typing for some cases
+* Enhanced formatter
+* Type aware completion (experimental)
+* Record reference for the second argument of ```is_record/2```
+* Better built-in file templates (thanks to Volodymyr Kyrychenko)
+* Bugfixes
 
 ### Version 0.5.1
 * Erlang/OTP R16B02 support

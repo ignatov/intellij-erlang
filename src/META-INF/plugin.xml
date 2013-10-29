@@ -1,6 +1,6 @@
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.5.1</version>
+    <version>0.5.2</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
     <idea-version since-build="129.290" until-build="129.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -11,6 +11,16 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.5.2</p>
+            <ul>
+              <li>Go to module action (Ctrl+N, Cmd+N for Mac OS X)</li>
+              <li>Better typing for some cases</li>
+              <li>Enhanced formatter</li>
+              <li>Type aware completion (experimental)</li>
+              <li>Record reference for the second argument of ```is_record/2```</li>
+              <li>Better built-in file templates (thanks to Volodymyr Kyrychenko)</li>
+              <li>Bugfixes</li>
+            </ul>
             <p>0.5.1</p>
             <ul>
               <li>Erlang/OTP R16B02 support</li>
