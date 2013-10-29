@@ -245,6 +245,8 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.ErlangCompletionContributor"/>
         <renameInputValidator implementation="org.intellij.erlang.ErlangRenameInputValidator"/>
+        
+        <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor"/>
 
         <inlineActionHandler implementation="org.intellij.erlang.ErlangInlineVariableHandler"/>
 
