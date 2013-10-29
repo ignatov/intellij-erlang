@@ -41,11 +41,11 @@
               <li>Introduce macros quickfix</li>
               <li>Better auto indentation for some cases</li>
               <li>Debugger (experimental)</li>
-              <li>Introduce funtcion refactoring (experimental)</li>
+              <li>Introduce function refactoring (experimental)</li>
               <li>RubyMine and other "small IDEs" compatibility</li>
               <li>Go to super action for callback implementations</li>
               <li>Better EUnit support: run single test and rerun failed tests action</li>
-              <li>Enhanced native compililation: parse_transform and behaviour detection</li>
+              <li>Enhanced native compilation: parse_transform and behaviour detection</li>
               <li>Comma-first style support</li>
               <li>Enhanced color schema settings</li>
               <li>Rebar-based compilation</li>
@@ -55,7 +55,7 @@
             <ul>
               <li>Comment based injection</li>
               <li>Dialyzer integration (experimental)</li>
-              <li>Introduce variable and function quickfixes</li>
+              <li>Introduce variable and function quick fixes</li>
               <li>Faster module completion</li>
               <li>Better auto indentation for some cases</li>
               <li>Bugfixes</li>
@@ -139,7 +139,7 @@
             </ul>
             <p>0.3.2:</p>
             <ul>
-              <li>New quickfixes: export function, introduce record, introduce record field</li>
+              <li>New quick fixes: export function, introduce record, introduce record field</li>
               <li>Multi-reference for functions: ability to go to the function definition with mismatched arity</li>
               <li>Better parsing, highlighting, completion and formatting</li>
               <li>Bugfixes</li>
@@ -150,14 +150,14 @@
               <li>Highlighting for .config and .rebar files</li>
               <li>Live templates</li>
               <li>New icons</li>
-              <li>Formatter impovement</li>
+              <li>Formatter improvements</li>
               <li>Bugfixes</li>
             </ul>
             <p>0.3:</p>
             <ul>
               <li>Better completion</li>
               <li>Record fields support</li>
-              <li>Formatter impovement</li>
+              <li>Formatter improvements</li>
               <li>New file templates for 'New File' action</li>
               <li>Bugfixes</li>
             </ul>
