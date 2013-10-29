@@ -10,7 +10,6 @@ import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.indices.IgnoredFileIndex;
 import org.jetbrains.jps.indices.ModuleExcludeIndex;
 import org.jetbrains.jps.model.JpsModel;
-import org.jetbrains.jps.model.JpsSimpleElement;
 import org.jetbrains.jps.model.java.JavaSourceRootProperties;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.java.JpsJavaClasspathKind;
@@ -36,10 +35,10 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
 
   @Override
   public Collection<BuildTarget<?>> computeDependencies(BuildTargetRegistry targetRegistry, TargetOutputIndex outputIndex) {
-    return computeDependencies(targetRegistry);
+    return computeDependencies();
   }
 
-  public Collection<BuildTarget<?>> computeDependencies(BuildTargetRegistry buildTargetRegistry) {
+  public Collection<BuildTarget<?>> computeDependencies() {
     List<BuildTarget<?>> dependencies = new ArrayList<BuildTarget<?>>();
     Set<JpsModule> modules = JpsJavaExtensionService.dependencies(myModule).includedIn(JpsJavaClasspathKind.compile(isTests())).getModules();
     for (JpsModule module : modules) {
@@ -58,7 +57,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   public List<ErlangSourceRootDescriptor> computeRootDescriptors(JpsModel model, ModuleExcludeIndex index, IgnoredFileIndex ignoredFileIndex, BuildDataPaths dataPaths) {
     List<ErlangSourceRootDescriptor> result = new ArrayList<ErlangSourceRootDescriptor>();
     JavaSourceRootType type = isTests() ? JavaSourceRootType.TEST_SOURCE : JavaSourceRootType.SOURCE;
-    for (JpsTypedModuleSourceRoot<JpsSimpleElement<JavaSourceRootProperties>> root : myModule.getSourceRoots(type)) {
+    for (JpsTypedModuleSourceRoot<JavaSourceRootProperties> root : myModule.getSourceRoots(type)) {
       result.add(new ErlangSourceRootDescriptor(root.getFile(), this));
     }
     return result;
