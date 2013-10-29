@@ -17,6 +17,7 @@
 package org.intellij.erlang.rebar.importWizard;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.Platform;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.*;
 import com.intellij.ide.util.projectWizard.WizardContext;
@@ -143,7 +144,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
         commandLine.setWorkDirectory(projectRoot.getCanonicalPath());
         commandLine.addParameter("get-deps");
         try {
-          OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getPreparedCommandLine());
+          OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getPreparedCommandLine(Platform.current()));
           handler.addProcessListener(new ProcessAdapter() {
             @Override
             public void onTextAvailable(ProcessEvent event, Key outputType) {

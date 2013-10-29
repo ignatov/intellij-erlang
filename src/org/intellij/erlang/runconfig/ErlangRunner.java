@@ -19,10 +19,8 @@ package org.intellij.erlang.runconfig;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
-import com.intellij.execution.configurations.ConfigurationPerRunnerSettings;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
-import com.intellij.execution.configurations.RunnerSettings;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.DefaultProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -42,16 +40,9 @@ public class ErlangRunner extends DefaultProgramRunner {
   public static final String ERLANG_RUNNER_ID = "ErlangRunner";
 
   public static final RunProfileState EMPTY_RUN_STATE = new RunProfileState() {
+    @Override
     public ExecutionResult execute(final Executor executor, @NotNull final ProgramRunner runner) throws ExecutionException {
       return null;
-    }
-
-    public RunnerSettings getRunnerSettings() {
-      return null;
-    }
-
-    public ConfigurationPerRunnerSettings getConfigurationSettings() {
-      return new ConfigurationPerRunnerSettings(ERLANG_RUNNER_ID, null);
     }
   };
 
@@ -69,16 +60,13 @@ public class ErlangRunner extends DefaultProgramRunner {
 
   @Override
   protected RunContentDescriptor doExecute(Project project,
-                                           Executor executor,
                                            RunProfileState state,
                                            RunContentDescriptor contentToReuse,
                                            ExecutionEnvironment env) throws ExecutionException {
     final ErlangRunConfigurationBase configuration = (ErlangRunConfigurationBase) env.getRunProfile();
     final ErlangRunningState runningState = configuration.createRunningState(env);
-
     FileDocumentManager.getInstance().saveAllDocuments();
-
-    ExecutionResult executionResult = runningState.execute(executor, this);
-    return new RunContentBuilder(project, this, executor, executionResult, env).showRunContent(contentToReuse);
+    ExecutionResult executionResult = runningState.execute(env.getExecutor(), this);
+    return new RunContentBuilder(this, executionResult, env).showRunContent(contentToReuse);
   }
 }

@@ -107,8 +107,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     JpsJavaExtensionService instance = JpsJavaExtensionService.getInstance();
     File outputDirectory = instance.getOutputDirectory(module, forTests);
     if (outputDirectory == null) {
-      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "No output dir for module " + module.getName()));
-      throw new ProjectBuildException();
+      String errorMessage = "No output dir for module " + module.getName();
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, errorMessage));
+      throw new ProjectBuildException(errorMessage);
     }
     if (!outputDirectory.exists()) {
       FileUtil.createDirectory(outputDirectory);
@@ -120,8 +121,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   private static JpsSdk<JpsDummyElement> getSdk(CompileContext context, JpsModule module) throws ProjectBuildException {
     JpsSdk<JpsDummyElement> sdk = module.getSdk(JpsErlangSdkType.INSTANCE);
     if (sdk == null) {
-      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "No SDK for module " + module.getName()));
-      throw new ProjectBuildException();
+      String errorMessage = "No SDK for module " + module.getName();
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, errorMessage));
+      throw new ProjectBuildException(errorMessage);
     }
     return sdk;
   }

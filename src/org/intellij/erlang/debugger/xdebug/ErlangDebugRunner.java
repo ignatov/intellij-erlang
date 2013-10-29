@@ -1,7 +1,6 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.intellij.execution.ExecutionException;
-import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.executors.DefaultDebugExecutor;
@@ -27,7 +26,6 @@ public class ErlangDebugRunner extends GenericProgramRunner {
   @Nullable
   @Override
   protected RunContentDescriptor doExecute(Project project,
-                                           final Executor executor,
                                            RunProfileState state,
                                            RunContentDescriptor contentToReuse,
                                            final ExecutionEnvironment env) throws ExecutionException {
@@ -36,7 +34,7 @@ public class ErlangDebugRunner extends GenericProgramRunner {
       @NotNull
       @Override
       public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-        return new ErlangXDebugProcess(session, executor, env);
+        return new ErlangXDebugProcess(session, env);
       }
     }).getRunContentDescriptor();
   }

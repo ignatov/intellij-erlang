@@ -20,7 +20,6 @@ import com.intellij.codeInsight.daemon.impl.actions.AbstractSuppressByNoInspecti
 import com.intellij.codeInspection.*;
 import com.intellij.lang.Commenter;
 import com.intellij.lang.LanguageCommenters;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -137,9 +136,9 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
       if (myContainerClass == ErlangExpression.class) return getTopmostExpression(context);
       return PsiTreeUtil.getParentOfType(context, myContainerClass);
     }
-    
+
     @Override
-    protected void createSuppression(Project project, Editor editor, PsiElement element, PsiElement container) throws IncorrectOperationException {
+    protected void createSuppression(@NotNull Project project, @NotNull PsiElement element, @NotNull PsiElement container) throws IncorrectOperationException {
       final PsiParserFacade parserFacade = PsiParserFacade.SERVICE.getInstance(project);
       final String text = SuppressionUtil.SUPPRESS_INSPECTIONS_TAG_NAME + " " + myID;
       PsiComment comment = parserFacade.createLineOrBlockCommentFromText(element.getContainingFile().getLanguage(), text);

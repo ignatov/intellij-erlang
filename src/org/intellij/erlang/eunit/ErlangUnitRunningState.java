@@ -111,21 +111,15 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       }
     });
 
-    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());
+    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction(getEnvironment()));
     return executionResult;
   }
 
   @Override
   @NotNull
   public ConsoleView createConsoleView(Executor executor) throws ExecutionException {
-    final ErlangUnitRunConfiguration runConfiguration = (ErlangUnitRunConfiguration) getRunnerSettings().getRunProfile();
-    return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator(
-      "Erlang",
-      new ErlangUnitConsoleProperties(runConfiguration, executor),
-      getRunnerSettings(),
-      getConfigurationSettings(),
-      new ErlangTestLocationProvider()
-    );
+    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties(myConfiguration, executor);
+    return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator("Erlang", consoleProperties, getEnvironment(), new ErlangTestLocationProvider());
   }
 
   private ErlangEntryPoint getEntryPointInternal(boolean debug) throws ExecutionException {

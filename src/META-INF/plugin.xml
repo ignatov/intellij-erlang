@@ -1,8 +1,8 @@
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.5.2</version>
+    <version>0.5.2.132</version>
     <vendor email="sergey.ignatov@jetbrains.com" logo="">Sergey Ignatov</vendor>
-    <idea-version since-build="129.290" until-build="129.9999"/>
+    <idea-version since-build="132.719" until-build="132.9999"/>
     <depends>com.intellij.modules.lang</depends>
 
     <depends optional="true" config-file="erlang-copyright.xml">com.intellij.copyright</depends>
@@ -245,7 +245,7 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.ErlangCompletionContributor"/>
         <renameInputValidator implementation="org.intellij.erlang.ErlangRenameInputValidator"/>
-      
+
         <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor"/>
 
         <inlineActionHandler implementation="org.intellij.erlang.ErlangInlineVariableHandler"/>
@@ -299,7 +299,6 @@
         <fileBasedIndex implementation="org.intellij.erlang.ErlangApplicationIndex"/>
 
         <gotoSymbolContributor implementation="org.intellij.erlang.go.ErlangSymbolContributor"/>
-        <gotoClassContributor implementation="org.intellij.erlang.go.ErlangModuleContributor"/>
 
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariable" displayName="Unbound variable"

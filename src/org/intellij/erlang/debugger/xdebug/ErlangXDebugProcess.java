@@ -2,7 +2,6 @@ package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.intellij.execution.ExecutionException;
-import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
@@ -59,19 +58,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ErlangXDebugProcess extends XDebugProcess {
   private final ExecutionEnvironment myExecutionEnvironment;
-  private final Executor myExecutor;
   @NotNull private ErlangDebuggerNode myDebuggerNode;
   private ProcessHandler myErlangProcessHandler;
   private XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>>();
 
-  public ErlangXDebugProcess(@NotNull XDebugSession session, Executor executor, ExecutionEnvironment env) {
+  public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) {
     //TODO add debug build targets and make sure the project is built using them.
     super(session);
     session.setPauseActionSupported(false);
     myExecutionEnvironment = env;
-    myExecutor = executor;
     myDebuggerNode = new ErlangDebuggerNode(myExecutionEnvironment.getProject());
     setDebuggerNodeListener();
     setModulesToInterpret();
@@ -149,7 +146,6 @@ public class ErlangXDebugProcess extends XDebugProcess {
 
   private void setModulesToInterpret() {
     Project project = myExecutionEnvironment.getProject();
-    assert project != null;
     Collection<ErlangFile> erlangModules = ErlangModulesUtil.getErlangModules(project);
     ErlangRunConfigurationBase<?> runConfiguration = getRunConfiguration();
     if (runConfiguration.isTestRunConfiguration()) {
@@ -175,7 +171,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
   @Override
   public ExecutionConsole createConsole() {
     try {
-      return createRunningState().createConsoleView(myExecutor);
+      return createRunningState().createConsoleView(myExecutionEnvironment.getExecutor());
     } catch (ExecutionException e) {
       return super.createConsole();
     }
@@ -273,7 +269,6 @@ public class ErlangXDebugProcess extends XDebugProcess {
   private ErlangSourcePosition getErlangSourcePosition(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
     Project project = myExecutionEnvironment.getProject();
     XSourcePosition sourcePosition = breakpoint.getSourcePosition();
-    assert project != null;
     return sourcePosition != null ? new ErlangSourcePosition(project, sourcePosition) : null;
   }
 

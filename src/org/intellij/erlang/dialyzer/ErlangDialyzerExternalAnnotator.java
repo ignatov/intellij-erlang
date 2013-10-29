@@ -60,7 +60,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
   @Nullable
   @Override
-  public State collectionInformation(@NotNull PsiFile file) {
+  public State collectInformation(@NotNull PsiFile file) {
     VirtualFile vFile = file.getVirtualFile();
     if (vFile == null || vFile.getFileType() != ErlangFileType.MODULE) return null;
     String canonicalPath = vFile.getCanonicalPath();
