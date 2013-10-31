@@ -18,7 +18,7 @@ package org.intellij.erlang.quickfixes;
 
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 
-public class ErlangExportFunctionFixTest extends ErlangQuickFixTestBase {
+public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();

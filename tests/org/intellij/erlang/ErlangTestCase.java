@@ -45,6 +45,7 @@ import org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilderTest;
 import org.intellij.erlang.refactoring.ErlangExtractFunctionTest;
 import org.intellij.erlang.refactoring.ErlangInlineVariableTest;
 import org.intellij.erlang.refactoring.ErlangIntroduceVariableTest;
+import org.intellij.erlang.refactoring.ErlangSafeDeleteTest;
 import org.intellij.erlang.resolve.ErlangIncludeLibResolveTest;
 import org.intellij.erlang.resolve.ErlangIncludeResolveTest;
 import org.intellij.erlang.resolve.ErlangSmallIdeIncludeResolveTest;
@@ -74,7 +75,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangDocumentationProviderTest.class);
     suite.addTestSuite(ErlangParameterInfoHandlerTest.class);
     suite.addTestSuite(ErlangFoldingBuilderTest.class);
-    suite.addTestSuite(ErlangExportFunctionFixTest.class);
+    suite.addTestSuite(ErlangFunctionFixesTest.class);
     suite.addTestSuite(ErlangExportTypeFixTest.class);
     suite.addTestSuite(ErlangHeadMismatchFixTest.class);
     suite.addTestSuite(ErlangIntroduceFunctionFixTest.class);
@@ -84,6 +85,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangIntroduceMacroQuickFixTest.class);
     suite.addTestSuite(ErlangIntroduceVariableTest.class);
     suite.addTestSuite(ErlangExtractFunctionTest.class);
+    suite.addTestSuite(ErlangSafeDeleteTest.class);
     suite.addTestSuite(ErlangSmartEnterClauseProcessorTest.class);
     suite.addTestSuite(ErlangSdkReleaseTest.class);
     suite.addTestSuite(ErlangBehaviourInspectionsTest.class);

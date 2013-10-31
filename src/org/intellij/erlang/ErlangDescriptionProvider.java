@@ -50,6 +50,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (o instanceof ErlangMacrosDefinition) return "Macros";
       if (o instanceof ErlangTypedExpr) return "Record field";
       if (o instanceof ErlangTypeDefinition) return "Type";
+      if (o instanceof ErlangAttribute) return "Attribute";
     }
     return null;
   }
