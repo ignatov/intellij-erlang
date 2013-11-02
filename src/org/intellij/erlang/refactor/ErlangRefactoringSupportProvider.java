@@ -20,10 +20,7 @@ import com.intellij.lang.refactoring.RefactoringSupportProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.refactoring.RefactoringActionHandler;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangMacrosDefinition;
-import org.intellij.erlang.psi.ErlangNamedElement;
-import org.intellij.erlang.psi.ErlangRecordDefinition;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.refactor.introduce.ErlangExtractFunctionHandler;
 import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +31,11 @@ import org.jetbrains.annotations.Nullable;
 public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider {
   @Override
   public boolean isSafeDeleteAvailable(PsiElement element) {
-    return element instanceof ErlangFunction || element instanceof ErlangRecordDefinition || element instanceof ErlangMacrosDefinition;
+    return
+      element instanceof ErlangFunction ||
+      element instanceof ErlangRecordDefinition ||
+      element instanceof ErlangMacrosDefinition ||
+      element instanceof ErlangTypeDefinition;
   }
 
   @Nullable
