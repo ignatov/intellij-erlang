@@ -278,4 +278,17 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       CheckType.EQUALS, "Fun", "Fun2" , "Str"
     );
   }
+
+
+  public void testCameCaseModules() throws Throwable {
+    myFixture.configureByText("CamelCase.erl", "");
+    myFixture.configureByText("a.erl", "bar() -> Cam<caret>");
+    myFixture.complete(CompletionType.BASIC, 2);
+    myFixture.checkResult("bar() -> 'CamelCase':<caret>");
+  }
+
+  public void testFunctionsFromCameCaseModule() throws Throwable {
+    myFixture.configureByText("CamelCase.erl", "-module('CamelCase'). -export([foo/0]). foo() -> ok.");
+    doTestEquals("bar() -> 'CamelCase':<caret>", "foo");
+  }
 }
