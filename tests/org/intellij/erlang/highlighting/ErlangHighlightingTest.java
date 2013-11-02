@@ -63,6 +63,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncludeLib()        { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
   public void test354()               { doTest(); }
+  public void test364()               { doTest(); }
 
   public void testUnresolvedMacros()  {
     enableUnresolvedMacroInspection();
