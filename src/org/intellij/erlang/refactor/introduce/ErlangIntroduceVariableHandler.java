@@ -20,6 +20,7 @@ import com.intellij.codeInsight.CodeInsightUtilBase;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
@@ -49,6 +50,7 @@ import java.util.List;
  * @author ignatov
  */
 public class ErlangIntroduceVariableHandler implements RefactoringActionHandler {
+  private final static Logger LOG = Logger.getInstance(ErlangIntroduceVariableHandler.class);
 
   public enum ReplaceStrategy {
     ALL, SINGLE, ASK
@@ -176,7 +178,12 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       showCannotPerformError(project, editor, "Selected expression contains errors");
       return null;
     }
-    PsiElement declaration = newText != null ? ErlangElementFactory.createExpressionFromText(project, newText) : null;
+    PsiElement declaration = null;
+    try {
+      declaration = newText != null ? ErlangElementFactory.createExpressionFromText(project, newText) : null;
+    } catch (Exception e) {
+      LOG.error("Can't create a new expression:\n" + newText + "\n", e);
+    }
     if (declaration == null) {
       showCannotPerformError(project, editor);
       return null;
