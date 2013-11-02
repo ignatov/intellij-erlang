@@ -105,6 +105,7 @@ public class VariableTextBuilder extends PsiRecursiveElementVisitor {
     String s = StringUtil.toTitleCase(myResult.toString())
       .replaceAll("_", "")
       .replaceAll("\\?", "")
+      .replaceAll("'", "")
       .replaceAll(" ", "");
     return StringUtil.notNullize(s, defaultValue);
   }
