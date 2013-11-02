@@ -420,7 +420,7 @@ public class ErlangPsiImplUtil {
       Sdk sdk = module == null ? null : ModuleRootManager.getInstance(module).getSdk();
       ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
       if (qAtom != null) {
-        String moduleName = qAtom.getText();
+        String moduleName = StringUtil.unquoteString(qAtom.getText());
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
 
         if (release == null || release.needBifCompletion(moduleName)) {
@@ -660,7 +660,8 @@ public class ErlangPsiImplUtil {
   @Nullable
   public static PsiReference getReference(@NotNull ErlangModuleRef o) {
     ErlangQAtom atom = o.getQAtom();
-    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText());
+    String name = StringUtil.unquoteString(atom.getText());
+    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), name);
   }
 
   @NotNull

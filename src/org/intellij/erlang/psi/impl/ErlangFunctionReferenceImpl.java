@@ -18,6 +18,7 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -143,7 +144,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
   @NotNull
   private String getModuleFileName() {
-    return myModuleAtom != null ? myModuleAtom.getText() : "";
+    return myModuleAtom != null ? StringUtil.unquoteString(myModuleAtom.getText()) : "";
   }
 
   @Override
