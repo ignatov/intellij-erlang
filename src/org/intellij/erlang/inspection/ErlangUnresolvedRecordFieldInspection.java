@@ -34,6 +34,7 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase 
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitRecordField(@NotNull ErlangRecordField o) {
+        super.visitRecordField(o);
         ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(o, ErlangRecordExpression.class);
         if (recordExpression != null) {
           PsiReference reference = recordExpression.getReference();
