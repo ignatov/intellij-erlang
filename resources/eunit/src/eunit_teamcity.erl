@@ -336,7 +336,7 @@ enter_new_test_item(Data, State) ->
     Depth = get_test_item_depth(Data),
     case get_current_group(State) of
         #group{depth = Depth} = CurrentGroup ->
-            end_group(CurrentGroup, State);
+            end_group(CurrentGroup, Data, State);
         _ -> State
     end.
 
