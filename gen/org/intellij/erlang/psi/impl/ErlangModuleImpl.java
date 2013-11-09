@@ -8,14 +8,20 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
+import org.intellij.erlang.stubs.ErlangModuleStub;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.ResolveState;
+import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangModuleImpl extends ErlangNamedElementImpl implements ErlangModule {
+public class ErlangModuleImpl extends ErlangStubbedPsiElementBase<ErlangModuleStub> implements ErlangModule {
 
   public ErlangModuleImpl(ASTNode node) {
     super(node);
+  }
+
+  public ErlangModuleImpl(ErlangModuleStub stub, IStubElementType nodeType) {
+    super(stub, nodeType);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

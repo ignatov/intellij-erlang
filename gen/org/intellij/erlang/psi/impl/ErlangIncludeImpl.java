@@ -8,12 +8,18 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
+import org.intellij.erlang.stubs.ErlangIncludeStub;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangIncludeImpl extends ErlangCompositeElementImpl implements ErlangInclude {
+public class ErlangIncludeImpl extends ErlangStubbedPsiElementBase<ErlangIncludeStub> implements ErlangInclude {
 
   public ErlangIncludeImpl(ASTNode node) {
     super(node);
+  }
+
+  public ErlangIncludeImpl(ErlangIncludeStub stub, IStubElementType nodeType) {
+    super(stub, nodeType);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
@@ -25,6 +31,11 @@ public class ErlangIncludeImpl extends ErlangCompositeElementImpl implements Erl
   @Nullable
   public ErlangIncludeString getIncludeString() {
     return findChildByClass(ErlangIncludeString.class);
+  }
+
+  @Nullable
+  public ErlangIncludeString getIncludeStringSafe() {
+    return ErlangPsiImplUtil.getIncludeStringSafe(this);
   }
 
 }

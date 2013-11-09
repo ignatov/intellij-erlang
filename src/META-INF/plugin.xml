@@ -295,11 +295,13 @@
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
         <codeInsight.gotoSuper language="Erlang" implementationClass="org.intellij.erlang.navigation.ErlangGotoSuperHandler"/>
 
-        <fileBasedIndex implementation="org.intellij.erlang.ErlangSymbolIndex"/>
         <fileBasedIndex implementation="org.intellij.erlang.ErlangModuleIndex"/>
         <fileBasedIndex implementation="org.intellij.erlang.ErlangApplicationIndex"/>
 
+        <stubIndex implementation="org.intellij.erlang.stubs.index.ErlangAllNameIndex"/>
+
         <gotoSymbolContributor implementation="org.intellij.erlang.go.ErlangSymbolContributor"/>
+        <gotoClassContributor implementation="org.intellij.erlang.go.ErlangModuleContributor"/>
 
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariable" displayName="Unbound variable"

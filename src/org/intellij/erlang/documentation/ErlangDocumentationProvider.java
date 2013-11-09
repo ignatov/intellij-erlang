@@ -23,9 +23,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangModule;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,12 +72,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
         if (psiFile instanceof ErlangFile) {
           final ErlangFile erlFile = (ErlangFile) psiFile;
           if (linkMatcher.group(2) == null) {
-            for (ErlangAttribute erlAttribute : erlFile.getAttributes()) {
-              final ErlangModule erlModule = erlAttribute.getModule();
-              if (erlModule != null) {
-                return erlModule;
-              }
-            }
+            return erlFile.getModule();
           }
           else {
             final String functionName = linkMatcher.group(3);

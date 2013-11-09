@@ -78,7 +78,10 @@
   pin("config_.*_expression")=1
 
   implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
-  extends("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  extends("q_var|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
+  extends           ("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.psi.impl.ErlangStubbedPsiElementBase<?>"
+  elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.ErlangElementTypeFactory.factory"
+
   implements("case_expression|try_expression|receive_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
 }
 
@@ -121,16 +124,26 @@ private tuple_recoverer ::= !('}'|',')
 record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
   pin=2
   methods = [getName setName getNameIdentifier getTextOffset]
+  stubClass="org.intellij.erlang.stubs.ErlangRecordDefinitionStub"
 }
 
 macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ',' <<guarded macros_body>> ')' {
   pin = 2
   methods = [getName setName getNameIdentifier getTextOffset]
+  stubClass="org.intellij.erlang.stubs.ErlangMacrosDefinitionStub"
 }
 macros_body ::= expression ((',' | ';' | '->') expression)* {pin(".*")=1}
 
-include ::= '-' 'include' '(' include_string ')' {pin=2}
-include_lib ::= '-' 'include_lib' '(' include_string ')' {pin=2}
+include ::= '-' 'include' '(' include_string ')' {
+  pin=2
+  methods=[getIncludeStringSafe]
+  stubClass="org.intellij.erlang.stubs.ErlangIncludeStub"
+}
+include_lib ::= '-' 'include_lib' '(' include_string ')' {
+  pin=2
+  methods=[getIncludeStringSafe]
+  stubClass="org.intellij.erlang.stubs.ErlangIncludeLibStub"
+}
 include_string ::= string {methods = [getReference]}
 
 attribute ::= '-' (
@@ -145,7 +158,10 @@ attribute ::= '-' (
   | else_atom_attribute <<enterMode "ELSE">>
   | atom_attribute
   ) {pin=1}
-callback_spec ::= 'callback' type_spec {pin=1}
+callback_spec ::= 'callback' type_spec {
+  pin=1
+  stubClass="org.intellij.erlang.stubs.ErlangCallbackSpecStub"
+}
 specification ::= 'spec' type_spec {
   pin=1
   methods = [getSignature]
@@ -156,6 +172,7 @@ import_directive ::= 'import' '(' module_ref ',' import_functions ')' {pin=1}
 module ::= 'module' '(' q_atom [',' module_tail] ')' {
   pin=1
   methods = [getName setName getNameIdentifier getTextOffset processDeclarations]
+  stubClass="org.intellij.erlang.stubs.ErlangModuleStub"
 }
 private module_tail ::= model_field_list | argument_definition
 model_field_list ::= '[' model_field (',' model_field)* ']'
@@ -163,11 +180,13 @@ model_field ::= q_var ['::' top_type] {pin=1 elementType=argument_definition}
 behaviour ::= 'behaviour' '(' module_ref ')' {
   pin=1
   methods = [getName]
+  stubClass="org.intellij.erlang.stubs.ErlangBehaviourStub"
 }
 
 type_definition ::= '-' ('type'|'opaque') (type_body | '(' type_body ')') {
   pin = 2
-  methods = [getName setName getNameIdentifier getTextOffset]
+  methods = [getName setName getNameIdentifier getTextOffset getArity]
+  stubClass="org.intellij.erlang.stubs.ErlangTypeDefinitionStub"
 }
 private type_body ::= q_atom argument_definition_list '::' top_type {pin=1}
 
@@ -260,7 +279,9 @@ function ::= function_clause (';' function_clause)* {
     getNameIdentifier
     getPresentation
     getIcon
+    isExported
   ]
+  stubClass="org.intellij.erlang.stubs.ErlangFunctionStub"
 }
 
 function_clause ::= q_atom argument_definition_list clause_guard? clause_body

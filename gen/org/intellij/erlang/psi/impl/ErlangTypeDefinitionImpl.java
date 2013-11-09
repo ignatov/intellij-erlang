@@ -8,12 +8,18 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
+import org.intellij.erlang.stubs.ErlangTypeDefinitionStub;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangTypeDefinitionImpl extends ErlangNamedElementImpl implements ErlangTypeDefinition {
+public class ErlangTypeDefinitionImpl extends ErlangStubbedPsiElementBase<ErlangTypeDefinitionStub> implements ErlangTypeDefinition {
 
   public ErlangTypeDefinitionImpl(ASTNode node) {
     super(node);
+  }
+
+  public ErlangTypeDefinitionImpl(ErlangTypeDefinitionStub stub, IStubElementType nodeType) {
+    super(stub, nodeType);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
@@ -56,6 +62,10 @@ public class ErlangTypeDefinitionImpl extends ErlangNamedElementImpl implements 
 
   public int getTextOffset() {
     return ErlangPsiImplUtil.getTextOffset(this);
+  }
+
+  public int getArity() {
+    return ErlangPsiImplUtil.getArity(this);
   }
 
 }

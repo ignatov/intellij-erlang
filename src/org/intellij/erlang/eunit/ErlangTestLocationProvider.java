@@ -32,7 +32,6 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangModuleIndex;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -94,7 +93,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
 
   @Nullable
   private static Location getModuleLocation(Project project, ErlangFile file) {
-    ErlangModule module = ErlangPsiImplUtil.getModule(file);
+    ErlangModule module = file.getModule();
     return module != null ? new PsiLocation<PsiElement>(project, module) : null;
   }
 
@@ -116,7 +115,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
   }
 
   private static Collection<ErlangFile> getErlangFiles(Project project, String module) {
-    return ErlangModuleIndex.getFilesByName(project, module, 
+    return ErlangModuleIndex.getFilesByName(project, module,
       GlobalSearchScope.getScopeRestrictedByFileTypes(GlobalSearchScope.projectScope(project), ErlangFileType.MODULE));
   }
 }

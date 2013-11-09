@@ -59,11 +59,18 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     ErlangQVar result = processor.getResult();
     if (result != null) return result;
 
-    ErlangModule module = getModule(myElement.getContainingFile());
+    ErlangModule module = getErlangModule();
     if (module == null) return null;
     module.processDeclarations(processor, ResolveState.initial(), module, module);
 
     return processor.getResult();
+  }
+
+  @Nullable
+  private ErlangModule getErlangModule() {
+    PsiFile file = myElement.getContainingFile();
+    ErlangFile erlangFile = file instanceof ErlangFile ? ((ErlangFile) file) : null;
+    return erlangFile != null ? erlangFile.getModule() : null;
   }
 
   @NotNull
@@ -73,11 +80,12 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
 
     List<LookupElement> result = new ArrayList<LookupElement>();
     Collection<String> vars = new THashSet<String>(CaseInsensitiveStringHashingStrategy.INSTANCE);
+    PsiFile file = myElement.getContainingFile();
     if (!(myElement.getParent() instanceof ErlangRecordExpression)) {
       ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myElement, ErlangFunctionClause.class);
       ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(clause, false, vars));
 
-      ErlangModule module = getModule(myElement.getContainingFile());
+      ErlangModule module = getErlangModule();
       if (module != null) {
         module.processDeclarations(new MyBaseScopeProcessor(clause, true, vars), ResolveState.initial(), module, module);
       }
@@ -87,10 +95,9 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
       }
 
       ErlangQAtom qAtom = getQAtom(PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class));
-      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(myElement.getContainingFile(), myElement.getParent() instanceof ErlangFunctionWithArityVariables, qAtom));
+      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(file, myElement.getParent() instanceof ErlangFunctionWithArityVariables, qAtom));
     }
 
-    PsiFile file = myElement.getContainingFile();
     Map<String, ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
     if (context != null && PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class) == null) {
       for (String var : context.keySet()) {

@@ -35,7 +35,7 @@ public class ErlangIndexUtil {
     return fileType == ErlangFileType.MODULE || fileType == ErlangFileType.HEADER;
   }
   
-  static boolean isErlangModuleFileType(FileType fileType) {
+  public static boolean isErlangModuleFileType(FileType fileType) {
     return fileType == ErlangFileType.MODULE;
   }
 }

@@ -4,8 +4,10 @@ package org.intellij.erlang.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.StubBasedPsiElement;
+import org.intellij.erlang.stubs.ErlangTypeDefinitionStub;
 
-public interface ErlangTypeDefinition extends ErlangNamedElement {
+public interface ErlangTypeDefinition extends ErlangNamedElement, StubBasedPsiElement<ErlangTypeDefinitionStub> {
 
   @Nullable
   ErlangArgumentDefinitionList getArgumentDefinitionList();
@@ -26,5 +28,7 @@ public interface ErlangTypeDefinition extends ErlangNamedElement {
   PsiElement getNameIdentifier();
 
   int getTextOffset();
+
+  int getArity();
 
 }

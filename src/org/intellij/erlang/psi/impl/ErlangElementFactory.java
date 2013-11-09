@@ -21,10 +21,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFileFactory;
 import org.intellij.erlang.ErlangLanguage;
-import org.intellij.erlang.psi.ErlangExpression;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangMaxExpression;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -66,8 +63,13 @@ public class ErlangElementFactory {
 
   @NotNull
   public static PsiElement createStringFromText(@NotNull Project project, @NotNull String text) {
+    return createIncludeString(project, text).getString();
+  }
+
+  @NotNull
+  public static ErlangIncludeString createIncludeString(@NotNull Project project, @NotNull String text) {
     ErlangFile fileFromText = createFileFromText(project, "-include(\"" + text + "\").");
-    return fileFromText.getIncludes().get(0).getIncludeString().getString();
+    return fileFromText.getIncludes().get(0).getIncludeStringSafe();
   }
 
   @NotNull

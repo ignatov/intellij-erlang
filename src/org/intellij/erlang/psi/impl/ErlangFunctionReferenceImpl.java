@@ -55,8 +55,12 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   public PsiElement resolve() {
     if (suppressResolve()) return null; // for #132
 
+    PsiFile file = getElement().getContainingFile().getOriginalFile();
+    boolean calcStubs = file instanceof ErlangFile && ((ErlangFile) file).calcStubs();
+
     if (myModuleAtom != null) {
-      final ErlangFunction explicitFunction = getExternalFunction(getModuleFileName());
+      if (calcStubs) return null;
+      ErlangFunction explicitFunction = getExternalFunction(getModuleFileName());
       if (explicitFunction != null) {
         return explicitFunction;
       }
@@ -68,12 +72,13 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
       }
     }
 
-    PsiFile containingFile = getElement().getContainingFile();
-    if (containingFile instanceof ErlangFile) {
-      ErlangFile erlangFile = (ErlangFile) containingFile;
+    if (file instanceof ErlangFile) {
+      ErlangFile erlangFile = (ErlangFile) file;
 
       ErlangFunction result = erlangFile.getFunction(myReferenceName, myArity);
       if (result != null) return result;
+
+      if (calcStubs) return null;
 
       final ErlangFunction implicitFunction = getExternalFunction("erlang");
       if (implicitFunction != null) return implicitFunction;
@@ -88,7 +93,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
           }
         }
       }
-      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangFunctionsFromIncludes((ErlangFile) containingFile, false, myReferenceName, myArity));
+      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangFunctionsFromIncludes((ErlangFile) file, false, myReferenceName, myArity));
     }
     return null;
   }

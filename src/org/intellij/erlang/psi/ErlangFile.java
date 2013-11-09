@@ -20,12 +20,12 @@ import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public interface ErlangFile extends PsiFile {
+  @Nullable
+  ErlangModule getModule();
+
   @NotNull
   List<ErlangRule> getRules();
 
@@ -34,6 +34,8 @@ public interface ErlangFile extends PsiFile {
 
   @Nullable
   ErlangCallbackSpec getCallbackByName(@NotNull String fullName);
+
+  boolean calcStubs();
 
   @NotNull
   List<ErlangFunction> getFunctions();
@@ -84,4 +86,6 @@ public interface ErlangFile extends PsiFile {
 
   @NotNull
   Map<String, ErlangCallbackSpec> getCallbackMap();
+
+  void addDeclaredParseTransforms(@NotNull Set<String> parseTransforms);
 }

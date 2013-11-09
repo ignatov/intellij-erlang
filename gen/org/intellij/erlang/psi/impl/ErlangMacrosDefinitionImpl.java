@@ -8,12 +8,18 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
+import org.intellij.erlang.stubs.ErlangMacrosDefinitionStub;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangMacrosDefinitionImpl extends ErlangNamedElementImpl implements ErlangMacrosDefinition {
+public class ErlangMacrosDefinitionImpl extends ErlangStubbedPsiElementBase<ErlangMacrosDefinitionStub> implements ErlangMacrosDefinition {
 
   public ErlangMacrosDefinitionImpl(ASTNode node) {
     super(node);
+  }
+
+  public ErlangMacrosDefinitionImpl(ErlangMacrosDefinitionStub stub, IStubElementType nodeType) {
+    super(stub, nodeType);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

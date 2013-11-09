@@ -42,14 +42,14 @@ public class ErlangIconProvider extends IconProvider implements DumbAware {
   }
 
   @Nullable
-  public static Icon getIcon(@NotNull ErlangFile element) {
-    if (!element.isValid()) return null;
-    VirtualFile virtualFile = element.getViewProvider().getVirtualFile();
+  public static Icon getIcon(@NotNull ErlangFile file) {
+    if (!file.isValid()) return null;
+    VirtualFile virtualFile = file.getViewProvider().getVirtualFile();
     FileType fileType = virtualFile.getFileType();
     if (ErlangFileType.MODULE == fileType) {
-      ErlangModule module = ErlangPsiImplUtil.getModule(element);
-      boolean isEunit = module != null && ErlangPsiImplUtil.isEunitTestFile(element);
-      return isEunit ? ErlangIcons.EUNIT : getModuleType(element).icon;
+      ErlangModule module = file.getModule();
+      boolean isEunit = module != null && ErlangPsiImplUtil.isEunitTestFile(file);
+      return isEunit ? ErlangIcons.EUNIT : getModuleType(file).icon;
     }
     return fileType.getIcon();
   }

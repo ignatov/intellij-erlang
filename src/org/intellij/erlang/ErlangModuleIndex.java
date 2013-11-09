@@ -28,7 +28,6 @@ import com.intellij.util.io.KeyDescriptor;
 import gnu.trove.THashSet;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -84,11 +83,9 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     final Set<ErlangModule> result = new THashSet<ErlangModule>();
     for (VirtualFile vFile : files) {
       final PsiFile psiFile = PsiManager.getInstance(project).findFile(vFile);
-      if (psiFile == null || !ErlangIndexUtil.isErlangModuleFileType(psiFile.getFileType())) {
-        continue;
+      if (psiFile instanceof ErlangFile && ErlangIndexUtil.isErlangModuleFileType(psiFile.getFileType())) {
+        ContainerUtil.addIfNotNull(result, ((ErlangFile) psiFile).getModule());
       }
-      ErlangModule module = ErlangPsiImplUtil.getModule(psiFile);
-      ContainerUtil.addIfNotNull(result, module);
     }
     return new ArrayList<ErlangModule>(result);
   }

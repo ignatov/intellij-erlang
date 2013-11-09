@@ -8,12 +8,18 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
+import org.intellij.erlang.stubs.ErlangBehaviourStub;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangBehaviourImpl extends ErlangCompositeElementImpl implements ErlangBehaviour {
+public class ErlangBehaviourImpl extends ErlangStubbedPsiElementBase<ErlangBehaviourStub> implements ErlangBehaviour {
 
   public ErlangBehaviourImpl(ASTNode node) {
     super(node);
+  }
+
+  public ErlangBehaviourImpl(ErlangBehaviourStub stub, IStubElementType nodeType) {
+    super(stub, nodeType);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {

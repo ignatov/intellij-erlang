@@ -8,14 +8,20 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
+import org.intellij.erlang.stubs.ErlangFunctionStub;
 import org.intellij.erlang.psi.*;
 import com.intellij.navigation.ItemPresentation;
 import javax.swing.Icon;
+import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangFunctionImpl extends ErlangNamedElementImpl implements ErlangFunction {
+public class ErlangFunctionImpl extends ErlangStubbedPsiElementBase<ErlangFunctionStub> implements ErlangFunction {
 
   public ErlangFunctionImpl(ASTNode node) {
     super(node);
+  }
+
+  public ErlangFunctionImpl(ErlangFunctionStub stub, IStubElementType nodeType) {
+    super(stub, nodeType);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
@@ -64,6 +70,10 @@ public class ErlangFunctionImpl extends ErlangNamedElementImpl implements Erlang
   @NotNull
   public Icon getIcon(int flags) {
     return ErlangPsiImplUtil.getIcon(this, flags);
+  }
+
+  public boolean isExported() {
+    return ErlangPsiImplUtil.isExported(this);
   }
 
 }

@@ -4,10 +4,12 @@ package org.intellij.erlang.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.StubBasedPsiElement;
+import org.intellij.erlang.stubs.ErlangFunctionStub;
 import com.intellij.navigation.ItemPresentation;
 import javax.swing.Icon;
 
-public interface ErlangFunction extends ErlangNamedElement {
+public interface ErlangFunction extends ErlangNamedElement, StubBasedPsiElement<ErlangFunctionStub> {
 
   @NotNull
   List<ErlangFunctionClause> getFunctionClauseList();
@@ -31,5 +33,7 @@ public interface ErlangFunction extends ErlangNamedElement {
 
   @NotNull
   Icon getIcon(int flags);
+
+  boolean isExported();
 
 }
