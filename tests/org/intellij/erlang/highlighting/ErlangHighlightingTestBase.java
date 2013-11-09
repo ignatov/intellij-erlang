@@ -20,6 +20,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.testFramework.fixtures.impl.CodeInsightTestFixtureImpl;
 import org.intellij.erlang.inspection.*;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -47,6 +48,7 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
   protected void setUp() throws Exception {
     super.setUp();
     setUpProjectSdk();
+    ((CodeInsightTestFixtureImpl)myFixture).canChangeDocumentDuringHighlighting(true);
   }
 
   @Override
