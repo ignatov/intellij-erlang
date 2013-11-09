@@ -488,21 +488,18 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testResolveLinkModule() {
-    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(
-      getPsiManager(), "file", null);
-    assertTrue(psiElement instanceof ErlangModule);
+    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file", null);
+    assertTrue("Not a module: " + psiElement, psiElement instanceof ErlangModule);
   }
 
   public void testResolveLinkFunction() {
-    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(
-      getPsiManager(), "file#read_line-1", null);
-    assertTrue(psiElement instanceof ErlangFunction);
+    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#read_line-1", null);
+    assertTrue("Not a function: " + psiElement, psiElement instanceof ErlangFunction);
   }
 
   public void testResolveLinkType() {
-    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(
-      getPsiManager(), "file#type-filename", null);
-    assertTrue(psiElement instanceof ErlangTypeDefinition);
+    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#type-filename", null);
+    assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
   }
 
   @NotNull
