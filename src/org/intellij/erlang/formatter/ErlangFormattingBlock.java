@@ -269,7 +269,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
   }
 
   @Nullable
-  private static Indent getChildIndent(@Nullable IElementType type, int newChildIndex) {
+  private Indent getChildIndent(@Nullable IElementType type, int newChildIndex) {
+    if (getNode().getPsi() instanceof ErlangFunction && type == ERL_SEMI) return Indent.getNoneIndent();
     if (
       type == ERL_IF_EXPRESSION ||
       type == ERL_CASE_EXPRESSION ||
