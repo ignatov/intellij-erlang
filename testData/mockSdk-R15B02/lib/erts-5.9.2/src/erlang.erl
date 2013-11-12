@@ -264,3 +264,9 @@ spawn_opt(N, M, F, A, O) when is_atom(N), is_atom(M), is_atom(F) ->
     end;
 spawn_opt(N,M,F,A,O) ->
     erlang:error(badarg, [N,M,F,A,O]).
+
+is_record(_Term,_RecordTag) ->
+    erlang:nif_error(undefined).
+
+is_record(_Term,_RecordTag,_Size) ->
+    erlang:nif_error(undefined).

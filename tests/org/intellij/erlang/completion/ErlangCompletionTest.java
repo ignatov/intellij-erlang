@@ -227,13 +227,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariants("% <caret>", CompletionType.BASIC, 1, CheckType.EQUALS);
   }
 
-  public void test353() throws Throwable {
-    doTestInclude("-record(aaa, {}). -record(bbb, {}). foo() -> is_record(1, <caret>)", "aaa", "bbb");
-  }
-  
-  public void test353_2() throws Throwable {
-    doTestInclude("-record(aaa, {}). -record(bbb, {}). foo() -> is_record(1,<caret>", "aaa", "bbb");
-  }
+
 
   public void testIncludeCompletion() throws Throwable {
     localFileSystemSetUp();

@@ -38,4 +38,12 @@ public class ErlangCompletionWithSdkTest extends ErlangCompletionTestBase {
   public void testNoBifDuplicates() throws Throwable {
     doCheckResult("bar() ->crc<caret>", "bar() ->crc32(<caret>)");  
   }
+
+  public void test353() throws Throwable {
+    doTestInclude("-record(aaa, {}). -record(bbb, {}). foo() -> is_record(1, <caret>)", "aaa", "bbb");
+  }
+
+  public void test353_2() throws Throwable {
+    doTestInclude("-record(aaa, {}). -record(bbb, {}). foo() -> is_record(1,<caret>", "aaa", "bbb");
+  }
 }
