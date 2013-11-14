@@ -9,3 +9,4 @@ The following people have made contributions (in no particular order):
 * Marcus Nilsson (github @Enouk, tandy.nilsson@gmail.com)
 * Sergey Savenko (github @deadok22)
 * David Robakowski (github @drobakowski)
+* Matt Campbell (github @xenolinguist)
