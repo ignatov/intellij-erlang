@@ -54,6 +54,6 @@ public enum ErlangSdkRelease {
   }
 
   public boolean needBifCompletion(@NotNull String moduleName) {
-    return VersionComparatorUtil.compare(myVersion, "5.10") < 0  || "lager".equals(moduleName);
+    return VersionComparatorUtil.compare(myVersion, "5.10") < 0  || "lager".equals(moduleName) || moduleName.isEmpty();
   }
 }

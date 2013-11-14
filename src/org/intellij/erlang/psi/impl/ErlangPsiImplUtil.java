@@ -424,10 +424,9 @@ public class ErlangPsiImplUtil {
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
 
         if (release == null || release.needBifCompletion(moduleName)) {
-          for (ErlangBifDescriptor bif : ErlangBifTable.getBifs(moduleName)) {
-            lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
-          }
+          addBifsAsFunctions(lookupElements, ErlangBifTable.getBifs(moduleName), withArity);
         }
+        addBifsAsFunctions(lookupElements, ErlangBifTable.getBifs("", ErlangBifTable.MODULE_INFO), withArity);
       }
       else {
         ErlangFile erlangFile = (ErlangFile) containingFile;
@@ -439,9 +438,10 @@ public class ErlangPsiImplUtil {
         }
 
         if (!withArity && (release == null || release.needBifCompletion("erlang"))) {
-          for (ErlangBifDescriptor bif : ErlangBifTable.getBifs("erlang")) {
-            lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), false, ErlangCompletionContributor.BIF_PRIORITY));
-          }
+          addBifs(lookupElements, ErlangBifTable.getBifs("erlang"));
+        }
+        if (!withArity && (release == null || release.needBifCompletion(""))) {
+          addBifs(lookupElements, ErlangBifTable.getBifs(""));
         }
       }
 
@@ -450,6 +450,18 @@ public class ErlangPsiImplUtil {
       return lookupElements;
     }
     return Collections.emptyList();
+  }
+
+  private static void addBifs(List<LookupElement> lookupElements, Collection<ErlangBifDescriptor> bifs) {
+    for (ErlangBifDescriptor bif : bifs) {
+      lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), false, ErlangCompletionContributor.BIF_PRIORITY));
+    }
+  }
+
+  private static void addBifsAsFunctions(List<LookupElement> lookupElements, Collection<ErlangBifDescriptor> bifs, boolean withArity) {
+    for (ErlangBifDescriptor bif : bifs) {
+      lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
+    }
   }
 
   public static List<LookupElement> createFunctionLookupElements(List<ErlangFunction> functions, final boolean withArity) {
@@ -461,7 +473,7 @@ public class ErlangPsiImplUtil {
     });
   }
 
-  private static LookupElement createFunctionsLookupElement(ErlangFunction function, boolean withArity, double priority) {
+  private static LookupElement createFunctionsLookupElement(@NotNull ErlangFunction function, boolean withArity, double priority) {
     int arity = function.getArity();
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(function)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
@@ -469,7 +481,7 @@ public class ErlangPsiImplUtil {
   }
 
   private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
-    return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name)
+    return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name + arity, name)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
       .withInsertHandler(getInsertHandler(arity, withArity)), (double) priority);
   }
