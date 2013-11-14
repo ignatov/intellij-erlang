@@ -19,20 +19,33 @@ package org.intellij.erlang.lexer;
 import com.intellij.lexer.Lexer;
 import com.intellij.lexer.LexerPosition;
 import com.intellij.lexer.LookAheadLexer;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.containers.Stack;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.ErlangLexer;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 /**
  * @author savenko
  */
 public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
+  private final ErlangMacroContext myMacroContext;
+
   public ErlangMacroSubstitutingLexer() {
     this(new ErlangFormsLexer());
   }
 
   public ErlangMacroSubstitutingLexer(Lexer baseLexer) {
+    this(baseLexer, new ErlangMacroContext());
+  }
+
+  public ErlangMacroSubstitutingLexer(Lexer baseLexer, ErlangMacroContext context) {
     super(baseLexer);
+    myMacroContext = context;
   }
 
   @Override
@@ -40,7 +53,8 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     if (baseLexer.getTokenType() == ErlangInterimTokenTypes.FORM) {
       formLookAhead(baseLexer.getBufferSequence(), baseLexer.getTokenStart(), baseLexer.getTokenEnd());
       baseLexer.advance();
-    } else {
+    }
+    else {
       super.lookAhead(baseLexer);
     }
   }
@@ -55,16 +69,19 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       addTokenAndWhitespaceFrom(lexer);
       if ("define".equals(attributeName)) {
         macroDefinitionLookAhead(lexer);
-      } else if ("include".equals(attributeName)) {
+      }
+      else if ("include".equals(attributeName)) {
         includeLookAhead(lexer);
-      } else if ("include_lib".equals(attributeName)) {
+      }
+      else if ("include_lib".equals(attributeName)) {
         includeLibLookAhead(lexer);
-      } else if ("undef".equals(attributeName)) {
+      }
+      else if ("undef".equals(attributeName)) {
         undefLookAhead(lexer);
       }
     }
     //consume remaining tokens
-    addAllTokensFrom(lexer);
+    addAllTokensWithMacroSubstitution(lexer);
   }
 
   private void macroDefinitionLookAhead(ErlangLexer lexer) {
@@ -82,7 +99,8 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       addTokenAndWhitespaceFrom(lexer);
       if (lexer.getTokenType() == ErlangTypes.ERL_PAR_RIGHT) {
         addTokenAndWhitespaceFrom(lexer);
-      } else {
+      }
+      else {
         if (lexer.getTokenType() != ErlangTypes.ERL_VAR) return;
         macroBuilder.addParameter(lexer.getTokenText());
         addTokenAndWhitespaceFrom(lexer);
@@ -114,7 +132,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       if (lexerRightParenthesisPosition != null) {
         tokensAfterLastRightParenthesis++;
       }
-      macroBuilder.addBodyToken(lexer.getTokenType(), getTokenText());
+      macroBuilder.addBodyToken(lexer.getTokenType(), lexer.getTokenText());
       addTokenFrom(lexer);
       lastTokenEnd = lexer.getTokenEnd();
     }
@@ -127,7 +145,9 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     addToken(lastTokenEnd, ErlangInterimTokenTypes.ERL_MACRO_BODY_END);
     addAllTokensFrom(lexer);
     ErlangMacro macro = macroBuilder.build();
-    //TODO store macro
+    if (macro != null) {
+      myMacroContext.defineMacro(macro);
+    }
   }
 
   private void includeLookAhead(Lexer lexer) {
@@ -143,7 +163,6 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
   }
 
   private void addAllTokensFrom(Lexer lexer) {
-    //TODO substitute macros before adding tokens
     while (lexer.getTokenType() != null) {
       addTokenFrom(lexer);
     }
@@ -165,6 +184,238 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     if (lexer.getTokenType() != null) {
       addToken(lexer.getTokenEnd(), lexer.getTokenType());
       lexer.advance();
+    }
+  }
+
+  //TODO support quotes
+  private void addAllTokensWithMacroSubstitution(Lexer baseLexer) {
+    new MacroSubstitutionWorker(baseLexer).doWork();
+  }
+
+  private final class MacroSubstitutionWorker {
+    private final Lexer myBaseLexer;
+    private final Stack<Lexer> myLexersStack = ContainerUtil.newStack();
+    private MacroCallParsingState myMacroCallParsingState = MacroCallParsingState.NONE;
+    private MacroCallBuilder myMacroCallBuilder = new MacroCallBuilder();
+    private int myOpenParenthesesCount = 0;
+    private MacroSubstitutionWorkerPosition myMacroNameEndPosition;
+
+    public MacroSubstitutionWorker(Lexer baseLexer) {
+      myBaseLexer = baseLexer;
+      myLexersStack.push(baseLexer);
+    }
+
+    //TODO clean up
+    public void doWork() {
+      while (!myLexersStack.isEmpty()) {
+        Lexer lexer = myLexersStack.peek();
+        addNotForeignWhitespaceAndCommentsFrom(lexer);
+        IElementType tokenType = lexer.getTokenType();
+        String tokenText = lexer.getTokenText();
+        if (tokenType == null) {
+          //NOTE: macro can only be split after a question mark (in other words, macro calls inside macros are called using only tokens inside them):
+          // -define(QMARK, ?).
+          // -define(MACRO, 10).
+          // foo() -> ?QMARK MACRO.
+          //The code above is valid whereas the following is not:
+          // -define(MACRO(A, B), A + B).
+          // -define(MACRO10, ?MACRO(10,).
+          // foo() -> ?MACRO10 20).
+          if (myMacroCallParsingState == MacroCallParsingState.MACRO_NAME) {
+            processMacroCall();
+          }
+          else {
+            if (myMacroCallParsingState != MacroCallParsingState.QMARK) {
+              resetMacroCallParsing();
+            }
+            myLexersStack.pop();
+            continue;
+          }
+        }
+        switch (myMacroCallParsingState) {
+          case NONE: {
+            if (tokenType == ErlangTypes.ERL_QMARK) {
+              myMacroCallParsingState = MacroCallParsingState.QMARK;
+            }
+            break;
+          }
+          case QMARK: {
+            if (tokenType == ErlangTypes.ERL_VAR || tokenType == ErlangTypes.ERL_ATOM) {
+              myMacroCallParsingState = MacroCallParsingState.MACRO_NAME;
+              myMacroCallBuilder.setMacroName(tokenText);
+              myMacroNameEndPosition = new MacroSubstitutionWorkerPosition();
+            }
+            else {
+              resetMacroCallParsing();
+            }
+            break;
+          }
+          case MACRO_NAME: {
+            if (tokenType == ErlangTypes.ERL_PAR_LEFT) {
+              myMacroCallParsingState = MacroCallParsingState.ARGUMENTS_LIST;
+              myMacroCallBuilder.setCanHaveArguments();
+              myOpenParenthesesCount = 1;
+            }
+            else { // no arguments specified: the macro call has a form ?MACRO
+              processMacroCall();
+            }
+            break;
+          }
+          case ARGUMENTS_LIST: {
+            //TODO make sure whitespace tokens are appended as macro arguments, so that ?MACRO(X = <<0:8>>) works.
+            if (myOpenParenthesesCount == 1 && tokenType == ErlangTypes.ERL_COMMA) {
+              myMacroCallBuilder.completeMacroArgument();
+            }
+            else if (myOpenParenthesesCount == 1 && tokenType == ErlangTypes.ERL_PAR_RIGHT) {
+              myMacroCallBuilder.completeMacroArgument();
+              processMacroCall();
+            }
+            else {
+              //TODO handle ERL_DOT - stop trying to build a macro call and continue lexing.
+              if (tokenType == ErlangTypes.ERL_PAR_RIGHT) {
+                myOpenParenthesesCount--;
+              }
+              else if (tokenType == ErlangTypes.ERL_PAR_LEFT) {
+                myOpenParenthesesCount++;
+              }
+              myMacroCallBuilder.appendMacroArgument(tokenText);
+            }
+            break;
+          }
+        }
+        addMayBeForeignTokenFrom(lexer);
+      }
+    }
+
+    private void processMacroCall() {
+      MacroCall macroCall = myMacroCallBuilder.build();
+      // this code handles calls like ?MACRO(arg1, arg2) where arguments may not be a MACRO's arguments
+      ErlangMacro macro = null;
+      List<String> macroArguments = macroCall.getPossibleArgumentsList();
+      if (macroArguments != null) {
+        macro = myMacroContext.getParameterizedMacro(macroCall.getName(), macroArguments.size());
+      }
+      if (macro == null) {
+        macro = myMacroContext.getParameterlessMacro(macroCall.getName());
+        macroArguments = null;
+        myMacroNameEndPosition.restore();
+      }
+      if (macro != null) {
+        String substitution = macro.substitute(macroArguments);
+        ErlangLexer substitutionLexer = new ErlangLexer();
+        substitutionLexer.start(substitution);
+        myLexersStack.push(substitutionLexer);
+      }
+      myMacroNameEndPosition = null;
+      resetMacroCallParsing();
+    }
+
+    public void resetMacroCallParsing() {
+      myMacroCallBuilder.reset();
+      myOpenParenthesesCount = 0;
+      myMacroCallParsingState = MacroCallParsingState.NONE;
+    }
+
+    private void addNotForeignWhitespaceAndCommentsFrom(Lexer lexer) {
+      if (lexer != myBaseLexer) {
+        //drop whitespace tokens from macro body.
+        while (ErlangParserDefinition.WS.contains(lexer.getTokenType()) ||
+          ErlangParserDefinition.COMMENTS.contains(lexer.getTokenType())) {
+          lexer.advance();
+        }
+      }
+      addWhitespaceAndCommentsFrom(lexer);
+    }
+
+    private void addMayBeForeignTokenFrom(Lexer lexer) {
+      IElementType tokenType = lexer.getTokenType();
+      int tokenEndOffset = myBaseLexer.getTokenEnd();
+      assert tokenType != null;
+      if (myBaseLexer != lexer) {
+        tokenEndOffset = myBaseLexer.getTokenStart();
+        tokenType = new ErlangForeignLeafType(tokenType, lexer.getTokenText());
+      }
+      addToken(tokenEndOffset, tokenType);
+      lexer.advance();
+    }
+
+    private class MacroSubstitutionWorkerPosition {
+      private final LexerPosition myBaseLexerPosition = myBaseLexer.getCurrentPosition();
+      private final LexerPosition myTopmostLexerPosition = myLexersStack.peek().getCurrentPosition();
+      private final int mySubstitutingLexerCacheSize = ErlangMacroSubstitutingLexer.this.getCacheSize();
+
+      public void restore() {
+        myBaseLexer.restore(myBaseLexerPosition);
+        myLexersStack.peek().restore(myTopmostLexerPosition);
+        ErlangMacroSubstitutingLexer.this.resetCacheSize(mySubstitutingLexerCacheSize);
+        myMacroNameEndPosition = null;
+      }
+    }
+  }
+
+  private static enum MacroCallParsingState {
+    NONE, QMARK, MACRO_NAME, ARGUMENTS_LIST
+  }
+
+  private static final class MacroCallBuilder {
+    private String myMacroName;
+    private StringBuilder myMacroArgumentBuilder = new StringBuilder();
+    private List<String> myArguments;
+    private boolean myCanHaveArguments;
+
+    public MacroCallBuilder() {
+      reset();
+    }
+
+    public void setMacroName(String name) {
+      myMacroName = name;
+    }
+
+    public void appendMacroArgument(String macroArgumentPart) {
+      myMacroArgumentBuilder.append(macroArgumentPart);
+    }
+
+    public void completeMacroArgument() {
+      if (myMacroArgumentBuilder.length() != 0) {
+        myArguments.add(myMacroArgumentBuilder.toString());
+        myMacroArgumentBuilder.setLength(0);
+      }
+    }
+
+    public void setCanHaveArguments() {
+      myCanHaveArguments = true;
+    }
+
+    public void reset() {
+      myMacroName = null;
+      myMacroArgumentBuilder.setLength(0);
+      myArguments = ContainerUtil.newArrayList();
+      myCanHaveArguments = false;
+    }
+
+    public MacroCall build() {
+      MacroCall result = new MacroCall(myMacroName, myCanHaveArguments ? myArguments : null);
+      reset();
+      return result;
+    }
+  }
+
+  private static final class MacroCall {
+    private final String myName;
+    private final List<String> myPossibleArgumentsList;
+
+    private MacroCall(String name, @Nullable List<String> possibleArgumentsList) {
+      myName = name;
+      myPossibleArgumentsList = possibleArgumentsList;
+    }
+
+    public String getName() {
+      return myName;
+    }
+
+    @Nullable
+    public List<String> getPossibleArgumentsList() {
+      return myPossibleArgumentsList;
     }
   }
 }

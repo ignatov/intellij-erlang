@@ -18,7 +18,10 @@ package org.intellij.erlang.parser;
 
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
+import com.intellij.lang.impl.PsiBuilderAdapter;
+import com.intellij.lang.impl.PsiBuilderImpl;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
+import com.intellij.lexer.Lexer;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
@@ -30,9 +33,11 @@ import com.intellij.psi.tree.TokenSet;
 import gnu.trove.TObjectLongHashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.lexer.ErlangForeignLeafType;
 import org.intellij.erlang.lexer.ErlangInterimTokenTypes;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static boolean isApplicationLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
@@ -109,10 +114,10 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser, TokenSet[] tokenSets) {
     PsiBuilder result = GeneratedParserUtilBase.adapt_builder_(root, builder, parser, tokenSets);
-    ErrorState.get(result).altMode = true;
-    return result;
+    ErrorState errorState = ErrorState.get(result);
+    return new Builder(builder, errorState, parser);
   }
-  
+
   @SuppressWarnings("UnusedParameters")
   public static boolean eofOrSpace(PsiBuilder builder_, int level_) {
     if (builder_.eof()) return true;
@@ -139,5 +144,46 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     beforeMacroBody.drop();
     builder_.advanceLexer();
     return true;
+  }
+
+  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
+  public static boolean recursion_guard_(PsiBuilder builder_, int level_, String funcName_) {
+    if (!GeneratedParserUtilBase.recursion_guard_(builder_, level_, funcName_)) {
+      return false;
+    }
+    //TODO move it to some other place
+    if (!funcName_.equals("macros") && nextTokenIs(builder_, ErlangTypes.ERL_QMARK)) {
+      PsiBuilder.Marker beforeMacroCallParsed = builder_.mark();
+      boolean macroCallParsed = ErlangParser.macros(builder_, level_);
+      //macro call which doesn't have ForeignLeaf elements after it was not substituted - leave it as is.
+      if (macroCallParsed && !(((Builder) builder_).getWrappedTokenType() instanceof ErlangForeignLeafType)) {
+        beforeMacroCallParsed.rollbackTo();
+      } else {
+        beforeMacroCallParsed.drop();
+      }
+    }
+    return true;
+  }
+
+  @SuppressWarnings("ClassNameSameAsAncestorName")
+  public static class Builder extends GeneratedParserUtilBase.Builder {
+    public Builder(PsiBuilder builder, GeneratedParserUtilBase.ErrorState state, PsiParser parser) {
+      super(builder, state, parser);
+    }
+
+    @Nullable
+    @Override
+    public IElementType getTokenType() {
+      IElementType tokenType = super.getTokenType();
+      while (tokenType instanceof ErlangForeignLeafType) {
+        tokenType = ((ErlangForeignLeafType) tokenType).getDelegate();
+      }
+      return tokenType;
+    }
+
+    @Nullable
+    public IElementType getWrappedTokenType() {
+      return super.getTokenType();
+    }
   }
 }
