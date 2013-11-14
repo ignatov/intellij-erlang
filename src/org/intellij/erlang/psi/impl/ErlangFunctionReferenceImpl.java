@@ -67,6 +67,9 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
       else if (ErlangBifTable.isBif(myModuleAtom.getText(), myReferenceName, myArity)) {
         return getElement();
       }
+      else if (myReferenceName.equals(ErlangBifTable.MODULE_INFO) && (myArity == 1 || myArity == 0)) {
+        return getElement();
+      }
       else {
         return null;
       }
@@ -80,8 +83,12 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
       if (calcStubs) return null;
 
-      final ErlangFunction implicitFunction = getExternalFunction("erlang");
+      ErlangFunction implicitFunction = getExternalFunction("erlang");
       if (implicitFunction != null) return implicitFunction;
+
+      if (ErlangBifTable.isBif("", myReferenceName, myArity)) {
+        return getElement();
+      }
 
       for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
         PsiReference reference = importFunction.getReference();

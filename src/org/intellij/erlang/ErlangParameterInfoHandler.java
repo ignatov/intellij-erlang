@@ -94,8 +94,8 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         Collections.sort(clauses, new Comparator<ErlangFunctionClause>() {
           @Override
           public int compare(ErlangFunctionClause lhs, ErlangFunctionClause rhs) {
-            final int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
-            final int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+            int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+            int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
             return Integer.signum(lhsSize - rhsSize);
           }
         });
@@ -105,18 +105,18 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       else {
         final ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
         if (erlGlobalFunctionCall != null) {
-          final ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
+          ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
           if (moduleRef != null) {
-            final String moduleName = moduleRef.getText();
-            final String functionName = erlFunctionCall.getNameIdentifier().getText();
-            final Collection<ErlangBifDescriptor> bifDescriptors = ErlangBifTable.getBifs(moduleName, functionName);
-            context.setItemsToShow(ArrayUtil.toObjectArray(bifDescriptors));
+            String moduleName = moduleRef.getText();
+            String functionName = erlFunctionCall.getNameIdentifier().getText();
+            List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.<ErlangBifDescriptor>emptyList();
+            context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs(moduleName, functionName), moduleInfo)));
             context.showHint(args, args.getTextRange().getStartOffset(), this);
           }
         }
         else {
           String name = erlFunctionCall.getNameIdentifier().getText();
-          context.setItemsToShow(ArrayUtil.toObjectArray(ErlangBifTable.getBifs("erlang", name)));
+          context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs("erlang", name), ErlangBifTable.getBifs("", name))));
           context.showHint(args, args.getTextRange().getStartOffset(), this);
         }
       }
@@ -217,7 +217,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       disabled = index >= args.size();
     }
     else if (p instanceof ErlangBifDescriptor) {
-      final String bifParams = ((ErlangBifDescriptor) p).getParams();
+      String bifParams = ((ErlangBifDescriptor) p).getParams();
       builder.append(bifParams);
       for (int i = 0; i < index && start != -1; ++i) {
         start = bifParams.indexOf(',', start + 1);
