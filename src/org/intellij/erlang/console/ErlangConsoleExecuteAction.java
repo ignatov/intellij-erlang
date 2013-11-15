@@ -16,25 +16,21 @@
 
 package org.intellij.erlang.console;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
-import com.intellij.openapi.actionSystem.Presentation;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ex.EditorEx;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangConsoleExecuteAction extends AnAction {
-
   @Override
   public void update(@NotNull AnActionEvent actionEvent) {
-    final Presentation presentation = actionEvent.getPresentation();
-    final Editor editor = actionEvent.getData(PlatformDataKeys.EDITOR);
+    Presentation presentation = actionEvent.getPresentation();
+    Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
     if (!(editor instanceof EditorEx) || ((EditorEx) editor).isRendererMode()) {
       presentation.setEnabled(false);
       return;
     }
-    final ErlangConsoleView consoleView = ErlangConsoleViewDirectory.getInstance().getConsole(editor);
+    ErlangConsoleView consoleView = ErlangConsoleViewDirectory.getInstance().getConsole(editor);
     if (consoleView == null) {
       presentation.setEnabled(false);
       return;
@@ -44,9 +40,9 @@ public class ErlangConsoleExecuteAction extends AnAction {
 
   @Override
   public void actionPerformed(@NotNull AnActionEvent actionEvent) {
-    final Editor editor = actionEvent.getData(PlatformDataKeys.EDITOR);
+    Editor editor = actionEvent.getData(CommonDataKeys.EDITOR);
     if (editor != null) {
-      final ErlangConsoleView consoleView = ErlangConsoleViewDirectory.getInstance().getConsole(editor);
+      ErlangConsoleView consoleView = ErlangConsoleViewDirectory.getInstance().getConsole(editor);
       if (consoleView != null) {
         consoleView.execute();
       }

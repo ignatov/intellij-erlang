@@ -24,6 +24,7 @@ import com.intellij.openapi.module.ModuleTypeManager;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
@@ -41,16 +42,19 @@ public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
     return (ErlangModuleType) ModuleTypeManager.getInstance().findByID(MODULE_TYPE_ID);
   }
 
+  @NotNull
   @Override
   public ErlangModuleBuilder createModuleBuilder() {
     return new ErlangModuleBuilder();
   }
 
+  @NotNull
   @Override
   public String getName() {
     return "Erlang Module";
   }
 
+  @NotNull
   @Override
   public String getDescription() {
     return "Erlang modules are used for developing <b>Erlang</b> applications.";
@@ -66,8 +70,11 @@ public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
     return ErlangIcons.ERLANG_MODULE_NODE;
   }
 
+  @NotNull
   @Override
-  public ModuleWizardStep[] createWizardSteps(WizardContext wizardContext, final ErlangModuleBuilder moduleBuilder, ModulesProvider modulesProvider) {
+  public ModuleWizardStep[] createWizardSteps(@NotNull WizardContext wizardContext,
+                                              @NotNull final ErlangModuleBuilder moduleBuilder,
+                                              @NotNull ModulesProvider modulesProvider) {
     return new ModuleWizardStep[]{new ProjectJdkForModuleStep(wizardContext, ErlangSdkType.getInstance()) {
       public void updateDataModel() {
         super.updateDataModel();

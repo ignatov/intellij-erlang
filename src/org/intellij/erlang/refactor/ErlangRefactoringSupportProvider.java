@@ -23,6 +23,7 @@ import com.intellij.refactoring.RefactoringActionHandler;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.refactor.introduce.ErlangExtractFunctionHandler;
 import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -30,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider {
   @Override
-  public boolean isSafeDeleteAvailable(PsiElement element) {
+  public boolean isSafeDeleteAvailable(@NotNull PsiElement element) {
     return
       element instanceof ErlangFunction ||
       element instanceof ErlangRecordDefinition ||
@@ -45,12 +46,12 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
   }
 
   @Override
-  public boolean isInplaceRenameAvailable(PsiElement element, PsiElement context) {
+  public boolean isInplaceRenameAvailable(@NotNull PsiElement element, PsiElement context) {
     return element instanceof ErlangNamedElement && element.getUseScope() instanceof LocalSearchScope;
   }
 
   @Override
-  public boolean isMemberInplaceRenameAvailable(PsiElement element, PsiElement context) {
+  public boolean isMemberInplaceRenameAvailable(@NotNull PsiElement element, PsiElement context) {
     return element instanceof ErlangNamedElement;
   }
 

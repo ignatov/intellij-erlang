@@ -22,4 +22,7 @@ public interface ErlangFunctionCallExpression extends ErlangExpression {
 
   int getTextOffset();
 
+  @NotNull
+  String getName();
+
 }

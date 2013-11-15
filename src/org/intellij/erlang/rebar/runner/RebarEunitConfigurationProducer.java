@@ -12,6 +12,7 @@ import org.intellij.erlang.eunit.ErlangUnitTestElementUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -73,7 +74,7 @@ public class RebarEunitConfigurationProducer extends RuntimeConfigurationProduce
   }
 
   @Override
-  public int compareTo(Object o) {
+  public int compareTo(@NotNull Object o) {
     return PREFERED;
   }
 }

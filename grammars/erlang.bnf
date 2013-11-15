@@ -424,7 +424,7 @@ module_ref ::= q_atom {
 global_function_call_expression ::= module_ref_or_dot_atom ':' function_call_expression {pin=0}
 private module_ref_or_dot_atom ::= '.' q_atom | module_ref
 function_call_expression ::= q_atom argument_list &not_function_definition {
-  methods = [getReference getNameIdentifier getTextOffset]
+  methods = [getReference getNameIdentifier getTextOffset getName]
 }
 private not_function_definition ::= <<isModeOn "GUARD">> | !('->'|when)
 macros_call ::= &('?') generic_function_call_expression {recoverUntil=macros_call_recover pin=1}

@@ -48,7 +48,7 @@ public class VariableTextBuilder extends PsiRecursiveElementVisitor {
       return;
     }
     else if (element instanceof ErlangFunctionCallExpression) {
-      myResult.append(((ErlangFunctionCallExpression) element).getNameIdentifier().getText());
+      myResult.append(((ErlangFunctionCallExpression) element).getName());
       return;
     }
     else if (element instanceof ErlangCaseExpression) {

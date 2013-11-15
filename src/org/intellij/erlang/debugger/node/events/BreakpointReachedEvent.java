@@ -118,13 +118,13 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
 
   @NotNull
   private static Collection<ErlangVariableBinding> getBindings(@Nullable OtpErlangList bindingsList) {
-    if (bindingsList == null) return ContainerUtil.<ErlangVariableBinding>emptyList();
+    if (bindingsList == null) return ContainerUtil.emptyList();
     Collection<ErlangVariableBinding> bindings = new ArrayList<ErlangVariableBinding>(bindingsList.arity());
     for (OtpErlangObject bindingObject : bindingsList) {
       OtpErlangTuple bindingTuple = getTupleValue(bindingObject);
       String variableName = getAtomText(elementAt(bindingTuple, 0));
       OtpErlangObject variableValue = elementAt(bindingTuple, 1);
-      if (variableName == null || variableValue == null) return ContainerUtil.<ErlangVariableBinding>emptyList();
+      if (variableName == null || variableValue == null) return ContainerUtil.emptyList();
       bindings.add(new ErlangVariableBinding(variableName, variableValue));
     }
     return bindings;

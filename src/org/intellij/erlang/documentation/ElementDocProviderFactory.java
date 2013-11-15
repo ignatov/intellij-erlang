@@ -86,7 +86,7 @@ final class ElementDocProviderFactory {
         if (moduleRef != null) {
           final String moduleName = moduleRef.getText();
           final ErlangFunctionCallExpression erlFunctionCall = erlGlobalFunctionCall.getFunctionCallExpression();
-          final String functionName = erlFunctionCall.getNameIdentifier().getText();
+          final String functionName = erlFunctionCall.getName();
           final int arity = erlFunctionCall.getArgumentList().getExpressionList().size();
           if (ErlangBifTable.isBif(moduleName, functionName, arity)) {
             final PsiReference psiReference = moduleRef.getReference();

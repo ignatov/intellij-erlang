@@ -22,6 +22,7 @@ import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
@@ -57,6 +58,8 @@ import java.util.*;
  * @author ignatov
  */
 public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
+  public static final Logger LOGGER = Logger.getInstance(ErlangExtractFunctionHandler.class);
+
   @Override
   public void invoke(@NotNull final Project project, Editor editor, PsiFile file, @Nullable DataContext dataContext) {
     if (!CommonRefactoringUtil.checkReadOnlyStatus(file)) return;
@@ -138,8 +141,8 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     final ErlangExpression first = ContainerUtil.getFirstItem(selection);
     final ErlangFunction function = PsiTreeUtil.getParentOfType(first, ErlangFunction.class);
     final ErlangExpression last = selection.get(selection.size() - 1);
-    assert function != null;
     assert first != null;
+    assert function != null;
     assert last != null;
 
     Pair<List<ErlangNamedElement>, List<ErlangNamedElement>> analyze = analyze(selection);
@@ -172,32 +175,24 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
         new WriteCommandAction(editor.getProject(), "Extract function", file) {
           @Override
           protected void run(Result result) throws Throwable {
-
-
-            ErlangFunction nf = ErlangElementFactory.createFunctionFromText(project, functionText);
-            PsiElement nn = ErlangElementFactory.createLeafFromText(project, "\n");
-            PsiElement n = ErlangElementFactory.createLeafFromText(project, "\n");
-
-
+            ErlangFunction newFunction = ErlangElementFactory.createFunctionFromText(project, functionText);
 
             PsiElement functionParent = function.getParent();
-            PsiElement anchor = function.getNextSibling();
-            PsiElement ffff = functionParent.addAfter(nf, function);
-            functionParent.addBefore(nn, ffff);
-            functionParent.addAfter(n,  function);
+            PsiElement added = functionParent.addAfter(newFunction, function);
+            functionParent.addBefore(newLine(), added);
+            functionParent.addAfter(newLine(),  function);
 
             PsiElement parent = first.getParent();
             parent.addBefore(ErlangElementFactory.createExpressionFromText(getProject(), bindingsS + signature), first);
             parent.deleteChildRange(first, last);
+          }
 
-//            editor.getDocument();
-//            PsiDocumentManager.getInstance(getProject()).doPostponedOperationsAndUnblockDocument(document);
-//
-//            CodeStyleManager.getInstance(project).reformat(ffff);
+          private PsiElement newLine() {
+            return ErlangElementFactory.createLeafFromText(project, "\n");
           }
         }.execute();
       } catch (Throwable throwable) {
-        throwable.printStackTrace();
+        LOGGER.warn(throwable);
       }
     }
   }

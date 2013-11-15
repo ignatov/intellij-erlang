@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangBinaryTypedHandler extends TypedHandlerDelegate {
 
   @Override
-  public Result charTyped(char c, Project project, Editor editor, @NotNull PsiFile file) {
+  public Result charTyped(char c, Project project, @NotNull Editor editor, @NotNull PsiFile file) {
     if (!(file instanceof ErlangFile)) return super.charTyped(c, project, editor, file);
 
     if (c != '<' || !CodeInsightSettings.getInstance().AUTOINSERT_PAIR_BRACKET) {

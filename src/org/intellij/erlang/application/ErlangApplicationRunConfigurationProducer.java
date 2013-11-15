@@ -30,6 +30,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ignatov
@@ -78,7 +79,7 @@ public class ErlangApplicationRunConfigurationProducer extends RuntimeConfigurat
   }
 
   @Override
-  public int compareTo(Object o) {
+  public int compareTo(@NotNull Object o) {
     return PREFERED;
   }
 }

@@ -423,9 +423,9 @@ public class ErlangPsiImplUtil {
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
 
         if (release == null || release.needBifCompletion(moduleName)) {
-          addBifsAsFunctions(lookupElements, ErlangBifTable.getBifs(moduleName), withArity);
+          addBifs(lookupElements, ErlangBifTable.getBifs(moduleName), withArity);
         }
-        addBifsAsFunctions(lookupElements, ErlangBifTable.getBifs("", ErlangBifTable.MODULE_INFO), withArity);
+        addBifs(lookupElements, ErlangBifTable.getBifs("", ErlangBifTable.MODULE_INFO), withArity);
       }
       else {
         ErlangFile erlangFile = (ErlangFile) containingFile;
@@ -457,7 +457,7 @@ public class ErlangPsiImplUtil {
     }
   }
 
-  private static void addBifsAsFunctions(List<LookupElement> lookupElements, Collection<ErlangBifDescriptor> bifs, boolean withArity) {
+  private static void addBifs(List<LookupElement> lookupElements, Collection<ErlangBifDescriptor> bifs, boolean withArity) {
     for (ErlangBifDescriptor bif : bifs) {
       lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
     }

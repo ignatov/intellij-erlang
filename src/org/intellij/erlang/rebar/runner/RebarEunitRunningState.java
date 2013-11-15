@@ -67,7 +67,7 @@ public class RebarEunitRunningState extends CommandLineState {
   }
 
   @NotNull
-  private ConsoleView createConsoleView(Executor executor) throws ExecutionException {
+  private ConsoleView createConsoleView(Executor executor) {
     ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties(myConfiguration, executor);
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH));

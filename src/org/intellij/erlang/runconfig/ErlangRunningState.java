@@ -126,7 +126,7 @@ public abstract class ErlangRunningState extends CommandLineState {
   }
 
   @NotNull
-  public abstract ConsoleView createConsoleView(Executor executor) throws ExecutionException;
+  public abstract ConsoleView createConsoleView(Executor executor);
 
   public static class ErlangEntryPoint {
     private final String myModuleName;

@@ -46,7 +46,7 @@ import java.util.*;
  * @author ignatov
  */
 public class ErlangUnitRunningState extends ErlangRunningState {
-  private static int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
+  public static int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
   private ErlangUnitRunConfiguration myConfiguration;
 
   public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
@@ -117,7 +117,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
   @Override
   @NotNull
-  public ConsoleView createConsoleView(Executor executor) throws ExecutionException {
+  public ConsoleView createConsoleView(Executor executor) {
     ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties(myConfiguration, executor);
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator("Erlang", consoleProperties, getEnvironment(), new ErlangTestLocationProvider());
   }

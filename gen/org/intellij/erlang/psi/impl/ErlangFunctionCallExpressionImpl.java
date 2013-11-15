@@ -48,4 +48,9 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
     return ErlangPsiImplUtil.getTextOffset(this);
   }
 
+  @NotNull
+  public String getName() {
+    return ErlangPsiImplUtil.getName(this);
+  }
+
 }

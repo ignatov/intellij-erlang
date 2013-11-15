@@ -108,14 +108,14 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
           ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
           if (moduleRef != null) {
             String moduleName = moduleRef.getText();
-            String functionName = erlFunctionCall.getNameIdentifier().getText();
+            String functionName = erlFunctionCall.getName();
             List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.<ErlangBifDescriptor>emptyList();
             context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs(moduleName, functionName), moduleInfo)));
             context.showHint(args, args.getTextRange().getStartOffset(), this);
           }
         }
         else {
-          String name = erlFunctionCall.getNameIdentifier().getText();
+          String name = erlFunctionCall.getName();
           context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs("erlang", name), ErlangBifTable.getBifs("", name))));
           context.showHint(args, args.getTextRange().getStartOffset(), this);
         }

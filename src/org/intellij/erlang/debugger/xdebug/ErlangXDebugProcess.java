@@ -313,7 +313,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
     setEntryPoint(runningState.getDebugEntryPoint());
   }
 
-  private void setEntryPoint(@NotNull ErlangRunningState.ErlangEntryPoint entryPoint) throws ExecutionException {
+  private void setEntryPoint(@NotNull ErlangRunningState.ErlangEntryPoint entryPoint) {
     myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
   }
 

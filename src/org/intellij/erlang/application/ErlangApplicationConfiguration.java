@@ -50,6 +50,7 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
     return new ErlangApplicationConfiguration(getProject(), getName(), ErlangApplicationRunConfigurationType.getInstance());
   }
 
+  @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
     return new ErlangRunConfigurationEditorForm();
