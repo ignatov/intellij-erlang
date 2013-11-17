@@ -50,6 +50,7 @@ import org.intellij.erlang.resolve.ErlangIncludeLibResolveTest;
 import org.intellij.erlang.resolve.ErlangIncludeResolveTest;
 import org.intellij.erlang.resolve.ErlangSmallIdeIncludeResolveTest;
 import org.intellij.erlang.sdk.ErlangSdkReleaseTest;
+import org.intellij.erlang.selection.ErlangWordSelectionTest;
 import org.intellij.erlang.typing.ErlangEnterHandlerTest;
 import org.intellij.erlang.typing.ErlangSmartEnterClauseProcessorTest;
 import org.intellij.erlang.typing.ErlangTypedHandlerTest;
@@ -95,6 +96,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangGotoSuperTest.class);
     suite.addTestSuite(ErlangTypedHandlerTest.class);
     suite.addTestSuite(ErlangEnterHandlerTest.class);
+    suite.addTestSuite(ErlangWordSelectionTest.class);
     suite.addTestSuite(ErlangIncludeLibResolveTest.class);
     suite.addTestSuite(ErlangIncludeResolveTest.class);
     suite.addTestSuite(ErlangSmallIdeIncludeResolveTest.class);

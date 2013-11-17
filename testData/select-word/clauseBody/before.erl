@@ -1,0 +1,3 @@
+foo() ->
+  first,
+  <caret>second.
