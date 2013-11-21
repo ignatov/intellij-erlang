@@ -46,7 +46,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   public static final Logger LOGGER = Logger.getInstance(ErlangApplicationIndex.class);
 
   private static final FileBasedIndex.InputFilter INPUT_FILTER = new ErlangApplicationInputFilter();
-  private static final int INDEX_VERSION = 0;
+  private static final int INDEX_VERSION = 1;
   private static final KeyDescriptor<String> KEY_DESCRIPTOR = new EnumeratorStringDescriptor();
   private static final DataIndexer<String, Void, FileContent> DATA_INDEXER = new ErlangApplicationDataIndexer();
   private static final String APP_SRC = ".app.src";
@@ -178,11 +178,17 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   private static class ErlangApplicationInputFilter implements FileBasedIndex.InputFilter {
     @Override
     public boolean acceptInput(VirtualFile file) {
-      return isApplicationFile(file);
+      return isApplicationFile(file) && isInsideEbinOrSrcDirectory(file);
     }
 
     private static boolean isApplicationFile(VirtualFile file) {
       return file != null && file.getFileType() == ErlangFileType.APP;
+    }
+    
+    private static boolean isInsideEbinOrSrcDirectory(VirtualFile file) {
+      VirtualFile parentDirectory = file.getParent();
+      String parentDirectoryName = parentDirectory != null ? parentDirectory.getName() : null;
+      return null != parentDirectoryName && ("src".equals(parentDirectoryName) || "ebin".equals(parentDirectoryName));
     }
   }
 
