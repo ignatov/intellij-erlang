@@ -41,6 +41,13 @@ public class ErlangIncludeLibResolveTest extends ErlangLightPlatformCodeInsightF
     doTestAppResolveTest("testapp");
   }
 
+  public void test375() throws Exception {
+    myFixture.configureByFiles("testappuser.erl",
+      "testapp-1.0/ebin/testapp.app", "testapp-1.0/include/testapp.hrl",
+      "patches/testapp/testapp.app", "patches/include/testapp.hrl");
+    doTestAppResolveTest("testapp-1.0");
+  }
+
   private void doTestAppResolveTest(String expectedAppDirName) throws Exception {
     PsiFile testappuserErl = myFixture.getFile();
     assertTrue(testappuserErl instanceof ErlangFile);
