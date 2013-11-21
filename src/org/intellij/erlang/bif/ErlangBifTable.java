@@ -385,6 +385,15 @@ public final class ErlangBifTable {
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "hash", 2, "Term, Range"));
 
     putLagerFunctionsToBifMap();
+    putGeneratedInfo();
+  }
+
+  public static final String MODULE_INFO = "module_info";
+
+  private static void putGeneratedInfo() {
+    bifMap.putValue("", new ErlangBifDescriptor("", "record_info", 2, "Key, Record"));
+    bifMap.putValue("", new ErlangBifDescriptor("", MODULE_INFO, 0, ""));
+    bifMap.putValue("", new ErlangBifDescriptor("", MODULE_INFO, 1, "Key"));
   }
 
   private static void putLagerFunctionsToBifMap() {
@@ -413,8 +422,7 @@ public final class ErlangBifTable {
   }
 
   @NotNull
-  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName,
-                                                        @NotNull String functionName) {
+  public static List<ErlangBifDescriptor> getBifs(@NotNull String moduleName, @NotNull String functionName) {
     final List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();
     for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {
       if (functionName.equals(bifDescriptor.getName())) {
