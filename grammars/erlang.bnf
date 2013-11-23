@@ -89,7 +89,7 @@ forms ::= console_expression | form_with_period *
 private console_expression ::= is_console empty console_expression_or_empty {pin=2}
 private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
-private form_with_period ::= form period {recoverUntil=form_recover pin=1}
+private form_with_period ::= form period {recoverWhile=form_recover pin=1}
 private left period ::= '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
 private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom | bnot | char | float | integer | not | string | var | '.')
 private form ::=
@@ -304,7 +304,7 @@ config_argument_list ::= '(' config_exprs? ')' {elementType=argument_list}
 config_list_expression ::= '[' config_exprs? ']' {elementType=list_expression}
 config_bin_list_expression ::= '<<' config_exprs? '>>' {elementType=binary_expression}
 config_tuple_expression ::= '{' config_exprs? '}' {elementType=tuple_expression}
-private config_exprs ::= config_expression (',' config_expression)* {recoverUntil=config_expr_recover}
+private config_exprs ::= config_expression (',' config_expression)* {recoverWhile=config_expr_recover}
 private config_expr_recover ::= !(')' | '>>' | ']' | '}')
 
 expression ::=
@@ -415,7 +415,7 @@ record_field ::= (q_atom | '_') '=' (qualified_atom_expression | expression) {
     getReference
     field_name_atom = "q_atom[0]"
   ]
-  recoverUntil="tuple_recoverer"
+  recoverWhile=tuple_recoverer
 }
 private qualified_atom_expression ::= q_atom '.' q_atom {pin=0}
 module_ref ::= q_atom {
@@ -427,7 +427,7 @@ function_call_expression ::= q_atom argument_list &not_function_definition {
   methods = [getReference getNameIdentifier getTextOffset getName]
 }
 private not_function_definition ::= <<isModeOn "GUARD">> | !('->'|when)
-macros_call ::= &('?') generic_function_call_expression {recoverUntil=macros_call_recover pin=1}
+macros_call ::= &('?') generic_function_call_expression {recoverWhile=macros_call_recover pin=1}
 private macros_call_recover ::= !'.'
 generic_function_call_expression ::= [q_atom_or_var ':'] (q_atom_or_var | macros) argument_list &not_function_definition
 private q_atom_or_var ::= q_atom | q_var
@@ -478,8 +478,8 @@ fake fake_binary_expression ::= expression+ {
   ]
 }
 
-private exprs ::= expression (exprs_tail)* {pin=2 recoverUntil=exprs_recover}
-private exprs_tail ::= ',' expression {pin=1 recoverUntil=exprs_recover}
+private exprs ::= expression (exprs_tail)* {pin=2 recoverWhile=exprs_recover}
+private exprs_tail ::= ',' expression {pin=1 recoverWhile=exprs_recover}
 private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
 private atomic ::= q_atom !'(' | integer | string_literal+ | float | char 

@@ -5505,18 +5505,11 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "prefix_expression")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
-    Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = prefix_op(builder_, level_ + 1);
     pinned_ = result_;
-    result_ = pinned_ && expression(builder_, level_, 9) && result_;
-    if (result_ || pinned_) {
-      marker_.done(ERL_PREFIX_EXPRESSION);
-    }
-    else {
-      marker_.rollbackTo();
-    }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    result_ = pinned_ && expression(builder_, level_, 9);
+    exit_section_(builder_, level_, marker_, ERL_PREFIX_EXPRESSION, result_, pinned_, null);
     return result_ || pinned_;
   }
 
@@ -5707,19 +5700,12 @@ public class ErlangParser implements PsiParser {
     if (!nextTokenIs(builder_, ERL_PAR_LEFT) && replaceVariants(builder_, 1, "<expression>")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
-    Marker marker_ = builder_.mark();
-    enterErrorRecordingSection(builder_, level_, _SECTION_GENERAL_, null);
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = consumeToken(builder_, ERL_PAR_LEFT);
     pinned_ = result_;
-    result_ = pinned_ && expression(builder_, level_, -1) && result_;
+    result_ = pinned_ && expression(builder_, level_, -1);
     result_ = pinned_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_RIGHT)) && result_;
-    if (result_ || pinned_) {
-      marker_.done(ERL_PARENTHESIZED_EXPRESSION);
-    }
-    else {
-      marker_.rollbackTo();
-    }
-    result_ = exitErrorRecordingSection(builder_, level_, result_, pinned_, _SECTION_GENERAL_, null);
+    exit_section_(builder_, level_, marker_, ERL_PARENTHESIZED_EXPRESSION, result_, pinned_, null);
     return result_ || pinned_;
   }
 
