@@ -16,7 +16,11 @@
 
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
@@ -28,6 +32,8 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangModuleIndex;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,6 +87,14 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
       ErlangFunction implicitFunction = getExternalFunction("erlang");
       if (implicitFunction != null) return implicitFunction;
+
+      Module module = ModuleUtilCore.findModuleForPsiElement(erlangFile);
+      Sdk sdk = module == null ? null : ModuleRootManager.getInstance(module).getSdk();
+      ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
+
+      if ((release == null || release.needBifCompletion("erlang")) && ErlangBifTable.isBif("erlang", myReferenceName, myArity)) {
+        return getElement();
+      }
 
       if (ErlangBifTable.isBif("", myReferenceName, myArity)) {
         return getElement();
