@@ -1,11 +1,4 @@
-// http://erlang.org/pipermail/erlang-questions/2011-November/062390.html
-// http://erlang.org/pipermail/erlang-questions/attachments/20111114/ba08f89c/attachment.obj
-// https://github.com/erlang/otp/blob/master/lib/stdlib/src/erl_parse.yrl
-//
-// Erlang bnf grammar
-//
-// Rootsymbol form
-
+// initial: https://github.com/erlang/otp/blob/master/lib/stdlib/src/erl_parse.yrl
 {
   parserClass="org.intellij.erlang.parser.ErlangParser"
   parserUtilClass="org.intellij.erlang.parser.ErlangParserUtil"
