@@ -205,22 +205,16 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       myLexersStack.push(baseLexer);
     }
 
-    //TODO clean up
     public void doWork() {
       while (!myLexersStack.isEmpty()) {
         Lexer lexer = myLexersStack.peek();
-        addNotForeignWhitespaceAndCommentsFrom(lexer);
+        // macro call arguments should contain all whitespace symbols so that ?MACRO(X = <<0:8>>) works fine
+        if (myMacroCallParsingState != MacroCallParsingState.ARGUMENTS_LIST) {
+          addNotForeignWhitespaceAndCommentsFrom(lexer);
+        }
         IElementType tokenType = lexer.getTokenType();
         String tokenText = lexer.getTokenText();
         if (tokenType == null) {
-          //NOTE: macro can only be split after a question mark (in other words, macro calls inside macros are called using only tokens inside them):
-          // -define(QMARK, ?).
-          // -define(MACRO, 10).
-          // foo() -> ?QMARK MACRO.
-          //The code above is valid whereas the following is not:
-          // -define(MACRO(A, B), A + B).
-          // -define(MACRO10, ?MACRO(10,).
-          // foo() -> ?MACRO10 20).
           if (myMacroCallParsingState == MacroCallParsingState.MACRO_NAME) {
             processMacroCall();
           }
@@ -262,7 +256,6 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
             break;
           }
           case ARGUMENTS_LIST: {
-            //TODO make sure whitespace tokens are appended as macro arguments, so that ?MACRO(X = <<0:8>>) works.
             if (myOpenParenthesesCount == 1 && tokenType == ErlangTypes.ERL_COMMA) {
               myMacroCallBuilder.completeMacroArgument();
             }
