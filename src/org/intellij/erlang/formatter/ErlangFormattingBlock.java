@@ -172,7 +172,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
     }
     if (BRACKETS_CONTAINERS.contains(parentType)) {
-      boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA;
+      boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA || childType == ERL_OP_OR;
       if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA && bracketsAndComma) return baseAlignment2;
     }

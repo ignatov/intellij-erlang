@@ -91,6 +91,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "SPACE_AROUND_SEND", "Send operator", AROUND_OPERATORS);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "SPACE_AROUND_ARROW", "Right arrow", AROUND_OPERATORS);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "SPACE_AROUND_LEFT_ARROW", "Left arrow", AROUND_OPERATORS);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "SPACE_AROUND_OR_IN_LISTS", "| inside lists", AROUND_OPERATORS);
     }
     else if (settingsType == SettingsType.BLANK_LINES_SETTINGS) {
       consumer.showStandardOptions("KEEP_BLANK_LINES_IN_CODE");
