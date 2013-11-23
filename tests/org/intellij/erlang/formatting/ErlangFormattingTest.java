@@ -105,10 +105,13 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test222_1()  throws Exception { getErlangSettings().INDENT_RELATIVE = true; doTest(); }
   public void test222_2()  throws Exception { getErlangSettings().INDENT_RELATIVE = false; doTest(); }
   public void test273()    throws Exception { getErlangSettings().ALIGN_GUARDS = true; doTest(); }
-  
-  public void test292()    throws Exception { 
-    getErlangSettings().ALIGN_MULTILINE_BLOCK = true; 
-    getErlangSettings().NEW_LINE_BEFORE_COMMA = true; 
+  public void test379()    throws Exception { setUpCommaFirst(); doTest(); }
+
+  public void test292() throws Exception {
+    ErlangCodeStyleSettings erlangSettings = getErlangSettings();
+    erlangSettings.ALIGN_MULTILINE_BLOCK = true;
+    erlangSettings.NEW_LINE_BEFORE_COMMA = true;
+    erlangSettings.SPACE_AROUND_OR_IN_LISTS = false;
     doTest(); 
   }
 
