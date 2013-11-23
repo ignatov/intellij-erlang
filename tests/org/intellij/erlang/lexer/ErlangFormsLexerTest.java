@@ -17,15 +17,11 @@
 package org.intellij.erlang.lexer;
 
 import com.intellij.lexer.Lexer;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.testFramework.LexerTestCase;
-
-import java.io.File;
 
 /**
  * @author savenko
  */
-public class ErlangFormsLexerTest extends LexerTestCase {
+public class ErlangFormsLexerTest extends ErlangLexerTestBase {
   @Override
   protected Lexer createLexer() {
     return new ErlangFormsLexer();
@@ -45,21 +41,4 @@ public class ErlangFormsLexerTest extends LexerTestCase {
   public void testIncompleteForm()   throws Exception { doTest(); }
   public void testCommentaries()     throws Exception { doTest(); }
   public void testElseWithNoDot()    throws Exception { doTest(); } // see #304
-
-  private void doTest() throws Exception {
-    doTest(loadTestFile(), loadExpectedFile());
-  }
-
-  private String loadTestFile() throws Exception {
-    return loadFile(false);
-  }
-
-  private String loadExpectedFile() throws Exception {
-    return loadFile(true);
-  }
-
-  private String loadFile(boolean isExpectedResultFile) throws Exception {
-    String fileName = getTestName(true) + (isExpectedResultFile ? "-expected.txt" : ".erl");
-    return FileUtil.loadFile(new File(getDirPath(), fileName), true);
-  }
 }
