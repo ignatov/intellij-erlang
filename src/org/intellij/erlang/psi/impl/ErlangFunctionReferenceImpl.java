@@ -56,10 +56,8 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     if (suppressResolve()) return null; // for #132
 
     PsiFile file = getElement().getContainingFile().getOriginalFile();
-    boolean calcStubs = file instanceof ErlangFile && ((ErlangFile) file).calcStubs();
 
     if (myModuleAtom != null) {
-      if (calcStubs) return null;
       ErlangFunction explicitFunction = getExternalFunction(getModuleFileName());
       if (explicitFunction != null) {
         return explicitFunction;
@@ -80,8 +78,6 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
       ErlangFunction result = erlangFile.getFunction(myReferenceName, myArity);
       if (result != null) return result;
-
-      if (calcStubs) return null;
 
       ErlangFunction implicitFunction = getExternalFunction("erlang");
       if (implicitFunction != null) return implicitFunction;

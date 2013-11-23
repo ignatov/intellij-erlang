@@ -51,9 +51,11 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.*;
+import com.intellij.util.ArrayUtil;
+import com.intellij.util.Function;
+import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
@@ -1449,21 +1451,9 @@ public class ErlangPsiImplUtil {
     ErlangFunctionStub stub = o.getStub();
     if (stub != null) return stub.isExported();
     
-    PsiFile file = o.getContainingFile().getOriginalFile();
-    file.putUserData(ErlangFileImpl.CALC_STUBS, true);
-    List<ErlangAttribute> attributes = ((ErlangFileImpl) file).getAttributes();
-    Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(attributes.toArray(new PsiElement[attributes.size()])));
-
-    List<PsiReference> exports = ContainerUtil.filter(search.findAll(), new Condition<PsiReference>() {
-      @Override
-      public boolean value(PsiReference psiReference) {
-        PsiElement element = psiReference.getElement();
-        return PsiTreeUtil.getParentOfType(element, ErlangExport.class) != null;
-      }
-    });
-    file.putUserData(ErlangFileImpl.CALC_STUBS, null);
-    PsiManager.getInstance(o.getProject()).dropResolveCaches();
-    return !exports.isEmpty();
+    PsiFile file = o.getContainingFile();
+    String signature = StringUtil.unquoteString(o.getName()) + "/" + o.getArity();
+    return file instanceof ErlangFile && ((ErlangFile) file).isExported(signature);
   }
 
   @Nullable

@@ -35,8 +35,6 @@ public interface ErlangFile extends PsiFile {
   @Nullable
   ErlangCallbackSpec getCallbackByName(@NotNull String fullName);
 
-  boolean calcStubs();
-
   @NotNull
   List<ErlangFunction> getFunctions();
 
@@ -78,6 +76,8 @@ public interface ErlangFile extends PsiFile {
 
   @NotNull
   Collection<ErlangFunction> getExportedFunctions();
+
+  boolean isExported(@NotNull String signature);
 
   boolean isExportedAll();
 

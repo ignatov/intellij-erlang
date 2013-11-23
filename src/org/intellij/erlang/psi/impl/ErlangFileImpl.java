@@ -20,7 +20,6 @@ import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Condition;
-import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.FileViewProvider;
@@ -57,8 +56,6 @@ import java.util.*;
  * @author ignatov
  */
 public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
-  public static final Key<Object> CALC_STUBS = Key.create("CALC_STUBS");
-
   public ErlangFileImpl(@NotNull FileViewProvider viewProvider) {
     super(viewProvider, ErlangLanguage.INSTANCE);
   }
@@ -119,6 +116,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   private CachedValue<List<ErlangBehaviour>> myBehavioursValue;
   private CachedValue<List<ErlangSpecification>> mySpecificationsValue;
   private CachedValue<Boolean> myExportAll;
+  private CachedValue<Set<String>> myExportedFunctionsSignatures;
 
   @NotNull
   @Override
@@ -131,6 +129,40 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     StubElement stub = super.getStub();
     if (stub == null) return null;
     return (ErlangFileStub) stub;
+  }
+
+  @Override
+  public boolean isExported(@NotNull String signature) {
+    if (isExportedAll()) return true;
+    if (myExportedFunctionsSignatures == null) {
+      myExportedFunctionsSignatures = CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<String>>() {
+        @Override
+        public Result<Set<String>> compute() {
+          return Result.create(calcExportedSignatures(), ErlangFileImpl.this);
+        }
+      }, false);
+    }
+    return myExportedFunctionsSignatures.getValue().contains(signature);
+  }
+
+  @NotNull
+  private Set<String> calcExportedSignatures() {
+    Set<String> result = ContainerUtil.newHashSet();
+    for (ErlangAttribute attribute : getAttributes()) {
+      ErlangExport export = attribute.getExport();
+      ErlangExportFunctions exportFunctions = export != null ? export.getExportFunctions() : null;
+      if (exportFunctions == null) continue;
+      List<ErlangExportFunction> list = exportFunctions.getExportFunctionList();
+      for (ErlangExportFunction exportFunction : list) {
+        ErlangQAtom qAtom = exportFunction.getQAtom();
+        PsiElement integer = exportFunction.getInteger();
+        if (integer == null) continue;
+        String text = qAtom.getText();
+        String s = StringUtil.unquoteString(text) + "/" + integer.getText();
+        result.add(s);
+      }
+    }
+    return result;
   }
 
   @Override
@@ -250,11 +282,6 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return callbacksMap;
   }
   
-  @Override
-  public boolean calcStubs() {
-    return getUserData(CALC_STUBS) != null;
-  }
-
   @NotNull
   @Override
   public List<ErlangFunction> getFunctions() {
