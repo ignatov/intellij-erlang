@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.lexer;
 
+import com.intellij.lang.BracePair;
 import com.intellij.lexer.Lexer;
 import com.intellij.lexer.LexerPosition;
 import com.intellij.lexer.LookAheadLexer;
@@ -24,6 +25,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.Stack;
+import org.intellij.erlang.ErlangBraceMatcher;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.ErlangLexer;
@@ -35,6 +37,8 @@ import java.util.List;
  * @author savenko
  */
 public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
+  private static final BracePair[] BRACE_PAIRS = new ErlangBraceMatcher().getPairs();
+
   private final ErlangMacroContext myMacroContext;
 
   public ErlangMacroSubstitutingLexer() {
@@ -197,9 +201,9 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
   private final class MacroSubstitutionWorker {
     private final Lexer myBaseLexer;
     private final Stack<Lexer> myLexersStack = ContainerUtil.newStack();
+    private final Stack<BracePair> myBracePairsStack = ContainerUtil.newStack();
     private MacroCallParsingState myMacroCallParsingState = MacroCallParsingState.NONE;
     private MacroCallBuilder myMacroCallBuilder = new MacroCallBuilder();
-    private int myOpenParenthesesCount = 0;
     private MacroSubstitutionWorkerPosition myMacroNameEndPosition;
 
     public MacroSubstitutionWorker(Lexer baseLexer) {
@@ -250,7 +254,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
             if (tokenType == ErlangTypes.ERL_PAR_LEFT) {
               myMacroCallParsingState = MacroCallParsingState.ARGUMENTS_LIST;
               myMacroCallBuilder.setCanHaveArguments();
-              myOpenParenthesesCount = 1;
+              myBracePairsStack.push(getBracePairForLeftBrace(ErlangTypes.ERL_PAR_LEFT));
             }
             else { // no arguments specified: the macro call has a form ?MACRO
               processMacroCall();
@@ -258,29 +262,46 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
             break;
           }
           case ARGUMENTS_LIST: {
-            if (myOpenParenthesesCount == 1 && tokenType == ErlangTypes.ERL_COMMA) {
+            int bracesStackSize = myBracePairsStack.size();
+            IElementType rightBraceType = myBracePairsStack.peek().getRightBraceType();
+            if (bracesStackSize == 1 && tokenType == ErlangTypes.ERL_COMMA) {
               myMacroCallBuilder.completeMacroArgument();
-            }
-            else if (myOpenParenthesesCount == 1 && tokenType == ErlangTypes.ERL_PAR_RIGHT) {
-              myMacroCallBuilder.completeMacroArgument();
-              processMacroCall();
             }
             else {
-              //TODO handle ERL_DOT - stop trying to build a macro call and continue lexing.
-              if (tokenType == ErlangTypes.ERL_PAR_RIGHT) {
-                myOpenParenthesesCount--;
+              if (bracesStackSize == 1 && tokenType == rightBraceType) {
+                myMacroCallBuilder.completeMacroArgument();
+                processMacroCall();
               }
-              else if (tokenType == ErlangTypes.ERL_PAR_LEFT) {
-                myOpenParenthesesCount++;
+              else {
+                //TODO handle ERL_DOT - stop trying to build a macro call and continue lexing.
+                if (tokenType == rightBraceType) {
+                  myBracePairsStack.pop();
+                }
+                else {
+                  BracePair bracePair = getBracePairForLeftBrace(tokenType);
+                  if (bracePair != null) {
+                    myBracePairsStack.push(bracePair);
+                  }
+                }
+                assert tokenType != null;
+                myMacroCallBuilder.appendMacroArgument(tokenText, tokenType);
               }
-              assert tokenType != null;
-              myMacroCallBuilder.appendMacroArgument(tokenText, tokenType);
             }
             break;
           }
         }
         addMayBeForeignTokenFrom(lexer);
       }
+    }
+
+    @Nullable
+    private BracePair getBracePairForLeftBrace(@Nullable IElementType leftBraceType) {
+      for (BracePair bracePair : BRACE_PAIRS) {
+        if (leftBraceType == bracePair.getLeftBraceType()) {
+          return bracePair;
+        }
+      }
+      return null;
     }
 
     private void processMacroCall() {
@@ -312,7 +333,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
 
     public void resetMacroCallParsing() {
       myMacroCallBuilder.reset();
-      myOpenParenthesesCount = 0;
+      myBracePairsStack.clear();
       myMacroCallParsingState = MacroCallParsingState.NONE;
     }
 

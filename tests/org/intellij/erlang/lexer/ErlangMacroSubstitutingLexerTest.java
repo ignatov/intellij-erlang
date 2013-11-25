@@ -47,4 +47,5 @@ public class ErlangMacroSubstitutingLexerTest extends ErlangLexerTestBase {
   public void testParameterTextSubstitution()     throws Exception { doTest(); }
   public void testBindBitSyntaxMacroArgument()    throws Exception { doTest(); }
   public void testWhitespaceMacroArgument()       throws Exception { doTest(); }
+  public void testCommasInMacroCallArguments()    throws Exception { doTest(); }
 }
