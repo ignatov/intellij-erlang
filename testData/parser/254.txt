@@ -58,8 +58,8 @@ ERL_FILE
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
               PsiElement(atom)('stdlib')
-        PsiErrorElement:']' expected, got '}'
-          <empty list>
+          PsiErrorElement:']' expected, got '}'
+            <empty list>
         PsiElement(})('}')
       PsiElement(,)(',')
       ERL_TUPLE_EXPRESSION

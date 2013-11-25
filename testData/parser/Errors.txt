@@ -175,4 +175,6 @@ ERL_FILE
             ERL_Q_ATOM
               PsiElement(atom)('first')
           PsiElement(||)('||')
+          PsiErrorElement:<expression> expected, got '.'
+            <empty list>
     PsiElement(.)('.')

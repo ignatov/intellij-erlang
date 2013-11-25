@@ -272,15 +272,15 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private Indent getChildIndent(@Nullable IElementType type, int newChildIndex) {
     if (getNode().getPsi() instanceof ErlangFunction && type == ERL_SEMI) return Indent.getNoneIndent();
     if (
-      type == ERL_IF_EXPRESSION ||
-      type == ERL_CASE_EXPRESSION ||
-      type == ERL_BEGIN_END_EXPRESSION ||
+      type == ERL_IF_EXPRESSION && newChildIndex == 1 ||
+      type == ERL_CASE_EXPRESSION && newChildIndex == 1 ||
+      type == ERL_BEGIN_END_EXPRESSION && newChildIndex == 1 ||
       type == ERL_AFTER_CLAUSE ||
       type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
       type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||
       type == ERL_TRY_CATCH && newChildIndex == 1 ||
       type == ERL_TRY_EXPRESSION && newChildIndex == 1 ||
-      type == ERL_TRY_EXPRESSION && newChildIndex == 3 ||
+      type == ERL_OF && newChildIndex == 3 ||
       type == ERL_SEMI) {
       return Indent.getNormalIndent(true);
     }

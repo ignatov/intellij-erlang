@@ -30,8 +30,8 @@ ERL_FILE
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
                       PsiElement(atom)('ok')
-        PsiErrorElement:';', after or end expected, got 'bar'
-          <empty list>
+          PsiErrorElement:';', after or end expected, got 'bar'
+            <empty list>
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
