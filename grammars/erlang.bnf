@@ -468,7 +468,7 @@ function_call_expression ::= q_atom argument_list &not_function_definition {
   methods = [getReference getNameIdentifier getTextOffset getName]
 }
 private not_function_definition ::= <<isModeOn "GUARD">> | !('->'|when)
-macros_call ::= &('?') generic_function_call_expression {recoverWhile=macros_call_recover pin=1}
+macros_call ::= &('?') macros argument_list &not_function_definition {recoverWhile=macros_call_recover pin=1}
 private macros_call_recover ::= !'.'
 generic_function_call_expression ::= [q_atom_or_var ':'] (q_atom_or_var | macros) argument_list &not_function_definition
 private q_atom_or_var ::= q_atom | q_var

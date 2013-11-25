@@ -152,9 +152,12 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       return false;
     }
     //TODO move it to some other place
-    if (!funcName_.equals("macros") && nextTokenIs(builder_, ErlangTypes.ERL_QMARK)) {
+    if (!funcName_.equals("macros") && !funcName_.startsWith("macros_call") && nextTokenIs(builder_, ErlangTypes.ERL_QMARK)) {
       PsiBuilder.Marker beforeMacroCallParsed = builder_.mark();
-      boolean macroCallParsed = ErlangParser.macros(builder_, level_);
+      boolean macroCallParsed = ErlangParser.macros_call(builder_, level_);
+      if (!macroCallParsed) {
+        macroCallParsed = ErlangParser.macros(builder_, level_);
+      }
       //macro call which doesn't have ForeignLeaf elements after it was not substituted - leave it as is.
       if (macroCallParsed && !(((Builder) builder_).getWrappedTokenType() instanceof ErlangForeignLeafType)) {
         beforeMacroCallParsed.rollbackTo();

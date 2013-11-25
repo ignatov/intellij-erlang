@@ -1,0 +1,53 @@
+ERL_FILE
+  ERL_MACROS_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom)('define')
+    PsiElement(()('(')
+    ERL_MACROS_NAME
+      PsiElement(var)('MACRO')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
+        ERL_MAX_EXPRESSION
+          ERL_Q_VAR
+            PsiElement(var)('X')
+      PsiElement(,)(',')
+      ERL_ARGUMENT_DEFINITION
+        ERL_MAX_EXPRESSION
+          ERL_Q_VAR
+            PsiElement(var)('Y')
+      PsiElement())(')')
+    PsiElement(,)(',')
+    ERL_MACROS_BODY
+      PsiElement(var)('X')
+      PsiElement(+)('+')
+      PsiElement(var)('Y')
+    PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_FUNCTION_CALL_EXPRESSION
+          ERL_Q_ATOM
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('MACRO')
+          ERL_ARGUMENT_LIST
+            PsiElement(()('(')
+            ERL_MAX_EXPRESSION
+              PsiElement(integer)('5')
+            PsiElement(,)(',')
+            ERL_MAX_EXPRESSION
+              PsiElement(integer)('10')
+            PsiElement())(')')
+          ForeignLeaf(integer: 5)('5')
+          ForeignLeaf(+: +)('+')
+          ForeignLeaf(integer: 10)('10')
+    PsiElement(.)('.')

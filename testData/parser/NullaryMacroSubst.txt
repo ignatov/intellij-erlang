@@ -1,0 +1,29 @@
+ERL_FILE
+  ERL_MACROS_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom)('define')
+    PsiElement(()('(')
+    ERL_MACROS_NAME
+      PsiElement(var)('MACRO')
+    PsiElement(,)(',')
+    ERL_MACROS_BODY
+      PsiElement(atom)('ok')
+    PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('MACRO')
+          ForeignLeaf(atom: ok)('ok')
+    PsiElement(.)('.')

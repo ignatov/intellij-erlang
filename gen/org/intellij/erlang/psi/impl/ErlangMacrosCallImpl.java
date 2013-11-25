@@ -23,8 +23,14 @@ public class ErlangMacrosCallImpl extends ErlangCompositeElementImpl implements 
 
   @Override
   @Nullable
-  public ErlangGenericFunctionCallExpression getGenericFunctionCallExpression() {
-    return findChildByClass(ErlangGenericFunctionCallExpression.class);
+  public ErlangArgumentList getArgumentList() {
+    return findChildByClass(ErlangArgumentList.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangMacros getMacros() {
+    return findChildByClass(ErlangMacros.class);
   }
 
 }

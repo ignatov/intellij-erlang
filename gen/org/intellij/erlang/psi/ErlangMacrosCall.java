@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface ErlangMacrosCall extends ErlangCompositeElement {
 
   @Nullable
-  ErlangGenericFunctionCallExpression getGenericFunctionCallExpression();
+  ErlangArgumentList getArgumentList();
+
+  @Nullable
+  ErlangMacros getMacros();
 
 }

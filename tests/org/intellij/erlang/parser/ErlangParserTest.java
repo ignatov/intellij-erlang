@@ -90,4 +90,6 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testComprehensions()    { doTest(true, false); }
   public void testMacrosHacks()       { doTest(true, false); }
   public void testMacrosUnderscore()  { doTest(true, false); }
+  public void testNullaryMacroSubst() { doTest(true, false); }
+  public void testBinaryMacroSubst()  { doTest(true, false); }
 }
