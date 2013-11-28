@@ -235,6 +235,12 @@ public class ErlangParser implements PsiParser {
     else if (t == ERL_LIST_OP_EXPRESSION) {
       r = expression(b, 0, 5);
     }
+    else if (t == ERL_MACRO_CALL_ARGUMENT_LIST) {
+      r = macro_call_argument_list(b, 0);
+    }
+    else if (t == ERL_MACRO_FORM) {
+      r = macro_form(b, 0);
+    }
     else if (t == ERL_MACROS) {
       r = macros(b, 0);
     }
@@ -243,9 +249,6 @@ public class ErlangParser implements PsiParser {
     }
     else if (t == ERL_MACROS_BODY) {
       r = macros_body(b, 0);
-    }
-    else if (t == ERL_MACROS_CALL) {
-      r = macros_call(b, 0);
     }
     else if (t == ERL_MACROS_DEFINITION) {
       r = macros_definition(b, 0);
@@ -1944,7 +1947,7 @@ public class ErlangParser implements PsiParser {
   //   | macros_definition
   //   | type_definition
   //   | attribute
-  //   | macros_call // macros support
+  //   | macro_form // macros support
   //   | rule
   //   | !<<eofOrSpace>>
   static boolean form(PsiBuilder b, int l) {
@@ -1959,7 +1962,7 @@ public class ErlangParser implements PsiParser {
     if (!r) r = macros_definition(b, l + 1);
     if (!r) r = type_definition(b, l + 1);
     if (!r) r = attribute(b, l + 1);
-    if (!r) r = macros_call(b, l + 1);
+    if (!r) r = macro_form(b, l + 1);
     if (!r) r = rule(b, l + 1);
     if (!r) r = form_10(b, l + 1);
     exit_section_(b, m, null, r);
@@ -3066,7 +3069,74 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '?' macros_name
+  // argument_list
+  public static boolean macro_call_argument_list(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macro_call_argument_list")) return false;
+    if (!nextTokenIs(b, ERL_PAR_LEFT)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = argument_list(b, l + 1);
+    exit_section_(b, m, ERL_MACRO_CALL_ARGUMENT_LIST, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // &('?') macros &not_function_definition
+  public static boolean macro_form(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macro_form")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, "<macro form>");
+    r = macro_form_0(b, l + 1);
+    p = r; // pin = 1
+    r = r && report_error_(b, macros(b, l + 1));
+    r = r && macro_form_2(b, l + 1);
+    exit_section_(b, l, m, ERL_MACRO_FORM, r, p, macro_form_recover_parser_);
+    return r || p;
+  }
+
+  // &('?')
+  private static boolean macro_form_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macro_form_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_, null);
+    r = macro_form_0_0(b, l + 1);
+    exit_section_(b, l, m, null, r, false, null);
+    return r;
+  }
+
+  // ('?')
+  private static boolean macro_form_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macro_form_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_QMARK);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &not_function_definition
+  private static boolean macro_form_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macro_form_2")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_, null);
+    r = not_function_definition(b, l + 1);
+    exit_section_(b, l, m, null, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // !'.'
+  static boolean macro_form_recover(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macro_form_recover")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_, null);
+    r = !consumeToken(b, ERL_DOT);
+    exit_section_(b, l, m, null, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // '?' macros_name macro_call_argument_list?
   public static boolean macros(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros")) return false;
     if (!nextTokenIs(b, ERL_QMARK)) return false;
@@ -3074,9 +3144,17 @@ public class ErlangParser implements PsiParser {
     Marker m = enter_section_(b, l, _NONE_, null);
     r = consumeToken(b, ERL_QMARK);
     p = r; // pin = 1
-    r = r && macros_name(b, l + 1);
+    r = r && report_error_(b, macros_name(b, l + 1));
+    r = p && macros_2(b, l + 1) && r;
     exit_section_(b, l, m, ERL_MACROS, r, p, null);
     return r || p;
+  }
+
+  // macro_call_argument_list?
+  private static boolean macros_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_2")) return false;
+    macro_call_argument_list(b, l + 1);
+    return true;
   }
 
   /* ********************************************************** */
@@ -3101,62 +3179,6 @@ public class ErlangParser implements PsiParser {
     Marker m = enter_section_(b, l, _NONE_, "<macros body>");
     r = consumeMacroBody(b, l + 1);
     exit_section_(b, l, m, ERL_MACROS_BODY, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // &('?') macros argument_list &not_function_definition
-  public static boolean macros_call(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_call")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<macros call>");
-    r = macros_call_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && report_error_(b, macros(b, l + 1));
-    r = p && report_error_(b, argument_list(b, l + 1)) && r;
-    r = r && macros_call_3(b, l + 1);
-    exit_section_(b, l, m, ERL_MACROS_CALL, r, p, macros_call_recover_parser_);
-    return r || p;
-  }
-
-  // &('?')
-  private static boolean macros_call_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_call_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = macros_call_0_0(b, l + 1);
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  // ('?')
-  private static boolean macros_call_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_call_0_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_QMARK);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  // &not_function_definition
-  private static boolean macros_call_3(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_call_3")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = not_function_definition(b, l + 1);
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // !'.'
-  static boolean macros_call_recover(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_call_recover")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NOT_, null);
-    r = !consumeToken(b, ERL_DOT);
-    exit_section_(b, l, m, null, r, false, null);
     return r;
   }
 
@@ -5811,14 +5833,14 @@ public class ErlangParser implements PsiParser {
       return guard(b, l + 1);
     }
   };
+  final static Parser macro_form_recover_parser_ = new Parser() {
+    public boolean parse(PsiBuilder b, int l) {
+      return macro_form_recover(b, l + 1);
+    }
+  };
   final static Parser macros_body_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return macros_body(b, l + 1);
-    }
-  };
-  final static Parser macros_call_recover_parser_ = new Parser() {
-    public boolean parse(PsiBuilder b, int l) {
-      return macros_call_recover(b, l + 1);
     }
   };
   final static Parser try_argument_definition_parser_ = new Parser() {

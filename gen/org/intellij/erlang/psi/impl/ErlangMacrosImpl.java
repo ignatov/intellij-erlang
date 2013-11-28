@@ -24,6 +24,12 @@ public class ErlangMacrosImpl extends ErlangCompositeElementImpl implements Erla
 
   @Override
   @Nullable
+  public ErlangMacroCallArgumentList getMacroCallArgumentList() {
+    return findChildByClass(ErlangMacroCallArgumentList.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangMacrosName getMacrosName() {
     return findChildByClass(ErlangMacrosName.class);
   }

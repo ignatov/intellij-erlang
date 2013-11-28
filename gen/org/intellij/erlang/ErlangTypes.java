@@ -84,9 +84,10 @@ public interface ErlangTypes {
   IElementType ERL_MACROS = new ErlangCompositeElementType("ERL_MACROS");
   IElementType ERL_MACROS_ARG = new ErlangCompositeElementType("ERL_MACROS_ARG");
   IElementType ERL_MACROS_BODY = new ErlangCompositeElementType("ERL_MACROS_BODY");
-  IElementType ERL_MACROS_CALL = new ErlangCompositeElementType("ERL_MACROS_CALL");
   IElementType ERL_MACROS_DEFINITION = ErlangElementTypeFactory.factory("ERL_MACROS_DEFINITION");
   IElementType ERL_MACROS_NAME = new ErlangCompositeElementType("ERL_MACROS_NAME");
+  IElementType ERL_MACRO_CALL_ARGUMENT_LIST = new ErlangCompositeElementType("ERL_MACRO_CALL_ARGUMENT_LIST");
+  IElementType ERL_MACRO_FORM = new ErlangCompositeElementType("ERL_MACRO_FORM");
   IElementType ERL_MAP_ENTRY = new ErlangCompositeElementType("ERL_MAP_ENTRY");
   IElementType ERL_MAP_ENTRY_TYPE = new ErlangCompositeElementType("ERL_MAP_ENTRY_TYPE");
   IElementType ERL_MAP_EXPRESSION = new ErlangCompositeElementType("ERL_MAP_EXPRESSION");
@@ -434,14 +435,17 @@ public interface ErlangTypes {
       else if (type == ERL_MACROS_BODY) {
         return new ErlangMacrosBodyImpl(node);
       }
-      else if (type == ERL_MACROS_CALL) {
-        return new ErlangMacrosCallImpl(node);
-      }
       else if (type == ERL_MACROS_DEFINITION) {
         return new ErlangMacrosDefinitionImpl(node);
       }
       else if (type == ERL_MACROS_NAME) {
         return new ErlangMacrosNameImpl(node);
+      }
+      else if (type == ERL_MACRO_CALL_ARGUMENT_LIST) {
+        return new ErlangMacroCallArgumentListImpl(node);
+      }
+      else if (type == ERL_MACRO_FORM) {
+        return new ErlangMacroFormImpl(node);
       }
       else if (type == ERL_MAP_ENTRY) {
         return new ErlangMapEntryImpl(node);

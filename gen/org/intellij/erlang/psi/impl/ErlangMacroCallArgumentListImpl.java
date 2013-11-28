@@ -10,27 +10,21 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangMacrosCallImpl extends ErlangCompositeElementImpl implements ErlangMacrosCall {
+public class ErlangMacroCallArgumentListImpl extends ErlangCompositeElementImpl implements ErlangMacroCallArgumentList {
 
-  public ErlangMacrosCallImpl(ASTNode node) {
+  public ErlangMacroCallArgumentListImpl(ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosCall(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacroCallArgumentList(this);
     else super.accept(visitor);
   }
 
   @Override
-  @Nullable
+  @NotNull
   public ErlangArgumentList getArgumentList() {
-    return findChildByClass(ErlangArgumentList.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangMacros getMacros() {
-    return findChildByClass(ErlangMacros.class);
+    return findNotNullChildByClass(ErlangArgumentList.class);
   }
 
 }

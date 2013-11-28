@@ -18,10 +18,7 @@ package org.intellij.erlang.parser;
 
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
-import com.intellij.lang.impl.PsiBuilderAdapter;
-import com.intellij.lang.impl.PsiBuilderImpl;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
-import com.intellij.lexer.Lexer;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
@@ -113,6 +110,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser, TokenSet[] tokenSets) {
+    //TODO copy implementation from GPUB, use ErrorState.initState to init state (available since 133.162)
     PsiBuilder result = GeneratedParserUtilBase.adapt_builder_(root, builder, parser, tokenSets);
     ErrorState errorState = ErrorState.get(result);
     return new Builder(builder, errorState, parser);
@@ -151,18 +149,11 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     if (!GeneratedParserUtilBase.recursion_guard_(builder_, level_, funcName_)) {
       return false;
     }
-    //TODO move it to some other place
     if (!funcName_.equals("macros") && !funcName_.startsWith("macros_call") && nextTokenIs(builder_, ErlangTypes.ERL_QMARK)) {
-      PsiBuilder.Marker beforeMacroCallParsed = builder_.mark();
-      boolean macroCallParsed = ErlangParser.macros_call(builder_, level_);
-      if (!macroCallParsed) {
-        macroCallParsed = ErlangParser.macros(builder_, level_);
-      }
-      //macro call which doesn't have ForeignLeaf elements after it was not substituted - leave it as is.
-      if (macroCallParsed && !(((Builder) builder_).getWrappedTokenType() instanceof ErlangForeignLeafType)) {
-        beforeMacroCallParsed.rollbackTo();
-      } else {
-        beforeMacroCallParsed.drop();
+      boolean macroCallParsed = ErlangParser.macros(builder_, level_);
+      if (macroCallParsed && !(((Builder)builder_).getWrappedTokenType() instanceof ErlangForeignLeafType)) {
+        //TODO rewind builder to a position right before this macro was parsed.
+        return true;
       }
     }
     return true;

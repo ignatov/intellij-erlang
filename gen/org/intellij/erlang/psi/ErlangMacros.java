@@ -9,6 +9,9 @@ import com.intellij.psi.PsiReference;
 public interface ErlangMacros extends ErlangCompositeElement {
 
   @Nullable
+  ErlangMacroCallArgumentList getMacroCallArgumentList();
+
+  @Nullable
   ErlangMacrosName getMacrosName();
 
   @NotNull

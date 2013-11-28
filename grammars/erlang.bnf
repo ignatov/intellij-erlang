@@ -99,7 +99,7 @@ private form ::=
   | macros_definition
   | type_definition
   | attribute
-  | macros_call // macros support
+  | macro_form // macros support
   | rule
   | !<<eofOrSpace>> /*&(!'.')*/
 
@@ -116,13 +116,14 @@ q_var ::= var {
   methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
 }
 macros_arg ::= '?''?' q_var
-macros ::= '?' macros_name {
+macros ::= '?' macros_name macro_call_argument_list? {
   pin=1
   methods = [getReference]
 }
 macros_name ::= atom | var {
   methods = [getReference]
 }
+macro_call_argument_list ::= argument_list //TODO consider cases like ?MACRO(->)
 
 private tuple_recoverer ::= !('}'|',')
 
@@ -468,8 +469,8 @@ function_call_expression ::= q_atom argument_list &not_function_definition {
   methods = [getReference getNameIdentifier getTextOffset getName]
 }
 private not_function_definition ::= <<isModeOn "GUARD">> | !('->'|when)
-macros_call ::= &('?') macros argument_list &not_function_definition {recoverWhile=macros_call_recover pin=1}
-private macros_call_recover ::= !'.'
+macro_form ::= &('?') macros &not_function_definition {recoverWhile=macro_form_recover pin=1}
+private macro_form_recover ::= !'.'
 generic_function_call_expression ::= [q_atom_or_var ':'] (q_atom_or_var | macros) argument_list &not_function_definition
 private q_atom_or_var ::= q_atom | q_var
 
