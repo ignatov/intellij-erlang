@@ -35,19 +35,20 @@ ERL_FILE
           ERL_BINARY_EXPRESSION
             PsiElement(<<)('<<')
             ERL_BIN_ELEMENT
-              ERL_GENERIC_FUNCTION_CALL_EXPRESSION
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   ERL_MACROS
                     PsiElement(?)('?')
                     ERL_MACROS_NAME
                       ERL_ATOM
                         PsiElement(atom_name)('get_int32')
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Len')
-                  PsiElement())(')')
+                    ERL_MACRO_CALL_ARGUMENT_LIST
+                      ERL_ARGUMENT_LIST
+                        PsiElement(()('(')
+                        ERL_MAX_EXPRESSION
+                          ERL_Q_VAR
+                            PsiElement(var)('Len')
+                        PsiElement())(')')
             PsiElement(,)(',')
             ERL_BIN_ELEMENT
               ERL_MAX_EXPRESSION

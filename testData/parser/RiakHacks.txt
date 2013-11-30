@@ -55,11 +55,16 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Req')
               PsiElement(=)('=')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  PsiElement(var)('VNODE_REQ')
               ERL_RECORD_EXPRESSION
-                ERL_MACROS
-                  PsiElement(?)('?')
-                  ERL_MACROS_NAME
-                    PsiElement(var)('VNODE_REQ')
+                ForeignLeaf(#: #)('#')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      ForeignLeaf(atom_name: riak_vnode_req_v1)('riak_vnode_req_v1')
                 ERL_RECORD_TUPLE
                   PsiElement({)('{')
                   ERL_RECORD_FIELD
@@ -99,11 +104,16 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Req')
               PsiElement(=)('=')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  PsiElement(var)('VNODE_REQ')
               ERL_RECORD_EXPRESSION
-                ERL_MACROS
-                  PsiElement(?)('?')
-                  ERL_MACROS_NAME
-                    PsiElement(var)('VNODE_REQ')
+                ForeignLeaf(#: #)('#')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      ForeignLeaf(atom_name: riak_vnode_req_v1)('riak_vnode_req_v1')
                 ERL_RECORD_TUPLE
                   PsiElement({)('{')
                   PsiElement(})('}')
@@ -135,11 +145,16 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Req')
               PsiElement(=)('=')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  PsiElement(var)('VNODE_REQ')
               ERL_RECORD_EXPRESSION
-                ERL_MACROS
-                  PsiElement(?)('?')
-                  ERL_MACROS_NAME
-                    PsiElement(var)('VNODE_REQ')
+                ForeignLeaf(#: #)('#')
+                ERL_RECORD_REF
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      ForeignLeaf(atom_name: riak_vnode_req_v1)('riak_vnode_req_v1')
                 ERL_RECORD_FIELD
                   PsiElement(.)('.')
                   ERL_Q_ATOM

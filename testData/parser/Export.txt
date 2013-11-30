@@ -109,24 +109,25 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('Cstructs0')
                 PsiElement(=)('=')
-                ERL_FUNCTION_CALL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     ERL_MACROS
                       PsiElement(?)('?')
                       ERL_MACROS_NAME
                         ERL_ATOM
                           PsiElement(atom_name)('ets_match_object')
-                  ERL_ARGUMENT_LIST
-                    PsiElement(()('(')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_ATOM
-                        ERL_ATOM
-                          PsiElement(atom_name)('mnesia_gvar')
-                    PsiElement(,)(',')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('CsPat')
-                    PsiElement())(')')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                PsiElement(atom_name)('mnesia_gvar')
+                          PsiElement(,)(',')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('CsPat')
+                          PsiElement())(')')
               PsiElement(,)(',')
               ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
@@ -628,27 +629,28 @@ ERL_FILE
               PsiElement(->)('->')
               ERL_CASE_EXPRESSION
                 PsiElement(case)('case')
-                ERL_FUNCTION_CALL_EXPRESSION
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
                     ERL_MACROS
                       PsiElement(?)('?')
                       ERL_MACROS_NAME
                         ERL_ATOM
                           PsiElement(atom_name)('catch_val')
-                  ERL_ARGUMENT_LIST
-                    PsiElement(()('(')
-                    ERL_TUPLE_EXPRESSION
-                      PsiElement({)('{')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Tab')
-                      PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('cstruct')
-                      PsiElement(})('}')
-                    PsiElement())(')')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_TUPLE_EXPRESSION
+                            PsiElement({)('{')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(var)('Tab')
+                            PsiElement(,)(',')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_ATOM
+                                ERL_ATOM
+                                  PsiElement(atom_name)('cstruct')
+                            PsiElement(})('}')
+                          PsiElement())(')')
                 PsiElement(of)('of')
                 ERL_CR_CLAUSE
                   ERL_ARGUMENT_DEFINITION

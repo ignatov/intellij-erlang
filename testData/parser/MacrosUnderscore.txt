@@ -54,12 +54,18 @@ ERL_FILE
             PsiElement(()('(')
             PsiElement())(')')
         PsiElement(,)(',')
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                PsiElement(var)('_')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            PsiElement(var)('_')
+        ERL_ANONYMOUS_CALL_EXPRESSION
+          ERL_FUNCTION_CALL_EXPRESSION
+            ERL_Q_ATOM
+              ERL_ATOM
+                ForeignLeaf(atom_name: foo)('foo')
+            ERL_ARGUMENT_LIST
+              ForeignLeaf((: ()('(')
+              ForeignLeaf(): ))(')')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             PsiElement())(')')

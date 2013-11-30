@@ -149,7 +149,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     if (!GeneratedParserUtilBase.recursion_guard_(builder_, level_, funcName_)) {
       return false;
     }
-    if (!funcName_.equals("macros") && !funcName_.startsWith("macros_call") && nextTokenIs(builder_, ErlangTypes.ERL_QMARK)) {
+    if (!funcName_.equals("macros") && !funcName_.startsWith("macros_call") && nextTokenIsFast(builder_, ErlangTypes.ERL_QMARK)) {
       PsiBuilder.Marker beforeMacroCallParsed = builder_.mark();
       boolean macroCallParsed = ErlangParser.macros(builder_, level_);
       if (!macroCallParsed || !(((Builder)builder_).getWrappedTokenType() instanceof ErlangForeignLeafType)) {

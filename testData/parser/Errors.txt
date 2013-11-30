@@ -140,8 +140,8 @@ ERL_FILE
           ERL_Q_ATOM
             ERL_ATOM
               PsiElement(atom_name)('ok')
-          PsiErrorElement:'|' unexpected
-            PsiElement(|)('|')
+        PsiErrorElement:'|' unexpected
+          PsiElement(|)('|')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE

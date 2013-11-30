@@ -12,8 +12,8 @@ ERL_FILE
         ERL_MAX_EXPRESSION
           ERL_Q_VAR
             PsiElement(var)('AA')
-          PsiErrorElement:'ok' unexpected
-            PsiElement(atom_name)('ok')
+        PsiErrorElement:'ok' unexpected
+          PsiElement(atom_name)('ok')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE

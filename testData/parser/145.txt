@@ -55,19 +55,86 @@ ERL_FILE
     PsiElement(,)(',')
     ERL_TYPED_RECORD_FIELDS
       PsiElement({)('{')
-      ERL_GENERIC_FUNCTION_CALL_EXPRESSION
+      ERL_MACROS
+        PsiElement(?)('?')
+        ERL_MACROS_NAME
+          PsiElement(var)('ELEMENT_BASE')
+        ERL_MACRO_CALL_ARGUMENT_LIST
+          ERL_ARGUMENT_LIST
+            PsiElement(()('(')
+            ERL_MAX_EXPRESSION
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('undefined')
+            PsiElement())(')')
+      ERL_TYPED_EXPR
         ERL_Q_ATOM
-          ERL_MACROS
-            PsiElement(?)('?')
-            ERL_MACROS_NAME
-              PsiElement(var)('ELEMENT_BASE')
-        ERL_ARGUMENT_LIST
-          PsiElement(()('(')
-          ERL_MAX_EXPRESSION
-            ERL_Q_ATOM
-              ERL_ATOM
-                PsiElement(atom_name)('undefined')
-          PsiElement())(')')
+          ERL_ATOM
+            ForeignLeaf(atom_name: is_element)('is_element')
+        ForeignLeaf(=: =)('=')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: is_element)('is_element')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: module)('module')
+        ForeignLeaf(=: =)('=')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: undefined)('undefined')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: id)('id')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: anchor)('anchor')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: actions)('actions')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: show_if)('show_if')
+        ForeignLeaf(=: =)('=')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: true)('true')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: class)('class')
+        ForeignLeaf(=: =)('=')
+        ERL_STRING_LITERAL
+          ForeignLeaf(string: "")('""')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: style)('style')
+        ForeignLeaf(=: =)('=')
+        ERL_STRING_LITERAL
+          ForeignLeaf(string: "")('""')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: html_id)('html_id')
+        ForeignLeaf(=: =)('=')
+        ERL_STRING_LITERAL
+          ForeignLeaf(string: "")('""')
       PsiElement(})('}')
     PsiElement())(')')
     PsiElement(.)('.')
@@ -81,19 +148,86 @@ ERL_FILE
     PsiElement(,)(',')
     ERL_TYPED_RECORD_FIELDS
       PsiElement({)('{')
-      ERL_GENERIC_FUNCTION_CALL_EXPRESSION
+      ERL_MACROS
+        PsiElement(?)('?')
+        ERL_MACROS_NAME
+          PsiElement(var)('ELEMENT_BASE')
+        ERL_MACRO_CALL_ARGUMENT_LIST
+          ERL_ARGUMENT_LIST
+            PsiElement(()('(')
+            ERL_MAX_EXPRESSION
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('element_image')
+            PsiElement())(')')
+      ERL_TYPED_EXPR
         ERL_Q_ATOM
-          ERL_MACROS
-            PsiElement(?)('?')
-            ERL_MACROS_NAME
-              PsiElement(var)('ELEMENT_BASE')
-        ERL_ARGUMENT_LIST
-          PsiElement(()('(')
-          ERL_MAX_EXPRESSION
-            ERL_Q_ATOM
-              ERL_ATOM
-                PsiElement(atom_name)('element_image')
-          PsiElement())(')')
+          ERL_ATOM
+            ForeignLeaf(atom_name: is_element)('is_element')
+        ForeignLeaf(=: =)('=')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: is_element)('is_element')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: module)('module')
+        ForeignLeaf(=: =)('=')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: element_image)('element_image')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: id)('id')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: anchor)('anchor')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: actions)('actions')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: show_if)('show_if')
+        ForeignLeaf(=: =)('=')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: true)('true')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: class)('class')
+        ForeignLeaf(=: =)('=')
+        ERL_STRING_LITERAL
+          ForeignLeaf(string: "")('""')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: style)('style')
+        ForeignLeaf(=: =)('=')
+        ERL_STRING_LITERAL
+          ForeignLeaf(string: "")('""')
+      ForeignLeaf(,: ,)(',')
+      ERL_TYPED_EXPR
+        ERL_Q_ATOM
+          ERL_ATOM
+            ForeignLeaf(atom_name: html_id)('html_id')
+        ForeignLeaf(=: =)('=')
+        ERL_STRING_LITERAL
+          ForeignLeaf(string: "")('""')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM

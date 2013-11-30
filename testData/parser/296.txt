@@ -62,23 +62,23 @@ ERL_FILE
       PsiElement(()('(')
       ERL_EXPORT_FUNCTIONS
         PsiElement([)('[')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            PsiElement(atom_name)('test_func_macro')
         ERL_EXPORT_FUNCTION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('test_func_macro')
+            ForeignLeaf(atom_name: test)('test')
           PsiElement(/)('/')
           PsiElement(integer)('0')
         PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            PsiElement(atom_name)('test_func_macro')
         ERL_EXPORT_FUNCTION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('test_func_macro')
+            ForeignLeaf(atom_name: test)('test')
           PsiElement(/)('/')
           PsiElement(integer)('0')
         PsiElement(])(']')
@@ -107,22 +107,23 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                PsiElement(var)('TRUE')
-    PsiElement(.)('.')
-  PsiComment(function_doc_comment)('%%error')
-  ERL_FUNCTION
-    ERL_FUNCTION_CLAUSE
-      ERL_Q_ATOM
         ERL_MACROS
           PsiElement(?)('?')
           ERL_MACROS_NAME
-            ERL_ATOM
-              PsiElement(atom_name)('test_func_macro')
+            PsiElement(var)('TRUE')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ForeignLeaf(atom: true)('true')
+    PsiElement(.)('.')
+  PsiComment(function_doc_comment)('%%error')
+  ERL_MACROS
+    PsiElement(?)('?')
+    ERL_MACROS_NAME
+      PsiElement(atom)('test_func_macro')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ForeignLeaf(atom: test)('test')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -134,29 +135,23 @@ ERL_FILE
               PsiElement(atom_name)('ok')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%error')
-  ERL_MACROS_CALL
-    ERL_GENERIC_FUNCTION_CALL_EXPRESSION
-      ERL_Q_ATOM
-        ERL_MACROS
-          PsiElement(?)('?')
-          ERL_MACROS_NAME
-            ERL_ATOM
-              PsiElement(atom_name)('a')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
-        PsiElement())(')')
+  ERL_MACROS
+    PsiElement(?)('?')
+    ERL_MACROS_NAME
+      PsiElement(atom_name)('a')
+  PsiErrorElement:null
+    ForeignLeaf(integer: 1)('1')
+    PsiElement(()('(')
+    PsiElement())(')')
     PsiElement(.)('.')
-  ERL_MACROS_CALL
-    ERL_GENERIC_FUNCTION_CALL_EXPRESSION
-      ERL_Q_ATOM
-        ERL_MACROS
-          PsiElement(?)('?')
-          ERL_MACROS_NAME
-            ERL_ATOM
-              PsiElement(atom_name)('a')
-      ERL_ARGUMENT_LIST
-        PsiElement(()('(')
-        PsiElement())(')')
+  ERL_MACROS
+    PsiElement(?)('?')
+    ERL_MACROS_NAME
+      PsiElement(atom_name)('a')
+  PsiErrorElement:null
+    ForeignLeaf(integer: 1)('1')
+    PsiElement(()('(')
+    PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -200,13 +195,13 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            PsiElement(atom)('test_func_macro')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('test_func_macro')
+            ForeignLeaf(atom: test)('test')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             PsiElement())(')')
@@ -251,13 +246,13 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            PsiElement(atom)('test_func_macro')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('test_func_macro')
+            ForeignLeaf(atom: test)('test')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             PsiElement())(')')

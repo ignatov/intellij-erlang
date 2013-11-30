@@ -1,7 +1,7 @@
 ERL_FILE
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
       PsiElement(var)('MACRO')
@@ -27,27 +27,30 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
-        ERL_FUNCTION_CALL_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                PsiElement(var)('MACRO')
-          ERL_ARGUMENT_LIST
-            PsiElement(()('(')
-            ERL_MAX_EXPRESSION
-              PsiElement(integer)('5')
-            PsiElement(,)(',')
-            ERL_MAX_EXPRESSION
-              PsiElement(integer)('10')
-            PsiElement())(')')
-          ForeignLeaf(integer: 5)('5')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            PsiElement(var)('MACRO')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_MAX_EXPRESSION
+                PsiElement(integer)('5')
+              PsiElement(,)(',')
+              ERL_MAX_EXPRESSION
+                PsiElement(integer)('10')
+              PsiElement())(')')
+        ERL_ADDITIVE_EXPRESSION
+          ERL_MAX_EXPRESSION
+            ForeignLeaf(integer: 5)('5')
           ForeignLeaf(+: +)('+')
-          ForeignLeaf(integer: 10)('10')
+          ERL_MAX_EXPRESSION
+            ForeignLeaf(integer: 10)('10')
     PsiElement(.)('.')
