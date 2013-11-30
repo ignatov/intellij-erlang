@@ -1,0 +1,21 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_ADDITIVE_EXPRESSION
+          ERL_MAX_EXPRESSION
+            ERL_Q_ATOM
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  PsiElement(var)('UNKNOWN_MACRO')
+          PsiElement(+)('+')
+          ERL_MAX_EXPRESSION
+            PsiElement(integer)('3')
+    PsiElement(.)('.')

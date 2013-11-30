@@ -150,10 +150,13 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       return false;
     }
     if (!funcName_.equals("macros") && !funcName_.startsWith("macros_call") && nextTokenIs(builder_, ErlangTypes.ERL_QMARK)) {
+      PsiBuilder.Marker beforeMacroCallParsed = builder_.mark();
       boolean macroCallParsed = ErlangParser.macros(builder_, level_);
-      if (macroCallParsed && !(((Builder)builder_).getWrappedTokenType() instanceof ErlangForeignLeafType)) {
-        //TODO rewind builder to a position right before this macro was parsed.
-        return true;
+      if (!macroCallParsed || !(((Builder)builder_).getWrappedTokenType() instanceof ErlangForeignLeafType)) {
+        beforeMacroCallParsed.rollbackTo();
+      }
+      else {
+        beforeMacroCallParsed.drop();
       }
     }
     return true;
