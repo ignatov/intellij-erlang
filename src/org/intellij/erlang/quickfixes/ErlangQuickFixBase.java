@@ -27,7 +27,7 @@ public abstract class ErlangQuickFixBase implements LocalQuickFix {
   static ErlangCompositeElement getAnchorElement(ErlangFile containingFile) {
     //noinspection unchecked
     return PsiTreeUtil.getChildOfAnyType(containingFile,
-      ErlangRecordDefinition.class, ErlangFunction.class, ErlangSpecification.class, ErlangTypeDefinition.class);
+      ErlangRecordDefinition.class, ErlangFunction.class, ErlangSpecification.class, ErlangTypeDefinition.class, ErlangMacros.class);
   }
 
   @NotNull

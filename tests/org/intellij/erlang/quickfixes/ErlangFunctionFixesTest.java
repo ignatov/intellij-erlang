@@ -59,6 +59,12 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testFewNonEmpties1()      { doTest("Export function"); }
   public void testFewNonEmpties2()      { doTest("Export function"); }
 
+  public void testMacroWholeFunDelete() { doTest("Remove function"); }
+  public void testMacroPartFunDelete()  { doTest("Remove function"); }
+
+  public void testMacroWholeFunExport() { doTest("Export function"); }
+  public void testMacroPartFunExport()  { doTest("Export function"); }
+  
   public void testExportsToShowInPopupAllEmpty() {
     myFixture.configureByFile("without.erl");
     assertEquals(getExportsToShow(myFixture.getFile()).size(), 0);

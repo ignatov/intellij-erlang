@@ -52,7 +52,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
       public void visitFile(final PsiFile file) {
         for (ErlangFunction function : ((ErlangFile) file).getFunctions()) {
           if (isUnusedFunction((ErlangFile) file, function)) {
-            holder.registerProblem(function.getNameIdentifier(),
+            registerProblemForeignTokensAware(holder, function.getNameIdentifier(),
               "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",
               ProblemHighlightType.LIKE_UNUSED_SYMBOL,
               new ErlangRemoveFunctionFix(),
