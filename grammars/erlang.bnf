@@ -135,7 +135,7 @@ record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
 
 macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ',' <<guarded macros_body>> ')' {
   pin = 2
-  methods = [getName setName getNameIdentifier getTextOffset]
+  methods = [getName setName getNameIdentifier getTextOffset getArity]
   stubClass="org.intellij.erlang.stubs.ErlangMacrosDefinitionStub"
 }
 macros_body ::= <<consumeMacroBody>>

@@ -194,16 +194,13 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         return Result.create(calcMacroses(), ErlangFileImpl.this);
       }
     }, false);
-  private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangMacrosDefinition>>() {
+  private CachedValue<MultiMap<String, ErlangMacrosDefinition>> myMacrosMap =
+    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<MultiMap<String, ErlangMacrosDefinition>>() {
       @Override
-      public Result<Map<String, ErlangMacrosDefinition>> compute() {
-        Map<String, ErlangMacrosDefinition> map = new THashMap<String, ErlangMacrosDefinition>();
+      public Result<MultiMap<String, ErlangMacrosDefinition>> compute() {
+        MultiMap<String, ErlangMacrosDefinition> map = new MultiMap<String, ErlangMacrosDefinition>();
         for (ErlangMacrosDefinition macros : getMacroses()) {
-          String macrosName = ErlangPsiImplUtil.getName(macros);
-          if (!map.containsKey(macrosName)) {
-            map.put(macrosName, macros);
-          }
+          map.putValue(macros.getName(), macros);
         }
         return Result.create(map, ErlangFileImpl.this);
       }
@@ -591,8 +588,15 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   @Override
-  public ErlangMacrosDefinition getMacros(@NotNull String name) {
-    return myMacrosesMap.getValue().get(name);
+  public ErlangMacrosDefinition getMacros(@NotNull String name, final int arity) {
+    MultiMap<String, ErlangMacrosDefinition> map = myMacrosMap.getValue();
+    Collection<ErlangMacrosDefinition> erlangMacrosDefinitions = map.get(name);
+    return ContainerUtil.getFirstItem(ContainerUtil.filter(erlangMacrosDefinitions, new Condition<ErlangMacrosDefinition>() {
+      @Override
+      public boolean value(ErlangMacrosDefinition macrosDefinition) {
+        return macrosDefinition.getArity() == arity;
+      }
+    }));
   }
 
   private List<ErlangRecordDefinition> calcRecords() {

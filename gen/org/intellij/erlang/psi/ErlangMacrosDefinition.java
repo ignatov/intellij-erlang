@@ -41,4 +41,6 @@ public interface ErlangMacrosDefinition extends ErlangNamedElement, StubBasedPsi
 
   int getTextOffset();
 
+  int getArity();
+
 }

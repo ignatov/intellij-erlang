@@ -51,7 +51,7 @@ public interface ErlangFile extends PsiFile {
   List<ErlangMacrosDefinition> getMacroses();
 
   @Nullable
-  ErlangMacrosDefinition getMacros(@NotNull String name);
+  ErlangMacrosDefinition getMacros(@NotNull String name, int arity);
 
   @NotNull
   List<ErlangTypeDefinition> getTypes();
