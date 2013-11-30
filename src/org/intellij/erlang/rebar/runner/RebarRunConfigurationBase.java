@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author savenko
  */
-public abstract class RebarRunConfigurationBase extends RuntimeConfiguration implements RunConfigurationWithSuppressedDefaultRunAction {
+public abstract class RebarRunConfigurationBase extends RuntimeConfiguration implements RunConfigurationWithSuppressedDefaultRunAction, RunConfigurationWithSuppressedDefaultDebugAction {
   @NotNull
   private String myCommand = "";
   private boolean mySkipDependencies = false;
