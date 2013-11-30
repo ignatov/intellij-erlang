@@ -29,4 +29,5 @@ public class ErlangFoldingBuilderTest extends ErlangLightPlatformCodeInsightFixt
   }
 
   public void testSimple() throws Throwable { doTest(); }
+  public void testMacroFunction() throws Throwable { doTest(); }
 }

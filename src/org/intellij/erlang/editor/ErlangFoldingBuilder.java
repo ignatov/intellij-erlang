@@ -21,6 +21,7 @@ import com.intellij.lang.folding.FoldingBuilderEx;
 import com.intellij.lang.folding.FoldingDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.PsiElementProcessor;
 import com.intellij.psi.tree.IElementType;
@@ -44,7 +45,10 @@ public class ErlangFoldingBuilder extends FoldingBuilderEx implements DumbAware 
 
     final List<FoldingDescriptor> result = ContainerUtil.newArrayList();
     for (ErlangFunction function : file.getFunctions()) {
-      result.add(new FoldingDescriptor(function, function.getTextRange()));
+      TextRange textRange = function.getTextRange();
+      if (textRange.getLength() >= 2) {
+        result.add(new FoldingDescriptor(function, textRange));
+      }
     }
 
     if (!quick) {
