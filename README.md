@@ -34,6 +34,11 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 * Enhanced debugger
 * Preprocessing support
 
+### Version 0.5.3
+* Faster completion
+* IDEA 13 compatibility
+* Bugfixes
+
 ### Version 0.5.2
 * Go to module action (Ctrl+N, Cmd+N for Mac OS X)
 * Better typing for some cases
