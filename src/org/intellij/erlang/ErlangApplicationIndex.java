@@ -43,7 +43,6 @@ import java.util.Map;
  */
 public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   public static final ID<String, Void> ERLANG_APPLICAION_INDEX = ID.create("ErlangApplicationIndex");
-  public static final Logger LOGGER = Logger.getInstance(ErlangApplicationIndex.class);
 
   private static final FileBasedIndex.InputFilter INPUT_FILTER = new ErlangApplicationInputFilter();
   private static final int INDEX_VERSION = 1;
@@ -92,10 +91,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
       processAppFiles(getAppFilesFromEbinDirectories(project), appName, processor);
     }
 
-    VirtualFile applicationPath = processor.getApplicationPath();
-    LOGGER.info("getApplicationDirectoryByName: application path for '" + appName + "' is " + applicationPath);
-
-    return applicationPath;
+    return processor.getApplicationPath();
   }
 
   public static List<VirtualFile> getAllApplicationDirectories(@NotNull Project project, @NotNull final GlobalSearchScope searchScope) {
