@@ -32,6 +32,7 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 
 ### Version 0.5.x (Work in progress)
 * Enhanced debugger
+* Remote debugger
 * Preprocessing support
 
 ### Version 0.5.3
