@@ -11,7 +11,8 @@ import java.util.List;
  */
 public interface ErlangDebuggerEventListener {
   void debuggerStarted();
-  void failedToInterpretModules(List<ErlangModule> modules);
+  void failedToInterpretModules(String nodeName, List<ErlangModule> modules);
+  void failedToDebugRemoteNode(String nodeName, String error);
   void unknownMessage(String messageText);
   void failedToSetBreakpoint(ErlangFile file, int line, String errorMessage);
   void breakpointIsSet(ErlangFile file, int line);

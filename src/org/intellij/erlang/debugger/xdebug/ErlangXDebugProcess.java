@@ -37,6 +37,8 @@ import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNodeException;
 import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunningState;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
@@ -82,17 +84,23 @@ public class ErlangXDebugProcess extends XDebugProcess {
       }
 
       @Override
-      public void failedToInterpretModules(List<ErlangModule> modules) {
-        String messagePrefix = "Failed to interpret modules: ";
+      public void failedToInterpretModules(String nodeName, List<ErlangModule> modules) {
+        String messagePrefix = "Failed to interpret modules on node " + nodeName + ": ";
         String modulesString = StringUtil.join(modules, new Function<ErlangModule, String>() {
           @Override
           public String fun(ErlangModule erlangModule) {
             return FileUtil.getNameWithoutExtension(erlangModule.getContainingFile().getName());
           }
         }, ", ");
-        String messageSuffix = ".\nMake sure they are compiled with debug_info option and their sources are located in same directory as .beam files.";
+        String messageSuffix = ".\nMake sure they are compiled with debug_info option, their sources are located in same directory as .beam files, modules are available on the node.";
         String message = messagePrefix + modulesString + messageSuffix;
         getSession().reportMessage(message, MessageType.WARNING);
+      }
+
+      @Override
+      public void failedToDebugRemoteNode(String nodeName, String error) {
+        String message = "Failed to debug remote node '" + nodeName + "'. Details: " + error;
+        getSession().reportMessage(message, MessageType.ERROR);
       }
 
       @Override
@@ -310,11 +318,17 @@ public class ErlangXDebugProcess extends XDebugProcess {
     myErlangProcessHandler = new OSProcessHandler(process);
     getSession().getConsoleView().attachToProcess(myErlangProcessHandler);
     myErlangProcessHandler.startNotify();
-    setEntryPoint(runningState.getDebugEntryPoint());
-  }
-
-  private void setEntryPoint(@NotNull ErlangRunningState.ErlangEntryPoint entryPoint) {
-    myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
+    if (runningState instanceof ErlangRemoteDebugRunningState) {
+      ErlangRemoteDebugRunConfiguration runConfiguration = (ErlangRemoteDebugRunConfiguration) getRunConfiguration();
+      if (StringUtil.isEmptyOrSpaces(runConfiguration.getErlangNode())) {
+        throw new ExecutionException("Bad run configuration: remote Erlang node is not specified.");
+      }
+      myDebuggerNode.debugRemoteNode(runConfiguration.getErlangNode(), runConfiguration.getCookie());
+    }
+    else {
+      ErlangRunningState.ErlangEntryPoint entryPoint = runningState.getDebugEntryPoint();
+      myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
+    }
   }
 
   private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {

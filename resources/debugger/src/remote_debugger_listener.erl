@@ -2,24 +2,44 @@
 
 % receives commands from remote debugger
 
--export([run/1, interpret_module/1]).
+-export([run/1]).
 
 -include("process_names.hrl").
 -include("remote_debugger_messages.hrl").
 -include("trace_utils.hrl").
 
+-record(state, {interpreted_modules = []}).
+
 run(Debugger) ->
   register(?RDEBUG_LISTENER, self()),
   Debugger ! #register_listener{pid = self()},
-  loop().
+  loop(#state{}).
 
-loop() ->
-  receive
-    Message ->
-      ?trace_message(Message),
-      process_message(Message)
-  end,
-  loop().
+loop(State) ->
+  NewState = receive
+               Message ->
+                 ?trace_message(Message),
+                 handle_message(Message, State)
+             end,
+  loop(NewState).
+
+handle_message(Message, State) ->
+  UsesState = uses_state(Message),
+  if
+    UsesState -> process_message(Message, State);
+    true -> process_message(Message), State
+  end.
+
+uses_state(#interpret_modules{}) -> true;
+uses_state(#debug_remote_node{}) -> true;
+uses_state(_Message)             -> false.
+
+process_message({interpret_modules, NewModules},
+                #state{interpreted_modules = Modules} = State) when is_list(NewModules) ->
+  interpret_modules(NewModules),
+  State#state{interpreted_modules = Modules ++ NewModules};
+process_message({debug_remote_node, Node, Cookie}, #state{interpreted_modules = Modules} = State) ->
+  debug_remote_node(Node, Cookie, Modules), State.
 
 % commands from remote debugger
 process_message({set_breakpoint, Module, Line}) when is_atom(Module),
@@ -28,8 +48,6 @@ process_message({set_breakpoint, Module, Line}) when is_atom(Module),
 process_message({remove_breakpoint, Module, Line}) when is_atom(Module),
                                                         is_integer(Line) ->
   remove_breakpoint(Module, Line);
-process_message({interpret_modules, Modules}) when is_list(Modules) ->
-  interpret_modules(Modules);
 process_message({run_debugger, Module, Function, Args}) when is_atom(Module),
                                                              is_atom(Function),
                                                              is_list(Args) ->
@@ -66,14 +84,7 @@ remove_breakpoint(Module, Line) ->
   int:delete_break(Module, Line).
 
 interpret_modules(Modules) ->
-  Statuses = lists:map(fun ?MODULE:interpret_module/1, Modules),
-  ?RDEBUG_NOTIFIER ! #interpret_modules_response{statuses = Statuses}.
-
-interpret_module(Module) ->
-  case int:ni(Module) of
-    {module, _} -> {Module, ok};
-    error -> {Module, int:interpretable(Module)}
-  end.
+  interpret_modules_on_node(Modules, node()).
 
 %%TODO handle all processes which are being debugged, not only the spawned one.
 run_debugger(Module, Function, ArgsString) ->
@@ -119,8 +130,42 @@ parse_args(ArgsString) ->
 
 eval_argslist(ExprList) ->
   case erl_eval:expr_list(ExprList, erl_eval:new_bindings()) of
-    {[ArgsList|_], _} ->
+    {[ArgsList | _], _} ->
       ArgsList;
     _ ->
       error
   end.
+
+debug_remote_node(Node, Cookie, Modules) ->
+  NodeConnected = connect_to_remote_node(Node, Cookie),
+  Status = if
+    NodeConnected -> interpret_modules_on_node(Modules, Node);
+    true -> failed_to_connect
+  end,
+  send_debug_remote_node_response(Node, Status).
+
+send_debug_remote_node_response(Node, ok) ->
+  ?RDEBUG_NOTIFIER ! #debug_remote_node_response{node = Node, status = ok};
+send_debug_remote_node_response(Node, Error) ->
+  ?RDEBUG_NOTIFIER ! #debug_remote_node_response{node = Node, status = {error, Error}}.
+
+connect_to_remote_node(Node, nocookie) ->
+  net_kernel:connect(Node);
+connect_to_remote_node(Node, Cookie) ->
+  erlang:set_cookie(Node, Cookie),
+  net_kernel:connect(Node).
+
+interpret_modules_on_node(Modules, Node) ->
+  case rpc:call(Node, lists, map, [fun int:ni/1, Modules]) of
+    {badrpc, _} = Error -> Error;
+    IntNiResults ->
+      send_interpret_modules_response(Node, lists:zip(Modules, IntNiResults)),
+      ok
+  end.
+
+send_interpret_modules_response(Node, IntResults) ->
+  Statuses = lists:map(fun
+              ({Module, {module, _}}) -> {Module, ok};
+              ({Module, error}) -> {Module, int:interpretable(Module)}
+            end, IntResults),
+  ?RDEBUG_NOTIFIER ! #interpret_modules_response{node = Node, statuses = Statuses}.

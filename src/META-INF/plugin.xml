@@ -281,6 +281,7 @@
 
         <!-- debug -->
         <programRunner implementation="org.intellij.erlang.debugger.xdebug.ErlangDebugRunner"/>
+        <configurationType implementation="org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfigurationType"/>
         <xdebugger.breakpointType implementation="org.intellij.erlang.debugger.xdebug.ErlangLineBreakpointType"/>
 
         <!--eunit -->

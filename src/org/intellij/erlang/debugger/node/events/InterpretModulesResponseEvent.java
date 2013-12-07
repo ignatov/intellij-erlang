@@ -17,11 +17,13 @@ import java.util.List;
  */
 class InterpretModulesResponseEvent implements ErlangDebuggerEvent {
   public static final String NAME = "interpret_modules_response";
+  private final String myNodeName;
   private final List<ErlangModule> myFailedToInterpretModules = new ArrayList<ErlangModule>();
 
   public InterpretModulesResponseEvent(Project project, OtpErlangTuple receivedMessage) throws DebuggerEventFormatException {
-    OtpErlangList interpretModuleStatuses = OtpErlangTermUtil.getListValue(receivedMessage.elementAt(1));
-    if (interpretModuleStatuses == null) throw new DebuggerEventFormatException();
+    myNodeName = OtpErlangTermUtil.getAtomText(receivedMessage.elementAt(1));
+    OtpErlangList interpretModuleStatuses = OtpErlangTermUtil.getListValue(receivedMessage.elementAt(2));
+    if (interpretModuleStatuses == null || myNodeName == null) throw new DebuggerEventFormatException();
     for (OtpErlangObject status : interpretModuleStatuses) {
       OtpErlangTuple statusTuple = OtpErlangTermUtil.getTupleValue(status);
       String moduleName = OtpErlangTermUtil.getAtomText(OtpErlangTermUtil.elementAt(statusTuple, 0));
@@ -46,7 +48,7 @@ class InterpretModulesResponseEvent implements ErlangDebuggerEvent {
   @Override
   public void process(ErlangDebuggerNode debuggerNode, ErlangDebuggerEventListener eventListener) {
     if (!myFailedToInterpretModules.isEmpty()) {
-      eventListener.failedToInterpretModules(myFailedToInterpretModules);
+      eventListener.failedToInterpretModules(myNodeName, myFailedToInterpretModules);
     }
   }
 }

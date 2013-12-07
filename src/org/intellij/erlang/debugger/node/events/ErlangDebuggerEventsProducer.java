@@ -28,7 +28,9 @@ public final class ErlangDebuggerEventsProducer {
       if (InterpretModulesResponseEvent.NAME.equals(messageName)) return new InterpretModulesResponseEvent(myProject, messageTuple);
       if (SetBreakpointResponseEvent.NAME.equals(messageName))    return new SetBreakpointResponseEvent(myProject, messageTuple);
       if (BreakpointReachedEvent.NAME.equals(messageName))        return new BreakpointReachedEvent(myProject, messageTuple);
-    } catch (DebuggerEventFormatException e) { // todo: process exception
+      if (DebugRemoteNodeResponseEvent.NAME.equals(messageName))  return new DebugRemoteNodeResponseEvent(messageTuple);
+    } catch (DebuggerEventFormatException e) {
+      return new UnknownMessageEvent(messageTuple);
     }
     return new UnknownMessageEvent(messageTuple);
   }
