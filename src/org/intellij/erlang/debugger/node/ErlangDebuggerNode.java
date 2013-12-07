@@ -104,6 +104,10 @@ public class ErlangDebuggerNode {
     addCommand(ErlangDebuggerCommandsProducer.getRunDebuggerCommand(module, function, args));
   }
 
+  public void debugRemoteNode(String nodeName, String cookie) {
+    addCommand(ErlangDebuggerCommandsProducer.getDebugRemoteNodeCommand(nodeName, cookie));
+  }
+
   public void stepInto() {
     addCommand(ErlangDebuggerCommandsProducer.getStepIntoCommand(myLastSuspendedPid));
   }

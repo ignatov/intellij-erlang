@@ -82,17 +82,23 @@ public class ErlangXDebugProcess extends XDebugProcess {
       }
 
       @Override
-      public void failedToInterpretModules(List<ErlangModule> modules) {
-        String messagePrefix = "Failed to interpret modules: ";
+      public void failedToInterpretModules(String nodeName, List<ErlangModule> modules) {
+        String messagePrefix = "Failed to interpret modules on node " + nodeName + ": ";
         String modulesString = StringUtil.join(modules, new Function<ErlangModule, String>() {
           @Override
           public String fun(ErlangModule erlangModule) {
             return FileUtil.getNameWithoutExtension(erlangModule.getContainingFile().getName());
           }
         }, ", ");
-        String messageSuffix = ".\nMake sure they are compiled with debug_info option and their sources are located in same directory as .beam files.";
+        String messageSuffix = ".\nMake sure they are compiled with debug_info option, their sources are located in same directory as .beam files, modules are available on the node.";
         String message = messagePrefix + modulesString + messageSuffix;
         getSession().reportMessage(message, MessageType.WARNING);
+      }
+
+      @Override
+      public void failedToDebugRemoteNode(String nodeName, String error) {
+        String message = "Failed to debug remote node " + nodeName + ". Details: " + error;
+        getSession().reportMessage(message, MessageType.ERROR);
       }
 
       @Override

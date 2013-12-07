@@ -6,6 +6,7 @@ import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -34,6 +35,11 @@ public final class ErlangDebuggerCommandsProducer {
   @NotNull
   public static ErlangDebuggerCommand getInterpretModulesCommand(@NotNull List<String> moduleNames) {
     return new InterpretModulesCommand(moduleNames);
+  }
+
+  @NotNull
+  public static ErlangDebuggerCommand getDebugRemoteNodeCommand(@NotNull String nodeName, @Nullable String cookie) {
+    return new DebugRemoteNodeCommand(nodeName, cookie);
   }
 
   @NotNull
@@ -159,6 +165,26 @@ public final class ErlangDebuggerCommandsProducer {
       return new OtpErlangTuple(new OtpErlangObject[] {
         new OtpErlangAtom("interpret_modules"),
         new OtpErlangList(ArrayUtil.toObjectArray(moduleNameAtoms, OtpErlangObject.class))
+      });
+    }
+  }
+
+  private static class DebugRemoteNodeCommand implements ErlangDebuggerCommand {
+    private final String myNodeName;
+    private final String myCookie;
+
+    public DebugRemoteNodeCommand(@NotNull String nodeName, @Nullable String cookie) {
+      myNodeName = nodeName;
+      myCookie = cookie != null ? cookie : "nocookie";
+    }
+
+    @NotNull
+    @Override
+    public OtpErlangTuple toMessage() {
+      return new OtpErlangTuple(new OtpErlangObject[] {
+        new OtpErlangAtom("debug_remote_node"),
+        new OtpErlangAtom(myNodeName),
+        new OtpErlangAtom(myCookie)
       });
     }
   }
