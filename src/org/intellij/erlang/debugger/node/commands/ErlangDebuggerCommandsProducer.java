@@ -175,7 +175,7 @@ public final class ErlangDebuggerCommandsProducer {
 
     public DebugRemoteNodeCommand(@NotNull String nodeName, @Nullable String cookie) {
       myNodeName = nodeName;
-      myCookie = cookie != null ? cookie : "nocookie";
+      myCookie = !StringUtil.isEmptyOrSpaces(cookie) ? cookie : "nocookie";
     }
 
     @NotNull

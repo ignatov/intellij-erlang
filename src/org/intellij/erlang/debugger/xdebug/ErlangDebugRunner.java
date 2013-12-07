@@ -13,6 +13,7 @@ import com.intellij.xdebugger.XDebugProcessStarter;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerManager;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,6 +49,8 @@ public class ErlangDebugRunner extends GenericProgramRunner {
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
     return DefaultDebugExecutor.EXECUTOR_ID.equals(executorId) &&
-      (profile instanceof ErlangApplicationConfiguration || profile instanceof ErlangUnitRunConfiguration);
+      (profile instanceof ErlangApplicationConfiguration ||
+        profile instanceof ErlangUnitRunConfiguration ||
+        profile instanceof ErlangRemoteDebugRunConfiguration);
   }
 }
