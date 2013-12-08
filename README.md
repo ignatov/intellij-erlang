@@ -34,7 +34,7 @@ If you would like to make a donation you can use [PayPal](https://www.paypal.com
 * IDEA 13 compatibility
 * Bugfixes
 
-### Version 0.x.x (Work in progress)
+### Work in progress
 * Enhanced debugger
 * Remote debugger
 * Preprocessing support
