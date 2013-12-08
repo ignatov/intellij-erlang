@@ -3,7 +3,6 @@
 
 ## Pre-release builds
 You can manually set up the plugin latest version from the [intellij-erlang-builds](https://www.dropbox.com/sh/4sbgxzjto5fa21b/1cpM3Nb-yF) folder.
-
 Note for **Mac OS X** users: you need to download the entire zip file, not a several jars (see [Apple discussion forum](https://discussions.apple.com/thread/1483114)). 
 
 ## Donations
