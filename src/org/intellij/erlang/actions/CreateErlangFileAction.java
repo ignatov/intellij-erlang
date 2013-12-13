@@ -67,7 +67,7 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
           if (StringUtil.isEmpty(inputString)) return null;
           try {
             ErlangElementFactory.createQAtomFromText(project, inputString);
-            if (inputString != null && inputString.equals(FileUtil.sanitizeFileName(inputString))) {
+            if (FileUtil.sanitizeFileName(inputString).equals(inputString)) {
               return null;
             }
             return "'" + inputString + "'" + error;
