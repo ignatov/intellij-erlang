@@ -57,6 +57,7 @@ public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtensi
     });
   }
 
+  @NotNull
   @Override
   public List<? extends JpsFacetConfigurationSerializer<?>> getFacetConfigurationSerializers() {
     return Collections.singletonList(new JpsFacetConfigurationSerializer<JpsErlangModuleExtension>(JpsErlangModuleExtension.ROLE, ErlangFacetConstants.ID, ErlangFacetConstants.NAME) {

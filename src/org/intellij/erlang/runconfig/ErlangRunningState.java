@@ -46,23 +46,23 @@ public abstract class ErlangRunningState extends CommandLineState {
 
   public ErlangRunningState(ExecutionEnvironment env, Module module) {
     super(env);
-    this.myModule = module;
+    myModule = module;
   }
 
   @NotNull
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
-    final Sdk sdk = ModuleRootManager.getInstance(myModule).getSdk();
+    Sdk sdk = ModuleRootManager.getInstance(myModule).getSdk();
     assert sdk != null;
-
     GeneralCommandLine commandLine = getCommand(sdk);
-
     return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
   }
 
-  private GeneralCommandLine getCommand(Sdk sdk) throws ExecutionException {
-    final GeneralCommandLine commandLine = new GeneralCommandLine();
-    String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(sdk.getHomePath()).getAbsolutePath());
+  private GeneralCommandLine getCommand(@NotNull Sdk sdk) throws ExecutionException {
+    GeneralCommandLine commandLine = new GeneralCommandLine();
+    String homePath = sdk.getHomePath();
+    assert homePath != null;
+    String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(homePath).getAbsolutePath());
     commandLine.setExePath(erl);
     commandLine.setWorkDirectory(myModule.getProject().getBasePath());
     commandLine.addParameters(getCodePath());
@@ -70,7 +70,7 @@ public abstract class ErlangRunningState extends CommandLineState {
     setStopErlang(commandLine);
     setNoShellMode(commandLine);
     setErlangFlags(commandLine);
-    final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
+    TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
   }
@@ -100,7 +100,7 @@ public abstract class ErlangRunningState extends CommandLineState {
   }
 
   private void setStopErlang(GeneralCommandLine commandLine) {
-    if (isStopErlang())  {
+    if (isStopErlang()) {
       commandLine.addParameters("-s", "init", "stop");
     }
   }
@@ -111,14 +111,9 @@ public abstract class ErlangRunningState extends CommandLineState {
 
   private void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
     ErlangEntryPoint entryPoint = getEntryPoint();
-    StringBuilder evalExpr = new StringBuilder();
-    evalExpr.append(entryPoint.getModuleName())
-            .append(":")
-            .append(entryPoint.getFunctionName())
-            .append("(")
-            .append(StringUtil.join(entryPoint.getArgsList(), ", "))
-            .append(").");
-    commandLine.addParameters("-eval", evalExpr.toString());
+    commandLine.addParameters("-eval",
+      entryPoint.getModuleName() + ":" + entryPoint.getFunctionName() +
+        "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ").");
   }
 
   private void setErlangFlags(GeneralCommandLine commandLine) {

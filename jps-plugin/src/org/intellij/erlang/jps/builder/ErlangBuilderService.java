@@ -13,6 +13,7 @@ import java.util.List;
  * @author @nik
  */
 public class ErlangBuilderService extends BuilderService {
+  @NotNull
   @Override
   public List<? extends BuildTargetType<?>> getTargetTypes() {
     return Arrays.asList(ErlangTargetType.PRODUCTION, ErlangTargetType.TESTS);
