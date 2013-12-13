@@ -6,6 +6,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.PlatformUtils;
+import com.intellij.util.PlatformUtilsCore;
 
 /**
  * @author ignatov
@@ -25,7 +26,7 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Ligh
   protected void setUp() throws Exception {
     if (myPlatformPrefix != null) {
       myBackedUpPlatformPrefix = PlatformUtils.getPlatformPrefix();
-      System.setProperty(PlatformUtils.PLATFORM_PREFIX_KEY, myPlatformPrefix);
+      System.setProperty(PlatformUtilsCore.PLATFORM_PREFIX_KEY, myPlatformPrefix);
     }
     super.setUp();
   }
@@ -33,7 +34,7 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Ligh
   @Override
   protected void tearDown() throws Exception {
     if (myPlatformPrefix != null) {
-      System.setProperty(PlatformUtils.PLATFORM_PREFIX_KEY, myBackedUpPlatformPrefix);
+      System.setProperty(PlatformUtilsCore.PLATFORM_PREFIX_KEY, myBackedUpPlatformPrefix);
     }
     super.tearDown();
   }

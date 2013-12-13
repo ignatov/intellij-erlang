@@ -16,14 +16,14 @@
 
 package org.intellij.erlang.highlighting;
 
-import com.intellij.util.PlatformUtils;
+import com.intellij.util.PlatformUtilsCore;
 
 /**
  * @author savenko
  */
 public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
   public ErlangSmallIdeHighlightingTest() {
-    super(PlatformUtils.PYCHARM_PREFIX);
+    super(PlatformUtilsCore.PYCHARM_PREFIX);
   }
 
   public void testIncludeFromOtpIncludeDirResolve() throws Exception {

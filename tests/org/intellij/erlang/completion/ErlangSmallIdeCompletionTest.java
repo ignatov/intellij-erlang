@@ -17,14 +17,14 @@
 package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
-import com.intellij.util.PlatformUtils;
+import com.intellij.util.PlatformUtilsCore;
 
 /**
  * @author savenko
  */
 public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
   public ErlangSmallIdeCompletionTest() {
-    super(PlatformUtils.PYCHARM_PREFIX);
+    super(PlatformUtilsCore.PYCHARM_PREFIX);
   }
 
   public void testIncludeOtpIncludeDirectoryCompletion() throws Throwable {

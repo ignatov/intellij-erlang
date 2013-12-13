@@ -34,7 +34,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
@@ -401,7 +401,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       ErlangFile rebarConfigPsi = RebarConfigUtil.getRebarConfig(file.getProject(), otpAppRoot);
       if (rebarConfigPsi != null && otpAppRoot != null) {
         for (String relativeIncludePath : ContainerUtil.reverse(RebarConfigUtil.getIncludePaths(rebarConfigPsi))) {
-          VirtualFile includePath = VfsUtil.findRelativeFile(relativeIncludePath, otpAppRoot);
+          VirtualFile includePath = VfsUtilCore.findRelativeFile(relativeIncludePath, otpAppRoot);
           result.addAll(getModulePathLookupElements(includePath, includeOwner, includeText));
         }
       }
@@ -444,7 +444,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     if (split.length != 0) {
       int joinEndIndex = includeText.endsWith("/") ? split.length : split.length - 1;
       String childPrefix = joinEndIndex == split.length ? "" : split[split.length - 1];
-      VirtualFile directory = VfsUtil.findRelativeFile(StringUtil.join(split, 0, joinEndIndex, "/"), searchRoot);
+      VirtualFile directory = VfsUtilCore.findRelativeFile(StringUtil.join(split, 0, joinEndIndex, "/"), searchRoot);
       VirtualFile[] children = directory != null ? directory.getChildren() : null;
 
       if (children == null) return;

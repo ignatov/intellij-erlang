@@ -25,7 +25,7 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.diagnostic.Logger;
@@ -60,14 +60,14 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
 
   @Override
   public void update(AnActionEvent e) {
-    final PsiFile psiFile = e.getData(LangDataKeys.PSI_FILE);
+    final PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
     boolean isErlang = psiFile instanceof ErlangFile;
     e.getPresentation().setEnabled(isErlang);
   }
 
   @Override
   public void actionPerformed(final AnActionEvent e) {
-    final PsiFile psiFile = e.getData(LangDataKeys.PSI_FILE);
+    final PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
     final Project project = getEventProject(e);
     if (project == null) return;
     if (!(psiFile instanceof ErlangFile)) return;

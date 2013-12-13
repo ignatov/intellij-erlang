@@ -20,7 +20,7 @@ import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.openapi.util.Condition;
 import com.intellij.util.ArrayUtilRt;
-import com.intellij.util.PlatformUtils;
+import com.intellij.util.PlatformUtilsCore;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public ErlangCompletionTest() {
-    super(PlatformUtils.COMMUNITY_PREFIX);
+    super(PlatformUtilsCore.COMMUNITY_PREFIX);
   }
 
   public void testKeywords1() throws Throwable { doTestInclude("-<caret>", "module", "record", "define"); }

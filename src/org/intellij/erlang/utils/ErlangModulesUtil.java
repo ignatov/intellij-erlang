@@ -23,7 +23,7 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleFileIndex;
 import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -83,7 +83,7 @@ public final class ErlangModulesUtil {
     Convertor<VirtualFile, Boolean> sourceDirectoriesFilter = onlyTestModules ? getTestDirectoriesFilter(moduleFileIndex) : getSourceDirectoriesFilter(moduleFileIndex);
 
     for (VirtualFile sourceRoot : rootManager.getSourceRoots(onlyTestModules)) {
-      VfsUtil.processFilesRecursively(sourceRoot, modulesCollector, sourceDirectoriesFilter);
+      VfsUtilCore.processFilesRecursively(sourceRoot, modulesCollector, sourceDirectoriesFilter);
     }
 
     return erlangModules;

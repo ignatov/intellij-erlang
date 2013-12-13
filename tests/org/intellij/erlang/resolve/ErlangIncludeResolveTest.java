@@ -1,13 +1,13 @@
 package org.intellij.erlang.resolve;
 
-import com.intellij.util.PlatformUtils;
+import com.intellij.util.PlatformUtilsCore;
 
 /**
  * @author savenko
  */
 public class ErlangIncludeResolveTest extends ErlangIncludeResolveTestBase {
   public ErlangIncludeResolveTest() {
-    super(PlatformUtils.COMMUNITY_PREFIX);
+    super(PlatformUtilsCore.COMMUNITY_PREFIX);
   }
 
   public void testRelativeToDirectParent() throws Exception {

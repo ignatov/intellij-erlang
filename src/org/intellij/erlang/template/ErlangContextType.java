@@ -22,7 +22,7 @@ import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.util.PsiUtilBase;
+import com.intellij.psi.util.PsiUtilCore;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangExpression;
@@ -42,7 +42,7 @@ public abstract class ErlangContextType extends TemplateContextType {
 
   @Override
   public boolean isInContext(@NotNull PsiFile file, int offset) {
-    if (!PsiUtilBase.getLanguageAtOffset(file, offset).isKindOf(ErlangLanguage.INSTANCE)) return false;
+    if (!PsiUtilCore.getLanguageAtOffset(file, offset).isKindOf(ErlangLanguage.INSTANCE)) return false;
     PsiElement element = file.findElementAt(offset);
     if (element instanceof PsiWhiteSpace) {
       return false;

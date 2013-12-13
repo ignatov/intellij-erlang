@@ -1,7 +1,7 @@
 package org.intellij.erlang.eunit;
 
+import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -32,7 +32,7 @@ public class ErlangUnitTestElementUtil {
   }
 
   public static Collection<ErlangFile> findFileTestElements(Project project, DataContext dataContext) {
-    VirtualFile[] selectedFiles = PlatformDataKeys.VIRTUAL_FILE_ARRAY.getData(dataContext);
+    VirtualFile[] selectedFiles = CommonDataKeys.VIRTUAL_FILE_ARRAY.getData(dataContext);
 
     if (selectedFiles == null) return Collections.emptyList();
 

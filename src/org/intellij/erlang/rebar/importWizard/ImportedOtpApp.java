@@ -18,7 +18,7 @@ package org.intellij.erlang.rebar.importWizard;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -161,7 +161,7 @@ final class ImportedOtpApp {
   }
 
   private void addIncludePath(String relativeIncludePath) {
-    VirtualFile path = VfsUtil.findRelativeFile(relativeIncludePath, myRoot);
+    VirtualFile path = VfsUtilCore.findRelativeFile(relativeIncludePath, myRoot);
     if (path != null) {
       myIncludePaths.add(path.getPath());
     }

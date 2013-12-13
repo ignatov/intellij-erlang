@@ -37,7 +37,6 @@ import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.patterns.PatternCondition;
@@ -908,7 +907,7 @@ public class ErlangPsiImplUtil {
     ErlangFile rebarConfigPsi = RebarConfigUtil.getRebarConfig(project, otpAppRoot);
     if (rebarConfigPsi != null) {
       for(String includePath : ContainerUtil.reverse(RebarConfigUtil.getIncludePaths(rebarConfigPsi))) {
-        VirtualFile includePathVirtualFile = VfsUtil.findRelativeFile(includePath, otpAppRoot);
+        VirtualFile includePathVirtualFile = VfsUtilCore.findRelativeFile(includePath, otpAppRoot);
         ErlangFile includedFile = getRelativeErlangFile(project, includeStringPath, includePathVirtualFile);
         if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
       }
@@ -989,7 +988,7 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   private static ErlangFile getRelativeErlangFile(@NotNull Project project, @NotNull String relativePath, @Nullable VirtualFile parent) {
-    VirtualFile relativeFile = VfsUtil.findRelativeFile(relativePath, parent);
+    VirtualFile relativeFile = VfsUtilCore.findRelativeFile(relativePath, parent);
     if (relativeFile == null) return null;
     PsiFile file = PsiManager.getInstance(project).findFile(relativeFile);
     return file instanceof ErlangFile ? (ErlangFile) file : null;

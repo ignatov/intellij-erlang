@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.refactor.introduce;
 
-import com.intellij.codeInsight.CodeInsightUtilBase;
+import com.intellij.codeInsight.CodeInsightUtilCore;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -190,7 +190,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     }
 
     declaration = performReplace(newName, declaration, expression, occurrences);
-    declaration = CodeInsightUtilBase.forcePsiPostprocessAndRestoreElement(declaration);
+    declaration = CodeInsightUtilCore.forcePsiPostprocessAndRestoreElement(declaration);
 
     return declaration;
   }
