@@ -18,6 +18,7 @@ import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -50,8 +51,9 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
         result.add(new SafeDeleteReferenceSimpleDeleteUsageInfo(refElement, element, inExport) {
           @Override
           public void deleteElement() throws IncorrectOperationException {
-            if (isSafeDelete() && inExport) {
-              PsiElement parent = getElement().getParent();
+            PsiElement e = getElement();
+            if (isSafeDelete() && inExport && e != null) {
+              PsiElement parent = e.getParent();
               PsiElement prev = PsiTreeUtil.prevVisibleLeaf(parent);
               if (isComma(prev)) {
                 prev.delete();
@@ -69,6 +71,7 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
             }
           }
 
+          @Contract("null -> false")
           private boolean isComma(@Nullable PsiElement leaf) {
             return leaf instanceof LeafPsiElement && ((LeafPsiElement) leaf).getElementType() == ErlangTypes.ERL_COMMA;
           }
