@@ -53,7 +53,8 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_CATCH, ERL_IF, ERL_RECEIVE,
       ERL_TRY, ERL_DIV, ERL_REM, ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND, ERL_BAND);
 
-    return new SpacingBuilder(settings.getRootSettings())
+    //noinspection SuspiciousNameCombination
+    return new SpacingBuilder(settings.getRootSettings(), ErlangLanguage.INSTANCE)
       .before(ERL_COMMA).spaceIf(settings.SPACE_BEFORE_COMMA)
       .after(ERL_COMMA).spaceIf(settings.SPACE_AFTER_COMMA)
       .before(ERL_SEMI).none()
