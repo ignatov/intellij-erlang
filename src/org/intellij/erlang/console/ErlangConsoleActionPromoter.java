@@ -16,10 +16,10 @@
 
 package org.intellij.erlang.console;
 
-import com.intellij.codeInsight.lookup.impl.actions.ChooseItemAction;
 import com.intellij.openapi.actionSystem.ActionPromoter;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.actions.EnterAction;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,11 +34,11 @@ public class ErlangConsoleActionPromoter implements ActionPromoter {
   private static final Comparator<AnAction> COMPARATOR = new Comparator<AnAction>() {
     @Override
     public int compare(@NotNull AnAction o1, @NotNull AnAction o2) {
-      return runOrChoose(o1) ? runOrChoose(o2) ? 0 : -1 : runOrChoose(o2) ? 1 : 0;
+      return notEnter(o1) ? notEnter(o2) ? 0 : -1 : notEnter(o2) ? 1 : 0;
     }
 
-    private boolean runOrChoose(AnAction o) {
-      return o instanceof ErlangConsoleExecuteAction || o instanceof ChooseItemAction;
+    private boolean notEnter(AnAction o) {
+      return !(o instanceof EnterAction);
     }
   };
 
