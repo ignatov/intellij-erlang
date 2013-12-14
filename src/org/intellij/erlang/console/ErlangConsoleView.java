@@ -21,8 +21,6 @@ import com.intellij.execution.console.LanguageConsoleImpl;
 import com.intellij.execution.console.LanguageConsoleViewImpl;
 import com.intellij.execution.process.ConsoleHistoryModel;
 import com.intellij.execution.process.ProcessHandler;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.ex.EditorEx;
@@ -41,33 +39,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
 public final class ErlangConsoleView extends LanguageConsoleViewImpl {
-  private static final Comparator<AnAction> ourActionComparator = new Comparator<AnAction>() {
-    @Override
-    public int compare(@NotNull AnAction o1, @NotNull AnAction o2) {
-      if (o1 instanceof ErlangConsoleExecuteAction) {
-        if (o2 instanceof ErlangConsoleExecuteAction) {
-          return 0;
-        }
-        else {
-          return -1;
-        }
-      }
-      else {
-        if (o2 instanceof ErlangConsoleExecuteAction) {
-          return 1;
-        }
-        else {
-          return 0;
-        }
-      }
-    }
-  };
-
   @Nullable private ConsoleHistoryModel myConsoleHistoryModel;
   @Nullable private OutputStreamWriter myProcessInputWriter;
 
@@ -102,22 +77,10 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
     ErlangConsoleViewDirectory.getInstance().delConsole(this);
   }
 
-  @Override
-  public Object getData(@NotNull String dataId) {
-    // This is needed to make sure that ErlangConsoleExecuteAction has a
-    // chance to process Ctrl+ENTER keystroke first.
-    if (PlatformDataKeys.ACTIONS_SORTER.is(dataId)) {
-      return ourActionComparator;
-    }
-    else {
-      return super.getData(dataId);
-    }
-  }
-
   public void append(@NotNull final String text) {
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       public void run() {
-        final Document document = getConsole().getCurrentEditor().getDocument();
+        Document document = getConsole().getCurrentEditor().getDocument();
         document.insertString(document.getTextLength(), text);
       }
     });
