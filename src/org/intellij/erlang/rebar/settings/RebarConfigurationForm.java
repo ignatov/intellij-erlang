@@ -103,8 +103,8 @@ public class RebarConfigurationForm {
       public void actionPerformed(AnActionEvent e) {
         DownloadableFileService service = DownloadableFileService.getInstance();
         DownloadableFileDescription rebar = service.createFileDescription("https://github.com/rebar/rebar/wiki/rebar", "rebar");
-        FileDownloader downloader = service.createDownloader(ContainerUtil.list(rebar), getEventProject(e), myLinkContainer, "rebar");
-        List<Pair<VirtualFile, DownloadableFileDescription>> pairs = downloader.downloadAndReturnWithDescriptions();
+        FileDownloader downloader = service.createDownloader(ContainerUtil.list(rebar), "rebar");
+        List<Pair<VirtualFile, DownloadableFileDescription>> pairs = downloader.downloadWithProgress(null, getEventProject(e), myLinkContainer);
         if (pairs != null) {
           for (Pair<VirtualFile, DownloadableFileDescription> pair : pairs) {
             try {
