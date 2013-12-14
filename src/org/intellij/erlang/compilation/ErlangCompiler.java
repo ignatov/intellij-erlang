@@ -69,7 +69,7 @@ public class ErlangCompiler implements TranslatingCompiler {
 
     final GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setWorkDirectory(PathUtil.getParentPath(context.getProject().getProjectFilePath()));
-    commandLine.setPassParentEnvs(true);
+    commandLine.setPassParentEnvironment(true);
 
     for (Module module : moduleChunk.getNodes()) {
       final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
