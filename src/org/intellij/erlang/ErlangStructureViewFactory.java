@@ -80,7 +80,6 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   }
 
   public static class Element implements StructureViewTreeElement, ItemPresentation, NavigationItem {
-
     private final PsiElement myElement;
 
     public Element(PsiElement element) {
@@ -174,27 +173,14 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
 
         return name + "(" + StringUtil.join(expressionStrings, ", ") + ")" + guardText;
       }
-      if (myElement instanceof ErlangFunction) {
-        return ErlangPsiImplUtil.createFunctionPresentation((ErlangFunction) myElement);
-      }
-      else if (myElement instanceof ErlangFile) {
-        return ((ErlangFile) myElement).getName();
-      }
-      else if (myElement instanceof ErlangRecordDefinition) {
-        return ((ErlangRecordDefinition) myElement).getName();
-      }
-      else if (myElement instanceof ErlangMacrosDefinition) {
-        return ((ErlangMacrosDefinition) myElement).getName();
-      }
-      else if (myElement instanceof ErlangTypeDefinition) {
-        return ErlangPsiImplUtil.createTypePresentation((ErlangTypeDefinition) myElement);
-      }
-      else if (myElement instanceof PsiNamedElement) {
-        return ((PsiNamedElement) myElement).getName();
-      }
+      if (myElement instanceof ErlangFunction)              return ErlangPsiImplUtil.createFunctionPresentation((ErlangFunction) myElement);
+      else if (myElement instanceof ErlangFile)             return ((ErlangFile) myElement).getName();
+      else if (myElement instanceof ErlangRecordDefinition) return ((ErlangRecordDefinition) myElement).getName();
+      else if (myElement instanceof ErlangMacrosDefinition) return ((ErlangMacrosDefinition) myElement).getName();
+      else if (myElement instanceof ErlangTypeDefinition)   return ErlangPsiImplUtil.createTypePresentation((ErlangTypeDefinition) myElement);
+      else if (myElement instanceof PsiNamedElement)        return ((PsiNamedElement) myElement).getName();
       throw new AssertionError(myElement.getClass().getName());
     }
-
 
     @Nullable
     @Override
@@ -207,33 +193,23 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       if (!myElement.isValid()) return null;
       if (myElement instanceof ErlangFunction) {
         boolean isPrivate = ErlangPsiImplUtil.isPrivateFunction(myElement.getContainingFile(), (ErlangFunction) myElement);
-        return buildRowIcon(ErlangIcons.FUNCTION, isPrivate ? PlatformIcons.PRIVATE_ICON : PlatformIcons.PUBLIC_ICON);
-      }
-      else if (myElement instanceof ErlangFunctionClause) {
-        return ErlangIcons.FUNCTION_CLAUSE;
-      }
-      else if (myElement instanceof ErlangAttribute) {
-        return ErlangIcons.ATTRIBUTE;
-      }
-      else if (myElement instanceof ErlangRecordDefinition) {
-        return ErlangIcons.RECORD;
-      }
-      else if (myElement instanceof ErlangMacrosDefinition) {
-        return ErlangIcons.MACROS;
-      }
-      else if (myElement instanceof ErlangTypeDefinition) {
-        return ErlangIcons.TYPE;
+        return createRowIcon(ErlangIcons.FUNCTION, isPrivate ? PlatformIcons.PRIVATE_ICON : PlatformIcons.PUBLIC_ICON);
       }
       else if (myElement instanceof ErlangModule) {
         PsiFile file = myElement.getContainingFile();
         return file instanceof ErlangFile ? ErlangIconProvider.getIcon((ErlangFile) file) : ErlangIcons.FILE;
       }
+      else if (myElement instanceof ErlangFunctionClause)   return ErlangIcons.FUNCTION_CLAUSE;
+      else if (myElement instanceof ErlangAttribute)        return ErlangIcons.ATTRIBUTE;
+      else if (myElement instanceof ErlangRecordDefinition) return ErlangIcons.RECORD;
+      else if (myElement instanceof ErlangMacrosDefinition) return ErlangIcons.MACROS;
+      else if (myElement instanceof ErlangTypeDefinition)   return ErlangIcons.TYPE;
       return myElement.getIcon(0);
     }
   }
 
   @NotNull
-  private static Icon buildRowIcon(Icon first, Icon second) {
+  private static Icon createRowIcon(Icon first, Icon second) {
     RowIcon rowIcon = new RowIcon(2);
     rowIcon.setIcon(first, 0);
     rowIcon.setIcon(second, 1);
