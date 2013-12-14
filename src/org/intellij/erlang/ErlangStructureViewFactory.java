@@ -21,6 +21,7 @@ import com.intellij.ide.util.treeView.smartTree.TreeElement;
 import com.intellij.lang.PsiStructureViewFactory;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.navigation.NavigationItem;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiElement;
@@ -49,7 +50,8 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   public StructureViewBuilder getStructureViewBuilder(@NotNull final PsiFile psiFile) {
     return new TreeBasedStructureViewBuilder() {
       @NotNull
-      public StructureViewModel createStructureViewModel() {
+      @Override
+      public StructureViewModel createStructureViewModel(@Nullable Editor editor) {
         return new Model(psiFile);
       }
 
