@@ -22,7 +22,6 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
-import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
@@ -73,7 +72,7 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
  * @author ignatov
  */
 public class ErlangCompletionContributor extends CompletionContributor {
-  public static final int MODULE_PRIORITY = 10;
+  public static final int MODULE_PRIORITY = -15;
   public static final int KEYWORD_PRIORITY = -10;
   public static final int MODULE_FUNCTIONS_PRIORITY = -4;
   public static final int BIF_PRIORITY = -5;
@@ -182,22 +181,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
             for (String keyword : suggestKeywords(position)) {
               result.addElement(createKeywordLookupElement(keyword));
             }
-            int invocationCount = parameters.getInvocationCount();
-            boolean moduleCompletion = invocationCount > 0 && invocationCount % 2 == 0;
             //noinspection unchecked
             boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
-            if ((inside || inConsole) && moduleCompletion) {
-              suggestModules(result, position, true);
-            }
-            else {
-              //noinspection unchecked
-              if (PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective) {
-                suggestModules(result, position, false);
-              }
-              else {
-                String shortcut = getActionShortcut(IdeActions.ACTION_CODE_COMPLETION);
-                CompletionService.getCompletionService().setAdvertisementText(shortcut + " to activate module name completion");
-              }
+            //noinspection unchecked
+            boolean insideImport = PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective;
+            if (inside || inConsole || insideImport) {
+              suggestModules(result, position, !insideImport);
             }
           }
           if (colonQualified == null && parent instanceof ErlangExpression && (ErlangPsiImplUtil.inFunction(position) || inConsole)) {

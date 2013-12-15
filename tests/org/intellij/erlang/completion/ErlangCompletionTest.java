@@ -210,7 +210,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testFunctionExpression() throws Throwable {
-    doCheckResult("foo() -> fun f<caret>", "foo() -> fun foo/0");
+    doCheckResult("zoo() -> fun zo<caret>", "zoo() -> fun zoo/0");
   }
 
   public void testFunctionExpression2() throws Throwable {
