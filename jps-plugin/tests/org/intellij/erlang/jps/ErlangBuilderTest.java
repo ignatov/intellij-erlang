@@ -56,11 +56,12 @@ public class ErlangBuilderTest extends JpsBuildTestCase {
     return jdk.getProperties();
   }
 
-  protected <T extends JpsElement> JpsModule addModule(String moduleName,
-                                                       String[] srcPaths,
+  @Override
+  protected <T extends JpsElement> JpsModule addModule(@NotNull String moduleName,
+                                                       @NotNull String[] srcPaths,
                                                        @Nullable String outputPath,
                                                        @Nullable String testOutputPath,
-                                                       JpsSdk<T> sdk) {
+                                                       @NotNull JpsSdk<T> sdk) {
     return addModule(moduleName, srcPaths, outputPath, testOutputPath, sdk, JpsErlangModuleType.INSTANCE);
   }
 }
