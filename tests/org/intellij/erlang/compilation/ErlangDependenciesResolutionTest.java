@@ -21,7 +21,6 @@ import java.util.List;
  * @author savenko
  */
 public class ErlangDependenciesResolutionTest extends ModuleTestCase {
-
   @Override
   protected void setUp() throws Exception {
     super.setUp();
@@ -86,7 +85,7 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
     try {
       ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
       fail("Expected a cyclic dependency exception to be thrown.");
-    } catch (ErlangPrepareDependenciesCompileTask.CyclicDependencyFoundException expected) {
+    } catch (ErlangPrepareDependenciesCompileTask.CyclicDependencyFoundException ignored) {
     }
   }
 
