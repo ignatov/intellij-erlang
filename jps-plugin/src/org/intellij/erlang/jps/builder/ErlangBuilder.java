@@ -60,17 +60,17 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     //disables java resource builder for erlang modules
     ResourcesBuilder.registerEnabler(new StandardResourceBuilderEnabler() {
       @Override
-      public boolean isResourceProcessingEnabled(JpsModule module) {
+      public boolean isResourceProcessingEnabled(@NotNull JpsModule module) {
         return !(module.getModuleType() instanceof JpsErlangModuleType);
       }
     });
   }
 
   @Override
-  public void build(@NotNull ErlangTarget target, 
-                    @NotNull DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder, 
-                    @NotNull BuildOutputConsumer outputConsumer, 
-                    @NotNull final CompileContext context) throws ProjectBuildException, IOException {
+  public void build(@NotNull ErlangTarget target,
+                    @NotNull DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder,
+                    @NotNull BuildOutputConsumer outputConsumer,
+                    @NotNull CompileContext context) throws ProjectBuildException, IOException {
     LOG.debug(target.getPresentableName());
     if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) return;
 
@@ -103,7 +103,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   }
 
   @NotNull
-  private static File getBuildOutputDirectory(JpsModule module, boolean forTests, CompileContext context) throws ProjectBuildException {
+  private static File getBuildOutputDirectory(@NotNull JpsModule module,
+                                              boolean forTests,
+                                              @NotNull CompileContext context) throws ProjectBuildException {
     JpsJavaExtensionService instance = JpsJavaExtensionService.getInstance();
     File outputDirectory = instance.getOutputDirectory(module, forTests);
     if (outputDirectory == null) {
@@ -118,7 +120,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   }
 
   @NotNull
-  private static JpsSdk<JpsDummyElement> getSdk(CompileContext context, JpsModule module) throws ProjectBuildException {
+  private static JpsSdk<JpsDummyElement> getSdk(@NotNull CompileContext context,
+                                                @NotNull JpsModule module) throws ProjectBuildException {
     JpsSdk<JpsDummyElement> sdk = module.getSdk(JpsErlangSdkType.INSTANCE);
     if (sdk == null) {
       String errorMessage = "No SDK for module " + module.getName();
@@ -128,7 +131,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return sdk;
   }
 
-  private static void runBuildProcess(final CompileContext context, GeneralCommandLine commandLine) throws ProjectBuildException {
+  private static void runBuildProcess(@NotNull CompileContext context,
+                                      @NotNull GeneralCommandLine commandLine) throws ProjectBuildException {
     Process process;
     try {
       process = commandLine.createProcess();
@@ -142,7 +146,10 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     handler.waitFor();
   }
 
-  private static void addDebugInfo(GeneralCommandLine commandLine, List<String> modulePaths, File outputDirectory, boolean addDebugInfoEnabled) throws ProjectBuildException {
+  private static void addDebugInfo(@NotNull GeneralCommandLine commandLine,
+                                   @NotNull List<String> modulePaths,
+                                   File outputDirectory,
+                                   boolean addDebugInfoEnabled) throws ProjectBuildException {
     if (!addDebugInfoEnabled) return;
     commandLine.addParameter("+debug_info");
     try {
@@ -156,7 +163,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void addIncludePaths(GeneralCommandLine commandLine, JpsModule module) {
+  private static void addIncludePaths(@NotNull GeneralCommandLine commandLine, @Nullable JpsModule module) {
     JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
     if (extension != null) {
       for (String includePath : extension.getIncludePaths()) {
@@ -165,15 +172,19 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static List<String> getErlangModulePaths(JpsModule module, ErlangTarget target, CompileContext context) {
+  @NotNull
+  private static List<String> getErlangModulePaths(@NotNull JpsModule module,
+                                                   @NotNull ErlangTarget target,
+                                                   @NotNull CompileContext context) {
     List<String> moduleFiles = getErlangModulePathsFromConfig(module, target, context);
     return moduleFiles != null ? moduleFiles : getErlangModulePathsDefault(module, target);
   }
 
-  private static List<String> getErlangModulePathsDefault(JpsModule module, ErlangTarget target) {
+  @NotNull
+  private static List<String> getErlangModulePathsDefault(@NotNull JpsModule module, @NotNull ErlangTarget target) {
     CommonProcessors.CollectProcessor<File> erlFilesCollector = new CommonProcessors.CollectProcessor<File>() {
       @Override
-      protected boolean accept(File file) {
+      protected boolean accept(@NotNull File file) {
         return !file.isDirectory() && FileUtilRt.extensionEquals(file.getName(), "erl");
       }
     };
@@ -186,15 +197,18 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       FileUtil.processFilesRecursively(root.getFile(), erlFilesCollector);
     }
     return ContainerUtil.map(erlFilesCollector.getResults(), new Function<File, String>() {
+      @NotNull
       @Override
-      public String fun(File file) {
+      public String fun(@NotNull File file) {
         return file.getAbsolutePath();
       }
     });
   }
 
   @Nullable
-  private static List<String> getErlangModulePathsFromConfig(JpsModule module, ErlangTarget target, CompileContext context) {
+  private static List<String> getErlangModulePathsFromConfig(@NotNull JpsModule module,
+                                                             @NotNull ErlangTarget target,
+                                                             @NotNull CompileContext context) {
     File dataStorageRoot = context.getProjectDescriptor().dataManager.getDataPaths().getDataStorageRoot();
     File depsConfigFile = new File(dataStorageRoot, DEPENDENCIES_CONFIG_FILE_PATH);
     if (!depsConfigFile.exists()) return null;
@@ -222,7 +236,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return null;
   }
 
-  private static void addParseTransforms(GeneralCommandLine commandLine, JpsModule module) throws ProjectBuildException {
+  private static void addParseTransforms(@NotNull GeneralCommandLine commandLine,
+                                         @Nullable JpsModule module) throws ProjectBuildException {
     JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
     List<String> parseTransforms = extension != null ? extension.getParseTransforms() : Collections.<String>emptyList();
     if (parseTransforms.isEmpty()) return;
@@ -231,7 +246,10 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void addCodePath(GeneralCommandLine commandLine, JpsModule module, ErlangTarget target, CompileContext context) throws ProjectBuildException {
+  private static void addCodePath(@NotNull GeneralCommandLine commandLine,
+                                  @NotNull JpsModule module,
+                                  @NotNull ErlangTarget target,
+                                  @NotNull CompileContext context) throws ProjectBuildException {
     ArrayList<JpsModule> codePathModules = new ArrayList<JpsModule>();
     collectDependentModules(module, codePathModules, new HashSet<String>());
 
@@ -243,7 +261,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void collectDependentModules(JpsModule module, Collection<JpsModule> addedModules, Set<String> addedModuleNames) {
+  private static void collectDependentModules(@NotNull JpsModule module,
+                                              @NotNull Collection<JpsModule> addedModules,
+                                              @NotNull Set<String> addedModuleNames) {
     String moduleName = module.getName();
     if (addedModuleNames.contains(moduleName)) return;
     addedModuleNames.add(moduleName);
@@ -258,7 +278,10 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void addModuleToCodePath(GeneralCommandLine commandLine, JpsModule module, boolean forTests, CompileContext context) throws ProjectBuildException {
+  private static void addModuleToCodePath(@NotNull GeneralCommandLine commandLine,
+                                          @NotNull JpsModule module,
+                                          boolean forTests,
+                                          @NotNull CompileContext context) throws ProjectBuildException {
     File outputDirectory = getBuildOutputDirectory(module, forTests, context);
     commandLine.addParameters("-pa", outputDirectory.getPath());
     for (String rootUrl : module.getContentRootsList().getUrls()) {

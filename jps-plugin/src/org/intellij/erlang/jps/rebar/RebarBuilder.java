@@ -73,7 +73,10 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     return NAME;
   }
 
-  private static void runRebar(String contentRootPath, String rebarPath, boolean addDebugInfo, final CompileContext context) throws ProjectBuildException {
+  private static void runRebar(@Nullable String contentRootPath,
+                               @NotNull String rebarPath,
+                               boolean addDebugInfo,
+                               @NotNull final CompileContext context) throws ProjectBuildException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setWorkDirectory(contentRootPath);
     commandLine.setExePath(rebarPath);
@@ -97,7 +100,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
   }
 
   @Nullable
-  private static String getRebarExecutablePath(JpsProject project) {
+  private static String getRebarExecutablePath(@Nullable JpsProject project) {
     JpsRebarConfigurationExtension rebarConfigurationExtension = JpsRebarConfigurationExtension.getExtension(project);
     String rebarPath = rebarConfigurationExtension != null ? rebarConfigurationExtension.getRebarPath() : null;
     return StringUtil.isEmptyOrSpaces(rebarPath) ? null : rebarPath;
