@@ -151,6 +151,9 @@ attribute ::= '-' (
   | else_atom_attribute <<enterMode "ELSE">>
   | atom_attribute
   ) {pin=1}
+
+private meta attribute_tail ::= !'(' <<p1>> | '(' <<p1>> ')'
+
 callback_spec ::= 'callback' type_spec {
   pin=1
   stubClass="org.intellij.erlang.stubs.ErlangCallbackSpecStub"
@@ -159,8 +162,8 @@ specification ::= 'spec' type_spec {
   pin=1
   methods = [getSignature]
 }
-export ::= 'export' '(' export_functions ')' {pin=1}
-export_type_attribute ::= 'export_type' '(' export_types ')' {pin=1}
+export ::= 'export' <<attribute_tail export_functions>> {pin=1}
+export_type_attribute ::= 'export_type' <<attribute_tail export_types>> {pin=1}
 import_directive ::= 'import' '(' module_ref ',' import_functions ')' {pin=1}
 module ::= 'module' '(' q_atom [',' module_tail] ')' {
   pin=1
@@ -176,7 +179,7 @@ behaviour ::= 'behaviour' '(' module_ref ')' {
   stubClass="org.intellij.erlang.stubs.ErlangBehaviourStub"
 }
 
-type_definition ::= '-' ('type'|'opaque') (type_body | '(' type_body ')') {
+type_definition ::= '-' ('type'|'opaque') <<attribute_tail type_body>> {
   pin = 2
   methods = [getName setName getNameIdentifier getTextOffset getArity]
   stubClass="org.intellij.erlang.stubs.ErlangTypeDefinitionStub"

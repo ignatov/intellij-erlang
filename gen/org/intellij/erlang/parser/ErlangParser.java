@@ -737,6 +737,51 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // !'(' <<p1>> | '(' <<p1>> ')'
+  static boolean attribute_tail(PsiBuilder builder_, int level_, final Parser p1) {
+    if (!recursion_guard_(builder_, level_, "attribute_tail")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = attribute_tail_0(builder_, level_ + 1, p1);
+    if (!result_) result_ = attribute_tail_1(builder_, level_ + 1, p1);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  // !'(' <<p1>>
+  private static boolean attribute_tail_0(PsiBuilder builder_, int level_, final Parser p1) {
+    if (!recursion_guard_(builder_, level_, "attribute_tail_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = attribute_tail_0_0(builder_, level_ + 1);
+    result_ = result_ && p1.parse(builder_, level_);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  // !'('
+  private static boolean attribute_tail_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "attribute_tail_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NOT_, null);
+    result_ = !consumeToken(builder_, ERL_PAR_LEFT);
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
+  }
+
+  // '(' <<p1>> ')'
+  private static boolean attribute_tail_1(PsiBuilder builder_, int level_, final Parser p1) {
+    if (!recursion_guard_(builder_, level_, "attribute_tail_1")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = consumeToken(builder_, ERL_PAR_LEFT);
+    result_ = result_ && p1.parse(builder_, level_);
+    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  /* ********************************************************** */
   // exprs
   public static boolean begin_end_body(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "begin_end_body")) return false;
@@ -1552,7 +1597,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // 'export' '(' export_functions ')'
+  // 'export' <<attribute_tail export_functions>>
   public static boolean export(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "export")) return false;
     boolean result_ = false;
@@ -1560,9 +1605,7 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<export>");
     result_ = consumeToken(builder_, "export");
     pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
-    result_ = pinned_ && report_error_(builder_, export_functions(builder_, level_ + 1)) && result_;
-    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    result_ = result_ && attribute_tail(builder_, level_ + 1, export_functions_parser_);
     exit_section_(builder_, level_, marker_, ERL_EXPORT, result_, pinned_, null);
     return result_ || pinned_;
   }
@@ -1663,7 +1706,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // 'export_type' '(' export_types ')'
+  // 'export_type' <<attribute_tail export_types>>
   public static boolean export_type_attribute(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "export_type_attribute")) return false;
     boolean result_ = false;
@@ -1671,9 +1714,7 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<attribute>");
     result_ = consumeToken(builder_, "export_type");
     pinned_ = result_; // pin = 1
-    result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_PAR_LEFT));
-    result_ = pinned_ && report_error_(builder_, export_types(builder_, level_ + 1)) && result_;
-    result_ = pinned_ && consumeToken(builder_, ERL_PAR_RIGHT) && result_;
+    result_ = result_ && attribute_tail(builder_, level_ + 1, export_types_parser_);
     exit_section_(builder_, level_, marker_, ERL_EXPORT_TYPE_ATTRIBUTE, result_, pinned_, null);
     return result_ || pinned_;
   }
@@ -4753,7 +4794,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '-' ('type'|'opaque') (type_body | '(' type_body ')')
+  // '-' ('type'|'opaque') <<attribute_tail type_body>>
   public static boolean type_definition(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "type_definition")) return false;
     if (!nextTokenIs(builder_, ERL_OP_MINUS)) return false;
@@ -4763,7 +4804,7 @@ public class ErlangParser implements PsiParser {
     result_ = consumeToken(builder_, ERL_OP_MINUS);
     result_ = result_ && type_definition_1(builder_, level_ + 1);
     pinned_ = result_; // pin = 2
-    result_ = result_ && type_definition_2(builder_, level_ + 1);
+    result_ = result_ && attribute_tail(builder_, level_ + 1, type_body_parser_);
     exit_section_(builder_, level_, marker_, ERL_TYPE_DEFINITION, result_, pinned_, null);
     return result_ || pinned_;
   }
@@ -4775,29 +4816,6 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = enter_section_(builder_);
     result_ = consumeToken(builder_, "type");
     if (!result_) result_ = consumeToken(builder_, "opaque");
-    exit_section_(builder_, marker_, null, result_);
-    return result_;
-  }
-
-  // type_body | '(' type_body ')'
-  private static boolean type_definition_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_definition_2")) return false;
-    boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
-    result_ = type_body(builder_, level_ + 1);
-    if (!result_) result_ = type_definition_2_1(builder_, level_ + 1);
-    exit_section_(builder_, marker_, null, result_);
-    return result_;
-  }
-
-  // '(' type_body ')'
-  private static boolean type_definition_2_1(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "type_definition_2_1")) return false;
-    boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
-    result_ = consumeToken(builder_, ERL_PAR_LEFT);
-    result_ = result_ && type_body(builder_, level_ + 1);
-    result_ = result_ && consumeToken(builder_, ERL_PAR_RIGHT);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }
@@ -5560,6 +5578,16 @@ public class ErlangParser implements PsiParser {
       return config_expr_recover(builder_, level_ + 1);
     }
   };
+  final static Parser export_functions_parser_ = new Parser() {
+    public boolean parse(PsiBuilder builder_, int level_) {
+      return export_functions(builder_, level_ + 1);
+    }
+  };
+  final static Parser export_types_parser_ = new Parser() {
+    public boolean parse(PsiBuilder builder_, int level_) {
+      return export_types(builder_, level_ + 1);
+    }
+  };
   final static Parser expression_parser_ = new Parser() {
     public boolean parse(PsiBuilder builder_, int level_) {
       return expression(builder_, level_ + 1, -1);
@@ -5598,6 +5626,11 @@ public class ErlangParser implements PsiParser {
   final static Parser tuple_recoverer_parser_ = new Parser() {
     public boolean parse(PsiBuilder builder_, int level_) {
       return tuple_recoverer(builder_, level_ + 1);
+    }
+  };
+  final static Parser type_body_parser_ = new Parser() {
+    public boolean parse(PsiBuilder builder_, int level_) {
+      return type_body(builder_, level_ + 1);
     }
   };
 }
