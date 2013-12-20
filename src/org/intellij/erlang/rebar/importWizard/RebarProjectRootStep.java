@@ -22,6 +22,7 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.*;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -35,7 +36,6 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.projectImport.ProjectImportWizardStep;
-import org.apache.log4j.Logger;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,7 +44,7 @@ import javax.swing.*;
 import java.io.File;
 
 final class RebarProjectRootStep extends ProjectImportWizardStep {
-  private static final Logger LOG = Logger.getLogger(RebarProjectImportBuilder.class);
+  private static final Logger LOG = Logger.getInstance(RebarProjectImportBuilder.class);
 
   private JPanel myPanel;
   private TextFieldWithBrowseButton myProjectRootComponent;

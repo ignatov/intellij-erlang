@@ -19,6 +19,7 @@ package org.intellij.erlang.rebar.importWizard;
 import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationInfoEx;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.ModifiableModuleModel;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -44,7 +45,6 @@ import com.intellij.packaging.artifacts.ModifiableArtifactModel;
 import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import org.apache.log4j.Logger;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.editor.ErlangModuleType;
@@ -63,7 +63,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpApp> {
-  private static final Logger LOG = Logger.getLogger(RebarProjectImportBuilder.class);
+  private static final Logger LOG = Logger.getInstance(RebarProjectImportBuilder.class);
 
   private boolean myOpenProjectSettingsAfter = false;
   @Nullable private VirtualFile myProjectRoot = null;
