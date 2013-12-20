@@ -11,6 +11,8 @@ select the IDEA installation directory as SDK root
 1. Setup the latest version of [Grammar-Kit](https://github.com/JetBrains/Grammar-Kit) plugin
 1. Run the **Erlang** run configuration
 
+Please don't use class comments with information about author or date and time creation.
+
 For further information please see [the official plugin development page](http://confluence.jetbrains.net/display/IDEADEV/PluginDevelopment).
 Also you can read some [tips and tricks](http://tomaszdziurko.pl/2011/09/developing-plugin-intellij-idea-some-tips-and-links/).
 For all development questions and proposals you can mail to our [Google Group](https://groups.google.com/d/forum/intellij-erlang-dev).
