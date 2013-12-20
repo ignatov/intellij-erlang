@@ -35,9 +35,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangClausesSmartEnterProcessor extends SmartEnterProcessor {
   @Override
   public boolean process(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {

@@ -32,9 +32,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
   private static final Logger LOG = Logger.getInstance(ErlangUnresolvedIncludeLibInspection.class);
   

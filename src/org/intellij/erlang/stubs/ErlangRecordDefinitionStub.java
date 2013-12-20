@@ -22,9 +22,6 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 
-/**
- * @author ignatov
- */
 public class ErlangRecordDefinitionStub extends NamedStubBase<ErlangRecordDefinition> {
   public ErlangRecordDefinitionStub(StubElement parent, IStubElementType elementType, StringRef name) {
     super(parent, elementType, name);

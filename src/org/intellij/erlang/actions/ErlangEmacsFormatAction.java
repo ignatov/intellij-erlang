@@ -51,9 +51,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-/**
- * @author ignatov
- */
 public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
   private static final String NOTIFICATION_TITLE = "Reformat code with Emacs";
   private static final Logger LOG = Logger.getInstance(ErlangEmacsFormatAction.class);

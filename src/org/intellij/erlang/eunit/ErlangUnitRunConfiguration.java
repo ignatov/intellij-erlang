@@ -38,9 +38,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/**
- * @author ignatov
- */
 public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<ErlangUnitRunningState> {
   private final ErlangUnitConfigData myConfigData = new ErlangUnitConfigData();
 

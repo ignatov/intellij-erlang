@@ -22,9 +22,6 @@ import com.intellij.openapi.fileTypes.FileTypeFactory;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangFileTypeFactory extends FileTypeFactory {
   private static final class ExtensionFileNameMatcher implements FileNameMatcher {
     private final String myDotExtension;

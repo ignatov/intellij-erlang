@@ -43,9 +43,6 @@ import javax.swing.*;
 import java.io.File;
 import java.util.regex.Pattern;
 
-/**
- * @author ignatov
- */
 public class ErlangSdkType extends SdkType {
 
   @NotNull

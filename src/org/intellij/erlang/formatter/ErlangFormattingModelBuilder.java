@@ -33,9 +33,6 @@ import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.ErlangTypes.*;
 
-/**
- * @author ignatov
- */
 public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   @NotNull
   @Override

@@ -10,9 +10,6 @@ import org.intellij.erlang.jps.model.ErlangFacetConstants;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author savenko
- */
 public class ErlangFacetType extends FacetType<ErlangFacet, ErlangFacetConfiguration> {
   public static final FacetTypeId<ErlangFacet> TYPE_ID = new FacetTypeId<ErlangFacet>(ErlangFacetConstants.ID);
 

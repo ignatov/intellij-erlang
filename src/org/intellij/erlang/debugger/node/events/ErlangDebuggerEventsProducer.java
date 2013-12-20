@@ -6,9 +6,6 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author savenko
- */
 public final class ErlangDebuggerEventsProducer {
   private Project myProject;
 

@@ -27,9 +27,6 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangIntroduceMacroQuickFix;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {

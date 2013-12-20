@@ -32,9 +32,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-/**
- * @author ignatov
- */
 public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   public static final ID<String, Void> ERLANG_MODULE_INDEX = ID.create("ErlangModuleIndex");
   private static final int INDEX_VERSION = 0;

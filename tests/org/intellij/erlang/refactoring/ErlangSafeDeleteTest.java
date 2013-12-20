@@ -4,9 +4,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.refactoring.safeDelete.SafeDeleteHandler;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
 
-/**
- * @author ignatov
- */
 public class ErlangSafeDeleteTest extends LightCodeInsightFixtureTestCase {
   @Override
   protected void setUp() throws Exception {

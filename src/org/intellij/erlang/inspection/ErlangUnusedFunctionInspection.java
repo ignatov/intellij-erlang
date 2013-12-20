@@ -36,9 +36,6 @@ import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {

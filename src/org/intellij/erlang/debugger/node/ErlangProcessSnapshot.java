@@ -24,9 +24,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangProcessSnapshot {
   private final OtpErlangPid myPid;
   private final ErlangTraceElement myInit;

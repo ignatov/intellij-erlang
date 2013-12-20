@@ -29,9 +29,6 @@ import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author ignatov
- */
 public class ErlangExportTypeIntention extends BaseIntentionAction {
   @NotNull
   @Override

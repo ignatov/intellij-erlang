@@ -28,9 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-/**
- * @author ignatov
- */
 public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
   public static final String MODULE_TYPE_ID = "ERLANG_MODULE";
 

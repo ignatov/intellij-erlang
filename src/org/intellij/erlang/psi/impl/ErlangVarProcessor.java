@@ -32,9 +32,6 @@ import java.util.Map;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
-/**
- * @author ignatov
- */
 public class ErlangVarProcessor extends BaseScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
   private List<ErlangQVar> myVarList = new ArrayList<ErlangQVar>(0);

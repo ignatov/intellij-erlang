@@ -33,9 +33,6 @@ import org.intellij.erlang.psi.impl.ErlangVarProcessor;
 import java.io.File;
 import java.util.HashMap;
 
-/**
- * @author ignatov
- */
 public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
   private ErlangConsoleView myView;
 

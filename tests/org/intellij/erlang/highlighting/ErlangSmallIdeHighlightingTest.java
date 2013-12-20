@@ -18,9 +18,6 @@ package org.intellij.erlang.highlighting;
 
 import com.intellij.util.PlatformUtilsCore;
 
-/**
- * @author savenko
- */
 public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
   public ErlangSmallIdeHighlightingTest() {
     super(PlatformUtilsCore.PYCHARM_PREFIX);

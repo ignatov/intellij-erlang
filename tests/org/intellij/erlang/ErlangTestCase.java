@@ -55,9 +55,6 @@ import org.intellij.erlang.typing.ErlangEnterHandlerTest;
 import org.intellij.erlang.typing.ErlangSmartEnterClauseProcessorTest;
 import org.intellij.erlang.typing.ErlangTypedHandlerTest;
 
-/**
- * @author ignatov
- */
 @SuppressWarnings("ALL")
 public class ErlangTestCase extends TestCase {
   public static TestSuite suite() {

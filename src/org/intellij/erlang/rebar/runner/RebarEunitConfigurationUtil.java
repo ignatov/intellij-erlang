@@ -11,9 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.Set;
 
-/**
- * @author savenko
- */
 class RebarEunitConfigurationUtil {
   private RebarEunitConfigurationUtil() {
   }

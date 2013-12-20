@@ -20,9 +20,6 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.indexing.FileBasedIndex;
 
-/**
- * @author ignatov
- */
 public class ErlangIndexUtil {
   public static final FileBasedIndex.InputFilter ERLANG_INPUT_FILTER = new FileBasedIndex.InputFilter() {
     @Override

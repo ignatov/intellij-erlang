@@ -30,9 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 import static org.intellij.erlang.ErlangTypes.*;
 
-/**
- * @author ignatov
- */
 public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey ILLEGAL       = createTextAttributesKey("ERL_ILLEGAL", DefaultLanguageHighlighterColors.INVALID_STRING_ESCAPE);
   public static final TextAttributesKey COMMENT       = createTextAttributesKey("ERL_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);

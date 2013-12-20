@@ -22,9 +22,6 @@ import com.intellij.psi.PsiElement;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangRenameVariableFix extends ErlangQuickFixBase {
   @NotNull
   @Override

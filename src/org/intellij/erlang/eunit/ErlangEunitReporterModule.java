@@ -8,9 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.net.URL;
 
-/**
- * @author savenko
- */
 public class ErlangEunitReporterModule {
   private ErlangEunitReporterModule() {
   }

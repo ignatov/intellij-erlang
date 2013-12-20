@@ -22,9 +22,6 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author ignatov
- */
 public abstract class ErlangQuickFixBase implements LocalQuickFix {
   @Nullable
   static ErlangCompositeElement getAnchorElement(ErlangFile containingFile) {

@@ -17,9 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author savenko
- */
 public class ErlangSourcePosition {
   private static final Pattern FUN_PATTERN = Pattern.compile("^-(.*)/(\\d+)-fun-(\\d+)-$");
   private final ErlangFile myErlangFile;

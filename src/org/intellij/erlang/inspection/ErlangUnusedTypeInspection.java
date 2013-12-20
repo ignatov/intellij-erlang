@@ -30,9 +30,6 @@ import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveTypeFix;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangUnusedTypeInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {

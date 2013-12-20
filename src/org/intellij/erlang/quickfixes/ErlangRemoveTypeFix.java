@@ -22,9 +22,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangRemoveTypeFix extends ErlangQuickFixBase {
   @NotNull
   @Override

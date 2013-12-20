@@ -46,9 +46,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangIntroduceVariableHandler implements RefactoringActionHandler {
   private final static Logger LOG = Logger.getInstance(ErlangIntroduceVariableHandler.class);
 

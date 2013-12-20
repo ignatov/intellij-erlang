@@ -23,9 +23,6 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 
-/**
- * @author savenko
- */
 public class ErlangRemoteDebugRunConfigurationType extends ConfigurationTypeBase {
   protected ErlangRemoteDebugRunConfigurationType() {
     super("ErlangRemoteDebugRunConfiguration",

@@ -40,9 +40,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 
-/**
- * @author savenko
- */
 public final class ErlangModulesUtil {
   private ErlangModulesUtil() {
   }

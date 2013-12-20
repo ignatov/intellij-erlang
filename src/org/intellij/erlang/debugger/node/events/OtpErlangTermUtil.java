@@ -5,9 +5,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author savenko
- */
 final class OtpErlangTermUtil {
   private OtpErlangTermUtil() {
   }

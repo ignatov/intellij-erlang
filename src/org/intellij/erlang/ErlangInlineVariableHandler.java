@@ -38,9 +38,6 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.Collection;
 
-/**
- * @author ignatov
- */
 public class ErlangInlineVariableHandler extends InlineActionHandler {
   private static final String REFACTORING_NAME = "Inline variable";
 

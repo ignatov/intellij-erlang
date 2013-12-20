@@ -36,9 +36,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * @author ignatov
- */
 public class ErlangProjectStructureDetector extends ProjectStructureDetector {
   @NotNull
   @Override

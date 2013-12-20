@@ -10,9 +10,6 @@ import org.jetbrains.jps.model.module.JpsModule;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangModuleExtension> {
   public static final JpsElementChildRole<JpsErlangModuleExtension> ROLE = JpsElementChildRoleBase.create("Erlang");
 

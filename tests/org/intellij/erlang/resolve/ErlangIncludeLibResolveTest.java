@@ -9,9 +9,6 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangIncludeLibResolveTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected void setUp() throws Exception {

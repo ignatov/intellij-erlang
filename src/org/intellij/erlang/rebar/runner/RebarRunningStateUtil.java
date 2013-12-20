@@ -14,9 +14,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class RebarRunningStateUtil {
   private RebarRunningStateUtil() {
   }

@@ -31,9 +31,6 @@ import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.util.JpsPathUtil;
 
-/**
- * @author ignatov
- */
 public class ErlangBuilderTest extends JpsBuildTestCase {
   public static final String ERLANG_SDK_PATH = "/usr/lib/erlang";
 

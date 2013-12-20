@@ -24,9 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
   @Nullable
   @Override

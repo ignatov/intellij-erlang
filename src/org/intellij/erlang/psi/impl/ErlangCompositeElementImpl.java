@@ -24,9 +24,6 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements ErlangCompositeElement {
   public ErlangCompositeElementImpl(ASTNode node) {
     super(node);

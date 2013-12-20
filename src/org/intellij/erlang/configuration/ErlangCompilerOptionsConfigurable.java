@@ -17,9 +17,6 @@ import javax.swing.event.AncestorEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- * @author savenko
- */
 public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
 
   private JPanel myRootPanel;

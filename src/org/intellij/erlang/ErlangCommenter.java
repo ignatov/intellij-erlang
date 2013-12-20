@@ -20,9 +20,6 @@ import com.intellij.lang.CodeDocumentationAwareCommenter;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.tree.IElementType;
 
-/**
- * @author ignatov
- */
 public class ErlangCommenter implements CodeDocumentationAwareCommenter {
   public String getLineCommentPrefix() {
     return "%% ";

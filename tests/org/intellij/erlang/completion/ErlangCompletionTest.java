@@ -26,9 +26,6 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public ErlangCompletionTest() {
     super(PlatformUtilsCore.COMMUNITY_PREFIX);

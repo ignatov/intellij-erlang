@@ -12,9 +12,6 @@ import org.intellij.erlang.psi.ErlangModule;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author savenko
- */
 class InterpretModulesResponseEvent implements ErlangDebuggerEvent {
   public static final String NAME = "interpret_modules_response";
   private final String myNodeName;

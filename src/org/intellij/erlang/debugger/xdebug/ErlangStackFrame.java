@@ -35,9 +35,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-/**
- * @author savenko
- */
 public class ErlangStackFrame extends XStackFrame {
   private final ErlangSourcePosition mySourcePosition;
   private final Collection<ErlangVariableBinding> myBindings;

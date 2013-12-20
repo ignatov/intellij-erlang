@@ -8,9 +8,6 @@ import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCa
 import com.intellij.util.PlatformUtils;
 import com.intellij.util.PlatformUtilsCore;
 
-/**
- * @author ignatov
- */
 public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends LightPlatformCodeInsightFixtureTestCase {
   private String myPlatformPrefix;
   private String myBackedUpPlatformPrefix;

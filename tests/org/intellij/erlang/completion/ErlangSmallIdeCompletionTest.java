@@ -19,9 +19,6 @@ package org.intellij.erlang.completion;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.util.PlatformUtilsCore;
 
-/**
- * @author savenko
- */
 public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
   public ErlangSmallIdeCompletionTest() {
     super(PlatformUtilsCore.PYCHARM_PREFIX);

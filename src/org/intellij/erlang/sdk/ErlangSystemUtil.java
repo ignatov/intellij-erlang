@@ -30,9 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.*;
 
-/**
- * @author ignatov
- */
 public class ErlangSystemUtil {
   public static final int STANDARD_TIMEOUT = 10 * 1000;
 

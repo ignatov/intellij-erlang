@@ -55,9 +55,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * @author savenko
- */
 public class ErlangXDebugProcess extends XDebugProcess {
   private final ExecutionEnvironment myExecutionEnvironment;
   @NotNull private ErlangDebuggerNode myDebuggerNode;

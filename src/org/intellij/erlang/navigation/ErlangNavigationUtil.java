@@ -33,9 +33,6 @@ import javax.swing.*;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangNavigationUtil {
 
   private ErlangNavigationUtil() {

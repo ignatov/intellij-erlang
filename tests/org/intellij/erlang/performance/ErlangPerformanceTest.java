@@ -9,9 +9,6 @@ import org.intellij.erlang.highlighting.ErlangHighlightingTestBase;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
-/**
- * @author ignatov
- */
 public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {

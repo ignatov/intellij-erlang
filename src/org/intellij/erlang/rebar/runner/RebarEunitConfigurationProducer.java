@@ -17,9 +17,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-/**
- * @author savenko
- */
 public class RebarEunitConfigurationProducer extends RuntimeConfigurationProducer {
 
   private PsiFile myFile;

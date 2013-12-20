@@ -21,9 +21,6 @@ import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
-/**
- * @author ignatov
- */
 public class ErlangCompletionWithSdkTest extends ErlangCompletionTestBase {
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {

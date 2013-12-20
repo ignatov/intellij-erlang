@@ -37,9 +37,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangRefactoringUtil {
   private ErlangRefactoringUtil() {
   }

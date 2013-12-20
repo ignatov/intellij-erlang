@@ -22,9 +22,6 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public abstract class ErlangQuickFixTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected boolean isWriteActionRequired() {

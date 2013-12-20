@@ -6,9 +6,6 @@ import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.ex.JpsCompositeElementBase;
 import org.jetbrains.jps.model.ex.JpsElementChildRoleBase;
 
-/**
- * @author savenko
- */
 public class JpsErlangCompilerOptionsExtension extends JpsCompositeElementBase<JpsErlangCompilerOptionsExtension> {
   public static final JpsElementChildRole<JpsErlangCompilerOptionsExtension> ROLE = JpsElementChildRoleBase.create("ErlangCompilerOptions");
 

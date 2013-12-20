@@ -22,9 +22,6 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 
-/**
- * @author ignatov
- */
 public class SingleCharInsertHandler extends BasicInsertHandler<LookupElement> {
   private final char myChar;
   private final boolean mySurroundWithSpaces;

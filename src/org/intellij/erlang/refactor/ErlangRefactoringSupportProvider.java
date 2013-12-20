@@ -26,9 +26,6 @@ import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author ignatov
- */
 public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider {
   @Override
   public boolean isSafeDeleteAvailable(@NotNull PsiElement element) {

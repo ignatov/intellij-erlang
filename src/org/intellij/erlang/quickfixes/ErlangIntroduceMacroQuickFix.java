@@ -32,9 +32,6 @@ import org.intellij.erlang.psi.ErlangMacrosName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author savenko
- */
 public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
 
   @NotNull

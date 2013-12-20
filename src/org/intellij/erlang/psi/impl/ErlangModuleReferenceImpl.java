@@ -24,9 +24,6 @@ import org.intellij.erlang.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangModuleReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBasedReferenceImpl<T> {
   public ErlangModuleReferenceImpl(@NotNull T element, TextRange range, String name) {
     super(element, range, name);

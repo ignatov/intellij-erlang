@@ -22,9 +22,6 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangBehaviour;
 
-/**
- * @author ignatov
- */
 public class ErlangBehaviourStub extends StubBase<ErlangBehaviour> {
   private final StringRef myNameRef;
 

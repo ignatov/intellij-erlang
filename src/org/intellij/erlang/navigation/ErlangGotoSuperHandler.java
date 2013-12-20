@@ -35,9 +35,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangGotoSuperHandler implements LanguageCodeInsightActionHandler {
 
   @Override

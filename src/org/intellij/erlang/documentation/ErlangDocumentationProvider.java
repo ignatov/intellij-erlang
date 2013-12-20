@@ -31,9 +31,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author ignatov
- */
 public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
   private static final Pattern PATTERN_PSI_LINK = Pattern.compile("(.+?)(#(.*?)-(.*?))?");
 

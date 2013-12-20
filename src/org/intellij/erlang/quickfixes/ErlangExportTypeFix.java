@@ -29,9 +29,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangExportTypeFix extends ErlangQuickFixBase {
   @NotNull
   @Override

@@ -7,9 +7,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 
-/**
- * @author ignatov
- */
 public class ModuleInsertHandler extends SingleCharInsertHandler {
   public static final String QUOTA = "'";
   private final Project myProject;

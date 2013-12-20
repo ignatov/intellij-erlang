@@ -32,9 +32,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-/**
- * @author ignatov
- */
 public class ErlangIconProvider extends IconProvider implements DumbAware {
   @Override
   public Icon getIcon(@NotNull PsiElement element, @Iconable.IconFlags int flags) {

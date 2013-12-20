@@ -35,9 +35,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-/**
- * @author ignatov
- */
 public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangArgumentList, Object> {
   @Override
   public boolean couldShowInLookup() {

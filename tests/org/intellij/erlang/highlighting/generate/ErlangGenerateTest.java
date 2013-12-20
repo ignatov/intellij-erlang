@@ -3,9 +3,6 @@ package org.intellij.erlang.highlighting.generate;
 import com.intellij.testFramework.PlatformTestUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
-/**
- * @author ignatov
- */
 public class ErlangGenerateTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private void doTest(String actionId, String before, String after) {
     myFixture.configureByText("a.erl", before);

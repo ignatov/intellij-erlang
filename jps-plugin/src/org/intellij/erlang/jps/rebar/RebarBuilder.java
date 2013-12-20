@@ -29,9 +29,6 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Collections;
 
-/**
- * @author savenko
- */
 public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   private static final String NAME = "rebar";
   private static final String REBAR_CONFIG_FILE_NAME = "rebar.config";

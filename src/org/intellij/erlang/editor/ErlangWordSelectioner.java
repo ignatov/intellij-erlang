@@ -27,9 +27,6 @@ import org.intellij.erlang.psi.ErlangFile;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangWordSelectioner extends ExtendWordSelectionHandlerBase {
   @Override
   public boolean canSelect(PsiElement e) {

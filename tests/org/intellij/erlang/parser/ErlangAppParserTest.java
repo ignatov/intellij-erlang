@@ -18,9 +18,6 @@ package org.intellij.erlang.parser;
 
 import org.intellij.erlang.ErlangParserDefinition;
 
-/**
- * @author ignatov
- */
 public class ErlangAppParserTest extends ErlangParserTestBase {
   public ErlangAppParserTest() {
     super("parser", "app", new ErlangParserDefinition());

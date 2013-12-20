@@ -24,9 +24,6 @@ import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangIncludeString;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 
-/**
- * @author ignatov
- */
 abstract class ErlangStringContainerStub<T extends ErlangCompositeElement> extends StubBase<T> {
   private final StringRef myStringRef;
 

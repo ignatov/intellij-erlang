@@ -28,9 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * @author savenko
- */
 public class RebarEunitRunningState extends CommandLineState {
   private static final String CONFIG_FILE_NAME = "rebar.config";
   private static final String REBAR_CONFIG = "\n{eunit_opts,[{report,{" + ErlangEunitReporterModule.MODULE_NAME + ", []}}, {no_tty, true}]}.";

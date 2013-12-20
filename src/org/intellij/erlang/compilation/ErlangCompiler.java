@@ -40,9 +40,6 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.charset.Charset;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangCompiler implements TranslatingCompiler {
   @NotNull
   @Override

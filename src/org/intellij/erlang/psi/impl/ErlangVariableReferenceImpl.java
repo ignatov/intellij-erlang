@@ -42,9 +42,6 @@ import java.util.Map;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
-/**
- * @author ignatov
- */
 public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
   public ErlangVariableReferenceImpl(@NotNull ErlangQVar element, TextRange range) {
     super(element, range);

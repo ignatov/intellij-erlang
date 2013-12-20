@@ -22,9 +22,6 @@ import com.intellij.psi.PsiReferenceBase;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangQAtom;
 
-/**
- * @author ignatov
- */
 public abstract class ErlangAtomBasedReferenceImpl<T extends ErlangQAtom> extends PsiReferenceBase<T> {
   protected final String myReferenceName;
 

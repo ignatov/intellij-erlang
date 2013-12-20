@@ -38,9 +38,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public abstract class ErlangRunningState extends CommandLineState {
   private final Module myModule;
 

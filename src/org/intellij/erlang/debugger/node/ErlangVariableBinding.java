@@ -2,9 +2,6 @@ package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 
-/**
- * @author savenko
- */
 public class ErlangVariableBinding {
   private final String myName;
   private final OtpErlangObject myValue;

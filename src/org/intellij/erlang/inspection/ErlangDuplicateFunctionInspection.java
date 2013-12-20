@@ -26,9 +26,6 @@ import org.intellij.erlang.psi.ErlangFunction;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangDuplicateFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(final PsiFile file, final ProblemsHolder problemsHolder) {

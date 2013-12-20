@@ -22,9 +22,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-/**
- * @author ignatov
- */
 public class ErlangFileType extends LanguageFileType {
   public static ErlangFileType MODULE = new ErlangFileType();
   public static HrlFileType HEADER = new HrlFileType();

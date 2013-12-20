@@ -38,9 +38,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author savenko
- */
 public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   public static final ID<String, Void> ERLANG_APPLICAION_INDEX = ID.create("ErlangApplicationIndex");
 

@@ -10,9 +10,6 @@ import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
 
-/**
- * @author savenko
- */
 public class ErlangCompilerProcessAdapter extends ProcessAdapter {
   private final CompileContext myContext;
   private final String myBuilderName;

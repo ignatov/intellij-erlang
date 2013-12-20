@@ -25,7 +25,6 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 
 public class SendSelectionToErlangConsoleAction extends AnAction {
-
   @Override
   public void update(@NotNull AnActionEvent actionEvent) {
     final Presentation presentation = actionEvent.getPresentation();

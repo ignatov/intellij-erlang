@@ -24,9 +24,6 @@ import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangRemoveFunctionFix extends ErlangQuickFixBase {
   @NotNull
   @Override

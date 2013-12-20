@@ -24,9 +24,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangSuspendContext extends XSuspendContext {
   private XExecutionStack[] myExecutionStacks;
   private int myActiveExecutionStackIdx;

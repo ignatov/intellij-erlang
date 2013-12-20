@@ -32,9 +32,6 @@ import org.intellij.erlang.application.ui.ErlangRunConfigurationEditorForm;
 import org.intellij.erlang.runconfig.ErlangRunner;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<ErlangApplicationRunningState> {
   private String myParams = "";
   private String myModuleAndFunction = "";

@@ -38,9 +38,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashSet;
 
-/**
- * @author savenko
- */
 @SuppressWarnings("ComponentNotRegistered")
 public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
   public ErlangUnitRerunFailedTestsAction(@NotNull ComponentContainer componentContainer) {

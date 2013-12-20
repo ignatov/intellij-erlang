@@ -39,9 +39,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
   @Override
   public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {

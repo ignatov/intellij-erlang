@@ -5,9 +5,6 @@ import com.intellij.openapi.components.AbstractProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupManager;
 
-/**
- * @author savenko
- */
 public class ErlangDependenciesManager extends AbstractProjectComponent {
   protected ErlangDependenciesManager(Project project) {
     super(project);

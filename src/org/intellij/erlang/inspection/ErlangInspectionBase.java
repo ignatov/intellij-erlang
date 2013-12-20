@@ -33,9 +33,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author ignatov
- */
 abstract public class ErlangInspectionBase extends LocalInspectionTool implements CustomSuppressableInspectionTool {
   private static final Pattern SUPPRESS_PATTERN = Pattern.compile(SuppressionUtil.COMMON_SUPPRESS_REGEXP);
 

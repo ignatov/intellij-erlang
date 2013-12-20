@@ -8,9 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-/**
- * @author savenko
- */
 public class ErlangTraceElement {
   private final ErlangFile myModule;
   private final String myFunction;

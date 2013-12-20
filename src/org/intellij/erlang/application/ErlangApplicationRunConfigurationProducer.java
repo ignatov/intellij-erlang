@@ -32,9 +32,6 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangApplicationRunConfigurationProducer extends RuntimeConfigurationProducer implements Cloneable {
   private ErlangFunction myFunction;
 

@@ -21,9 +21,6 @@ import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
 import org.intellij.erlang.ErlangInlineVariableHandler;
 import org.intellij.erlang.psi.ErlangQVar;
 
-/**
- * @author ignatov
- */
 public class ErlangInlineVariableTest extends LightCodeInsightFixtureTestCase {
   public void testSimple()                             throws Exception { doTest(); }
   public void testFunExpression()                      throws Exception { doTest(); }

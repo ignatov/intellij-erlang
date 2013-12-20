@@ -23,9 +23,6 @@ import com.intellij.psi.codeStyle.CodeStyleSettings;
 import org.intellij.erlang.ErlangLanguage;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangCodeStyleConfigurable extends CodeStyleAbstractConfigurable {
   public ErlangCodeStyleConfigurable(@NotNull CodeStyleSettings settings, CodeStyleSettings cloneSettings) {
     super(settings, cloneSettings, "Erlang");

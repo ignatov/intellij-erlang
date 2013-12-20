@@ -22,9 +22,6 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangModule;
 
-/**
- * @author ignatov
- */
 public class ErlangModuleStub extends NamedStubBase<ErlangModule> {
   public ErlangModuleStub(StubElement parent, IStubElementType elementType, StringRef name) {
     super(parent, elementType, name);

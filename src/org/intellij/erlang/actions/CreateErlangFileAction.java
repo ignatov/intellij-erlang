@@ -27,9 +27,6 @@ import com.intellij.psi.PsiDirectory;
 import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 
-/**
- * @author ignatov
- */
 public class CreateErlangFileAction extends CreateFileFromTemplateAction implements DumbAware {
   private static final String NEW_ERLANG_FILE = "New Erlang File";
 

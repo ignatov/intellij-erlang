@@ -26,9 +26,6 @@ import com.intellij.openapi.module.Module;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author savenko
- */
 public class ErlangRemoteDebugRunningState extends ErlangRunningState {
   public ErlangRemoteDebugRunningState(ExecutionEnvironment env, Module module) {
     super(env, module);

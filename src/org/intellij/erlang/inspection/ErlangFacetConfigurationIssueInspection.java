@@ -20,9 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool {
   @Nullable
   @Override

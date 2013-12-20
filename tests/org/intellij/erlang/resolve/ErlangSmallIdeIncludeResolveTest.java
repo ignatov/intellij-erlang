@@ -18,9 +18,6 @@ package org.intellij.erlang.resolve;
 
 import com.intellij.util.PlatformUtilsCore;
 
-/**
- * @author savenko
- */
 public class ErlangSmallIdeIncludeResolveTest extends ErlangIncludeResolveTestBase {
   public ErlangSmallIdeIncludeResolveTest() {
     super(PlatformUtilsCore.PHP_PREFIX);

@@ -7,9 +7,6 @@ import com.intellij.psi.stubs.StubElement;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangStubbedPsiElementBase<T extends StubElement<?>> extends StubBasedPsiElementBase<T> implements ErlangCompositeElement {
   public ErlangStubbedPsiElementBase(@NotNull T stub, @NotNull IStubElementType nodeType) {
     super(stub, nodeType);

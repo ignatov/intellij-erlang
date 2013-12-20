@@ -7,9 +7,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangModuleExtensionProperties {
   @Tag("includePaths")
   @AbstractCollection(surroundWithTag = false, elementTag = "path")

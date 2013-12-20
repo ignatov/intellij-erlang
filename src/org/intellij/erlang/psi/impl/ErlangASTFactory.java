@@ -5,9 +5,6 @@ import com.intellij.psi.impl.source.tree.LeafElement;
 import com.intellij.psi.impl.source.tree.PsiCommentImpl;
 import com.intellij.psi.tree.IElementType;
 
-/**
- * @author ignatov
- */
 public class ErlangASTFactory extends DefaultASTFactoryImpl {
   @Override
   public LeafElement createComment(IElementType type, CharSequence text) {

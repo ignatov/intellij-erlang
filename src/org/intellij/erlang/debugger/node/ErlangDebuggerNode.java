@@ -15,9 +15,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * @author savenko
- */
 public class ErlangDebuggerNode {
   private static final Logger LOG = Logger.getInstance(ErlangDebuggerNode.class);
   private static final String MESSAGE_BOX_NAME = "idea_dbg_box";

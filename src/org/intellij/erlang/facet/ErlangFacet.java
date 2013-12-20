@@ -9,9 +9,6 @@ import org.intellij.erlang.jps.model.ErlangFacetConstants;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author savenko
- */
 public class ErlangFacet extends Facet<ErlangFacetConfiguration> {
   public ErlangFacet(@NotNull FacetType facetType, @NotNull Module module, @NotNull String name, @NotNull ErlangFacetConfiguration configuration, @Nullable Facet underlyingFacet) {
     super(facetType, module, name, configuration, underlyingFacet);

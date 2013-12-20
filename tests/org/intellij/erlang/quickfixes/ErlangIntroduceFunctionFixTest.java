@@ -19,9 +19,6 @@ package org.intellij.erlang.quickfixes;
 import org.intellij.erlang.inspection.ErlangUnresolvedExportFunctionInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
 
-/**
- * @author ignatov
- */
 public class ErlangIntroduceFunctionFixTest extends ErlangQuickFixTestBase {
   @SuppressWarnings("unchecked")
   @Override

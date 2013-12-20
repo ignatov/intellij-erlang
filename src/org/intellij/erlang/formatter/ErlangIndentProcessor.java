@@ -35,9 +35,6 @@ import java.util.Set;
 
 import static org.intellij.erlang.ErlangTypes.*;
 
-/**
- * @author ignatov
- */
 public class ErlangIndentProcessor {
   private static final Set<IElementType> BIN_OPERATORS = ContainerUtil.set(
     ERL_OP_PLUS, ERL_OP_MINUS, ERL_OP_AR_MUL, ERL_OP_AR_DIV, ERL_REM,

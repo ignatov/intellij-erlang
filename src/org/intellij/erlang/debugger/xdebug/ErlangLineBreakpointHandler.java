@@ -4,9 +4,6 @@ import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author savenko
- */
 public class ErlangLineBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<ErlangLineBreakpointProperties>> {
   private final ErlangXDebugProcess myDebugProcess;
 

@@ -21,9 +21,6 @@ import com.intellij.psi.AbstractElementManipulator;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangStringLiteral;
 
-/**
- * @author ignatov
- */
 public class ErlangStringManipulator extends AbstractElementManipulator<ErlangStringLiteral> {
   @Override
   public ErlangStringLiteral handleContentChange(ErlangStringLiteral psi, TextRange range, String newContent) throws IncorrectOperationException {

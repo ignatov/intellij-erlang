@@ -10,9 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-/**
- * @author savenko
- */
 public class ErlangTestRunConfigProducersUtil {
   private ErlangTestRunConfigProducersUtil() {
   }

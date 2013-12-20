@@ -28,9 +28,6 @@ import org.intellij.erlang.psi.ErlangTypedRecordFields;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
   @NotNull
   @Override

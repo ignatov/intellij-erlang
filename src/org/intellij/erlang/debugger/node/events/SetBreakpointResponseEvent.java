@@ -10,9 +10,6 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author savenko
- */
 class SetBreakpointResponseEvent implements ErlangDebuggerEvent {
   public static final String NAME = "set_breakpoint_response";
 

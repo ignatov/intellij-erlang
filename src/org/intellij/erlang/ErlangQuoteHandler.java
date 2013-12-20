@@ -21,9 +21,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.psi.TokenType;
 
-/**
- * @author ignatov
- */
 public class ErlangQuoteHandler extends SimpleTokenSetQuoteHandler {
   public ErlangQuoteHandler() {
     super(ErlangTypes.ERL_STRING, TokenType.BAD_CHARACTER);

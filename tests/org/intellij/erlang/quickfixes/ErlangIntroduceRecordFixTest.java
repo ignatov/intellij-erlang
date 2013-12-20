@@ -2,9 +2,6 @@ package org.intellij.erlang.quickfixes;
 
 import org.intellij.erlang.inspection.ErlangUnresolvedRecordInspection;
 
-/**
- * @author savenko
- */
 public class ErlangIntroduceRecordFixTest extends ErlangQuickFixTestBase {
 
   @SuppressWarnings("unchecked")

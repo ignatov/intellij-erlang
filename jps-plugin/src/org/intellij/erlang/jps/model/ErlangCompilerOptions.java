@@ -2,9 +2,6 @@ package org.intellij.erlang.jps.model;
 
 import com.intellij.util.xmlb.annotations.Tag;
 
-/**
- * @author savenko
- */
 public class ErlangCompilerOptions {
   public ErlangCompilerOptions() {
   }

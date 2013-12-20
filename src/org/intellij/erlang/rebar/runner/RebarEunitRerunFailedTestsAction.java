@@ -38,9 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-/**
- * @author savenko
- */
 @SuppressWarnings("ComponentNotRegistered")
 public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
   static {

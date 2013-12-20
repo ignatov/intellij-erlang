@@ -22,9 +22,6 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public abstract class ErlangIncludeResolveTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public ErlangIncludeResolveTestBase(String platformPrefix) {
     super(platformPrefix);

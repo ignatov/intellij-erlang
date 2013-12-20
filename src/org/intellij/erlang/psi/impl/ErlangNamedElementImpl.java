@@ -24,9 +24,6 @@ import org.intellij.erlang.psi.ErlangNamedElement;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public abstract class ErlangNamedElementImpl extends ErlangCompositeElementImpl implements ErlangCompositeElement, ErlangNamedElement {
   public ErlangNamedElementImpl(ASTNode node) {
     super(node);

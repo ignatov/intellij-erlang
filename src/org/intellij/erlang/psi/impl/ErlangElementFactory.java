@@ -24,9 +24,6 @@ import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 @SuppressWarnings("ConstantConditions")
 public class ErlangElementFactory {
   private ErlangElementFactory() {

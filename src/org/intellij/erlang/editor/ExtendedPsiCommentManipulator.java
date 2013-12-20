@@ -4,9 +4,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.impl.source.resolve.reference.impl.manipulators.PsiCommentManipulator;
 
-/**
- * @author ignatov
- */
 public class ExtendedPsiCommentManipulator extends PsiCommentManipulator {
   @Override
   public TextRange getRangeInElement(PsiComment element) {

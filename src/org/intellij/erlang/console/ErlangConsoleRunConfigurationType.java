@@ -26,7 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 
 public final class ErlangConsoleRunConfigurationType implements ConfigurationType {
-
   public static ErlangConsoleRunConfigurationType getInstance() {
     return Extensions.findExtension(CONFIGURATION_TYPE_EP, ErlangConsoleRunConfigurationType.class);
   }

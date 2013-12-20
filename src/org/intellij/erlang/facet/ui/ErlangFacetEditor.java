@@ -24,9 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangFacetEditor extends FacetEditorTab {
   private JPanel myRootPanel;
   private JPanel myIncludePathsEditorPanel;

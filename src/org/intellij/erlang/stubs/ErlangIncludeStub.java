@@ -21,9 +21,6 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangInclude;
 
-/**
- * @author ignatov
- */
 public class ErlangIncludeStub extends ErlangStringContainerStub<ErlangInclude> {
   public ErlangIncludeStub(StubElement parent, IStubElementType elementType, String name) {
     super(parent, elementType, name);

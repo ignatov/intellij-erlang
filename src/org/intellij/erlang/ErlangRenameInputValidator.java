@@ -26,9 +26,6 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author ignatov
- */
 public class ErlangRenameInputValidator implements RenameInputValidator {
   @Override
   public ElementPattern<? extends PsiElement> getPattern() {

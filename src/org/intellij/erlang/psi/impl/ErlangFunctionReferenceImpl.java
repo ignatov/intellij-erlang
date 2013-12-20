@@ -41,9 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyVariantReferenceBase<T> {
   @Nullable
   private final ErlangQAtom myModuleAtom;

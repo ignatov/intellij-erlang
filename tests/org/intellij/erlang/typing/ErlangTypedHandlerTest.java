@@ -18,9 +18,6 @@ package org.intellij.erlang.typing;
 
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
-/**
- * @author ignatov
- */
 public class ErlangTypedHandlerTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testNotPaired() throws Throwable { doTest('(', "foo() -> <caret>a", "foo() -> (<caret>a"); }
   public void testPaired()    throws Throwable { doTest('(', "foo<caret>", "foo(<caret>)"); }

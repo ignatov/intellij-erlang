@@ -25,9 +25,6 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {

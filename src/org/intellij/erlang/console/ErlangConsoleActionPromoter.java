@@ -27,9 +27,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangConsoleActionPromoter implements ActionPromoter {
   private static final Comparator<AnAction> COMPARATOR = new Comparator<AnAction>() {
     @Override

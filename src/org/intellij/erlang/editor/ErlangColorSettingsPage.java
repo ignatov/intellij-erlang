@@ -31,9 +31,6 @@ import java.util.Map;
 
 import static org.intellij.erlang.editor.ErlangSyntaxHighlighter.*;
 
-/**
- * @author ignatov
- */
 public class ErlangColorSettingsPage implements ColorSettingsPage {
   private static final AttributesDescriptor[] ATTRS;
 

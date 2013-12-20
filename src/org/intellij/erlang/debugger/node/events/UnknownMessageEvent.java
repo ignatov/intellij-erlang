@@ -4,9 +4,6 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 
-/**
- * @author savenko
- */
 class UnknownMessageEvent implements ErlangDebuggerEvent {
   private final String myUnknownMessageText;
 

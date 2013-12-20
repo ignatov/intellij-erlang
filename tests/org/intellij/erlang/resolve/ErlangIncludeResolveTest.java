@@ -2,9 +2,6 @@ package org.intellij.erlang.resolve;
 
 import com.intellij.util.PlatformUtilsCore;
 
-/**
- * @author savenko
- */
 public class ErlangIncludeResolveTest extends ErlangIncludeResolveTestBase {
   public ErlangIncludeResolveTest() {
     super(PlatformUtilsCore.COMMUNITY_PREFIX);

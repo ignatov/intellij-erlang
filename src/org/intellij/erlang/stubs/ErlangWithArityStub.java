@@ -22,9 +22,6 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangNamedElement;
 
-/**
- * @author ignatov
- */
 public class ErlangWithArityStub<T extends ErlangNamedElement> extends NamedStubBase<T> {
   protected final int myArity;
 

@@ -35,9 +35,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
-/**
- * @author ignatov
- */
 public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProducer implements Cloneable {
   private PsiFile myFile;
 

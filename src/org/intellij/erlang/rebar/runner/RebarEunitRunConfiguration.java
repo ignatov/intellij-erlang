@@ -7,9 +7,6 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author savenko
- */
 public class RebarEunitRunConfiguration extends RebarRunConfigurationBase {
   protected RebarEunitRunConfiguration(@NotNull Project project, @NotNull String name) {
     super(name, project, RebarEunitRunConfigurationFactory.getInstance());

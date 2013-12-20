@@ -7,9 +7,6 @@ import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.ex.JpsCompositeElementBase;
 import org.jetbrains.jps.model.ex.JpsElementChildRoleBase;
 
-/**
- * @author savenko
- */
 public class JpsRebarConfigurationExtension extends JpsCompositeElementBase<JpsRebarConfigurationExtension> {
   public static final JpsElementChildRole<JpsRebarConfigurationExtension> ROLE = JpsElementChildRoleBase.create("Rebar");
 

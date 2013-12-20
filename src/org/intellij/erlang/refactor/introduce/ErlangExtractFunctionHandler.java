@@ -54,9 +54,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-/**
- * @author ignatov
- */
 public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   public static final Logger LOGGER = Logger.getInstance(ErlangExtractFunctionHandler.class);
 

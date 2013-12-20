@@ -6,9 +6,6 @@ import org.intellij.erlang.psi.ErlangModule;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public interface ErlangDebuggerEventListener {
   void debuggerStarted();
   void failedToInterpretModules(String nodeName, List<ErlangModule> modules);

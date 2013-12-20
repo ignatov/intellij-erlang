@@ -22,9 +22,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
   @NotNull
   @Override

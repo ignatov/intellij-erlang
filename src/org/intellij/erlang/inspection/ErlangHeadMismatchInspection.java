@@ -33,9 +33,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangHeadMismatchInspection extends ErlangInspectionBase implements DumbAware {
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {

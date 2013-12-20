@@ -26,9 +26,6 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author savenko
- */
 public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
   protected ErlangHighlightingTestBase(String platformPrefix) {
     super(platformPrefix);

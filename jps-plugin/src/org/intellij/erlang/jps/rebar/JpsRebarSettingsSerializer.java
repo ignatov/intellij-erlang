@@ -6,9 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.serialization.JpsProjectExtensionSerializer;
 
-/**
- * @author savenko
- */
 public class JpsRebarSettingsSerializer extends JpsProjectExtensionSerializer {
   public static final String REBAR_CONFIG_FILE_NAME = "rebar.xml";
   public static final String REBAR_COMPONENT_NAME = "RebarSettings";

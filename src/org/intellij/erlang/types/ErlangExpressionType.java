@@ -30,9 +30,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-/**
- * @author ignatov
- */
 public abstract class ErlangExpressionType {
   public String getName() {
     return myName;

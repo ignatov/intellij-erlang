@@ -30,9 +30,6 @@ import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author ignatov
- */
 public class ErlangExportFunctionIntention extends BaseIntentionAction {
   @NotNull
   @Override

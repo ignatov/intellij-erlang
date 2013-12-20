@@ -23,9 +23,6 @@ import java.util.Collections;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangFacetConfiguration implements FacetConfiguration, PersistentStateComponent<ErlangModuleExtensionProperties> {
   private ErlangModuleExtensionProperties myState = new ErlangModuleExtensionProperties();
 

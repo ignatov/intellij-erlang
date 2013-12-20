@@ -28,9 +28,6 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangGotoSuperTest extends LightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {

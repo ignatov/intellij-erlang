@@ -6,9 +6,6 @@ import com.intellij.openapi.extensions.Extensions;
 import org.intellij.erlang.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author savenko
- */
 public class RebarEunitRunConfigurationType extends ConfigurationTypeBase {
   RebarEunitRunConfigurationType() {
     super("RebarEunitRunConfigurationType", "Erlang Rebar Eunit", "Runs Eunit tests with Rebar", ErlangIcons.REBAR_EUNIT);

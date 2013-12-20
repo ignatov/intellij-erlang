@@ -18,9 +18,6 @@ package org.intellij.erlang.quickfixes;
 
 import org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection;
 
-/**
- * @author savenko
- */
 public class ErlangIntroduceMacroQuickFixTest extends ErlangQuickFixTestBase {
 
   @SuppressWarnings("unchecked")

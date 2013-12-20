@@ -34,9 +34,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
-/**
- * @author ignatov
- */
 public class ErlangFoldingBuilder extends FoldingBuilderEx implements DumbAware {
   @NotNull
   @Override

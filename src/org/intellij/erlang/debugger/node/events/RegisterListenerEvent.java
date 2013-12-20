@@ -7,9 +7,6 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 
-/**
- * @author savenko
- */
 class RegisterListenerEvent implements ErlangDebuggerEvent {
   public static final String NAME = "register_listener";
 

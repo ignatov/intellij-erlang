@@ -23,9 +23,6 @@ import org.intellij.erlang.stubs.index.ErlangAllNameIndex;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public abstract class ErlangNamedStubElementType<S extends NamedStubBase<T>, T extends ErlangNamedElement> extends ErlangStubElementType<S, T> {
   public ErlangNamedStubElementType(@NonNls @NotNull String debugName) {
     super(debugName);

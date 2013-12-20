@@ -41,9 +41,6 @@ import java.util.List;
 import static org.intellij.erlang.ErlangParserDefinition.COMMENTS;
 import static org.intellij.erlang.ErlangTypes.*;
 
-/**
- * @author ignatov
- */
 public class ErlangFormattingBlock extends AbstractBlock {
   public static final TokenSet BLOCKS_TOKEN_SET = TokenSet.create(
     ERL_CLAUSE_BODY,

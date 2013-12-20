@@ -38,9 +38,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-/**
- * @author ignatov
- */
 public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider, DumbAware {
 
   @Override

@@ -26,9 +26,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangExecutionStack extends XExecutionStack {
   private final ErlangProcessSnapshot myProcessSnapshot;
   private final List<ErlangStackFrame> myStack;

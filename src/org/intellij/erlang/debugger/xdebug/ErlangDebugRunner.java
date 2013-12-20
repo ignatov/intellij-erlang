@@ -18,9 +18,6 @@ import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author savenko
- */
 public class ErlangDebugRunner extends GenericProgramRunner {
   public static final String ERLANG_DEBUG_RUNNER_ID = "ErlangDebugRunner";
 

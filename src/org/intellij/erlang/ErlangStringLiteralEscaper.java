@@ -21,9 +21,6 @@ import com.intellij.psi.LiteralTextEscaper;
 import org.intellij.erlang.psi.ErlangStringLiteral;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangStringLiteralEscaper extends LiteralTextEscaper<ErlangStringLiteral> {
   public ErlangStringLiteralEscaper(ErlangStringLiteral element) {
     super(element);

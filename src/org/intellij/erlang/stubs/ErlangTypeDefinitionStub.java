@@ -21,9 +21,6 @@ import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 
-/**
- * @author ignatov
- */
 public class ErlangTypeDefinitionStub extends ErlangWithArityStub<ErlangTypeDefinition> {
   public ErlangTypeDefinitionStub(StubElement parent, IStubElementType elementType, StringRef name, int arity) {
     super(parent, elementType, name, arity);

@@ -25,9 +25,6 @@ import org.intellij.erlang.psi.ErlangFile;
 
 import java.util.HashSet;
 
-/**
- * @author ignatov
- */
 public class ErlangFileStub extends PsiFileStubImpl<ErlangFile> {
   private final boolean myExportAll;
   private final StringRef myParseTransformsRef;

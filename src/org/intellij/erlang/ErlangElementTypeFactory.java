@@ -20,9 +20,6 @@ import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.stubs.types.*;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangElementTypeFactory {
   private ErlangElementTypeFactory() {
   }

@@ -24,9 +24,6 @@ import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFunctionClause;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangImplementationTextSelectioner implements ImplementationTextSelectioner {
   @Override
   public int getTextStartOffset(@NotNull PsiElement psiElement) {

@@ -26,9 +26,6 @@ import com.intellij.usageView.UsageViewTypeLocation;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {

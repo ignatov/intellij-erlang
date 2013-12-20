@@ -26,9 +26,6 @@ import com.intellij.usageView.UsageViewTypeLocation;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @Override
   public WordsScanner getWordsScanner() {

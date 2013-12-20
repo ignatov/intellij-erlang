@@ -29,9 +29,6 @@ import org.intellij.erlang.psi.ErlangArgumentList;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String FOO = "foo(Arg1, Arg2) -> ok.\n";
 

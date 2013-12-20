@@ -8,9 +8,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author savenko
- */
 public class RebarEunitRunConfigurationFactory extends ConfigurationFactory {
   private static final RebarEunitRunConfigurationFactory ourInstance = new RebarEunitRunConfigurationFactory();
 

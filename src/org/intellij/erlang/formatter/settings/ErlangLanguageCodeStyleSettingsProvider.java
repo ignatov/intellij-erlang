@@ -26,9 +26,6 @@ import org.intellij.erlang.ErlangLanguage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author ignatov
- */
 public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSettingsProvider {
   public static final String AROUND_OPERATORS = "Around Operators";
   public static final String ALIGNMENT = "Alignment";

@@ -8,9 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
-/**
- * @author ignatov
- */
 public class ErlangReferenceContributor extends PsiReferenceContributor {
   private enum Kind {FUNCTION, MODULE, RECORD}
 

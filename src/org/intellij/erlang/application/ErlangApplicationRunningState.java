@@ -30,9 +30,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangApplicationRunningState extends ErlangRunningState {
   private ErlangApplicationConfiguration myConfiguration;
 

@@ -6,9 +6,6 @@ import com.intellij.util.xmlb.annotations.Tag;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangModuleBuildOrders {
   //reflection
   public ErlangModuleBuildOrders() {

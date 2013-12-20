@@ -6,9 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.serialization.JpsProjectExtensionSerializer;
 
-/**
- * @author savenko
- */
 public class JpsErlangCompilerOptionsSerializer extends JpsProjectExtensionSerializer {
   public static final String COMPILER_OPTIONS_COMPONENT_NAME = "ErlangCompilerOptions";
 

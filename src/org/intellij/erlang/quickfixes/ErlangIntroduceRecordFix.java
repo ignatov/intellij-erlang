@@ -30,9 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
   @NotNull
   @Override

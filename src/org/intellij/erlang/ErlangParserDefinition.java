@@ -36,9 +36,6 @@ import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.stubs.types.ErlangFileElementType;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangParserDefinition implements ParserDefinition {
   public static final IStubFileElementType ERL_FILE_ELEMENT_TYPE = new ErlangFileElementType();
   public static final TokenSet WS = TokenSet.create(TokenType.WHITE_SPACE);

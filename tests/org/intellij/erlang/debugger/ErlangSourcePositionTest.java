@@ -9,9 +9,6 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
-/**
- * @author savenko
- */
 public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private ErlangFile myErlangFile;
 

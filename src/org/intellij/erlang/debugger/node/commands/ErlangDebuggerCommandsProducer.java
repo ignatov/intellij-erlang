@@ -10,9 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public final class ErlangDebuggerCommandsProducer {
   private ErlangDebuggerCommandsProducer() {
   }

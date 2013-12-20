@@ -23,9 +23,6 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected void setUp() throws Exception {

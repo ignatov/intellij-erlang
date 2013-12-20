@@ -20,9 +20,6 @@ import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RuntimeConfiguration;
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
 
-/**
- * @author ignatov
- */
 public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties {
 
   private RuntimeConfiguration myConfig;

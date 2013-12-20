@@ -26,9 +26,6 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testFunctionClause() throws Exception {
     doTest("foo(A, B, C) -> ok;<caret>",

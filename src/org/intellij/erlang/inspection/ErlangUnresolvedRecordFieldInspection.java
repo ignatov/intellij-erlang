@@ -24,9 +24,6 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFieldFix;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {

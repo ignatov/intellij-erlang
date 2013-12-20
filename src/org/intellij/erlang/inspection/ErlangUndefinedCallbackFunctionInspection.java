@@ -38,9 +38,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author ignatov
- */
 public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {

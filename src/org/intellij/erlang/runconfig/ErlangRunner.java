@@ -33,9 +33,6 @@ import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangRunner extends DefaultProgramRunner {
   public static final String ERLANG_RUNNER_ID = "ErlangRunner";
 

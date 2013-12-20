@@ -36,9 +36,6 @@ import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
-/**
- * @author ignatov
- */
 public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {

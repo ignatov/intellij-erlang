@@ -19,9 +19,6 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author ignatov
- */
 public class ErlangUnitTestMethodAction extends CodeInsightAction implements CodeInsightActionHandler {
   private static void insertTestFunction(@NotNull Project project, @NotNull Editor editor, String name, boolean needNewline) {
     final Template template = TemplateManager.getInstance(project).createTemplate("", "");

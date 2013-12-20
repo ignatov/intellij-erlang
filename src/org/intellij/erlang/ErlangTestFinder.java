@@ -32,9 +32,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 
-/**
- * @author ignatov
- */
 public class ErlangTestFinder implements TestFinder {
   public static final String EXT = "." + ErlangFileType.MODULE.getDefaultExtension();
   public static String[] SUFFIXES = new String[]{"_test", "_tests"};

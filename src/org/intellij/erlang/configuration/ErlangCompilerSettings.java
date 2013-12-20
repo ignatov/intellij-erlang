@@ -7,9 +7,6 @@ import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author savenko
- */
 @State(
   name = JpsErlangCompilerOptionsSerializer.COMPILER_OPTIONS_COMPONENT_NAME,
   storages = {

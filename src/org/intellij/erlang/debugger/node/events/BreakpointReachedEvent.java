@@ -34,9 +34,6 @@ import java.util.List;
 
 import static org.intellij.erlang.debugger.node.events.OtpErlangTermUtil.*;
 
-/**
- * @author savenko
- */
 class BreakpointReachedEvent implements ErlangDebuggerEvent {
   public static final String NAME = "breakpoint_reached";
 

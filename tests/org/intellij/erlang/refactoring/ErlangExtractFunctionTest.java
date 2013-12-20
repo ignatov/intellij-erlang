@@ -19,9 +19,6 @@ package org.intellij.erlang.refactoring;
 import org.intellij.erlang.refactor.introduce.ErlangExtractFunctionHandler;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
-/**
- * @author ignatov
- */
 public class ErlangExtractFunctionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {

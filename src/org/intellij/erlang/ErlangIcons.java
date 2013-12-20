@@ -23,9 +23,6 @@ import com.intellij.util.PlatformIcons;
 
 import javax.swing.*;
 
-/**
- * @author ignatov
- */
 public interface ErlangIcons {
   Icon FUNCTION = PlatformIcons.FUNCTION_ICON;
   Icon ATTRIBUTE = PlatformIcons.ANNOTATION_TYPE_ICON;

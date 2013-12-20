@@ -2,9 +2,6 @@ package org.intellij.erlang.typing;
 
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
-/**
- * @author savenko
- */
 public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
 
   @Override

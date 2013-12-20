@@ -68,9 +68,6 @@ import java.util.*;
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 import static com.intellij.patterns.StandardPatterns.instanceOf;
 
-/**
- * @author ignatov
- */
 public class ErlangCompletionContributor extends CompletionContributor {
   public static final int MODULE_PRIORITY = -15;
   public static final int KEYWORD_PRIORITY = -10;

@@ -27,9 +27,6 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class DefaultModuleEditorsProvider implements ModuleConfigurationEditorProvider {
   public ModuleConfigurationEditor[] createEditors(ModuleConfigurationState state) {
     ModifiableRootModel rootModel = state.getRootModel();

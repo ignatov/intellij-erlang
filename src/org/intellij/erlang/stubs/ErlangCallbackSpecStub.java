@@ -23,9 +23,6 @@ import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangCallbackSpec;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author ignatov
- */
 public class ErlangCallbackSpecStub extends StubBase<ErlangCallbackSpec> {
   private final StringRef myNameRef;
   private final int myArity;

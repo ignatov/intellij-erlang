@@ -22,9 +22,6 @@ import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author ignatov
- */
 public class ErlangUpdateAddedFileProcessor extends UpdateAddedFileProcessor {
   @Override
   public boolean canProcessElement(PsiFile file) {

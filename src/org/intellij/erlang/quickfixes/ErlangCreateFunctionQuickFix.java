@@ -35,9 +35,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author ignatov
- */
 public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase {
   private final String myName;
   private final int myArity;

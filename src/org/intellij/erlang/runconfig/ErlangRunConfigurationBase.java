@@ -31,9 +31,6 @@ import org.jdom.Element;
 import java.util.Arrays;
 import java.util.Collection;
 
-/**
- * @author savenko
- */
 public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunningState> extends ModuleBasedConfiguration<ErlangModuleBasedConfiguration>
   implements RunConfigurationWithSuppressedDefaultRunAction {
   public ErlangRunConfigurationBase(String name, ErlangModuleBasedConfiguration configurationModule, ConfigurationFactory factory) {
