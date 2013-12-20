@@ -16,10 +16,10 @@
 
 package org.intellij.erlang.stubs;
 
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.stubs.PsiFileStubImpl;
 import com.intellij.psi.tree.IStubFileElementType;
 import com.intellij.util.io.StringRef;
-import org.apache.commons.lang.StringUtils;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFile;
 
@@ -34,7 +34,7 @@ public class ErlangFileStub extends PsiFileStubImpl<ErlangFile> {
     myExportAll = file.isExportedAll();
     HashSet<String> transforms = new HashSet<String>();
     file.addDeclaredParseTransforms(transforms);
-    String join = StringUtils.join(transforms, ",");
+    String join = StringUtil.join(transforms, ",");
     myParseTransformsRef = StringRef.fromString(join);
   }
 

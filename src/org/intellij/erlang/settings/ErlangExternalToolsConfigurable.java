@@ -38,7 +38,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.dialyzer.DialyzerSettings;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
@@ -51,6 +51,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.File;
+import java.util.List;
 
 /**
  * @author Maxim Vladimirsky, ignatov
@@ -95,7 +96,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
       }
     }
 
-    if (StringUtils.isEmpty(myEmacsSettings.getEmacsPath()) && (SystemInfo.isLinux || SystemInfo.isMac)) {
+    if (StringUtil.isEmpty(myEmacsSettings.getEmacsPath()) && (SystemInfo.isLinux || SystemInfo.isMac)) {
       String suggestedPath = "/usr/bin/emacs";
       File file = new File(suggestedPath);
       if (file.exists() && FileUtil.canExecute(file)) {
@@ -178,9 +179,9 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
 
   private void validateEmacsPath() {
     String version = ExtProcessUtil.restrictedTimeExec(myEmacsPathSelector.getText() + " --version", 3000);
-    String[] split = StringUtils.split(version, "\n");
-    if (StringUtils.containsIgnoreCase(version, "emacs") && split.length > 0) {
-      myEmacsVersionText.setText(ArrayUtil.getFirstElement(split));
+    List<String> split = StringUtil.split(version, "\n");
+    if (StringUtil.containsIgnoreCase(version, "emacs") && split.size() > 0) {
+      myEmacsVersionText.setText(ContainerUtil.getFirstItem(split));
     }
     else {
       myEmacsVersionText.setText("N/A");
