@@ -72,6 +72,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
   public static final int MODULE_PRIORITY = -15;
   public static final int KEYWORD_PRIORITY = -10;
   public static final int MODULE_FUNCTIONS_PRIORITY = -4;
+  public static final int TYPE_PRIORITY = 10;
   public static final int BIF_PRIORITY = -5;
   public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
     "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour"

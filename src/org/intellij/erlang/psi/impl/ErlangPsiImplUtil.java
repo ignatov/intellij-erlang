@@ -580,7 +580,9 @@ public class ErlangPsiImplUtil {
       List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(BUILT_IN_TYPES, new Function<String, LookupElement>() {
         @Override
         public LookupElement fun(String s) {
-          return LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler);
+          return PrioritizedLookupElement.withPriority(
+            LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler),
+            ErlangCompletionContributor.TYPE_PRIORITY);
         }
       }) : ContainerUtil.<LookupElement>emptyList();
 
@@ -589,7 +591,9 @@ public class ErlangPsiImplUtil {
         new Function<ErlangTypeDefinition, LookupElement>() {
           @Override
           public LookupElement fun(@NotNull final ErlangTypeDefinition rd) {
-            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(getArity(rd), withArity));
+            return PrioritizedLookupElement.withPriority(
+              LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(getArity(rd), withArity)),
+              ErlangCompletionContributor.TYPE_PRIORITY);
           }
         });
       return ContainerUtil.concat(foundedTypes, builtInTypes);
