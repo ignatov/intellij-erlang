@@ -40,9 +40,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author ignatov, savenko
- */
 public class ErlangTestLocationProvider implements TestLocationProvider {
   private static final Pattern LOCATION_PATTERN = Pattern.compile("^(\\w+)(?::(\\w+)(?::(\\d+))?)?$");
 

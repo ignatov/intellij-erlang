@@ -63,9 +63,6 @@ import java.util.Map;
 
 import static org.intellij.erlang.jps.CompileScopeTestBuilder.make;
 
-/**
- * @author nik
- */
 public abstract class JpsBuildTestCase extends UsefulTestCase {
   private File myProjectDir;
   protected JpsProject myProject;

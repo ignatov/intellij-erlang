@@ -45,9 +45,6 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
 
-/**
- * @author @nik, savenko
- */
 public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   public static final String DEPENDENCIES_CONFIG_FILE_PATH = "erlang-builder/deps-config.xml";
   public static final String NAME = "erlc";

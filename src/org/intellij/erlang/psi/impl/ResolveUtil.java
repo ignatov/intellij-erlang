@@ -24,11 +24,6 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Taken from the Clojure plugin sources
- *
- * @author ilyas
- */
 public abstract class ResolveUtil {
   public static boolean treeWalkUp(@Nullable PsiElement place, PsiScopeProcessor processor) {
     PsiElement lastParent = null;

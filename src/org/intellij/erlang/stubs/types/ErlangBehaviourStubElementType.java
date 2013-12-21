@@ -28,9 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-/**
-* @author ignatov
-*/
 public class ErlangBehaviourStubElementType extends ErlangStubElementType<ErlangBehaviourStub, ErlangBehaviour> {
   public static final ErlangBehaviour[] EMPTY_ARRAY = new ErlangBehaviour[0];
 

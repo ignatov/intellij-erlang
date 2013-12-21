@@ -9,9 +9,6 @@ import org.jetbrains.jps.model.library.sdk.JpsSdkType;
 
 import java.io.File;
 
-/**
- * @author @nik
- */
 public class JpsErlangSdkType extends JpsSdkType<JpsDummyElement> implements JpsElementTypeWithDefaultProperties<JpsDummyElement> {
   public static final JpsErlangSdkType INSTANCE = new JpsErlangSdkType();
 

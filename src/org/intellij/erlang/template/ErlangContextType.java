@@ -32,9 +32,6 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
- */
 public abstract class ErlangContextType extends TemplateContextType {
   protected ErlangContextType(@NotNull @NonNls String id, @NotNull String presentableName, @Nullable Class<? extends TemplateContextType> baseContextType) {
     super(id, presentableName, baseContextType);

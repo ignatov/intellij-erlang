@@ -26,9 +26,6 @@ import org.jetbrains.jps.incremental.messages.DoneSomethingNotification;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
-* @author nik
-*/
 public class BuildResult implements MessageHandler {
   private final List<BuildMessage> myErrorMessages;
   private final List<BuildMessage> myWarnMessages;

@@ -20,9 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * @author @nik
- */
 public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtension {
   public static final String ERLANG_SDK_TYPE_ID = "Erlang SDK";
 

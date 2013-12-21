@@ -32,9 +32,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-/**
-* @author ignatov
-*/
 abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
   protected ErlangCompletionTestBase() {
   }

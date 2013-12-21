@@ -53,9 +53,6 @@ import javax.swing.*;
 import java.io.File;
 import java.util.List;
 
-/**
- * @author Maxim Vladimirsky, ignatov
- */
 public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
   public static final String ERLANG_RELATED_TOOLS = "Erlang External Tools";
   public static final String ERLANG_LIBRARY_NAME = "Erlang SDK";

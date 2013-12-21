@@ -18,9 +18,6 @@ package org.intellij.erlang.template;
 import com.intellij.codeInsight.template.impl.DefaultLiveTemplatesProvider;
 import com.intellij.util.ArrayUtil;
 
-/**
- * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
- */
 public class ErlangLiveTemplateProvider implements DefaultLiveTemplatesProvider {
   public static final String[] TEMPLATE_FILES = {"liveTemplates/erlang"};
 

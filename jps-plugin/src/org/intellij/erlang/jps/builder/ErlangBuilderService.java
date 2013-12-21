@@ -9,9 +9,6 @@ import org.intellij.erlang.jps.rebar.RebarBuilder;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * @author @nik
- */
 public class ErlangBuilderService extends BuilderService {
   @NotNull
   @Override

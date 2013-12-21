@@ -20,9 +20,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 
-/**
-* @author ignatov
-*/
 public class ErlangRecursiveVisitor extends ErlangVisitor {
   @Override
   public void visitCompositeElement(@NotNull ErlangCompositeElement o) {

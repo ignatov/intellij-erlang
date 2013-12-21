@@ -27,9 +27,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-/**
-* @author ignatov
-*/
 public class ErlangRecordDefinitionElementType extends ErlangNamedStubElementType<ErlangRecordDefinitionStub, ErlangRecordDefinition> {
   public static final ErlangRecordDefinition[] EMPTY_ARRAY = new ErlangRecordDefinition[0];
 

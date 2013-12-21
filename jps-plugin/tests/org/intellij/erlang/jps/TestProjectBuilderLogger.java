@@ -28,9 +28,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-/**
- * @author nik
- */
 public class TestProjectBuilderLogger extends ProjectBuilderLoggerBase {
   private MultiMap<String, File> myCompiledFiles = new MultiMap<String, File>();
   private Set<File> myDeletedFiles = new THashSet<File>(FileUtil.FILE_HASHING_STRATEGY);

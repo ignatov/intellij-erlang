@@ -29,9 +29,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-/**
-* @author ignatov
-*/
 public class ErlangIncludeLibElementType extends ErlangStubElementType<ErlangIncludeLibStub, ErlangIncludeLib> {
   public static final ErlangIncludeLib[] EMPTY_ARRAY = new ErlangIncludeLib[0];
 

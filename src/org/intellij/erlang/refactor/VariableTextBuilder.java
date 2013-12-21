@@ -26,9 +26,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
-* @author ignatov
-*/
 public class VariableTextBuilder extends PsiRecursiveElementVisitor {
   private StringBuilder myResult = new StringBuilder();
 

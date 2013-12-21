@@ -23,9 +23,6 @@ import org.intellij.erlang.psi.ErlangFunTypeSigs;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.ErlangTypeSig;
 
-/**
- * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
- */
 public class ErlangIncorrectAritySpecificationInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {

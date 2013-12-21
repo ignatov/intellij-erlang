@@ -10,9 +10,6 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author @nik
- */
 public class ErlangCompilerError {
   private static final Pattern COMPILER_MESSAGE_PATTERN = Pattern.compile("^(.+):(\\d+):(\\s*Warning:)?\\s*(.+)$");
 

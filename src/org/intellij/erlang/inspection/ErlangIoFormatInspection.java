@@ -31,9 +31,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author ignatov, savenko
- */
 public class ErlangIoFormatInspection extends ErlangInspectionBase {
   private static final Pattern CONTROL_SEQUENCE_PATTERN;
   static {

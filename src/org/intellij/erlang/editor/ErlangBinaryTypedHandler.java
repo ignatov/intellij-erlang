@@ -31,9 +31,6 @@ import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
- */
 public class ErlangBinaryTypedHandler extends TypedHandlerDelegate {
 
   @Override

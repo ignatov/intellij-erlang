@@ -39,9 +39,6 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 
-/**
- * @author Maxim Vladimirsky, ignatov
- */
 public class RebarConfigurationForm {
   private JPanel myPanel;
   private TextFieldWithBrowseButton myRebarPathSelector;

@@ -8,9 +8,6 @@ import org.jetbrains.jps.builders.BuildTarget;
 import java.io.File;
 import java.io.FileFilter;
 
-/**
- * @author @nik
- */
 public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
   private File myRoot;
   private final ErlangTarget myErlangTarget;

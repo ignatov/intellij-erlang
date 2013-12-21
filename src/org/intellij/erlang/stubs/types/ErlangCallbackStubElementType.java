@@ -28,9 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-/**
-* @author ignatov
-*/
 public class ErlangCallbackStubElementType extends ErlangStubElementType<ErlangCallbackSpecStub, ErlangCallbackSpec> {
   public static final ErlangCallbackSpec[] EMPTY_ARRAY = new ErlangCallbackSpec[0];
 

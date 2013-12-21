@@ -12,9 +12,6 @@ import org.jetbrains.jps.model.module.JpsTypedModule;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author @nik
- */
 public class ErlangTargetType extends ModuleBasedBuildTargetType<ErlangTarget> {
   public static final ErlangTargetType PRODUCTION = new ErlangTargetType("erlang-production", false);
   public static final ErlangTargetType TESTS = new ErlangTargetType("erlang-tests", true);

@@ -20,9 +20,6 @@ import org.jetbrains.jps.model.module.JpsTypedModuleSourceRoot;
 import java.io.File;
 import java.util.*;
 
-/**
- * @author @nik
- */
 public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> {
   public ErlangTarget(@NotNull JpsModule module, ErlangTargetType targetType) {
     super(targetType, module);

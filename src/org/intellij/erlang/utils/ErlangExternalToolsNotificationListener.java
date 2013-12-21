@@ -25,9 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.event.HyperlinkEvent;
 
-/**
-* @author ignatov
-*/
 public class ErlangExternalToolsNotificationListener implements NotificationListener {
   @NotNull
   private final Project myProject;
