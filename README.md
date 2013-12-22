@@ -6,7 +6,7 @@ You can manually set up the plugin latest version from the [intellij-erlang-buil
 Note for **Mac OS X** users: you need to download the entire zip file, not a several jars (see [Apple discussion forum](https://discussions.apple.com/thread/1483114)). 
 
 ## Donations
-If you would like to make a donation you can use [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=C344TC8DDC5UN).
+If you'd like to make a donation you can use [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=C344TC8DDC5UN).
 
 ## Recent changes
 ### Version 0.5.3
