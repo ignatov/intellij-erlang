@@ -1,10 +1,8 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.OtpErlangList;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
