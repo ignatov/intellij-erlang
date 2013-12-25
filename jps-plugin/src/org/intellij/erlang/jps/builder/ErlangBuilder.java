@@ -1,7 +1,5 @@
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.diagnostic.Logger;
@@ -14,6 +12,8 @@ import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
+import org.intellij.erlang.jps.execution.ExecutionException;
+import org.intellij.erlang.jps.execution.GeneralCommandLine;
 import org.intellij.erlang.jps.model.*;
 import org.jdom.Document;
 import org.jdom.JDOMException;

@@ -1,7 +1,5 @@
 package org.intellij.erlang.jps.rebar;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.text.StringUtil;
@@ -9,6 +7,8 @@ import org.intellij.erlang.jps.builder.ErlangCompilerProcessAdapter;
 import org.intellij.erlang.jps.builder.ErlangSourceRootDescriptor;
 import org.intellij.erlang.jps.builder.ErlangTarget;
 import org.intellij.erlang.jps.builder.ErlangTargetType;
+import org.intellij.erlang.jps.execution.ExecutionException;
+import org.intellij.erlang.jps.execution.GeneralCommandLine;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
 import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsExtension;
 import org.jetbrains.annotations.NotNull;
