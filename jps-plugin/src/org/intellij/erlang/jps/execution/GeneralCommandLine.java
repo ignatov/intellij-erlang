@@ -17,7 +17,6 @@ package org.intellij.erlang.jps.execution;
 
 import com.intellij.execution.CommandLineUtil;
 import com.intellij.execution.Platform;
-import com.intellij.execution.configurations.ParametersList;
 import com.intellij.ide.IdeBundle;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Key;
@@ -26,7 +25,7 @@ import com.intellij.openapi.util.UserDataHolder;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.util.EnvironmentUtil;
-import com.intellij.util.PlatformUtils;
+import com.intellij.util.PlatformUtilsCore;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashMap;
@@ -274,7 +273,9 @@ public class GeneralCommandLine implements UserDataHolder {
     environment.clear();
 
     if (myPassParentEnvironment) {
-      environment.putAll(PlatformUtils.isAppCode() ? System.getenv() // Temporarily fix for OC-8606 
+      String prefix = System.getProperty(PlatformUtilsCore.PLATFORM_PREFIX_KEY, PlatformUtilsCore.IDEA_PREFIX);
+      environment.putAll(
+        PlatformUtilsCore.APPCODE_PREFIX.equals(prefix) ? System.getenv() // Temporarily fix for OC-8606
                                                    : EnvironmentUtil.getEnvironmentMap());
     }
 
