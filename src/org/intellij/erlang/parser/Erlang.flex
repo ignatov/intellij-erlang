@@ -1,9 +1,3 @@
-/**
- * @author ignatov
- * Based on the ErlGray lexer (http://code.google.com/p/idea-erlang/)
- * Thanks for Joachim Ansorg, mail@ansorg-it.com
- **/
-
 package org.intellij.erlang.parser;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
@@ -86,7 +80,6 @@ UniversalPattern = _
  {Comment}                     { return ERL_COMMENT; }
  {Whitespace}                  { return com.intellij.psi.TokenType.WHITE_SPACE; }
 
-/* keywords */
  "after"                       { return ERL_AFTER; }
  "when"                        { return ERL_WHEN; }
  "begin"                       { return ERL_BEGIN; }
@@ -99,11 +92,8 @@ UniversalPattern = _
  "if"                          { return ERL_IF; }
  "receive"                     { return ERL_RECEIVE; }
 
-/*Binary tokens*/
  "<<"                           { return ERL_BIN_START; }
  ">>"                           { return ERL_BIN_END; }
-
-/* operators */
  "+"                            { return ERL_OP_PLUS; }
  "-"                            { return ERL_OP_MINUS; }
  "*"                            { return ERL_OP_AR_MUL; }
@@ -134,11 +124,9 @@ UniversalPattern = _
  "!"                            { return ERL_OP_EXL; }
  "<-"                           { return ERL_OP_LT_MINUS; }
  "<="                           { return ERL_OP_LT_EQ; }
-/* Newer additions */
  "andalso"                      { return ERL_ANDALSO; }
  "orelse"                       { return ERL_ORELSE; }
 
-/* Literals */
  {IntegerLiteral}              { return ERL_INTEGER; }
  {FloatLiteral}                { return ERL_FLOAT; }
  {UniversalPattern}            { return ERL_UNI_PATTERN; }
@@ -148,7 +136,6 @@ UniversalPattern = _
  {AtomLiteral}                 { return ERL_ATOM; }
  {Variable}                    { return ERL_VAR; }
 
-/*separators*/
   "("                           { return ERL_PAR_LEFT; }
   ")"                           { return ERL_PAR_RIGHT; }
   "{"                           { return ERL_CURLY_LEFT; }
@@ -168,6 +155,4 @@ UniversalPattern = _
   "->"                          { return ERL_ARROW; }
   "#"                           { return ERL_RADIX; }
 
-/** END */
- /* \n                          { return LINE_FEED; } */
  .                              { return com.intellij.psi.TokenType.BAD_CHARACTER; }
