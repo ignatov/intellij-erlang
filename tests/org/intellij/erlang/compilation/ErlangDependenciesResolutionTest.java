@@ -10,7 +10,7 @@ import com.intellij.testFramework.ModuleTestCase;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.editor.ErlangModuleType;
+import org.intellij.erlang.ErlangModuleType;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
 
 import java.io.File;

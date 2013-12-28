@@ -11,7 +11,7 @@ import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.editor.ErlangModuleType;
+import org.intellij.erlang.ErlangModuleType;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetConfiguration;
 import org.intellij.erlang.psi.ErlangFile;

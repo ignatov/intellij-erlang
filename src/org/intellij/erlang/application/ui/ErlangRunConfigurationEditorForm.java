@@ -22,7 +22,7 @@ import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.ui.ListCellRendererWrapper;
-import org.intellij.erlang.editor.ErlangModuleType;
+import org.intellij.erlang.ErlangModuleType;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.jetbrains.annotations.NotNull;
 

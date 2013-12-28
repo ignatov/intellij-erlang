@@ -5,7 +5,7 @@ import com.intellij.facet.FacetType;
 import com.intellij.facet.FacetTypeId;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
-import org.intellij.erlang.editor.ErlangModuleType;
+import org.intellij.erlang.ErlangModuleType;
 import org.intellij.erlang.jps.model.ErlangFacetConstants;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

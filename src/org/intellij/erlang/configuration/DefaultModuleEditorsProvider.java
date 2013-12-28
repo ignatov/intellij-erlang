@@ -21,7 +21,7 @@ import com.intellij.openapi.module.ModuleConfigurationEditor;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ui.configuration.*;
-import org.intellij.erlang.editor.ErlangModuleType;
+import org.intellij.erlang.ErlangModuleType;
 
 import javax.swing.*;
 import java.util.ArrayList;
