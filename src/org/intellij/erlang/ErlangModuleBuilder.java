@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.editor;
+package org.intellij.erlang;
 
 import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;

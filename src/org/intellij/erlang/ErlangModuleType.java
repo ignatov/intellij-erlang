@@ -22,7 +22,6 @@ import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.ModuleTypeManager;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
-import org.intellij.erlang.editor.ErlangModuleBuilder;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
