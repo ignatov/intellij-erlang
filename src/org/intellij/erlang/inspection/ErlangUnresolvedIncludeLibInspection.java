@@ -28,11 +28,13 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangIncludeLib;
 import org.intellij.erlang.psi.ErlangIncludeString;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.quickfixes.ErlangFindIncludeQuickFix;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
+  public static String INCLUDE_LIB_LABEL = "include_lib";
   private static final Logger LOG = Logger.getInstance(ErlangUnresolvedIncludeLibInspection.class);
   
   @Override
@@ -42,7 +44,7 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
     for (ErlangIncludeLib erlangIncludeLib : ((ErlangFile) file).getIncludeLibs()) {
       ErlangIncludeString includeString = erlangIncludeLib.getIncludeStringSafe();
       if (includeString == null) continue;
-      processInclude(problemsHolder, ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangIncludeLib), includeString, "include_lib");
+      processInclude(problemsHolder, ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangIncludeLib), includeString, INCLUDE_LIB_LABEL);
     }
   }
 
@@ -52,10 +54,11 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
     if (files.size() == 0) {
       LOG.debug(what + ": " + string.getText() + " unresolved");
       if (empty) {
-        problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found");
+        problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found",getFindIncludeQuickFix(what));
       }
       else {
-        problemsHolder.registerProblem(string, "Unresolved " + what + ": file not found", ProblemHighlightType.LIKE_UNKNOWN_SYMBOL, range);
+        problemsHolder.registerProblem(string, "Unresolved " + what + ": file not found",
+          ProblemHighlightType.LIKE_UNKNOWN_SYMBOL, range,getFindIncludeQuickFix(what));
       }
     }
     else if (files.size() > 1) {
@@ -71,5 +74,12 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
       LOG.debug(what + ": " + string.getText() + " resolved to: " + resolvedFilesList);
       problemsHolder.registerProblem(string, range, "Unresolved " + what + ": ambiguous file reference");
     }
+  }
+  private static ErlangFindIncludeQuickFix getFindIncludeQuickFix(String what) {
+    boolean setDirectHrlLink = true;
+    if (what.equals(INCLUDE_LIB_LABEL)) {
+      setDirectHrlLink = false;
+    }
+    return new ErlangFindIncludeQuickFix(setDirectHrlLink);
   }
 }

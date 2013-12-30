@@ -26,6 +26,7 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import java.util.List;
 
 public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
+  public static String INCLUDE_LABEL = "include";
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
@@ -34,7 +35,7 @@ public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
       ErlangIncludeString string = erlangInclude.getIncludeStringSafe();
       if (string == null) continue;
       List<ErlangFile> files = ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangInclude);
-      ErlangUnresolvedIncludeLibInspection.processInclude(problemsHolder, files, string, "include");
+      ErlangUnresolvedIncludeLibInspection.processInclude(problemsHolder, files, string, INCLUDE_LABEL);
     }
   }
 }
