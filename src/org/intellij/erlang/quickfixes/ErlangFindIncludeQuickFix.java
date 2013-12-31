@@ -85,22 +85,34 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     //Single file found
     if (matchFiles.length == 1) {
       fixFacetUsingIncludeFile(problem, matchFiles[0]);
+      renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
     }
     //Multiple files -- allow user select which file should be imported
     if (matchFiles.length > 1) {
-      displayPopupListDialog(project,problem,matchFiles);
+      displayPopupListDialog(project, problem, matchFiles, setDirectHrlLink, includeString, includeFileName);
     }
 
+
+  }
+
+  private static void renameIncludeString(Project project,
+                                          PsiElement problem,
+                                          boolean setDirectHrlLink,
+                                          String includeString,
+                                          String includeFileName) {
     //Rename include string according setDirectHrlLink
     if (setDirectHrlLink && !includeString.equals(includeFileName)) {
-      problem.replace(ErlangElementFactory.createStringFromText(project, includeFileName));
+      problem.replace(ErlangElementFactory.createIncludeString(project, includeFileName));
     }
-
   }
 
   private static void displayPopupListDialog(final Project project,
                                              final PsiElement problem,
-                                             final PsiFile[] files) {
+                                             final PsiFile[] files,
+                                             final boolean setDirectHrlLink,
+                                             final String includeString,
+                                             final String includeFileName
+  ) {
     final Editor problemEditor = PsiUtilBase.findEditor(problem);
     if (problemEditor == null) {
       return;
@@ -129,7 +141,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       public String getTextFor(Object o) {
         //Uses relative path to project root if possible (if not - full path)
         VirtualFile f = ((PsiFile) o).getVirtualFile();
-        String projectRootRelativePath = VfsUtilCore.getRelativePath(f, project.getBaseDir(), '/');
+        String projectRootRelativePath = VfsUtilCore.getRelativePath(f, project.getBaseDir(), INCLUDE_STRING_PATH_SEPARATOR);
         return projectRootRelativePath == null ?
           f.getPath() : projectRootRelativePath;
       }
@@ -162,6 +174,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
               @Override
               public void run() {
                 fixFacetUsingIncludeFile(problem, f);
+                renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
                 FileContentUtilCore.reparseFiles(Arrays.asList(problem.getContainingFile().getVirtualFile()));
               }
             });
