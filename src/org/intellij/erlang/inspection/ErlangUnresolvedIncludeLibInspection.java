@@ -36,7 +36,7 @@ import java.util.List;
 public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
   public static String INCLUDE_LIB_LABEL = "include_lib";
   private static final Logger LOG = Logger.getInstance(ErlangUnresolvedIncludeLibInspection.class);
-  
+
   @Override
   protected void checkFile(PsiFile file, @NotNull ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
@@ -48,17 +48,20 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
     }
   }
 
-  static void processInclude(@NotNull ProblemsHolder problemsHolder, @NotNull List<ErlangFile> files, @NotNull ErlangIncludeString string, String what) {
+  static void processInclude(@NotNull ProblemsHolder problemsHolder,
+                             @NotNull List<ErlangFile> files,
+                             @NotNull ErlangIncludeString string,
+                             String what) {
     boolean empty = string.getTextLength() <= 2;
     TextRange range = empty ? TextRange.create(0, string.getTextLength()) : TextRange.create(1, string.getTextLength() - 1);
     if (files.size() == 0) {
       LOG.debug(what + ": " + string.getText() + " unresolved");
       if (empty) {
-        problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found",getFindIncludeQuickFix(what));
+        problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found", getFindIncludeQuickFix(what));
       }
       else {
         problemsHolder.registerProblem(string, "Unresolved " + what + ": file not found",
-          ProblemHighlightType.LIKE_UNKNOWN_SYMBOL, range,getFindIncludeQuickFix(what));
+          ProblemHighlightType.LIKE_UNKNOWN_SYMBOL, range, getFindIncludeQuickFix(what));
       }
     }
     else if (files.size() > 1) {
@@ -75,6 +78,7 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
       problemsHolder.registerProblem(string, range, "Unresolved " + what + ": ambiguous file reference");
     }
   }
+
   private static ErlangFindIncludeQuickFix getFindIncludeQuickFix(String what) {
     boolean setDirectHrlLink = true;
     if (what.equals(INCLUDE_LIB_LABEL)) {

@@ -27,6 +27,7 @@ import java.util.List;
 
 public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
   public static String INCLUDE_LABEL = "include";
+
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;

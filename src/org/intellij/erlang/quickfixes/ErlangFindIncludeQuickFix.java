@@ -21,7 +21,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.*;
@@ -35,7 +34,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtilBase;
 import com.intellij.util.FileContentUtilCore;
 import org.intellij.erlang.ErlangIcons;
-import org.intellij.erlang.ErlangModuleType;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetConfiguration;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
@@ -66,7 +64,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
   @NotNull
   @Override
   public String getFamilyName() {
-    return "try find include";
+    return "Find include";
   }
 
   public void applyFix(@NotNull Project project,
@@ -160,7 +158,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       @Nullable
       @Override
       public String getTitle() {
-        return "multiple files found";
+        return "Multiple files found";
       }
 
       @Nullable
@@ -256,15 +254,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
   }
 
   private static void addToModuleFacet(Module module, VirtualFile includeFile) {
-
-    //Force create facet if facet for module not found
-    if (ModuleType.get(module) != ErlangModuleType.getInstance()) return;
     ErlangFacet facet = ErlangFacet.getFacet(module);
-    if (facet == null) {
-      ErlangFacet.createFacet(module);
-      facet = ErlangFacet.getFacet(module);
-    }
-
     if (facet != null) {
       ErlangFacetConfiguration configuration = facet.getConfiguration();
       //add include path for folder, that contains include file ("include" folder if its otp application)
