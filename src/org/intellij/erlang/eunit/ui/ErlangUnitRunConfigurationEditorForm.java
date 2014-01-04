@@ -16,11 +16,9 @@
 
 package org.intellij.erlang.eunit.ui;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.ListCellRendererWrapper;
 import org.intellij.erlang.ErlangModuleType;
@@ -37,7 +35,7 @@ import java.util.Set;
 
 public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangUnitRunConfiguration> {
   private JPanel component;
-  private JComboBox myModuleComboBox;
+  private ModulesCombobox myModuleComboBox;
   private JTextField myErlangModulesField;
   private JTextField myErlangFunctionsField;
   private JLabel myErlangModulesLabel;
@@ -53,18 +51,10 @@ public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangU
     });
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   protected void resetEditorFrom(ErlangUnitRunConfiguration configuration) {
-    myModuleComboBox.removeAllItems();
-    final Module[] modules = ModuleManager.getInstance(configuration.getProject()).getModules();
-    for (final Module module : modules) {
-      if (ModuleType.get(module) == ErlangModuleType.getInstance()) {
-        myModuleComboBox.addItem(module);
-      }
-    }
-    myModuleComboBox.setSelectedItem(configuration.getConfigurationModule().getModule());
-    myModuleComboBox.setRenderer(getModuleListCellRendererWrapper());
+    myModuleComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+    myModuleComboBox.setSelectedModule(configuration.getConfigurationModule().getModule());
 
     ErlangUnitRunConfiguration.ErlangUnitConfigData configData = configuration.getConfigData();
 
@@ -82,16 +72,12 @@ public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangU
 
   @Override
   protected void applyEditorTo(ErlangUnitRunConfiguration configuration) throws ConfigurationException {
-    configuration.setModule(getSelectedModule());
+    configuration.setModule(myModuleComboBox.getSelectedModule());
 
     ErlangUnitRunConfiguration.ErlangUnitConfigData configData = configuration.getConfigData();
     configData.setFunctionNames(parseCommaSeparatedNames(myErlangFunctionsField.getText()));
     configData.setModuleNames(parseCommaSeparatedNames(myErlangModulesField.getText()));
     configData.setKind((ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind) myTestKindComboBox.getSelectedItem());
-  }
-
-  private Module getSelectedModule() {
-    return (Module) myModuleComboBox.getSelectedItem();
   }
 
   @NotNull
@@ -118,17 +104,6 @@ public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangU
     myErlangFunctionsField.setVisible(functionTestSelected);
     myErlangModulesLabel.setVisible(moduleTestSelected);
     myErlangModulesField.setVisible(moduleTestSelected);
-  }
-
-  private static ListCellRendererWrapper<Module> getModuleListCellRendererWrapper() {
-    return new ListCellRendererWrapper<Module>() {
-      @Override
-      public void customize(JList list, Module module, int index, boolean selected, boolean hasFocus) {
-        if (module != null) {
-          setText(module.getName());
-        }
-      }
-    };
   }
 
   private static ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> getTestKindListCellRendererWrapper() {
