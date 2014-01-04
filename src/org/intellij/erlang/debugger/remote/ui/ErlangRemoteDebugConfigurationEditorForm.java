@@ -16,43 +16,32 @@
 
 package org.intellij.erlang.debugger.remote.ui;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
-import com.intellij.ui.ListCellRendererWrapper;
-import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
+import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
 import org.intellij.erlang.ErlangModuleType;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
 public class ErlangRemoteDebugConfigurationEditorForm extends SettingsEditor<ErlangRemoteDebugRunConfiguration> {
   private JPanel myComponent;
-  private JComboBox myModuleComboBox;
+  private ModulesCombobox myModuleComboBox;
   private JTextField myNodeTextField;
   private JTextField myCookieTextField;
 
-  @SuppressWarnings("unchecked")
   @Override
   protected void resetEditorFrom(ErlangRemoteDebugRunConfiguration configuration) {
-    myModuleComboBox.removeAllItems();
-    final Module[] modules = ModuleManager.getInstance(configuration.getProject()).getModules();
-    for (final Module module : modules) {
-      if (ModuleType.get(module) == ErlangModuleType.getInstance()) {
-        myModuleComboBox.addItem(module);
-      }
-    }
-    myModuleComboBox.setSelectedItem(configuration.getConfigurationModule().getModule());
-    myModuleComboBox.setRenderer(getListCellRendererWrapper());
+    myModuleComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+    myModuleComboBox.setSelectedModule(configuration.getConfigurationModule().getModule());
     myNodeTextField.setText(configuration.getErlangNode());
     myCookieTextField.setText(configuration.getCookie());
   }
 
   @Override
   protected void applyEditorTo(ErlangRemoteDebugRunConfiguration configuration) throws ConfigurationException {
-    configuration.setModule((Module) myModuleComboBox.getSelectedItem());
+    configuration.setModule(myModuleComboBox.getSelectedModule());
     configuration.setErlangNode(myNodeTextField.getText());
     configuration.setCookie(myCookieTextField.getText());
   }
@@ -61,17 +50,5 @@ public class ErlangRemoteDebugConfigurationEditorForm extends SettingsEditor<Erl
   @Override
   protected JComponent createEditor() {
     return myComponent;
-  }
-
-  private static ListCellRendererWrapper getListCellRendererWrapper() {
-    return new ListCellRendererWrapper() {
-      @Override
-      public void customize(JList list, Object value, int index, boolean selected, boolean hasFocus) {
-        if (value instanceof Module) {
-          final Module module = (Module) value;
-          setText(module.getName());
-        }
-      }
-    };
   }
 }

@@ -16,12 +16,9 @@
 
 package org.intellij.erlang.application.ui;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
-import com.intellij.ui.ListCellRendererWrapper;
+import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
 import org.intellij.erlang.ErlangModuleType;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +27,7 @@ import javax.swing.*;
 
 public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangApplicationConfiguration> {
   private JPanel component;
-  private JComboBox myComboModules;
+  private ModulesCombobox myComboModules;
   private JTextField myParamsField;
   private JTextField myModuleAndFunctionField;
   private JTextField myErlFlagsTextField;
@@ -39,45 +36,21 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
   @SuppressWarnings("unchecked")
   @Override
   protected void resetEditorFrom(ErlangApplicationConfiguration configuration) {
-    myComboModules.removeAllItems();
-
-    final Module[] modules = ModuleManager.getInstance(configuration.getProject()).getModules();
-    for (final Module module : modules) {
-      if (ModuleType.get(module) == ErlangModuleType.getInstance()) {
-        myComboModules.addItem(module);
-      }
-    }
-    myComboModules.setSelectedItem(configuration.getConfigurationModule().getModule());
-    myComboModules.setRenderer(getListCellRendererWrapper());
+    myComboModules.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+    myComboModules.setSelectedModule(configuration.getConfigurationModule().getModule());
     myParamsField.setText(configuration.getParams());
     myStopErlangInterpreterCheckBox.setSelected(configuration.stopErlang());
     myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
     myErlFlagsTextField.setText(configuration.getErlFlags());
   }
-  
-  public static ListCellRendererWrapper getListCellRendererWrapper() {
-    return new ListCellRendererWrapper() {
-      @Override
-      public void customize(JList list, Object value, int index, boolean selected, boolean hasFocus) {
-        if (value instanceof Module) {
-          final Module module = (Module) value;
-          setText(module.getName());
-        }
-      }
-    };
-  }
 
   @Override
   protected void applyEditorTo(ErlangApplicationConfiguration configuration) throws ConfigurationException {
-    configuration.setModule(getSelectedModule());
+    configuration.setModule(myComboModules.getSelectedModule());
     configuration.setParams(myParamsField.getText());
     configuration.setModuleAndFunction(myModuleAndFunctionField.getText());
     configuration.setErlFlags(myErlFlagsTextField.getText());
     configuration.setStopErlang(myStopErlangInterpreterCheckBox.isSelected());
-  }
-
-  private Module getSelectedModule() {
-    return (Module) myComboModules.getSelectedItem();
   }
 
   @NotNull
