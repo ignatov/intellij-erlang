@@ -16,13 +16,12 @@
 
 package org.intellij.erlang.eunit;
 
-import com.intellij.execution.Location;
-import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.execution.junit.RuntimeConfigurationProducer;
+import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.util.Condition;
+import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -30,33 +29,27 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
-public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProducer implements Cloneable {
-  private PsiFile myFile;
-
+public class ErlangUnitRunConfigurationProducer extends RunConfigurationProducer<ErlangUnitRunConfiguration> {
   public ErlangUnitRunConfigurationProducer() {
     super(ErlangUnitRunConfigurationType.getInstance());
   }
 
   @Override
-  public PsiElement getSourceElement() {
-    return myFile;
-  }
-
-  @Override
-  protected RunnerAndConfigurationSettings createConfigurationByElement(Location location, ConfigurationContext context) {
-    PsiElement psiElement = location.getPsiElement();
-    myFile = psiElement.getContainingFile();
-
-    if (!(myFile instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) myFile) ||
-      !ErlangTestRunConfigProducersUtil.shouldProduceEunitTestRunConfiguration(context.getProject(), context.getModule())) return null;
-
-    RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(psiElement.getProject(), context);
-    ErlangUnitRunConfiguration configuration = (ErlangUnitRunConfiguration) settings.getConfiguration();
+  protected boolean setupConfigurationFromContext(ErlangUnitRunConfiguration configuration, ConfigurationContext context, Ref<PsiElement> sourceElement) {
+    PsiElement psiElement = sourceElement.get();
+    if (psiElement == null || !psiElement.isValid()) {
+      return false;
+    }
+    
+    PsiFile file = psiElement.getContainingFile();
+    if (!(file instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) file) ||
+      !ErlangTestRunConfigProducersUtil.shouldProduceEunitTestRunConfiguration(context.getProject(), context.getModule())) {
+      return false;
+    }
 
     Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
     if (module != null) {
@@ -64,7 +57,6 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
     }
 
     Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(psiElement);
-
     functions = ContainerUtil.filter(functions, new Condition<ErlangFunction>() {
       @Override
       public boolean value(ErlangFunction erlangFunction) {
@@ -89,18 +81,18 @@ public class ErlangUnitRunConfigurationProducer extends RuntimeConfigurationProd
         }
       }
 
-      if (moduleNames.isEmpty()) return null;
+      if (moduleNames.isEmpty()) return false;
 
       configuration.getConfigData().setModuleNames(moduleNames);
       configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE);
       configuration.setName(moduleNames.iterator().next() + (moduleNames.size() > 1 ? " and " + (moduleNames.size() - 1) + " more" : ""));
     }
 
-    return settings;
+    return true;
   }
 
   @Override
-  public int compareTo(@NotNull Object o) {
-    return PREFERED;
+  public boolean isConfigurationFromContext(ErlangUnitRunConfiguration configuration, ConfigurationContext context) {
+    return false;
   }
 }
