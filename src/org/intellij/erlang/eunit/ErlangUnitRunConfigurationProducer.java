@@ -29,6 +29,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -39,12 +40,14 @@ public class ErlangUnitRunConfigurationProducer extends RunConfigurationProducer
   }
 
   @Override
-  protected boolean setupConfigurationFromContext(ErlangUnitRunConfiguration configuration, ConfigurationContext context, Ref<PsiElement> sourceElement) {
+  protected boolean setupConfigurationFromContext(@NotNull ErlangUnitRunConfiguration configuration,
+                                                  @NotNull ConfigurationContext context,
+                                                  @NotNull Ref<PsiElement> sourceElement) {
     PsiElement psiElement = sourceElement.get();
     if (psiElement == null || !psiElement.isValid()) {
       return false;
     }
-    
+
     PsiFile file = psiElement.getContainingFile();
     if (!(file instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) file) ||
       !ErlangTestRunConfigProducersUtil.shouldProduceEunitTestRunConfiguration(context.getProject(), context.getModule())) {
@@ -56,33 +59,15 @@ public class ErlangUnitRunConfigurationProducer extends RunConfigurationProducer
       configuration.setModule(module);
     }
 
-    Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(psiElement);
-    functions = ContainerUtil.filter(functions, new Condition<ErlangFunction>() {
-      @Override
-      public boolean value(ErlangFunction erlangFunction) {
-        return ErlangPsiImplUtil.isEunitTestFunction(erlangFunction);
-      }
-    });
-    if (!functions.isEmpty()) {
-      LinkedHashSet<String> functionNames = new LinkedHashSet<String>();
-      for (ErlangFunction f : functions) {
-        functionNames.add(ErlangPsiImplUtil.getQualifiedFunctionName(f));
-      }
+    LinkedHashSet<String> functionNames = findTestFunctionNames(psiElement);
+    if (!functionNames.isEmpty()) {
       configuration.getConfigData().setFunctionNames(functionNames);
       configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
       configuration.setName(functionNames.iterator().next() + (functionNames.size() > 1 ? " and " + (functionNames.size() - 1) + " more" : ""));
     }
     else {
-      LinkedHashSet<String> moduleNames = new LinkedHashSet<String>();
-      for (ErlangFile f : ErlangUnitTestElementUtil.findFileTestElements(context.getProject(), context.getDataContext())) {
-        VirtualFile virtualFile = f.getVirtualFile();
-        if (virtualFile != null) {
-          moduleNames.add(virtualFile.getNameWithoutExtension());
-        }
-      }
-
+      LinkedHashSet<String> moduleNames = findTestModuleNames(context);
       if (moduleNames.isEmpty()) return false;
-
       configuration.getConfigData().setModuleNames(moduleNames);
       configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE);
       configuration.setName(moduleNames.iterator().next() + (moduleNames.size() > 1 ? " and " + (moduleNames.size() - 1) + " more" : ""));
@@ -92,7 +77,53 @@ public class ErlangUnitRunConfigurationProducer extends RunConfigurationProducer
   }
 
   @Override
-  public boolean isConfigurationFromContext(ErlangUnitRunConfiguration configuration, ConfigurationContext context) {
-    return false;
+  public boolean isConfigurationFromContext(@NotNull ErlangUnitRunConfiguration configuration, @NotNull ConfigurationContext context) {
+    PsiElement psiElement = context.getPsiLocation();
+    if (psiElement == null || !psiElement.isValid()) {
+      return false;
+    }
+    
+    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
+    if (module == null || !module.equals(configuration.getConfigurationModule().getModule())) {
+      return false;
+    }
+
+    LinkedHashSet<String> functionNames = findTestFunctionNames(psiElement);
+    if (!functionNames.isEmpty()) {
+      return configuration.getConfigData().getKind() == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION &&
+        configuration.getConfigData().getFunctionNames().equals(functionNames);
+    }
+    else {
+      return configuration.getConfigData().getKind() == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE &&
+        configuration.getConfigData().getModuleNames().equals(findTestModuleNames(context));
+    }
+  }
+
+  @NotNull
+  private static LinkedHashSet<String> findTestModuleNames(@NotNull ConfigurationContext context) {
+    LinkedHashSet<String> moduleNames = new LinkedHashSet<String>();
+    for (ErlangFile f : ErlangUnitTestElementUtil.findFileTestElements(context.getProject(), context.getDataContext())) {
+      VirtualFile virtualFile = f.getVirtualFile();
+      if (virtualFile != null) {
+        moduleNames.add(virtualFile.getNameWithoutExtension());
+      }
+    }
+    return moduleNames;
+  }
+
+  @NotNull
+  private static LinkedHashSet<String> findTestFunctionNames(@NotNull PsiElement context) {
+    Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(context);
+    functions = ContainerUtil.filter(functions, new Condition<ErlangFunction>() {
+      @Override
+      public boolean value(@NotNull ErlangFunction erlangFunction) {
+        return ErlangPsiImplUtil.isEunitTestFunction(erlangFunction);
+      }
+    });
+    LinkedHashSet<String> functionNames = new LinkedHashSet<String>();
+    for (ErlangFunction f : functions) {
+      functionNames.add(ErlangPsiImplUtil.getQualifiedFunctionName(f));
+    }
+    return functionNames;
   }
 }
