@@ -21,6 +21,7 @@ import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.util.Ref;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -28,6 +29,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangApplicationRunConfigurationProducer extends RunConfigurationProducer<ErlangApplicationConfiguration> {
   public ErlangApplicationRunConfigurationProducer() {
@@ -58,7 +60,7 @@ public class ErlangApplicationRunConfigurationProducer extends RunConfigurationP
     String moduleName = vFile.getNameWithoutExtension();
     String functionName = function.getName();
 
-    configuration.setModuleAndFunction(moduleName + " " + functionName);
+    configuration.setModuleAndFunction(moduleNameAndFunction(moduleName, functionName));
     configuration.setName(moduleName + "." + functionName);
     if (module != null) {
       configuration.setModule(module);
@@ -69,6 +71,27 @@ public class ErlangApplicationRunConfigurationProducer extends RunConfigurationP
   @Override
   public boolean isConfigurationFromContext(ErlangApplicationConfiguration configuration,
                                             ConfigurationContext context) {
-    return false;
+    PsiElement psiElement = context.getPsiLocation();
+    if (psiElement == null || !psiElement.isValid()) {
+      return false;
+    }
+
+    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
+    if (module == null || !module.equals(configuration.getConfigurationModule().getModule())) {
+      return false;
+    }
+
+    ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
+    PsiFile containingFile = psiElement.getContainingFile();
+    VirtualFile vFile = containingFile.getVirtualFile();
+    if (function == null || vFile == null) return false;
+
+    return StringUtil.equals(configuration.getModuleAndFunction(),
+      moduleNameAndFunction(vFile.getNameWithoutExtension(), function.getName()));
+  }
+
+  @NotNull
+  private static String moduleNameAndFunction(@NotNull String moduleName, @NotNull String functionName) {
+    return moduleName + " " + functionName;
   }
 }
