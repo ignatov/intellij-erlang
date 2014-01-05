@@ -41,10 +41,11 @@ import java.util.Set;
 public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<ErlangUnitRunningState> {
   private final ErlangUnitConfigData myConfigData = new ErlangUnitConfigData();
 
-  public ErlangUnitRunConfiguration(Project project, String name, ErlangUnitRunConfigurationType configurationType) {
+  public ErlangUnitRunConfiguration(Project project, String name, @NotNull ErlangUnitRunConfigurationType configurationType) {
     super(name, new ErlangModuleBasedConfiguration(project), configurationType.getConfigurationFactories()[0]);
   }
 
+  @NotNull
   @Override
   protected ModuleBasedConfiguration createInstance() {
     return new ErlangUnitRunConfiguration(getProject(), getName(), ErlangUnitRunConfigurationType.getInstance());
@@ -61,6 +62,7 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
     return ErlangRunner.EMPTY_RUN_STATE; // todo: CommandLineState
   }
 
+  @NotNull
   @Override
   protected ErlangUnitRunningState newRunningState(ExecutionEnvironment env, Module module) {
     return new ErlangUnitRunningState(env, module, this);
@@ -71,6 +73,7 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
     return true;
   }
 
+  @NotNull
   public ErlangUnitConfigData getConfigData() {
     return myConfigData;
   }
@@ -82,7 +85,7 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
   }
 
   @Override
-  public void readExternal(Element element) throws InvalidDataException {
+  public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
     XmlSerializer.deserializeInto(myConfigData, element);
   }
@@ -92,31 +95,39 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
   }
 
   public static final class ErlangUnitConfigData {
+    @NotNull
     private ErlangUnitRunConfigurationKind myKind = ErlangUnitRunConfigurationKind.MODULE;
+
+    @NotNull
     private Set<String> myModuleNames = new LinkedHashSet<String>();
+
+    @NotNull
     private Set<String> myFunctionNames = new LinkedHashSet<String>();
 
+    @NotNull
     public ErlangUnitRunConfigurationKind getKind() {
       return myKind;
     }
 
-    public void setKind(ErlangUnitRunConfigurationKind kind) {
+    public void setKind(@NotNull ErlangUnitRunConfigurationKind kind) {
       myKind = kind;
     }
 
+    @NotNull
     public Set<String> getModuleNames() {
       return myModuleNames;
     }
 
-    public void setModuleNames(Set<String> moduleNames) {
+    public void setModuleNames(@NotNull Set<String> moduleNames) {
       myModuleNames = moduleNames;
     }
 
+    @NotNull
     public Set<String> getFunctionNames() {
       return myFunctionNames;
     }
 
-    public void setFunctionNames(Set<String> functionNames) {
+    public void setFunctionNames(@NotNull Set<String> functionNames) {
       myFunctionNames = functionNames;
     }
   }
