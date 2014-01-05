@@ -50,7 +50,16 @@ public class RebarEunitConfigurationProducer extends RunConfigurationProducer<Re
 
   @Override
   public boolean isConfigurationFromContext(RebarEunitRunConfiguration configuration, ConfigurationContext context) {
-    return false;
+    PsiElement psiElement = context.getPsiLocation();
+    if (psiElement == null || !psiElement.isValid()) {
+      return false;
+    }
+
+    Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(psiElement);
+    Collection<ErlangFile> suites = ErlangUnitTestElementUtil.findFileTestElements(context.getProject(), context.getDataContext());
+    String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, functions, true);
+
+    return configuration.getCommand().equals(command) && configuration.isSkipDependencies();
   }
 
   private static String createConfigurationName(Collection<ErlangFunction> functions, Collection<ErlangFile> suites) {
