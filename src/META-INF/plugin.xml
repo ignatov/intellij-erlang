@@ -209,7 +209,7 @@
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationType"/>
         <programRunner implementation="org.intellij.erlang.rebar.runner.RebarRunner"/>
-        <configurationProducer implementation="org.intellij.erlang.rebar.runner.RebarEunitConfigurationProducer"/>
+        <runConfigurationProducer implementation="org.intellij.erlang.rebar.runner.RebarEunitConfigurationProducer"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -277,7 +277,7 @@
         <!-- run -->
         <programRunner implementation="org.intellij.erlang.runconfig.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationType"/>
-        <configurationProducer implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationProducer"/>
+        <runConfigurationProducer implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationProducer"/>
 
         <!-- debug -->
         <programRunner implementation="org.intellij.erlang.debugger.xdebug.ErlangDebugRunner"/>
@@ -286,7 +286,7 @@
 
         <!--eunit -->
         <testFinder implementation="org.intellij.erlang.ErlangTestFinder"/>
-        <configurationProducer implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer" order="first"/>
+        <runConfigurationProducer implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer" order="first"/>
         <configurationType implementation="org.intellij.erlang.eunit.ErlangUnitRunConfigurationType"/>
 
         <!-- Tool Runners -->

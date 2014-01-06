@@ -16,13 +16,12 @@
 
 package org.intellij.erlang.application;
 
-import com.intellij.execution.Location;
-import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.execution.junit.RuntimeConfigurationProducer;
+import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Ref;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -32,51 +31,67 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangApplicationRunConfigurationProducer extends RuntimeConfigurationProducer implements Cloneable {
-  private ErlangFunction myFunction;
-
+public class ErlangApplicationRunConfigurationProducer extends RunConfigurationProducer<ErlangApplicationConfiguration> {
   public ErlangApplicationRunConfigurationProducer() {
     super(ErlangApplicationRunConfigurationType.getInstance());
   }
 
   @Override
-  public PsiElement getSourceElement() {
-    return myFunction;
-  }
-
-  @Override
-  protected RunnerAndConfigurationSettings createConfigurationByElement(Location location, ConfigurationContext context) {
-    PsiElement psiElement = location.getPsiElement();
-    myFunction = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
-    Project project = psiElement.getProject();
-    PsiFile containingFile = psiElement.getContainingFile();
-
-    if (!(containingFile instanceof ErlangFile) ||
-        myFunction == null || ErlangPsiImplUtil.isEunitTestFunction(myFunction) ||
-        ErlangPsiImplUtil.isPrivateFunction(containingFile, myFunction)) {
-      return null;
+  protected boolean setupConfigurationFromContext(ErlangApplicationConfiguration configuration,
+                                                  ConfigurationContext context,
+                                                  Ref<PsiElement> sourceElement) {
+    PsiElement psiElement = sourceElement.get();
+    if (psiElement == null || !psiElement.isValid()) {
+      return false;
     }
 
-    RunnerAndConfigurationSettings settings = cloneTemplateConfiguration(project, context);
-    ErlangApplicationConfiguration configuration = (ErlangApplicationConfiguration) settings.getConfiguration();
+    ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
+    PsiFile containingFile = psiElement.getContainingFile();
+
+    if (!(containingFile instanceof ErlangFile) || function == null ||
+      ErlangPsiImplUtil.isEunitTestFunction(function) ||
+      ErlangPsiImplUtil.isPrivateFunction(containingFile, function)) {
+      return false;
+    }
 
     Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
-
-    final VirtualFile vFile = containingFile.getVirtualFile();
-    if (vFile == null) return null;
+    VirtualFile vFile = containingFile.getVirtualFile();
+    if (vFile == null) return false;
     String moduleName = vFile.getNameWithoutExtension();
-    String functionName = myFunction.getName();
+    String functionName = function.getName();
 
-    configuration.setModuleAndFunction(moduleName + " " + functionName);
+    configuration.setModuleAndFunction(moduleNameAndFunction(moduleName, functionName));
     configuration.setName(moduleName + "." + functionName);
     if (module != null) {
       configuration.setModule(module);
     }
-    return settings;
+    return true;
   }
 
   @Override
-  public int compareTo(@NotNull Object o) {
-    return PREFERED;
+  public boolean isConfigurationFromContext(ErlangApplicationConfiguration configuration,
+                                            ConfigurationContext context) {
+    PsiElement psiElement = context.getPsiLocation();
+    if (psiElement == null || !psiElement.isValid()) {
+      return false;
+    }
+
+    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
+    if (module == null || !module.equals(configuration.getConfigurationModule().getModule())) {
+      return false;
+    }
+
+    ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
+    PsiFile containingFile = psiElement.getContainingFile();
+    VirtualFile vFile = containingFile.getVirtualFile();
+    if (function == null || vFile == null) return false;
+
+    return StringUtil.equals(configuration.getModuleAndFunction(),
+      moduleNameAndFunction(vFile.getNameWithoutExtension(), function.getName()));
+  }
+
+  @NotNull
+  private static String moduleNameAndFunction(@NotNull String moduleName, @NotNull String functionName) {
+    return moduleName + " " + functionName;
   }
 }
