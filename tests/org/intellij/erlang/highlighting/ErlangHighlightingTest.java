@@ -77,7 +77,9 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
-  public void testIncludeResolve()       { enableUnresolvedMacroInspection(); doTestWithApp(); }
-  public void testIncludeLibResolve()    { enableUnresolvedMacroInspection(); doTestWithApp(); }
+  public void testIncludeResolve()             { enableUnresolvedMacroInspection(); doTestWithApp(); }
+  public void testIncludeLibResolve()          { enableUnresolvedMacroInspection(); doTestWithApp(); }
+  public void testRecursiveIncludeResolve()    { enableUnresolvedMacroInspection(); doTestWithApp(); }
+  public void testRecursiveIncludeLibResolve() { enableUnresolvedMacroInspection(); doTestWithApp(); }
   public void testRelativePathInclude()  { doTestWithApp(); }
 }
