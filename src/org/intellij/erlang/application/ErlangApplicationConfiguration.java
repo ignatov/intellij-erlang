@@ -18,18 +18,22 @@ package org.intellij.erlang.application;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
-import com.intellij.execution.configurations.ConfigurationType;
-import com.intellij.execution.configurations.ModuleBasedConfiguration;
-import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiFile;
+import org.intellij.erlang.application.ui.ErlangRunConfigurationEditorForm;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.runconfig.ErlangModuleBasedConfiguration;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
-import org.intellij.erlang.application.ui.ErlangRunConfigurationEditorForm;
 import org.intellij.erlang.runconfig.ErlangRunner;
+import org.intellij.erlang.runconfig.ErlangRunningState;
+import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<ErlangApplicationRunningState> {
@@ -98,5 +102,38 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
 
   public void setErlFlags(String erlFlags) {
     myErlFlags = erlFlags;
+  }
+
+  @Override
+  public void checkConfiguration() throws RuntimeConfigurationException {
+    super.checkConfiguration();
+    ErlangModuleBasedConfiguration configurationModule = getConfigurationModule();
+    Module module = configurationModule.getModule();
+    if (module == null) return;
+
+    if (StringUtil.isNotEmpty(myModuleAndFunction)) {
+      ErlangRunningState.ErlangEntryPoint entryPoint = ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction(myModuleAndFunction, myParams);
+      if (entryPoint != null) {
+        ErlangModule erlangModule = ErlangModulesUtil.getErlangModule(getProject(), entryPoint.getModuleName());
+        if (erlangModule != null) {
+          PsiFile containingFile = erlangModule.getContainingFile();
+          assert containingFile instanceof ErlangFile;
+          ErlangFunction function = ((ErlangFile) containingFile).getFunction(entryPoint.getFunctionName(), entryPoint.getArgsList().size());
+          if (function == null) {
+            throw new RuntimeConfigurationError("Module '" + entryPoint.getModuleName() + "' doesn't contain function '"
+              + entryPoint.getFunctionName() + "' with " + entryPoint.getArgsList().size() + " arguments");
+          }
+        }
+        else {
+          throw new RuntimeConfigurationError("Invalid module name '" + entryPoint.getModuleName() + "'");
+        }
+      }
+      else {
+        throw new RuntimeConfigurationError("Invalid module and function entry point");
+      }
+    }
+    else {
+      throw new RuntimeConfigurationError("Module and function doesn't specified");
+    }
   }
 }
