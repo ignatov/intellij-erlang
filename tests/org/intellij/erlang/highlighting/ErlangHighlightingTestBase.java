@@ -89,7 +89,8 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
   protected void doTest(boolean withApp) {
     String testDataFile = getTestName(false) + ".erl";
     if (withApp) {
-      doTest(testDataFile, "testapp-1/ebin/testapp.app", "testapp-1/include/testapp.hrl");
+      doTest(testDataFile, "testapp-1/ebin/testapp.app",
+        "testapp-1/include/testapp.hrl", "testapp-1/include/recursive.hrl", "testapp-1/include/recursiveLib.hrl");
     }
     else {
       doTest(testDataFile);
