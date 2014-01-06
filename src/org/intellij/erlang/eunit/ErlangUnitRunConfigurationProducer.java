@@ -88,15 +88,16 @@ public class ErlangUnitRunConfigurationProducer extends RunConfigurationProducer
       return false;
     }
 
-    LinkedHashSet<String> functionNames = findTestFunctionNames(psiElement);
-    if (!functionNames.isEmpty()) {
-      return configuration.getConfigData().getKind() == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION &&
-        configuration.getConfigData().getFunctionNames().equals(functionNames);
+    ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind configurationKind = configuration.getConfigData().getKind();
+    if (configurationKind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
+      LinkedHashSet<String> testFunctionNames = findTestFunctionNames(psiElement);
+      return !testFunctionNames.isEmpty() && configuration.getConfigData().getFunctionNames().equals(testFunctionNames);
     }
-    else {
-      return configuration.getConfigData().getKind() == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE &&
-        configuration.getConfigData().getModuleNames().equals(findTestModuleNames(context));
+    else if (configurationKind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
+      return configuration.getConfigData().getModuleNames().equals(findTestModuleNames(context));
     }
+
+    return false;
   }
 
   @NotNull
