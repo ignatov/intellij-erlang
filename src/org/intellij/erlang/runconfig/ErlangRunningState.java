@@ -35,6 +35,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -141,6 +142,16 @@ public abstract class ErlangRunningState extends CommandLineState {
 
     public List<String> getArgsList() {
       return myArgsList;
+    }
+
+    @Nullable
+    public static ErlangEntryPoint fromModuleAndFunction(@NotNull String moduleAndFunction, @NotNull String params) {
+      List<String> split = StringUtil.split(moduleAndFunction, " ");
+      if (split.size() != 2) return null;
+      String module = split.get(0);
+      String function = split.get(1);
+      List<String> args = StringUtil.split(params, " ");
+      return new ErlangEntryPoint(module, function, args);
     }
   }
 }

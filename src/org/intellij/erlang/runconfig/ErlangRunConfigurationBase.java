@@ -19,6 +19,7 @@ package org.intellij.erlang.runconfig;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ModuleBasedConfiguration;
+import com.intellij.execution.configurations.RuntimeConfigurationException;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
@@ -48,6 +49,12 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
     super.writeExternal(element);
     writeModule(element);
     XmlSerializer.serializeInto(this, element);
+  }
+
+  @Override
+  public void checkConfiguration() throws RuntimeConfigurationException {
+    ErlangModuleBasedConfiguration configurationModule = getConfigurationModule();
+    configurationModule.checkForWarning();
   }
 
   @Override
