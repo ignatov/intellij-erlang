@@ -61,12 +61,11 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
   @Nullable
   @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {
-    List<String> split = StringUtil.split(myConfiguration.getModuleAndFunction(), " ");
-    if (split.size() != 2) throw new ExecutionException("Invalid entry point");
-    String module = split.get(0);
-    String function = split.get(1);
-    List<String> args = StringUtil.split(myConfiguration.getParams(), " ");
-    return new ErlangEntryPoint(module, function, args);
+    ErlangEntryPoint entryPoint = ErlangEntryPoint.fromModuleAndFunction(myConfiguration.getModuleAndFunction(), myConfiguration.getParams());
+    if (entryPoint == null) {
+      throw new ExecutionException("Invalid entry point");
+    }
+    return entryPoint;
   }
 
   @NotNull
