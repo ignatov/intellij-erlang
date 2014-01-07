@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 Sergey Ignatov
+ * Copyright 2012-2014 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,29 +111,24 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
     Module module = configurationModule.getModule();
     if (module == null) return;
 
-    if (StringUtil.isNotEmpty(myModuleAndFunction)) {
-      ErlangRunningState.ErlangEntryPoint entryPoint = ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction(myModuleAndFunction, myParams);
-      if (entryPoint != null) {
-        ErlangModule erlangModule = ErlangModulesUtil.getErlangModule(getProject(), entryPoint.getModuleName());
-        if (erlangModule != null) {
-          PsiFile containingFile = erlangModule.getContainingFile();
-          assert containingFile instanceof ErlangFile;
-          ErlangFunction function = ((ErlangFile) containingFile).getFunction(entryPoint.getFunctionName(), entryPoint.getArgsList().size());
-          if (function == null) {
-            throw new RuntimeConfigurationError("Module '" + entryPoint.getModuleName() + "' doesn't contain function '"
-              + entryPoint.getFunctionName() + "' with " + entryPoint.getArgsList().size() + " arguments");
-          }
-        }
-        else {
-          throw new RuntimeConfigurationError("Invalid module name '" + entryPoint.getModuleName() + "'");
-        }
-      }
-      else {
-        throw new RuntimeConfigurationError("Invalid module and function entry point");
-      }
-    }
-    else {
+    if (StringUtil.isEmpty(myModuleAndFunction)) {
       throw new RuntimeConfigurationError("Module and function doesn't specified");
+    }
+
+    ErlangRunningState.ErlangEntryPoint entryPoint = ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction(myModuleAndFunction, myParams);
+    if (entryPoint == null) throw new RuntimeConfigurationError("Invalid module and function entry point");
+
+    ErlangModule erlangModule = ErlangModulesUtil.getErlangModule(getProject(), entryPoint.getModuleName());
+    if (erlangModule == null) {
+      throw new RuntimeConfigurationError("Invalid module name '" + entryPoint.getModuleName() + "'");
+    }
+
+    PsiFile containingFile = erlangModule.getContainingFile();
+    assert containingFile instanceof ErlangFile;
+    ErlangFunction function = ((ErlangFile) containingFile).getFunction(entryPoint.getFunctionName(), entryPoint.getArgsList().size());
+    if (function == null) {
+      throw new RuntimeConfigurationError("Module '" + entryPoint.getModuleName() + "' doesn't contain function '"
+        + entryPoint.getFunctionName() + "' with " + entryPoint.getArgsList().size() + " arguments");
     }
   }
 }
