@@ -112,7 +112,7 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
     if (module == null) return;
 
     if (StringUtil.isEmpty(myModuleAndFunction)) {
-      throw new RuntimeConfigurationError("Module and function doesn't specified");
+      throw new RuntimeConfigurationError("Module and function aren't specified");
     }
 
     ErlangRunningState.ErlangEntryPoint entryPoint = ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction(myModuleAndFunction, myParams);
