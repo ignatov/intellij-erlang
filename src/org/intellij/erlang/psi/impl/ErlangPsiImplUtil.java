@@ -233,7 +233,8 @@ public class ErlangPsiImplUtil {
       return new PsiReferenceBase<PsiElement>(o, TextRange.from(1, o.getTextLength() - 2)) {
         @Override
         public PsiElement resolve() {
-          List<ErlangFile> files = parent instanceof ErlangInclude ? getDirectlyIncludedFiles((ErlangInclude) parent) : getDirectlyIncludedFiles((ErlangIncludeLib) parent);
+          ErlangFile file = (ErlangFile) o.getContainingFile();
+          List<ErlangFile> files = parent instanceof ErlangInclude ? getDirectlyIncludedFiles((ErlangInclude) parent, file) : getDirectlyIncludedFiles((ErlangIncludeLib) parent, file);
           return ContainerUtil.getFirstItem(files);
         }
 
@@ -838,16 +839,16 @@ public class ErlangPsiImplUtil {
   public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangFile erlangFile) {
     List<ErlangFile> files = new ArrayList<ErlangFile>();
     for (ErlangInclude include : erlangFile.getIncludes()) {
-      files.addAll(getDirectlyIncludedFiles(include));
+      files.addAll(getDirectlyIncludedFiles(include, erlangFile));
     }
     for (ErlangIncludeLib includeLib : erlangFile.getIncludeLibs()) {
-      files.addAll(getDirectlyIncludedFiles(includeLib));
+      files.addAll(getDirectlyIncludedFiles(includeLib, erlangFile));
     }
     return files;
   }
 
   @NotNull
-  public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangIncludeLib includeLib) {
+  public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangIncludeLib includeLib, @NotNull ErlangFile erlangFile) {
     ErlangIncludeString includeString = includeLib.getIncludeStringSafe();
     String[] split = includeString != null ? StringUtil.unquoteString(includeString.getText()).split("/") : null;
 
@@ -862,23 +863,22 @@ public class ErlangPsiImplUtil {
       }
     }
     //either include_lib does not specify a library, or it was not found, falling back to 'include' behaviour.
-    return getDirectlyIncludedFiles(includeString);
+    return getDirectlyIncludedFiles(includeString, erlangFile);
   }
 
   @NotNull
-  public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangInclude include) {
+  public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangInclude include, @NotNull ErlangFile erlangFile) {
     ErlangIncludeString includeString = include.getIncludeStringSafe();
-    return getDirectlyIncludedFiles(includeString);
+    return getDirectlyIncludedFiles(includeString, erlangFile);
   }
 
   @NotNull
-  public static List<ErlangFile> getDirectlyIncludedFiles(@Nullable ErlangIncludeString includeString) {
+  public static List<ErlangFile> getDirectlyIncludedFiles(@Nullable ErlangIncludeString includeString, @NotNull ErlangFile erlangFile) {
     if (includeString == null) return ContainerUtil.emptyList();
-    ErlangFile containingPsiFile = (ErlangFile) includeString.getContainingFile();
-    VirtualFile containingVirtualFile = containingPsiFile.getOriginalFile().getVirtualFile();
+    VirtualFile containingVirtualFile = erlangFile.getOriginalFile().getVirtualFile();
     VirtualFile parent = containingVirtualFile != null ? containingVirtualFile.getParent() : null;
     String relativePath = StringUtil.unquoteString(includeString.getText());
-    Project project = containingPsiFile.getProject();
+    Project project = erlangFile.getProject();
     ErlangFile relativeToDirectParent = getRelativeErlangFile(project, relativePath, parent);
     if (relativeToDirectParent != null) return ContainerUtil.newSmartList(relativeToDirectParent);
     //relative to direct parent include file was not found

@@ -35,7 +35,7 @@ public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
     for (ErlangInclude erlangInclude : ((ErlangFile) file).getIncludes()) {
       ErlangIncludeString string = erlangInclude.getIncludeStringSafe();
       if (string == null) continue;
-      List<ErlangFile> files = ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangInclude);
+      List<ErlangFile> files = ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangInclude, (ErlangFile) file);
       ErlangUnresolvedIncludeLibInspection.processInclude(problemsHolder, files, string, INCLUDE_LABEL);
     }
   }
