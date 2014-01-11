@@ -24,6 +24,8 @@ import com.intellij.execution.process.ProcessOutput;
 import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
+import com.intellij.notification.NotificationGroup;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -46,6 +48,7 @@ import java.util.List;
 
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
+  public static final NotificationGroup NOTIFICATION_GROUP = NotificationGroup.logOnlyGroup("Dialyzer-based inspections");
   
   @Nullable
   private static Problem parseProblem(String input) {
@@ -97,7 +100,10 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
       if (output.getStderrLines().isEmpty()) {
         for (String line : output.getStdoutLines()) {
           LOG.debug(line);
-          if (line.equals("dialyzer: Analysis failed with error:")) return state; // todo: show the warning in notification area
+          if (line.startsWith("dialyzer: ")) {
+            NOTIFICATION_GROUP.createNotification(line, NotificationType.WARNING).notify(null); // todo: get a project
+            return state;
+          }
           Problem problem = parseProblem(line);
           LOG.debug(problem != null ? problem.toString() : null);
           ContainerUtil.addAllNotNull(state.problems, problem);
