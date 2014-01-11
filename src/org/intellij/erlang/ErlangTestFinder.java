@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 Sergey Ignatov
+ * Copyright 2012-2014 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ public class ErlangTestFinder implements TestFinder {
   @Nullable
   private VirtualFile getVirtualFile(PsiElement element) {
     PsiFile file = findSourceElement(element);
-    if (file == null) return null;
+    if (file == null || !(file instanceof ErlangFile)) return null;
     return file.getVirtualFile();
   }
 
