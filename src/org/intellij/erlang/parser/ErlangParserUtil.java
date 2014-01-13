@@ -110,10 +110,9 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser, TokenSet[] tokenSets) {
-    //TODO copy implementation from GPUB, use ErrorState.initState to init state (available since 133.162)
-    PsiBuilder result = GeneratedParserUtilBase.adapt_builder_(root, builder, parser, tokenSets);
-    ErrorState errorState = ErrorState.get(result);
-    return new Builder(builder, errorState, parser);
+    ErrorState state = new ErrorState();
+    ErrorState.initState(state, builder, root, tokenSets);
+    return new Builder(builder, state, parser);
   }
 
   @SuppressWarnings("UnusedParameters")
