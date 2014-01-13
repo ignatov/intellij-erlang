@@ -83,7 +83,7 @@ public class ErlangApplicationRunConfigurationProducer extends RunConfigurationP
 
     ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
     PsiFile containingFile = psiElement.getContainingFile();
-    VirtualFile vFile = containingFile.getVirtualFile();
+    VirtualFile vFile = containingFile != null ? containingFile.getVirtualFile() : null;
     if (function == null || vFile == null) return false;
 
     return StringUtil.equals(configuration.getModuleAndFunction(),
