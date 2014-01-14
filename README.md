@@ -19,6 +19,6 @@ If you'd like to make a donation you can use [PayPal](https://www.paypal.com/cgi
 * Bugfixes
 
 ### Work in progress
-* Enhanced debugger
-* Remote debugger
+* R17 support (EEP43: maps, EEP37: funs with names, etc.)
+* Enhanced and remote debugger
 * Preprocessing support
