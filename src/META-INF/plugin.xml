@@ -2,7 +2,7 @@
     <id>org.jetbrains.erlang</id>
     <version>0.5.4</version>
     <vendor email="sergey.ignatov@jetbrains.com">Sergey Ignatov</vendor>
-    <idea-version since-build="133.193" until-build="133.9999"/>
+    <idea-version since-build="133.471" until-build="133.9999"/>
     <depends>com.intellij.modules.lang</depends>
 
     <depends optional="true" config-file="erlang-copyright.xml">com.intellij.copyright</depends>
