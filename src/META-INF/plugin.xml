@@ -1,6 +1,6 @@
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.5.3</version>
+    <version>0.5.4</version>
     <vendor email="sergey.ignatov@jetbrains.com">Sergey Ignatov</vendor>
     <idea-version since-build="133.193" until-build="133.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -11,6 +11,12 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
+            <p>0.5.3</p>
+            <ul>
+              <li>Find include quick fix</li>
+              <li>Erlang/OTP R16B03 support</li>
+              <li>Bugfixes</li>
+            </ul>
             <p>0.5.3</p>
             <ul>
               <li>Faster completion</li>
