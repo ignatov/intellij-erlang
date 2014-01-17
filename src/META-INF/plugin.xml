@@ -11,7 +11,7 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
-            <p>0.5.3</p>
+            <p>0.5.4</p>
             <ul>
               <li>Find include quick fix</li>
               <li>Erlang/OTP R16B03 support</li>
