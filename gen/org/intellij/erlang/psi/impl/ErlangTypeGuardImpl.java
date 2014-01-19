@@ -33,4 +33,16 @@ public class ErlangTypeGuardImpl extends ErlangCompositeElementImpl implements E
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getParLeft() {
+    return findChildByType(ERL_PAR_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParRight() {
+    return findChildByType(ERL_PAR_RIGHT);
+  }
+
 }

@@ -16,4 +16,7 @@ public interface ErlangTryClause extends ErlangCompositeElement {
   @Nullable
   ErlangClauseGuard getClauseGuard();
 
+  @Nullable
+  PsiElement getColon();
+
 }

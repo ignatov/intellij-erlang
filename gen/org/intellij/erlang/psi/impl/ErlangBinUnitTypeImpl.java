@@ -29,6 +29,18 @@ public class ErlangBinUnitTypeImpl extends ErlangTypeImpl implements ErlangBinUn
 
   @Override
   @NotNull
+  public PsiElement getColon() {
+    return findNotNullChildByType(ERL_COLON);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getOpArMul() {
+    return findNotNullChildByType(ERL_OP_AR_MUL);
+  }
+
+  @Override
+  @NotNull
   public PsiElement getInteger() {
     return findNotNullChildByType(ERL_INTEGER);
   }

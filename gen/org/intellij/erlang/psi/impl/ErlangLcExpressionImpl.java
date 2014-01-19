@@ -33,4 +33,16 @@ public class ErlangLcExpressionImpl extends ErlangExpressionImpl implements Erla
     return findNotNullChildByClass(ErlangExpression.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getOpLtEq() {
+    return findChildByType(ERL_OP_LT_EQ);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getOpLtMinus() {
+    return findChildByType(ERL_OP_LT_MINUS);
+  }
+
 }

@@ -6,8 +6,8 @@ import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.StubBasedPsiElement;
 import org.intellij.erlang.stubs.ErlangModuleStub;
-import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.ResolveState;
+import com.intellij.psi.scope.PsiScopeProcessor;
 
 public interface ErlangModule extends ErlangNamedElement, StubBasedPsiElement<ErlangModuleStub> {
 
@@ -19,6 +19,15 @@ public interface ErlangModule extends ErlangNamedElement, StubBasedPsiElement<Er
 
   @Nullable
   ErlangQAtom getQAtom();
+
+  @Nullable
+  PsiElement getComma();
+
+  @Nullable
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
 
   @NotNull
   String getName();

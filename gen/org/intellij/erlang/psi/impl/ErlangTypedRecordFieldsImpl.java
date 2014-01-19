@@ -33,4 +33,16 @@ public class ErlangTypedRecordFieldsImpl extends ErlangCompositeElementImpl impl
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTypedExpr.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getCurlyLeft() {
+    return findNotNullChildByType(ERL_CURLY_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getCurlyRight() {
+    return findChildByType(ERL_CURLY_RIGHT);
+  }
+
 }

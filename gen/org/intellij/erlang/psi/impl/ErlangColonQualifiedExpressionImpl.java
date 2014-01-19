@@ -27,4 +27,10 @@ public class ErlangColonQualifiedExpressionImpl extends ErlangExpressionImpl imp
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getColon() {
+    return findNotNullChildByType(ERL_COLON);
+  }
+
 }

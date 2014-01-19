@@ -19,4 +19,7 @@ public interface ErlangGenericFunctionCallExpression extends ErlangExpression {
   @NotNull
   List<ErlangQVar> getQVarList();
 
+  @Nullable
+  PsiElement getColon();
+
 }

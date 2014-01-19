@@ -39,4 +39,16 @@ public class ErlangTypedAttrValImpl extends ErlangCompositeElementImpl implement
     return findChildByClass(ErlangTypedRecordFields.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getColonColon() {
+    return findChildByType(ERL_COLON_COLON);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getComma() {
+    return findChildByType(ERL_COMMA);
+  }
+
 }

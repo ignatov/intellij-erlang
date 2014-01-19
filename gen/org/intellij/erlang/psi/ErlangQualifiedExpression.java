@@ -10,4 +10,7 @@ public interface ErlangQualifiedExpression extends ErlangExpression {
   @NotNull
   List<ErlangQAtom> getQAtomList();
 
+  @NotNull
+  PsiElement getDot();
+
 }

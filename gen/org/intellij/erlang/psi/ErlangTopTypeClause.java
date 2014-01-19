@@ -10,4 +10,7 @@ public interface ErlangTopTypeClause extends ErlangCompositeElement {
   @Nullable
   ErlangTopType getTopType();
 
+  @NotNull
+  PsiElement getArrow();
+
 }

@@ -13,4 +13,10 @@ public interface ErlangArgumentList extends ErlangCompositeElement {
   @NotNull
   List<ErlangExpression> getExpressionList();
 
+  @NotNull
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
+
 }

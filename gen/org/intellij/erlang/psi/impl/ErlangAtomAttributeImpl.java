@@ -39,4 +39,16 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
     return findChildByClass(ErlangTypedAttrVal.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getParLeft() {
+    return findChildByType(ERL_PAR_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParRight() {
+    return findChildByType(ERL_PAR_RIGHT);
+  }
+
 }

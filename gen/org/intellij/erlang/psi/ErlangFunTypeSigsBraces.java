@@ -10,4 +10,10 @@ public interface ErlangFunTypeSigsBraces extends ErlangCompositeElement {
   @Nullable
   ErlangFunTypeSigs getFunTypeSigs();
 
+  @NotNull
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
+
 }

@@ -10,4 +10,7 @@ public interface ErlangColonQualifiedExpression extends ErlangExpression {
   @NotNull
   List<ErlangExpression> getExpressionList();
 
+  @NotNull
+  PsiElement getColon();
+
 }

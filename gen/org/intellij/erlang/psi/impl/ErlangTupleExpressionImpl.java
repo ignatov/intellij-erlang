@@ -27,4 +27,16 @@ public class ErlangTupleExpressionImpl extends ErlangExpressionImpl implements E
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getCurlyLeft() {
+    return findNotNullChildByType(ERL_CURLY_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getCurlyRight() {
+    return findChildByType(ERL_CURLY_RIGHT);
+  }
+
 }

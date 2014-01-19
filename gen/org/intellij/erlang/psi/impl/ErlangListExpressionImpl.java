@@ -27,4 +27,28 @@ public class ErlangListExpressionImpl extends ErlangExpressionImpl implements Er
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getBracketLeft() {
+    return findNotNullChildByType(ERL_BRACKET_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getBracketRight() {
+    return findChildByType(ERL_BRACKET_RIGHT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getComma() {
+    return findChildByType(ERL_COMMA);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getOpOr() {
+    return findChildByType(ERL_OP_OR);
+  }
+
 }

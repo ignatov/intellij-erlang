@@ -45,4 +45,10 @@ public class ErlangGenericFunctionCallExpressionImpl extends ErlangExpressionImp
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQVar.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getColon() {
+    return findChildByType(ERL_COLON);
+  }
+
 }

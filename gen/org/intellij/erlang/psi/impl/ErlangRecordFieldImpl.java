@@ -34,6 +34,24 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getDot() {
+    return findChildByType(ERL_DOT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getOpEq() {
+    return findChildByType(ERL_OP_EQ);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getUniPattern() {
+    return findChildByType(ERL_UNI_PATTERN);
+  }
+
   @Nullable
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);

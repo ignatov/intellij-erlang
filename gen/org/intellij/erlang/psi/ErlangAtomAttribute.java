@@ -16,4 +16,10 @@ public interface ErlangAtomAttribute extends ErlangCompositeElement {
   @Nullable
   ErlangTypedAttrVal getTypedAttrVal();
 
+  @Nullable
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
+
 }

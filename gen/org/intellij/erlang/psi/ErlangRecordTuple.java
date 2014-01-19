@@ -10,4 +10,10 @@ public interface ErlangRecordTuple extends ErlangCompositeElement {
   @Nullable
   ErlangRecordFields getRecordFields();
 
+  @NotNull
+  PsiElement getCurlyLeft();
+
+  @Nullable
+  PsiElement getCurlyRight();
+
 }

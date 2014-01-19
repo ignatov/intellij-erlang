@@ -27,4 +27,10 @@ public class ErlangSendExpressionImpl extends ErlangFakeBinaryExpressionImpl imp
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getOpExl() {
+    return findNotNullChildByType(ERL_OP_EXL);
+  }
+
 }

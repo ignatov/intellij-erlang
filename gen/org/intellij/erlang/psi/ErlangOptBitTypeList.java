@@ -10,4 +10,7 @@ public interface ErlangOptBitTypeList extends ErlangCompositeElement {
   @NotNull
   List<ErlangBitType> getBitTypeList();
 
+  @NotNull
+  PsiElement getOpArDiv();
+
 }

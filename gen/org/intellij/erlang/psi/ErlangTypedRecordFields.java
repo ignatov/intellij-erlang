@@ -13,4 +13,10 @@ public interface ErlangTypedRecordFields extends ErlangCompositeElement {
   @NotNull
   List<ErlangTypedExpr> getTypedExprList();
 
+  @NotNull
+  PsiElement getCurlyLeft();
+
+  @Nullable
+  PsiElement getCurlyRight();
+
 }

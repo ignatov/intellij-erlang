@@ -10,4 +10,7 @@ public interface ErlangClauseBody extends ErlangCompositeElement {
   @NotNull
   List<ErlangExpression> getExpressionList();
 
+  @NotNull
+  PsiElement getArrow();
+
 }

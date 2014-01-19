@@ -33,4 +33,10 @@ public class ErlangTopTypeImpl extends ErlangCompositeElementImpl implements Erl
     return findNotNullChildByClass(ErlangType.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getColonColon() {
+    return findChildByType(ERL_COLON_COLON);
+  }
+
 }

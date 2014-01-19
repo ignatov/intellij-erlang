@@ -16,6 +16,12 @@ public interface ErlangTypedExpr extends ErlangNamedElement {
   @Nullable
   ErlangTopType getTopType();
 
+  @Nullable
+  PsiElement getColonColon();
+
+  @Nullable
+  PsiElement getOpEq();
+
   @NotNull
   String getName();
 

@@ -12,6 +12,15 @@ public interface ErlangIncludeLib extends ErlangCompositeElement, StubBasedPsiEl
   @Nullable
   ErlangIncludeString getIncludeString();
 
+  @NotNull
+  PsiElement getOpMinus();
+
+  @Nullable
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
+
   @Nullable
   ErlangIncludeString getIncludeStringSafe();
 

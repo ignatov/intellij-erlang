@@ -27,4 +27,10 @@ public class ErlangTopTypeClauseImpl extends ErlangCompositeElementImpl implemen
     return findChildByClass(ErlangTopType.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getArrow() {
+    return findNotNullChildByType(ERL_ARROW);
+  }
+
 }

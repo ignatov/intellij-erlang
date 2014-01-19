@@ -27,4 +27,22 @@ public class ErlangBinaryTypeImpl extends ErlangTypeImpl implements ErlangBinary
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getBinEnd() {
+    return findChildByType(ERL_BIN_END);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getBinStart() {
+    return findNotNullChildByType(ERL_BIN_START);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getComma() {
+    return findChildByType(ERL_COMMA);
+  }
+
 }

@@ -35,6 +35,12 @@ public class ErlangIntTypeImpl extends ErlangTypeImpl implements ErlangIntType {
 
   @Override
   @Nullable
+  public PsiElement getOpMinus() {
+    return findChildByType(ERL_OP_MINUS);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getInteger() {
     return findChildByType(ERL_INTEGER);
   }

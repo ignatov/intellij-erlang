@@ -27,4 +27,16 @@ public class ErlangExportTypesImpl extends ErlangCompositeElementImpl implements
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExportType.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getBracketLeft() {
+    return findNotNullChildByType(ERL_BRACKET_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getBracketRight() {
+    return findChildByType(ERL_BRACKET_RIGHT);
+  }
+
 }

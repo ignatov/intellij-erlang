@@ -11,6 +11,9 @@ public interface ErlangFunctionWithArityVariables extends ErlangCompositeElement
   List<ErlangQVar> getQVarList();
 
   @Nullable
+  PsiElement getOpArDiv();
+
+  @Nullable
   PsiElement getInteger();
 
 }

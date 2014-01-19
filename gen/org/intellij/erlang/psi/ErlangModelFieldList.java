@@ -10,4 +10,10 @@ public interface ErlangModelFieldList extends ErlangCompositeElement {
   @NotNull
   List<ErlangArgumentDefinition> getArgumentDefinitionList();
 
+  @NotNull
+  PsiElement getBracketLeft();
+
+  @Nullable
+  PsiElement getBracketRight();
+
 }

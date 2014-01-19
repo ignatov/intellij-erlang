@@ -53,6 +53,12 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
 
   @Override
   @Nullable
+  public PsiElement getColon() {
+    return findChildByType(ERL_COLON);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getEnd() {
     return findChildByType(ERL_END);
   }

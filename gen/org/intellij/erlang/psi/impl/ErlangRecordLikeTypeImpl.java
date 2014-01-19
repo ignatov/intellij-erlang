@@ -27,4 +27,16 @@ public class ErlangRecordLikeTypeImpl extends ErlangTypeImpl implements ErlangRe
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getCurlyLeft() {
+    return findNotNullChildByType(ERL_CURLY_LEFT);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getCurlyRight() {
+    return findNotNullChildByType(ERL_CURLY_RIGHT);
+  }
+
 }

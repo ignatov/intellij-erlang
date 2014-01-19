@@ -10,4 +10,10 @@ public interface ErlangExportTypeAttribute extends ErlangCompositeElement {
   @Nullable
   ErlangExportTypes getExportTypes();
 
+  @Nullable
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
+
 }

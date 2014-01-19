@@ -23,6 +23,9 @@ public interface ErlangFunExpression extends ErlangExpression {
   ErlangQVar getQVar();
 
   @Nullable
+  PsiElement getColon();
+
+  @Nullable
   PsiElement getEnd();
 
   @NotNull

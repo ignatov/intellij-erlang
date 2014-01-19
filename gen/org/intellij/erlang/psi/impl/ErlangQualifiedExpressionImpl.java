@@ -27,4 +27,10 @@ public class ErlangQualifiedExpressionImpl extends ErlangExpressionImpl implemen
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangQAtom.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getDot() {
+    return findNotNullChildByType(ERL_DOT);
+  }
+
 }

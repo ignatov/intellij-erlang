@@ -15,6 +15,15 @@ public interface ErlangRecordField extends ErlangCompositeElement {
   List<ErlangQAtom> getQAtomList();
 
   @Nullable
+  PsiElement getDot();
+
+  @Nullable
+  PsiElement getOpEq();
+
+  @Nullable
+  PsiElement getUniPattern();
+
+  @Nullable
   PsiReference getReference();
 
   @Nullable

@@ -39,4 +39,16 @@ public class ErlangFunTypeSigsImpl extends ErlangCompositeElementImpl implements
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTypeSig.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getColon() {
+    return findChildByType(ERL_COLON);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getColonColon() {
+    return findChildByType(ERL_COLON_COLON);
+  }
+
 }

@@ -14,6 +14,12 @@ public interface ErlangConfigExpression extends ErlangExpression {
   ErlangQVar getQVar();
 
   @Nullable
+  PsiElement getOpMinus();
+
+  @Nullable
+  PsiElement getOpPlus();
+
+  @Nullable
   PsiElement getBnot();
 
   @Nullable

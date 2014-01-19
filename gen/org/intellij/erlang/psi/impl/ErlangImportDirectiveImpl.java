@@ -33,4 +33,22 @@ public class ErlangImportDirectiveImpl extends ErlangCompositeElementImpl implem
     return findChildByClass(ErlangModuleRef.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getComma() {
+    return findChildByType(ERL_COMMA);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParLeft() {
+    return findChildByType(ERL_PAR_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParRight() {
+    return findChildByType(ERL_PAR_RIGHT);
+  }
+
 }

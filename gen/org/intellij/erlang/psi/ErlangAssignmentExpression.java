@@ -10,4 +10,7 @@ public interface ErlangAssignmentExpression extends ErlangFakeBinaryExpression {
   @NotNull
   List<ErlangExpression> getExpressionList();
 
+  @NotNull
+  PsiElement getOpEq();
+
 }

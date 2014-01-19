@@ -39,4 +39,10 @@ public class ErlangTryClauseImpl extends ErlangCompositeElementImpl implements E
     return findChildByClass(ErlangClauseGuard.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getColon() {
+    return findChildByType(ERL_COLON);
+  }
+
 }

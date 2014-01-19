@@ -53,6 +53,72 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
 
   @Override
   @Nullable
+  public PsiElement getBracketLeft() {
+    return findChildByType(ERL_BRACKET_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getBracketRight() {
+    return findChildByType(ERL_BRACKET_RIGHT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getColon() {
+    return findChildByType(ERL_COLON);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getColonColon() {
+    return findChildByType(ERL_COLON_COLON);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getCurlyLeft() {
+    return findChildByType(ERL_CURLY_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getCurlyRight() {
+    return findChildByType(ERL_CURLY_RIGHT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getDotDot() {
+    return findChildByType(ERL_DOT_DOT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getDotDotDot() {
+    return findChildByType(ERL_DOT_DOT_DOT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParLeft() {
+    return findChildByType(ERL_PAR_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParRight() {
+    return findChildByType(ERL_PAR_RIGHT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getRadix() {
+    return findChildByType(ERL_RADIX);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getFun() {
     return findChildByType(ERL_FUN);
   }

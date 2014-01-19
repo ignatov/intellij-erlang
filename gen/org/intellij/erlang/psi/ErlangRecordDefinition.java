@@ -15,6 +15,18 @@ public interface ErlangRecordDefinition extends ErlangNamedElement, StubBasedPsi
   @Nullable
   ErlangTypedRecordFields getTypedRecordFields();
 
+  @Nullable
+  PsiElement getComma();
+
+  @NotNull
+  PsiElement getOpMinus();
+
+  @Nullable
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
+
   @NotNull
   String getName();
 

@@ -14,6 +14,15 @@ public interface ErlangBinElement extends ErlangCompositeElement {
   ErlangOptBitTypeList getOptBitTypeList();
 
   @Nullable
+  PsiElement getColon();
+
+  @Nullable
+  PsiElement getOpMinus();
+
+  @Nullable
+  PsiElement getOpPlus();
+
+  @Nullable
   PsiElement getBnot();
 
   @Nullable

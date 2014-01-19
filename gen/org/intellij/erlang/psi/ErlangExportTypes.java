@@ -10,4 +10,10 @@ public interface ErlangExportTypes extends ErlangCompositeElement {
   @NotNull
   List<ErlangExportType> getExportTypeList();
 
+  @NotNull
+  PsiElement getBracketLeft();
+
+  @Nullable
+  PsiElement getBracketRight();
+
 }

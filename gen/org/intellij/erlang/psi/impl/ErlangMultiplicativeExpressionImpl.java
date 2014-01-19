@@ -29,6 +29,18 @@ public class ErlangMultiplicativeExpressionImpl extends ErlangFakeBinaryExpressi
 
   @Override
   @Nullable
+  public PsiElement getOpArDiv() {
+    return findChildByType(ERL_OP_AR_DIV);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getOpArMul() {
+    return findChildByType(ERL_OP_AR_MUL);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getAnd() {
     return findChildByType(ERL_AND);
   }

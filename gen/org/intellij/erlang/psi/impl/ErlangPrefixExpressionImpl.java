@@ -29,6 +29,18 @@ public class ErlangPrefixExpressionImpl extends ErlangExpressionImpl implements 
 
   @Override
   @Nullable
+  public PsiElement getOpMinus() {
+    return findChildByType(ERL_OP_MINUS);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getOpPlus() {
+    return findChildByType(ERL_OP_PLUS);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getBnot() {
     return findChildByType(ERL_BNOT);
   }

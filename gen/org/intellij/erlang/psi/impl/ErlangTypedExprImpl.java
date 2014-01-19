@@ -39,6 +39,18 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
     return findChildByClass(ErlangTopType.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getColonColon() {
+    return findChildByType(ERL_COLON_COLON);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getOpEq() {
+    return findChildByType(ERL_OP_EQ);
+  }
+
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);

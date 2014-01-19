@@ -10,4 +10,10 @@ public interface ErlangImportFunctions extends ErlangCompositeElement {
   @NotNull
   List<ErlangImportFunction> getImportFunctionList();
 
+  @NotNull
+  PsiElement getBracketLeft();
+
+  @NotNull
+  PsiElement getBracketRight();
+
 }

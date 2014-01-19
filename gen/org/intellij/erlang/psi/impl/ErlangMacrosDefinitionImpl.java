@@ -45,6 +45,30 @@ public class ErlangMacrosDefinitionImpl extends ErlangStubbedPsiElementBase<Erla
     return findChildByClass(ErlangMacrosName.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getComma() {
+    return findChildByType(ERL_COMMA);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getOpMinus() {
+    return findNotNullChildByType(ERL_OP_MINUS);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParLeft() {
+    return findChildByType(ERL_PAR_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParRight() {
+    return findChildByType(ERL_PAR_RIGHT);
+  }
+
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);

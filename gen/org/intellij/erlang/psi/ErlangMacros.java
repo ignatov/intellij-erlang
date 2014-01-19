@@ -11,6 +11,9 @@ public interface ErlangMacros extends ErlangCompositeElement {
   @Nullable
   ErlangMacrosName getMacrosName();
 
+  @NotNull
+  PsiElement getQmark();
+
   @Nullable
   PsiReference getReference();
 

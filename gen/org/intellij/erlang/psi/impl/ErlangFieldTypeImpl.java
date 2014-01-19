@@ -34,6 +34,12 @@ public class ErlangFieldTypeImpl extends ErlangTypeImpl implements ErlangFieldTy
     return findChildByClass(ErlangTopType.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getColonColon() {
+    return findChildByType(ERL_COLON_COLON);
+  }
+
   @Nullable
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);

@@ -10,8 +10,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.stubs.ErlangModuleStub;
 import org.intellij.erlang.psi.*;
-import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.ResolveState;
+import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangModuleImpl extends ErlangStubbedPsiElementBase<ErlangModuleStub> implements ErlangModule {
@@ -45,6 +45,24 @@ public class ErlangModuleImpl extends ErlangStubbedPsiElementBase<ErlangModuleSt
   @Nullable
   public ErlangQAtom getQAtom() {
     return findChildByClass(ErlangQAtom.class);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getComma() {
+    return findChildByType(ERL_COMMA);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParLeft() {
+    return findChildByType(ERL_PAR_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParRight() {
+    return findChildByType(ERL_PAR_RIGHT);
   }
 
   @NotNull

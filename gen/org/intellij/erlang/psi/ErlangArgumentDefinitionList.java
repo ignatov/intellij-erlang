@@ -10,4 +10,10 @@ public interface ErlangArgumentDefinitionList extends ErlangCompositeElement {
   @NotNull
   List<ErlangArgumentDefinition> getArgumentDefinitionList();
 
+  @NotNull
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
+
 }

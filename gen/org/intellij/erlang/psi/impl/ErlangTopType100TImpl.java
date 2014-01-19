@@ -27,4 +27,10 @@ public class ErlangTopType100TImpl extends ErlangTypeImpl implements ErlangTopTy
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getOpOr() {
+    return findChildByType(ERL_OP_OR);
+  }
+
 }

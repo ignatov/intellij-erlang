@@ -33,6 +33,18 @@ public class ErlangBehaviourImpl extends ErlangStubbedPsiElementBase<ErlangBehav
     return findChildByClass(ErlangModuleRef.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getParLeft() {
+    return findChildByType(ERL_PAR_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getParRight() {
+    return findChildByType(ERL_PAR_RIGHT);
+  }
+
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);

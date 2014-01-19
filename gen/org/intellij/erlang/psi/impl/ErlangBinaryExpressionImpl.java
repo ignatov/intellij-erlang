@@ -27,4 +27,16 @@ public class ErlangBinaryExpressionImpl extends ErlangExpressionImpl implements 
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangBinElement.class);
   }
 
+  @Override
+  @Nullable
+  public PsiElement getBinEnd() {
+    return findChildByType(ERL_BIN_END);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getBinStart() {
+    return findNotNullChildByType(ERL_BIN_START);
+  }
+
 }

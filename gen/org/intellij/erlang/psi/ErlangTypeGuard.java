@@ -13,4 +13,10 @@ public interface ErlangTypeGuard extends ErlangCompositeElement {
   @NotNull
   List<ErlangTopType> getTopTypeList();
 
+  @Nullable
+  PsiElement getParLeft();
+
+  @Nullable
+  PsiElement getParRight();
+
 }

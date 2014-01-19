@@ -27,4 +27,10 @@ public class ErlangClauseBodyImpl extends ErlangCompositeElementImpl implements 
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getArrow() {
+    return findNotNullChildByType(ERL_ARROW);
+  }
+
 }

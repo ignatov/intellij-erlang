@@ -18,6 +18,8 @@
 
   psiImplUtilClass="org.intellij.erlang.psi.impl.ErlangPsiImplUtil"
 
+  generateTokenAccessors=true
+
   // operators
   OP_PLUS         = "+"
   OP_MINUS        = "-"

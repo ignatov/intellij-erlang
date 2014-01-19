@@ -27,4 +27,10 @@ public class ErlangOptBitTypeListImpl extends ErlangCompositeElementImpl impleme
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangBitType.class);
   }
 
+  @Override
+  @NotNull
+  public PsiElement getOpArDiv() {
+    return findNotNullChildByType(ERL_OP_AR_DIV);
+  }
+
 }
