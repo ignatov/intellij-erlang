@@ -27,7 +27,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.IFileElementType;
-import com.intellij.psi.tree.IStubFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParser;
@@ -37,7 +36,6 @@ import org.intellij.erlang.stubs.types.ErlangFileElementType;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangParserDefinition implements ParserDefinition {
-  public static final IStubFileElementType ERL_FILE_ELEMENT_TYPE = new ErlangFileElementType();
   public static final TokenSet WS = TokenSet.create(TokenType.WHITE_SPACE);
   public static final IElementType ERL_SHEBANG = new ErlangTokenType("ERL_SHEBANG");
   public static final IElementType ERL_COMMENT = new ErlangTokenType("ERL_LINE_COMMENT");
@@ -59,7 +57,7 @@ public class ErlangParserDefinition implements ParserDefinition {
 
   @Override
   public IFileElementType getFileNodeType() {
-    return ERL_FILE_ELEMENT_TYPE;
+    return ErlangFileElementType.INSTANCE;
   }
 
   @NotNull

@@ -32,6 +32,7 @@ import java.io.IOException;
 
 public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> {
   public static final int VERSION = 1;
+  public static final IStubFileElementType INSTANCE = new ErlangFileElementType();
 
   public ErlangFileElementType() {
     super("ERL_FILE", ErlangLanguage.INSTANCE);

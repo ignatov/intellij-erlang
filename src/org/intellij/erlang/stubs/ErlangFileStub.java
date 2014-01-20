@@ -20,8 +20,8 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.stubs.PsiFileStubImpl;
 import com.intellij.psi.tree.IStubFileElementType;
 import com.intellij.util.io.StringRef;
-import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.stubs.types.ErlangFileElementType;
 
 import java.util.HashSet;
 
@@ -54,6 +54,6 @@ public class ErlangFileStub extends PsiFileStubImpl<ErlangFile> {
 
   @Override
   public IStubFileElementType getType() {
-    return ErlangParserDefinition.ERL_FILE_ELEMENT_TYPE;
+    return ErlangFileElementType.INSTANCE;
   }
 }
