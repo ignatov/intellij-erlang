@@ -16,10 +16,12 @@
 
 package org.intellij.erlang.stubs.types;
 
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.StubBuilder;
-import com.intellij.psi.stubs.*;
+import com.intellij.psi.stubs.DefaultStubBuilder;
+import com.intellij.psi.stubs.StubElement;
+import com.intellij.psi.stubs.StubInputStream;
+import com.intellij.psi.stubs.StubOutputStream;
 import com.intellij.psi.tree.IStubFileElementType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangFile;
@@ -69,15 +71,5 @@ public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> 
   @Override
   public String getExternalId() {
     return "erlang.FILE";
-  }
-
-  @Override
-  public void indexStub(@NotNull PsiFileStub stub, @NotNull IndexSink sink) {
-    super.indexStub(stub, sink);
-  }
-
-  @Override
-  public boolean shouldBuildStubFor(VirtualFile file) {
-    return super.shouldBuildStubFor(file);
   }
 }
