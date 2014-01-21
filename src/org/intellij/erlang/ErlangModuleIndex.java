@@ -17,10 +17,13 @@
 package org.intellij.erlang;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.*;
 import com.intellij.util.io.EnumeratorStringDescriptor;
@@ -29,12 +32,13 @@ import gnu.trove.THashSet;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   public static final ID<String, Void> ERLANG_MODULE_INDEX = ID.create("ErlangModuleIndex");
-  private static final int INDEX_VERSION = 0;
+  private static final int INDEX_VERSION = 1;
   public static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
     @Override
     public boolean acceptInput(VirtualFile file) {
@@ -82,30 +86,37 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
 
   @NotNull
   public static List<ErlangModule> getModulesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
-    final Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(ERLANG_MODULE_INDEX, name, searchScope);
-
-    final Set<ErlangModule> result = new THashSet<ErlangModule>();
-    for (VirtualFile vFile : files) {
-      final PsiFile psiFile = PsiManager.getInstance(project).findFile(vFile);
-      if (psiFile instanceof ErlangFile) {
-        ContainerUtil.addIfNotNull(result, ((ErlangFile) psiFile).getModule());
+    return getByName(project, name, searchScope, new Function<ErlangFile, ErlangModule>() {
+      @Nullable
+      @Override
+      public ErlangModule fun(ErlangFile erlangFile) {
+        return erlangFile.getModule();
       }
-    }
-    return new ArrayList<ErlangModule>(result);
+    });
   }
   
   @NotNull
   public static List<ErlangFile> getFilesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
-    final Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(ERLANG_MODULE_INDEX, name, searchScope);
+    return getByName(project, name, searchScope, new Function<ErlangFile, ErlangFile>() {
+      @Override
+      public ErlangFile fun(ErlangFile erlangFile) {
+        return erlangFile;
+      }
+    });
+  }
 
-    final Set<ErlangFile> result = new THashSet<ErlangFile>();
+  private static <T> List<T> getByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope, Function<ErlangFile, T> psiMapper) {
+    final ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();
+    final Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(ERLANG_MODULE_INDEX, name, searchScope);
+    final Set<T> result = new THashSet<T>();
     for (VirtualFile vFile : files) {
+      if (!projectFileIndex.isInSource(vFile)) continue;
       final PsiFile psiFile = PsiManager.getInstance(project).findFile(vFile);
       if (psiFile instanceof ErlangFile) {
-        result.add(((ErlangFile) psiFile));
+        ContainerUtil.addIfNotNull(result, psiMapper.fun((ErlangFile) psiFile));
       }
     }
-    return new ArrayList<ErlangFile>(result);
+    return new ArrayList<T>(result);
   }
 
   private static class MyDataIndexer implements DataIndexer<String, Void, FileContent> {

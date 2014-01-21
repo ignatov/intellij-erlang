@@ -46,7 +46,6 @@ import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.ResolveScopeManager;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.scope.PsiScopeProcessor;
-import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
@@ -96,7 +95,7 @@ public class ErlangPsiImplUtil {
   public static PsiReference getReference(@NotNull ErlangQVar o) {
     return new ErlangVariableReferenceImpl(o, TextRange.from(0, o.getTextLength()));
   }
-  
+
   @Nullable
   public static PsiReference getReference(@NotNull ErlangQAtom o) {
     return ArrayUtil.getFirstElement(ReferenceProvidersRegistry.getReferencesFromProviders(o));
@@ -423,7 +422,7 @@ public class ErlangPsiImplUtil {
       ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
       if (qAtom != null) {
         String moduleName = StringUtil.unquoteString(qAtom.getText());
-        functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName + ".erl"));
+        functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName));
 
         if (release == null || release.needBifCompletion(moduleName)) {
           addBifs(lookupElements, ErlangBifTable.getBifs(moduleName), withArity);
@@ -433,7 +432,7 @@ public class ErlangPsiImplUtil {
       else {
         ErlangFile erlangFile = (ErlangFile) containingFile;
         functions.addAll(erlangFile.getFunctions());
-        functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang.erl"));
+        functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"));
 
         for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
           lookupElements.add(createFunctionLookupElement(importFunction.getQAtom().getText(), getArity(importFunction.getInteger()), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
@@ -780,7 +779,7 @@ public class ErlangPsiImplUtil {
   public static String getName(@NotNull ErlangFunctionCallExpression o) {
     return o.getNameIdentifier().getText();
   }
-  
+
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangFunctionCallExpression o) {
     return o.getQAtom();
@@ -1104,13 +1103,11 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project, @NotNull String moduleFileName) {
-    PsiFile[] files = FilenameIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project));
+  public static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project, @NotNull String moduleName) {
     List<ErlangFunction> result = new ArrayList<ErlangFunction>();
-    for (PsiFile file : files) {
-      if (file instanceof ErlangFile) {
-        result.addAll(((ErlangFile) file).getExportedFunctions());
-      }
+    List<ErlangFile> erlangModules = ErlangModuleIndex.getFilesByName(project, moduleName, GlobalSearchScope.allScope(project));
+    for (ErlangFile file : erlangModules) {
+      result.addAll(file.getExportedFunctions());
     }
     return result;
   }
@@ -1454,7 +1451,7 @@ public class ErlangPsiImplUtil {
   public static boolean isExported(ErlangFunction o) {
     ErlangFunctionStub stub = o.getStub();
     if (stub != null) return stub.isExported();
-    
+
     PsiFile file = o.getContainingFile();
     String signature = StringUtil.unquoteString(o.getName()) + "/" + o.getArity();
     return file instanceof ErlangFile && ((ErlangFile) file).isExported(signature);
@@ -1466,7 +1463,7 @@ public class ErlangPsiImplUtil {
     if (stub != null) return stub.getIncludeString();
     return o.getIncludeString();
   }
-  
+
   @Nullable
   public static ErlangIncludeString getIncludeStringSafe(ErlangIncludeLib o) {
     ErlangIncludeLibStub stub = o.getStub();
