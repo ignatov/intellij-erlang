@@ -35,6 +35,13 @@ import java.util.*;
 public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   public static final ID<String, Void> ERLANG_MODULE_INDEX = ID.create("ErlangModuleIndex");
   private static final int INDEX_VERSION = 0;
+  public static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
+    @Override
+    public boolean acceptInput(VirtualFile file) {
+      return file.getFileType() == ErlangFileType.MODULE;
+    }
+  };
+
   private DataIndexer<String, Void, FileContent> myDataIndexer = new MyDataIndexer();
 
   @NotNull
@@ -61,7 +68,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
 
   @Override
   public FileBasedIndex.InputFilter getInputFilter() {
-    return ErlangIndexUtil.ERLANG_INPUT_FILTER;
+    return ERLANG_MODULE_FILTER;
   }
 
   @Override
@@ -80,7 +87,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     final Set<ErlangModule> result = new THashSet<ErlangModule>();
     for (VirtualFile vFile : files) {
       final PsiFile psiFile = PsiManager.getInstance(project).findFile(vFile);
-      if (psiFile instanceof ErlangFile && ErlangIndexUtil.isErlangModuleFileType(psiFile.getFileType())) {
+      if (psiFile instanceof ErlangFile) {
         ContainerUtil.addIfNotNull(result, ((ErlangFile) psiFile).getModule());
       }
     }
@@ -94,7 +101,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     final Set<ErlangFile> result = new THashSet<ErlangFile>();
     for (VirtualFile vFile : files) {
       final PsiFile psiFile = PsiManager.getInstance(project).findFile(vFile);
-      if (psiFile instanceof ErlangFile && ErlangIndexUtil.isErlangModuleFileType(psiFile.getFileType())) {
+      if (psiFile instanceof ErlangFile) {
         result.add(((ErlangFile) psiFile));
       }
     }
