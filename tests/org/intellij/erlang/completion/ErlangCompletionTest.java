@@ -270,7 +270,6 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     );
   }
 
-
   public void testCameCaseModules() throws Throwable {
     myFixture.configureByText("CamelCase.erl", "");
     myFixture.configureByText("a.erl", "bar() -> Cam<caret>");
