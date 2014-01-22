@@ -59,8 +59,8 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
   }
 
   @Nullable
-  public PsiReference getReference() {
-    return ErlangPsiImplUtil.getReference(this);
+  public PsiReference getReferenceInternal() {
+    return ErlangPsiImplUtil.getReferenceInternal(this);
   }
 
 }

@@ -105,7 +105,7 @@ public class ErlangPsiImplUtil {
     List<ErlangTypedExpr> result = new ArrayList<ErlangTypedExpr>(0);
     List<ErlangQAtom> atoms = new ArrayList<ErlangQAtom>(0);
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
-    PsiReference reference = recordExpression != null ? recordExpression.getReference() : null;
+    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
 
     if (resolve == null && recordExpression != null) {
@@ -669,7 +669,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static PsiReference getReference(@NotNull ErlangRecordExpression o) {
+  public static PsiReference getReferenceInternal(@NotNull ErlangRecordExpression o) {
     ErlangRecordRef recordRef = o.getRecordRef();
     return recordRef != null ? recordRef.getReference() : null;
   }

@@ -40,7 +40,7 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
     PsiElement element = descriptor.getPsiElement();
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     if (recordExpression != null) {
-      PsiReference reference = recordExpression.getReference();
+      PsiReference reference = recordExpression.getReferenceInternal();
       PsiElement resolve = reference != null ? reference.resolve() : null;
       if (resolve != null) {
         ErlangTypedRecordFields fields = ((ErlangRecordDefinition) resolve).getTypedRecordFields();

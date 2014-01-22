@@ -226,8 +226,6 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariants("% <caret>", CompletionType.BASIC, 1, CheckType.EQUALS);
   }
 
-
-
   public void testIncludeCompletion() throws Throwable {
     localFileSystemSetUp();
     myFixture.configureByFiles("include/includeCompletion.erl", "include/include/header.hrl");
@@ -283,5 +281,12 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testFunctionsFromCameCaseModule() throws Throwable {
     myFixture.configureByText("CamelCase.erl", "-module('CamelCase'). -export([foo/0]). foo() -> ok.");
     doTestInclude("bar() -> 'CamelCase':<caret>", "foo");
+  }
+
+  public void testOverrideInsideRecord() throws Exception {
+    myFixture.configureByText("a.erl", "bar(Record, Record2) -> Rec<caret>#data{}.");
+    myFixture.completeBasic();
+    myFixture.type('\t');
+    myFixture.checkResult("bar(Record, Record2) -> Record#data{}.");
   }
 }

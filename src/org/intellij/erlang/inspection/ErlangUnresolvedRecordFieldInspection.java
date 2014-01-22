@@ -34,7 +34,7 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase 
         super.visitRecordField(o);
         ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(o, ErlangRecordExpression.class);
         if (recordExpression != null) {
-          PsiReference reference = recordExpression.getReference();
+          PsiReference reference = recordExpression.getReferenceInternal();
           if (reference != null && reference.resolve() == null) {
             return;
           }
@@ -49,5 +49,4 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase 
       }
     });
   }
-
 }

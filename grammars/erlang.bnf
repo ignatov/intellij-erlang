@@ -397,7 +397,7 @@ tuple_expression ::= '{' (&'}' | exprs) '}' {pin=1}
 
 record_expression ::= expression record_tail {
   pin=2
-  methods = [getReference]
+  methods = [getReferenceInternal]
 }
 private record_tail ::= record_head (record_field_ref | record_tuple | ()) {pin=1}
 private record_head ::= record_head_classic | macros &('{'|'.' q_atom &(!('(')))
