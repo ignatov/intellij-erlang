@@ -184,9 +184,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
             //noinspection unchecked
             boolean insideImport = PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective;
-            PsiElement dot = PsiTreeUtil.prevVisibleLeaf(position);
-            boolean isDot = dot != null && dot.getNode().getElementType() == ErlangTypes.ERL_DOT;
-            if (inside || (inConsole && !isDot) || insideImport) {
+            if (inside || (inConsole && !isDot(position)) || insideImport) {
               suggestModules(result, position, !insideImport);
             }
           }
@@ -194,6 +192,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, null));
           }
         }
+      }
+
+      private boolean isDot(@NotNull PsiElement position) {
+        PsiElement dot = PsiTreeUtil.prevVisibleLeaf(position);
+        return dot != null && dot.getNode().getElementType() == ErlangTypes.ERL_DOT;
       }
     });
     extend(CompletionType.SMART, psiElement().inside(true, psiElement(ErlangArgumentList.class)), new CompletionProvider<CompletionParameters>() {
