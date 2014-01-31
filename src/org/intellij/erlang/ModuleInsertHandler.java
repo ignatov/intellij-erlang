@@ -1,5 +1,6 @@
 package org.intellij.erlang;
 
+import com.intellij.codeInsight.AutoPopupController;
 import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.editor.Document;
@@ -35,6 +36,7 @@ public class ModuleInsertHandler extends SingleCharInsertHandler {
       context.setTailOffset(tailOffset + 2);
     }
     if (myWithColon) {
+      AutoPopupController.getInstance(context.getProject()).autoPopupMemberLookup(context.getEditor(), null);
       super.handleInsert(context, item);
     }
   }
