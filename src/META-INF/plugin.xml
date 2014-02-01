@@ -78,7 +78,7 @@
         <inlineActionHandler implementation="org.intellij.erlang.ErlangInlineVariableHandler"/>
 
         <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler"/>
-        <typedHandler implementation="org.intellij.erlang.editor.ErlangBinaryTypedHandler" id="ErlangBinary"/>
+        <typedHandler implementation="org.intellij.erlang.editor.ErlangTypedHandler" id="ErlangBinary"/>
         <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterHandler" id="ErlangEnter"/>
 
         <extendWordSelectionHandler implementation="org.intellij.erlang.editor.ErlangWordSelectioner" order="last"/>

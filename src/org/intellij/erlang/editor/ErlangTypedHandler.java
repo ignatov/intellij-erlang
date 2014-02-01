@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.editor;
 
+import com.intellij.codeInsight.AutoPopupController;
 import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.editorActions.TypedHandlerDelegate;
 import com.intellij.codeInsight.highlighting.BraceMatcher;
@@ -31,7 +32,19 @@ import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangBinaryTypedHandler extends TypedHandlerDelegate {
+public class ErlangTypedHandler extends TypedHandlerDelegate {
+  @Override
+  public Result checkAutoPopup(char c, Project project, Editor editor, PsiFile file) {
+    if (!(file instanceof ErlangFile)) return super.checkAutoPopup(c, project, editor, file);
+
+    AutoPopupController autoPopupController = AutoPopupController.getInstance(project);
+    if (c == ':') {
+      autoPopupController.autoPopupMemberLookup(editor, null);
+      return Result.STOP;
+    }
+
+    return super.checkAutoPopup(c, project, editor, file);
+  }
 
   @Override
   public Result charTyped(char c, Project project, @NotNull Editor editor, @NotNull PsiFile file) {
