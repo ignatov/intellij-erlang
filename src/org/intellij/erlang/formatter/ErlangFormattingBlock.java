@@ -159,7 +159,6 @@ public class ErlangFormattingBlock extends AbstractBlock {
     Alignment fromStrategy = calculateAlignmentFromStrategy(parent, child);
     if (fromStrategy != null) return fromStrategy;
 
-
     if (PARENTHESIS_CONTAINERS.contains(parentType)) {
       if (childType != ERL_PAR_LEFT && childType != ERL_PAR_RIGHT && childType != ERL_COMMA) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
