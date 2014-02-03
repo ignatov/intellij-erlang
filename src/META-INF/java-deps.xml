@@ -40,4 +40,10 @@
       <implementation-class>org.intellij.erlang.compilation.ErlangDependenciesManager</implementation-class>
     </component>
   </project-components>
+  <actions>
+    <action id="Erlang.MarkAsIncludeDirectory"
+            class="org.intellij.erlang.roots.ErlangMarkIncludeSourceRootAction">
+      <add-to-group group-id="MarkRootGroup"/>
+    </action>
+  </actions>
 </idea-plugin>
