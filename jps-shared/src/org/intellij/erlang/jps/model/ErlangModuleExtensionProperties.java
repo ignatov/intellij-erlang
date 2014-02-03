@@ -8,11 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ErlangModuleExtensionProperties {
-  @Tag("includePaths")
-  @AbstractCollection(surroundWithTag = false, elementTag = "path")
-  //should not contain duplicate elements
-  public List<String> myIncludePaths = ContainerUtil.newArrayList();
-
   @Tag("parseTransforms")
   @AbstractCollection(surroundWithTag = false, elementTag = "transform")
   //should not contain duplicate elements
@@ -22,7 +17,6 @@ public class ErlangModuleExtensionProperties {
   }
 
   public ErlangModuleExtensionProperties(@NotNull ErlangModuleExtensionProperties props) {
-    myIncludePaths = ContainerUtil.newArrayList(props.myIncludePaths);
     myParseTransforms = ContainerUtil.newArrayList(props.myParseTransforms);
   }
 }

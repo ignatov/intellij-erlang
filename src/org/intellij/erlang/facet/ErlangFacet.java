@@ -23,7 +23,6 @@ public class ErlangFacet extends Facet<ErlangFacetConfiguration> {
   public static void createFacet(@NotNull Module module) {
     FacetManager facetManager = FacetManager.getInstance(module);
     ErlangFacet facet = facetManager.createFacet(FacetType.findInstance(ErlangFacetType.class), ErlangFacetConstants.NAME, null);
-    facet.getConfiguration().addIncludeDirectoriesToIncludePath(module);
     ModifiableFacetModel facetModel = facetManager.createModifiableModel();
     facetModel.addFacet(facet);
     facetModel.commit();

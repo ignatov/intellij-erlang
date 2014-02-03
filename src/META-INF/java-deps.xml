@@ -25,9 +25,9 @@
     <projectConfigurable instance="org.intellij.erlang.configuration.ErlangCompilerOptionsConfigurable" parentId="project.propCompiler" id="Erlang compiler"
                          displayName="Erlang Compiler" />
 
-    <localInspection language="Erlang" shortName="ErlangFacetConfigurationIssue" displayName="Facet configuration issues"
+    <localInspection language="Erlang" shortName="ErlangIncludeDirectories" displayName="Include directories configuration issues"
                      groupName="Erlang" enabledByDefault="true" level="WARNING"
-                     implementationClass="org.intellij.erlang.inspection.ErlangFacetConfigurationIssueInspection"/>
+                     implementationClass="org.intellij.erlang.inspection.ErlangIncludeDirectoriesInspection"/>
 
     <projectStructureDetector implementation="org.intellij.erlang.editor.ErlangProjectStructureDetector"/>
     <projectImportProvider implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportProvider"/>

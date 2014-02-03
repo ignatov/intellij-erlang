@@ -7,20 +7,22 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.Condition;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangModuleType;
-import org.intellij.erlang.facet.ErlangFacet;
-import org.intellij.erlang.facet.ErlangFacetConfiguration;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool {
+public class ErlangIncludeDirectoriesInspection extends LocalInspectionTool {
   @Nullable
   @Override
   public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
@@ -28,11 +30,9 @@ public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool
     VirtualFile file = psiFile.getVirtualFile();
     final Module module = file != null ? ModuleUtilCore.findModuleForFile(file, psiFile.getProject()) : null;
     if (module == null) return ProblemDescriptor.EMPTY_ARRAY;
-    ErlangFacet facet = ErlangFacet.getFacet(module);
-    if (facet == null) return createProblemDescriptors(psiFile, "Erlang facet is not configured.", manager, isOnTheFly);
-    List<String> notIncludedPaths = getIncludeFoldersNotInIncludePath(module, facet.getConfiguration());
+    List<VirtualFile> notIncludedPaths = getIncludeFoldersNotMarkedAsIncludeDirectories(module);
     if (!notIncludedPaths.isEmpty()) {
-      return createProblemDescriptors(psiFile, "Some 'include' folders are not marked as include paths.", manager, isOnTheFly);
+      return createProblemDescriptors(psiFile, "Some 'include' folders are not marked as include directories.", manager, isOnTheFly);
     }
     return ProblemDescriptor.EMPTY_ARRAY;
   }
@@ -40,28 +40,40 @@ public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool
   private static ProblemDescriptor[] createProblemDescriptors(PsiFile psiFile, String message, InspectionManager manager, boolean isOnTheFly) {
     return new ProblemDescriptor[]{
       manager.createProblemDescriptor(
-        psiFile, message, new LocalQuickFix[]{new ErlangFacetQuickFix(true), new ErlangFacetQuickFix(false)},
+        psiFile, message, new LocalQuickFix[]{new ErlangIncludeDirectoriesQuickFix(true), new ErlangIncludeDirectoriesQuickFix(false)},
         ProblemHighlightType.GENERIC_ERROR_OR_WARNING, isOnTheFly, false)
     };
   }
 
-  private static List<String> getIncludeFoldersNotInIncludePath(Module module, ErlangFacetConfiguration configuration) {
-    final List<String> includePaths = configuration.getIncludePaths();
-    List<String> includeFolderPaths = ErlangFacetConfiguration.getIncludeFolderPaths(module);
-    return ContainerUtil.filter(includeFolderPaths, new Condition<String>() {
+  private static List<VirtualFile> getIncludeFoldersNotMarkedAsIncludeDirectories(Module module) {
+    final List<VirtualFile> includeDirectories = ErlangIncludeDirectoryUtil.getIncludeDirectories(module);
+    List<VirtualFile> includeFolders = getIncludeFolders(module);
+    return ContainerUtil.filter(includeFolders, new Condition<VirtualFile>() {
       @Override
-      public boolean value(String includeFolderPath) {
-        return !includePaths.contains(includeFolderPath);
+      public boolean value(VirtualFile includeFolderPath) {
+        return !includeDirectories.contains(includeFolderPath);
       }
     });
   }
 
-  private static class ErlangFacetQuickFix implements LocalQuickFix {
+  private static List<VirtualFile> getIncludeFolders(Module module) {
+    List<VirtualFile> includeFolders = new ArrayList<VirtualFile>();
+    VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
+    for (VirtualFile contentRoot : contentRoots) {
+      VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include");
+      if (includeDirectory != null) {
+        includeFolders.add(includeDirectory);
+      }
+    }
+    return includeFolders;
+  }
+
+  private static class ErlangIncludeDirectoriesQuickFix implements LocalQuickFix {
     private boolean myDoFix;
     private final String myName;
 
-    protected ErlangFacetQuickFix(boolean doFix) {
-      myName = doFix ? "Setup facets" : "Dismiss";
+    protected ErlangIncludeDirectoriesQuickFix(boolean doFix) {
+      myName = doFix ? "Mark folders" : "Dismiss";
       myDoFix = doFix;
     }
 
@@ -73,7 +85,7 @@ public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool
         }
       }
       else {
-        new DisableInspectionToolAction(new ErlangFacetConfigurationIssueInspection()).invoke(project, null, descriptor.getPsiElement().getContainingFile());
+        new DisableInspectionToolAction(new ErlangIncludeDirectoriesInspection()).invoke(project, null, descriptor.getPsiElement().getContainingFile());
       }
     }
 
@@ -91,13 +103,9 @@ public class ErlangFacetConfigurationIssueInspection extends LocalInspectionTool
 
     private static void doFix(@NotNull Module module) {
       if (ModuleType.get(module) != ErlangModuleType.getInstance()) return;
-      ErlangFacet facet = ErlangFacet.getFacet(module);
-      if (facet == null) {
-        ErlangFacet.createFacet(module);
-      }
-      else {
-        ErlangFacetConfiguration configuration = facet.getConfiguration();
-        configuration.addIncludeDirectoriesToIncludePath(module);
+      List<VirtualFile> includeFolders = getIncludeFoldersNotMarkedAsIncludeDirectories(module);
+      for (VirtualFile includeFolder : includeFolders) {
+        ErlangIncludeDirectoryUtil.markAsIncludeDirectory(module, includeFolder);
       }
     }
   }

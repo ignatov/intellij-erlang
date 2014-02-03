@@ -2,16 +2,10 @@ package org.intellij.erlang.facet.ui;
 
 import com.intellij.facet.ui.FacetEditorContext;
 import com.intellij.facet.ui.FacetEditorTab;
-import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.projectRoots.ui.PathEditor;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.text.CharFilter;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
-import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ErlangFacetConfiguration;
@@ -20,32 +14,17 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ErlangFacetEditor extends FacetEditorTab {
   private JPanel myRootPanel;
-  private JPanel myIncludePathsEditorPanel;
   private JTextField myParseTransformsEditorField;
 
   private final ErlangFacetConfiguration myConfiguration;
-  private final PathEditor myIncludePathsEditor;
   private boolean myIsModified = false;
 
-  public ErlangFacetEditor(FacetEditorContext editorContext, ErlangFacetConfiguration configuration) {
-    if (editorContext.isNewFacet()) {
-      configuration.addIncludeDirectoriesToIncludePath(editorContext.getModule());
-    }
+  public ErlangFacetEditor(@SuppressWarnings("UnusedParameters") FacetEditorContext editorContext, ErlangFacetConfiguration configuration) {
     myConfiguration = configuration;
-
-    FileChooserDescriptor chooserDescriptor = new FileChooserDescriptor(false, true, false, false, false, true);
-    myIncludePathsEditor = new PathEditor(chooserDescriptor);
-    myIncludePathsEditor.setAddBaseDir(ModuleRootManager.getInstance(editorContext.getModule()).getContentRoots()[0]);
-
-    JComponent includePathsEditorComponent = myIncludePathsEditor.createComponent();
-    myIncludePathsEditorPanel.add(includePathsEditorComponent, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, includePathsEditorComponent.getMinimumSize(), includePathsEditorComponent.getPreferredSize(), includePathsEditorComponent.getMaximumSize()));
-
     myParseTransformsEditorField.getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
       protected void textChanged(DocumentEvent e) {
@@ -69,12 +48,11 @@ public class ErlangFacetEditor extends FacetEditorTab {
 
   @Override
   public boolean isModified() {
-    return myIncludePathsEditor.isModified() || myIsModified;
+    return myIsModified;
   }
 
   @Override
   public void reset() {
-    myIncludePathsEditor.resetPath(getConfigurationIncludeDirectories());
     myParseTransformsEditorField.setText(getConfigurationParseTransforms());
     myIsModified = false;
   }
@@ -85,29 +63,8 @@ public class ErlangFacetEditor extends FacetEditorTab {
 
   @Override
   public void apply() throws ConfigurationException {
-    myIncludePathsEditor.resetPath(Arrays.asList(myIncludePathsEditor.getRoots()));
-    myConfiguration.setIncludePathsFrom(getUiIncludeDirectories());
     myConfiguration.setParseTransformsFrom(getUiParseTransforms());
     myIsModified = false;
-  }
-
-  private List<VirtualFile> getConfigurationIncludeDirectories() {
-    List<String> includePaths = myConfiguration.getIncludePaths();
-    List<VirtualFile> includeDirectories = new ArrayList<VirtualFile>(includePaths.size());
-    for (String includePath : includePaths) {
-      VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
-      ContainerUtil.addIfNotNull(includeDirectories, includeDir);
-    }
-    return includeDirectories;
-  }
-
-  private List<String> getUiIncludeDirectories() {
-    VirtualFile[] includeDirs = myIncludePathsEditor.getRoots();
-    List<String> includePaths = new ArrayList<String>(includeDirs.length);
-    for (VirtualFile includeDir : includeDirs) {
-      includePaths.add(includeDir.getPath());
-    }
-    return includePaths;
   }
 
   private String getConfigurationParseTransforms() {

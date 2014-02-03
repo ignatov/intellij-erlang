@@ -33,10 +33,7 @@ import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
-import org.jetbrains.jps.model.module.JpsDependencyElement;
-import org.jetbrains.jps.model.module.JpsModule;
-import org.jetbrains.jps.model.module.JpsModuleDependency;
-import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
+import org.jetbrains.jps.model.module.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,11 +158,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   }
 
   private static void addIncludePaths(@NotNull GeneralCommandLine commandLine, @Nullable JpsModule module) {
-    JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
-    if (extension != null) {
-      for (String includePath : extension.getIncludePaths()) {
-        commandLine.addParameters("-I", includePath);
-      }
+    if (module == null) return;
+    for (JpsTypedModuleSourceRoot<JpsDummyElement> includeDirectory : module.getSourceRoots(ErlangIncludeSourceRootType.INSTANCE)) {
+      commandLine.addParameters("-I", includeDirectory.getFile().getPath());
     }
   }
 

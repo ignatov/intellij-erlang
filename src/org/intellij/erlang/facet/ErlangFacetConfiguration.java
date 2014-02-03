@@ -5,22 +5,16 @@ import com.intellij.facet.ui.FacetEditorContext;
 import com.intellij.facet.ui.FacetEditorTab;
 import com.intellij.facet.ui.FacetValidatorsManager;
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
-import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ui.ErlangFacetEditor;
 import org.intellij.erlang.jps.model.ErlangModuleExtensionProperties;
 import org.jdom.Element;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class ErlangFacetConfiguration implements FacetConfiguration, PersistentStateComponent<ErlangModuleExtensionProperties> {
@@ -48,37 +42,6 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
   @Override
   public void loadState(ErlangModuleExtensionProperties state) {
     myState = state;
-  }
-
-  public List<String> getIncludePaths() {
-    return Collections.unmodifiableList(myState.myIncludePaths);
-  }
-
-  public void setIncludePathsFrom(Iterable<String> includePaths) {
-    myState.myIncludePaths = ContainerUtil.newArrayList(ContainerUtil.newLinkedHashSet(includePaths));
-  }
-  
-  public void addIncludeDirectoriesToIncludePath(@NotNull Module module) {
-    addIncludePaths(getIncludeFolderPaths(module));
-  }
-  
-  public void addIncludePaths(Collection<String> newIncludePaths) {
-    if (newIncludePaths.isEmpty()) return;
-    //noinspection unchecked
-    setIncludePathsFrom(ContainerUtil.concat(myState.myIncludePaths, newIncludePaths));
-  }
-
-  @NotNull 
-  public static List<String> getIncludeFolderPaths(@NotNull Module module) {
-    List<String> includeFolderPaths = new ArrayList<String>();
-    VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
-    for (VirtualFile contentRoot : contentRoots) {
-      VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include");
-      if (includeDirectory != null) {
-        includeFolderPaths.add(includeDirectory.getPath());
-      }
-    }
-    return includeFolderPaths;
   }
 
   public List<String> getParseTransforms() {

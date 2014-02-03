@@ -38,10 +38,6 @@ public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangM
     return myProperties;
   }
 
-  public List<String> getIncludePaths() {
-    return Collections.unmodifiableList(myProperties.myIncludePaths);
-  }
-
   public List<String> getParseTransforms() {
     return Collections.unmodifiableList(myProperties.myParseTransforms);
   }
