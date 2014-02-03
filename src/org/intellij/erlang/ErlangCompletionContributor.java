@@ -32,7 +32,6 @@ import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
@@ -48,7 +47,6 @@ import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashSet;
-import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
@@ -57,6 +55,7 @@ import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
+import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.types.ErlangExpressionType;
 import org.jetbrains.annotations.NotNull;
@@ -380,12 +379,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
     result.addAll(getModulePathLookupElements(parentFile, includeOwner, includeText));
     //search in include directories
     Module module = ModuleUtilCore.findModuleForPsiElement(file);
-    ErlangFacet facet = module != null ? ErlangFacet.getFacet(module) : null;
-    if (facet != null) {
-      for (String includePath : facet.getConfiguration().getIncludePaths()) {
-        VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
-        result.addAll(getModulePathLookupElements(includeDir, includeOwner, includeText));
-      }
+    for (VirtualFile includeDir : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
+      result.addAll(getModulePathLookupElements(includeDir, includeOwner, includeText));
     }
     if (ErlangSystemUtil.isSmallIde()) {
       VirtualFile otpAppRoot = ErlangPsiImplUtil.getContainingOtpAppRoot(file.getProject(), includeOwner);
