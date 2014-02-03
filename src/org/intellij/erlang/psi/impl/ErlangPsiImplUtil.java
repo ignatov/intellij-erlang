@@ -36,7 +36,6 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.patterns.PatternCondition;
@@ -58,10 +57,10 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
-import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
+import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
@@ -884,15 +883,12 @@ public class ErlangPsiImplUtil {
     //let's search in include directories
     if (containingVirtualFile != null) {
       Module module = ModuleUtilCore.findModuleForFile(containingVirtualFile, project);
-      ErlangFacet erlangFacet = module != null ? ErlangFacet.getFacet(module) : null;
-      if (erlangFacet != null) {
-        for (String includePath : erlangFacet.getConfiguration().getIncludePaths()) {
-          VirtualFile includeDir = LocalFileSystem.getInstance().findFileByPath(includePath);
-          ErlangFile includedFile = getRelativeErlangFile(project, relativePath, includeDir);
-          if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
-        }
+      for (VirtualFile includeDir : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
+        ErlangFile includedFile = getRelativeErlangFile(project, relativePath, includeDir);
+        if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
       }
     }
+    //TODO consider providing source roots functionality to small IDEs
     if (ErlangSystemUtil.isSmallIde()) {
       VirtualFile appRoot = getContainingOtpAppRoot(project, parent);
       return getDirectlyIncludedFilesForSmallIde(project, relativePath, appRoot);
