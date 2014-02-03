@@ -17,6 +17,7 @@
 package org.intellij.erlang.roots;
 
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.roots.ContentEntry;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
@@ -35,5 +36,9 @@ public final class ErlangIncludeDirectoryUtil {
     if (module == null) return ContainerUtil.emptyList();
     ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
     return rootManager.getSourceRoots(ErlangIncludeSourceRootType.INSTANCE);
+  }
+
+  public static void markAsIncludeDirectory(@NotNull ContentEntry contentEntry, @NotNull VirtualFile directory) {
+    contentEntry.addSourceFolder(directory, ErlangIncludeSourceRootType.INSTANCE);
   }
 }

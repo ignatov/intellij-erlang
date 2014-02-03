@@ -51,6 +51,7 @@ import org.intellij.erlang.ErlangModuleType;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetConfiguration;
 import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -241,6 +242,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         final ContentEntry content = rootModel.addContentEntry(importedOtpApp.getRoot());
         addSourceDirToContent(content, ideaModuleDir, "src", false);
         addSourceDirToContent(content, ideaModuleDir, "test", true);
+        addIncludeDirectories(content, importedOtpApp);
         // Exclude standard folders
         excludeDirFromContent(content, ideaModuleDir, "doc");
         // Initialize output paths according to Rebar conventions.
@@ -286,7 +288,6 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
           }
           if (facet != null) {
             ErlangFacetConfiguration configuration = facet.getConfiguration();
-            configuration.addIncludePaths(app.getIncludePaths());
             configuration.addParseTransforms(app.getParseTransforms());
           }
         }
@@ -318,6 +319,12 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     final VirtualFile sourceDirFile = root.findChild(sourceDir);
     if (sourceDirFile != null) {
       content.addSourceFolder(sourceDirFile, test);
+    }
+  }
+
+  private static void addIncludeDirectories(@NotNull ContentEntry content, ImportedOtpApp app) {
+    for (VirtualFile includeDirectory : app.getIncludePaths()) {
+      ErlangIncludeDirectoryUtil.markAsIncludeDirectory(content, includeDirectory);
     }
   }
 

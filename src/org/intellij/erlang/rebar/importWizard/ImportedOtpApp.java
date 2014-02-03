@@ -37,7 +37,7 @@ final class ImportedOtpApp {
   private final String myName;
   private final VirtualFile myRoot;
   private final Set<String> myDeps = ContainerUtil.newHashSet();
-  private final Set<String> myIncludePaths = ContainerUtil.newHashSet();
+  private final Set<VirtualFile> myIncludePaths = ContainerUtil.newHashSet();
   private final Set<String> myParseTransforms = ContainerUtil.newHashSet();
   private VirtualFile myIdeaModuleFile;
   private Module myModule;
@@ -47,6 +47,7 @@ final class ImportedOtpApp {
     myRoot = root;
     addDependenciesFromAppFile(appConfig);
     addInfoFromRebarConfig();
+    addIncludePath("include");
   }
 
   @NotNull
@@ -64,7 +65,7 @@ final class ImportedOtpApp {
     return myDeps;
   }
 
-  public Set<String> getIncludePaths() {
+  public Set<VirtualFile> getIncludePaths() {
     return myIncludePaths;
   }
 
@@ -163,7 +164,7 @@ final class ImportedOtpApp {
   private void addIncludePath(String relativeIncludePath) {
     VirtualFile path = VfsUtilCore.findRelativeFile(relativeIncludePath, myRoot);
     if (path != null) {
-      myIncludePaths.add(path.getPath());
+      myIncludePaths.add(path);
     }
   }
 }

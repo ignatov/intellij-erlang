@@ -33,8 +33,6 @@ import com.intellij.openapi.roots.impl.ModuleRootManagerImpl;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.Consumer;
 import junit.framework.Assert;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
@@ -48,8 +46,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   private static final String MODULE_DIR = "MODULE_DIR";
@@ -141,11 +137,11 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   public void testIncludePathsInRebarConfig1() throws Exception {
-    doRebarIncludePathsTest();
+    doTest(null);
   }
 
   public void testIncludePathsInRebarConfig2() throws Exception {
-    doRebarIncludePathsTest();
+    doTest(null);
   }
 
   public void testParseTransformInRebarConfig() throws Exception {
@@ -155,28 +151,6 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
     assertNotNull(facet);
     assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
-  }
-
-  private void doRebarIncludePathsTest() throws Exception {
-    String projectPath = getProject().getBaseDir().getPath();
-    String importFromPath = projectPath + "/test/";
-    Module module = importProjectFrom(importFromPath, null,
-      new RebarProjectImportProvider(new RebarProjectImportBuilder()));
-    ErlangFacet facet = ErlangFacet.getFacet(module);
-    assertNotNull(facet);
-    List<String> actualIncludePaths = facet.getConfiguration().getIncludePaths();
-    List<String> expectedIncludePaths = new ArrayList<String>();
-    for (VirtualFile contentRoot : ModuleRootManager.getInstance(module).getContentRoots()) {
-      VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include1");
-      if (includeDirectory != null) {
-        expectedIncludePaths.add(includeDirectory.getPath());
-      }
-      includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include2");
-      if (includeDirectory != null) {
-        expectedIncludePaths.add(includeDirectory.getPath());
-      }
-    }
-    assertSameElements(actualIncludePaths, expectedIncludePaths);
   }
 
   private static void createMockSdk() {
@@ -237,14 +211,5 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     FacetManager facetManager = FacetManager.getInstance(module);
     ErlangFacet facet = facetManager.getFacetByType(ErlangFacetType.TYPE_ID);
     assertNotNull("Erlang facet was not added.", facet);
-    List<String> actualIncludePaths = facet.getConfiguration().getIncludePaths();
-    List<String> expectedIncludePaths = new ArrayList<String>();
-    for (VirtualFile contentRoot : ModuleRootManager.getInstance(module).getContentRoots()) {
-      VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include");
-      if (includeDirectory != null) {
-        expectedIncludePaths.add(includeDirectory.getPath());
-      }
-    }
-    assertSameElements(actualIncludePaths, expectedIncludePaths);
   }
 }
