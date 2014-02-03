@@ -15,6 +15,7 @@ public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangM
 
   private final ErlangModuleExtensionProperties myProperties;
 
+  @SuppressWarnings("UnusedDeclaration")
   public JpsErlangModuleExtension() {
     myProperties = new ErlangModuleExtensionProperties();
   }

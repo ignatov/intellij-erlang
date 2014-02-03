@@ -16,6 +16,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="jps-plugin" />
     <orderEntry type="library" name="OtpErlang" level="project" />
+    <orderEntry type="module" module-name="jps-shared" />
   </component>
 </module>
 

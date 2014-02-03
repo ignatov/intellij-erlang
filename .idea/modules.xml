@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Erlang.iml" filepath="$PROJECT_DIR$/Erlang.iml" />
       <module fileurl="file://$PROJECT_DIR$/jps-plugin/jps-plugin.iml" filepath="$PROJECT_DIR$/jps-plugin/jps-plugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jps-shared/jps-shared.iml" filepath="$PROJECT_DIR$/jps-shared/jps-shared.iml" />
     </modules>
   </component>
 </project>
