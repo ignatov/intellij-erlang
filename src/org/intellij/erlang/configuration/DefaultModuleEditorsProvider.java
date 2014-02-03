@@ -19,28 +19,26 @@ package org.intellij.erlang.configuration;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleConfigurationEditor;
 import com.intellij.openapi.module.ModuleType;
-import com.intellij.openapi.roots.ModifiableRootModel;
-import com.intellij.openapi.roots.ui.configuration.*;
+import com.intellij.openapi.roots.ui.configuration.ClasspathEditor;
+import com.intellij.openapi.roots.ui.configuration.ModuleConfigurationEditorProvider;
+import com.intellij.openapi.roots.ui.configuration.ModuleConfigurationState;
+import com.intellij.openapi.roots.ui.configuration.OutputEditor;
 import org.intellij.erlang.ErlangModuleType;
+import org.intellij.erlang.roots.ErlangContentEntriesEditor;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DefaultModuleEditorsProvider implements ModuleConfigurationEditorProvider {
   public ModuleConfigurationEditor[] createEditors(ModuleConfigurationState state) {
-    ModifiableRootModel rootModel = state.getRootModel();
-    Module module = rootModel.getModule();
-    if (!(ModuleType.get(module) instanceof ErlangModuleType)) {
-      return ModuleConfigurationEditor.EMPTY;
+    Module module = state.getRootModel().getModule();
+    if (ModuleType.get(module) instanceof ErlangModuleType) {
+      return new ModuleConfigurationEditor[]{
+        new ErlangContentEntriesEditor(module.getName(), state),
+        new OutputEditorEx(state),
+        new ClasspathEditor(state)
+      };
     }
-
-    String moduleName = module.getName();
-    List<ModuleConfigurationEditor> editors = new ArrayList<ModuleConfigurationEditor>();
-    editors.add(new ContentEntriesEditor(moduleName, state));
-    editors.add(new OutputEditorEx(state));
-    editors.add(new ClasspathEditor(state));
-    return editors.toArray(new ModuleConfigurationEditor[editors.size()]);
+    return ModuleConfigurationEditor.EMPTY;
   }
 
   static class OutputEditorEx extends OutputEditor {

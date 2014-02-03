@@ -15,6 +15,8 @@ import org.jetbrains.jps.model.serialization.JpsProjectExtensionSerializer;
 import org.jetbrains.jps.model.serialization.facet.JpsFacetConfigurationSerializer;
 import org.jetbrains.jps.model.serialization.library.JpsSdkPropertiesSerializer;
 import org.jetbrains.jps.model.serialization.module.JpsModulePropertiesSerializer;
+import org.jetbrains.jps.model.serialization.module.JpsModuleSourceRootDummyPropertiesSerializer;
+import org.jetbrains.jps.model.serialization.module.JpsModuleSourceRootPropertiesSerializer;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +24,12 @@ import java.util.List;
 
 public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtension {
   public static final String ERLANG_SDK_TYPE_ID = "Erlang SDK";
+
+  @NotNull
+  @Override
+  public List<? extends JpsModuleSourceRootPropertiesSerializer<?>> getModuleSourceRootPropertiesSerializers() {
+    return Collections.singletonList(new JpsModuleSourceRootDummyPropertiesSerializer(ErlangIncludeSourceRootType.INSTANCE, "erlang-include"));
+  }
 
   @NotNull
   @Override

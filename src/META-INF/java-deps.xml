@@ -33,6 +33,7 @@
     <projectImportProvider implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportProvider"/>
     <projectImportBuilder implementation="org.intellij.erlang.rebar.importWizard.RebarProjectImportBuilder"/>
     <projectOpenProcessor implementation="org.intellij.erlang.rebar.importWizard.RebarProjectOpenProcessor"/>
+    <projectStructure.sourceRootEditHandler implementation="org.intellij.erlang.roots.ErlangIncludeSourceRootEditHandler"/>
   </extensions>
   <project-components>
     <component>
