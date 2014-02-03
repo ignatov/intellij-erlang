@@ -18,10 +18,12 @@ package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.inspection.ErlangUnresolvedIncludeInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedIncludeLibInspection;
+import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
@@ -57,7 +59,9 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
   private void doIncludeTest(String expectedIncludePath, String ... files) throws Exception {
     myFixture.configureByFiles(files);
     runQuickFix();
-    checkFacetContainsIncludePath(expectedIncludePath);
+    List<VirtualFile> includeDirectories = ErlangIncludeDirectoryUtil.getIncludeDirectories(myFixture.getModule());
+    assertEquals(1, includeDirectories.size());
+    assertTrue(includeDirectories.get(0).getPath().endsWith(expectedIncludePath));
   }
 
   private void runQuickFix() {
@@ -65,14 +69,5 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
     IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
     assertNotNull(action);
     myFixture.launchAction(action);
-  }
-
-  private void checkFacetContainsIncludePath(String expectedIncludePath) {
-    ErlangFacet facet = ErlangFacet.getFacet(myFixture.getModule());
-    assert facet != null;
-    List<String> includePaths = facet.getConfiguration().getIncludePaths();
-    assertEquals(1, includePaths.size());
-    String includePath = includePaths.get(0);
-    assertEquals("/src/" + expectedIncludePath, includePath);
   }
 }

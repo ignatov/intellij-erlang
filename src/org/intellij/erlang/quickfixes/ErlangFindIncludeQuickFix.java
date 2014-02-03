@@ -34,9 +34,8 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtilBase;
 import com.intellij.util.FileContentUtilCore;
 import org.intellij.erlang.ErlangIcons;
-import org.intellij.erlang.facet.ErlangFacet;
-import org.intellij.erlang.facet.ErlangFacetConfiguration;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -82,7 +81,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     }
     //Single file found
     if (matchFiles.length == 1) {
-      fixFacetUsingIncludeFile(problem, matchFiles[0]);
+      fixUsingIncludeFile(problem, matchFiles[0]);
       renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
     }
     //Multiple files -- allow user select which file should be imported
@@ -171,7 +170,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
             ApplicationManager.getApplication().runWriteAction(new Runnable() {
               @Override
               public void run() {
-                fixFacetUsingIncludeFile(problem, f);
+                fixUsingIncludeFile(problem, f);
                 renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
                 FileContentUtilCore.reparseFiles(Arrays.asList(problem.getContainingFile().getVirtualFile()));
               }
@@ -228,12 +227,12 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     p.showInBestPositionFor(problemEditor);
   }
 
-  private static void fixFacetUsingIncludeFile(PsiElement problem,
-                                               final PsiFile includeFile) {
+  private static void fixUsingIncludeFile(PsiElement problem,
+                                          final PsiFile includeFile) {
     //Search the module that contains the current(problem) file & fix facets
     final Module containedModule = ModuleUtilCore.findModuleForPsiElement(problem);
     if (containedModule == null) return;
-    addToModuleFacet(containedModule, includeFile.getVirtualFile());
+    ErlangIncludeDirectoryUtil.markAsIncludeDirectory(containedModule, includeFile.getVirtualFile().getParent());
   }
 
   /*
@@ -253,14 +252,6 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     return FilenameIndex.getFilesByName(project, fileName, GlobalSearchScope.allScope(project));
   }
 
-  private static void addToModuleFacet(Module module, VirtualFile includeFile) {
-    ErlangFacet facet = ErlangFacet.getFacet(module);
-    if (facet != null) {
-      ErlangFacetConfiguration configuration = facet.getConfiguration();
-      //add include path for folder, that contains include file ("include" folder if its otp application)
-      configuration.addIncludePaths(Arrays.asList(includeFile.getParent().getCanonicalPath()));
-    }
-  }
 }
 
 

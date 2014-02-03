@@ -18,7 +18,9 @@ package org.intellij.erlang.roots;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.roots.ContentEntry;
+import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
@@ -40,5 +42,19 @@ public final class ErlangIncludeDirectoryUtil {
 
   public static void markAsIncludeDirectory(@NotNull ContentEntry contentEntry, @NotNull VirtualFile directory) {
     contentEntry.addSourceFolder(directory, ErlangIncludeSourceRootType.INSTANCE);
+  }
+
+  public static void markAsIncludeDirectory(@NotNull Module module, @NotNull VirtualFile directory) {
+    ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
+    ModifiableRootModel rootModel = rootManager.getModifiableModel();
+    for (ContentEntry contentEntry : rootModel.getContentEntries()) {
+      VirtualFile contentRootDirectory = contentEntry.getFile();
+      if (contentRootDirectory != null && VfsUtilCore.isAncestor(contentRootDirectory, directory, false)) {
+        markAsIncludeDirectory(contentEntry, directory);
+        rootModel.commit();
+        return;
+      }
+    }
+    rootModel.dispose();
   }
 }
