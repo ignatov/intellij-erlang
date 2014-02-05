@@ -354,7 +354,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       assert tokenType != null;
       if (myBaseLexer != lexer) {
         tokenEndOffset = myBaseLexer.getTokenStart();
-        tokenType = new ErlangForeignLeafType(tokenType, lexer.getTokenText());
+        tokenType = new ErlangForeignLeafType(tokenType, lexer.getTokenText(), myLexersStack.size());
       }
       addToken(tokenEndOffset, tokenType);
       lexer.advance();

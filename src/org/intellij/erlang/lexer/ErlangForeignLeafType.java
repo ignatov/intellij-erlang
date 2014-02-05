@@ -23,7 +23,14 @@ import com.intellij.psi.tree.IElementType;
  * @author savenko
  */
 public class ErlangForeignLeafType extends ForeignLeafType {
-  public ErlangForeignLeafType(IElementType delegate, CharSequence value) {
+  private final int mySubstitutionDepth;
+
+  public ErlangForeignLeafType(IElementType delegate, CharSequence value, int substitutionDepth) {
     super(delegate, value);
+    mySubstitutionDepth = substitutionDepth;
+  }
+
+  public int getSubstitutionDepth() {
+    return mySubstitutionDepth;
   }
 }

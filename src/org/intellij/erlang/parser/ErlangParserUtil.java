@@ -148,17 +148,24 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     if (!GeneratedParserUtilBase.recursion_guard_(builder_, level_, funcName_)) {
       return false;
     }
-    if (!funcName_.equals("macros") && !funcName_.startsWith("macros_call") && nextTokenIsFast(builder_, ErlangTypes.ERL_QMARK)) {
-      PsiBuilder.Marker beforeMacroCallParsed = builder_.mark();
-      boolean macroCallParsed = ErlangParser.macros(builder_, level_);
-      if (!macroCallParsed || !(((Builder)builder_).getWrappedTokenType() instanceof ErlangForeignLeafType)) {
-        beforeMacroCallParsed.rollbackTo();
-      }
-      else {
-        beforeMacroCallParsed.drop();
-      }
+    if (!funcName_.equals("macros") && !funcName_.startsWith("macros_call")) {
+      consumeSubstitutedMacroCall((Builder) builder_, level_);
     }
     return true;
+  }
+
+  private static void consumeSubstitutedMacroCall(Builder builder, int level) {
+    if (!nextTokenIsFast(builder, ErlangTypes.ERL_QMARK)) return;
+    int macroCallSubstitutionDepth = builder.getNextTokenSubstitutionDepth();
+    PsiBuilder.Marker beforeMacroCallParsed = builder.mark();
+    boolean macroCallParsed = ErlangParser.macros(builder, level);
+    boolean macroWasSubstituted = macroCallSubstitutionDepth + 1 == builder.getNextTokenSubstitutionDepth();
+    if (!macroCallParsed || !macroWasSubstituted) {
+      beforeMacroCallParsed.rollbackTo();
+    }
+    else {
+      beforeMacroCallParsed.drop();
+    }
   }
 
   @SuppressWarnings("ClassNameSameAsAncestorName")
@@ -180,6 +187,12 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     @Nullable
     public IElementType getWrappedTokenType() {
       return super.getTokenType();
+    }
+
+    public int getNextTokenSubstitutionDepth() {
+      IElementType wrappedTokenType = getWrappedTokenType();
+      return wrappedTokenType instanceof ErlangForeignLeafType ?
+        ((ErlangForeignLeafType) wrappedTokenType).getSubstitutionDepth() : 1;
     }
   }
 }
