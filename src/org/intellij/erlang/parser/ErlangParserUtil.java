@@ -29,6 +29,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import gnu.trove.TObjectLongHashMap;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.lexer.ErlangForeignLeafType;
 import org.intellij.erlang.lexer.ErlangInterimTokenTypes;
@@ -177,15 +178,13 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     @Nullable
     @Override
     public IElementType getTokenType() {
-      IElementType tokenType = super.getTokenType();
-      while (tokenType instanceof ErlangForeignLeafType) {
-        tokenType = ((ErlangForeignLeafType) tokenType).getDelegate();
-      }
-      return tokenType;
+      IElementType tokenType = getWrappedTokenType();
+      return unwrap(tokenType);
     }
 
     @Nullable
     public IElementType getWrappedTokenType() {
+      skipForeignLeafWhitespace();
       return super.getTokenType();
     }
 
@@ -193,6 +192,21 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       IElementType wrappedTokenType = getWrappedTokenType();
       return wrappedTokenType instanceof ErlangForeignLeafType ?
         ((ErlangForeignLeafType) wrappedTokenType).getSubstitutionDepth() : 1;
+    }
+
+    private void skipForeignLeafWhitespace() {
+      IElementType tt;
+      while ((tt = super.getTokenType()) != null && ErlangParserDefinition.WS.contains(unwrap(tt))) {
+        advanceLexer();
+      }
+    }
+
+    @Nullable
+    private static IElementType unwrap(@Nullable IElementType tokenType) {
+      while (tokenType instanceof ErlangForeignLeafType) {
+        tokenType = ((ErlangForeignLeafType) tokenType).getDelegate();
+      }
+      return tokenType;
     }
   }
 }
