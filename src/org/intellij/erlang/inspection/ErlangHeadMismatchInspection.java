@@ -16,10 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.LocalInspectionToolSession;
-import com.intellij.codeInspection.LocalQuickFixBase;
-import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.codeInspection.*;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
@@ -63,10 +60,16 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
       String functionSignature = ErlangPsiImplUtil.createFunctionPresentation(function);
 
       if (!functionSignature.equals(clauseSignature)) {
-        registerProblem(problemsHolder, clauseHead, "Head mismatch: should be '" + functionSignature + "'",
-          new RenameFunctionClauseHeadQuickFix(functionName));
+        registerProblem(problemsHolder, clauseHead,
+          "Head mismatch: should be '" + functionSignature + "'", getFunctionHeadMismatchQuickFixes(clauseHead, functionName));
       }
     }
+  }
+
+  private static LocalQuickFix[] getFunctionHeadMismatchQuickFixes(ErlangQAtom clauseHead, String functionName) {
+    return ErlangPsiImplUtil.startsWithForeignLeaf(clauseHead) ?
+      LocalQuickFix.EMPTY_ARRAY :
+      new LocalQuickFixBase[]{new RenameFunctionClauseHeadQuickFix(functionName)};
   }
 
   private void checkFunExpression(ErlangFunExpression funExpression, ProblemsHolder problemsHolder) {

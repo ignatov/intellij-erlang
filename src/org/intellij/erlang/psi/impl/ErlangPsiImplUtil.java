@@ -45,6 +45,8 @@ import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.ResolveScopeManager;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.impl.source.resolve.reference.impl.PsiMultiReference;
+import com.intellij.psi.impl.source.tree.ForeignLeafPsiElement;
+import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
@@ -1716,6 +1718,10 @@ public class ErlangPsiImplUtil {
     ErlangQAtom module = moduleExpression == null ? null : moduleExpression.getQAtom();
     int arity = list == null ? -1 : list.getExpressionList().size();
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, module, arity);
+  }
+
+  public static boolean startsWithForeignLeaf(PsiElement e) {
+    return TreeUtil.findFirstLeaf(e.getNode()) instanceof ForeignLeafPsiElement;
   }
 
   public static boolean isWhitespaceOrComment(@NotNull PsiElement element) {
