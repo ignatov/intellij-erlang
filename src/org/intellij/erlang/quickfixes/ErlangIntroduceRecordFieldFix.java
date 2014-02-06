@@ -22,6 +22,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.psi.ErlangRecordExpression;
 import org.intellij.erlang.psi.ErlangTypedRecordFields;
@@ -37,7 +38,7 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-    PsiElement element = descriptor.getPsiElement();
+    PsiElement element = getProblemElementMacroAware(descriptor);
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     if (recordExpression != null) {
       PsiReference reference = recordExpression.getReferenceInternal();
@@ -48,12 +49,17 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
           String replace = fields.getText().replaceFirst("\\{", "").replace("}", "");
           boolean empty = StringUtil.isEmptyOrSpaces(replace);
 
-          String newFields = replace + (empty ? "" : " ,") + element.getText();
+          String newFields = replace + (empty ? "" : " ,") + getNewRecordFieldName(element);
           PsiElement recordFieldsFromText = ErlangElementFactory.createRecordFieldsFromText(project, newFields);
 
           fields.replace(recordFieldsFromText);
         }
       }
     }
+  }
+
+  private static String getNewRecordFieldName(PsiElement problemElement) {
+    PsiElement atom = problemElement instanceof ErlangQAtom ? ((ErlangQAtom) problemElement).getAtom() : null;
+    return atom != null ? atom.getText() : problemElement.getText();
   }
 }

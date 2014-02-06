@@ -926,7 +926,7 @@ public class ErlangPsiImplUtil {
   public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return processDeclarationRecursive(o, processor, state);
   }
-  
+
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     List<ErlangCrClause> crClauseList = o.getCrClauseList();

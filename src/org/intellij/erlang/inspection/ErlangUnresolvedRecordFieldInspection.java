@@ -24,6 +24,7 @@ import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.ErlangRecordExpression;
 import org.intellij.erlang.psi.ErlangRecordField;
 import org.intellij.erlang.psi.ErlangVisitor;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFieldFix;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,9 +45,11 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase 
 
         PsiReference reference = o.getReference();
         if (reference == null || reference.resolve() == null) {
-          ErlangQAtom atom = o.getFieldNameAtom();
-          if (atom == null || atom.getMacros() != null) return;
-          registerProblem(holder, atom, "Unresolved record field " + "'" + atom.getText() + "'", new ErlangIntroduceRecordFieldFix());
+          ErlangQAtom qAtom = o.getFieldNameAtom();
+          if (qAtom != null && qAtom.getMacros() == null) {
+            String description = "Unresolved record field " + "'" + ErlangPsiImplUtil.getName(qAtom) + "'";
+            registerProblemForeignTokensAware(holder, qAtom, description, new ErlangIntroduceRecordFieldFix());
+          }
         }
       }
     };
