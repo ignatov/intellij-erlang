@@ -25,17 +25,16 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilBase;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangMacros;
-import org.intellij.erlang.psi.ErlangMacrosDefinition;
-import org.intellij.erlang.psi.ErlangMacrosName;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.refactor.VariableTextBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 //TODO add macro arguments count selection (it should be either -1 or same as arguments count on the call site)
 public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
-
   @NotNull
   @Override
   public String getFamilyName() {
@@ -66,7 +65,7 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
       editor.getDocument().insertString(offset, "\n");
     }
 
-    Template template = createMacroDefinitionTemplate(project, macroName);
+    Template template = createMacroDefinitionTemplate(project, macroName, macro.getMacroCallArgumentList());
     editor.getCaretModel().moveToOffset(offset);
     TemplateManager.getInstance(project).startTemplate(editor, template);
   }
@@ -93,18 +92,40 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
     return null == elementBefore ? -1 : elementBefore.getTextRange().getStartOffset();
   }
 
-  private static Template createMacroDefinitionTemplate(Project project, String macroName) {
+  private static Template createMacroDefinitionTemplate(Project project, String macroName, @Nullable ErlangMacroCallArgumentList argumentList) {
     TemplateManager templateManager = TemplateManager.getInstance(project);
-
     Template template = templateManager.createTemplate("", "");
-
     template.setToReformat(true);
-    template.addTextSegment("-define(" + macroName + ", ");
+    template.addTextSegment("-define(" + macroName);
+    if (argumentList != null) {
+      addMacroArgumentsToTemplate(template, argumentList.getArgumentList().getExpressionList());
+    }
+    template.addTextSegment(", ");
     template.addVariable("macro_body", new ConstantNode("macro_body"), true);
     template.addTextSegment(").");
     template.addEndVariable();
     template.addTextSegment("\n");
-
     return template;
+  }
+
+  private static void addMacroArgumentsToTemplate(Template template, List<ErlangExpression> args) {
+    template.addTextSegment("(");
+    if (!args.isEmpty()) {
+      int argumentNumber = 0;
+      while (true) {
+        addMacroArgumentToTemplate(template, args.get(argumentNumber), argumentNumber);
+        argumentNumber++;
+        if (argumentNumber == args.size()) break;
+        template.addTextSegment(", ");
+      }
+    }
+    template.addTextSegment(")");
+  }
+
+  private static void addMacroArgumentToTemplate(Template template, ErlangExpression argument, int argumentNumber) {
+    VariableTextBuilder varNameBuilder = new VariableTextBuilder();
+    varNameBuilder.visitElement(argument);
+    String variableName = varNameBuilder.result();
+    template.addVariable("arg_" + argumentNumber, new ConstantNode(variableName), true);
   }
 }

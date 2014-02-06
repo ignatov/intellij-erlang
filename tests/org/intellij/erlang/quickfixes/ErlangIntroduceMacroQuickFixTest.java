@@ -35,6 +35,10 @@ public class ErlangIntroduceMacroQuickFixTest extends ErlangQuickFixTestBase {
   public void testSimple() throws Throwable                   { doIntroduceMacroTest(); }
   public void testWithMacro() throws Throwable                { doIntroduceMacroTest(); }
   public void testWithMacroSucceedingUsage() throws Throwable { doIntroduceMacroTest(); }
+  public void testNullaryMacro() throws Throwable             { doIntroduceMacroTest(); }
+  public void testUnaryMacro() throws Throwable               { doIntroduceMacroTest(); }
+  public void testBinaryMacro() throws Throwable              { doIntroduceMacroTest(); }
+  public void testTernaryMacro() throws Throwable             { doIntroduceMacroTest(); }
 
   private void doIntroduceMacroTest() { doTest("Introduce macro"); }
 }
