@@ -44,6 +44,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIoFormat()          { doTest(); }
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
+  public void testUnusedVariable()    { doTest(); }
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
   public void test200()               { doTest(); }

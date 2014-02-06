@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
@@ -44,6 +45,7 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
             PsiElement resolve = reference != null ? reference.resolve() : null;
             if (resolve != null) return;
 
+            //FIXME References search doesn't find refs attached to foreign leaf elements
             Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
             for (PsiReference ref : search) {
               PsiElement element = ref.getElement();
@@ -54,11 +56,16 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
               return;
             }
 
-            registerProblem(problemsHolder, o, "Unused variable " + "'" + o.getText() + "'", null,
-              ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());
+            registerProblemForeignTokensAware(problemsHolder, o, "Unused variable " + "'" + o.getText() + "'",
+              ProblemHighlightType.LIKE_UNUSED_SYMBOL, getQuickFixes(o));
           }
         });
       }
     }
+  }
+
+  private static LocalQuickFix[] getQuickFixes(PsiElement problemElement) {
+    return ErlangPsiImplUtil.startsWithForeignLeaf(problemElement) ?
+      LocalQuickFix.EMPTY_ARRAY : new LocalQuickFix[]{new ErlangRenameVariableFix()};
   }
 }
