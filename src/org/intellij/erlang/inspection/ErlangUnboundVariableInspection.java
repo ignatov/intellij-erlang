@@ -26,10 +26,13 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.impl.source.tree.ForeignLeafPsiElement;
+import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.util.PsiUtilBase;
 import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangVisitor;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangQuickFixBase;
 import org.jetbrains.annotations.NotNull;
 
@@ -51,7 +54,8 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
         }
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          registerProblem(holder, o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
+          String description = "Variable " + "'" + ErlangPsiImplUtil.getName(o) + "' is unbound"; 
+          registerProblemForeignTokensAware(holder, o, description, new ErlangIntroduceVariableQuickFix());
         }
       }
     };
@@ -66,36 +70,38 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-      PsiElement psiElement = descriptor.getPsiElement();
+      PsiElement psiElement = getProblemElementMacroAware(descriptor);
       if (!(psiElement instanceof ErlangQVar)) return;
 
       PsiElement anchor = psiElement;
-      while (anchor != null && !(anchor.getParent() instanceof ErlangClauseBody)) {
+      while (anchor != null &&
+        !(anchor.getParent() instanceof ErlangClauseBody && !startsWithForeignLeaf(anchor.getParent()))) {
         anchor = anchor.getParent();
       }
 
-      if (anchor != null) {
-        PsiElement parent = anchor.getParent();
-        if (parent != null) {
-          Editor editor = PsiUtilBase.findEditor(anchor);
-          if (editor == null) return;
+      PsiElement parent = anchor != null ? anchor.getParent() : null;
+      if (parent == null) return;
+      if (startsWithForeignLeaf(anchor)) anchor = parent.getChildren()[0];
+      Editor editor = PsiUtilBase.findEditor(anchor);
+      if (editor == null) return;
 
-          editor.getCaretModel().moveToOffset(anchor.getTextRange().getStartOffset());
+      editor.getCaretModel().moveToOffset(anchor.getTextRange().getStartOffset());
 
-          TemplateManager manager = TemplateManager.getInstance(project);
-          Template template = manager.createTemplate("", "");
+      TemplateManager manager = TemplateManager.getInstance(project);
+      Template template = manager.createTemplate("", "");
 
-          template.addTextSegment(((ErlangQVar) psiElement).getName());
-          template.addTextSegment(" = ");
-          template.addVariable(new ConstantNode("unbound"), true);
-          template.addTextSegment("");
-          template.addEndVariable();
-          template.addTextSegment(",\n");
+      template.addTextSegment(ErlangPsiImplUtil.getName((ErlangQVar) psiElement));
+      template.addTextSegment(" = ");
+      template.addVariable(new ConstantNode("unbound"), true);
+      template.addTextSegment("");
+      template.addEndVariable();
+      template.addTextSegment(",\n");
 
-          manager.startTemplate(editor, template);
+      manager.startTemplate(editor, template);
+    }
 
-        }
-      }
+    private static boolean startsWithForeignLeaf(PsiElement e) {
+      return TreeUtil.findFirstLeaf(e.getNode()) instanceof ForeignLeafPsiElement;
     }
   }
 }
