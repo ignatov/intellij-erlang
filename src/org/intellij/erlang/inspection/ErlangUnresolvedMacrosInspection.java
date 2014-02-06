@@ -38,7 +38,8 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
 
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          registerProblem(holder, o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
+          String description = "Unresolved macro " + "'" + ErlangPsiImplUtil.getMacroName(macrosName) + "'";
+          registerProblemForeignTokensAware(holder, o, description, new ErlangIntroduceMacroQuickFix());
         }
       }
     };

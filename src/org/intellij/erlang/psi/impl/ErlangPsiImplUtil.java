@@ -386,6 +386,15 @@ public class ErlangPsiImplUtil {
     return new ErlangMacrosReferenceImpl<ErlangMacrosName>(macrosName, arity);
   }
 
+  @NotNull
+  public static String getMacroName(ErlangMacrosName macroNameElement) {
+    PsiElement atom = macroNameElement.getAtom();
+    if (atom != null) return atom.getText();
+    PsiElement var = macroNameElement.getVar();
+    if (var != null) return var.getText();
+    return macroNameElement.getText();
+  }
+
   @Nullable
   public static PsiReference getReference(@Nullable ErlangMacrosName o) {
     return o != null ? new ErlangMacrosReferenceImpl<ErlangMacrosName>(o, -1) : null;

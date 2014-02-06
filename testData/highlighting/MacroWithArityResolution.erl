@@ -1,3 +1,5 @@
+-export([foo/0, bar/0]).
+
 -define(NULLARY_MACRO(), ok).
 -define(UNARY_MACRO(X), ok).
 

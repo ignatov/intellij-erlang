@@ -29,9 +29,11 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+//TODO add macro arguments count selection (it should be either -1 or same as arguments count on the call site)
 public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
 
   @NotNull
@@ -42,12 +44,9 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-    PsiElement psiElement = descriptor.getPsiElement();
-
+    PsiElement psiElement = getProblemElementMacroAware(descriptor);
     if (!(psiElement instanceof ErlangMacros)) return;
-
     PsiElement file = psiElement.getContainingFile();
-
     if (file instanceof ErlangFile) {
       insertMacroDefinition(project, (ErlangMacros) psiElement, (ErlangFile) file);
     }
@@ -85,7 +84,7 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
   @Nullable
   private static String getMacroName(ErlangMacros macro) {
     ErlangMacrosName macroNamePsi = macro.getMacrosName();
-    return macroNamePsi != null ? macroNamePsi.getText() : null;
+    return macroNamePsi != null ? ErlangPsiImplUtil.getMacroName(macroNamePsi) : null;
   }
 
   private static int getFirstMacroDefinitionOffset(ErlangFile file) {
