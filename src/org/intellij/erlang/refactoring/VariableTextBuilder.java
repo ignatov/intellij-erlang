@@ -22,6 +22,7 @@ import com.intellij.psi.PsiRecursiveElementVisitor;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -41,7 +42,15 @@ public class VariableTextBuilder extends PsiRecursiveElementVisitor {
       return;
     }
     else if (element instanceof ErlangQAtom) {
-      myResult.append(StringUtil.capitalize(element.getText()));
+      ErlangMacros macro = ((ErlangQAtom) element).getMacros();
+      if (macro != null) {
+        ErlangMacrosName macroName = macro.getMacrosName();
+        if (macroName != null) {
+          myResult.append(ErlangPsiImplUtil.getMacroName(macroName));
+        }
+      } else {
+        myResult.append(StringUtil.capitalize(element.getText()));
+      }
       return;
     }
     else if (element instanceof ErlangFunctionCallExpression) {
