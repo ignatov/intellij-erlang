@@ -62,7 +62,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
             new LocalQuickFix[]{} :
             new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(name, arity)};
 
-          registerProblem(holder, o.getNameIdentifier(), "Unresolved function " + "'" + signature + "'", qfs);
+          registerProblemForeignTokensAware(holder, o.getNameIdentifier(), "Unresolved function " + "'" + signature + "'", qfs);
         }
       }
 
@@ -86,7 +86,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         if (r.getArity() < 0) return; //there is no need to inspect incomplete/erroneous code
         LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(what, ErlangModuleRef.class) != null ?
           new LocalQuickFix[]{} : new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(r.getName(), r.getArity())};
-        registerProblem(holder, target, "Unresolved function " + "'" + r.getSignature() + "'", qfs);
+        registerProblemForeignTokensAware(holder, target, "Unresolved function " + "'" + r.getSignature() + "'", qfs);
       }
     };
   }

@@ -18,4 +18,5 @@ bar(1,1) -> ok.
 
 -define(M(X), X).
 rec() -> <warning>rec</warning>(<warning>rec</warning>(1)).
-mrec() -> ?M(rec(1)).
+%% inspections should not be run on macro arguments - they can be whatever they can be.
+mrec() -> <warning>?M(rec(1))</warning>.

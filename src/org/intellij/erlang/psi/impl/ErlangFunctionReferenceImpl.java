@@ -58,7 +58,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
       if (explicitFunction != null) {
         return explicitFunction;
       }
-      else if (ErlangBifTable.isBif(myModuleAtom.getText(), myReferenceName, myArity) || 
+      else if (ErlangBifTable.isBif(myModuleAtom.getText(), myReferenceName, myArity) ||
         myReferenceName.equals(ErlangBifTable.MODULE_INFO) && (myArity == 1 || myArity == 0)) {
         return getElement();
       }

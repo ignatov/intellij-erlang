@@ -186,6 +186,11 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     }
   }
 
+  protected static void registerProblemForeignTokensAware(ProblemsHolder problemsHolder, @NotNull PsiElement psiElement,
+                                                          @NotNull String descriptionTemplate, LocalQuickFix... fixes) {
+    registerProblemForeignTokensAware(problemsHolder, psiElement, descriptionTemplate, ProblemHighlightType.GENERIC_ERROR_OR_WARNING, fixes);
+  }
+
   protected static void registerProblemForeignTokensAware(ProblemsHolder problemsHolder,
                                                           @NotNull PsiElement psiElement,
                                                           @NotNull String descriptionTemplate,

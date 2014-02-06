@@ -17,7 +17,10 @@
 package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInspection.LocalQuickFix;
+import com.intellij.codeInspection.ProblemDescriptor;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.inspection.ErlangMacroSubstitutionProblemDescriptor;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,5 +37,11 @@ public abstract class ErlangQuickFixBase implements LocalQuickFix {
   @Override
   public String getName() {
     return getFamilyName();
+  }
+
+  public static PsiElement getProblemElementMacroAware(ProblemDescriptor descriptor) {
+    return descriptor instanceof ErlangMacroSubstitutionProblemDescriptor ?
+      ((ErlangMacroSubstitutionProblemDescriptor) descriptor).getRealProblemElement() :
+      descriptor.getPsiElement();
   }
 }
