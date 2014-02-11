@@ -76,13 +76,14 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
     ErlangFunction f = ContainerUtil.getFirstItem(file.getFunctionsByName(function));
     String fileText = file.getText();
     int lineNumber = StringUtil.parseInt(line, -1);
-
     if (f == null) return null;
-
-    if (lineNumber != -1 && lineNumber != StringUtil.offsetToLineNumber(fileText, f.getTextOffset())) {
-      PsiElement testElement = findTestElementInLine(file, fileText, lineNumber);
-      if (testElement != null) {
-        return new PsiLocation<PsiElement>(project, testElement);
+    if (lineNumber != -1) {
+      lineNumber -= 1;
+      if (lineNumber != StringUtil.offsetToLineNumber(fileText, f.getTextOffset())) {
+        PsiElement testElement = findTestElementInLine(file, fileText, lineNumber);
+        if (testElement != null) {
+          return new PsiLocation<PsiElement>(project, testElement);
+        }
       }
     }
     return new PsiLocation<PsiElement>(project, f);
