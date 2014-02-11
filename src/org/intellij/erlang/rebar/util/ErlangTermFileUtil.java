@@ -70,12 +70,16 @@ public final class ErlangTermFileUtil {
   }
 
   public static void processConfigSection(@Nullable PsiElement configRoot, @NotNull String sectionName, @NotNull Consumer<ErlangExpression> sectionConsumer) {
-    List<ErlangTupleExpression> erlOptTuples = findNamedTuples(PsiTreeUtil.getChildrenOfTypeAsList(configRoot, ErlangExpression.class), sectionName);
-    for (ErlangTupleExpression erlOptTuple : erlOptTuples) {
+    for (ErlangTupleExpression erlOptTuple : getConfigSections(configRoot, sectionName)) {
       List<ErlangExpression> expressions = erlOptTuple.getExpressionList();
       ErlangExpression optionsList = expressions.size() >= 2 ? expressions.get(1) : null;
       if (optionsList == null) continue;
       sectionConsumer.consume(optionsList);
     }
+  }
+
+  @NotNull
+  public static List<ErlangTupleExpression> getConfigSections(@Nullable PsiElement termsFile, @NotNull String sectionName) {
+    return findNamedTuples(PsiTreeUtil.getChildrenOfTypeAsList(termsFile, ErlangExpression.class), sectionName);
   }
 }

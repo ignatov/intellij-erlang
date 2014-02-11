@@ -126,9 +126,7 @@ final class ImportedOtpApp {
 
   private void addDependenciesFromAppFile(@NotNull VirtualFile appFile) {
     ErlangFile appConfigPsi = ErlangTermFileUtil.createPsi(appFile);
-    if (appConfigPsi == null) return;
-    List<ErlangTupleExpression> applicationDescriptors =
-      ErlangTermFileUtil.findNamedTuples(PsiTreeUtil.getChildrenOfTypeAsList(appConfigPsi, ErlangExpression.class), "application");
+    List<ErlangTupleExpression> applicationDescriptors = ErlangTermFileUtil.getConfigSections(appConfigPsi, "application");
     ErlangListExpression appAttributes = PsiTreeUtil.getChildOfType(ContainerUtil.getFirstItem(applicationDescriptors), ErlangListExpression.class);
     ErlangTermFileUtil.processConfigSection(appAttributes, "applications", new Consumer<ErlangExpression>() {
       @Override
