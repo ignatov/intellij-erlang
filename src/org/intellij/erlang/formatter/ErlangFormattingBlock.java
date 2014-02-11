@@ -209,7 +209,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private AlignmentStrategy createOrGetAlignmentStrategy() {
     PsiElement psi = getNode().getPsi();
     if (myErlangSettings.ALIGN_FUNCTION_CLAUSES && psi instanceof ErlangFunction) {
-      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.<IElementType>list(ERL_CLAUSE_BODY), ERL_FUNCTION_CLAUSE, true);
+      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_CLAUSE_BODY), ERL_FUNCTION_CLAUSE, true);
     }
     return myAlignmentStrategy;
   }
