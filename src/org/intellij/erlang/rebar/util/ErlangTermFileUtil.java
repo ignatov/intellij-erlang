@@ -1,18 +1,25 @@
 package org.intellij.erlang.rebar.util;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.impl.source.tree.TreeUtil;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Consumer;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,5 +88,50 @@ public final class ErlangTermFileUtil {
   @NotNull
   public static List<ErlangTupleExpression> getConfigSections(@Nullable PsiElement termsFile, @NotNull String sectionName) {
     return findNamedTuples(PsiTreeUtil.getChildrenOfTypeAsList(termsFile, ErlangExpression.class), sectionName);
+  }
+
+  @Nullable
+  public static ErlangExpression createForm(String formText) {
+    Project defaultProject = ProjectManager.getInstance().getDefaultProject();
+    PsiFile file = PsiFileFactory.getInstance(defaultProject).createFileFromText("a.config", ErlangFileType.TERMS, formText);
+    return ContainerUtil.getFirstItem(PsiTreeUtil.getChildrenOfTypeAsList(file, ErlangExpression.class));
+  }
+
+  public static void addListExpressionItem(@NotNull ErlangListExpression list, @NotNull ErlangExpression what) {
+    boolean shouldAddComma = list.getChildren().length != 0;
+    PsiElement leftBracket = list.getBracketLeft();
+    if (shouldAddComma) {
+      PsiElement comma = ErlangElementFactory.createLeafFromText(ProjectManager.getInstance().getDefaultProject(), ",");
+      list.addAfter(comma, leftBracket);
+    }
+    list.addAfter(what, leftBracket);
+  }
+
+  public static void deleteListExpressionItem(@NotNull PsiElement what) {
+    ASTNode whatNode = what.getNode();
+    ASTNode commaAfterElement = TreeUtil.findSibling(whatNode, ErlangTypes.ERL_COMMA);
+    ASTNode commaBeforeElement = TreeUtil.findSiblingBackward(whatNode, ErlangTypes.ERL_COMMA);
+    PsiElement firstElementToDelete = commaBeforeElement != null && shouldDeleteComma(commaBeforeElement, whatNode) ?
+      commaBeforeElement.getPsi() : what;
+    PsiElement lastElementToDelete = commaAfterElement != null && shouldDeleteComma(commaAfterElement, whatNode) ?
+      commaAfterElement.getPsi() : what;
+    what.getParent().deleteChildRange(firstElementToDelete, lastElementToDelete);
+  }
+
+  private static boolean shouldDeleteComma(@NotNull ASTNode comma, @NotNull ASTNode listElementNode) {
+    ASTNode leftNode = comma.getStartOffset() < listElementNode.getStartOffset() ? comma : listElementNode;
+    ASTNode rightNode = comma.getStartOffset() < listElementNode.getStartOffset() ? listElementNode : comma;
+    return elementsBetweenAreWhitespaceOrComment(leftNode, rightNode);
+  }
+
+  private static boolean elementsBetweenAreWhitespaceOrComment(@NotNull ASTNode first, @NotNull ASTNode last) {
+    for (ASTNode node = first.getTreeNext(); node != null && node.getStartOffset() < last.getStartOffset();
+         node = node.getTreeNext()) {
+      IElementType elementType = node.getElementType();
+      if (!(ErlangParserDefinition.WS.contains(elementType) || ErlangParserDefinition.COMMENTS.contains(elementType))) {
+        return false;
+      }
+    }
+    return true;
   }
 }

@@ -15,22 +15,39 @@ import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Getter;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.*;
+import com.intellij.psi.impl.file.PsiDirectoryFactory;
+import com.intellij.util.Processor;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.console.FileReferenceFilter;
 import org.intellij.erlang.eunit.ErlangEunitReporterModule;
 import org.intellij.erlang.eunit.ErlangTestLocationProvider;
 import org.intellij.erlang.eunit.ErlangUnitConsoleProperties;
+import org.intellij.erlang.psi.ErlangExpression;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangListExpression;
+import org.intellij.erlang.psi.ErlangTupleExpression;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.rebar.util.ErlangTermFileUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class RebarEunitRunningState extends CommandLineState {
   private static final String CONFIG_FILE_NAME = "rebar.config";
-  private static final String REBAR_CONFIG = "\n{eunit_opts,[{report,{" + ErlangEunitReporterModule.MODULE_NAME + ", []}}, {no_tty, true}]}.";
+  private static final String EUNIT_NO_TTY_OPTION = "{no_tty, true}";
+  private static final String EUNIT_TEAMCITY_REPORTER = "{report,{" + ErlangEunitReporterModule.MODULE_NAME + ", []}}";
+  private static final String EUNIT_OPTS = "\n{eunit_opts,[" + EUNIT_TEAMCITY_REPORTER + "," + EUNIT_NO_TTY_OPTION + "]}.";
 
   private final RebarEunitRunConfiguration myConfiguration;
 
@@ -99,7 +116,7 @@ public class RebarEunitRunningState extends CommandLineState {
       File tempDirectory = FileUtil.createTempDirectory(ErlangEunitReporterModule.MODULE_NAME, null);
       File configFile = new File(tempDirectory, CONFIG_FILE_NAME);
 
-      writeAugmentedConfig(new File(projectRoot, CONFIG_FILE_NAME), configFile);
+      writeModifiedConfig(new File(projectRoot, CONFIG_FILE_NAME), configFile);
       ErlangEunitReporterModule.putReporterModuleTo(tempDirectory);
 
       return tempDirectory;
@@ -108,9 +125,64 @@ public class RebarEunitRunningState extends CommandLineState {
     }
   }
 
-  private static void writeAugmentedConfig(File oldConfig, File newConfig) throws IOException {
-    FileUtil.copy(oldConfig, newConfig);
-    //TODO modify config (the config option we add at the end of file overrides by previously defined option from user's rebar.config)
-    FileUtil.appendToFile(newConfig, REBAR_CONFIG);
+  private void writeModifiedConfig(File oldConfig, final File newConfig) throws IOException {
+    Project project = myConfiguration.getProject();
+    final PsiFile configPsi = createModifiedConfigPsi(oldConfig);
+    VirtualFile outputDirectory = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(newConfig.getParentFile());
+    final PsiDirectory psiDirectory = outputDirectory != null ? PsiDirectoryFactory.getInstance(project).createDirectory(outputDirectory) : null;
+    if (psiDirectory == null) {
+      throw new IOException("Failed to save modified rebar.config");
+    }
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        configPsi.setName(newConfig.getName());
+        psiDirectory.add(configPsi);
+      }
+    });
+  }
+
+  private PsiFile createModifiedConfigPsi(File oldConfig) throws IOException {
+    String oldConfigText = new String(FileUtil.loadFileText(oldConfig));
+    ErlangFile configPsi = (ErlangFile) PsiFileFactory.getInstance(myConfiguration.getProject())
+      .createFileFromText(CONFIG_FILE_NAME, ErlangFileType.TERMS, oldConfigText);
+    List<ErlangTupleExpression> eunitOptsSections = ErlangTermFileUtil.getConfigSections(configPsi, "eunit_opts");
+    if (eunitOptsSections.isEmpty()) {
+      ErlangExpression form = ErlangTermFileUtil.createForm(EUNIT_OPTS);
+      assert form != null;
+      configPsi.add(form);
+    } else {
+      removeReportOptions(eunitOptsSections);
+      addEunitTeamcityReportOptions(eunitOptsSections.get(0));
+    }
+    return configPsi;
+  }
+
+  private static void removeReportOptions(List<ErlangTupleExpression> eunitOptsSections) {
+    final Processor<ErlangTupleExpression> deletingProcessor = new Processor<ErlangTupleExpression>() {
+      @Override
+      public boolean process(ErlangTupleExpression erlangTupleExpression) {
+        ErlangTermFileUtil.deleteListExpressionItem(erlangTupleExpression);
+        return true;
+      }
+    };
+    for (ErlangTupleExpression eunitOptsSection : eunitOptsSections) {
+      ErlangExpression eunitOptsList = eunitOptsSection.getExpressionList().get(1);
+      ContainerUtil.process(ErlangTermFileUtil.getConfigSections(eunitOptsList, "report"), deletingProcessor);
+      ContainerUtil.process(ErlangTermFileUtil.getConfigSections(eunitOptsList, "no_tty"), deletingProcessor);
+    }
+  }
+
+  private void addEunitTeamcityReportOptions(ErlangTupleExpression eunitOptsTuple) throws IOException {
+    ErlangExpression eunitOptsList = eunitOptsTuple.getExpressionList().get(1);
+    if (!(eunitOptsList instanceof ErlangListExpression)) {
+      throw new IOException("Invalid rebar.config file");
+    }
+    ErlangTermFileUtil.addListExpressionItem((ErlangListExpression) eunitOptsList, createExpression(EUNIT_TEAMCITY_REPORTER));
+    ErlangTermFileUtil.addListExpressionItem((ErlangListExpression) eunitOptsList, createExpression(EUNIT_NO_TTY_OPTION));
+  }
+
+  private ErlangExpression createExpression(String expressionText) {
+    return ErlangElementFactory.createExpressionFromText(myConfiguration.getProject(), expressionText);
   }
 }
