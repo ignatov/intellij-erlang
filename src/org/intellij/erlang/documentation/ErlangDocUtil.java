@@ -78,6 +78,10 @@ public final class ErlangDocUtil {
     }), "<br/>");
   }
 
+  public static String wrapInPreTag(@NotNull String text) {
+    return "<pre>" + text + "</pre>";
+  }
+
   @NotNull
   static List<PsiComment> collectPrevComments(@NotNull PsiComment comment) {
     ArrayList<PsiComment> result = new ArrayList<PsiComment>();

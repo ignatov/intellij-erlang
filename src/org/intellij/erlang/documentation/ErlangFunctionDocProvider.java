@@ -56,6 +56,6 @@ final class ErlangFunctionDocProvider implements ElementDocProvider {
       commentText += "<b>Comment:</b><br/>" + ErlangDocUtil.getCommentsText(
         ErlangDocUtil.collectPrevComments(comment), "%%", ErlangDocUtil.EDOC_FUNCTION_TAGS);
     }
-    return commentText;
+    return ErlangDocUtil.wrapInPreTag(commentText);
   }
 }
