@@ -1,6 +1,5 @@
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.openapi.util.io.FileUtilRt;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.builders.BuildRootDescriptor;
 import org.jetbrains.jps.builders.BuildTarget;
@@ -38,7 +37,10 @@ public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
     return new FileFilter() {
       @Override
       public boolean accept(File file) {
-        return FileUtilRt.extensionEquals(file.getName(), "erl");
+        String name = file.getName();
+        return name.endsWith(".erl") ||
+          name.endsWith(".app") ||
+          name.endsWith(".app.src");
       }
     };
   }

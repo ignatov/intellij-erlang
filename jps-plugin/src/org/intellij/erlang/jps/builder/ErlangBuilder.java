@@ -36,6 +36,7 @@ import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.*;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -76,6 +77,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     File outputDirectory = getBuildOutputDirectory(module, target.isTests(), context);
 
     runErlc(target, context, compilerOptions, outputDirectory);
+    processAppConfigFiles(module, outputDirectory);
   }
 
   @NotNull
@@ -111,6 +113,30 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       throw new ProjectBuildException(errorMessage);
     }
     return sdk;
+  }
+
+  private static void processAppConfigFiles(JpsModule module, File outputDirectory) throws IOException {
+    FileFilter appConfigFileFilter = new FileFilter() {
+      @Override
+      public boolean accept(File pathname) {
+        String fileName = pathname.getName();
+        return !pathname.isDirectory() &&
+          (fileName.endsWith(".app") || fileName.endsWith(".app.src"));
+      }
+    };
+    for (JpsModuleSourceRoot sourceRoot : module.getSourceRoots()) {
+      File sourceRootFile = sourceRoot.getFile();
+      for (File appConfigSrc : sourceRootFile.listFiles(appConfigFileFilter)) {
+        File appConfigDst = new File(outputDirectory, getAppConfigDestinationFileName(appConfigSrc.getName()));
+        FileUtil.copy(appConfigSrc, appConfigDst);
+      }
+    }
+  }
+
+  private static String getAppConfigDestinationFileName(String sourceFileName) {
+    return sourceFileName.endsWith(".app.src") ?
+      (StringUtil.trimEnd(sourceFileName, ".app.src") + ".app") :
+      sourceFileName;
   }
 
   private static void runErlc(ErlangTarget target,

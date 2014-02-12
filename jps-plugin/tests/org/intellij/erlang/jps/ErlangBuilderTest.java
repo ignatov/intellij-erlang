@@ -35,11 +35,23 @@ public class ErlangBuilderTest extends JpsBuildTestCase {
   public static final String ERLANG_SDK_PATH = "/usr/lib/erlang";
 
   public void testSimple() throws Exception {
-    String depFile = createFile("src/simple.erl", "-module(simple). foo() -> ok.");
+    doSingleFileTest("src/simple.erl", "-module(simple). foo() -> ok.", "simple.beam");
+  }
+
+  public void testAppFilesAreCopiedToOutputDirectory() throws Exception {
+    doSingleFileTest("src/simple.app", "", "simple.app");
+  }
+
+  public void testAppSrcFilesAreCopiedToOutputDirectory() throws Exception {
+    doSingleFileTest("src/simple.app.src", "", "simple.app");
+  }
+
+  private void doSingleFileTest(String relativePath, String text, String expectedOutputFileName) {
+    String depFile = createFile(relativePath, text);
     String moduleName = "m";
     addModule(moduleName, PathUtilRt.getParentPath(depFile));
     rebuildAll();
-    assertCompiled(moduleName, "simple.beam");
+    assertCompiled(moduleName, expectedOutputFileName);
   }
 
   private void assertCompiled(@NotNull String moduleName, @NotNull String fileName) {
