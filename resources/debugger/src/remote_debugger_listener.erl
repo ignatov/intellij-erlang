@@ -84,7 +84,7 @@ remove_breakpoint(Module, Line) ->
   int:delete_break(Module, Line).
 
 interpret_modules(Modules) ->
-  interpret_modules_on_node(Modules, node()).
+  interpret_modules(Modules, node()).
 
 %%TODO handle all processes which are being debugged, not only the spawned one.
 run_debugger(Module, Function, ArgsString) ->
@@ -139,7 +139,7 @@ eval_argslist(ExprList) ->
 debug_remote_node(Node, Cookie, Modules) ->
   NodeConnected = connect_to_remote_node(Node, Cookie),
   Status = if
-    NodeConnected -> interpret_modules_on_node(Modules, Node);
+    NodeConnected -> interpret_modules(Modules, Node);
     true -> failed_to_connect
   end,
   send_debug_remote_node_response(Node, Status).
@@ -155,13 +155,10 @@ connect_to_remote_node(Node, Cookie) ->
   erlang:set_cookie(Node, Cookie),
   net_kernel:connect(Node).
 
-interpret_modules_on_node(Modules, Node) ->
-  case rpc:call(Node, lists, map, [fun int:ni/1, Modules]) of
-    {badrpc, _} = Error -> Error;
-    IntNiResults ->
-      send_interpret_modules_response(Node, lists:zip(Modules, IntNiResults)),
-      ok
-  end.
+interpret_modules(Modules, Node) ->
+  IntNiResults = [{Module, int:ni(Module)} || Module <- Modules],
+  send_interpret_modules_response(Node, IntNiResults),
+  ok.
 
 send_interpret_modules_response(Node, IntResults) ->
   Statuses = lists:map(fun
