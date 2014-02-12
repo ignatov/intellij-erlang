@@ -25,8 +25,12 @@ run(Debugger) ->
 
 wait_for_exit() ->
   receive
-    {'EXIT', _, _} -> ok;
-    {'DOWN', _, _, _, _} -> ok;
+    {'EXIT', _, _} -> stop_debugger();
+    {'DOWN', _, _, _, _} -> stop_debugger();
     _ ->
       wait_for_exit()
   end.
+
+stop_debugger() ->
+  int:stop(),
+  ok.
