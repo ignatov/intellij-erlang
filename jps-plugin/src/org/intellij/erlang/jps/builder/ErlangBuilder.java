@@ -74,20 +74,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     if (compilerOptions.myUseRebarCompiler) return;
 
     File outputDirectory = getBuildOutputDirectory(module, target.isTests(), context);
-    JpsSdk<JpsDummyElement> sdk = getSdk(context, module);
-    File executable = JpsErlangSdkType.getByteCodeCompilerExecutable(sdk.getHomePath());
-    GeneralCommandLine commandLine = new GeneralCommandLine();
-    List<String> erlangModulePaths = getErlangModulePaths(module, target, context);
 
-    commandLine.setWorkDirectory(outputDirectory);
-    commandLine.setExePath(executable.getAbsolutePath());
-    addCodePath(commandLine, module, target, context);
-    addParseTransforms(commandLine, module);
-    addDebugInfo(commandLine, erlangModulePaths, outputDirectory, compilerOptions.myAddDebugInfoEnabled);
-    addIncludePaths(commandLine, module);
-    commandLine.addParameters(erlangModulePaths);
-
-    runBuildProcess(context, commandLine);
+    runErlc(target, context, compilerOptions, outputDirectory);
   }
 
   @NotNull
@@ -125,8 +113,11 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return sdk;
   }
 
-  private static void runBuildProcess(@NotNull CompileContext context,
-                                      @NotNull GeneralCommandLine commandLine) throws ProjectBuildException {
+  private static void runErlc(ErlangTarget target,
+                              CompileContext context,
+                              ErlangCompilerOptions compilerOptions,
+                              File outputDirectory) throws ProjectBuildException {
+    GeneralCommandLine commandLine = getErlcCommandLine(target, context, compilerOptions, outputDirectory);
     Process process;
     try {
       process = commandLine.createProcess();
@@ -138,6 +129,28 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();
+  }
+
+  private static GeneralCommandLine getErlcCommandLine(ErlangTarget target,
+                                                       CompileContext context,
+                                                       ErlangCompilerOptions compilerOptions,
+                                                       File outputDirectory) throws ProjectBuildException {
+    GeneralCommandLine commandLine = new GeneralCommandLine();
+
+    JpsModule module = target.getModule();
+    JpsSdk<JpsDummyElement> sdk = getSdk(context, module);
+    File executable = JpsErlangSdkType.getByteCodeCompilerExecutable(sdk.getHomePath());
+    List<String> erlangModulePaths = getErlangModulePaths(module, target, context);
+
+    commandLine.setWorkDirectory(outputDirectory);
+    commandLine.setExePath(executable.getAbsolutePath());
+    addCodePath(commandLine, module, target, context);
+    addParseTransforms(commandLine, module);
+    addDebugInfo(commandLine, erlangModulePaths, outputDirectory, compilerOptions.myAddDebugInfoEnabled);
+    addIncludePaths(commandLine, module);
+    commandLine.addParameters(erlangModulePaths);
+
+    return commandLine;
   }
 
   private static void addDebugInfo(@NotNull GeneralCommandLine commandLine,
