@@ -5,8 +5,6 @@
     <idea-version since-build="133.609" until-build="133.9999"/>
     <depends>com.intellij.modules.lang</depends>
 
-    <depends optional="true" config-file="erlang-copyright.xml">com.intellij.copyright</depends>
-
     <name>Erlang</name>
     <description>Erlang plugin</description>
     <change-notes>
@@ -240,4 +238,10 @@
         </group>
 
     </actions>
+    <application-components>
+      <component>
+        <headless-implementation-class/>
+        <implementation-class>org.intellij.erlang.copyright.CopyrightExtensionDeferredLoader</implementation-class>
+      </component>
+    </application-components>
 </idea-plugin>

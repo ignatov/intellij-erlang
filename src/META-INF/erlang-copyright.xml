@@ -1,5 +1,0 @@
-<idea-plugin>
-    <extensions defaultExtensionNs="com.intellij.copyright">
-        <updater filetype="Erlang" implementationClass="org.intellij.erlang.copyright.UpdateErlangCopyrightsProvider"/>
-    </extensions>
-</idea-plugin>
