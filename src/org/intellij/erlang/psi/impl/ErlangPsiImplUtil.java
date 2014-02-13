@@ -48,6 +48,7 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
@@ -1475,6 +1476,16 @@ public class ErlangPsiImplUtil {
     ErlangQAtom module = moduleExpression == null ? null : moduleExpression.getQAtom();
     int arity = list == null ? -1 : list.getExpressionList().size();
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, module, TextRange.from(0, atom.getTextLength()), atom.getText(), arity);
+  }
+
+  public static boolean isWhitespaceOrComment(@NotNull PsiElement element) {
+    return isWhitespaceOrComment(element.getNode());
+  }
+
+  public static boolean isWhitespaceOrComment(@NotNull ASTNode node) {
+    IElementType elementType = node.getElementType();
+    return ErlangParserDefinition.WS.contains(elementType) ||
+      ErlangParserDefinition.COMMENTS.contains(elementType);
   }
 
   public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {

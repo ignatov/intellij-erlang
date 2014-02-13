@@ -10,16 +10,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.impl.source.tree.TreeUtil;
-import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Consumer;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -127,8 +126,7 @@ public final class ErlangTermFileUtil {
   private static boolean elementsBetweenAreWhitespaceOrComment(@NotNull ASTNode first, @NotNull ASTNode last) {
     for (ASTNode node = first.getTreeNext(); node != null && node.getStartOffset() < last.getStartOffset();
          node = node.getTreeNext()) {
-      IElementType elementType = node.getElementType();
-      if (!(ErlangParserDefinition.WS.contains(elementType) || ErlangParserDefinition.COMMENTS.contains(elementType))) {
+      if (!ErlangPsiImplUtil.isWhitespaceOrComment(node)) {
         return false;
       }
     }
