@@ -246,6 +246,15 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_MACROS_NAME) {
       result_ = macros_name(builder_, 0);
     }
+    else if (root_ == ERL_MAP_ENTRIES) {
+      result_ = map_entries(builder_, 0);
+    }
+    else if (root_ == ERL_MAP_ENTRY) {
+      result_ = map_entry(builder_, 0);
+    }
+    else if (root_ == ERL_MAP_EXPRESSION) {
+      result_ = expression(builder_, 0, 10);
+    }
     else if (root_ == ERL_MAX_EXPRESSION) {
       result_ = max_expression(builder_, 0);
     }
@@ -398,10 +407,10 @@ public class ErlangParser implements PsiParser {
       ERL_COLON_QUALIFIED_EXPRESSION, ERL_COMP_OP_EXPRESSION, ERL_CONFIG_CALL_EXPRESSION, ERL_CONFIG_EXPRESSION,
       ERL_EXPRESSION, ERL_FUNCTION_CALL_EXPRESSION, ERL_FUN_EXPRESSION, ERL_GENERIC_FUNCTION_CALL_EXPRESSION,
       ERL_GLOBAL_FUNCTION_CALL_EXPRESSION, ERL_IF_EXPRESSION, ERL_LC_EXPRESSION, ERL_LIST_COMPREHENSION,
-      ERL_LIST_EXPRESSION, ERL_LIST_OP_EXPRESSION, ERL_MAX_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION,
-      ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION,
-      ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION, ERL_STRING_LITERAL,
-      ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
+      ERL_LIST_EXPRESSION, ERL_LIST_OP_EXPRESSION, ERL_MAP_EXPRESSION, ERL_MAX_EXPRESSION,
+      ERL_MULTIPLICATIVE_EXPRESSION, ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION,
+      ERL_QUALIFIED_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION,
+      ERL_STRING_LITERAL, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
     create_token_set_(ERL_BINARY_TYPE, ERL_BIN_BASE_TYPE, ERL_BIN_UNIT_TYPE, ERL_FIELD_TYPE,
       ERL_FUN_TYPE, ERL_FUN_TYPE_100_T, ERL_INT_TYPE, ERL_RECORD_LIKE_TYPE,
       ERL_TOP_TYPE_100_T, ERL_TYPE),
@@ -3254,6 +3263,112 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // map_entry (',' map_entry)*
+  public static boolean map_entries(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_entries")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<map entries>");
+    result_ = map_entry(builder_, level_ + 1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && map_entries_1(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, ERL_MAP_ENTRIES, result_, pinned_, null);
+    return result_ || pinned_;
+  }
+
+  // (',' map_entry)*
+  private static boolean map_entries_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_entries_1")) return false;
+    int pos_ = current_position_(builder_);
+    while (true) {
+      if (!map_entries_1_0(builder_, level_ + 1)) break;
+      if (!empty_element_parsed_guard_(builder_, "map_entries_1", pos_)) break;
+      pos_ = current_position_(builder_);
+    }
+    return true;
+  }
+
+  // ',' map_entry
+  private static boolean map_entries_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_entries_1_0")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
+    result_ = consumeToken(builder_, ERL_COMMA);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && map_entry(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
+    return result_ || pinned_;
+  }
+
+  /* ********************************************************** */
+  // expression (('=>' | ':=') expression)?
+  public static boolean map_entry(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_entry")) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<map entry>");
+    result_ = expression(builder_, level_ + 1, -1);
+    pinned_ = result_; // pin = 1
+    result_ = result_ && map_entry_1(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, ERL_MAP_ENTRY, result_, pinned_, tuple_recoverer_parser_);
+    return result_ || pinned_;
+  }
+
+  // (('=>' | ':=') expression)?
+  private static boolean map_entry_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_entry_1")) return false;
+    map_entry_1_0(builder_, level_ + 1);
+    return true;
+  }
+
+  // ('=>' | ':=') expression
+  private static boolean map_entry_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_entry_1_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = map_entry_1_0_0(builder_, level_ + 1);
+    result_ = result_ && expression(builder_, level_ + 1, -1);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  // '=>' | ':='
+  private static boolean map_entry_1_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_entry_1_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = consumeToken(builder_, ERL_ASSOC);
+    if (!result_) result_ = consumeToken(builder_, ERL_MATCH);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // '#' '{' map_entries? '}'
+  static boolean map_tail(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_tail")) return false;
+    if (!nextTokenIs(builder_, ERL_RADIX)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
+    result_ = consumeToken(builder_, ERL_RADIX);
+    result_ = result_ && consumeToken(builder_, ERL_CURLY_LEFT);
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, map_tail_2(builder_, level_ + 1));
+    result_ = pinned_ && consumeToken(builder_, ERL_CURLY_RIGHT) && result_;
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
+    return result_ || pinned_;
+  }
+
+  // map_entries?
+  private static boolean map_tail_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_tail_2")) return false;
+    map_entries(builder_, level_ + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
   // q_var ['::' top_type]
   public static boolean model_field(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "model_field")) return false;
@@ -5236,7 +5351,7 @@ public class ErlangParser implements PsiParser {
   // 8: BINARY(multiplicative_expression)
   // 9: PREFIX(prefix_expression)
   // 10: BINARY(colon_qualified_expression)
-  // 11: ATOM(function_call_expression) ATOM(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression) POSTFIX(record_expression) ATOM(record2_expression) ATOM(qualified_expression)
+  // 11: ATOM(function_call_expression) ATOM(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression) POSTFIX(record_expression) ATOM(record2_expression) POSTFIX(map_expression) ATOM(map_construct_expression) ATOM(qualified_expression)
   // 12: ATOM(max_expression)
   // 13: PREFIX(parenthesized_expression)
   public static boolean expression(PsiBuilder builder_, int level_, int priority_) {
@@ -5250,6 +5365,7 @@ public class ErlangParser implements PsiParser {
     if (!result_) result_ = global_function_call_expression(builder_, level_ + 1);
     if (!result_) result_ = generic_function_call_expression(builder_, level_ + 1);
     if (!result_) result_ = record2_expression(builder_, level_ + 1);
+    if (!result_) result_ = map_construct_expression(builder_, level_ + 1);
     if (!result_) result_ = qualified_expression(builder_, level_ + 1);
     if (!result_) result_ = max_expression(builder_, level_ + 1);
     if (!result_) result_ = parenthesized_expression(builder_, level_ + 1);
@@ -5320,6 +5436,11 @@ public class ErlangParser implements PsiParser {
         result_ = true;
         marker_.drop();
         left_marker_.precede().done(ERL_RECORD_EXPRESSION);
+      }
+      else if (priority_ < 11 && map_tail(builder_, level_ + 1)) {
+        result_ = true;
+        marker_.drop();
+        left_marker_.precede().done(ERL_MAP_EXPRESSION);
       }
       else {
         exit_section_(builder_, marker_, null, false);
@@ -5524,6 +5645,17 @@ public class ErlangParser implements PsiParser {
     Marker marker_ = enter_section_(builder_, level_, _COLLAPSE_, "<expression>");
     result_ = record_tail(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_RECORD_EXPRESSION, result_, false, null);
+    return result_;
+  }
+
+  // map_tail
+  public static boolean map_construct_expression(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_construct_expression")) return false;
+    if (!nextTokenIs(builder_, ERL_RADIX)) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = map_tail(builder_, level_ + 1);
+    exit_section_(builder_, marker_, ERL_MAP_EXPRESSION, result_);
     return result_;
   }
 

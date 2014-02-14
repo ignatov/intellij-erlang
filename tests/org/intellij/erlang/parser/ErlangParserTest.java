@@ -80,4 +80,8 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testEscriptShebang2()   { doTest(true, true);  }
   public void test325()               { doTest(true, true);  }
   public void test390()               { doTest(true, true);  }
+  public void testMapConstruct()      { doTest(true, false); }
+  public void testMapSingleValueAcc() { doTest(true, false); }
+  public void testMapUpdate()         { doTest(true, false); }
+  public void testMapMatch()          { doTest(true, false); }
 }

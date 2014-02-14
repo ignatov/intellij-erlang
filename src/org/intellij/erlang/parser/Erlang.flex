@@ -92,6 +92,9 @@ UniversalPattern = _
  "if"                          { return ERL_IF; }
  "receive"                     { return ERL_RECEIVE; }
 
+ ":="                          { return ERL_MATCH; }
+ "=>"                          { return ERL_ASSOC; }
+
  "<<"                           { return ERL_BIN_START; }
  ">>"                           { return ERL_BIN_END; }
  "+"                            { return ERL_OP_PLUS; }

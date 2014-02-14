@@ -85,6 +85,9 @@ public interface ErlangTypes {
   IElementType ERL_MACROS_CALL = new ErlangCompositeElementType("ERL_MACROS_CALL");
   IElementType ERL_MACROS_DEFINITION = ErlangElementTypeFactory.factory("ERL_MACROS_DEFINITION");
   IElementType ERL_MACROS_NAME = new ErlangCompositeElementType("ERL_MACROS_NAME");
+  IElementType ERL_MAP_ENTRIES = new ErlangCompositeElementType("ERL_MAP_ENTRIES");
+  IElementType ERL_MAP_ENTRY = new ErlangCompositeElementType("ERL_MAP_ENTRY");
+  IElementType ERL_MAP_EXPRESSION = new ErlangCompositeElementType("ERL_MAP_EXPRESSION");
   IElementType ERL_MAX_EXPRESSION = new ErlangCompositeElementType("ERL_MAX_EXPRESSION");
   IElementType ERL_MODEL_FIELD_LIST = new ErlangCompositeElementType("ERL_MODEL_FIELD_LIST");
   IElementType ERL_MODULE = ErlangElementTypeFactory.factory("ERL_MODULE");
@@ -135,6 +138,7 @@ public interface ErlangTypes {
   IElementType ERL_AND = new ErlangTokenType("and");
   IElementType ERL_ANDALSO = new ErlangTokenType("andalso");
   IElementType ERL_ARROW = new ErlangTokenType("->");
+  IElementType ERL_ASSOC = new ErlangTokenType("=>");
   IElementType ERL_ATOM = new ErlangTokenType("atom");
   IElementType ERL_BAND = new ErlangTokenType("band");
   IElementType ERL_BEGIN = new ErlangTokenType("begin");
@@ -164,6 +168,7 @@ public interface ErlangTypes {
   IElementType ERL_FUN = new ErlangTokenType("fun");
   IElementType ERL_IF = new ErlangTokenType("if");
   IElementType ERL_INTEGER = new ErlangTokenType("integer");
+  IElementType ERL_MATCH = new ErlangTokenType(":=");
   IElementType ERL_NOT = new ErlangTokenType("not");
   IElementType ERL_OF = new ErlangTokenType("of");
   IElementType ERL_OP_AR_DIV = new ErlangTokenType("/");
@@ -429,6 +434,15 @@ public interface ErlangTypes {
       }
       else if (type == ERL_MACROS_NAME) {
         return new ErlangMacrosNameImpl(node);
+      }
+      else if (type == ERL_MAP_ENTRIES) {
+        return new ErlangMapEntriesImpl(node);
+      }
+      else if (type == ERL_MAP_ENTRY) {
+        return new ErlangMapEntryImpl(node);
+      }
+      else if (type == ERL_MAP_EXPRESSION) {
+        return new ErlangMapExpressionImpl(node);
       }
       else if (type == ERL_MAX_EXPRESSION) {
         return new ErlangMaxExpressionImpl(node);
