@@ -249,7 +249,7 @@ type ::=
   | q_var ['::' top_type]
   | '[' [top_type [',' '...']] ']'
   | record_like_type
-  | '#' record_ref '{' field_type_list? '}' {pin(".*")=1}
+  | record_hash record_ref '{' field_type_list? '}' {pin(".*")=1}
 record_like_type ::= '{' top_type_list? '}' {extends=type}
 
 int_type ::= '-'? (integer | macros argument_list?) {extends=type}
@@ -401,7 +401,8 @@ record_expression ::= expression record_tail {
 }
 private record_tail ::= record_head (record_field_ref | record_tuple | ()) {pin=1}
 private record_head ::= record_head_classic | macros &('{'|'.' q_atom &(!('(')))
-private record_head_classic ::= '#' record_ref {pin=1}
+private record_head_classic ::= record_hash record_ref {pin=1}
+private record_hash ::= '#' &(!'{')
 record_field_ref ::= '.' q_atom {pin=1 elementType="record_field"}
 record_ref ::= q_atom {methods = [getReference]}
 
