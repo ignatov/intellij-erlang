@@ -84,4 +84,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testMapSingleValueAcc() { doTest(true, false); }
   public void testMapUpdate()         { doTest(true, false); }
   public void testMapMatch()          { doTest(true, false); }
+  public void testComprehensions()    { doTest(true, false); }
 }

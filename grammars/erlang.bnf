@@ -343,7 +343,6 @@ private max_group ::=
   | record_expression
   | record2_expression
   | map_expression
-  | map_construct_expression
   | qualified_expression
 colon_qualified_expression ::= expression ':' expression
 qualified_expression ::= q_atom '.' q_atom !'('
@@ -360,6 +359,8 @@ max_expression ::=
   | if_expression
   | binary_comprehension
   | list_comprehension
+  | map_comprehension
+  | map_construct_expression
   | receive_expression
   | fun_expression
   | try_expression
@@ -390,7 +391,9 @@ list_comprehension ::= '[' expression '||' lc_exprs ']' {
   methods=[processDeclarations]
 }
 lc_exprs ::= lc_expression (',' lc_expression)*
-lc_expression ::= [argument_definition ('<-' | '<=')] expression {pin(".*")=2}
+lc_expression ::= [ lc_generator_definition ('<-' | '<=')] expression {pin(".*")=2}
+lc_generator_definition ::= (map_match | expression) {elementType="argument_definition"}
+private map_match ::= expression ':=' expression {pin=2}
 
 binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {
   pin=3
@@ -424,6 +427,13 @@ private qualified_atom_expression ::= q_atom '.' q_atom {pin=0}
 module_ref ::= q_atom {
   methods = [getReference]
 }
+
+map_comprehension ::= '#' '{' map_assoc '||' lc_exprs '}' {
+  pin=4
+  methods=[processDeclarations]
+  elementType="list_comprehension"
+}
+private map_assoc ::= expression '=>' expression {pin=2 elementType=map_entry}
 
 map_construct_expression ::= map_tail {elementType=map_expression}
 map_expression ::= expression map_tail {pin=2}
