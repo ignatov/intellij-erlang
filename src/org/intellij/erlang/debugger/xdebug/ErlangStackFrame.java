@@ -27,6 +27,7 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.frame.*;
 import org.intellij.erlang.debugger.node.ErlangTraceElement;
 import org.intellij.erlang.debugger.node.ErlangVariableBinding;
+import org.intellij.erlang.debugger.xdebug.xvalue.ErlangXValueFactory;
 import org.intellij.erlang.psi.ErlangFunExpression;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -85,13 +86,7 @@ public class ErlangStackFrame extends XStackFrame {
     node.addChildren(myVariables, true);
   }
 
-  private static XValue getVariableValue(final OtpErlangObject value) {
-    //TODO implement XValue to provide proper presentation of values of variables.
-    return new XValue() {
-      @Override
-      public void computePresentation(@NotNull XValueNode node, @NotNull XValuePlace place) {
-        node.setPresentation(AllIcons.Debugger.Value, "", value.toString(), false);
-      }
-    };
+  private static XValue getVariableValue(OtpErlangObject value) {
+    return ErlangXValueFactory.create(value);
   }
 }
