@@ -2430,25 +2430,29 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom argument_definition_list clause_guard? clause_body
+  // plain_function_clause | maybe_macro_funciton_clause
   public static boolean function_clause(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "function_clause")) return false;
     if (!nextTokenIs(builder_, "<function clause>", ERL_QMARK, ERL_ATOM)) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<function clause>");
-    result_ = q_atom(builder_, level_ + 1);
-    result_ = result_ && argument_definition_list(builder_, level_ + 1);
-    result_ = result_ && function_clause_2(builder_, level_ + 1);
-    result_ = result_ && clause_body(builder_, level_ + 1);
+    result_ = plain_function_clause(builder_, level_ + 1);
+    if (!result_) result_ = maybe_macro_funciton_clause(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_FUNCTION_CLAUSE, result_, false, null);
     return result_;
   }
 
-  // clause_guard?
-  private static boolean function_clause_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "function_clause_2")) return false;
-    clause_guard(builder_, level_ + 1);
-    return true;
+  /* ********************************************************** */
+  // q_atom argument_definition_list
+  static boolean function_clause_head(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "function_clause_head")) return false;
+    if (!nextTokenIs(builder_, "", ERL_QMARK, ERL_ATOM)) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = q_atom(builder_, level_ + 1);
+    result_ = result_ && argument_definition_list(builder_, level_ + 1);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
   }
 
   /* ********************************************************** */
@@ -3442,6 +3446,27 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
+  // function_clause_head clause_guard? clause_body
+  static boolean maybe_macro_funciton_clause(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "maybe_macro_funciton_clause")) return false;
+    if (!nextTokenIs(builder_, "", ERL_QMARK, ERL_ATOM)) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = function_clause_head(builder_, level_ + 1);
+    result_ = result_ && maybe_macro_funciton_clause_1(builder_, level_ + 1);
+    result_ = result_ && clause_body(builder_, level_ + 1);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
+  // clause_guard?
+  private static boolean maybe_macro_funciton_clause_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "maybe_macro_funciton_clause_1")) return false;
+    clause_guard(builder_, level_ + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
   // q_var ['::' top_type]
   public static boolean model_field(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "model_field")) return false;
@@ -3721,6 +3746,50 @@ public class ErlangParser implements PsiParser {
     result_ = result_ && exitMode(builder_, level_ + 1, "ELSE");
     exit_section_(builder_, marker_, null, result_);
     return result_;
+  }
+
+  /* ********************************************************** */
+  // &(!'?') function_clause_head clause_guard? clause_body
+  static boolean plain_function_clause(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "plain_function_clause")) return false;
+    if (!nextTokenIs(builder_, ERL_ATOM)) return false;
+    boolean result_ = false;
+    boolean pinned_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
+    result_ = plain_function_clause_0(builder_, level_ + 1);
+    result_ = result_ && function_clause_head(builder_, level_ + 1);
+    pinned_ = result_; // pin = 2
+    result_ = result_ && report_error_(builder_, plain_function_clause_2(builder_, level_ + 1));
+    result_ = pinned_ && clause_body(builder_, level_ + 1) && result_;
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
+    return result_ || pinned_;
+  }
+
+  // &(!'?')
+  private static boolean plain_function_clause_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "plain_function_clause_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _AND_, null);
+    result_ = plain_function_clause_0_0(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
+  }
+
+  // !'?'
+  private static boolean plain_function_clause_0_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "plain_function_clause_0_0")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NOT_, null);
+    result_ = !consumeToken(builder_, ERL_QMARK);
+    exit_section_(builder_, level_, marker_, null, result_, false, null);
+    return result_;
+  }
+
+  // clause_guard?
+  private static boolean plain_function_clause_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "plain_function_clause_2")) return false;
+    clause_guard(builder_, level_ + 1);
+    return true;
   }
 
   /* ********************************************************** */

@@ -10,7 +10,7 @@ public interface ErlangFunctionClause extends ErlangCompositeElement {
   @NotNull
   ErlangArgumentDefinitionList getArgumentDefinitionList();
 
-  @NotNull
+  @Nullable
   ErlangClauseBody getClauseBody();
 
   @Nullable

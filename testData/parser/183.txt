@@ -1,11 +1,17 @@
 ERL_FILE
-  PsiElement(atom)('foo1')
-  PsiElement(()('(')
-  PsiElement(integer)('0')
-  PsiElement())(')')
-  PsiErrorElement:'->' or when expected, got '.'
-    <empty list>
-  PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        PsiElement(atom)('foo1')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_MAX_EXPRESSION
+            PsiElement(integer)('0')
+        PsiElement())(')')
+      PsiErrorElement:'->' or when expected, got '.'
+        <empty list>
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM

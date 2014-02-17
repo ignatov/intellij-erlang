@@ -284,7 +284,10 @@ function ::= function_clause (';' function_clause)* {
   stubClass="org.intellij.erlang.stubs.ErlangFunctionStub"
 }
 
-function_clause ::= q_atom argument_definition_list clause_guard? clause_body
+function_clause ::= plain_function_clause | maybe_macro_funciton_clause
+private plain_function_clause ::= &(!'?') function_clause_head clause_guard? clause_body {pin=2}
+private maybe_macro_funciton_clause ::= function_clause_head clause_guard? clause_body
+private function_clause_head ::= q_atom argument_definition_list
 argument_definition_list ::= '(' argument_definition? (',' argument_definition)* ')'
 
 clause_guard ::= when <<guarded guard>> {pin=1}
@@ -502,7 +505,7 @@ private exprs ::= expression (exprs_tail)* {pin=2 recoverWhile=exprs_recover}
 private exprs_tail ::= ',' expression {pin=1 recoverWhile=exprs_recover}
 private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
-private atomic ::= q_atom !'(' | integer | string_literal+ | float | char 
+private atomic ::= q_atom !'(' | integer | string_literal+ | float | char
 string_literal ::= string {
   implements = "com.intellij.psi.PsiLanguageInjectionHost"
   methods = [isValidHost updateText createLiteralTextEscaper]
