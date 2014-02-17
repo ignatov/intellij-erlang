@@ -18,6 +18,7 @@ package org.intellij.erlang.debugger.xdebug.xvalue;
 
 import com.ericsson.otp.erlang.OtpErlangBitstr;
 import com.ericsson.otp.erlang.OtpErlangByte;
+import com.intellij.xdebugger.frame.ImmediateFullValueEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
@@ -43,12 +44,16 @@ class ErlangBitStringXValue extends ErlangXValueBase<OtpErlangBitstr> {
   @Nullable
   @Override
   protected XValuePresentation getPresentation(@NotNull XValueNode node, @NotNull XValuePlace place) {
+    //TODO apply string detection heuristics (see http://www.erlang.org/doc/apps/stdlib/unicode_usage.html)
+    final String textValue = new String(getValue().binaryValue());
+    if (textValue.length() > XValueNode.MAX_VALUE_LENGTH) {
+      node.setFullValueEvaluator(new ImmediateFullValueEvaluator(textValue));
+    }
     return new XValuePresentation() {
       @Override
       public void renderValue(@NotNull XValueTextRenderer renderer) {
-        //TODO apply string detection heuristics (see http://www.erlang.org/doc/apps/stdlib/unicode_usage.html)
         renderer.renderSpecialSymbol("<<");
-        renderer.renderStringValue(new String(getValue().binaryValue()));
+        renderer.renderStringValue(textValue, "\"\\", XValueNode.MAX_VALUE_LENGTH);
         renderer.renderSpecialSymbol(">>");
       }
     };

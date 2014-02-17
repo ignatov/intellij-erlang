@@ -17,6 +17,7 @@
 package org.intellij.erlang.debugger.xdebug.xvalue;
 
 import com.ericsson.otp.erlang.OtpErlangString;
+import com.intellij.xdebugger.frame.ImmediateFullValueEvaluator;
 import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
 import com.intellij.xdebugger.frame.presentation.XStringValuePresentation;
@@ -32,6 +33,10 @@ class ErlangStringXValue extends ErlangXValueBase<OtpErlangString> {
   @Nullable
   @Override
   protected XValuePresentation getPresentation(@NotNull XValueNode node, @NotNull XValuePlace place) {
-    return new XStringValuePresentation(getValue().stringValue());
+    String text = getValue().stringValue();
+    if (text.length() > XValueNode.MAX_VALUE_LENGTH) {
+      node.setFullValueEvaluator(new ImmediateFullValueEvaluator(text));
+    }
+    return new XStringValuePresentation(text);
   }
 }

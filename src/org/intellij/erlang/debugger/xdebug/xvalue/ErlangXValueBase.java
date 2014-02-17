@@ -18,6 +18,7 @@ package org.intellij.erlang.debugger.xdebug.xvalue;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.intellij.icons.AllIcons;
+import com.intellij.xdebugger.frame.ImmediateFullValueEvaluator;
 import com.intellij.xdebugger.frame.XValue;
 import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
@@ -49,7 +50,12 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
       node.setPresentation(AllIcons.Debugger.Value, presentation, myHasChildren);
     }
     else {
-      node.setPresentation(AllIcons.Debugger.Value, getType(), getStringRepr(), myHasChildren);
+      String repr = getStringRepr();
+      if (repr.length() > XValueNode.MAX_VALUE_LENGTH) {
+        node.setFullValueEvaluator(new ImmediateFullValueEvaluator(repr));
+        repr = repr.substring(0, XValueNode.MAX_VALUE_LENGTH - 3) + "...";
+      }
+      node.setPresentation(AllIcons.Debugger.Value, getType(), repr, myHasChildren);
     }
   }
 
