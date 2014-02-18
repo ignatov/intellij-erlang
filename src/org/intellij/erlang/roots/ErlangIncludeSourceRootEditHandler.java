@@ -16,10 +16,10 @@
 
 package org.intellij.erlang.roots;
 
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.CustomShortcutSet;
 import com.intellij.openapi.roots.ui.configuration.ModuleSourceRootEditHandler;
 import com.intellij.ui.JBColor;
+import org.intellij.erlang.ErlangIcons;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,8 +42,7 @@ public class ErlangIncludeSourceRootEditHandler extends ModuleSourceRootEditHand
   @NotNull
   @Override
   public Icon getRootIcon() {
-    //TODO set icon
-    return AllIcons.Modules.Sources;
+    return ErlangIcons.INCLUDE_ROOT;
   }
 
   @Nullable
@@ -67,7 +66,7 @@ public class ErlangIncludeSourceRootEditHandler extends ModuleSourceRootEditHand
   @NotNull
   @Override
   public Color getRootsGroupColor() {
-    return new JBColor(new Color(140, 123, 79), new Color(140, 123, 79));
+    return new JBColor(new Color(165, 108, 206), new Color(165, 108, 206));
   }
 
   @NotNull
