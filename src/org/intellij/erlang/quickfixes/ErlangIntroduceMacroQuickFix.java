@@ -20,9 +20,16 @@ import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.ConstantNode;
 import com.intellij.codeInspection.ProblemDescriptor;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.ui.popup.ListPopup;
+import com.intellij.openapi.ui.popup.ListPopupStep;
+import com.intellij.openapi.ui.popup.PopupStep;
+import com.intellij.openapi.ui.popup.util.BaseListPopupStep;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilBase;
 import org.intellij.erlang.psi.*;
@@ -33,7 +40,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-//TODO add macro arguments count selection (it should be either -1 or same as arguments count on the call site)
 public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
   @NotNull
   @Override
@@ -45,27 +51,68 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
     PsiElement psiElement = getProblemElementMacroAware(descriptor);
     if (!(psiElement instanceof ErlangMacros)) return;
-    PsiElement file = psiElement.getContainingFile();
-    if (file instanceof ErlangFile) {
-      insertMacroDefinition(project, (ErlangMacros) psiElement, (ErlangFile) file);
+    insertMacroDefinition(project, (ErlangMacros) psiElement);
+  }
+
+  private static void insertMacroDefinition(@NotNull Project project, @NotNull ErlangMacros macro) {
+    ErlangMacroCallArgumentList macroCallArgumentList = macro.getMacroCallArgumentList();
+    if (macroCallArgumentList == null || ApplicationManager.getApplication().isUnitTestMode()) {
+      doInsertMacroDefinition(project, macro, macroCallArgumentList);
+    }
+    else {
+      showAritySelectionPopup(project, macro, macroCallArgumentList);
     }
   }
 
-  private static void insertMacroDefinition(Project project, ErlangMacros macro, ErlangFile file) {
-    Editor editor = PsiUtilBase.findEditor(file);
-    String macroName = getMacroName(macro);
+  private static void showAritySelectionPopup(@NotNull Project project, @NotNull ErlangMacros macro,
+                                              @NotNull ErlangMacroCallArgumentList macroCallArgumentList) {
+    ListPopupStep<String> popupStep = createAritySelectionPopupStep(project, macro, macroCallArgumentList);
+    Editor editor = PsiUtilBase.findEditor(macro);
+    if (popupStep == null || editor == null) return;
+    ListPopup listPopup = JBPopupFactory.getInstance().createListPopup(popupStep);
+    listPopup.showInBestPositionFor(editor);
+  }
 
-    if (editor == null || macroName == null) return;
+  @Nullable
+  private static ListPopupStep<String> createAritySelectionPopupStep(@NotNull final Project project, @NotNull final ErlangMacros macro,
+                                                                     @NotNull final ErlangMacroCallArgumentList macroCallArgumentList) {
+    String macroName = getMacroName(macro);
+    if (macroName == null) return null;
+
+    final String callSiteArityMacro = "?" + macroName + "/" + macroCallArgumentList.getArgumentList().getExpressionList().size();
+    final String noArityMacro = "?" + macroName;
+    return new BaseListPopupStep<String>("Which macro to introduce?",
+      new String[]{callSiteArityMacro, noArityMacro}) {
+      @Override
+      public PopupStep onChosen(String selectedValue, boolean finalChoice) {
+        if (!finalChoice) return this;
+        if (callSiteArityMacro == selectedValue) {
+          doInsertMacroDefinition(project, macro, macroCallArgumentList);
+        }
+        else if (noArityMacro == selectedValue) {
+          doInsertMacroDefinition(project, macro, null);
+        }
+        return FINAL_CHOICE;
+      }
+    };
+  }
+
+  private static void doInsertMacroDefinition(@NotNull Project project, @NotNull ErlangMacros macro,
+                                              @Nullable ErlangMacroCallArgumentList macroCallArgumentList) {
+    PsiFile containingFile = macro.getContainingFile();
+    Editor editor = containingFile != null ? PsiUtilBase.findEditor(containingFile) : null;
+    ErlangFile file = containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
+    String macroName = getMacroName(macro);
+    if (editor == null || file == null || macroName == null) return;
 
     int offset = getFirstMacroDefinitionOffset(file);
     int topLevelOffset = getTopLevelElementOffset(macro, file);
-
     if (offset == -1 || topLevelOffset < offset) {
       offset = topLevelOffset;
       editor.getDocument().insertString(offset, "\n");
     }
 
-    Template template = createMacroDefinitionTemplate(project, macroName, macro.getMacroCallArgumentList());
+    Template template = createMacroDefinitionTemplate(project, macroName, macroCallArgumentList);
     editor.getCaretModel().moveToOffset(offset);
     TemplateManager.getInstance(project).startTemplate(editor, template);
   }
