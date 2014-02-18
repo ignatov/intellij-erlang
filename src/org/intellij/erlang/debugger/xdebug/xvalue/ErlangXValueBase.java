@@ -19,11 +19,13 @@ package org.intellij.erlang.debugger.xdebug.xvalue;
 import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangObject;
-import com.intellij.icons.AllIcons;
 import com.intellij.xdebugger.frame.*;
 import com.intellij.xdebugger.frame.presentation.XValuePresentation;
+import org.intellij.erlang.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
 
 class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
   private final T myValue;
@@ -62,7 +64,7 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
   public final void computePresentation(@NotNull XValueNode node, @NotNull XValuePlace place) {
     XValuePresentation presentation = getPresentation(node, place);
     if (presentation != null) {
-      node.setPresentation(AllIcons.Debugger.Value, presentation, hasChildren());
+      node.setPresentation(getIcon(), presentation, hasChildren());
     }
     else {
       String repr = getStringRepr();
@@ -70,7 +72,7 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
         node.setFullValueEvaluator(new ImmediateFullValueEvaluator(repr));
         repr = repr.substring(0, XValueNode.MAX_VALUE_LENGTH - 3) + "...";
       }
-      node.setPresentation(AllIcons.Debugger.Value, getType(), repr, hasChildren());
+      node.setPresentation(getIcon(), getType(), repr, hasChildren());
     }
   }
 
@@ -95,6 +97,10 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
   @NotNull
   protected String getStringRepr() {
     return myValue.toString();
+  }
+
+  protected Icon getIcon() {
+    return ErlangIcons.DEBUGGER_VALUE;
   }
 
   private boolean hasChildren() {
@@ -127,5 +133,27 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
 
   protected static void addNamedChild(XValueChildrenList childrenList, XValue child, String name) {
     childrenList.add(name, child);
+  }
+}
+
+class ErlangPrimitiveXValueBase<T extends OtpErlangObject> extends ErlangXValueBase<T> {
+  public ErlangPrimitiveXValueBase(T value) {
+    super(value);
+  }
+
+  @Override
+  protected Icon getIcon() {
+    return ErlangIcons.DEBUGGER_PRIMITIVE_VALUE;
+  }
+}
+
+class ErlangArrayXValueBase<T extends OtpErlangObject> extends ErlangXValueBase<T> {
+  public ErlangArrayXValueBase(T value, int childrenCount) {
+    super(value, childrenCount);
+  }
+
+  @Override
+  protected Icon getIcon() {
+    return ErlangIcons.DEBUGGER_ARRAY;
   }
 }

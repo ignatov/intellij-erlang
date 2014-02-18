@@ -20,7 +20,7 @@ import com.ericsson.otp.erlang.OtpErlangMap;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.intellij.xdebugger.frame.XValueChildrenList;
 
-public class ErlangMapXValue extends ErlangXValueBase<OtpErlangMap> {
+public class ErlangMapXValue extends ErlangArrayXValueBase<OtpErlangMap> {
   public ErlangMapXValue(OtpErlangMap value) {
     super(value, value.arity());
   }

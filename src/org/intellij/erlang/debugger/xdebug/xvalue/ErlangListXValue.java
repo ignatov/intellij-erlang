@@ -19,7 +19,7 @@ package org.intellij.erlang.debugger.xdebug.xvalue;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.intellij.xdebugger.frame.XValueChildrenList;
 
-class ErlangListXValue extends ErlangXValueBase<OtpErlangList> {
+class ErlangListXValue extends ErlangArrayXValueBase<OtpErlangList> {
   public ErlangListXValue(OtpErlangList value) {
     super(value, value.arity());
   }

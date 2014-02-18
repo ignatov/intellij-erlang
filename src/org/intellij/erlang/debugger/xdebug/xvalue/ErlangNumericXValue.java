@@ -24,7 +24,7 @@ import com.intellij.xdebugger.frame.presentation.XValuePresentation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class ErlangNumericXValue extends ErlangXValueBase<OtpErlangObject> {
+class ErlangNumericXValue extends ErlangPrimitiveXValueBase<OtpErlangObject> {
   public ErlangNumericXValue(OtpErlangObject value) {
     super(value);
   }

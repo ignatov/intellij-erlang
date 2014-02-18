@@ -25,7 +25,7 @@ import com.intellij.xdebugger.frame.presentation.XValuePresentation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class ErlangBitStringXValue extends ErlangXValueBase<OtpErlangBitstr> {
+class ErlangBitStringXValue extends ErlangArrayXValueBase<OtpErlangBitstr> {
   public ErlangBitStringXValue(OtpErlangBitstr value) {
     super(value, value.binaryValue().length);
   }

@@ -54,6 +54,6 @@ public final class ErlangXValueFactory {
     if (object instanceof OtpErlangMap) {
       return new ErlangMapXValue((OtpErlangMap) object);
     }
-    return new ErlangXValueBase<OtpErlangObject>(object);
+    return new ErlangPrimitiveXValueBase<OtpErlangObject>(object);
   }
 }
