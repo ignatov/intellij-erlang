@@ -18,7 +18,6 @@ package org.intellij.erlang.debugger.xdebug.xvalue;
 
 import com.ericsson.otp.erlang.*;
 import com.intellij.xdebugger.frame.XValue;
-import com.intellij.xdebugger.frame.XValueChildrenList;
 
 public final class ErlangXValueFactory {
   private ErlangXValueFactory() {
@@ -56,13 +55,5 @@ public final class ErlangXValueFactory {
       return new ErlangMapXValue((OtpErlangMap) object);
     }
     return new ErlangXValueBase<OtpErlangObject>(object);
-  }
-
-  public static XValueChildrenList createChildrenList(OtpErlangObject[] elements) {
-    XValueChildrenList children = new XValueChildrenList(elements.length);
-    for (int i = 0; i < elements.length; i++) {
-      children.add("[" + (i + 1) + "]", create(elements[i]));
-    }
-    return children;
   }
 }

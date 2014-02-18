@@ -25,14 +25,14 @@ import org.jetbrains.annotations.Nullable;
 
 class ErlangMappingXValue extends ErlangXValueBase<OtpErlangTuple> {
   public ErlangMappingXValue(OtpErlangObject key, OtpErlangObject value) {
-    super(new OtpErlangTuple(new OtpErlangObject[]{key, value}), true);
+    super(new OtpErlangTuple(new OtpErlangObject[]{key, value}), 2);
   }
 
   @Override
   public void computeChildren(@NotNull XCompositeNode node) {
     XValueChildrenList children = new XValueChildrenList(2);
-    children.add("key", ErlangXValueFactory.create(getMappingKey()));
-    children.add("value", ErlangXValueFactory.create(getMappingValue()));
+    addNamedChild(children, getMappingKey(), "key");
+    addNamedChild(children, getMappingValue(), "value");
     node.addChildren(children, true);
   }
 

@@ -23,15 +23,15 @@ import org.jetbrains.annotations.NotNull;
 
 class ErlangPidXValue extends ErlangXValueBase<OtpErlangPid> {
   public ErlangPidXValue(OtpErlangPid value) {
-    super(value, true);
+    super(value, 3);
   }
 
   @Override
   public void computeChildren(@NotNull XCompositeNode node) {
     XValueChildrenList childrenList = new XValueChildrenList(3);
-    childrenList.add("node", ErlangXValueFactory.create(new OtpErlangAtom(getValue().node())));
-    childrenList.add("id", ErlangXValueFactory.create(new OtpErlangLong(getValue().id())));
-    childrenList.add("serial", ErlangXValueFactory.create(new OtpErlangLong(getValue().serial())));
+    addNamedChild(childrenList, getValue().node(), "node");
+    addNamedChild(childrenList, getValue().id(), "id");
+    addNamedChild(childrenList, getValue().serial(), "serial");
     node.addChildren(childrenList, true);
   }
 }

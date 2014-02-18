@@ -17,9 +17,8 @@
 package org.intellij.erlang.debugger.xdebug.xvalue;
 
 import com.ericsson.otp.erlang.OtpErlangBitstr;
-import com.ericsson.otp.erlang.OtpErlangByte;
 import com.intellij.xdebugger.frame.ImmediateFullValueEvaluator;
-import com.intellij.xdebugger.frame.XCompositeNode;
+import com.intellij.xdebugger.frame.XValueChildrenList;
 import com.intellij.xdebugger.frame.XValueNode;
 import com.intellij.xdebugger.frame.XValuePlace;
 import com.intellij.xdebugger.frame.presentation.XValuePresentation;
@@ -28,17 +27,12 @@ import org.jetbrains.annotations.Nullable;
 
 class ErlangBitStringXValue extends ErlangXValueBase<OtpErlangBitstr> {
   public ErlangBitStringXValue(OtpErlangBitstr value) {
-    super(value, true);
+    super(value, value.binaryValue().length);
   }
 
   @Override
-  public void computeChildren(@NotNull XCompositeNode node) {
-    byte[] bytes = getValue().binaryValue();
-    OtpErlangByte[] otpBytes = new OtpErlangByte[bytes.length];
-    for (int i = 0; i < bytes.length; i++) {
-      otpBytes[i] = new OtpErlangByte(bytes[i]);
-    }
-    node.addChildren(ErlangXValueFactory.createChildrenList(otpBytes), true);
+  protected void computeChild(XValueChildrenList children, int childIdx) {
+    addIndexedChild(children, getValue().binaryValue()[childIdx], childIdx);
   }
 
   @Nullable

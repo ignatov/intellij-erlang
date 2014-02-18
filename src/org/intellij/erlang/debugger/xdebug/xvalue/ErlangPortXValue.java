@@ -16,8 +16,6 @@
 
 package org.intellij.erlang.debugger.xdebug.xvalue;
 
-import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangPort;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XValueChildrenList;
@@ -25,14 +23,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class ErlangPortXValue extends ErlangXValueBase<OtpErlangPort> {
   public ErlangPortXValue(OtpErlangPort value) {
-    super(value, true);
+    super(value, 2);
   }
 
   @Override
   public void computeChildren(@NotNull XCompositeNode node) {
     XValueChildrenList childrenList = new XValueChildrenList(2);
-    childrenList.add("node", ErlangXValueFactory.create(new OtpErlangAtom(getValue().node())));
-    childrenList.add("id", ErlangXValueFactory.create(new OtpErlangLong(getValue().id())));
+    addNamedChild(childrenList, getValue().node(), "node");
+    addNamedChild(childrenList, getValue().id(), "id");
     node.addChildren(childrenList, true);
   }
 }
