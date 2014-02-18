@@ -73,10 +73,17 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
         PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
+      if (hasNarrowerParentScope(psiElement)) return true;
       return !myVarList.add((ErlangQVar) psiElement); // put all possible variables to list
     }
 
     return true;
+  }
+
+  private boolean hasNarrowerParentScope(PsiElement psiElement) {
+    @SuppressWarnings("unchecked") ErlangCompositeElement narrowestParentScopeOwner =
+      PsiTreeUtil.getParentOfType(psiElement, ErlangCrClause.class, ErlangFunClause.class, ErlangFunctionClause.class);
+    return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
   }
 
   private boolean inDifferentCrClauses(PsiElement psiElement) {
