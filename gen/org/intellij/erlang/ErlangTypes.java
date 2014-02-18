@@ -87,7 +87,9 @@ public interface ErlangTypes {
   IElementType ERL_MACROS_NAME = new ErlangCompositeElementType("ERL_MACROS_NAME");
   IElementType ERL_MAP_ENTRIES = new ErlangCompositeElementType("ERL_MAP_ENTRIES");
   IElementType ERL_MAP_ENTRY = new ErlangCompositeElementType("ERL_MAP_ENTRY");
+  IElementType ERL_MAP_ENTRY_TYPE = new ErlangCompositeElementType("ERL_MAP_ENTRY_TYPE");
   IElementType ERL_MAP_EXPRESSION = new ErlangCompositeElementType("ERL_MAP_EXPRESSION");
+  IElementType ERL_MAP_TYPE = new ErlangCompositeElementType("ERL_MAP_TYPE");
   IElementType ERL_MAX_EXPRESSION = new ErlangCompositeElementType("ERL_MAX_EXPRESSION");
   IElementType ERL_MODEL_FIELD_LIST = new ErlangCompositeElementType("ERL_MODEL_FIELD_LIST");
   IElementType ERL_MODULE = ErlangElementTypeFactory.factory("ERL_MODULE");
@@ -441,8 +443,14 @@ public interface ErlangTypes {
       else if (type == ERL_MAP_ENTRY) {
         return new ErlangMapEntryImpl(node);
       }
+      else if (type == ERL_MAP_ENTRY_TYPE) {
+        return new ErlangMapEntryTypeImpl(node);
+      }
       else if (type == ERL_MAP_EXPRESSION) {
         return new ErlangMapExpressionImpl(node);
+      }
+      else if (type == ERL_MAP_TYPE) {
+        return new ErlangMapTypeImpl(node);
       }
       else if (type == ERL_MAX_EXPRESSION) {
         return new ErlangMaxExpressionImpl(node);

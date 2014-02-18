@@ -320,8 +320,16 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitMapEntryType(@NotNull ErlangMapEntryType o) {
+    visitType(o);
+  }
+
   public void visitMapExpression(@NotNull ErlangMapExpression o) {
     visitExpression(o);
+  }
+
+  public void visitMapType(@NotNull ErlangMapType o) {
+    visitType(o);
   }
 
   public void visitMaxExpression(@NotNull ErlangMaxExpression o) {

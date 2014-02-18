@@ -242,6 +242,10 @@ type_guard ::= q_atom '(' top_type_list ')' | top_type
 private top_type_list ::= top_type (',' top_type)*
 top_type ::= [q_var '::'] top_type_100_t
 top_type_100_t ::= type ['|' top_type_100_t] {pin(".*")=1 extends=type}
+map_type ::= '#' '{' map_entry_type_list? '}' {pin=1 extends=type}
+private map_entry_type_list ::= map_entry_type (',' map_entry_type)* {pin(".*")=1}
+map_entry_type ::= top_type '=>' top_type {pin=2 extends=type}
+
 type ::=
   '(' top_type ')'
   | int_type ['..' int_type]
@@ -251,7 +255,8 @@ type ::=
   | q_var ['::' top_type]
   | '[' [top_type [',' '...']] ']'
   | record_like_type
-  | record_hash record_ref '{' field_type_list? '}' {pin(".*")=1}
+  | record_hash record_ref '{' field_type_list? '}'
+  | map_type {pin(".*")=1}
 record_like_type ::= '{' top_type_list? '}' {extends=type}
 
 int_type ::= '-'? (integer | macros argument_list?) {extends=type}
