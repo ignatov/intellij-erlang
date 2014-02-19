@@ -87,14 +87,24 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
       public PopupStep onChosen(String selectedValue, boolean finalChoice) {
         if (!finalChoice) return this;
         if (callSiteArityMacro == selectedValue) {
-          doInsertMacroDefinition(project, macro, macroCallArgumentList);
+          doInsertMacroDefinitionInWriteAction(project, macro, macroCallArgumentList);
         }
         else if (noArityMacro == selectedValue) {
-          doInsertMacroDefinition(project, macro, null);
+          doInsertMacroDefinitionInWriteAction(project, macro, null);
         }
         return FINAL_CHOICE;
       }
     };
+  }
+
+  private static void doInsertMacroDefinitionInWriteAction(@NotNull final Project project, @NotNull final ErlangMacros macro,
+                                                           @Nullable final ErlangMacroCallArgumentList macroCallArgumentList) {
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        doInsertMacroDefinition(project, macro, macroCallArgumentList);
+      }
+    });
   }
 
   private static void doInsertMacroDefinition(@NotNull Project project, @NotNull ErlangMacros macro,
