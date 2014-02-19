@@ -19,7 +19,7 @@
         </constraints>
         <properties>
           <font style="0"/>
-          <text value="P&amp;roject root:"/>
+          <text value="&amp;Rebar project root:"/>
         </properties>
       </component>
       <component id="7ccdd" class="com.intellij.openapi.ui.TextFieldWithBrowseButton" binding="myProjectRootComponent">
