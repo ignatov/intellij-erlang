@@ -2,17 +2,13 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import org.intellij.erlang.eunit.ErlangTestRunConfigProducersUtil;
 import org.intellij.erlang.eunit.ErlangUnitTestElementUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.Collection;
 
@@ -27,15 +23,7 @@ public class RebarEunitConfigurationProducer extends RunConfigurationProducer<Re
                                                   ConfigurationContext context,
                                                   Ref<PsiElement> sourceElement) {
     PsiElement psiElement = sourceElement.get();
-    if (psiElement == null || !psiElement.isValid()) {
-      return false;
-    }
-
-    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
-    configuration.setModule(module);
-
-    PsiFile file = psiElement.getContainingFile();
-    if (!(file instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) file) ||
+    if (psiElement == null || !psiElement.isValid() ||
       !ErlangTestRunConfigProducersUtil.shouldProduceRebarTestRunConfiguration(context.getProject(), context.getModule())) {
       return false;
     }
@@ -46,6 +34,7 @@ public class RebarEunitConfigurationProducer extends RunConfigurationProducer<Re
 
     if (command.isEmpty()) return false;
 
+    configuration.setModule(context.getModule());
     configuration.setCommand(command);
     configuration.setSkipDependencies(true);
     configuration.setName(createConfigurationName(functions, suites));

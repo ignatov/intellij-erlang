@@ -24,7 +24,6 @@ import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -44,20 +43,12 @@ public class ErlangUnitRunConfigurationProducer extends RunConfigurationProducer
                                                   @NotNull ConfigurationContext context,
                                                   @NotNull Ref<PsiElement> sourceElement) {
     PsiElement psiElement = sourceElement.get();
-    if (psiElement == null || !psiElement.isValid()) {
-      return false;
-    }
-
-    PsiFile file = psiElement.getContainingFile();
-    if (!(file instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) file) ||
+    if (psiElement == null || !psiElement.isValid() ||
       !ErlangTestRunConfigProducersUtil.shouldProduceEunitTestRunConfiguration(context.getProject(), context.getModule())) {
       return false;
     }
 
-    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
-    if (module != null) {
-      configuration.setModule(module);
-    }
+    configuration.setModule(context.getModule());
 
     LinkedHashSet<String> functionNames = findTestFunctionNames(psiElement);
     if (!functionNames.isEmpty()) {

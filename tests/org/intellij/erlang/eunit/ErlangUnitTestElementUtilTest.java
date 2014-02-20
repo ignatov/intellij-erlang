@@ -53,6 +53,17 @@ public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsigh
     assertContainsElements(files, psiFiles);
   }
 
+  public void testDirectorySelection() throws Exception {
+    PsiFile[] psiFiles = myFixture.configureByFiles("tests1.erl", "tests2.erl");
+    @SuppressWarnings("ConstantConditions") MyMockDataContext dataContext =
+      new MyMockDataContext(psiFiles[0].getParent().getVirtualFile());
+    Collection<ErlangFile> files = ErlangUnitTestElementUtil.findFileTestElements(myFixture.getProject(), dataContext);
+
+    assertNotNull(files);
+    assertEquals(psiFiles.length, files.size());
+    assertContainsElements(files, psiFiles);
+  }
+
   private static VirtualFile[] getVirtualFiles(PsiFile[] psiFiles) {
     VirtualFile[] virtualFiles = new VirtualFile[psiFiles.length];
     for (int i = 0; i < psiFiles.length; i++) {
