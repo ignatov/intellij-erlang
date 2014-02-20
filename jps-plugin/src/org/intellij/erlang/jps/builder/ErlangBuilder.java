@@ -174,9 +174,16 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     addParseTransforms(commandLine, module);
     addDebugInfo(commandLine, erlangModulePaths, outputDirectory, compilerOptions.myAddDebugInfoEnabled);
     addIncludePaths(commandLine, module);
+    addMacroDefinitions(commandLine, target);
     commandLine.addParameters(erlangModulePaths);
 
     return commandLine;
+  }
+
+  private static void addMacroDefinitions(GeneralCommandLine commandLine, ErlangTarget target) {
+    if (target.isTests()) {
+      commandLine.addParameters("-DTEST");
+    }
   }
 
   private static void addDebugInfo(@NotNull GeneralCommandLine commandLine,
