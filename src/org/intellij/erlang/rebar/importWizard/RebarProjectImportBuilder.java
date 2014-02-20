@@ -72,6 +72,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   @NotNull private List<ImportedOtpApp> mySelectedOtpApps = Collections.emptyList();
   private boolean myImportExamples;
   @NotNull private String myRebarPath = "";
+  private boolean myIsImportingProject;
 
   @NotNull
   @NonNls
@@ -268,7 +269,9 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
     addErlangFacets(mySelectedOtpApps);
     RebarSettings.getInstance(project).setRebarPath(myRebarPath);
-    ErlangCompilerSettings.getInstance(project).setUseRebarCompilerEnabled(true);
+    if (myIsImportingProject) {
+      ErlangCompilerSettings.getInstance(project).setUseRebarCompilerEnabled(true);
+    }
     CompilerWorkspaceConfiguration.getInstance(project).CLEAR_OUTPUT_DIRECTORY = false;
 
     return createdModules;
@@ -480,5 +483,9 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
   public void setRebarPath(@NotNull String rebarPath) {
     myRebarPath = rebarPath;
+  }
+
+  public void setIsImportingProject(boolean isImportingProject) {
+    myIsImportingProject = isImportingProject;
   }
 }

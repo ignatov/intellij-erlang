@@ -83,6 +83,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
     RebarProjectImportBuilder builder = getBuilder();
     builder.setImportExamples(myImportExamplesCheckBox.isSelected());
     builder.setRebarPath(myRebarConfigurationForm.getPath());
+    builder.setIsImportingProject(getWizardContext().isCreatingNewProject());
     return builder.setProjectRoot(projectRoot);
   }
 
