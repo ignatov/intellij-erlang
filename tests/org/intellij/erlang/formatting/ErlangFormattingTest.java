@@ -106,6 +106,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test222_2()  throws Exception { getErlangSettings().INDENT_RELATIVE = false; doTest(); }
   public void test273()    throws Exception { getErlangSettings().ALIGN_GUARDS = true; doTest(); }
   public void test379()    throws Exception { setUpCommaFirst(); doTest(); }
+  public void test433()    throws Exception { getErlangSettings().ALIGN_FUN_CLAUSES = true; doTest(); }
 
   public void test292() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();

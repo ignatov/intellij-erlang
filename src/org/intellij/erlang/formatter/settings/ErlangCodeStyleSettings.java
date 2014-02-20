@@ -31,8 +31,9 @@ public class ErlangCodeStyleSettings extends CustomCodeStyleSettings {
   public boolean SPACE_AROUND_LEFT_ARROW = true;
   public boolean SPACE_AROUND_EQ_IN_RECORDS = true;
   public boolean SPACE_AROUND_OR_IN_LISTS = true;
+  public boolean ALIGN_FUN_CLAUSES = false;
 
-  public int EXPRESSION_IN_CLAUSE_WRAP = CommonCodeStyleSettings.WRAP_AS_NEEDED;  
+  public int EXPRESSION_IN_CLAUSE_WRAP = CommonCodeStyleSettings.WRAP_AS_NEEDED;
 
   protected ErlangCodeStyleSettings(CodeStyleSettings container) {
     super("ErlangCodeStyleSettings", container);

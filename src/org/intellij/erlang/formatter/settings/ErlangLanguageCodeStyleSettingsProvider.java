@@ -118,6 +118,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       showCustomWrapOption(consumer, "EXPRESSION_IN_CLAUSE_WRAP", "Expression in clause", null);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_MULTILINE_BLOCK", "Blocks (fun...end, etc)", ALIGNMENT);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_FUNCTION_CLAUSES", "Function clauses", ALIGNMENT);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_FUN_CLAUSES", "Fun expression clauses", ALIGNMENT);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_GUARDS", "Guards", ALIGNMENT);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "INDENT_RELATIVE", "Honor relative", null);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "NEW_LINE_BEFORE_COMMA", "Comma first style", null);
