@@ -16,27 +16,54 @@
 
 package org.intellij.erlang.rebar.runner;
 
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
+import org.intellij.erlang.ErlangModuleType;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfigurationBase> {
   private JPanel myComponent;
   private JTextField myCommandText;
-  private JCheckBox mySkipDependencies;
+  private JCheckBox myRunInModuleCheckBox;
+  private ModulesCombobox myModulesComboBox;
+  private JCheckBox mySkipDependenciesCheckBox;
+
+  RebarRunConfigurationEditorForm() {
+    myRunInModuleCheckBox.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        myModulesComboBox.setEnabled(myRunInModuleCheckBox.isSelected());
+      }
+    });
+  }
 
   @Override
-  protected void resetEditorFrom(@NotNull RebarRunConfigurationBase rebarRunConfiguration) {
-    myCommandText.setText(rebarRunConfiguration.getCommand());
-    mySkipDependencies.setSelected(rebarRunConfiguration.isSkipDependencies());
+  protected void resetEditorFrom(@NotNull RebarRunConfigurationBase configuration) {
+    myCommandText.setText(configuration.getCommand());
+    mySkipDependenciesCheckBox.setSelected(configuration.isSkipDependencies());
+    myModulesComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+    Module module = configuration.getConfigurationModule().getModule();
+    if (module != null) {
+      setRunInModuleSelected(true);
+      myModulesComboBox.setSelectedModule(module);
+    }
+    else {
+      setRunInModuleSelected(false);
+    }
   }
 
   @Override
   protected void applyEditorTo(@NotNull RebarRunConfigurationBase rebarRunConfiguration) throws ConfigurationException {
     rebarRunConfiguration.setCommand(myCommandText.getText());
-    rebarRunConfiguration.setSkipDependencies(mySkipDependencies.isSelected());
+    rebarRunConfiguration.setSkipDependencies(mySkipDependenciesCheckBox.isSelected());
+    Module selectedModule = myRunInModuleCheckBox.isSelected() ? myModulesComboBox.getSelectedModule() : null;
+    rebarRunConfiguration.setModule(selectedModule);
   }
 
   @NotNull
@@ -48,5 +75,18 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   @Override
   protected void disposeEditor() {
     myComponent.setVisible(false);
+  }
+
+  private void setRunInModuleSelected(boolean b) {
+    if (b) {
+      if (!myRunInModuleCheckBox.isSelected()) {
+        myRunInModuleCheckBox.doClick();
+      }
+    }
+    else {
+      if (myRunInModuleCheckBox.isSelected()) {
+        myRunInModuleCheckBox.doClick();
+      }
+    }
   }
 }

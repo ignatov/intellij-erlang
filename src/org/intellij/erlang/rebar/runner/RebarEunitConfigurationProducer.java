@@ -2,6 +2,8 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -28,6 +30,9 @@ public class RebarEunitConfigurationProducer extends RunConfigurationProducer<Re
     if (psiElement == null || !psiElement.isValid()) {
       return false;
     }
+
+    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
+    configuration.setModule(module);
 
     PsiFile file = psiElement.getContainingFile();
     if (!(file instanceof ErlangFile) || !ErlangPsiImplUtil.isEunitImported((ErlangFile) file) ||

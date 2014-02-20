@@ -6,7 +6,10 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
@@ -23,7 +26,7 @@ public class RebarRunningStateUtil {
     RebarSettings rebarSettings = RebarSettings.getInstance(project);
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
-    commandLine.setWorkDirectory(project.getBasePath());
+    commandLine.setWorkDirectory(getWorkingDirectory(configuration));
     commandLine.setExePath(rebarSettings.getRebarPath());
 
     List<String> split = ContainerUtil.list(configuration.getCommand().split("\\s+"));
@@ -51,5 +54,16 @@ public class RebarRunningStateUtil {
       }
       throw e;
     }
+  }
+
+  public static String getWorkingDirectory(@NotNull RebarRunConfigurationBase configuration) {
+    Module module = configuration.getConfigurationModule().getModule();
+    if (module != null) {
+      VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
+      if (contentRoots.length >= 1) {
+        return contentRoots[0].getPath();
+      }
+    }
+    return configuration.getProject().getBasePath();
   }
 }

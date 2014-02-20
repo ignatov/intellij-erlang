@@ -111,12 +111,11 @@ public class RebarEunitRunningState extends CommandLineState {
 
   private File createEunitReportsEnvironment() throws ExecutionException {
     try {
-      Project project = myConfiguration.getProject();
-      String projectRoot = project.getBasePath();
+      String workingDirectory = RebarRunningStateUtil.getWorkingDirectory(myConfiguration);
       File tempDirectory = FileUtil.createTempDirectory(ErlangEunitReporterModule.MODULE_NAME, null);
       File configFile = new File(tempDirectory, CONFIG_FILE_NAME);
 
-      writeModifiedConfig(new File(projectRoot, CONFIG_FILE_NAME), configFile);
+      writeModifiedConfig(new File(workingDirectory, CONFIG_FILE_NAME), configFile);
       ErlangEunitReporterModule.putReporterModuleTo(tempDirectory);
 
       return tempDirectory;
