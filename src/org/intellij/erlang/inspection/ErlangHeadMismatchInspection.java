@@ -23,10 +23,7 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangFunctionClause;
-import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -35,36 +32,49 @@ import java.util.List;
 
 public class ErlangHeadMismatchInspection extends ErlangInspectionBase implements DumbAware {
   @Override
-  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
+  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
+    file.accept(new ErlangRecursiveVisitor() {
+      @Override
+      public void visitFunction(@NotNull ErlangFunction function) {
+        checkFunction(function, problemsHolder);
+      }
+    });
+  }
 
-    for (ErlangFunction function : ((ErlangFile) file).getFunctions()) {
-      final String functionName = function.getName();
-      List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
+  private static void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {
+    final String functionName = function.getName();
+    List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
+    if (clauses.size() <= 1) return;
+    for (ErlangFunctionClause clause : clauses) {
+      ErlangQAtom clauseHead = clause.getQAtom();
+      if (clauseHead.getMacros() != null) return;
+      String clauseSignature = ErlangPsiImplUtil.createFunctionClausePresentation(clause);
+      String functionSignature = ErlangPsiImplUtil.createFunctionPresentation(function);
 
-      if (clauses.size() > 1) {
-        for (ErlangFunctionClause clause : clauses) {
-          ErlangQAtom clauseHead = clause.getQAtom();
-          if (clauseHead.getMacros() != null) return;
-          String clauseSignature = ErlangPsiImplUtil.createFunctionClausePresentation(clause);
-          String functionSignature = ErlangPsiImplUtil.createFunctionPresentation(function);
+      if (!functionSignature.equals(clauseSignature)) {
+        problemsHolder.registerProblem(clauseHead,
+          "Head mismatch: should be '" + functionSignature + "'", new RenameFunctionClauseHeadQuickFix(functionName));
+      }
+    }
+  }
 
-          if (!functionSignature.equals(clauseSignature)) {
-            problemsHolder.registerProblem(clauseHead, "Head mismatch: should be '" + functionSignature + "'",
-              new LocalQuickFixBase("Rename clause head") {
-                @Override
-                public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-                  PsiElement oldHead = descriptor.getPsiElement();
-                  if (oldHead instanceof ErlangQAtom) {
-                    PsiElement newHead = ErlangElementFactory.createQAtomFromText(project, functionName);
-                    PsiElement atom = ((ErlangQAtom) oldHead).getAtom();
-                    if (atom != null) {
-                      atom.replace(newHead);
-                    }
-                  }
-                }
-              });
-          }
+  private static class RenameFunctionClauseHeadQuickFix extends LocalQuickFixBase {
+    private final String myFunctionName;
+
+    protected RenameFunctionClauseHeadQuickFix(String functionName) {
+      super("Rename clause head");
+      myFunctionName = functionName;
+    }
+
+    @Override
+    public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+      PsiElement oldHead = descriptor.getPsiElement();
+      if (oldHead instanceof ErlangQAtom) {
+        PsiElement newHead = ErlangElementFactory.createQAtomFromText(project, myFunctionName);
+        PsiElement atom = ((ErlangQAtom) oldHead).getAtom();
+        if (atom != null) {
+          atom.replace(newHead);
         }
       }
     }
