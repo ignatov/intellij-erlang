@@ -200,12 +200,12 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariantsInner(CompletionType.BASIC, 2, CheckType.INCLUDES, "test_module");
   }
 
-  public void testModuleCompletionWithComma() throws Throwable {
+  public void testModuleCompletionWithColon() throws Throwable {
     myFixture.configureByFiles("module-completion/test_module.erl");
     doCheckResult("foo() -> test_modul<caret>", "foo() -> test_module:");
   }
 
-  public void testModuleCompletionWithoutComma() throws Throwable {
+  public void testModuleCompletionWithoutColon() throws Throwable {
     myFixture.configureByFiles("module-completion/test_module.erl");
     doCheckResult("foo() -> bar(test_modul<caret>", "foo() -> bar(test_module");
   }
