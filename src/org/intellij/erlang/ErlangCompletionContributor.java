@@ -184,7 +184,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
             //noinspection unchecked
             boolean insideImport = PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective;
             if (inside || (inConsole && !isDot(position)) || insideImport) {
-              suggestModules(result, position, !insideImport);
+              boolean withColon = !insideImport && null == PsiTreeUtil.getParentOfType(position, ErlangFunctionCallExpression.class, false);
+              suggestModules(result, position, withColon);
             }
           }
           if (colonQualified == null && grandPa instanceof ErlangExpression && (ErlangPsiImplUtil.inFunction(position) || inConsole)) {
