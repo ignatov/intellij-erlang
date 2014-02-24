@@ -2253,14 +2253,26 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // q_var
+  // fun_name_var
   public static boolean fun_name(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "fun_name")) return false;
     if (!nextTokenIs(builder_, "<fun name>", ERL_UNI_PATTERN, ERL_VAR)) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<fun name>");
-    result_ = q_var(builder_, level_ + 1);
+    result_ = fun_name_var(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_ARGUMENT_DEFINITION, result_, false, null);
+    return result_;
+  }
+
+  /* ********************************************************** */
+  // q_var
+  public static boolean fun_name_var(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "fun_name_var")) return false;
+    if (!nextTokenIs(builder_, "<fun name var>", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<fun name var>");
+    result_ = q_var(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, ERL_MAX_EXPRESSION, result_, false, null);
     return result_;
   }
 

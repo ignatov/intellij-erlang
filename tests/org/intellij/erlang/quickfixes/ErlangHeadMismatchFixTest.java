@@ -32,4 +32,12 @@ public class ErlangHeadMismatchFixTest extends ErlangQuickFixTestBase {
   }
 
   public void testSimple() throws Throwable { doTest("Rename clause head"); }
+
+  public void testFun_expr_delete() throws Throwable { doFunExprTest(); }
+  public void testFun_expr_insert() throws Throwable { doFunExprTest(); }
+  public void testFun_expr_rename() throws Throwable { doFunExprTest(); }
+
+  private void doFunExprTest() throws Throwable {
+    doTest("Change clause name");
+  }
 }

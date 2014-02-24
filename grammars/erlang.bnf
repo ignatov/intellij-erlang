@@ -488,7 +488,8 @@ function_with_arity ::= q_atom '/' integer {pin=1 methods=[getReference]}
 function_with_arity_variables ::= q_var '/' (integer|q_var) {pin=1}
 fun_clauses ::= fun_clause (';' fun_clause)*
 fun_clause ::= fun_name? argument_definition_list clause_guard? clause_body {pin=2}
-fun_name ::= q_var {elementType=argument_definition}
+fun_name ::= fun_name_var {elementType=argument_definition}
+fun_name_var ::= q_var {elementType=max_expression}
 
 try_expression ::= try try_expressions_clause [of cr_clauses] try_catch end {pin(".*")=1}
 try_catch ::= catch try_clauses [after try_expressions_clause] | after try_expressions_clause {pin(".*")="catch|after"}

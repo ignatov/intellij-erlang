@@ -21,15 +21,21 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.FileContentUtilCore;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
+//TODO add arity mismatch checks
 public class ErlangHeadMismatchInspection extends ErlangInspectionBase implements DumbAware {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
@@ -37,7 +43,14 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitFunction(@NotNull ErlangFunction function) {
+        super.visitFunction(function); // for fun expressions
         checkFunction(function, problemsHolder);
+      }
+
+      @Override
+      public void visitFunExpression(@NotNull ErlangFunExpression funExpression) {
+        super.visitFunExpression(funExpression); // for nested fun expressions
+        checkFunExpression(funExpression, problemsHolder);
       }
     });
   }
@@ -59,6 +72,39 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     }
   }
 
+  private static void checkFunExpression(ErlangFunExpression funExpression, ProblemsHolder problemsHolder) {
+    ErlangFunClauses funClauses = funExpression.getFunClauses();
+    List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : Collections.<ErlangFunClause>emptyList();
+    if (funClauseList.size() <= 1) return;
+    ErlangFunClause firstClause = funClauseList.get(0);
+    ErlangQVar firstClauseName = getFunExpressionClauseName(firstClause);
+    for (ErlangFunClause funClause : funClauseList) {
+      ErlangQVar funClauseName = getFunExpressionClauseName(funClause);
+      if (!funExpressionClauseNamesAreEqual(firstClauseName, funClauseName)) {
+        String problemDescription = firstClauseName == null ?
+          "Head mismatch: named clause in an unnamed fun expression" :
+          (funClauseName == null ?
+            "Head mismatch: unnamed clause in a named fun expression" :
+            "Head mismatch: should be '" + firstClauseName.getName() + "'");
+        PsiElement elementForRange = funClauseName != null ? funClauseName : funClause.getArgumentDefinitionList();
+        TextRange range = TextRange.create(elementForRange.getStartOffsetInParent(),
+          elementForRange.getStartOffsetInParent() + elementForRange.getTextLength());
+        problemsHolder.registerProblem(funClause, range, problemDescription, new ChangeFunExpressionNameQuickFix(firstClauseName));
+      }
+    }
+  }
+
+  private static boolean funExpressionClauseNamesAreEqual(@Nullable ErlangQVar var1, @Nullable ErlangQVar var2) {
+    return var1 == var2 || var1 != null && var2 != null && var1.getName().equals(var2.getName());
+  }
+
+  @Nullable
+  private static ErlangQVar getFunExpressionClauseName(ErlangFunClause clause) {
+    ErlangArgumentDefinition argumentDefinition = clause.getArgumentDefinition();
+    ErlangExpression expression = argumentDefinition != null ? argumentDefinition.getExpression() : null;
+    return expression instanceof ErlangMaxExpression ? ((ErlangMaxExpression) expression).getQVar() : null;
+  }
+
   private static class RenameFunctionClauseHeadQuickFix extends LocalQuickFixBase {
     private final String myFunctionName;
 
@@ -76,6 +122,45 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
         if (atom != null) {
           atom.replace(newHead);
         }
+      }
+    }
+  }
+
+  private static class ChangeFunExpressionNameQuickFix extends LocalQuickFixBase {
+    private PsiElement myNewNameVar;
+
+    public ChangeFunExpressionNameQuickFix(@Nullable ErlangQVar newNameVar) {
+      super("Change clause name");
+      myNewNameVar = newNameVar != null ? newNameVar.getVar() : null;
+    }
+
+    @Override
+    public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+      ErlangFunClause funClause = (ErlangFunClause) descriptor.getPsiElement();
+      ErlangQVar actualNameQVar = getFunExpressionClauseName(funClause);
+      PsiElement actualNameVar = actualNameQVar != null ? actualNameQVar.getVar() : null;
+      if (myNewNameVar == null) {
+        if (actualNameVar != null) {
+          actualNameVar.delete();
+          rebuildPsiFor(funClause);
+        }
+      }
+      else {
+        if (actualNameVar == null) {
+          funClause.addBefore(myNewNameVar, funClause.getFirstChild());
+        }
+        else {
+          actualNameVar.replace(myNewNameVar);
+        }
+        rebuildPsiFor(funClause);
+      }
+    }
+
+    private static void rebuildPsiFor(PsiElement what) {
+      PsiFile psiFile = what.getContainingFile();
+      VirtualFile virtualFile = psiFile.getVirtualFile();
+      if (virtualFile != null) {
+        FileContentUtilCore.reparseFiles(Collections.singletonList(virtualFile));
       }
     }
   }

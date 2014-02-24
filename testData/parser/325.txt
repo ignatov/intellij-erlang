@@ -13,8 +13,9 @@ ERL_FILE
           ERL_FUN_CLAUSES
             ERL_FUN_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_Q_VAR
-                  PsiElement(var)('Fact')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Fact')
               ERL_ARGUMENT_DEFINITION_LIST
                 PsiElement(()('(')
                 ERL_ARGUMENT_DEFINITION
@@ -55,8 +56,9 @@ ERL_FILE
             PsiElement(;)(';')
             ERL_FUN_CLAUSE
               ERL_ARGUMENT_DEFINITION
-                ERL_Q_VAR
-                  PsiElement(var)('Fact')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Fact')
               ERL_ARGUMENT_DEFINITION_LIST
                 PsiElement(()('(')
                 ERL_ARGUMENT_DEFINITION
