@@ -97,6 +97,9 @@ public class ErlangIndentProcessor {
       boolean insideCall = PsiTreeUtil.getParentOfType(node.getPsi(), ErlangArgumentDefinition.class, ErlangParenthesizedExpression.class) != null;
       return insideCall ? Indent.getNormalIndent() : Indent.getNoneIndent();
     }
+    if (parentType == ERL_MAP_ENTRIES) {
+      return Indent.getNormalIndent();
+    }
     if (parentType == ERL_BEGIN_END_BODY) {
       return Indent.getNoneIndent();
     }
