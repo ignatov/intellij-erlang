@@ -211,6 +211,8 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testCommaFirstEnter() throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter2() throws Exception { setUpCommaFirst(); doEnterTest(); }
 
+  public void testNamedFunExpr() throws Exception { doTest(); }
+
   private void setUpCommaFirst() {
     getErlangSettings().NEW_LINE_BEFORE_COMMA = true;
     getErlangSettings().ALIGN_MULTILINE_BLOCK = true;

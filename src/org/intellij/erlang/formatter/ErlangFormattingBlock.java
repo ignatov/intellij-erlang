@@ -226,6 +226,16 @@ public class ErlangFormattingBlock extends AbstractBlock {
         return Spacing.createKeepingFirstColumnSpacing(0, Integer.MAX_VALUE, true, mySettings.KEEP_BLANK_LINES_IN_CODE);
       }
     }
+    //adds a space between fun and and fun name var in named fun expressions
+    if (child1 instanceof ErlangFormattingBlock && child2 instanceof ErlangFormattingBlock &&
+      ((ErlangFormattingBlock) child1).getNode().getElementType() == ERL_FUN &&
+      ((ErlangFormattingBlock) child2).getNode().getElementType() == ERL_FUN_CLAUSES) {
+      ErlangFunClauses funClauses = (ErlangFunClauses) ((ErlangFormattingBlock) child2).getNode().getPsi();
+      List<ErlangFunClause> funClauseList = funClauses.getFunClauseList();
+      if (!funClauseList.isEmpty() && funClauseList.get(0).getArgumentDefinition() != null) {
+        return Spacing.createSpacing(1, 1, 0, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
+      }
+    }
     return mySpacingBuilder.getSpacing(this, child1, child2);
   }
 
