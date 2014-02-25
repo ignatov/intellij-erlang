@@ -50,10 +50,8 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
       ContainerUtil.addIfNotNull(variableContext.get(myRequestedName), myVarList);
       return true;
     }
-    
+
     if (!(psiElement instanceof ErlangQVar)) return true;
-    if (psiElement instanceof ErlangFunction) return false;
-    if (psiElement instanceof ErlangSpecification) return false;
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
     
