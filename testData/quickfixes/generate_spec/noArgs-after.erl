@@ -1,3 +1,3 @@
--spec foo() -> any().
+-spec foo() -> atom().
 
 foo() -> ok.

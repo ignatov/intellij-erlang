@@ -19,8 +19,9 @@ public class ErlangGenerateSpecFixTest extends ErlangQuickFixTestBase {
 
   private void doGenerateSpecTest() { doTest(ErlangGenerateSpecFix.NAME); }
 
-  public void testNoArgs() throws Throwable { doGenerateSpecTest(); }
-  public void testWithArgs() throws Throwable { doGenerateSpecTest(); }
+  public void testNoArgs()          throws Throwable { doGenerateSpecTest(); }
+  public void testWithArgs()        throws Throwable { doGenerateSpecTest(); }
+  public void testMultipleClauses() throws Throwable { doGenerateSpecTest(); }
 
   public void testNoActionIfSpecExists() throws Throwable {
     final String testName = getTestName(true);
