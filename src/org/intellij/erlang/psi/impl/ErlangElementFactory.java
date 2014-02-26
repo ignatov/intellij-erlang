@@ -71,14 +71,12 @@ public class ErlangElementFactory {
 
   @NotNull
   public static PsiElement createExportFromText(@NotNull Project project, @NotNull String text) {
-    ErlangFile fileFromText = createFileFromText(project, "-export([" + text + "]).");
-    return fileFromText.getAttributes().get(0);
+    return createAttributeFromText(project, "-export([" + text + "]).");
   }
 
   @NotNull
   public static PsiElement createExportTypeFromText(@NotNull Project project, @NotNull String text) {
-    ErlangFile fileFromText = createFileFromText(project, "-export_type([" + text + "]).");
-    return fileFromText.getAttributes().get(0);
+    return createAttributeFromText(project, "-export_type([" + text + "]).");
   }
 
   @NotNull
@@ -97,6 +95,16 @@ public class ErlangElementFactory {
   @NotNull
   public static PsiElement createLeafFromText(@NotNull Project project, @NotNull String text) {
     return createFileFromText(project, text).getFirstChild();
+  }
+  @NotNull
+  public static PsiElement createSpecFromText(@NotNull Project project, @NotNull String text) {
+    return createAttributeFromText(project, "-spec " + text);
+  }
+
+  @NotNull
+  private static PsiElement createAttributeFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, text);
+    return fileFromText.getAttributes().get(0);
   }
 
   @NotNull
