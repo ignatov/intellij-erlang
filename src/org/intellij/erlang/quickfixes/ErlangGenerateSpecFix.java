@@ -8,7 +8,6 @@ import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -59,38 +58,36 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     ApplicationManager.getApplication().invokeLater(new Runnable() {
       @Override
       public void run() {
-        ApplicationManager.getApplication().runWriteAction(new Runnable() {
+        CommandProcessor.getInstance().executeCommand(editor.getProject(), new Runnable() {
           @Override
           public void run() {
-            TemplateBuilder templateBuilder = TemplateBuilderFactory.getInstance().createTemplateBuilder(spec);
-            Collection<ErlangTopType> types = PsiTreeUtil.findChildrenOfType(spec, ErlangTopType.class);
-            for (ErlangTopType type : types) {
-              templateBuilder.replaceElement(type, type.getText());
-            }
-            templateBuilder.run(editor, false);
+            ApplicationManager.getApplication().runWriteAction(new Runnable() {
+              @Override
+              public void run() {
+                TemplateBuilder templateBuilder = TemplateBuilderFactory.getInstance().createTemplateBuilder(spec);
+                Collection<ErlangTopType> types = PsiTreeUtil.findChildrenOfType(spec, ErlangTopType.class);
+                for (ErlangTopType type : types) {
+                  templateBuilder.replaceElement(type, type.getText());
+                }
+                templateBuilder.run(editor, false);
+              }
+            });
           }
-        });
+        }, "Generate spec template editor", null);
       }
     });
   }
 
-  private static PsiElement createSpecTemplate(final ErlangFunction function, final ErlangFile file, final Project project) {
-    final StringBuilder specText = new StringBuilder();
+  private static PsiElement createSpecTemplate(ErlangFunction function, ErlangFile file, Project project) {
+    StringBuilder specText = new StringBuilder();
     specText.append(function.getName())
             .append('(').append(computeArgsTypeSpecs(function)).append(')')
             .append(" -> ")
             .append(getTypeString(computeReturnType(function)))
             .append('.');
-    final Ref<PsiElement> specRef = new Ref<PsiElement>();
-    CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-      @Override
-      public void run() {
-        PsiElement spec = file.addBefore(ErlangElementFactory.createSpecFromText(project, specText.toString()), function);
-        specRef.set(spec);
-        file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), function);
-      }
-    }, null, null);
-    return specRef.get();
+    PsiElement spec = file.addBefore(ErlangElementFactory.createSpecFromText(project, specText.toString()), function);
+    file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), function);
+    return spec;
   }
 
   private static String computeArgsTypeSpecs(ErlangFunction function) {
