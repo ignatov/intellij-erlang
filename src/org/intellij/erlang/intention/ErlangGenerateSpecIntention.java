@@ -13,9 +13,6 @@ import org.intellij.erlang.quickfixes.ErlangGenerateSpecFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * @author savenko
- */
 public class ErlangGenerateSpecIntention extends BaseIntentionAction {
   @NotNull
   @Override

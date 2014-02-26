@@ -5,9 +5,6 @@ import com.intellij.util.containers.ContainerUtil;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangGenerateSpecFixTest extends ErlangQuickFixTestBase {
   @Override
   protected void setUp() throws Exception {
