@@ -81,6 +81,12 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   private boolean hasNarrowerParentScope(PsiElement psiElement) {
     @SuppressWarnings("unchecked") ErlangCompositeElement narrowestParentScopeOwner =
       PsiTreeUtil.getParentOfType(psiElement, ErlangCrClause.class, ErlangFunClause.class, ErlangFunctionClause.class);
+    if (narrowestParentScopeOwner instanceof ErlangFunClause) {
+      ErlangArgumentDefinition funName = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+      if (((ErlangFunClause) narrowestParentScopeOwner).getArgumentDefinition() == funName) {
+        return false;
+      }
+    }
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
   }
 
