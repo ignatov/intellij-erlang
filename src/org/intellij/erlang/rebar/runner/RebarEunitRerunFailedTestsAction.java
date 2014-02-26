@@ -30,6 +30,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.runconfig.ErlangModuleBasedConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -120,8 +121,16 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         configuration.setCommand(RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false));
         configuration.setName("");
         configuration.setSkipDependencies(true);
+        configuration.setModule(getModule());
 
         return configuration;
+      }
+
+      @Nullable
+      private Module getModule() {
+        RebarEunitRunConfiguration oldRunConf = (RebarEunitRunConfiguration) getPeer();
+        ErlangModuleBasedConfiguration configurationModule = oldRunConf.getConfigurationModule();
+        return configurationModule != null ? configurationModule.getModule() : null;
       }
 
       private void notifyGeneratedTestsFailed(final List<ErlangFunction> failedGeneratedTests) {
