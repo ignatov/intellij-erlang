@@ -75,8 +75,9 @@ public class ErlangIndentProcessor {
       if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) return Indent.getNoneIndent();
       return Indent.getNormalIndent();
     }
-    if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS || parentType == ERL_RECORD_LIKE_TYPE) {
-      if (elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT) return Indent.getNoneIndent();
+    if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS ||
+      parentType == ERL_RECORD_LIKE_TYPE || parentType == ERL_MAP_EXPRESSION) {
+      if (elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT || elementType == ERL_RADIX) return Indent.getNoneIndent();
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS || parentType == ERL_EXPORT_TYPES) {
@@ -97,9 +98,6 @@ public class ErlangIndentProcessor {
       //noinspection unchecked
       boolean insideCall = PsiTreeUtil.getParentOfType(node.getPsi(), ErlangArgumentDefinition.class, ErlangParenthesizedExpression.class) != null;
       return insideCall ? Indent.getNormalIndent() : Indent.getNoneIndent();
-    }
-    if (parentType == ERL_MAP_ENTRIES) {
-      return Indent.getNormalIndent();
     }
     if (parentType == ERL_BEGIN_END_BODY) {
       return Indent.getNoneIndent();

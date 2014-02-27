@@ -58,7 +58,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_TOP_TYPE_CLAUSE
   );
   public static final TokenSet CURLY_CONTAINERS = TokenSet.create(
-    ERL_TUPLE_EXPRESSION, ERL_RECORD_TUPLE, ERL_TYPED_RECORD_FIELDS, ERL_RECORD_FIELDS, ERL_RECORD_LIKE_TYPE
+    ERL_TUPLE_EXPRESSION, ERL_RECORD_TUPLE, ERL_TYPED_RECORD_FIELDS, ERL_RECORD_FIELDS, ERL_RECORD_LIKE_TYPE, ERL_MAP_EXPRESSION
   );
   public static final TokenSet PARENTHESIS_CONTAINERS = TokenSet.create(
     ERL_PARENTHESIZED_EXPRESSION, ERL_ARGUMENT_LIST, ERL_ARGUMENT_DEFINITION_LIST, ERL_FUN_TYPE, ERL_FUN_TYPE_ARGUMENTS
@@ -115,9 +115,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
       if (child.getTextRange().getLength() == 0 || childType == TokenType.WHITE_SPACE) continue;
 
       Alignment alignment = getAlignment(getNode(), child, baseAlignment, baseAlignment2);
-      
+
       WrapType wrapType = calculateWrapType(getNode(), child);
-      
+
       Wrap wrap;
       if (wrapType == WrapType.CHOP_DOWN_IF_LONG) {
         chopDownIfLongWrap = chopDownIfLongWrap == null ? Wrap.createWrap(wrapType, true) : chopDownIfLongWrap;
@@ -129,7 +129,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       else {
         wrap = Wrap.createWrap(wrapType, true);
       }
-      
+
       blocks.add(new ErlangFormattingBlock(child, alignment, alignmentStrategy, wrap, mySettings, myErlangSettings, mySpacingBuilder));
     }
     return Collections.unmodifiableList(blocks);
@@ -164,7 +164,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
     }
     if (CURLY_CONTAINERS.contains(parentType)) {
-      if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT && childType != ERL_COMMA) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
+      if (childType != ERL_CURLY_LEFT && childType != ERL_CURLY_RIGHT && childType != ERL_COMMA && childType != ERL_RADIX) {
+        if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;
+      }
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
     }
     if (BRACKETS_CONTAINERS.contains(parentType)) {
