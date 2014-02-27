@@ -67,13 +67,13 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (canonicalPath == null) return null;
     Module module = ModuleUtilCore.findModuleForPsiElement(file);
     if (module == null) return null;
-    final Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
+    Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
     if (sdk == null) return null;
-    final String homePath = sdk.getHomePath();
+    String homePath = sdk.getHomePath();
     if (homePath == null) return null;
 
-    final InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getInspectionProfile();
-    final HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
+    InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getInspectionProfile();
+    HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
     if (!profile.isToolEnabled(key)) return null;
 
     String workingDir = file.getProject().getBasePath();
@@ -116,7 +116,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
   @Override
   public void apply(@NotNull PsiFile file, State annotationResult, @NotNull AnnotationHolder holder) {
     if (annotationResult == null || !file.isValid()) return;
-    final String text = file.getText();
+    String text = file.getText();
     for (Problem problem : annotationResult.problems) {
       int offset = StringUtil.lineColToOffset(text, problem.myLine - 1, 0);
 
@@ -126,8 +126,8 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
       while (offset + width < text.length() && !StringUtil.isLineBreak(text.charAt(offset + width))) width++;
 
       TextRange problemRange = TextRange.create(offset, offset + width);
-      final String message = "Dialyzer: " + problem.myDescription;
-      final Annotation annotation = holder.createWarningAnnotation(problemRange, message);
+      String message = "Dialyzer: " + problem.myDescription;
+      Annotation annotation = holder.createWarningAnnotation(problemRange, message);
       HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
       annotation.registerFix(new DisableInspectionToolAction(key) {
         @NotNull
