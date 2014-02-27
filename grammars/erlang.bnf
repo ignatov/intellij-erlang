@@ -123,7 +123,7 @@ macros ::= '?' macros_name macro_call_argument_list? {
 macros_name ::= atom | var {
   methods = [getReference]
 }
-macro_call_argument_list ::= argument_list //TODO consider cases like ?MACRO(->)
+macro_call_argument_list ::= <<macroCallArgumentsList>> {methods=[getArgumentList]}//TODO consider cases like ?MACRO(->)
 
 private tuple_recoverer ::= !('}'|',')
 

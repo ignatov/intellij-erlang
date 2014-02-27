@@ -21,10 +21,9 @@ public class ErlangMacroCallArgumentListImpl extends ErlangCompositeElementImpl 
     else super.accept(visitor);
   }
 
-  @Override
   @NotNull
   public ErlangArgumentList getArgumentList() {
-    return findNotNullChildByClass(ErlangArgumentList.class);
+    return ErlangPsiImplUtil.getArgumentList(this);
   }
 
 }

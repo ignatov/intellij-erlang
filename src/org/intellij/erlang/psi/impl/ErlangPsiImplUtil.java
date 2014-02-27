@@ -1739,6 +1739,13 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  public static ErlangArgumentList getArgumentList(ErlangMacroCallArgumentList erlangMacroCallArgumentList) {
+    ErlangArgumentList argumentsList = PsiTreeUtil.getChildOfType(erlangMacroCallArgumentList, ErlangArgumentList.class);
+    assert argumentsList != null;
+    return argumentsList;
+  }
+
+  @NotNull
   public static TextRange getTextRangeForReference(@NotNull ErlangQAtom qAtom) {
     return rangeInParent(qAtom.getTextRange(), getNameIdentifier(qAtom).getTextRange());
   }

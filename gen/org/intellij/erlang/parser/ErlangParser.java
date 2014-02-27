@@ -3069,14 +3069,13 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // argument_list
+  // <<macroCallArgumentsList>>
   public static boolean macro_call_argument_list(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macro_call_argument_list")) return false;
-    if (!nextTokenIs(b, ERL_PAR_LEFT)) return false;
     boolean r;
-    Marker m = enter_section_(b);
-    r = argument_list(b, l + 1);
-    exit_section_(b, m, ERL_MACRO_CALL_ARGUMENT_LIST, r);
+    Marker m = enter_section_(b, l, _NONE_, "<macro call argument list>");
+    r = macroCallArgumentsList(b, l + 1);
+    exit_section_(b, l, m, ERL_MACRO_CALL_ARGUMENT_LIST, r, false, null);
     return r;
   }
 

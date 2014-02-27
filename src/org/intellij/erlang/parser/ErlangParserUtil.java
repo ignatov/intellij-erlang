@@ -144,13 +144,23 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return true;
   }
 
+  public static boolean macroCallArgumentsList(PsiBuilder builder, int level) {
+    Builder b = (Builder) builder;
+    b.increaseMacroCallArgumentsLevel();
+    boolean argumentListParsed = ErlangParser.argument_list(builder, level + 1);
+    b.decreaseMacroCallArgumentsLevel();
+    return argumentListParsed;
+  }
+
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static boolean recursion_guard_(PsiBuilder builder_, int level_, String funcName_) {
     if (!GeneratedParserUtilBase.recursion_guard_(builder_, level_, funcName_)) {
       return false;
     }
-    if (!funcName_.equals("macros") && !funcName_.startsWith("macros_call")) {
-      consumeSubstitutedMacroCall((Builder) builder_, level_);
+    Builder b = (Builder) builder_;
+    if (b.getMacroCallArgumentsLevel() == 0 &&
+      !funcName_.equals("macros") && !funcName_.startsWith("macros_call") && !funcName_.contains("recover")) {
+      consumeSubstitutedMacroCall(b, level_);
     }
     return true;
   }
@@ -171,6 +181,8 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   @SuppressWarnings("ClassNameSameAsAncestorName")
   public static class Builder extends GeneratedParserUtilBase.Builder {
+    private int myMacroCallArgumentsLevel;
+
     public Builder(PsiBuilder builder, GeneratedParserUtilBase.ErrorState state, PsiParser parser) {
       super(builder, state, parser);
     }
@@ -192,6 +204,18 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       IElementType wrappedTokenType = getWrappedTokenType();
       return wrappedTokenType instanceof ErlangForeignLeafType ?
         ((ErlangForeignLeafType) wrappedTokenType).getSubstitutionDepth() : 1;
+    }
+
+    public int getMacroCallArgumentsLevel() {
+      return myMacroCallArgumentsLevel;
+    }
+
+    public void increaseMacroCallArgumentsLevel() {
+      myMacroCallArgumentsLevel++;
+    }
+
+    public void decreaseMacroCallArgumentsLevel() {
+      myMacroCallArgumentsLevel--;
     }
 
     private void skipForeignLeafWhitespace() {
