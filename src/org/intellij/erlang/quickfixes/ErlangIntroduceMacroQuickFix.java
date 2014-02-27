@@ -21,6 +21,7 @@ import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.ConstantNode;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
@@ -97,14 +98,20 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
     };
   }
 
-  private static void doInsertMacroDefinitionInWriteAction(@NotNull final Project project, @NotNull final ErlangMacros macro,
+  private static void doInsertMacroDefinitionInWriteAction(@NotNull final Project project,
+                                                           @NotNull final ErlangMacros macro,
                                                            @Nullable final ErlangMacroCallArgumentList macroCallArgumentList) {
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+    CommandProcessor.getInstance().executeCommand(project, new Runnable() {
       @Override
       public void run() {
-        doInsertMacroDefinition(project, macro, macroCallArgumentList);
+        ApplicationManager.getApplication().runWriteAction(new Runnable() {
+          @Override
+          public void run() {
+            doInsertMacroDefinition(project, macro, macroCallArgumentList);
+          }
+        });
       }
-    });
+    }, "Introduce macro", null);
   }
 
   private static void doInsertMacroDefinition(@NotNull Project project, @NotNull ErlangMacros macro,
