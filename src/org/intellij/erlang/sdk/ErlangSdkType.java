@@ -44,7 +44,6 @@ import java.io.File;
 import java.util.regex.Pattern;
 
 public class ErlangSdkType extends SdkType {
-
   @NotNull
   public static ErlangSdkType getInstance() {
     return SdkType.findInstance(ErlangSdkType.class);
@@ -105,20 +104,20 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Override
-  public boolean isValidSdkHome(@NotNull final String path) {
-    final File erl = getTopLevelExecutable(path);
-    final File erlc = JpsErlangSdkType.getByteCodeCompilerExecutable(path);
+  public boolean isValidSdkHome(@NotNull String path) {
+    File erl = getTopLevelExecutable(path);
+    File erlc = JpsErlangSdkType.getByteCodeCompilerExecutable(path);
     return erl.canExecute() && erlc.canExecute();
   }
 
   @NotNull
-  public static File getTopLevelExecutable(@NotNull final String sdkHome) {
+  public static File getTopLevelExecutable(@NotNull String sdkHome) {
     return JpsErlangSdkType.getExecutable(new File(sdkHome, "bin").getAbsolutePath(), "erl");
   }
 
   @NotNull
   @Override
-  public String suggestSdkName(@Nullable final String currentSdkName, @NotNull final String sdkHome) {
+  public String suggestSdkName(@Nullable String currentSdkName, @NotNull String sdkHome) {
     String version = getVersionString(sdkHome);
     if (version == null) return "Unknown Erlang version at " + sdkHome;
     return "Erlang " + version;
@@ -126,7 +125,7 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   @Override
-  public String getVersionString(@NotNull final String sdkHome) {
+  public String getVersionString(@NotNull String sdkHome) {
     return getReleaseString(sdkHome);
   }
 
@@ -138,12 +137,12 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   @Override
-  public AdditionalDataConfigurable createAdditionalDataConfigurable(@NotNull final SdkModel sdkModel, @NotNull final SdkModificator sdkModificator) {
+  public AdditionalDataConfigurable createAdditionalDataConfigurable(@NotNull SdkModel sdkModel, @NotNull SdkModificator sdkModificator) {
     return null;
   }
 
   @Override
-  public void saveAdditionalData(@NotNull final SdkAdditionalData additionalData, @NotNull final Element additional) {
+  public void saveAdditionalData(@NotNull SdkAdditionalData additionalData, @NotNull Element additional) {
   }
 
   @NonNls
@@ -153,16 +152,16 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Override
-  public void setupSdkPaths(@NotNull final Sdk sdk) {
+  public void setupSdkPaths(@NotNull Sdk sdk) {
     configureSdkPaths(sdk);
   }
 
   @VisibleForTesting
   @NotNull
-  public static Sdk createMockSdk(@NotNull final String sdkHome) {
-    final String release = getReleaseString(sdkHome);
-    final Sdk sdk = new ProjectJdkImpl(release, getInstance());
-    final SdkModificator sdkModificator = sdk.getSdkModificator();
+  public static Sdk createMockSdk(@NotNull String sdkHome) {
+    String release = getReleaseString(sdkHome);
+    Sdk sdk = new ProjectJdkImpl(release, getInstance());
+    SdkModificator sdkModificator = sdk.getSdkModificator();
     sdkModificator.setHomePath(sdkHome);
     sdkModificator.setVersionString(release); // must be set after home path, otherwise setting home path clears the version string
     sdkModificator.commitChanges();
@@ -170,20 +169,20 @@ public class ErlangSdkType extends SdkType {
     return sdk;
   }
 
-  private static void configureSdkPaths(@NotNull final Sdk sdk) {
-    final SdkModificator sdkModificator = sdk.getSdkModificator();
+  private static void configureSdkPaths(@NotNull Sdk sdk) {
+    SdkModificator sdkModificator = sdk.getSdkModificator();
     setupLocalSdkPaths(sdkModificator);
 
-    final String externalDocUrl = getDefaultDocumentationUrl(getRelease(sdk));
+    String externalDocUrl = getDefaultDocumentationUrl(getRelease(sdk));
     if (externalDocUrl != null) {
-      final VirtualFile fileByUrl = VirtualFileManager.getInstance().findFileByUrl(externalDocUrl);
+      VirtualFile fileByUrl = VirtualFileManager.getInstance().findFileByUrl(externalDocUrl);
       sdkModificator.addRoot(fileByUrl, JavadocOrderRootType.getInstance());
     }
     sdkModificator.commitChanges();
   }
 
   @Nullable
-  public static ErlangSdkRelease getRelease(@NotNull final Sdk sdk) {
+  public static ErlangSdkRelease getRelease(@NotNull Sdk sdk) {
     String versionString = sdk.getVersionString();
     try {
       return versionString == null ? null : ErlangSdkRelease.valueOf(versionString);
@@ -193,7 +192,7 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Nullable
-  private static String getReleaseString(@NotNull final String sdkHome) {
+  private static String getReleaseString(@NotNull String sdkHome) {
     Pattern pattern = Pattern.compile("R\\d+.*");
     // determine the version from the 'releases' directory, if it exists
     File releases = new File(sdkHome, "releases");
@@ -216,46 +215,46 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Nullable
-  private static String getDefaultDocumentationUrl(@Nullable final ErlangSdkRelease release) {
+  private static String getDefaultDocumentationUrl(@Nullable ErlangSdkRelease release) {
     return release == null ? null : "http://www.erlang.org/documentation/doc-" + release.getVersion();
   }
 
-  private static void setupLocalSdkPaths(@NotNull final SdkModificator sdkModificator) {
-    final String sdkHome = sdkModificator.getHomePath();
+  private static void setupLocalSdkPaths(@NotNull SdkModificator sdkModificator) {
+    String sdkHome = sdkModificator.getHomePath();
 
     {
-      final File stdLibDir = new File(new File(sdkHome), "lib");
+      File stdLibDir = new File(new File(sdkHome), "lib");
       if (tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir)) return;
     }
 
     try {
-      final String exePath = JpsErlangSdkType.getByteCodeCompilerExecutable(sdkHome).getAbsolutePath();
-      final ProcessOutput processOutput = ErlangSystemUtil.getProcessOutput(sdkHome, exePath, "-where");
+      String exePath = JpsErlangSdkType.getByteCodeCompilerExecutable(sdkHome).getAbsolutePath();
+      ProcessOutput processOutput = ErlangSystemUtil.getProcessOutput(sdkHome, exePath, "-where");
       if (processOutput.getExitCode() == 0) {
-        final String stdout = processOutput.getStdout().trim();
+        String stdout = processOutput.getStdout().trim();
         if (!stdout.isEmpty()) {
           if (SystemInfo.isWindows && stdout.startsWith("/")) {
-            for (final File root : File.listRoots()) {
-              final File stdLibDir = new File(root, stdout);
+            for (File root : File.listRoots()) {
+              File stdLibDir = new File(root, stdout);
               if (tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir)) return;
             }
           }
           else {
-            final File stdLibDir = new File(stdout);
+            File stdLibDir = new File(stdout);
             if (tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir)) return;
           }
         }
       }
-    } catch (final ExecutionException ignore) {
+    } catch (ExecutionException ignore) {
     }
 
-    final File stdLibDir = new File("/usr/lib/erlang");
+    File stdLibDir = new File("/usr/lib/erlang");
     tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir);
   }
 
-  private static boolean tryToProcessAsStandardLibraryDir(@NotNull final SdkModificator sdkModificator, @NotNull final File stdLibDir) {
+  private static boolean tryToProcessAsStandardLibraryDir(@NotNull SdkModificator sdkModificator, @NotNull File stdLibDir) {
     if (!isStandardLibraryDir(stdLibDir)) return false;
-    final VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(stdLibDir);
+    VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(stdLibDir);
     if (dir != null) {
       sdkModificator.addRoot(dir, OrderRootType.SOURCES);
       sdkModificator.addRoot(dir, OrderRootType.CLASSES);
@@ -263,7 +262,7 @@ public class ErlangSdkType extends SdkType {
     return true;
   }
 
-  private static boolean isStandardLibraryDir(@NotNull final File dir) {
+  private static boolean isStandardLibraryDir(@NotNull File dir) {
     return dir.isDirectory();
   }
 }
