@@ -40,7 +40,7 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Ligh
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {
-        final Sdk sdk = getProjectDescriptor().getSdk();
+        Sdk sdk = getProjectDescriptor().getSdk();
         ProjectJdkTable.getInstance().addJdk(sdk);
         ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
       }
