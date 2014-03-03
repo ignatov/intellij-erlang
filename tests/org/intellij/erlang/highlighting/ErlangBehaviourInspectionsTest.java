@@ -17,6 +17,7 @@
 package org.intellij.erlang.highlighting;
 
 import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -41,18 +42,25 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     myFixture.checkHighlighting(true, false, false);
   }
 
-  public void testTest() throws Exception {
-    myFixture.configureByFiles("b1.erl", "b2.erl");
-    myFixture.configureByFile("test-qf.erl");
-    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions("Implement all callbacks");
-    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
-    assertNotNull(action);
-    myFixture.launchAction(action);
-    myFixture.checkResultByFile("test-qf-after.erl");
-  }
+  public void testCallbackImplementationsAreExportedOnce() throws Exception { doImplementCallbacksFixTest("testExported.erl", "b1.erl", "b2.erl"); }
+  public void testTest()                                   throws Exception { doImplementCallbacksFixTest("test-qf.erl", "b1.erl", "b2.erl"); }
 
   @Override
   protected boolean isWriteActionRequired() {
     return false;
+  }
+
+  private void doImplementCallbacksFixTest(String ... files) throws Exception {
+    myFixture.configureByFiles(files);
+    applyImplementAllCallbacksFix();
+    String expectedResultFile = FileUtil.getNameWithoutExtension(files[0]) + "-after.erl";
+    myFixture.checkResultByFile(expectedResultFile);
+  }
+
+  private void applyImplementAllCallbacksFix() {
+    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions("Implement all callbacks");
+    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
+    assertNotNull(action);
+    myFixture.launchAction(action);
   }
 }

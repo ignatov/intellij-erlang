@@ -31,6 +31,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -102,7 +103,14 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
       PsiFile file = problemDescriptor.getPsiElement().getContainingFile();
+      ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
+      if (erlangFile != null) {
+        addCallbackImplementations(project, erlangFile);
+        exportAddedCallbackImplementations(project, erlangFile);
+      }
+    }
 
+    private void addCallbackImplementations(@NotNull Project project, @NotNull ErlangFile file) {
       for (ErlangCallbackSpec spec : myCallbackSpecs) {
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
         List<ErlangTopType> topTypeList = ErlangPsiImplUtil.getCallBackSpecArguments(spec);
@@ -124,6 +132,17 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
         document.insertString(textOffset, newFunction);
         manager.commitDocument(document);
         CodeStyleManager.getInstance(project).reformatText(file, textOffset, textOffset + newFunction.length());
+      }
+    }
+
+    private void exportAddedCallbackImplementations(@NotNull Project project, @NotNull ErlangFile file) {
+      for (ErlangCallbackSpec spec : myCallbackSpecs) {
+        String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
+        int arity = ErlangPsiImplUtil.getCallBackSpecArguments(spec).size();
+        ErlangFunction function = (name != null && arity >= 0) ? file.getFunction(name, arity) : null;
+        if (function != null && ErlangUnusedFunctionInspection.isUnusedFunction(file, function)) {
+          ErlangExportFunctionFix.processFunction(project, function);
+        }
       }
     }
   }

@@ -33,30 +33,20 @@ import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
+    ErlangFile erlangFile = (file instanceof ErlangFile) ? (ErlangFile) file : null;
+    if (erlangFile == null) return;
     if (file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension())) return;
-    if (((ErlangFile) file).isExportedAll()) return;
-    LocalSearchScope scope = new LocalSearchScope(file);
-    
-    boolean isEunitImported = ErlangPsiImplUtil.isEunitImported((ErlangFile) file);
-    for (final ErlangFunction function : ((ErlangFile) file).getFunctions()) {
-      if (isEunitImported && ErlangPsiImplUtil.isEunitTestFunction(function)) continue;
+    if (erlangFile.isExportedAll()) return;
 
-      List<PsiReference> refs = ContainerUtil.filter(ReferencesSearch.search(function, scope).findAll(), new Condition<PsiReference>() { // filtered specs out
-        @Override
-        public boolean value(PsiReference psiReference) {
-          PsiElement element = psiReference.getElement();
-          return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !ErlangPsiImplUtil.isRecursiveCall(element, function);
-        }
-      });
-
-      if (ContainerUtil.getFirstItem(refs) == null) {
+    for (final ErlangFunction function : erlangFile.getFunctions()) {
+      if (isUnusedFunction(erlangFile, function)) {
         problemsHolder.registerProblem(function.getNameIdentifier(),
           "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",
           ProblemHighlightType.LIKE_UNUSED_SYMBOL,
@@ -64,5 +54,18 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
           new ErlangExportFunctionFix());
       }
     }
+  }
+
+  public static boolean isUnusedFunction(@NotNull ErlangFile file, @NotNull final ErlangFunction function) {
+    if (ErlangPsiImplUtil.isEunitImported(file) && ErlangPsiImplUtil.isEunitTestFunction(function)) return false;
+    LocalSearchScope scope = new LocalSearchScope(file);
+    List<PsiReference> refs = ContainerUtil.filter(ReferencesSearch.search(function, scope).findAll(), new Condition<PsiReference>() { // filtered specs out
+      @Override
+      public boolean value(PsiReference psiReference) {
+        PsiElement element = psiReference.getElement();
+        return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !ErlangPsiImplUtil.isRecursiveCall(element, function);
+      }
+    });
+    return ContainerUtil.getFirstItem(refs) == null;
   }
 }
