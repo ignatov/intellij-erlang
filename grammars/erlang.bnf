@@ -111,6 +111,8 @@ atom ::= atom_name | (single_quote atom_name single_quote) {
   methods = [getName setName getNameIdentifier]
 }
 
+//TODO this is what's causing performance issues: 'macros' should not be here
+//TODO consider removing macros from here and also from all the rules which use macros
 q_atom ::= atom | macros_arg | macros {methods=[getReference]}
 q_var ::= var {
   methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
