@@ -870,36 +870,48 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // prefix_op? bin_expression [':' bin_expression] opt_bit_type_list?
+  // generic_function_call_expression 
+  //   | prefix_op? bin_expression [':' bin_expression] opt_bit_type_list?
   public static boolean bin_element(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bin_element")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<binary element>");
-    result_ = bin_element_0(builder_, level_ + 1);
-    result_ = result_ && bin_expression(builder_, level_ + 1);
-    result_ = result_ && bin_element_2(builder_, level_ + 1);
-    result_ = result_ && bin_element_3(builder_, level_ + 1);
+    result_ = generic_function_call_expression(builder_, level_ + 1);
+    if (!result_) result_ = bin_element_1(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_BIN_ELEMENT, result_, false, null);
     return result_;
   }
 
+  // prefix_op? bin_expression [':' bin_expression] opt_bit_type_list?
+  private static boolean bin_element_1(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bin_element_1")) return false;
+    boolean result_ = false;
+    Marker marker_ = enter_section_(builder_);
+    result_ = bin_element_1_0(builder_, level_ + 1);
+    result_ = result_ && bin_expression(builder_, level_ + 1);
+    result_ = result_ && bin_element_1_2(builder_, level_ + 1);
+    result_ = result_ && bin_element_1_3(builder_, level_ + 1);
+    exit_section_(builder_, marker_, null, result_);
+    return result_;
+  }
+
   // prefix_op?
-  private static boolean bin_element_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "bin_element_0")) return false;
+  private static boolean bin_element_1_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bin_element_1_0")) return false;
     prefix_op(builder_, level_ + 1);
     return true;
   }
 
   // [':' bin_expression]
-  private static boolean bin_element_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "bin_element_2")) return false;
-    bin_element_2_0(builder_, level_ + 1);
+  private static boolean bin_element_1_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bin_element_1_2")) return false;
+    bin_element_1_2_0(builder_, level_ + 1);
     return true;
   }
 
   // ':' bin_expression
-  private static boolean bin_element_2_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "bin_element_2_0")) return false;
+  private static boolean bin_element_1_2_0(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bin_element_1_2_0")) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
     result_ = consumeToken(builder_, ERL_COLON);
@@ -909,8 +921,8 @@ public class ErlangParser implements PsiParser {
   }
 
   // opt_bit_type_list?
-  private static boolean bin_element_3(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "bin_element_3")) return false;
+  private static boolean bin_element_1_3(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "bin_element_1_3")) return false;
     opt_bit_type_list(builder_, level_ + 1);
     return true;
   }
