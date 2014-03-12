@@ -392,14 +392,14 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inLeftPartOfAssignment(@NotNull PsiElement psiElement, boolean strict) {
-    ErlangAssignmentExpression assignment = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class);
-    if (assignment == null) return false;
-    PsiElement parent = assignment.getParent();
-    boolean insideTupleOrList = parent instanceof ErlangTupleExpression || parent instanceof ErlangListExpression;
-    ErlangAssignmentExpression topAssignment = insideTupleOrList ?
-      PsiTreeUtil.getParentOfType(parent, ErlangAssignmentExpression.class) : null;
-    assignment = topAssignment != null ? topAssignment : assignment;
-    return insideTupleOrList || PsiTreeUtil.isAncestor(assignment.getLeft(), psiElement, strict);
+    ErlangAssignmentExpression assignment = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class, true);
+    while (assignment != null) {
+      if (PsiTreeUtil.isAncestor(assignment.getLeft(), psiElement, strict)) {
+        return true;
+      }
+      assignment = PsiTreeUtil.getParentOfType(assignment, ErlangAssignmentExpression.class, true);
+    }
+    return false;
   }
 
   public static boolean isMacros(ErlangQVar o) {
