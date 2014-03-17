@@ -108,13 +108,14 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test379()    throws Exception { setUpCommaFirst(); doTest(); }
   public void test433()    throws Exception { getErlangSettings().ALIGN_FUN_CLAUSES = true; doTest(); }
   public void test434()    throws Exception { getErlangSettings().ALIGN_MULTILINE_BLOCK = true; doTest(); }
+  public void test451()    throws Exception { setUpCommaFirst(); doTest(); }
 
   public void test292() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
     erlangSettings.ALIGN_MULTILINE_BLOCK = true;
     erlangSettings.NEW_LINE_BEFORE_COMMA = true;
     erlangSettings.SPACE_AROUND_OR_IN_LISTS = false;
-    doTest(); 
+    doTest();
   }
 
   public void testAligned() throws Exception {
@@ -166,10 +167,10 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBegin1() throws Exception { doEnterTest(); }
   public void testBegin2() throws Exception { doEnterTest(); }
   public void testBegin3() throws Exception { doEnterTest(); }
-  
+
   public void testRecordFields1() throws Exception { doEnterTest(); }
   public void testRecordFields2() throws Exception { doEnterTest(); }
-  
+
   public void testFunExpression() throws Exception { doTest(); }
 //  public void testFunExpression1() throws Exception { doEnterTest(); }
   public void testFunExpression2() throws Exception { doEnterTest(); }
@@ -202,7 +203,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBeginParasite1() throws Exception { doEnterParasiteTest(); }
   public void testBeginParasite2() throws Exception { doEnterParasiteTest(); }
   public void testBeginParasite3() throws Exception { doEnterParasiteTest(); }
-  
+
   public void testFunExpressionParasite1() throws Exception { doEnterParasiteTest(); }
   public void testFunExpressionParasite2() throws Exception { doEnterParasiteTest(); }
   public void testFunExpressionParasite3() throws Exception { doEnterParasiteTest(); }

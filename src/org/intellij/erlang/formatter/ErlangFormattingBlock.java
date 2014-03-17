@@ -64,7 +64,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_PARENTHESIZED_EXPRESSION, ERL_ARGUMENT_LIST, ERL_ARGUMENT_DEFINITION_LIST, ERL_FUN_TYPE, ERL_FUN_TYPE_ARGUMENTS
   );
   public static final TokenSet BRACKETS_CONTAINERS = TokenSet.create(
-    ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES
+    ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES, ERL_BINARY_EXPRESSION
   );
 
   private final Indent myIndent;
@@ -170,9 +170,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
     }
     if (BRACKETS_CONTAINERS.contains(parentType)) {
-      boolean bracketsAndComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA || childType == ERL_OP_OR;
-      if (!bracketsAndComma && childType != ERL_BIN_START && childType != ERL_BIN_END) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
-      else if (myErlangSettings.NEW_LINE_BEFORE_COMMA && bracketsAndComma) return baseAlignment2;
+      if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END &&
+        childType != ERL_COMMA && childType != ERL_OP_OR) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
+      else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
     }
     if (myErlangSettings.ALIGN_MULTILINE_BLOCK) {
       if (parentType == ERL_LIST_COMPREHENSION) {
