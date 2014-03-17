@@ -57,6 +57,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
+    ErlangMacrosDefinition macroDefinition = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangMacrosDefinition.class);
 
     boolean inSpecification = PsiTreeUtil.isAncestor(spec, psiElement, false);
     boolean inDefinition = inArgumentDefinition(psiElement);
@@ -64,7 +65,8 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     boolean inAssignment = inLeftPartOfAssignment(psiElement);
     boolean inDefinitionOrAssignment = inDefinition || inAssignment;
     boolean inFunction = inFunctionClause && inDefinitionOrAssignment;
-    if (inFunction || inModule(psiElement) || inSpecification) {
+    boolean inMacroDefinition = PsiTreeUtil.isAncestor(macroDefinition, psiElement, false) && inDefinitionOrAssignment;
+    if (inFunction || inModule(psiElement) || inSpecification || inMacroDefinition) {
       boolean inArgumentList = inArgumentList(psiElement);
       //noinspection unchecked
       boolean inArgumentListBeforeAssignment =

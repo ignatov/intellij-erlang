@@ -36,11 +36,15 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
 
   @Override
   public boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
-    if (!processor.execute(this, state)) {
+    return processDeclarations(this, processor, state, lastParent, place);
+  }
+
+  static boolean processDeclarations(@NotNull PsiElement element, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    if (!processor.execute(element, state)) {
       return false;
     }
     else {
-      return ResolveUtil.processChildren(this, processor, state, lastParent, place);
+      return ResolveUtil.processChildren(element, processor, state, lastParent, place);
     }
   }
 }
