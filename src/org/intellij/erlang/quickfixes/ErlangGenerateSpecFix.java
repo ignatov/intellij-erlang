@@ -86,7 +86,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
             .append(getTypeString(computeReturnType(function)))
             .append('.');
     PsiElement spec = file.addBefore(ErlangElementFactory.createSpecFromText(project, specText.toString()), function);
-    file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), function);
+    file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n"), function);
     return spec;
   }
 

@@ -1,3 +1,2 @@
 -spec foo(any(), any(), any()) -> atom().
-
-foo<caret>(One, Two, Three) -> ok.
+foo(One, Two, Three) -> ok.
