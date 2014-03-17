@@ -217,6 +217,10 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (myErlangSettings.ALIGN_FUN_CLAUSES && psi instanceof ErlangFunExpression) {
       return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_FUN_CLAUSE), ERL_FUN_CLAUSES, true);
     }
+    if (myErlangSettings.ALIGN_RECORD_FIELD_ASSIGNMENTS && psi instanceof ErlangRecordFields) {
+      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_OP_EQ), ERL_RECORD_FIELD, true);
+    }
+
     return myAlignmentStrategy;
   }
 
