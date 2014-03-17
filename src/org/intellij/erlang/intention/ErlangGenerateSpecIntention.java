@@ -1,6 +1,5 @@
 package org.intellij.erlang.intention;
 
-import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
@@ -13,17 +12,9 @@ import org.intellij.erlang.quickfixes.ErlangGenerateSpecFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ErlangGenerateSpecIntention extends BaseIntentionAction {
-  @NotNull
-  @Override
-  public String getText() {
-    return ErlangGenerateSpecFix.NAME;
-  }
-
-  @NotNull
-  @Override
-  public String getFamilyName() {
-    return ErlangGenerateSpecFix.NAME;
+public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention {
+  public ErlangGenerateSpecIntention() {
+    super(ErlangGenerateSpecFix.NAME, ErlangGenerateSpecFix.NAME);
   }
 
   @Override

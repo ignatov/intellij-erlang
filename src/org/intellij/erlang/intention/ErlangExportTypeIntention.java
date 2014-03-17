@@ -16,30 +16,18 @@
 
 package org.intellij.erlang.intention;
 
-import com.intellij.codeInsight.intention.impl.BaseIntentionAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ErlangExportTypeIntention extends BaseIntentionAction {
-  @NotNull
-  @Override
-  public String getFamilyName() {
-    return "Export type";
-  }
-
-  @NotNull
-  @Override
-  public String getText() {
-    return "Export type";
+public class ErlangExportTypeIntention extends ErlangBaseNamedElementIntention {
+  public ErlangExportTypeIntention() {
+    super("Export type", "Export type");
   }
 
   @Override
@@ -62,14 +50,6 @@ public class ErlangExportTypeIntention extends BaseIntentionAction {
   
   @Nullable
   private static ErlangTypeDefinition findType(PsiFile file, int offset) {
-    PsiElement element = file.findElementAt(offset);
-    ErlangTypeDefinition res = PsiTreeUtil.getParentOfType(element, ErlangTypeDefinition.class);
-    if (res == null) return null;
-
-    PsiElement name = res.getNameIdentifier();
-    TextRange textRange = name.getTextRange();
-    if (textRange == null || textRange.getEndOffset() < offset) return null;
-
-    return res;
+    return findElement(file, offset, ErlangTypeDefinition.class);
   }
 }
