@@ -3,7 +3,6 @@ package org.intellij.erlang.intention;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -20,8 +19,7 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
   @Override
   public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
     if (!(file instanceof ErlangFile)) return false;
-    ErlangFile erlangFile = (ErlangFile) file;
-    ErlangFunction function = getFunctionAtOffset(editor.getCaretModel().getOffset(), erlangFile);
+    ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function == null) return false;
 
     return ErlangPsiImplUtil.getSpecification(function) == null;
@@ -33,8 +31,7 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
     if (!(file instanceof ErlangFile)) {
       throw new IncorrectOperationException("Only applicable to Erlang files.");
     }
-    ErlangFile erlangFile = (ErlangFile) file;
-    ErlangFunction function = getFunctionAtOffset(editor.getCaretModel().getOffset(), erlangFile);
+    ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function == null) {
       throw new IncorrectOperationException("Cursor should be placed on Erlang function.");
     }
@@ -45,7 +42,7 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
   }
 
   @Nullable
-  private static ErlangFunction getFunctionAtOffset(int offset, ErlangFile erlangFile) {
-    return PsiTreeUtil.getParentOfType(erlangFile.findElementAt(offset), ErlangFunction.class, false);
+  private static ErlangFunction findFunction(PsiFile file, int offset) {
+    return findElement(file, offset, ErlangFunction.class);
   }
 }
