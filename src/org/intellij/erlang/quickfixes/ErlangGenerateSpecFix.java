@@ -21,9 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   public static final String NAME = "Generate spec";
 
