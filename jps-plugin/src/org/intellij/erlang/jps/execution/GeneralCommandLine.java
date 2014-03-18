@@ -25,7 +25,7 @@ import com.intellij.openapi.util.UserDataHolder;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.util.EnvironmentUtil;
-import com.intellij.util.PlatformUtilsCore;
+import com.intellij.util.PlatformUtils;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashMap;
@@ -273,9 +273,9 @@ public class GeneralCommandLine implements UserDataHolder {
     environment.clear();
 
     if (myPassParentEnvironment) {
-      String prefix = System.getProperty(PlatformUtilsCore.PLATFORM_PREFIX_KEY, PlatformUtilsCore.IDEA_PREFIX);
+      String prefix = System.getProperty(PlatformUtils.PLATFORM_PREFIX_KEY, PlatformUtils.IDEA_PREFIX);
       environment.putAll(
-        PlatformUtilsCore.APPCODE_PREFIX.equals(prefix) ? System.getenv() // Temporarily fix for OC-8606
+        PlatformUtils.APPCODE_PREFIX.equals(prefix) ? System.getenv() // Temporarily fix for OC-8606
                                                    : EnvironmentUtil.getEnvironmentMap());
     }
 
