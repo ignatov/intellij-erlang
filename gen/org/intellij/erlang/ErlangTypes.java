@@ -106,7 +106,6 @@ public interface ErlangTypes {
   IElementType ERL_RECORD_DEFINITION = ErlangElementTypeFactory.factory("ERL_RECORD_DEFINITION");
   IElementType ERL_RECORD_EXPRESSION = new ErlangCompositeElementType("ERL_RECORD_EXPRESSION");
   IElementType ERL_RECORD_FIELD = new ErlangCompositeElementType("ERL_RECORD_FIELD");
-  IElementType ERL_RECORD_FIELDS = new ErlangCompositeElementType("ERL_RECORD_FIELDS");
   IElementType ERL_RECORD_LIKE_TYPE = new ErlangCompositeElementType("ERL_RECORD_LIKE_TYPE");
   IElementType ERL_RECORD_REF = new ErlangCompositeElementType("ERL_RECORD_REF");
   IElementType ERL_RECORD_TUPLE = new ErlangCompositeElementType("ERL_RECORD_TUPLE");
@@ -499,9 +498,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_RECORD_FIELD) {
         return new ErlangRecordFieldImpl(node);
-      }
-      else if (type == ERL_RECORD_FIELDS) {
-        return new ErlangRecordFieldsImpl(node);
       }
       else if (type == ERL_RECORD_LIKE_TYPE) {
         return new ErlangRecordLikeTypeImpl(node);

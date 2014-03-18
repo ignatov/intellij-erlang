@@ -155,7 +155,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             ErlangQAtom qAtom = ErlangPsiImplUtil.getQAtom(colonQualified);
             result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, qAtom));
           }
-          else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordFields) {
+          else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordTuple) {
             Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = ErlangPsiImplUtil.getRecordFields(grandPa);
             final boolean withoutEq = is(grandPa.getFirstChild(), ErlangTypes.ERL_DOT);
             result.addAllElements(ContainerUtil.map(recordFields.first, new Function<ErlangTypedExpr, LookupElement>() {

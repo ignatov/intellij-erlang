@@ -69,14 +69,13 @@ ERL_FILE
                     PsiElement(var)('VNODE_REQ')
                 ERL_RECORD_TUPLE
                   PsiElement({)('{')
-                  ERL_RECORD_FIELDS
-                    ERL_RECORD_FIELD
-                      ERL_Q_ATOM
-                        PsiElement(atom)('index')
-                      PsiElement(=)('=')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Idx')
+                  ERL_RECORD_FIELD
+                    ERL_Q_ATOM
+                      PsiElement(atom)('index')
+                    PsiElement(=)('=')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Idx')
                   PsiElement(})('}')
             PsiElement(})('}')
         PsiElement())(')')

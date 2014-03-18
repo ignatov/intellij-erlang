@@ -309,9 +309,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_RECORD_FIELD) {
       result_ = record_field(builder_, 0);
     }
-    else if (root_ == ERL_RECORD_FIELDS) {
-      result_ = record_fields(builder_, 0);
-    }
     else if (root_ == ERL_RECORD_LIKE_TYPE) {
       result_ = record_like_type(builder_, 0);
     }
@@ -870,7 +867,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // generic_function_call_expression 
+  // generic_function_call_expression
   //   | prefix_op? bin_expression [':' bin_expression] opt_bit_type_list?
   public static boolean bin_element(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "bin_element")) return false;
@@ -4088,15 +4085,15 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // record_field (',' record_field)*
-  public static boolean record_fields(PsiBuilder builder_, int level_) {
+  static boolean record_fields(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "record_fields")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<record fields>");
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = record_field(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && record_fields_1(builder_, level_ + 1);
-    exit_section_(builder_, level_, marker_, ERL_RECORD_FIELDS, result_, pinned_, null);
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
   }
 

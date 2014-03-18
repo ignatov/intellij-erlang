@@ -58,7 +58,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_TOP_TYPE_CLAUSE
   );
   public static final TokenSet CURLY_CONTAINERS = TokenSet.create(
-    ERL_TUPLE_EXPRESSION, ERL_RECORD_TUPLE, ERL_TYPED_RECORD_FIELDS, ERL_RECORD_FIELDS, ERL_RECORD_LIKE_TYPE, ERL_MAP_EXPRESSION
+    ERL_TUPLE_EXPRESSION, ERL_RECORD_TUPLE, ERL_TYPED_RECORD_FIELDS, ERL_RECORD_LIKE_TYPE, ERL_MAP_EXPRESSION
   );
   public static final TokenSet PARENTHESIS_CONTAINERS = TokenSet.create(
     ERL_PARENTHESIZED_EXPRESSION, ERL_ARGUMENT_LIST, ERL_ARGUMENT_DEFINITION_LIST, ERL_FUN_TYPE, ERL_FUN_TYPE_ARGUMENTS
@@ -217,7 +217,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (myErlangSettings.ALIGN_FUN_CLAUSES && psi instanceof ErlangFunExpression) {
       return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_FUN_CLAUSE), ERL_FUN_CLAUSES, true);
     }
-    if (myErlangSettings.ALIGN_RECORD_FIELD_ASSIGNMENTS && psi instanceof ErlangRecordFields) {
+    if (myErlangSettings.ALIGN_RECORD_FIELD_ASSIGNMENTS && psi instanceof ErlangRecordTuple) {
       return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_OP_EQ), ERL_RECORD_FIELD, true);
     }
 

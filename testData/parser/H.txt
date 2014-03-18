@@ -20954,118 +20954,117 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('callgraph')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Callgraph')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('envs')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Env')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('fun_tab')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('FunTab')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('opaques')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Opaques')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('plt')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Plt')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('races')
-                PsiElement(=)('=')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_races')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('new')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      PsiElement())(')')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('records')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Records')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('warning_mode')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('callgraph')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Callgraph')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('envs')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Env')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('fun_tab')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('FunTab')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('opaques')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Opaques')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('plt')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Plt')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('races')
+              PsiElement(=)('=')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
                   ERL_Q_ATOM
-                    PsiElement(atom)('false')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
+                    PsiElement(atom)('dialyzer_races')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('new')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    PsiElement())(')')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('records')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Records')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('warning_mode')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('warnings')
-                PsiElement(=)('=')
-                ERL_LIST_EXPRESSION
-                  PsiElement([)('[')
-                  PsiElement(])(']')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('work')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Work')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('tree_map')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('TreeMap')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('module')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Module')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('behaviour_api_dict')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('BehaviourTranslations')
+                  PsiElement(atom)('false')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('warnings')
+              PsiElement(=)('=')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                PsiElement(])(']')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('work')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Work')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('tree_map')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('TreeMap')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('module')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Module')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('behaviour_api_dict')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('BehaviourTranslations')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -21083,14 +21082,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('fun_tab')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('FunTab')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('fun_tab')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('FunTab')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -21171,33 +21169,32 @@ ERL_FILE
                     PsiElement(atom)('state')
                 ERL_RECORD_TUPLE
                   PsiElement({)('{')
-                  ERL_RECORD_FIELDS
-                    ERL_RECORD_FIELD
-                      ERL_Q_ATOM
-                        PsiElement(atom)('fun_tab')
-                      PsiElement(=)('=')
-                      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                        ERL_MODULE_REF
-                          ERL_Q_ATOM
-                            PsiElement(atom)('dict')
-                        PsiElement(:)(':')
-                        ERL_FUNCTION_CALL_EXPRESSION
-                          ERL_Q_ATOM
-                            PsiElement(atom)('store')
-                          ERL_ARGUMENT_LIST
-                            PsiElement(()('(')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Fun')
-                            PsiElement(,)(',')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Entry')
-                            PsiElement(,)(',')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('FunTab')
-                            PsiElement())(')')
+                  ERL_RECORD_FIELD
+                    ERL_Q_ATOM
+                      PsiElement(atom)('fun_tab')
+                    PsiElement(=)('=')
+                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                      ERL_MODULE_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('dict')
+                      PsiElement(:)(':')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          PsiElement(atom)('store')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Fun')
+                          PsiElement(,)(',')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Entry')
+                          PsiElement(,)(',')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('FunTab')
+                          PsiElement())(')')
                   PsiElement(})('}')
           PsiElement(;)(';')
           ERL_CR_CLAUSE
@@ -21240,14 +21237,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('warning_mode')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('WM')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('warning_mode')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('WM')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -21271,30 +21267,29 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tree_map')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('TreeMap')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('fun_tab')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('FunTab')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('races')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Races')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tree_map')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('TreeMap')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('fun_tab')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('FunTab')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('races')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Races')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -21349,74 +21344,73 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('work')
+              PsiElement(=)('=')
+              ERL_FUNCTION_CALL_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('work')
-                PsiElement(=)('=')
-                ERL_FUNCTION_CALL_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('init_work')
-                  ERL_ARGUMENT_LIST
-                    PsiElement(()('(')
-                    ERL_LIST_EXPRESSION
-                      PsiElement([)('[')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_ATOM
-                          PsiElement(atom)('top')
-                      PsiElement(|)('|')
-                      ERL_LIST_OP_EXPRESSION
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('Funs')
-                        PsiElement(--)('--')
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_ATOM
-                              PsiElement(atom)('top')
-                          PsiElement(])(']')
-                      PsiElement(])(']')
-                    PsiElement())(')')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('fun_tab')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('FunTab')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('warning_mode')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    PsiElement(atom)('true')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('races')
-                PsiElement(=)('=')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_races')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('put_race_analysis')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_ATOM
-                          PsiElement(atom)('true')
-                      PsiElement(,)(',')
+                  PsiElement(atom)('init_work')
+                ERL_ARGUMENT_LIST
+                  PsiElement(()('(')
+                  ERL_LIST_EXPRESSION
+                    PsiElement([)('[')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_ATOM
+                        PsiElement(atom)('top')
+                    PsiElement(|)('|')
+                    ERL_LIST_OP_EXPRESSION
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
-                          PsiElement(var)('Races')
-                      PsiElement())(')')
+                          PsiElement(var)('Funs')
+                      PsiElement(--)('--')
+                      ERL_LIST_EXPRESSION
+                        PsiElement([)('[')
+                        ERL_MAX_EXPRESSION
+                          ERL_Q_ATOM
+                            PsiElement(atom)('top')
+                        PsiElement(])(']')
+                    PsiElement(])(']')
+                  PsiElement())(')')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('fun_tab')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('FunTab')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('warning_mode')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_ATOM
+                  PsiElement(atom)('true')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('races')
+              PsiElement(=)('=')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('dialyzer_races')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('put_race_analysis')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_ATOM
+                        PsiElement(atom)('true')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Races')
+                    PsiElement())(')')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -21439,14 +21433,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('callgraph')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Callgraph')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('callgraph')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Callgraph')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -21465,29 +21458,28 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('callgraph')
-                PsiElement(=)('=')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_callgraph')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('put_race_code')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('RaceCode')
-                      PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Callgraph')
-                      PsiElement())(')')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('callgraph')
+              PsiElement(=)('=')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('dialyzer_callgraph')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('put_race_code')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('RaceCode')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Callgraph')
+                    PsiElement())(')')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -21510,14 +21502,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('races')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Races')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('races')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Races')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -21536,29 +21527,28 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('races')
-                PsiElement(=)('=')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_races')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('put_race_analysis')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Analysis')
-                      PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Races')
-                      PsiElement())(')')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('races')
+              PsiElement(=)('=')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('dialyzer_races')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('put_race_analysis')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Analysis')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Races')
+                    PsiElement())(')')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -21586,14 +21576,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('races')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Races')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('races')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Races')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -21612,33 +21601,32 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('races')
-                PsiElement(=)('=')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_races')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('put_curr_fun')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('CurrFun')
-                      PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('CurrFunLabel')
-                      PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Races')
-                      PsiElement())(')')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('races')
+              PsiElement(=)('=')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('dialyzer_races')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('put_curr_fun')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('CurrFun')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('CurrFunLabel')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Races')
+                    PsiElement())(')')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -21661,14 +21649,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('races')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Races')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('races')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Races')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -21717,29 +21704,28 @@ ERL_FILE
                     PsiElement(atom)('state')
                 ERL_RECORD_TUPLE
                   PsiElement({)('{')
-                  ERL_RECORD_FIELDS
-                    ERL_RECORD_FIELD
-                      ERL_Q_ATOM
-                        PsiElement(atom)('races')
-                      PsiElement(=)('=')
-                      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                        ERL_MODULE_REF
-                          ERL_Q_ATOM
-                            PsiElement(atom)('dialyzer_races')
-                        PsiElement(:)(':')
-                        ERL_FUNCTION_CALL_EXPRESSION
-                          ERL_Q_ATOM
-                            PsiElement(atom)('put_fun_args')
-                          ERL_ARGUMENT_LIST
-                            PsiElement(()('(')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Args')
-                            PsiElement(,)(',')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Races')
-                            PsiElement())(')')
+                  ERL_RECORD_FIELD
+                    ERL_Q_ATOM
+                      PsiElement(atom)('races')
+                    PsiElement(=)('=')
+                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                      ERL_MODULE_REF
+                        ERL_Q_ATOM
+                          PsiElement(atom)('dialyzer_races')
+                      PsiElement(:)(':')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          PsiElement(atom)('put_fun_args')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Args')
+                          PsiElement(,)(',')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Races')
+                          PsiElement())(')')
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
@@ -21768,14 +21754,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('races')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Races')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('races')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Races')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -21794,33 +21779,32 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('races')
-                PsiElement(=)('=')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_races')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('put_race_list')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('RaceList')
-                      PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('RaceListSize')
-                      PsiElement(,)(',')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Races')
-                      PsiElement())(')')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('races')
+              PsiElement(=)('=')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('dialyzer_races')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('put_race_list')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('RaceList')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('RaceListSize')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Races')
+                    PsiElement())(')')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -21851,14 +21835,13 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('warnings')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Warnings')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('warnings')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Warnings')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
@@ -21919,14 +21902,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('warnings')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Warnings')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('warnings')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Warnings')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -21945,21 +21927,20 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('warnings')
-                PsiElement(=)('=')
-                ERL_LIST_EXPRESSION
-                  PsiElement([)('[')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Warn')
-                  PsiElement(|)('|')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Warnings')
-                  PsiElement(])(']')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('warnings')
+              PsiElement(=)('=')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Warn')
+                PsiElement(|)('|')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Warnings')
+                PsiElement(])(']')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -22031,14 +22012,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('warning_mode')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('warning_mode')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_ATOM
-                        PsiElement(atom)('false')
+                      PsiElement(atom)('false')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -22085,22 +22065,21 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('warnings')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Warnings')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('warning_mode')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('warnings')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Warnings')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('warning_mode')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_ATOM
-                        PsiElement(atom)('true')
+                      PsiElement(atom)('true')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -22217,21 +22196,20 @@ ERL_FILE
                     PsiElement(atom)('state')
                 ERL_RECORD_TUPLE
                   PsiElement({)('{')
-                  ERL_RECORD_FIELDS
-                    ERL_RECORD_FIELD
-                      ERL_Q_ATOM
-                        PsiElement(atom)('warnings')
-                      PsiElement(=)('=')
-                      ERL_LIST_EXPRESSION
-                        PsiElement([)('[')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('Warn')
-                        PsiElement(|)('|')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('Warnings')
-                        PsiElement(])(']')
+                  ERL_RECORD_FIELD
+                    ERL_Q_ATOM
+                      PsiElement(atom)('warnings')
+                    PsiElement(=)('=')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Warn')
+                      PsiElement(|)('|')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Warnings')
+                      PsiElement(])(']')
                   PsiElement(})('}')
           PsiElement(;)(';')
           ERL_CR_CLAUSE
@@ -22320,21 +22298,20 @@ ERL_FILE
                           PsiElement(atom)('state')
                       ERL_RECORD_TUPLE
                         PsiElement({)('{')
-                        ERL_RECORD_FIELDS
-                          ERL_RECORD_FIELD
-                            ERL_Q_ATOM
-                              PsiElement(atom)('warnings')
-                            PsiElement(=)('=')
-                            ERL_LIST_EXPRESSION
-                              PsiElement([)('[')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('Warn')
-                              PsiElement(|)('|')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('Warnings')
-                              PsiElement(])(']')
+                        ERL_RECORD_FIELD
+                          ERL_Q_ATOM
+                            PsiElement(atom)('warnings')
+                          PsiElement(=)('=')
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(var)('Warn')
+                            PsiElement(|)('|')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(var)('Warnings')
+                            PsiElement(])(']')
                         PsiElement(})('}')
                 PsiElement(end)('end')
           PsiElement(end)('end')
@@ -22354,14 +22331,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('races')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Races')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('races')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Races')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -22411,14 +22387,13 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('races')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Races1')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('races')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Races1')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -22436,38 +22411,37 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tree_map')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('TreeMap')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('fun_tab')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('FunTab')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('callgraph')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Callgraph')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('plt')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Plt')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tree_map')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('TreeMap')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('fun_tab')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('FunTab')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('callgraph')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Callgraph')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('plt')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Plt')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -23325,14 +23299,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('warnings')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Warn')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('warnings')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Warn')
               PsiElement(})('}')
           PsiElement(=)('=')
           ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
@@ -23392,14 +23365,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('callgraph')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Callgraph')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('callgraph')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Callgraph')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -23443,14 +23415,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('callgraph')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Callgraph')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('callgraph')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Callgraph')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -23660,14 +23631,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('callgraph')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Callgraph')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('callgraph')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Callgraph')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -23747,14 +23717,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('records')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Records')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('records')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Records')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -23880,14 +23849,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('fun_tab')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('FunTab')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('fun_tab')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('FunTab')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -24667,14 +24635,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('envs')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Envs')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('envs')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Envs')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -24727,14 +24694,13 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('envs')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('NewEnvs')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('envs')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('NewEnvs')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -24756,14 +24722,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('envs')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Envs')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('envs')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Envs')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -24849,14 +24814,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('fun_tab')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('FunTab')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('fun_tab')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('FunTab')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -24980,14 +24944,13 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('fun_tab')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('NewFunTab')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('fun_tab')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('NewFunTab')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -25004,14 +24967,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('fun_tab')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('FunTab')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('fun_tab')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('FunTab')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -25114,14 +25076,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('fun_tab')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('FunTab')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('fun_tab')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('FunTab')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -25297,30 +25258,29 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('fun_tab')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('FunTab')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('callgraph')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('CG')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('plt')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Plt')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('fun_tab')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('FunTab')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('callgraph')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('CG')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('plt')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Plt')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -25701,14 +25661,13 @@ ERL_FILE
                             PsiElement(atom)('state')
                         ERL_RECORD_TUPLE
                           PsiElement({)('{')
-                          ERL_RECORD_FIELDS
-                            ERL_RECORD_FIELD
-                              ERL_Q_ATOM
-                                PsiElement(atom)('fun_tab')
-                              PsiElement(=)('=')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('NewFunTab')
+                          ERL_RECORD_FIELD
+                            ERL_Q_ATOM
+                              PsiElement(atom)('fun_tab')
+                            PsiElement(=)('=')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(var)('NewFunTab')
                           PsiElement(})('}')
                     PsiElement(,)(',')
                     ERL_FUNCTION_CALL_EXPRESSION
@@ -25856,14 +25815,13 @@ ERL_FILE
                       PsiElement(atom)('state')
                   ERL_RECORD_TUPLE
                     PsiElement({)('{')
-                    ERL_RECORD_FIELDS
-                      ERL_RECORD_FIELD
-                        ERL_Q_ATOM
-                          PsiElement(atom)('fun_tab')
-                        PsiElement(=)('=')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('NewFunTab')
+                    ERL_RECORD_FIELD
+                      ERL_Q_ATOM
+                        PsiElement(atom)('fun_tab')
+                      PsiElement(=)('=')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('NewFunTab')
                     PsiElement(})('}')
               PsiElement(,)(',')
               ERL_FUNCTION_CALL_EXPRESSION
@@ -25901,14 +25859,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('warning_mode')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('warning_mode')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_ATOM
-                        PsiElement(atom)('true')
+                      PsiElement(atom)('true')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -25940,22 +25897,21 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('callgraph')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Callgraph')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tree_map')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('TreeMap')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('callgraph')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Callgraph')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tree_map')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('TreeMap')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -26288,14 +26244,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('work')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Work')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('work')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Work')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -26333,14 +26288,13 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('work')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('NewWork')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('work')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('NewWork')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -26358,22 +26312,21 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('work')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Work')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tree_map')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('TreeMap')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('work')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Work')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tree_map')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('TreeMap')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -26450,14 +26403,13 @@ ERL_FILE
                       PsiElement(atom)('state')
                   ERL_RECORD_TUPLE
                     PsiElement({)('{')
-                    ERL_RECORD_FIELDS
-                      ERL_RECORD_FIELD
-                        ERL_Q_ATOM
-                          PsiElement(atom)('work')
-                        PsiElement(=)('=')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('NewWork')
+                    ERL_RECORD_FIELD
+                      ERL_Q_ATOM
+                        PsiElement(atom)('work')
+                      PsiElement(=)('=')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('NewWork')
                     PsiElement(})('}')
                 PsiElement(})('}')
           PsiElement(end)('end')
@@ -26481,14 +26433,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('callgraph')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Callgraph')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('callgraph')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Callgraph')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -26588,14 +26539,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('plt')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('PLT')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('plt')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('PLT')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -26670,30 +26620,29 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('callgraph')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('CG')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('fun_tab')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('FunTab')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('plt')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('PLT')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('callgraph')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('CG')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('fun_tab')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('FunTab')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('plt')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('PLT')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -26929,14 +26878,13 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('callgraph')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Callgraph')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('callgraph')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Callgraph')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -27147,22 +27095,21 @@ ERL_FILE
                   PsiElement(atom)('state')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('work')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Work')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('fun_tab')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('FunTab')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('work')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Work')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('fun_tab')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('FunTab')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -27498,22 +27445,21 @@ ERL_FILE
                     PsiElement(atom)('state')
                 ERL_RECORD_TUPLE
                   PsiElement({)('{')
-                  ERL_RECORD_FIELDS
-                    ERL_RECORD_FIELD
-                      ERL_Q_ATOM
-                        PsiElement(atom)('work')
-                      PsiElement(=)('=')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('NewWork')
-                    PsiElement(,)(',')
-                    ERL_RECORD_FIELD
-                      ERL_Q_ATOM
-                        PsiElement(atom)('fun_tab')
-                      PsiElement(=)('=')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('NewFunTab')
+                  ERL_RECORD_FIELD
+                    ERL_Q_ATOM
+                      PsiElement(atom)('work')
+                    PsiElement(=)('=')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('NewWork')
+                  PsiElement(,)(',')
+                  ERL_RECORD_FIELD
+                    ERL_Q_ATOM
+                      PsiElement(atom)('fun_tab')
+                    PsiElement(=)('=')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('NewFunTab')
                   PsiElement(})('}')
           PsiElement(end)('end')
     PsiElement(.)('.')
@@ -27561,30 +27507,29 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('callgraph')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Callgraph')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('races')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Races')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('records')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Records')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('callgraph')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Callgraph')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('races')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Races')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('records')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Records')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -27596,52 +27541,51 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('callgraph')
-                PsiElement(=)('=')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_callgraph')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('cleanup')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Callgraph')
-                      PsiElement())(')')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('races')
-                PsiElement(=)('=')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      PsiElement(atom)('dialyzer_races')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('cleanup')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('Races')
-                      PsiElement())(')')
-              PsiElement(,)(',')
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('records')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Records')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('callgraph')
+              PsiElement(=)('=')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('dialyzer_callgraph')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('cleanup')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Callgraph')
+                    PsiElement())(')')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('races')
+              PsiElement(=)('=')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
+                  ERL_Q_ATOM
+                    PsiElement(atom)('dialyzer_races')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    PsiElement(atom)('cleanup')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Races')
+                    PsiElement())(')')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('records')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Records')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
@@ -27692,14 +27636,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('callgraph')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Callgraph')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('callgraph')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Callgraph')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -27756,14 +27699,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('races')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Races')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('races')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Races')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -27816,14 +27758,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('records')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Records')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('records')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Records')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -27902,14 +27843,13 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('callgraph')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Callgraph')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('callgraph')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Callgraph')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
@@ -27982,14 +27922,13 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('races')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Races')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('races')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Races')
             PsiElement(})('}')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
@@ -28036,14 +27975,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('records')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Records')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('records')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Records')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -28055,14 +27993,13 @@ ERL_FILE
               PsiElement(atom)('state')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
-            ERL_RECORD_FIELDS
-              ERL_RECORD_FIELD
-                ERL_Q_ATOM
-                  PsiElement(atom)('records')
-                PsiElement(=)('=')
-                ERL_MAX_EXPRESSION
-                  ERL_Q_VAR
-                    PsiElement(var)('Records')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                PsiElement(atom)('records')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('Records')
             PsiElement(})('}')
     PsiElement(.)('.')
   PsiComment(module_doc_comment)('%%% ===========================================================================')
@@ -29413,14 +29350,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('records')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('R')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('records')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('R')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -29500,14 +29436,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('records')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('R')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('records')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('R')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -29592,14 +29527,13 @@ ERL_FILE
                 PsiElement(atom)('state')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('records')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('R')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('records')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('R')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY

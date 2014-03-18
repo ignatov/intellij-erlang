@@ -43,30 +43,29 @@ ERL_FILE
                 PsiElement(atom)('rec')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('a')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  PsiElement(integer)('1')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                PsiElement(_)('_')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)('a')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    PsiElement(integer)('1')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  PsiElement(_)('_')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)(''abc'')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
+                    PsiElement(atom)(''abc'')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('c')
+                PsiElement(=)('=')
+                ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)('c')
-                  PsiElement(=)('=')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)('abs')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      PsiElement())(')')
+                    PsiElement(atom)('abs')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    PsiElement())(')')
               PsiElement(})('}')
     PsiElement(.)('.')

@@ -425,7 +425,7 @@ record_field_ref ::= '.' q_atom {pin=1 elementType="record_field"}
 record_ref ::= q_atom {methods = [getReference]}
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
-record_fields ::= record_field (',' record_field)* {pin(".*")=1}
+private record_fields ::= record_field (',' record_field)* {pin(".*")=1}
 record_field ::= (q_atom | '_') '=' (qualified_atom_expression | expression) {
   pin=1
   methods = [

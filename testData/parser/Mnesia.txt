@@ -10971,14 +10971,13 @@ ERL_FILE
                 PsiElement(atom)('tidstore')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('store')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Store')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('store')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Store')
               PsiElement(})('}')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
@@ -11255,14 +11254,13 @@ ERL_FILE
                 PsiElement(atom)('tidstore')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('store')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Store')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('store')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Store')
               PsiElement(})('}')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
@@ -11513,14 +11511,13 @@ ERL_FILE
                 PsiElement(atom)('tidstore')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('store')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Store')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('store')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Store')
               PsiElement(})('}')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
@@ -21091,46 +21088,45 @@ ERL_FILE
                 PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('tid')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Tid')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('node')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Node')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('storage')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Storage')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('tab')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Tab')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('orig')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Spec')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('tid')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Tid')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('node')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Node')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('storage')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Storage')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('tab')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Tab')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('orig')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Spec')
               PsiElement(})('}')
         PsiElement(,)(',')
         ERL_CASE_EXPRESSION
@@ -21473,38 +21469,37 @@ ERL_FILE
                               PsiElement(atom)('mnesia_select')
                           ERL_RECORD_TUPLE
                             PsiElement({)('{')
-                            ERL_RECORD_FIELDS
-                              ERL_RECORD_FIELD
-                                ERL_Q_ATOM
-                                  PsiElement(atom)('written')
-                                PsiElement(=)('=')
-                                ERL_MAX_EXPRESSION
-                                  ERL_Q_VAR
-                                    PsiElement(var)('Written')
-                              PsiElement(,)(',')
-                              ERL_RECORD_FIELD
-                                ERL_Q_ATOM
-                                  PsiElement(atom)('spec')
-                                PsiElement(=)('=')
-                                ERL_MAX_EXPRESSION
-                                  ERL_Q_VAR
-                                    PsiElement(var)('CMS')
-                              PsiElement(,)(',')
-                              ERL_RECORD_FIELD
-                                ERL_Q_ATOM
-                                  PsiElement(atom)('type')
-                                PsiElement(=)('=')
-                                ERL_MAX_EXPRESSION
-                                  ERL_Q_VAR
-                                    PsiElement(var)('Type')
-                              PsiElement(,)(',')
-                              ERL_RECORD_FIELD
-                                ERL_Q_ATOM
-                                  PsiElement(atom)('orig')
-                                PsiElement(=)('=')
-                                ERL_MAX_EXPRESSION
-                                  ERL_Q_VAR
-                                    PsiElement(var)('FixedSpec')
+                            ERL_RECORD_FIELD
+                              ERL_Q_ATOM
+                                PsiElement(atom)('written')
+                              PsiElement(=)('=')
+                              ERL_MAX_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('Written')
+                            PsiElement(,)(',')
+                            ERL_RECORD_FIELD
+                              ERL_Q_ATOM
+                                PsiElement(atom)('spec')
+                              PsiElement(=)('=')
+                              ERL_MAX_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('CMS')
+                            PsiElement(,)(',')
+                            ERL_RECORD_FIELD
+                              ERL_Q_ATOM
+                                PsiElement(atom)('type')
+                              PsiElement(=)('=')
+                              ERL_MAX_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('Type')
+                            PsiElement(,)(',')
+                            ERL_RECORD_FIELD
+                              ERL_Q_ATOM
+                                PsiElement(atom)('orig')
+                              PsiElement(=)('=')
+                              ERL_MAX_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('FixedSpec')
                             PsiElement(})('}')
                         PsiElement())(')')
                 PsiElement(end)('end')
@@ -21713,30 +21708,29 @@ ERL_FILE
                   PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tid')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Tid')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('cont')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Cont')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('orig')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Ms')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tid')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Tid')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('cont')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Cont')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('orig')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Ms')
                 PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_GUARD
@@ -21847,22 +21841,21 @@ ERL_FILE
                   PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tid')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Tid')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('written')
-                    PsiElement(=)('=')
-                    ERL_LIST_EXPRESSION
-                      PsiElement([)('[')
-                      PsiElement(])(']')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tid')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Tid')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('written')
+                  PsiElement(=)('=')
+                  ERL_LIST_EXPRESSION
+                    PsiElement([)('[')
+                    PsiElement(])(']')
                 PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -21915,14 +21908,13 @@ ERL_FILE
                   PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('tid')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Tid')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('tid')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Tid')
                 PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -21970,14 +21962,13 @@ ERL_FILE
                 PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('tid')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('_Tid1')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('tid')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('_Tid1')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -22051,30 +22042,29 @@ ERL_FILE
                 PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('written')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Written0')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('spec')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('CMS')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('type')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Type')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('written')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Written0')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('spec')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('CMS')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('type')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Type')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -22158,30 +22148,29 @@ ERL_FILE
                   PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('written')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Written0')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('spec')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('CMS')
-                  PsiElement(,)(',')
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('type')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Type')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('written')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Written0')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('spec')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('CMS')
+                PsiElement(,)(',')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('type')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Type')
                 PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -22257,14 +22246,13 @@ ERL_FILE
                   PsiElement(atom)('mnesia_select')
               ERL_RECORD_TUPLE
                 PsiElement({)('{')
-                ERL_RECORD_FIELDS
-                  ERL_RECORD_FIELD
-                    ERL_Q_ATOM
-                      PsiElement(atom)('written')
-                    PsiElement(=)('=')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Written')
+                ERL_RECORD_FIELD
+                  ERL_Q_ATOM
+                    PsiElement(atom)('written')
+                  PsiElement(=)('=')
+                  ERL_MAX_EXPRESSION
+                    ERL_Q_VAR
+                      PsiElement(var)('Written')
                 PsiElement(})('}')
             PsiElement())(')')
     PsiElement(.)('.')
@@ -22309,14 +22297,13 @@ ERL_FILE
                 PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('cont')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Cont')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('cont')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Cont')
               PsiElement(})('}')
           PsiElement(})('}')
     PsiElement(;)(';')
@@ -26900,14 +26887,13 @@ ERL_FILE
                 PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('cont')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)('cont')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_ATOM
-                      PsiElement(atom)(''$end_of_table'')
+                    PsiElement(atom)(''$end_of_table'')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -26929,46 +26915,45 @@ ERL_FILE
                 PsiElement(atom)('mnesia_select')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('node')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Node')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('tab')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Tab')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('storage')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Type')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('cont')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Cont')
-                PsiElement(,)(',')
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('orig')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Ms')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('node')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Node')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('tab')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Tab')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('storage')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Type')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('cont')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Cont')
+              PsiElement(,)(',')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('orig')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Ms')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -37558,14 +37543,13 @@ ERL_FILE
                         PsiElement(atom)('tidstore')
                     ERL_RECORD_TUPLE
                       PsiElement({)('{')
-                      ERL_RECORD_FIELDS
-                        ERL_RECORD_FIELD
-                          ERL_Q_ATOM
-                            PsiElement(atom)('store')
-                          PsiElement(=)('=')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('Store')
+                      ERL_RECORD_FIELD
+                        ERL_Q_ATOM
+                          PsiElement(atom)('store')
+                        PsiElement(=)('=')
+                        ERL_MAX_EXPRESSION
+                          ERL_Q_VAR
+                            PsiElement(var)('Store')
                       PsiElement(})('}')
                 PsiElement(})('}')
             ERL_CLAUSE_GUARD
@@ -38082,14 +38066,13 @@ ERL_FILE
                       PsiElement(atom)('tidstore')
                   ERL_RECORD_TUPLE
                     PsiElement({)('{')
-                    ERL_RECORD_FIELDS
-                      ERL_RECORD_FIELD
-                        ERL_Q_ATOM
-                          PsiElement(atom)('store')
-                        PsiElement(=)('=')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('Store')
+                    ERL_RECORD_FIELD
+                      ERL_Q_ATOM
+                        PsiElement(atom)('store')
+                      PsiElement(=)('=')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Store')
                     PsiElement(})('}')
                 PsiElement(})('}')
             ERL_CLAUSE_GUARD
@@ -41887,14 +41870,13 @@ ERL_FILE
                 PsiElement(atom)('tidstore')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
-              ERL_RECORD_FIELDS
-                ERL_RECORD_FIELD
-                  ERL_Q_ATOM
-                    PsiElement(atom)('store')
-                  PsiElement(=)('=')
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('Store')
+              ERL_RECORD_FIELD
+                ERL_Q_ATOM
+                  PsiElement(atom)('store')
+                PsiElement(=)('=')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Store')
               PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY

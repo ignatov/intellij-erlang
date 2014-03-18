@@ -93,7 +93,7 @@ public class ErlangIndentProcessor {
     if (parentType == ERL_LC_EXPRS) {
       return Indent.getNormalIndent();
     }
-    if (parentType == ERL_RECORD_FIELDS) {
+    if (parentType == ERL_RECORD_TUPLE) {
       // todo: not a smart solution
       //noinspection unchecked
       boolean insideCall = PsiTreeUtil.getParentOfType(node.getPsi(), ErlangArgumentDefinition.class, ErlangParenthesizedExpression.class) != null;

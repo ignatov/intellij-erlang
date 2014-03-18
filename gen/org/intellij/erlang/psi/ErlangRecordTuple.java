@@ -7,8 +7,8 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangRecordTuple extends ErlangCompositeElement {
 
-  @Nullable
-  ErlangRecordFields getRecordFields();
+  @NotNull
+  List<ErlangRecordField> getRecordFieldList();
 
   @NotNull
   PsiElement getCurlyLeft();

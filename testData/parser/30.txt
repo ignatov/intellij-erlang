@@ -96,14 +96,13 @@ ERL_FILE
                           PsiElement(atom)(''rec'')
                       ERL_RECORD_TUPLE
                         PsiElement({)('{')
-                        ERL_RECORD_FIELDS
-                          ERL_RECORD_FIELD
-                            ERL_Q_ATOM
-                              PsiElement(atom)('something')
-                            PsiElement(=)('=')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Eep')
+                        ERL_RECORD_FIELD
+                          ERL_Q_ATOM
+                            PsiElement(atom)('something')
+                          PsiElement(=)('=')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Eep')
                         PsiElement(})('}')
                     PsiElement(=)('=')
                     ERL_RECORD_EXPRESSION
@@ -254,14 +253,13 @@ ERL_FILE
                           PsiElement(atom)(''rec'')
                       ERL_RECORD_TUPLE
                         PsiElement({)('{')
-                        ERL_RECORD_FIELDS
-                          ERL_RECORD_FIELD
-                            ERL_Q_ATOM
-                              PsiElement(atom)('something')
-                            PsiElement(=)('=')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Eep')
+                        ERL_RECORD_FIELD
+                          ERL_Q_ATOM
+                            PsiElement(atom)('something')
+                          PsiElement(=)('=')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Eep')
                         PsiElement(})('}')
                     PsiElement(=)('=')
                     ERL_RECORD_EXPRESSION
@@ -365,14 +363,13 @@ ERL_FILE
                           PsiElement(atom)(''rec'')
                       ERL_RECORD_TUPLE
                         PsiElement({)('{')
-                        ERL_RECORD_FIELDS
-                          ERL_RECORD_FIELD
-                            ERL_Q_ATOM
-                              PsiElement(atom)('something')
-                            PsiElement(=)('=')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('Eep')
+                        ERL_RECORD_FIELD
+                          ERL_Q_ATOM
+                            PsiElement(atom)('something')
+                          PsiElement(=)('=')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Eep')
                         PsiElement(})('}')
                     PsiElement(=)('=')
                     ERL_RECORD_EXPRESSION
