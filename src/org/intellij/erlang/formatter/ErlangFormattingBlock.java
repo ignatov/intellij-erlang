@@ -259,8 +259,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
   @Nullable
   private Alignment getChildAlignment(@Nullable IElementType type) {
-    if (type != ERL_COMMA && myErlangSettings.NEW_LINE_BEFORE_COMMA && BRACKETS_CONTAINERS.contains(getNode().getElementType())) {
-      return getSubBlocks().get(0).getAlignment();
+    if (type != ERL_COMMA && myErlangSettings.NEW_LINE_BEFORE_COMMA) {
+      IElementType parentType = getNode().getElementType();
+      if (BRACKETS_CONTAINERS.contains(parentType) || parentType == ERL_RECORD_TUPLE) {
+        return getSubBlocks().get(0).getAlignment();
+      }
     }
     return null;
   }

@@ -209,8 +209,9 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testFunExpressionParasite3() throws Exception { doEnterParasiteTest(); }
   public void testFunExpressionParasite4() throws Exception { doEnterParasiteTest(); }
 
-  public void testCommaFirstEnter() throws Exception { setUpCommaFirst(); doEnterTest(); }
-  public void testCommaFirstEnter2() throws Exception { setUpCommaFirst(); doEnterTest(); }
+  public void testCommaFirstEnterRecords() throws Exception { setUpCommaFirst(); doEnterTest(); }
+  public void testCommaFirstEnter()        throws Exception { setUpCommaFirst(); doEnterTest(); }
+  public void testCommaFirstEnter2()       throws Exception { setUpCommaFirst(); doEnterTest(); }
 
   public void testNamedFunExpr()   throws Exception { doTest(); }
   public void testComprehensions() throws Exception { doTest(); }
