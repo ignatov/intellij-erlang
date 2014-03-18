@@ -55,12 +55,6 @@ public class ErlangFileType extends LanguageFileType {
     return ErlangIcons.FILE;
   }
 
-  @Override
-  public boolean isJVMDebuggingSupported() {
-    // turn off for now
-    return false;
-  }
-
   public static class HrlFileType extends ErlangFileType {
     @NotNull
     @Override

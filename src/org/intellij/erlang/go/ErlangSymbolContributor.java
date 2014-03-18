@@ -42,8 +42,8 @@ public class ErlangSymbolContributor implements ChooseByNameContributor {
   @Override
   public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
     GlobalSearchScope scope = includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
-    Collection<ErlangNamedElement> result = StubIndex.getInstance().get(ErlangAllNameIndex.KEY, name, project, scope);
-    List<NavigationItem> items = ContainerUtil.newArrayListWithExpectedSize(result.size());
+    Collection<ErlangNamedElement> result = StubIndex.getElements(ErlangAllNameIndex.KEY, name, project, scope, ErlangNamedElement.class);
+    List<NavigationItem> items = ContainerUtil.newArrayListWithCapacity(result.size());
     for (final ErlangNamedElement element : result) {
       items.add(new ErlangStructureViewFactory.Element(element) {
         @Override
