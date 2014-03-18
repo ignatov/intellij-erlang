@@ -33,11 +33,12 @@ import java.util.Collection;
 import java.util.List;
 
 abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  protected ErlangCompletionTestBase() {
+  protected ErlangCompletionTestBase(boolean isSmallIde) {
+    super(isSmallIde);
   }
-
-  protected ErlangCompletionTestBase(String platformPrefix) {
-    super(platformPrefix);
+  
+  protected ErlangCompletionTestBase() {
+    super(false);
   }
 
   protected String getTestDataPath() {

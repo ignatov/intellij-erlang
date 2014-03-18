@@ -27,8 +27,12 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  protected ErlangHighlightingTestBase(String platformPrefix) {
-    super(platformPrefix);
+  protected ErlangHighlightingTestBase(boolean isSmallIde) {
+    super(isSmallIde);
+  }
+
+  public ErlangHighlightingTestBase() {
+    super(false);
   }
 
   @Override

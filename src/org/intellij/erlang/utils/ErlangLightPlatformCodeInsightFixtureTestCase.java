@@ -6,32 +6,32 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.PlatformUtils;
-import com.intellij.util.PlatformUtilsCore;
 
 public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends LightPlatformCodeInsightFixtureTestCase {
-  private String myPlatformPrefix;
   private String myBackedUpPlatformPrefix;
+  private final boolean myIsSmallIde;
 
-  protected ErlangLightPlatformCodeInsightFixtureTestCase() {
+  protected ErlangLightPlatformCodeInsightFixtureTestCase(boolean isSmallIde) {
+    myIsSmallIde = isSmallIde;
   }
 
-  protected ErlangLightPlatformCodeInsightFixtureTestCase(String platformPrefix) {
-    myPlatformPrefix = platformPrefix;
+  protected ErlangLightPlatformCodeInsightFixtureTestCase() {
+    myIsSmallIde = false;
   }
 
   @Override
   protected void setUp() throws Exception {
-    if (myPlatformPrefix != null) {
+    if (myIsSmallIde) {
       myBackedUpPlatformPrefix = PlatformUtils.getPlatformPrefix();
-      System.setProperty(PlatformUtilsCore.PLATFORM_PREFIX_KEY, myPlatformPrefix);
+      System.setProperty(PlatformUtils.PLATFORM_PREFIX_KEY, PlatformUtils.PYCHARM_PREFIX);
     }
     super.setUp();
   }
 
   @Override
   protected void tearDown() throws Exception {
-    if (myPlatformPrefix != null) {
-      System.setProperty(PlatformUtilsCore.PLATFORM_PREFIX_KEY, myBackedUpPlatformPrefix);
+    if (myIsSmallIde) {
+      System.setProperty(PlatformUtils.PLATFORM_PREFIX_KEY, myBackedUpPlatformPrefix);
     }
     super.tearDown();
   }

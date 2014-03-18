@@ -23,8 +23,12 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import java.util.List;
 
 public abstract class ErlangIncludeResolveTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  public ErlangIncludeResolveTestBase(String platformPrefix) {
-    super(platformPrefix);
+  protected ErlangIncludeResolveTestBase(boolean isSmallIde) {
+    super(isSmallIde);
+  }
+
+  public ErlangIncludeResolveTestBase() {
+    super(false);
   }
 
   @Override

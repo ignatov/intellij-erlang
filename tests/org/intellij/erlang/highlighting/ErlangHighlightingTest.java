@@ -16,13 +16,7 @@
 
 package org.intellij.erlang.highlighting;
 
-import com.intellij.util.PlatformUtilsCore;
-
 public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
-  public ErlangHighlightingTest() {
-    super(PlatformUtilsCore.COMMUNITY_PREFIX);
-  }
-
   public void testHelloWorld()        { doTest(); }
   public void testExport()            { doTest(); }
   public void testIsDigits()          { doTest(); }

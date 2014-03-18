@@ -16,11 +16,9 @@
 
 package org.intellij.erlang.resolve;
 
-import com.intellij.util.PlatformUtilsCore;
-
 public class ErlangSmallIdeIncludeResolveTest extends ErlangIncludeResolveTestBase {
   public ErlangSmallIdeIncludeResolveTest() {
-    super(PlatformUtilsCore.PHP_PREFIX);
+    super(true);
   }
 
   public void testRelativeToIncludeDirectory() throws Exception {
