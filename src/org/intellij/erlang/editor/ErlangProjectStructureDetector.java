@@ -21,6 +21,7 @@ import com.intellij.ide.util.importProject.ProjectDescriptor;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.ProjectJdkForModuleStep;
 import com.intellij.ide.util.projectWizard.importSources.DetectedProjectRoot;
+import com.intellij.ide.util.projectWizard.importSources.DetectedSourceRoot;
 import com.intellij.ide.util.projectWizard.importSources.ProjectFromSourcesBuilder;
 import com.intellij.ide.util.projectWizard.importSources.ProjectStructureDetector;
 import com.intellij.openapi.util.io.FileUtil;
@@ -62,7 +63,7 @@ public class ErlangProjectStructureDetector extends ProjectStructureDetector {
       if (modules.isEmpty()) {
         modules = new ArrayList<ModuleDescriptor>();
         for (DetectedProjectRoot root : roots) {
-          modules.add(new ModuleDescriptor(root.getDirectory(), ErlangModuleType.getInstance(), ContainerUtil.<DetectedProjectRoot>emptyList()));
+          modules.add(new ModuleDescriptor(root.getDirectory(), ErlangModuleType.getInstance(), ContainerUtil.<DetectedSourceRoot>emptyList()));
         }
         projectDescriptor.setModules(modules);
       }

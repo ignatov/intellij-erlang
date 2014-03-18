@@ -18,6 +18,7 @@ package org.intellij.erlang.highlighting;
 
 import com.intellij.codeInsight.daemon.DaemonAnalyzerTestCase;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.io.FileUtil;
@@ -38,7 +39,6 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
 
   @Override
   protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     myView = new ErlangConsoleView(getProject());
   }
@@ -52,7 +52,12 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {
-        document.insertString(0, "C = A + B.");
+        WriteCommandAction.runWriteCommandAction(getProject(), new Runnable() {
+          @Override
+          public void run() {
+            document.insertString(0, "C = A + B.");
+          }
+        });
       }
     });
     instance.commitDocument(document);
