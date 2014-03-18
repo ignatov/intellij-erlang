@@ -13,12 +13,11 @@ We are going to release a standalone Erlang IDE. If you are interested on it, pl
 If you'd like to make a donation you can use [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=C344TC8DDC5UN).
 
 ## Recent changes
-### Version 0.5.4
-* Find include quick fix
-* Erlang/OTP R16B03 support
-* Bugfixes
+### Version 0.5.5
+* Erlang/OTP R17 support
+* Generate spec intention
+* A bunch of bugfixes
 
 ### Work in progress
-* R17 support (EEP43: maps, EEP37: funs with names, etc.)
 * Enhanced and remote debugger
 * Preprocessing support
