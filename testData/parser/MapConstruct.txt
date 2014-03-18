@@ -9,9 +9,9 @@ ERL_FILE
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
         ERL_MAP_EXPRESSION
-          PsiElement(#)('#')
-          PsiElement({)('{')
-          ERL_MAP_ENTRIES
+          ERL_MAP_TUPLE
+            PsiElement(#)('#')
+            PsiElement({)('{')
             ERL_MAP_ENTRY
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
@@ -20,12 +20,12 @@ ERL_FILE
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('value')
-          PsiElement(})('}')
+            PsiElement(})('}')
         PsiElement(,)(',')
         ERL_MAP_EXPRESSION
-          PsiElement(#)('#')
-          PsiElement({)('{')
-          ERL_MAP_ENTRIES
+          ERL_MAP_TUPLE
+            PsiElement(#)('#')
+            PsiElement({)('{')
             ERL_MAP_ENTRY
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
@@ -34,13 +34,13 @@ ERL_FILE
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('value')
-          PsiElement(})('}')
+            PsiElement(})('}')
         PsiElement(,)(',')
         PsiComment(ERL_LINE_COMMENT)('% although this is incorrect, parser should eat it.')
         ERL_MAP_EXPRESSION
-          PsiElement(#)('#')
-          PsiElement({)('{')
-          ERL_MAP_ENTRIES
+          ERL_MAP_TUPLE
+            PsiElement(#)('#')
+            PsiElement({)('{')
             ERL_MAP_ENTRY
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
@@ -58,10 +58,11 @@ ERL_FILE
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('value')
-          PsiElement(})('}')
+            PsiElement(})('}')
         PsiElement(,)(',')
         ERL_MAP_EXPRESSION
-          PsiElement(#)('#')
-          PsiElement({)('{')
-          PsiElement(})('}')
+          ERL_MAP_TUPLE
+            PsiElement(#)('#')
+            PsiElement({)('{')
+            PsiElement(})('}')
     PsiElement(.)('.')

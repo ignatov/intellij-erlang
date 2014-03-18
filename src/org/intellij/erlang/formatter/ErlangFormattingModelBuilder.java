@@ -153,6 +153,8 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .aroundInside(ERL_DOT, ERL_RECORD_FIELD).none()
       .before(ERL_RECORD_FIELD).none()
       .aroundInside(ERL_RADIX, ERL_RECORD_EXPRESSION).none()
+      .afterInside(ERL_RADIX, ERL_MAP_TUPLE).none()
+      .beforeInside(ERL_MAP_TUPLE, ERL_MAP_EXPRESSION).none()
       .before(ERL_DOT).none()
       .around(ERL_QMARK).none()
       .before(ERL_RECORD_TUPLE).none()

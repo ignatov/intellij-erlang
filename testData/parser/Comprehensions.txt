@@ -239,9 +239,9 @@ ERL_FILE
               PsiElement(var)('Map')
           PsiElement(=)('=')
           ERL_MAP_EXPRESSION
-            PsiElement(#)('#')
-            PsiElement({)('{')
-            ERL_MAP_ENTRIES
+            ERL_MAP_TUPLE
+              PsiElement(#)('#')
+              PsiElement({)('{')
               ERL_MAP_ENTRY
                 ERL_MAX_EXPRESSION
                   PsiElement(integer)('1')
@@ -255,7 +255,7 @@ ERL_FILE
                 PsiElement(=>)('=>')
                 ERL_MAX_EXPRESSION
                   PsiElement(integer)('2')
-            PsiElement(})('}')
+              PsiElement(})('}')
         PsiElement(,)(',')
         ERL_LIST_COMPREHENSION
           PsiElement([)('[')

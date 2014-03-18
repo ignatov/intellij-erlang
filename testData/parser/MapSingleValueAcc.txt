@@ -21,25 +21,25 @@ ERL_FILE
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('M')
-          PsiElement(#)('#')
-          PsiElement({)('{')
-          ERL_MAP_ENTRIES
+          ERL_MAP_TUPLE
+            PsiElement(#)('#')
+            PsiElement({)('{')
             ERL_MAP_ENTRY
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
                   PsiElement(atom)('key')
-          PsiElement(})('}')
+            PsiElement(})('}')
         PsiElement(,)(',')
         ERL_MAP_EXPRESSION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
               PsiElement(var)('M')
-          PsiElement(#)('#')
-          PsiElement({)('{')
-          ERL_MAP_ENTRIES
+          ERL_MAP_TUPLE
+            PsiElement(#)('#')
+            PsiElement({)('{')
             ERL_MAP_ENTRY
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('M')
-          PsiElement(})('}')
+            PsiElement(})('}')
     PsiElement(.)('.')

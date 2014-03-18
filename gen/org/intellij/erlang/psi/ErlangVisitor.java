@@ -312,10 +312,6 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
-  public void visitMapEntries(@NotNull ErlangMapEntries o) {
-    visitCompositeElement(o);
-  }
-
   public void visitMapEntry(@NotNull ErlangMapEntry o) {
     visitCompositeElement(o);
   }
@@ -326,6 +322,10 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitMapExpression(@NotNull ErlangMapExpression o) {
     visitExpression(o);
+  }
+
+  public void visitMapTuple(@NotNull ErlangMapTuple o) {
+    visitCompositeElement(o);
   }
 
   public void visitMapType(@NotNull ErlangMapType o) {

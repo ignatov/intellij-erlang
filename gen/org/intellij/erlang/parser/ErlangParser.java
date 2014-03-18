@@ -246,9 +246,6 @@ public class ErlangParser implements PsiParser {
     else if (root_ == ERL_MACROS_NAME) {
       result_ = macros_name(builder_, 0);
     }
-    else if (root_ == ERL_MAP_ENTRIES) {
-      result_ = map_entries(builder_, 0);
-    }
     else if (root_ == ERL_MAP_ENTRY) {
       result_ = map_entry(builder_, 0);
     }
@@ -257,6 +254,9 @@ public class ErlangParser implements PsiParser {
     }
     else if (root_ == ERL_MAP_EXPRESSION) {
       result_ = expression(builder_, 0, 10);
+    }
+    else if (root_ == ERL_MAP_TUPLE) {
+      result_ = map_tuple(builder_, 0);
     }
     else if (root_ == ERL_MAP_TYPE) {
       result_ = map_type(builder_, 0);
@@ -3340,28 +3340,28 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // map_tail
+  // map_tuple
   public static boolean map_construct_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "map_construct_expression")) return false;
     if (!nextTokenIs(builder_, ERL_RADIX)) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_);
-    result_ = map_tail(builder_, level_ + 1);
+    result_ = map_tuple(builder_, level_ + 1);
     exit_section_(builder_, marker_, ERL_MAP_EXPRESSION, result_);
     return result_;
   }
 
   /* ********************************************************** */
   // map_entry (',' map_entry)*
-  public static boolean map_entries(PsiBuilder builder_, int level_) {
+  static boolean map_entries(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "map_entries")) return false;
     boolean result_ = false;
     boolean pinned_ = false;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<map entries>");
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
     result_ = map_entry(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && map_entries_1(builder_, level_ + 1);
-    exit_section_(builder_, level_, marker_, ERL_MAP_ENTRIES, result_, pinned_, null);
+    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
     return result_ || pinned_;
   }
 
@@ -3504,8 +3504,8 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // '#' '{' map_entries? '}'
-  static boolean map_tail(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "map_tail")) return false;
+  public static boolean map_tuple(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_tuple")) return false;
     if (!nextTokenIs(builder_, ERL_RADIX)) return false;
     boolean result_ = false;
     boolean pinned_ = false;
@@ -3513,15 +3513,15 @@ public class ErlangParser implements PsiParser {
     result_ = consumeToken(builder_, ERL_RADIX);
     result_ = result_ && consumeToken(builder_, ERL_CURLY_LEFT);
     pinned_ = result_; // pin = 2
-    result_ = result_ && report_error_(builder_, map_tail_2(builder_, level_ + 1));
+    result_ = result_ && report_error_(builder_, map_tuple_2(builder_, level_ + 1));
     result_ = pinned_ && consumeToken(builder_, ERL_CURLY_RIGHT) && result_;
-    exit_section_(builder_, level_, marker_, null, result_, pinned_, null);
+    exit_section_(builder_, level_, marker_, ERL_MAP_TUPLE, result_, pinned_, null);
     return result_ || pinned_;
   }
 
   // map_entries?
-  private static boolean map_tail_2(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "map_tail_2")) return false;
+  private static boolean map_tuple_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "map_tuple_2")) return false;
     map_entries(builder_, level_ + 1);
     return true;
   }
@@ -5685,7 +5685,7 @@ public class ErlangParser implements PsiParser {
         marker_.drop();
         left_marker_.precede().done(ERL_RECORD_EXPRESSION);
       }
-      else if (priority_ < 11 && map_tail(builder_, level_ + 1)) {
+      else if (priority_ < 11 && map_tuple(builder_, level_ + 1)) {
         result_ = true;
         marker_.drop();
         left_marker_.precede().done(ERL_MAP_EXPRESSION);

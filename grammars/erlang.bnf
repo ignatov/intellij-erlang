@@ -446,10 +446,10 @@ map_comprehension ::= '#' '{' map_assoc '||' lc_exprs '}' {
 }
 private map_assoc ::= expression '=>' expression {pin=2 elementType=map_entry}
 
-map_construct_expression ::= map_tail {elementType=map_expression}
-map_expression ::= expression map_tail {pin=2}
-private map_tail ::= '#' '{' map_entries? '}' {pin=2}
-map_entries ::= map_entry (',' map_entry)* {pin(".*")=1}
+map_construct_expression ::= map_tuple {elementType=map_expression}
+map_expression ::= expression map_tuple {pin=2}
+map_tuple ::= '#' '{' map_entries? '}' {pin=2}
+private map_entries ::= map_entry (',' map_entry)* {pin(".*")=1}
 map_entry ::= expression (('=>' | ':=') expression)? {pin=1 recoverWhile=tuple_recoverer}
 
 global_function_call_expression ::= module_ref_or_dot_atom ':' function_call_expression {pin=0}

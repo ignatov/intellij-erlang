@@ -28,27 +28,9 @@ public class ErlangMapExpressionImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
-  @Nullable
-  public ErlangMapEntries getMapEntries() {
-    return findChildByClass(ErlangMapEntries.class);
-  }
-
-  @Override
   @NotNull
-  public PsiElement getCurlyLeft() {
-    return findNotNullChildByType(ERL_CURLY_LEFT);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getCurlyRight() {
-    return findChildByType(ERL_CURLY_RIGHT);
-  }
-
-  @Override
-  @NotNull
-  public PsiElement getRadix() {
-    return findNotNullChildByType(ERL_RADIX);
+  public ErlangMapTuple getMapTuple() {
+    return findNotNullChildByClass(ErlangMapTuple.class);
   }
 
 }

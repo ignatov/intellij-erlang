@@ -10,14 +10,14 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangMapEntriesImpl extends ErlangCompositeElementImpl implements ErlangMapEntries {
+public class ErlangMapTupleImpl extends ErlangCompositeElementImpl implements ErlangMapTuple {
 
-  public ErlangMapEntriesImpl(ASTNode node) {
+  public ErlangMapTupleImpl(ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMapEntries(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMapTuple(this);
     else super.accept(visitor);
   }
 
@@ -25,6 +25,24 @@ public class ErlangMapEntriesImpl extends ErlangCompositeElementImpl implements 
   @NotNull
   public List<ErlangMapEntry> getMapEntryList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangMapEntry.class);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getCurlyLeft() {
+    return findNotNullChildByType(ERL_CURLY_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getCurlyRight() {
+    return findChildByType(ERL_CURLY_RIGHT);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getRadix() {
+    return findNotNullChildByType(ERL_RADIX);
   }
 
 }

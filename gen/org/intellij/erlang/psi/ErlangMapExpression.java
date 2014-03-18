@@ -10,16 +10,7 @@ public interface ErlangMapExpression extends ErlangExpression {
   @NotNull
   ErlangExpression getExpression();
 
-  @Nullable
-  ErlangMapEntries getMapEntries();
-
   @NotNull
-  PsiElement getCurlyLeft();
-
-  @Nullable
-  PsiElement getCurlyRight();
-
-  @NotNull
-  PsiElement getRadix();
+  ErlangMapTuple getMapTuple();
 
 }

@@ -5,9 +5,18 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangMapEntries extends ErlangCompositeElement {
+public interface ErlangMapTuple extends ErlangCompositeElement {
 
   @NotNull
   List<ErlangMapEntry> getMapEntryList();
+
+  @NotNull
+  PsiElement getCurlyLeft();
+
+  @Nullable
+  PsiElement getCurlyRight();
+
+  @NotNull
+  PsiElement getRadix();
 
 }
