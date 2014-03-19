@@ -13,7 +13,7 @@ We are going to release a standalone Erlang IDE. If you are interested on it, pl
 If you'd like to make a donation you can use [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=C344TC8DDC5UN).
 
 ## Recent changes
-### Version 0.5.5
+### Version 0.5.6
 * Erlang/OTP R17 support
 * Generate spec intention
 * A bunch of bugfixes
