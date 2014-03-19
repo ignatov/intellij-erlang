@@ -1,6 +1,6 @@
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2" use-idea-classloader="true">
     <id>org.jetbrains.erlang</id>
-    <version>0.5.5</version>
+    <version>0.5.6</version>
     <vendor email="sergey.ignatov@jetbrains.com">Sergey Ignatov</vendor>
     <idea-version since-build="135.475" until-build="135.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -11,10 +11,7 @@
         <![CDATA[
             <p>0.5.5</p>
             <ul>
-              <li>IntelliJ 13.1 support</li>
-              <li>Erlang/OTP R17 support</li>
-              <li>Generate spec intention</li>
-              <li>A bunch of bugfixes</li>
+              <li>Startup crash fix</li>
             </ul>
         ]]>
     </change-notes>
