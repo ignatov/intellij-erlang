@@ -123,6 +123,8 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "ALIGN_RECORD_FIELD_ASSIGNMENTS", "Record field assignments", ALIGNMENT);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "INDENT_RELATIVE", "Honor relative", null);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "NEW_LINE_BEFORE_COMMA", "Comma first style", null);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "NEW_LINE_AFTER_ARROW", "Newline after '->'", null,
+        ErlangCodeStyleSettings.NewLineAfterArrow.OPTIONS, ErlangCodeStyleSettings.NewLineAfterArrow.VALUES);
     }
   }
 

@@ -19,6 +19,7 @@ package org.intellij.erlang.formatter;
 import com.intellij.formatting.*;
 import com.intellij.formatting.alignment.AlignmentStrategy;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
@@ -200,7 +201,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       Alignment alignment = myAlignmentStrategy.getAlignment(parentType, childType);
       if (alignment != null &&
         childType == ERL_CLAUSE_BODY && myErlangSettings.ALIGN_FUNCTION_CLAUSES &&
-        StringUtil.countNewLines(child.getText()) > 0) {
+        (myErlangSettings.NEW_LINE_AFTER_ARROW == ErlangCodeStyleSettings.NewLineAfterArrow.FORCE || StringUtil.countNewLines(child.getText()) > 0)) {
         return null; // redesign this hack
       }
       return alignment;
@@ -242,6 +243,16 @@ public class ErlangFormattingBlock extends AbstractBlock {
       if (!funClauseList.isEmpty() && funClauseList.get(0).getArgumentDefinition() != null) {
         return Spacing.createSpacing(1, 1, 0, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
       }
+    }
+    //force newline after arrow
+    if (myErlangSettings.NEW_LINE_AFTER_ARROW != ErlangCodeStyleSettings.NewLineAfterArrow.DO_NOT_FORCE &&
+      child1 instanceof ErlangFormattingBlock && ((ErlangFormattingBlock) child1).getNode().getElementType() == ERL_ARROW) {
+      int spaceAroundArrow = myErlangSettings.SPACE_AROUND_ARROW ? 1 : 0;
+      if (myErlangSettings.NEW_LINE_AFTER_ARROW == ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES) {
+        TextRange dependency = TextRange.create(child2.getTextRange().getStartOffset(), this.getTextRange().getEndOffset());
+        return Spacing.createDependentLFSpacing(spaceAroundArrow, spaceAroundArrow, dependency, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
+      }
+      return Spacing.createSpacing(spaceAroundArrow, spaceAroundArrow, 1, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
     }
     return mySpacingBuilder.getSpacing(this, child1, child2);
   }
