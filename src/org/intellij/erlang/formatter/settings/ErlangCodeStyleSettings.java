@@ -21,11 +21,20 @@ import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.codeStyle.CustomCodeStyleSettings;
 
 public class ErlangCodeStyleSettings extends CustomCodeStyleSettings {
+  public interface NewLineAfterArrow {
+    int DO_NOT_FORCE = 0x00;
+    int FORCE = 0x01;
+    int FORCE_EXCEPT_ONE_LINE_CLAUSES = 0x02;
+    int[] VALUES = {DO_NOT_FORCE, FORCE, FORCE_EXCEPT_ONE_LINE_CLAUSES};
+    String[] OPTIONS = {"Do not force", "Force", "Force, except one-line clauses"};
+  }
+
   public boolean ALIGN_MULTILINE_BLOCK = false;
   public boolean ALIGN_FUNCTION_CLAUSES = false;
   public boolean ALIGN_GUARDS = false;
   public boolean INDENT_RELATIVE = true;
   public boolean NEW_LINE_BEFORE_COMMA = false;
+  public int NEW_LINE_AFTER_ARROW = NewLineAfterArrow.DO_NOT_FORCE;
   public boolean SPACE_AROUND_SEND = true;
   public boolean SPACE_AROUND_ARROW = true;
   public boolean SPACE_AROUND_LEFT_ARROW = true;

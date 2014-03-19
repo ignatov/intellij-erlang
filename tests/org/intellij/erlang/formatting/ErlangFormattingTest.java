@@ -139,6 +139,15 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testNewLineAfterArrow1() throws Exception {
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE;
+    doTest();
+  }
+  public void testNewLineAfterArrow2() throws Exception {
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    doTest();
+  }
+
   public void testFunctionClause() throws Exception { doEnterTest(); }
 
   public void testIf1() throws Exception { doEnterTest(); }
