@@ -36,7 +36,7 @@ public class CopyrightExtensionDeferredLoader implements ApplicationComponent {
   @Override
   public void initComponent() {
     IdeaPluginDescriptor plugin = PluginManager.getPlugin(PluginId.getId("com.intellij.copyright"));
-    if (plugin != null && addThisPluginsJarPathTo(plugin)) {
+    if (plugin != null && plugin.isEnabled() && addThisPluginsJarPathTo(plugin)) {
       FileTypeExtensionPoint fileTypeEp = new FileTypeExtensionPoint();
       fileTypeEp.filetype = "Erlang";
       fileTypeEp.implementationClass = COPYRIGHTS_PROVIDER_CLASS_NAME;
