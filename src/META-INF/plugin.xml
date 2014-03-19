@@ -9,7 +9,7 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
-            <p>0.5.5</p>
+            <p>0.5.6</p>
             <ul>
               <li>Startup crash fix</li>
             </ul>
