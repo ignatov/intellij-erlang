@@ -52,12 +52,12 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   }
 
   @Override
-  public ErlangArgumentList findElementForParameterInfo(CreateParameterInfoContext context) {
+  public ErlangArgumentList findElementForParameterInfo(@NotNull CreateParameterInfoContext context) {
     return getErlangArgumentList(context);
   }
 
   @Override
-  public ErlangArgumentList findElementForUpdatingParameterInfo(UpdateParameterInfoContext context) {
+  public ErlangArgumentList findElementForUpdatingParameterInfo(@NotNull UpdateParameterInfoContext context) {
     return getErlangArgumentList(context);
   }
 
@@ -68,7 +68,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   }
 
   @Override
-  public void showParameterInfo(@NotNull ErlangArgumentList args, CreateParameterInfoContext context) {
+  public void showParameterInfo(@NotNull ErlangArgumentList args, @NotNull CreateParameterInfoContext context) {
     ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
     if (erlFunctionCall != null) {
       PsiReference reference = erlFunctionCall.getReference();
@@ -121,7 +121,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   }
 
   @Override
-  public void updateParameterInfo(@NotNull ErlangArgumentList place, UpdateParameterInfoContext context) {
+  public void updateParameterInfo(@NotNull ErlangArgumentList place, @NotNull UpdateParameterInfoContext context) {
     context.setCurrentParameter(ParameterInfoUtils.getCurrentParameterIndex(place.getNode(), context.getOffset(), ErlangTypes.ERL_COMMA));
   }
 
