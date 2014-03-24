@@ -19,6 +19,9 @@ package org.intellij.erlang.go;
 import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ArrayUtil;
 import org.intellij.erlang.ErlangModuleIndex;
@@ -26,6 +29,7 @@ import org.intellij.erlang.ErlangStructureViewFactory;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangNamedElement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +42,10 @@ public class ErlangModuleContributor implements ChooseByNameContributor {
     List<ErlangModule> result = ErlangModuleIndex.getModulesByName(project, name, scope);
     ArrayList<NavigationItem> items = new ArrayList<NavigationItem>(result.size());
     for (ErlangNamedElement element : result) {
-      items.add(new ErlangStructureViewFactory.Element(element));
+      PsiFile containingFile = element.getContainingFile();
+      VirtualFile virtualFile = containingFile != null ? containingFile.getVirtualFile() : null;
+      String moduleName = virtualFile != null ? virtualFile.getNameWithoutExtension() : null;
+      items.add(new ErlangModuleNavigationItem(element, moduleName == null ? element.getName() : moduleName));
     }
     return items.toArray(new NavigationItem[items.size()]);
   }
@@ -47,5 +54,25 @@ public class ErlangModuleContributor implements ChooseByNameContributor {
   @Override
   public String[] getNames(Project project, boolean includeNonProjectItems) {
     return ArrayUtil.toStringArray(ErlangModuleIndex.getNames(project));
+  }
+
+  private static class ErlangModuleNavigationItem extends ErlangStructureViewFactory.Element {
+    private final String myPresentableName;
+
+    public ErlangModuleNavigationItem(@NotNull PsiElement element, @Nullable String presentableName) {
+      super(element);
+      myPresentableName = presentableName;
+    }
+
+    @Nullable
+    @Override
+    public String getName() {
+      return myPresentableName;
+    }
+
+    @Override
+    public String getPresentableText() {
+      return myPresentableName;
+    }
   }
 }
