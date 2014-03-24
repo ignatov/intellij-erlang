@@ -36,6 +36,7 @@ import org.intellij.erlang.highlighting.ErlangHighlightingTest;
 import org.intellij.erlang.highlighting.ErlangSmallIdeHighlightingTest;
 import org.intellij.erlang.highlighting.generate.ErlangGenerateTest;
 import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
+import org.intellij.erlang.marker.ErlangMethodSeparatorProviderTest;
 import org.intellij.erlang.navigation.ErlangGotoSuperTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
@@ -106,6 +107,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangConsoleViewTest.class);
     suite.addTestSuite(ErlangSourcePositionTest.class);
     suite.addTestSuite(ErlangModuleResolutionTest.class);
+    suite.addTestSuite(ErlangMethodSeparatorProviderTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }
