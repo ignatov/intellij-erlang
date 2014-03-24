@@ -3,4 +3,4 @@
 -type x() :: integer().
 -opaque x() :: integer().
 
-f() -> A = m:f / 1.
+f() -> A = fun m:f/1.
