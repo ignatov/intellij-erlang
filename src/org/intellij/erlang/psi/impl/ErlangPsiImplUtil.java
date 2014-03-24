@@ -1245,7 +1245,15 @@ public class ErlangPsiImplUtil {
 
   public static boolean isEunitTestFunction(@NotNull ErlangFunction function) {
     String name = function.getName();
-    return (StringUtil.endsWith(name, "_test") || StringUtil.endsWith(name, "_test_"));
+    return isEunitTestFunctionName(name) || isEunitTestGeneratorFunctionName(name);
+  }
+
+  public static boolean isEunitTestFunctionName(@NotNull String functionName) {
+    return StringUtil.endsWith(functionName, "_test");
+  }
+
+  public static boolean isEunitTestGeneratorFunctionName(@NotNull String functionName) {
+    return StringUtil.endsWith(functionName, "_test_");
   }
 
   public static boolean isEunitImported(ErlangFile file) {

@@ -35,6 +35,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 
@@ -139,7 +140,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
         result.append("{\"module \'").append(moduleName).append("\'\", [");
         for (String function : e.getValue()) {
-          result.append("fun ").append(moduleName).append(':').append(function).append("/0, ");
+          boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
+          result.append(isGenerator ? "{generator, " : "")
+            .append("fun ").append(moduleName).append(':').append(function).append("/0")
+            .append(isGenerator ? "}" : "")
+            .append(", ");
         }
         result.setLength(result.length() - 2);
         result.append("]}, ");

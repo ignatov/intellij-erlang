@@ -24,14 +24,14 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testIntegration.TestLocationProvider;
-import com.intellij.util.ArrayUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangModuleIndex;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -104,12 +104,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
     if (node == null) return null;
 
     ASTNode nonWhitespaceSibling = FormatterUtil.getNextNonWhitespaceSibling(node);
-    PsiElement psi = nonWhitespaceSibling != null ? nonWhitespaceSibling.getPsi() : null;
-    if (psi == null) return null;
-    if (psi instanceof ErlangListExpression) { // in case of first element in generator
-      psi = ArrayUtil.getFirstElement(psi.getChildren());
-    }
-    return PsiTreeUtil.getNonStrictParentOfType(psi, ErlangFunctionCallExpression.class, ErlangGenericFunctionCallExpression.class, ErlangFunction.class);
+    return nonWhitespaceSibling != null ? nonWhitespaceSibling.getPsi() : null;
   }
 
   private static Collection<ErlangFile> getErlangFiles(Project project, String module) {
