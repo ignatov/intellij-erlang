@@ -49,7 +49,9 @@ public class ErlangIndentProcessor {
     myErlangSettings = erlangSettings;
   }
 
-  public Indent getChildIndent(ASTNode node) {
+  public Indent getChildIndent(ASTNode node, int binaryExpressionIndex) {
+    if (binaryExpressionIndex > 0) return Indent.getNormalIndent();
+
     IElementType elementType = node.getElementType();
     ASTNode parent = node.getTreeParent();
     IElementType parentType = parent != null ? parent.getElementType() : null;

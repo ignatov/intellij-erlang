@@ -19,6 +19,7 @@ package org.intellij.erlang.formatter;
 import com.intellij.formatting.*;
 import com.intellij.formatting.alignment.AlignmentStrategy;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
@@ -67,6 +68,10 @@ public class ErlangFormattingBlock extends AbstractBlock {
   public static final TokenSet BRACKETS_CONTAINERS = TokenSet.create(
     ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES, ERL_BINARY_EXPRESSION
   );
+  private static final TokenSet BINARY_EXPRESSIONS = TokenSet.create(
+    ERL_LIST_OP_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION, ERL_SEND_EXPRESSION, //right-assoc
+    ERL_ADDITIVE_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION
+  );
 
   private final Indent myIndent;
   private final AlignmentStrategy myAlignmentStrategy;
@@ -81,13 +86,14 @@ public class ErlangFormattingBlock extends AbstractBlock {
                                @Nullable Wrap wrap,
                                @NotNull CommonCodeStyleSettings settings,
                                @NotNull ErlangCodeStyleSettings erlangSettings,
-                               @NotNull SpacingBuilder spacingBuilder) {
+                               @NotNull SpacingBuilder spacingBuilder,
+                               int binaryExpressionIndex) {
     super(node, wrap, alignment);
     myAlignmentStrategy = alignmentStrategy;
     mySettings = settings;
     myErlangSettings = erlangSettings;
     mySpacingBuilder = spacingBuilder;
-    myIndent = new ErlangIndentProcessor(myErlangSettings).getChildIndent(node);
+    myIndent = new ErlangIndentProcessor(erlangSettings).getChildIndent(node, binaryExpressionIndex);
   }
 
   @Override
@@ -105,35 +111,73 @@ public class ErlangFormattingBlock extends AbstractBlock {
   }
 
   private List<Block> buildSubBlocks() {
-    List<Block> blocks = new ArrayList<Block>();
-    Alignment baseAlignment = Alignment.createAlignment(true);
-    Alignment baseAlignment2 = Alignment.createAlignment(true);
-    AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
+    final List<Block> blocks = new ArrayList<Block>();
+    final Alignment baseAlignment = Alignment.createAlignment(true);
+    final Alignment baseAlignment2 = Alignment.createAlignment(true);
+    final AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
+    final Ref<Wrap> chopDownIfLongWrap = new Ref<Wrap>();
 
-    Wrap chopDownIfLongWrap = null;
-    for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
-      IElementType childType = child.getElementType();
-      if (child.getTextRange().getLength() == 0 || childType == TokenType.WHITE_SPACE) continue;
-
-      Alignment alignment = getAlignment(getNode(), child, baseAlignment, baseAlignment2);
-
-      WrapType wrapType = calculateWrapType(getNode(), child);
-
-      Wrap wrap;
-      if (wrapType == WrapType.CHOP_DOWN_IF_LONG) {
-        chopDownIfLongWrap = chopDownIfLongWrap == null ? Wrap.createWrap(wrapType, true) : chopDownIfLongWrap;
-        wrap = chopDownIfLongWrap;
+    // if uniform binary expressions option is enabled, blocks for binary expression sequences are built flat, that is
+    // for an expression like 1 + 1 + 1 a single parent block with 5 children in it is constructed.
+    if (myErlangSettings.UNIFORM_BINARY_EXPRESSIONS && BINARY_EXPRESSIONS.contains(myNode.getElementType())) {
+      class BinaryExpressionSequenceBlocksBuilder {
+        private int myBinaryExpressionIndex = 0;
+        void build(ASTNode node) {
+          for (ASTNode child = node.getFirstChildNode(); child != null; child = child.getTreeNext()) {
+            if (!shouldCreateBlockFor(child)) continue;
+            IElementType childType = child.getElementType();
+            if (BINARY_EXPRESSIONS.contains(childType) ||
+              myBinaryExpressionIndex != 0 &&
+                childType == ERL_MAX_EXPRESSION &&
+                child.getFirstChildNode() != null &&
+                child.getFirstChildNode().getElementType() == ERL_STRING_LITERAL) {
+              build(child);
+            }
+            else {
+              blocks.add(createChildBlock(node, child, chopDownIfLongWrap, baseAlignment, baseAlignment2, alignmentStrategy, myBinaryExpressionIndex));
+              myBinaryExpressionIndex++;
+            }
+          }
+        }
       }
-      else if (wrapType == null) {
-        wrap = null;
+      new BinaryExpressionSequenceBlocksBuilder().build(myNode);
+    }
+    else {
+      for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
+        if (!shouldCreateBlockFor(child)) continue;
+        blocks.add(createChildBlock(myNode, child, chopDownIfLongWrap, baseAlignment, baseAlignment2, alignmentStrategy, -1));
       }
-      else {
-        wrap = Wrap.createWrap(wrapType, true);
-      }
-
-      blocks.add(new ErlangFormattingBlock(child, alignment, alignmentStrategy, wrap, mySettings, myErlangSettings, mySpacingBuilder));
     }
     return Collections.unmodifiableList(blocks);
+  }
+
+  private static boolean shouldCreateBlockFor(ASTNode node) {
+    return node.getTextRange().getLength() != 0 && node.getElementType() != TokenType.WHITE_SPACE;
+  }
+
+  private ErlangFormattingBlock createChildBlock(ASTNode parent,
+                                                 ASTNode child,
+                                                 Ref<Wrap> chopDownIfLongWrap,
+                                                 Alignment baseAlignment,
+                                                 Alignment baseAlignment2,
+                                                 @Nullable AlignmentStrategy alignmentStrategy,
+                                                 int binaryExpressionIndex) {
+    Alignment alignment = getAlignment(parent, child, baseAlignment, baseAlignment2, binaryExpressionIndex);
+    WrapType wrapType = calculateWrapType(parent, child);
+    Wrap wrap;
+    if (wrapType == WrapType.CHOP_DOWN_IF_LONG) {
+      if (chopDownIfLongWrap.isNull()) {
+        chopDownIfLongWrap.set(Wrap.createWrap(wrapType, true));
+      }
+      wrap = chopDownIfLongWrap.get();
+    }
+    else if (wrapType == null) {
+      wrap = null;
+    }
+    else {
+      wrap = Wrap.createWrap(wrapType, true);
+    }
+    return new ErlangFormattingBlock(child, alignment, alignmentStrategy, wrap, mySettings, myErlangSettings, mySpacingBuilder, binaryExpressionIndex);
   }
 
   @Nullable
@@ -154,7 +198,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   }
 
   @Nullable
-  private Alignment getAlignment(@NotNull ASTNode parent, @NotNull ASTNode child, @Nullable Alignment baseAlignment, @Nullable Alignment baseAlignment2) {
+  private Alignment getAlignment(@NotNull ASTNode parent, @NotNull ASTNode child, @Nullable Alignment baseAlignment, @Nullable Alignment baseAlignment2, int binaryExpressionIndex) {
     IElementType childType = child.getElementType();
     IElementType parentType = parent.getElementType();
     Alignment fromStrategy = calculateAlignmentFromStrategy(parent, child);
@@ -185,7 +229,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
         return baseAlignment;
       }
       PsiElement psi = parent.getPsi();
-      if (psi instanceof ErlangFakeBinaryExpression) {
+      if ((psi instanceof ErlangFakeBinaryExpression || parentType == ERL_MAX_EXPRESSION && childType == ERL_STRING_LITERAL) &&
+        (binaryExpressionIndex > 1 || binaryExpressionIndex < 0)) {
         return baseAlignment;
       }
     }

@@ -42,6 +42,7 @@ public class ErlangCodeStyleSettings extends CustomCodeStyleSettings {
   public boolean SPACE_AROUND_OR_IN_LISTS = true;
   public boolean ALIGN_FUN_CLAUSES = false;
   public boolean ALIGN_RECORD_FIELD_ASSIGNMENTS = false;
+  public boolean UNIFORM_BINARY_EXPRESSIONS = false;
 
   public int EXPRESSION_IN_CLAUSE_WRAP = CommonCodeStyleSettings.WRAP_AS_NEEDED;
 

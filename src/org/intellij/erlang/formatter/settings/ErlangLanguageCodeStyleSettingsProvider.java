@@ -125,6 +125,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "NEW_LINE_BEFORE_COMMA", "Comma first style", null);
       consumer.showCustomOption(ErlangCodeStyleSettings.class, "NEW_LINE_AFTER_ARROW", "Newline after '->'", null,
         ErlangCodeStyleSettings.NewLineAfterArrow.OPTIONS, ErlangCodeStyleSettings.NewLineAfterArrow.VALUES);
+      consumer.showCustomOption(ErlangCodeStyleSettings.class, "UNIFORM_BINARY_EXPRESSIONS", "Uniform binary expressions style", null);
     }
   }
 

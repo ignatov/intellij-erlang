@@ -148,6 +148,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testUniformBinaryExpressionsStyle() throws Exception {
+    getErlangSettings().UNIFORM_BINARY_EXPRESSIONS = true;
+    getErlangSettings().ALIGN_MULTILINE_BLOCK = true;
+    doTest();
+  }
+
   public void testFunctionClause() throws Exception { doEnterTest(); }
 
   public void testIf1() throws Exception { doEnterTest(); }
