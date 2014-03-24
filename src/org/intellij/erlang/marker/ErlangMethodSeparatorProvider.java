@@ -1,0 +1,82 @@
+/*
+ * Copyright 2012-2014 Sergey Ignatov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.intellij.erlang.marker;
+
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzerSettings;
+import com.intellij.codeInsight.daemon.LineMarkerInfo;
+import com.intellij.codeInsight.daemon.LineMarkerProvider;
+import com.intellij.codeInsight.daemon.impl.LineMarkersPass;
+import com.intellij.openapi.editor.colors.EditorColorsManager;
+import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
+import java.util.List;
+
+public class ErlangMethodSeparatorProvider implements LineMarkerProvider {
+  private final DaemonCodeAnalyzerSettings myDaemonSettings;
+  private final EditorColorsManager myColorsManager;
+
+  public ErlangMethodSeparatorProvider(DaemonCodeAnalyzerSettings daemonSettings, EditorColorsManager colorsManager) {
+    myDaemonSettings = daemonSettings;
+    myColorsManager = colorsManager;
+  }
+
+  @Nullable
+  @Override
+  public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement function) {
+    if (myDaemonSettings.SHOW_METHOD_SEPARATORS && function instanceof ErlangFunction) {
+      PsiElement anchor = findAnchorElementForMethodSeparator((ErlangFunction) function);
+      return LineMarkersPass.createMethodSeparatorLineMarker(anchor, myColorsManager);
+    }
+    return null;
+  }
+
+  @Override
+  public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
+  }
+
+  private static PsiElement findAnchorElementForMethodSeparator(ErlangFunction function) {
+    ErlangAttribute specAttribute = getSpecAttributeForFunction(function);
+    PsiElement leftmostPossibleAnchor = function;
+    PsiElement leftmostElement = function;
+    while ((leftmostElement = leftmostElement.getPrevSibling()) != null) {
+      if (leftmostElement instanceof PsiComment || leftmostElement == specAttribute) {
+        leftmostPossibleAnchor = leftmostElement;
+      }
+      else if (!(leftmostElement instanceof PsiWhiteSpace)) break;
+    }
+    return leftmostPossibleAnchor;
+  }
+
+  @Nullable
+  private static ErlangAttribute getSpecAttributeForFunction(ErlangFunction function) {
+    ErlangSpecification spec = ErlangPsiImplUtil.getSpecification(function);
+    ErlangFunTypeSigs signature = ErlangPsiImplUtil.getSignature(spec);
+    ErlangSpecFun specFun = signature != null ? signature.getSpecFun() : null;
+    PsiReference reference = specFun != null ? specFun.getReference() : null;
+    boolean isSpecForPassedFunction = reference != null && reference.isReferenceTo(function);
+    return isSpecForPassedFunction ? PsiTreeUtil.getParentOfType(spec, ErlangAttribute.class) : null;
+  }
+}
