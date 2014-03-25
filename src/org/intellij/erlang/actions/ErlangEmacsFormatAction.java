@@ -57,13 +57,13 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
 
   @Override
   public void update(AnActionEvent e) {
-    final PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
+    PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
     boolean isErlang = psiFile instanceof ErlangFile;
     e.getPresentation().setEnabled(isErlang);
   }
 
   @Override
-  public void actionPerformed(final AnActionEvent e) {
+  public void actionPerformed(AnActionEvent e) {
     final PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
     final Project project = getEventProject(e);
     if (project == null) return;
@@ -73,7 +73,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
 
     final String groupId = e.getPresentation().getText();
     try {
-      final GeneralCommandLine commandLine = new GeneralCommandLine();
+      GeneralCommandLine commandLine = new GeneralCommandLine();
       String emacsPath = EmacsSettings.getInstance(project).getEmacsPath();
       if (emacsPath.isEmpty()) {
         Notifications.Bus.notify(
