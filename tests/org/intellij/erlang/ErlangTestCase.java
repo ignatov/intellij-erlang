@@ -47,10 +47,7 @@ import org.intellij.erlang.refactoring.ErlangExtractFunctionTest;
 import org.intellij.erlang.refactoring.ErlangInlineVariableTest;
 import org.intellij.erlang.refactoring.ErlangIntroduceVariableTest;
 import org.intellij.erlang.refactoring.ErlangSafeDeleteTest;
-import org.intellij.erlang.resolve.ErlangIncludeLibResolveTest;
-import org.intellij.erlang.resolve.ErlangIncludeResolveTest;
-import org.intellij.erlang.resolve.ErlangModuleResolutionTest;
-import org.intellij.erlang.resolve.ErlangSmallIdeIncludeResolveTest;
+import org.intellij.erlang.resolve.*;
 import org.intellij.erlang.sdk.ErlangSdkReleaseTest;
 import org.intellij.erlang.selection.ErlangWordSelectionTest;
 import org.intellij.erlang.typing.ErlangEnterHandlerTest;
@@ -108,6 +105,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangSourcePositionTest.class);
     suite.addTestSuite(ErlangModuleResolutionTest.class);
     suite.addTestSuite(ErlangMethodSeparatorProviderTest.class);
+    suite.addTestSuite(ErlangMacroParameterResolutionTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }
