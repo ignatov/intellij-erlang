@@ -20,32 +20,31 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangExportTypeIntention extends ErlangBaseNamedElementIntention {
+  public static final String NAME = "Export type";
+
   public ErlangExportTypeIntention() {
-    super("Export type", "Export type");
+    super(NAME, NAME);
   }
 
   @Override
   public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
-    if (!file.getManager().isInProject(file)) return false;
+    if (!file.getManager().isInProject(file) || !(file instanceof ErlangFile)) return false;
     ErlangTypeDefinition type = findType(file, editor.getCaretModel().getOffset());
     return type != null;
-//    if (type != null && file instanceof ErlangFile) {
-//      return !((ErlangFile) file).getExportedTypes().contains(type);
-//    }
   }
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
     ErlangTypeDefinition type = findType(file, editor.getCaretModel().getOffset());
-    if (type != null) {
-      ErlangExportTypeFix.processType(project, type);
-    }
+    assert type != null;
+    ErlangExportTypeFix.processType(project, type);
   }
   
   @Nullable
