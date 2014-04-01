@@ -20,11 +20,12 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.file.UpdateAddedFileProcessor;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangFile;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangUpdateAddedFileProcessor extends UpdateAddedFileProcessor {
   @Override
-  public boolean canProcessElement(PsiFile file) {
+  public boolean canProcessElement(@NotNull PsiFile file) {
     return file instanceof ErlangFile && file.getFileType() == ErlangFileType.MODULE;
   }
 
