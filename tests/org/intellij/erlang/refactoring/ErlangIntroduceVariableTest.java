@@ -19,19 +19,22 @@ package org.intellij.erlang.refactoring;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
 
+import static org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
+import static org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.*;
+
 public class ErlangIntroduceVariableTest extends LightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {
     return "testData/refactoring/introduce_variable";
   }
 
-  public void testSimple()                  { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testFunctionArguments()       { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testFunctionClauseScope()     { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testSingleOccurrenceReplace() { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.SINGLE); }
-  public void testParenthesesElimination()  { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testSimple()                  { doTest(ALL); }
+  public void testFunctionArguments()       { doTest(ALL); }
+  public void testFunctionClauseScope()     { doTest(ALL); }
+  public void testParenthesesElimination()  { doTest(ALL); }
+  public void testSingleOccurrenceReplace() { doTest(SINGLE); }
 
-  private void doTest(ErlangIntroduceVariableHandler.ReplaceStrategy replaceStrategy)  {
+  private void doTest(ReplaceStrategy replaceStrategy)  {
     myFixture.configureByFile(getTestName(true) + ".erl");
     new ErlangIntroduceVariableHandler(replaceStrategy).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");
