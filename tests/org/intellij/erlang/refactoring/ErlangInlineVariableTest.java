@@ -22,16 +22,16 @@ import org.intellij.erlang.ErlangInlineVariableHandler;
 import org.intellij.erlang.psi.ErlangQVar;
 
 public class ErlangInlineVariableTest extends LightCodeInsightFixtureTestCase {
-  public void testSimple()                             throws Exception { doTest(); }
-  public void testFunExpression()                      throws Exception { doTest(); }
-  public void testLowPrecedence()                      throws Exception { doTest(); }
-  public void testCaseExpression()                     throws Exception { doTest(); }
-  public void testNestedCaseFormatting()               throws Exception { doTest(); }
-  public void testFunExpressionInline1()               throws Exception { doTest(); }
-  public void testFunExpressionInline2()               throws Exception { doTest(); }
-  public void testFunctionCallSubstitution()           throws Exception { doTest(); }
-  public void testFunctionCallSubstitutionWithArity1() throws Exception { doTest(); }
-  public void testFunctionCallSubstitutionWithArity2() throws Exception { doTest(); }
+  public void testSimple()                             { doTest(); }
+  public void testFunExpression()                      { doTest(); }
+  public void testLowPrecedence()                      { doTest(); }
+  public void testCaseExpression()                     { doTest(); }
+  public void testNestedCaseFormatting()               { doTest(); }
+  public void testFunExpressionInline1()               { doTest(); }
+  public void testFunExpressionInline2()               { doTest(); }
+  public void testFunctionCallSubstitution()           { doTest(); }
+  public void testFunctionCallSubstitutionWithArity1() { doTest(); }
+  public void testFunctionCallSubstitutionWithArity2() { doTest(); }
 
   @Override
   protected String getTestDataPath() {
