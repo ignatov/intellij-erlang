@@ -28,16 +28,19 @@ public class ErlangIntroduceVariableTest extends LightPlatformCodeInsightFixture
     return "testData/refactoring/introduce_variable";
   }
 
-  public void testSimple()                  { doTest(ALL); }
-  public void testCaseExpression()          { doTest(ALL); }
-  public void testFunctionArguments()       { doTest(ALL); }
-  public void testFunctionClauseScope()     { doTest(ALL); }
-  public void testParenthesesElimination()  { doTest(ALL); }
+  public void testSimple()                  { doTest(); }
+  public void testCaseExpression()          { doTest(); }
+  public void testFunctionArguments()       { doTest(); }
+  public void testFunctionClauseScope()     { doTest(); }
+  public void testParenthesesElimination()  { doTest(); }
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
 
+  private void doTest() { doTest(ALL); }
+
   private void doTest(ReplaceStrategy replaceStrategy)  {
-    myFixture.configureByFile(getTestName(true) + ".erl");
+    String name = getTestName(true);
+    myFixture.configureByFile(name + ".erl");
     new ErlangIntroduceVariableHandler(replaceStrategy).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
-    myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+    myFixture.checkResultByFile(name + "-after.erl");
   }
 }
