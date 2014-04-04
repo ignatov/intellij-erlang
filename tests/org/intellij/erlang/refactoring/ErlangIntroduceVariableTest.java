@@ -29,6 +29,7 @@ public class ErlangIntroduceVariableTest extends LightPlatformCodeInsightFixture
   }
 
   public void testSimple()                  { doTest(ALL); }
+  public void testCaseExpression()          { doTest(ALL); }
   public void testFunctionArguments()       { doTest(ALL); }
   public void testFunctionClauseScope()     { doTest(ALL); }
   public void testParenthesesElimination()  { doTest(ALL); }
