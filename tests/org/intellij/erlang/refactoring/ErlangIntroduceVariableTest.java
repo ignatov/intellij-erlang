@@ -25,13 +25,13 @@ public class ErlangIntroduceVariableTest extends LightPlatformCodeInsightFixture
     return "testData/refactoring/introduce_variable";
   }
 
-  public void testSimple()                  throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testFunctionArguments()       throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testFunctionClauseScope()     throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
-  public void testSingleOccurrenceReplace() throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.SINGLE); }
-  public void testParenthesesElimination()  throws Throwable { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testSimple()                  { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testFunctionArguments()       { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testFunctionClauseScope()     { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
+  public void testSingleOccurrenceReplace() { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.SINGLE); }
+  public void testParenthesesElimination()  { doTest(ErlangIntroduceVariableHandler.ReplaceStrategy.ALL); }
 
-  private void doTest(ErlangIntroduceVariableHandler.ReplaceStrategy replaceStrategy) throws Throwable {
+  private void doTest(ErlangIntroduceVariableHandler.ReplaceStrategy replaceStrategy)  {
     myFixture.configureByFile(getTestName(true) + ".erl");
     new ErlangIntroduceVariableHandler(replaceStrategy).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");
