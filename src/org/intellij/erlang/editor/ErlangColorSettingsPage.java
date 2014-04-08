@@ -57,23 +57,23 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     new AttributesDescriptor("Specifications", SPEC),
   };
 
-  private static Map<String, TextAttributesKey> attributesKeyMap = ContainerUtil.newHashMap();
+  private static Map<String, TextAttributesKey> ATTRIBUTES_KEY_MAP = ContainerUtil.newHashMap();
 
   static {
-    attributesKeyMap.put("a", ATOM);
-    attributesKeyMap.put("d", DOC_TAG);
-    attributesKeyMap.put("k", KEYWORD);
-    attributesKeyMap.put("m", MACRO);
-    attributesKeyMap.put("r", RECORDS);
-    attributesKeyMap.put("f", FUNCTION);
-    attributesKeyMap.put("t", TYPE);
-    attributesKeyMap.put("bt", BUILT_IN_TYPE);
-    attributesKeyMap.put("m_att", ATTRIBUTE);
-    attributesKeyMap.put("c", FUNCTION_CALL);
-    attributesKeyMap.put("mr", MODULE_REF);
-    attributesKeyMap.put("g", GUARD);
-    attributesKeyMap.put("s", SPEC);
-    attributesKeyMap.put("cb", CALLBACK);
+    ATTRIBUTES_KEY_MAP.put("a", ATOM);
+    ATTRIBUTES_KEY_MAP.put("d", DOC_TAG);
+    ATTRIBUTES_KEY_MAP.put("k", KEYWORD);
+    ATTRIBUTES_KEY_MAP.put("m", MACRO);
+    ATTRIBUTES_KEY_MAP.put("r", RECORDS);
+    ATTRIBUTES_KEY_MAP.put("f", FUNCTION);
+    ATTRIBUTES_KEY_MAP.put("t", TYPE);
+    ATTRIBUTES_KEY_MAP.put("bt", BUILT_IN_TYPE);
+    ATTRIBUTES_KEY_MAP.put("m_att", ATTRIBUTE);
+    ATTRIBUTES_KEY_MAP.put("c", FUNCTION_CALL);
+    ATTRIBUTES_KEY_MAP.put("mr", MODULE_REF);
+    ATTRIBUTES_KEY_MAP.put("g", GUARD);
+    ATTRIBUTES_KEY_MAP.put("s", SPEC);
+    ATTRIBUTES_KEY_MAP.put("cb", CALLBACK);
   }
   
   @NotNull
@@ -134,6 +134,6 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
 
   @NotNull
   public Map<String, TextAttributesKey> getAdditionalHighlightingTagToDescriptorMap() {
-    return attributesKeyMap;
+    return ATTRIBUTES_KEY_MAP;
   }
 }
