@@ -21,9 +21,8 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.options.colors.AttributesDescriptor;
 import com.intellij.openapi.options.colors.ColorDescriptor;
 import com.intellij.openapi.options.colors.ColorSettingsPage;
-import gnu.trove.THashMap;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangIcons;
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -32,36 +31,51 @@ import java.util.Map;
 import static org.intellij.erlang.editor.ErlangSyntaxHighlighter.*;
 
 public class ErlangColorSettingsPage implements ColorSettingsPage {
-  private static final AttributesDescriptor[] ATTRS;
+  private static final AttributesDescriptor[] ATTRS = new AttributesDescriptor[]{
+    new AttributesDescriptor("Illegal character", ILLEGAL),
+    new AttributesDescriptor("Comment", COMMENT),
+    new AttributesDescriptor("String", STRING),
+    new AttributesDescriptor("Number", NUMBER),
+    new AttributesDescriptor("Keyword", KEYWORD),
+    new AttributesDescriptor("Parenthesis", PARENTHESES),
+    new AttributesDescriptor("Braces", BRACES),
+    new AttributesDescriptor("Brackets", BRACKETS),
+    new AttributesDescriptor("Atom", ATOM),
+    new AttributesDescriptor("Macro", MACRO),
+    new AttributesDescriptor("Variable", VARIABLES),
+    new AttributesDescriptor("Records", RECORDS),
+    new AttributesDescriptor("Operation sign", OP_SIGN),
+    new AttributesDescriptor("Edoc tag", DOC_TAG),
+    new AttributesDescriptor("Function", FUNCTION),
+    new AttributesDescriptor("Type", TYPE),
+    new AttributesDescriptor("Built-in type", BUILT_IN_TYPE),
+    new AttributesDescriptor("Attribute", ATTRIBUTE),
+    new AttributesDescriptor("Function call", FUNCTION_CALL),
+    new AttributesDescriptor("Module reference", MODULE_REF),
+    new AttributesDescriptor("Guards", GUARD),
+    new AttributesDescriptor("Callbacks", CALLBACK),
+    new AttributesDescriptor("Specifications", SPEC),
+  };
+
+  private static Map<String, TextAttributesKey> attributesKeyMap = ContainerUtil.newHashMap();
 
   static {
-    ATTRS = new AttributesDescriptor[]{
-      new AttributesDescriptor("Illegal character", ILLEGAL),
-      new AttributesDescriptor("Comment", COMMENT),
-      new AttributesDescriptor("String", STRING),
-      new AttributesDescriptor("Number", NUMBER),
-      new AttributesDescriptor("Keyword", KEYWORD),
-      new AttributesDescriptor("Parenthesis", PARENTHESES),
-      new AttributesDescriptor("Braces", BRACES),
-      new AttributesDescriptor("Brackets", BRACKETS),
-      new AttributesDescriptor("Atom", ATOM),
-      new AttributesDescriptor("Macro", MACRO),
-      new AttributesDescriptor("Variable", VARIABLES),
-      new AttributesDescriptor("Records", RECORDS),
-      new AttributesDescriptor("Operation sign", OP_SIGN),
-      new AttributesDescriptor("Edoc tag", DOC_TAG),
-      new AttributesDescriptor("Function", FUNCTION),
-      new AttributesDescriptor("Type", TYPE),
-      new AttributesDescriptor("Built-in type", BUILT_IN_TYPE),
-      new AttributesDescriptor("Attribute", ATTRIBUTE),
-      new AttributesDescriptor("Function call", FUNCTION_CALL),
-      new AttributesDescriptor("Module reference", MODULE_REF),
-      new AttributesDescriptor("Guards", GUARD),
-      new AttributesDescriptor("Callbacks", CALLBACK),
-      new AttributesDescriptor("Specifications", SPEC),
-    };
+    attributesKeyMap.put("a", ATOM);
+    attributesKeyMap.put("d", DOC_TAG);
+    attributesKeyMap.put("k", KEYWORD);
+    attributesKeyMap.put("m", MACRO);
+    attributesKeyMap.put("r", RECORDS);
+    attributesKeyMap.put("f", FUNCTION);
+    attributesKeyMap.put("t", TYPE);
+    attributesKeyMap.put("bt", BUILT_IN_TYPE);
+    attributesKeyMap.put("m_att", ATTRIBUTE);
+    attributesKeyMap.put("c", FUNCTION_CALL);
+    attributesKeyMap.put("mr", MODULE_REF);
+    attributesKeyMap.put("g", GUARD);
+    attributesKeyMap.put("s", SPEC);
+    attributesKeyMap.put("cb", CALLBACK);
   }
-
+  
   @NotNull
   public String getDisplayName() {
     return "Erlang";
@@ -118,24 +132,8 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       ;
   }
 
+  @NotNull
   public Map<String, TextAttributesKey> getAdditionalHighlightingTagToDescriptorMap() {
-    @NonNls
-    final Map<String, TextAttributesKey> map = new THashMap<String, TextAttributesKey>();
-    map.put("a", ATOM);
-    map.put("d", DOC_TAG);
-    map.put("k", KEYWORD);
-    map.put("m", MACRO);
-    map.put("r", RECORDS);
-    map.put("f", FUNCTION);
-    map.put("t", TYPE);
-    map.put("bt", BUILT_IN_TYPE);
-    map.put("m_att", ATTRIBUTE);
-    map.put("c", FUNCTION_CALL);
-    map.put("mr", MODULE_REF);
-    map.put("g", GUARD);
-    map.put("s", SPEC);
-    map.put("cb", CALLBACK);
-
-    return map;
+    return attributesKeyMap;
   }
 }
