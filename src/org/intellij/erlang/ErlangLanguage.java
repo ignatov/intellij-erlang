@@ -27,6 +27,6 @@ public class ErlangLanguage extends Language {
 
   @Override
   public String getDisplayName() {
-    return "Erlang language";
+    return "Erlang";
   }
 }
