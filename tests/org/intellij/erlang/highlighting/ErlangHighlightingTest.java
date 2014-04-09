@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.highlighting;
 
+import org.intellij.erlang.inspection.ErlangR17SyntaxInspection;
+
 public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testHelloWorld()        { doTest(); }
   public void testExport()            { doTest(); }
@@ -60,6 +62,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test364()               { doTest(); }
   public void test365()               { doTest(); }
   public void test387()               { doTest(); }
+
+  public void testR17SyntaxError() {
+    //noinspection unchecked
+    myFixture.enableInspections(ErlangR17SyntaxInspection.class);
+    doTest();
+  }
 
   public void testUnresolvedMacros()  {
     enableUnresolvedMacroInspection();

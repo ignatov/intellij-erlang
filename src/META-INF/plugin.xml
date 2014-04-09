@@ -163,6 +163,9 @@
         <localInspection language="Erlang" shortName="ErlangUnresolvedIncludeLib" displayName="Unresolved include_lib"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedIncludeLibInspection"/>
+        <localInspection language="Erlang" shortName="ErlangR17Syntax" displayName="17.0 syntax"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangR17SyntaxInspection"/>
 
         <!--warnings-->
         <localInspection language="Erlang" shortName="ErlangUnresolvedFunction" displayName="Unresolved function"

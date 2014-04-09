@@ -60,6 +60,10 @@ public enum ErlangSdkRelease {
     return VersionComparatorUtil.compare(myVersion, "5.10") < 0  || "lager".equals(moduleName) || moduleName.isEmpty();
   }
 
+  public boolean isNewerThan(@NotNull ErlangSdkRelease release) {
+    return VersionComparatorUtil.compare(myVersion, release.getVersion()) >= 0;
+  }
+
   @Nullable
   public static ErlangSdkRelease getSdkRelease(@Nullable String releaseString) {
     if (releaseString == null) return null;
