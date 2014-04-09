@@ -183,17 +183,12 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   public static ErlangSdkRelease getRelease(@NotNull Sdk sdk) {
-    String versionString = sdk.getVersionString();
-    try {
-      return versionString == null ? null : ErlangSdkRelease.valueOf(versionString);
-    } catch (IllegalArgumentException e) {
-      return null;
-    }
+    return ErlangSdkRelease.getSdkRelease(sdk.getVersionString());
   }
 
   @Nullable
   private static String getReleaseString(@NotNull String sdkHome) {
-    Pattern pattern = Pattern.compile("R\\d+.*");
+    Pattern pattern = Pattern.compile("R?\\d+.*");
     // determine the version from the 'releases' directory, if it exists
     File releases = new File(sdkHome, "releases");
     if (releases.isDirectory()) {

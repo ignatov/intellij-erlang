@@ -25,4 +25,11 @@ public class ErlangSdkReleaseTest extends TestCase {
   public void testNeedCompletion4() throws Exception { assertTrue(ErlangSdkRelease.R15B03.needBifCompletion("lager")); }
   public void testNeedCompletion5() throws Exception { assertTrue(ErlangSdkRelease.R16A.needBifCompletion("lager")); }
   public void testNeedCompletion6() throws Exception { assertTrue(ErlangSdkRelease.R16B.needBifCompletion("lager")); }
+
+  public void testReleaseString() throws Exception {
+    assertNotNull(ErlangSdkRelease.getSdkRelease("17"));
+    for (ErlangSdkRelease erlangSdkRelease : ErlangSdkRelease.values()) {
+      assertNotNull(ErlangSdkRelease.getSdkRelease(erlangSdkRelease.name()));
+    }
+  }
 }

@@ -18,8 +18,10 @@ package org.intellij.erlang.sdk;
 
 import com.intellij.util.text.VersionComparatorUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public enum ErlangSdkRelease {
+  R17   ("6.0"),
   R16B03("5.10.4"),
   R16B02("5.10.3"),
   R16B01("5.10.2"),
@@ -56,5 +58,15 @@ public enum ErlangSdkRelease {
 
   public boolean needBifCompletion(@NotNull String moduleName) {
     return VersionComparatorUtil.compare(myVersion, "5.10") < 0  || "lager".equals(moduleName) || moduleName.isEmpty();
+  }
+
+  @Nullable
+  public static ErlangSdkRelease getSdkRelease(@Nullable String releaseString) {
+    if (releaseString == null) return null;
+    try {
+      return valueOf(releaseString.startsWith("R") ? releaseString : ("R" + releaseString));
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
   }
 }
