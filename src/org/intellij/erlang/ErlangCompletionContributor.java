@@ -462,7 +462,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       result.addElement(
         PrioritizedLookupElement.withPriority(
           LookupElementBuilder.create(name)
-            .withIcon(ErlangIcons.MODULE)
+            .withIcon(ErlangIcons.FILE)
             .withInsertHandler(new ModuleInsertHandler(project, name, withColon)),
           MODULE_PRIORITY));
     }
