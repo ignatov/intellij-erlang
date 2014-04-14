@@ -211,6 +211,11 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "foo");
   }
 
+  public void test465() throws Throwable {
+    myFixture.configureByFiles("465/a.erl", "465/specs.hrl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "type1");
+  }
+
   public void testFunctionExpression() throws Throwable {
     doCheckResult("zoo() -> fun zo<caret>", "zoo() -> fun zoo/0");
   }

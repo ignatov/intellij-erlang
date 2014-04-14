@@ -568,7 +568,8 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity) {
     if (containingFile instanceof ErlangFile) {
-      List<ErlangTypeDefinition> types = ((ErlangFile) containingFile).getTypes();
+      ErlangFile erlangFile = (ErlangFile) containingFile;
+      List<ErlangTypeDefinition> types = ContainerUtil.concat(erlangFile.getTypes(), getErlangTypeFromIncludes(erlangFile, true, ""));
 
       final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<LookupElement>() {
         @Override
