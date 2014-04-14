@@ -47,6 +47,7 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    if (myArity < 0) return;
     //noinspection unchecked
     PsiElement call = PsiTreeUtil.getContextOfType(
       descriptor.getPsiElement(),
