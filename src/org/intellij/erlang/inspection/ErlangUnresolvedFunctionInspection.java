@@ -36,7 +36,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
     file.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-        super.visitFunctionCallExpression(o);        
+        super.visitFunctionCallExpression(o);
         PsiReference reference = o.getReference();
         if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
           if (o.getQAtom().getMacros() != null) return;
@@ -98,5 +98,4 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
       }
     });
   }
-
 }
