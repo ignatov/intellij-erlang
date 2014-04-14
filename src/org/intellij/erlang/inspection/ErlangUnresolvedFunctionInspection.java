@@ -27,6 +27,7 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFunctionReferenceImpl;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
   @Override
@@ -44,6 +45,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
           String name = r.getName();
           int arity = r.getArity();
 
+          if (arity < 0) return;
           if (ErlangBifTable.isBif("erlang", name, arity)) return;
 
           String signature = r.getSignature();
@@ -70,35 +72,31 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
       @Override
       public void visitSpecFun(@NotNull ErlangSpecFun o) {
         super.visitSpecFun(o);
-        PsiReference reference = o.getReference();
-        if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
-          if (o.getQAtom().getMacros() != null) return;
-          ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
-          LocalQuickFix[] qfs = getQuickFixes(o, new ErlangCreateFunctionQuickFix(r.getName(), r.getArity()));
-          problemsHolder.registerProblem(o.getQAtom(), "Unresolved function " + "'" + r.getSignature() + "'", qfs);
-        }
+        inspect(o, o.getQAtom(), o.getReference());
       }
 
       @Override
       public void visitFunctionWithArity(@NotNull ErlangFunctionWithArity o) {
         super.visitFunctionWithArity(o);
-        PsiReference reference = o.getReference();
-        if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
-          if (o.getQAtom().getMacros() != null) return;
-          ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
-          LocalQuickFix[] qfs = getQuickFixes(o, new ErlangCreateFunctionQuickFix(r.getName(), r.getArity()));
-          problemsHolder.registerProblem(o.getQAtom(), "Unresolved function " + "'" + r.getSignature() + "'", qfs);
-        }
+        inspect(o, o.getQAtom(), o.getReference());
       }
 
       //prevents UnresolvedFunction messages in callback specifications
       @Override
       public void visitCallbackSpec(@NotNull ErlangCallbackSpec o) {
       }
+
+      private void inspect(PsiElement what, ErlangQAtom target, @Nullable PsiReference reference) {
+        if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
+          if (target.getMacros() != null) return;
+          ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
+          if (r.getArity() < 0) return; //there is no need to inspect incomplete/erroneous code
+          LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(what, ErlangModuleRef.class) != null ?
+            new LocalQuickFix[]{} : new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(r.getName(), r.getArity())};
+          problemsHolder.registerProblem(target, "Unresolved function " + "'" + r.getSignature() + "'", qfs);
+        }
+      }
     });
   }
 
-  private static LocalQuickFix[] getQuickFixes(PsiElement o, ErlangCreateFunctionQuickFix fix) {
-    return PsiTreeUtil.getNextSiblingOfType(o, ErlangModuleRef.class) != null ? new LocalQuickFix[]{} : new LocalQuickFix[]{fix};
-  }
 }
