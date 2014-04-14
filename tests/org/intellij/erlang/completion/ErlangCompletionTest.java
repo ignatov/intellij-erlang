@@ -298,4 +298,12 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.type('\t');
     myFixture.checkResult("bar(Record, Record2) -> Record#data{}.");
   }
+
+  public void testFunctionTypeArguments() throws Throwable {
+    doTestInclude("-spec foo(Type) -> ok when <caret>", "Type");
+  }
+
+  public void testMacroArguments() throws Throwable {
+    doTestInclude("-define(M(Arg), <caret>", "Arg");
+  }
 }

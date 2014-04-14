@@ -362,6 +362,11 @@ public class ErlangPsiImplUtil {
     return parent instanceof ErlangFunctionCallExpression && ((ErlangFunctionCallExpression) parent).getQAtom().getMacros() == null;
   }
 
+  public static boolean inFunctionTypeArgument(PsiElement psiElement) {
+    ErlangTopType topType = PsiTreeUtil.getParentOfType(psiElement, ErlangTopType.class);
+    return PsiTreeUtil.getParentOfType(topType, ErlangFunTypeArguments.class) != null;
+  }
+
   public static boolean inDefine(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangMacrosDefinition.class) != null;
   }

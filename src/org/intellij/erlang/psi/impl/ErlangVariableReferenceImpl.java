@@ -79,12 +79,14 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     Collection<String> vars = new THashSet<String>(CaseInsensitiveStringHashingStrategy.INSTANCE);
     PsiFile file = myElement.getContainingFile();
     if (!(myElement.getParent() instanceof ErlangRecordExpression)) {
-      ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(myElement, ErlangFunctionClause.class);
-      ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(clause, false, vars));
+      //noinspection unchecked
+      PsiElement scopeOwner = PsiTreeUtil.getParentOfType(myElement,
+        ErlangFunctionClause.class, ErlangMacrosDefinition.class, ErlangTypeDefinition.class, ErlangSpecification.class);
+      ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(scopeOwner, false, vars));
 
       ErlangModule module = getErlangModule();
       if (module != null) {
-        module.processDeclarations(new MyBaseScopeProcessor(clause, true, vars), ResolveState.initial(), module, module);
+        module.processDeclarations(new MyBaseScopeProcessor(scopeOwner, true, vars), ResolveState.initial(), module, module);
       }
 
       for (String var : vars) {
@@ -112,28 +114,28 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
   }
 
   private class MyBaseScopeProcessor extends BaseScopeProcessor {
-    private final ErlangFunctionClause myClause;
+    private final PsiElement myScopeOwner;
     private final boolean myForce;
     private final Collection<String> myResult;
     @Nullable private Collection<ErlangQVar> myVars;
 
-    public MyBaseScopeProcessor(@Nullable ErlangFunctionClause clause, boolean force, Collection<String> result) {
-      myClause = clause;
+    public MyBaseScopeProcessor(@Nullable PsiElement scopeOwner, boolean force, Collection<String> result) {
+      myScopeOwner = scopeOwner;
       myForce = force;
       myResult = result;
     }
 
     @SuppressWarnings("NullableProblems")
-    private MyBaseScopeProcessor(@Nullable ErlangFunctionClause clause, @NotNull Collection<ErlangQVar> result) {
-      this(clause, true, ContainerUtil.<String>newArrayList());
+    private MyBaseScopeProcessor(@Nullable PsiElement scopeOwner, @NotNull Collection<ErlangQVar> result) {
+      this(scopeOwner, true, ContainerUtil.<String>newArrayList());
       myVars = result;
     }
 
     @Override
     public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
       if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_") && !inColonQualified(myElement)) {
-        boolean ancestor = PsiTreeUtil.isAncestor(myClause, psiElement, false);
-        if ((ancestor || myForce) && (inArgumentDefinition(psiElement) || inLeftPartOfAssignment(psiElement))) {
+        boolean ancestor = PsiTreeUtil.isAncestor(myScopeOwner, psiElement, false);
+        if ((ancestor || myForce) && (inArgumentDefinition(psiElement) || inLeftPartOfAssignment(psiElement) || inFunctionTypeArgument(psiElement))) {
           myResult.add(((ErlangQVar) psiElement).getName());
           if (myVars != null) myVars.add((ErlangQVar) psiElement);
         }
@@ -142,7 +144,7 @@ public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
     }
   }
 
-  public void populateVariables(@Nullable ErlangFunctionClause clause, @NotNull Collection<ErlangQVar> result) {
-    ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(clause, result));
+  public void populateVariables(@Nullable PsiElement scopeOwner, @NotNull Collection<ErlangQVar> result) {
+    ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(scopeOwner, result));
   }
 }
