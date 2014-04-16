@@ -43,28 +43,28 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     setUpProjectSdk();
   }
 
-  public void testExternalUrlSdkFunction() throws Exception {
+  public void testExternalUrlSdkFunction() {
     doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#foreach-2",
       "-module(test).\n" +
         "test() ->\n" +
         "    lists:for<caret>each(foo, bar).\n");
   }
 
-  public void testExternalUrlSdkBif() throws Exception {
+  public void testExternalUrlSdkBif() {
     doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#member-2",
       "-module(test).\n" +
         "test() ->\n" +
         "    lists:mem<caret>ber(foo, bar).\n");
   }
 
-  public void testExternalUrlSdkModule() throws Exception {
+  public void testExternalUrlSdkModule() {
     doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html",
       "-module(test).\n" +
         "test() ->\n" +
         "    lis<caret>ts:foreach(foo, bar).\n");
   }
 
-  public void testGenerateDocSdkBif() throws Exception {
+  public void testGenerateDocSdkBif() {
     doTestGenerateDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
@@ -89,7 +89,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    lists:mem<caret>ber(foo, bar).\n");
   }
 
-  public void testGenerateDocSdkFunction() throws Exception {
+  public void testGenerateDocSdkFunction() {
     doTestGenerateDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
@@ -112,7 +112,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    lists:for<caret>each(foo, bar).\n");
   }
 
-  public void testGenerateDocSdkFunctionMulti() throws Exception {
+  public void testGenerateDocSdkFunctionMulti() {
     doTestGenerateDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
@@ -156,7 +156,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    lists:s<caret>eq(foo, bar, blah).\n");
   }
 
-  public void testGenerateDocSdkLastFunction() throws Exception {
+  public void testGenerateDocSdkLastFunction() {
     doTestGenerateDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
@@ -194,7 +194,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    lists:zip<caret>with3(foo, bar, preved, medved).\n");
   }
 
-  public void testGenerateDocSdkModule() throws Exception {
+  public void testGenerateDocSdkModule() {
     doTestGenerateDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
@@ -241,7 +241,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    lis<caret>ts:foreach(foo, bar).\n");
   }
 
-  public void testGenerateDocSdkType() throws Exception {
+  public void testGenerateDocSdkType() {
     doTestGenerateDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
@@ -255,7 +255,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    ok.\n");
   }
 
-  public void testGenerateDocSdkLastType() throws Exception {
+  public void testGenerateDocSdkLastType() {
     doTestGenerateDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
@@ -270,7 +270,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    ok.\n");
   }
 
-  public void testLinkConverterLocal() throws Exception {
+  public void testLinkConverterLocal() {
     // <a href="#write_$FUNC$-$ARITY$">
     // <a href="#type-$TYPE$">
     doTestGenerateDoc(
@@ -293,7 +293,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    file:cha<caret>nge_time(foo, bar).\n");
   }
 
-  public void testLinkConverterErlRef() throws Exception {
+  public void testLinkConverterErlRef() {
     // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html#type-$TYPE$');">
     // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html');">
     doTestGenerateDoc(
@@ -321,7 +321,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    file:pat<caret>h_script(1, 2, 3).\n");
   }
 
-  public void testLinkConverterErlRef2() throws Exception {
+  public void testLinkConverterErlRef2() {
     // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html#$FUNCTION$-$ARITY$');">
     doTestGenerateDoc(
       "<html>\n" +
@@ -374,7 +374,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    file:rea<caret>d_line(1).\n");
   }
 
-  public void testLinkConverterInModule() throws Exception {
+  public void testLinkConverterInModule() {
     // <a href="$MODULE$.html#$FUNCTION$-$ARITY$">
     // <a href="$MODULE$.html#type-$TYPE$">
     doTestGenerateDoc(
@@ -424,7 +424,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "    file:sen<caret>dfile(1,2,3,4,5).\n");
   }
 
-  public void testLinkConverterWithLineBreak() throws Exception {
+  public void testLinkConverterWithLineBreak() {
     doTestGenerateDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
@@ -519,17 +519,18 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     };
   }
 
-  private void doTestGetUrls(@NotNull String expected, @NotNull String text) throws Exception {
+  private void doTestGetUrls(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertEquals(expected, myErlangDocProvider.getUrlFor(element, null).get(0));
   }
 
-  private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) throws Exception {
+  private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
   }
 
-  private PsiElement resolveElementAtCaret(String text) {
+  @NotNull
+  private PsiElement resolveElementAtCaret(@NotNull String text) {
     myFixture.configureByText("test.erl", text);
     int caretPosition = myFixture.getEditor().getCaretModel().getOffset();
     PsiReference psiReference = myFixture.getFile().findReferenceAt(caretPosition);
