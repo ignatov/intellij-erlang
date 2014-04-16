@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 Sergey Ignatov
+ * Copyright 2012-2014 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -488,17 +488,17 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testResolveLinkModule() {
-    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file", null);
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file", null);
     assertTrue("Not a module: " + psiElement, psiElement instanceof ErlangModule);
   }
 
   public void testResolveLinkFunction() {
-    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#read_line-1", null);
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#read_line-1", null);
     assertTrue("Not a function: " + psiElement, psiElement instanceof ErlangFunction);
   }
 
   public void testResolveLinkType() {
-    final PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#type-filename", null);
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#type-filename", null);
     assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
   }
 
@@ -508,10 +508,10 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        final Sdk mockSdk = ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
+        Sdk mockSdk = ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
         // Set local SDK documentation path
-        final SdkModificator sdkModificator = mockSdk.getSdkModificator();
-        final VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath("testData/mockSdk-R15B02/");
+        SdkModificator sdkModificator = mockSdk.getSdkModificator();
+        VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath("testData/mockSdk-R15B02/");
         sdkModificator.addRoot(localDocDir, JavadocOrderRootType.getInstance());
         sdkModificator.commitChanges();
         return mockSdk;
@@ -520,20 +520,20 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   private void doTestGetUrls(@NotNull String expected, @NotNull String text) throws Exception {
-    final PsiElement element = resolveElementAtCaret(text);
+    PsiElement element = resolveElementAtCaret(text);
     assertEquals(expected, myErlangDocProvider.getUrlFor(element, null).get(0));
   }
 
   private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) throws Exception {
-    final PsiElement element = resolveElementAtCaret(text);
+    PsiElement element = resolveElementAtCaret(text);
     assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
   }
 
   private PsiElement resolveElementAtCaret(String text) {
     myFixture.configureByText("test.erl", text);
-    final int caretPosition = myFixture.getEditor().getCaretModel().getOffset();
-    final PsiReference psiReference = myFixture.getFile().findReferenceAt(caretPosition);
-    final PsiElement resolve = psiReference.resolve();
+    int caretPosition = myFixture.getEditor().getCaretModel().getOffset();
+    PsiReference psiReference = myFixture.getFile().findReferenceAt(caretPosition);
+    PsiElement resolve = psiReference.resolve();
     assertNotNull(resolve);
     return resolve;
   }
