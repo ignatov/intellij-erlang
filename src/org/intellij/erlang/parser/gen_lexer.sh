@@ -1,1 +1,1 @@
-~/src/community/tools/lexer/jflex-1.4/bin/jflex --skel ~/src/community/tools/lexer/idea-flex.skeleton --charat --nobak Erlang.flex
+~/src/intellij-community/tools/lexer/jflex-1.4/bin/jflex --skel ~/src/intellij-community/tools/lexer/idea-flex.skeleton --charat --nobak Erlang.flex -d ../../../../../gen/org/intellij/erlang/parser/
