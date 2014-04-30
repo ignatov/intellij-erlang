@@ -50,20 +50,15 @@ public abstract class ErlangRunningState extends CommandLineState {
   @NotNull
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
-    Sdk sdk = ModuleRootManager.getInstance(myModule).getSdk();
-    assert sdk != null;
-    GeneralCommandLine commandLine = getCommand(sdk);
+    GeneralCommandLine commandLine = getCommand();
     return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
   }
 
-  private GeneralCommandLine getCommand(@NotNull Sdk sdk) throws ExecutionException {
+  private GeneralCommandLine getCommand() throws ExecutionException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
-    String homePath = sdk.getHomePath();
-    assert homePath != null;
-    String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(homePath).getAbsolutePath());
-    commandLine.setExePath(erl);
-    commandLine.setWorkDirectory(myModule.getProject().getBasePath());
-    commandLine.addParameters(getCodePath());
+    setExePath(commandLine);
+    setWorkDirectory(commandLine);
+    setCodePath(commandLine);
     setEntryPoint(commandLine);
     setStopErlang(commandLine);
     setNoShellMode(commandLine);
@@ -97,24 +92,42 @@ public abstract class ErlangRunningState extends CommandLineState {
     return getEntryPoint();
   }
 
-  private void setStopErlang(GeneralCommandLine commandLine) {
+  public final void setCodePath(GeneralCommandLine commandLine) throws ExecutionException {
+    commandLine.addParameters(getCodePath());
+  }
+
+  public final void setExePath(GeneralCommandLine commandLine) throws ExecutionException {
+    Sdk sdk = ModuleRootManager.getInstance(myModule).getSdk();
+    String homePath = sdk != null ? sdk.getHomePath() : null;
+    if (homePath == null) {
+      throw new ExecutionException("Invalid module SDK.");
+    }
+    String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(homePath).getAbsolutePath());
+    commandLine.setExePath(erl);
+  }
+
+  public final void setWorkDirectory(GeneralCommandLine commandLine) {
+    commandLine.setWorkDirectory(myModule.getProject().getBasePath());
+  }
+
+  public final void setStopErlang(GeneralCommandLine commandLine) {
     if (isStopErlang()) {
       commandLine.addParameters("-s", "init", "stop");
     }
   }
 
-  private void setNoShellMode(GeneralCommandLine commandLine) {
+  public final void setNoShellMode(GeneralCommandLine commandLine) {
     if (isNoShellMode()) commandLine.addParameters("-noshell");
   }
 
-  private void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
+  public final void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
     ErlangEntryPoint entryPoint = getEntryPoint();
     commandLine.addParameters("-eval",
       entryPoint.getModuleName() + ":" + entryPoint.getFunctionName() +
         "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ").");
   }
 
-  private void setErlangFlags(GeneralCommandLine commandLine) {
+  public final void setErlangFlags(GeneralCommandLine commandLine) {
     commandLine.addParameters(getErlFlags());
   }
 
