@@ -13,8 +13,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
@@ -43,7 +41,6 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
-import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -298,21 +295,18 @@ public class ErlangXDebugProcess extends XDebugProcess {
 
   private void runDebugTarget() throws ExecutionException {
     ErlangRunningState runningState = createRunningState();
-    Sdk sdk = ModuleRootManager.getInstance(runningState.getModule()).getSdk();
-    String sdkHome = sdk != null ? sdk.getHomePath() : null;
-    assert sdkHome != null;
-    File erl = ErlangSdkType.getTopLevelExecutable(sdkHome);
-
     GeneralCommandLine commandLine = new GeneralCommandLine();
-    commandLine.setExePath(erl.getPath());
-    commandLine.setWorkDirectory(runningState.getModule().getProject().getBasePath());
+    runningState.setExePath(commandLine);
+    runningState.setWorkDirectory(commandLine);
     setUpErlangDebuggerCodePath(commandLine);
-    commandLine.addParameters(runningState.getCodePath());
+    runningState.setCodePath(commandLine);
     commandLine.addParameters("-sname", "test_node" + System.currentTimeMillis());
-    commandLine.addParameters("-run", "debugnode", "main", myDebuggerNode.getName(), myDebuggerNode.getMessageBoxName(), "-noshell");
-    commandLine.addParameters("-s", "init", "stop");
+    commandLine.addParameters("-run", "debugnode", "main", myDebuggerNode.getName(), myDebuggerNode.getMessageBoxName());
+    runningState.setErlangFlags(commandLine);
+    runningState.setNoShellMode(commandLine);
+    runningState.setStopErlang(commandLine);
     Process process = commandLine.createProcess();
-    myErlangProcessHandler = new OSProcessHandler(process);
+    myErlangProcessHandler = new OSProcessHandler(process, commandLine.getCommandLineString());
     getSession().getConsoleView().attachToProcess(myErlangProcessHandler);
     myErlangProcessHandler.startNotify();
     if (runningState instanceof ErlangRemoteDebugRunningState) {
