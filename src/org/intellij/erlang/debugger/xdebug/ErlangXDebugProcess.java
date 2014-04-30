@@ -179,6 +179,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
     }
   }
 
+  @NotNull
   @Override
   public XBreakpointHandler<?>[] getBreakpointHandlers() {
     return myBreakpointHandlers;
