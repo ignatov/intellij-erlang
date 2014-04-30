@@ -33,6 +33,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Getter;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -55,8 +56,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @Override
   public List<String> getCodePath() throws ExecutionException {
     try {
-      File reporterDir = createReporterModuleDirectory();
-      List<String> reporterModuleCodePath = Arrays.asList("-pa", reporterDir.getPath());
+      List<String> reporterModuleCodePath = Arrays.asList("-pa", createReporterModuleDirectory());
       return ContainerUtil.concat(reporterModuleCodePath, super.getCodePath());
     } catch (IOException e) {
       throw new ExecutionException("Failed to setup eunit reports environment", e);
@@ -179,9 +179,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return result;
   }
 
-  private static File createReporterModuleDirectory() throws IOException {
+  private static String createReporterModuleDirectory() throws IOException {
     File tempDirectory = FileUtil.createTempDirectory(ErlangEunitReporterModule.MODULE_NAME, null);
     ErlangEunitReporterModule.putReporterModuleTo(tempDirectory);
-    return tempDirectory;
+    return PathUtil.toSystemIndependentName(tempDirectory.getPath());
   }
 }

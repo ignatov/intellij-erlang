@@ -23,6 +23,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.file.PsiDirectoryFactory;
+import com.intellij.util.PathUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
@@ -106,7 +107,7 @@ public class RebarEunitRunningState extends CommandLineState {
   }
 
   private static void addEnvParams(GeneralCommandLine commandLine, File reportsRoot) {
-    commandLine.getEnvironment().put("ERL_FLAGS", "-pa " + reportsRoot.getPath());
+    commandLine.getEnvironment().put("ERL_FLAGS", "-pa " + PathUtil.toSystemIndependentName(reportsRoot.getPath()));
   }
 
   private File createEunitReportsEnvironment() throws ExecutionException {
