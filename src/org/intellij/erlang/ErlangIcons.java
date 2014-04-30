@@ -59,4 +59,5 @@ public interface ErlangIcons {
   Icon DEBUGGER_PRIMITIVE_VALUE = AllIcons.Debugger.Db_primitive;
   Icon DEBUGGER_VALUE = AllIcons.Debugger.Value;
   Icon DEBUGGER_ARRAY = AllIcons.Debugger.Db_array;
+  Icon REMOTE_NODE = new LayeredIcon(AllIcons.RunConfigurations.Remote, ERLANG_MARK);
 }

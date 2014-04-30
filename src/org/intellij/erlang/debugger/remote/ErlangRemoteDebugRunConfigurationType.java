@@ -19,16 +19,16 @@ package org.intellij.erlang.debugger.remote;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.icons.AllIcons;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
+import org.intellij.erlang.ErlangIcons;
 
 public class ErlangRemoteDebugRunConfigurationType extends ConfigurationTypeBase {
   protected ErlangRemoteDebugRunConfigurationType() {
     super("ErlangRemoteDebugRunConfiguration",
       "Erlang Remote Node",
       "Erlang remote node debug run configuration",
-      AllIcons.RunConfigurations.Remote);
+      ErlangIcons.REMOTE_NODE);
     addFactory(new ConfigurationFactory(this) {
       @Override
       public RunConfiguration createTemplateConfiguration(Project project) {
