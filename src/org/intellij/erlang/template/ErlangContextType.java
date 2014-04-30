@@ -24,11 +24,13 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilCore;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,8 +71,13 @@ public abstract class ErlangContextType extends TemplateContextType {
 
     @Override
     protected boolean isInContext(PsiElement element) {
-      PsiFile psiFile = element.getContainingFile();
-      if (psiFile != null && ErlangParserUtil.isConsole(psiFile)) return false;
+      PsiFile file = element.getContainingFile();
+      if (file != null && ErlangParserUtil.isConsole(file)) return false;
+      int offset = element.getTextOffset();
+      if (offset > 0 && file != null) {
+        PsiElement prev = file.findElementAt(offset - 1);
+        if (ErlangPsiImplUtil.is(prev, ErlangTypes.ERL_DOT)) return false;
+      }
       PsiElement parent = element.getParent();
       return parent instanceof ErlangFile || (parent instanceof PsiErrorElement && parent.getParent() instanceof ErlangFile);
     }

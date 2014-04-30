@@ -52,7 +52,6 @@ import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
@@ -66,6 +65,7 @@ import java.util.*;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 import static com.intellij.patterns.StandardPatterns.instanceOf;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangCompletionContributor extends CompletionContributor {
   public static final int MODULE_PRIORITY = -15;
@@ -104,11 +104,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static boolean isRecordFunctionCallCompletion(@Nullable PsiElement previousByOffset) {
     PsiElement prevSibling = previousByOffset != null ? previousByOffset.getPrevSibling() : null;
     if (prevSibling == null) return false;
-    return is(previousByOffset, ErlangTypes.ERL_COMMA) && ErlangPsiImplUtil.inIsRecord(0).accepts(prevSibling, new ProcessingContext());
-  }
-
-  private static boolean is(@Nullable PsiElement element, IElementType type) {
-    return element != null && element.getNode().getElementType() == type;
+    return is(previousByOffset, ErlangTypes.ERL_COMMA) && inIsRecord(0).accepts(prevSibling, new ProcessingContext());
   }
 
   public ErlangCompletionContributor() {
@@ -140,23 +136,23 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (originalParent instanceof ErlangStringLiteral || originalPosition instanceof PsiComment) return;
 
         if (grandPa instanceof ErlangType) {
-          result.addAllElements(ErlangPsiImplUtil.getTypeLookupElements(file, true, false));
+          result.addAllElements(getTypeLookupElements(file, true, false));
         }
 
         if (originalParent instanceof ErlangRecordExpression || prevIsRadix(originalPosition) || prevIsRadix(grandPa)) {
-          result.addAllElements(ErlangPsiImplUtil.getRecordLookupElements(file));
+          result.addAllElements(getRecordLookupElements(file));
         }
         else if (originalParent instanceof ErlangExportFunctions && file instanceof ErlangFile) {
-          result.addAllElements(ErlangPsiImplUtil.createFunctionLookupElements(((ErlangFile) file).getFunctions(), true));
+          result.addAllElements(createFunctionLookupElements(((ErlangFile) file).getFunctions(), true));
         }
         else {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
           if (colonQualified != null && (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null || inConsole)) {
-            ErlangQAtom qAtom = ErlangPsiImplUtil.getQAtom(colonQualified);
-            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, qAtom));
+            ErlangQAtom qAtom = getQAtom(colonQualified);
+            result.addAllElements(getFunctionLookupElements(file, false, qAtom));
           }
           else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordTuple) {
-            Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = ErlangPsiImplUtil.getRecordFields(grandPa);
+            Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(grandPa);
             final boolean withoutEq = is(grandPa.getFirstChild(), ErlangTypes.ERL_DOT);
             result.addAllElements(ContainerUtil.map(recordFields.first, new Function<ErlangTypedExpr, LookupElement>() {
               @Override
@@ -188,8 +184,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
               suggestModules(result, position, withColon);
             }
           }
-          if (colonQualified == null && grandPa instanceof ErlangExpression && (ErlangPsiImplUtil.inFunction(position) || inConsole)) {
-            result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, false, null));
+          if (colonQualified == null && grandPa instanceof ErlangExpression && (inFunction(position) || inConsole)) {
+            result.addAllElements(getFunctionLookupElements(file, false, null));
           }
         }
       }
@@ -224,7 +220,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         ((ErlangVariableReferenceImpl) reference).populateVariables(clause, vars);
 
         for (ErlangQVar v : vars) {
-          if (ErlangPsiImplUtil.inLeftPartOfAssignment(v, true)) {
+          if (inLeftPartOfAssignment(v, true)) {
             ErlangAssignmentExpression assign = PsiTreeUtil.getParentOfType(v, ErlangAssignmentExpression.class);
             ErlangExpression right = assign != null ? assign.getRight() : null;
             ErlangExpressionType varType = ErlangExpressionType.create(right);
@@ -236,7 +232,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
 
         if (clause == null) return;
-        List<LookupElement> functionLookupElements = ErlangPsiImplUtil.getFunctionLookupElements(clause.getContainingFile(), false, null);
+        List<LookupElement> functionLookupElements = getFunctionLookupElements(clause.getContainingFile(), false, null);
         for (LookupElement lookupElement : functionLookupElements) {
           PsiElement psiElement = lookupElement.getPsiElement();
           if (psiElement instanceof ErlangFunction) {
@@ -267,9 +263,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
           for (ResolveResult r : resolveResults) {
             PsiElement element = r.getElement();
             if (element instanceof ErlangFunction) {
-              ErlangSpecification spec = ErlangPsiImplUtil.getSpecification((ErlangFunction) element);
+              ErlangSpecification spec = getSpecification((ErlangFunction) element);
               if (spec == null) return expectedTypes;
-              ErlangFunTypeSigs signature = ErlangPsiImplUtil.getSignature(spec);
+              ErlangFunTypeSigs signature = getSignature(spec);
               List<ErlangTypeSig> typeSigList = signature != null ? signature.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
               for (ErlangTypeSig sig : typeSigList) {
                 ErlangFunTypeArguments arguments = sig.getFunType().getFunTypeArguments();
@@ -384,7 +380,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       result.addAll(getModulePathLookupElements(includeDir, includeOwner, includeText));
     }
     if (ErlangSystemUtil.isSmallIde()) {
-      VirtualFile otpAppRoot = ErlangPsiImplUtil.getContainingOtpAppRoot(file.getProject(), includeOwner);
+      VirtualFile otpAppRoot = getContainingOtpAppRoot(file.getProject(), includeOwner);
       VirtualFile otpIncludeDirectory = otpAppRoot != null ? otpAppRoot.findChild("include") : null;
       result.addAll(getModulePathLookupElements(otpIncludeDirectory, includeOwner, includeText));
       ErlangFile rebarConfigPsi = RebarConfigUtil.getRebarConfig(file.getProject(), otpAppRoot);

@@ -1502,6 +1502,10 @@ public class ErlangPsiImplUtil {
       ErlangParserDefinition.COMMENTS.contains(elementType);
   }
 
+  public static boolean is(@Nullable PsiElement element, IElementType type) {
+    return element != null && element.getNode().getElementType() == type;
+  }
+
   public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {
     private final String myFunName;
     private final String myModule;
