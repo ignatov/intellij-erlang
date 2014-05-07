@@ -143,7 +143,7 @@ public class RebarEunitRunningState extends CommandLineState {
   }
 
   private PsiFile createModifiedConfigPsi(File oldConfig) throws IOException {
-    String oldConfigText = new String(FileUtil.loadFileText(oldConfig));
+    String oldConfigText = oldConfig.exists() ? new String(FileUtil.loadFileText(oldConfig)) : "";
     ErlangFile configPsi = (ErlangFile) PsiFileFactory.getInstance(myConfiguration.getProject())
       .createFileFromText(CONFIG_FILE_NAME, ErlangFileType.TERMS, oldConfigText);
     List<ErlangTupleExpression> eunitOptsSections = ErlangTermFileUtil.getConfigSections(configPsi, "eunit_opts");
