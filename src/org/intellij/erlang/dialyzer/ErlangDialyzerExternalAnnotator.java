@@ -132,7 +132,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
       annotation.registerFix(new DisableInspectionToolAction(key) {
         @NotNull
         @Override
-        public String getText() {
+        public String getName() {
           return "Disable 'Dialyzer-based inspections'";
         }
       });
