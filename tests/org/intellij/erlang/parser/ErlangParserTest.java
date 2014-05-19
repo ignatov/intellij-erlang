@@ -50,7 +50,6 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void test96()                { doTest(true, false); }
   public void test30()                { doTest(true, true);  }
   public void test127()               { doTest(true, true);  }
-  public void testEunit()             { doTest(true, false); }
   public void testMeck()              { doTest(true, false); }
   public void test145()               { doTest(true, false); }
   public void test145_2()             { doTest(true, false); }

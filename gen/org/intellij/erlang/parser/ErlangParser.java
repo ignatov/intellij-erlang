@@ -3694,29 +3694,6 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '.' q_atom | module_ref
-  static boolean module_ref_or_dot_atom(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "module_ref_or_dot_atom")) return false;
-    boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
-    result_ = module_ref_or_dot_atom_0(builder_, level_ + 1);
-    if (!result_) result_ = module_ref(builder_, level_ + 1);
-    exit_section_(builder_, marker_, null, result_);
-    return result_;
-  }
-
-  // '.' q_atom
-  private static boolean module_ref_or_dot_atom_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "module_ref_or_dot_atom_0")) return false;
-    boolean result_ = false;
-    Marker marker_ = enter_section_(builder_);
-    result_ = consumeToken(builder_, ERL_DOT);
-    result_ = result_ && q_atom(builder_, level_ + 1);
-    exit_section_(builder_, marker_, null, result_);
-    return result_;
-  }
-
-  /* ********************************************************** */
   // model_field_list | argument_definition
   static boolean module_tail(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "module_tail")) return false;
@@ -5800,12 +5777,13 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
-  // module_ref_or_dot_atom ':' function_call_expression
+  // module_ref ':' function_call_expression
   public static boolean global_function_call_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "global_function_call_expression")) return false;
+    if (!nextTokenIs(builder_, "<expression>", ERL_QMARK, ERL_ATOM)) return false;
     boolean result_ = false;
     Marker marker_ = enter_section_(builder_, level_, _NONE_, "<expression>");
-    result_ = module_ref_or_dot_atom(builder_, level_ + 1);
+    result_ = module_ref(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON);
     result_ = result_ && function_call_expression(builder_, level_ + 1);
     exit_section_(builder_, level_, marker_, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION, result_, false, null);
