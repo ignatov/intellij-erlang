@@ -344,8 +344,8 @@ get_location(Data) ->
     case proplists:get_value(source, Data) of
         {Module, Function, _Arity} ->
             case proplists:get_value(line, Data) of
-                Line when is_integer(Line) ->
-                    {Module, Function, Line};
+                Line when is_integer(Line) andalso Line > 0 -> %% eunit sometimes reports line to be 0
+                    {Module, Function, Line};                  %% which means no line info available
                 _ -> {Module, Function, -1}
             end;
         undefined ->

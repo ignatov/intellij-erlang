@@ -41,7 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ErlangTestLocationProvider implements TestLocationProvider {
-  private static final Pattern LOCATION_PATTERN = Pattern.compile("^(\\w+)(?::(\\w+)(?::(\\d+))?)?$");
+  private static final Pattern LOCATION_PATTERN = Pattern.compile("^(\\w+)(?::(\\w+)(?::(-?\\d+))?)?$");
 
   @NotNull
   public List<Location> getLocation(@NotNull String protocolId, @NotNull String locationData, Project project) {
