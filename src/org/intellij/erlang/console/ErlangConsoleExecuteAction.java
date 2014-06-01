@@ -35,7 +35,7 @@ public class ErlangConsoleExecuteAction extends AnAction {
       presentation.setEnabled(false);
       return;
     }
-    presentation.setEnabled(consoleView.isRunning());
+    presentation.setEnabledAndVisible(consoleView.isRunning());
   }
 
   @Override
