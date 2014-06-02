@@ -42,7 +42,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   private static final int INDEX_VERSION = 1;
   public static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
     @Override
-    public boolean acceptInput(VirtualFile file) {
+    public boolean acceptInput(@NotNull VirtualFile file) {
       return file.getFileType() == ErlangFileType.MODULE;
     }
   };
@@ -66,11 +66,13 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     return myDataIndexer;
   }
 
+  @NotNull
   @Override
   public KeyDescriptor<String> getKeyDescriptor() {
     return new EnumeratorStringDescriptor();
   }
 
+  @NotNull
   @Override
   public FileBasedIndex.InputFilter getInputFilter() {
     return ERLANG_MODULE_FILTER;
