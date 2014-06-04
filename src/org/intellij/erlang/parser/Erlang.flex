@@ -66,96 +66,104 @@ StringLiteral = {STRING_BAD1} \"
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
 NameChars = {NameChar}+
 
-QuotedCharacter = \\' | {EscapeSequence}  | [^'\\] /* [a-zA-Z0-9#_.@,;:!?/&%$+*~\^-] */ 
-AtomLiteral = ({ErlangLowercase} {NameChar}*) | "''" | (' {QuotedCharacter}+ ')
+QuotedCharacter = \\' | {EscapeSequence}  | [^'\\] /* [a-zA-Z0-9#_.@,;:!?/&%$+*~\^-] */
+QuotedAtomName = {QuotedCharacter}+
+AtomName = ({ErlangLowercase} {NameChar}*)
 
 Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars}?)
 
 UniversalPattern = _
 
+%state IN_QUOTES
+
 %%
- {ShebangLine}                 { return getTokenStart() == 0 ? ERL_SHEBANG : com.intellij.psi.TokenType.ERROR_ELEMENT; }
- {ModuleDocComment}            { return ERL_MODULE_DOC_COMMENT; }
- {FunctionDocComment}          { return ERL_FUNCTION_DOC_COMMENT; }
- {Comment}                     { return ERL_COMMENT; }
- {Whitespace}                  { return com.intellij.psi.TokenType.WHITE_SPACE; }
+<YYINITIAL> {ShebangLine}                 { return getTokenStart() == 0 ? ERL_SHEBANG : com.intellij.psi.TokenType.ERROR_ELEMENT; }
+<YYINITIAL> {ModuleDocComment}            { return ERL_MODULE_DOC_COMMENT; }
+<YYINITIAL> {FunctionDocComment}          { return ERL_FUNCTION_DOC_COMMENT; }
+<YYINITIAL> {Comment}                     { return ERL_COMMENT; }
+<YYINITIAL> {Whitespace}                  { return com.intellij.psi.TokenType.WHITE_SPACE; }
 
- "after"                       { return ERL_AFTER; }
- "when"                        { return ERL_WHEN; }
- "begin"                       { return ERL_BEGIN; }
- "end"                         { return ERL_END; }
- "of"                          { return ERL_OF; }
- "case"                        { return ERL_CASE; }
- "fun"                         { return ERL_FUN; }
- "try"                         { return ERL_TRY; }
- "catch"                       { return ERL_CATCH; }
- "if"                          { return ERL_IF; }
- "receive"                     { return ERL_RECEIVE; }
+<YYINITIAL> "after"                       { return ERL_AFTER; }
+<YYINITIAL> "when"                        { return ERL_WHEN; }
+<YYINITIAL> "begin"                       { return ERL_BEGIN; }
+<YYINITIAL> "end"                         { return ERL_END; }
+<YYINITIAL> "of"                          { return ERL_OF; }
+<YYINITIAL> "case"                        { return ERL_CASE; }
+<YYINITIAL> "fun"                         { return ERL_FUN; }
+<YYINITIAL> "try"                         { return ERL_TRY; }
+<YYINITIAL> "catch"                       { return ERL_CATCH; }
+<YYINITIAL> "if"                          { return ERL_IF; }
+<YYINITIAL> "receive"                     { return ERL_RECEIVE; }
 
- ":="                          { return ERL_MATCH; }
- "=>"                          { return ERL_ASSOC; }
+<YYINITIAL> ":="                          { return ERL_MATCH; }
+<YYINITIAL> "=>"                          { return ERL_ASSOC; }
 
- "<<"                           { return ERL_BIN_START; }
- ">>"                           { return ERL_BIN_END; }
- "+"                            { return ERL_OP_PLUS; }
- "-"                            { return ERL_OP_MINUS; }
- "*"                            { return ERL_OP_AR_MUL; }
- "/"                            { return ERL_OP_AR_DIV; }
- "div"                          { return ERL_DIV; }
- "rem"                          { return ERL_REM; }
- "or"                           { return ERL_OR; }
- "xor"                          { return ERL_XOR; }
- "bor"                          { return ERL_BOR; }
- "bxor"                         { return ERL_BXOR; }
- "bsl"                          { return ERL_BSL; }
- "bsr"                          { return ERL_BSR; }
- "and"                          { return ERL_AND; }
- "band"                         { return ERL_BAND; }
- "=="                           { return ERL_OP_EQ_EQ; }
- "/="                           { return ERL_OP_DIV_EQ; }
- "=:="                          { return ERL_OP_EQ_COL_EQ; }
- "=/="                          { return ERL_OP_EQ_DIV_EQ; }
- "<"                            { return ERL_OP_LT; }
- "=<"                           { return ERL_OP_EQ_LT; }
- ">"                            { return ERL_OP_GT; }
- ">="                           { return ERL_OP_GT_EQ; }
- "not"                          { return ERL_NOT; }
- "bnot"                         { return ERL_BNOT; }
- "++"                           { return ERL_OP_PLUS_PLUS; }
- "--"                           { return ERL_OP_MINUS_MINUS; }
- "="                            { return ERL_OP_EQ; }
- "!"                            { return ERL_OP_EXL; }
- "<-"                           { return ERL_OP_LT_MINUS; }
- "<="                           { return ERL_OP_LT_EQ; }
- "andalso"                      { return ERL_ANDALSO; }
- "orelse"                       { return ERL_ORELSE; }
+<YYINITIAL> "<<"                           { return ERL_BIN_START; }
+<YYINITIAL> ">>"                           { return ERL_BIN_END; }
+<YYINITIAL> "+"                            { return ERL_OP_PLUS; }
+<YYINITIAL> "-"                            { return ERL_OP_MINUS; }
+<YYINITIAL> "*"                            { return ERL_OP_AR_MUL; }
+<YYINITIAL> "/"                            { return ERL_OP_AR_DIV; }
+<YYINITIAL> "div"                          { return ERL_DIV; }
+<YYINITIAL> "rem"                          { return ERL_REM; }
+<YYINITIAL> "or"                           { return ERL_OR; }
+<YYINITIAL> "xor"                          { return ERL_XOR; }
+<YYINITIAL> "bor"                          { return ERL_BOR; }
+<YYINITIAL> "bxor"                         { return ERL_BXOR; }
+<YYINITIAL> "bsl"                          { return ERL_BSL; }
+<YYINITIAL> "bsr"                          { return ERL_BSR; }
+<YYINITIAL> "and"                          { return ERL_AND; }
+<YYINITIAL> "band"                         { return ERL_BAND; }
+<YYINITIAL> "=="                           { return ERL_OP_EQ_EQ; }
+<YYINITIAL> "/="                           { return ERL_OP_DIV_EQ; }
+<YYINITIAL> "=:="                          { return ERL_OP_EQ_COL_EQ; }
+<YYINITIAL> "=/="                          { return ERL_OP_EQ_DIV_EQ; }
+<YYINITIAL> "<"                            { return ERL_OP_LT; }
+<YYINITIAL> "=<"                           { return ERL_OP_EQ_LT; }
+<YYINITIAL> ">"                            { return ERL_OP_GT; }
+<YYINITIAL> ">="                           { return ERL_OP_GT_EQ; }
+<YYINITIAL> "not"                          { return ERL_NOT; }
+<YYINITIAL> "bnot"                         { return ERL_BNOT; }
+<YYINITIAL> "++"                           { return ERL_OP_PLUS_PLUS; }
+<YYINITIAL> "--"                           { return ERL_OP_MINUS_MINUS; }
+<YYINITIAL> "="                            { return ERL_OP_EQ; }
+<YYINITIAL> "!"                            { return ERL_OP_EXL; }
+<YYINITIAL> "<-"                           { return ERL_OP_LT_MINUS; }
+<YYINITIAL> "<="                           { return ERL_OP_LT_EQ; }
+<YYINITIAL> "andalso"                      { return ERL_ANDALSO; }
+<YYINITIAL> "orelse"                       { return ERL_ORELSE; }
 
- {IntegerLiteral}              { return ERL_INTEGER; }
- {FloatLiteral}                { return ERL_FLOAT; }
- {UniversalPattern}            { return ERL_UNI_PATTERN; }
+<YYINITIAL> {IntegerLiteral}              { return ERL_INTEGER; }
+<YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
+<YYINITIAL> {UniversalPattern}            { return ERL_UNI_PATTERN; }
 
- {CharLiteral}                 { return ERL_CHAR; }
- {StringLiteral}               { return ERL_STRING; }
- {AtomLiteral}                 { return ERL_ATOM; }
- {Variable}                    { return ERL_VAR; }
+<YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
+<YYINITIAL> {StringLiteral}               { return ERL_STRING; }
 
-  "("                           { return ERL_PAR_LEFT; }
-  ")"                           { return ERL_PAR_RIGHT; }
-  "{"                           { return ERL_CURLY_LEFT; }
-  "}"                           { return ERL_CURLY_RIGHT; }
-  "["                           { return ERL_BRACKET_LEFT; }
-  "]"                           { return ERL_BRACKET_RIGHT; }
-  "."                           { return ERL_DOT; }
-  ".."                          { return ERL_DOT_DOT; }
-  "..."                         { return ERL_DOT_DOT_DOT; }
-  ":"                           { return ERL_COLON; }
-  "::"                          { return ERL_COLON_COLON; }
-  "||"                          { return ERL_OR_OR; }
-  "|"                           { return ERL_OP_OR; }
-  ";"                           { return ERL_SEMI; }
-  ","                           { return ERL_COMMA; }
-  "?"                           { return ERL_QMARK; }
-  "->"                          { return ERL_ARROW; }
-  "#"                           { return ERL_RADIX; }
+<YYINITIAL> {AtomName}                    { return ERL_ATOM_NAME; }
+<YYINITIAL> '                             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE; }
+<IN_QUOTES> {AtomName} | {QuotedAtomName} { return ERL_ATOM_NAME; }
+<IN_QUOTES> '                             { yybegin(YYINITIAL); return ERL_SINGLE_QUOTE; }
 
- .                              { return com.intellij.psi.TokenType.BAD_CHARACTER; }
+<YYINITIAL> {Variable}                    { return ERL_VAR; }
+
+<YYINITIAL>  "("                           { return ERL_PAR_LEFT; }
+<YYINITIAL>  ")"                           { return ERL_PAR_RIGHT; }
+<YYINITIAL>  "{"                           { return ERL_CURLY_LEFT; }
+<YYINITIAL>  "}"                           { return ERL_CURLY_RIGHT; }
+<YYINITIAL>  "["                           { return ERL_BRACKET_LEFT; }
+<YYINITIAL>  "]"                           { return ERL_BRACKET_RIGHT; }
+<YYINITIAL>  "."                           { return ERL_DOT; }
+<YYINITIAL>  ".."                          { return ERL_DOT_DOT; }
+<YYINITIAL>  "..."                         { return ERL_DOT_DOT_DOT; }
+<YYINITIAL>  ":"                           { return ERL_COLON; }
+<YYINITIAL>  "::"                          { return ERL_COLON_COLON; }
+<YYINITIAL>  "||"                          { return ERL_OR_OR; }
+<YYINITIAL>  "|"                           { return ERL_OP_OR; }
+<YYINITIAL>  ";"                           { return ERL_SEMI; }
+<YYINITIAL>  ","                           { return ERL_COMMA; }
+<YYINITIAL>  "?"                           { return ERL_QMARK; }
+<YYINITIAL>  "->"                          { return ERL_ARROW; }
+<YYINITIAL>  "#"                           { return ERL_RADIX; }
+
+<YYINITIAL> .                              { return com.intellij.psi.TokenType.BAD_CHARACTER; }

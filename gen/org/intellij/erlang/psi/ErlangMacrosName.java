@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ErlangMacrosName extends ErlangCompositeElement {
 
   @Nullable
-  PsiElement getAtom();
+  ErlangAtom getAtom();
 
   @Nullable
   PsiElement getVar();

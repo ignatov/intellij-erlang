@@ -209,9 +209,9 @@ public class ErlangPsiImplUtil {
           if (field.getName().equals(myReferenceName)) return field;
         }
         for (ErlangQAtom qAtom : recordFields.second) {
-          PsiElement aa = qAtom.getAtom();
+          ErlangAtom aa = qAtom.getAtom();
           if (aa != null) {
-            if (myReferenceName.equals(aa.getText())) return qAtom;
+            if (myReferenceName.equals(aa.getName())) return qAtom;
           }
         }
         return null;
@@ -625,9 +625,9 @@ public class ErlangPsiImplUtil {
     ErlangFunctionStub stub = o.getStub();
     if (stub != null) return StringUtil.notNullize(stub.getName());
 
-    PsiElement atom = o.getAtomName().getAtom();
+    ErlangAtom atom = o.getAtomName().getAtom();
     if (atom != null) {
-      return atom.getText();
+      return atom.getName();
     }
     //noinspection ConstantConditions
     return o.getAtomName().getMacros().getText();
@@ -700,13 +700,19 @@ public class ErlangPsiImplUtil {
     return new ErlangModuleReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), name);
   }
 
+  public static boolean renameAtom(@Nullable ErlangQAtom qAtom, String newName) {
+    ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
+    if (atom != null) {
+      atom.setName(newName);
+      return true;
+    }
+    return false;
+  }
+
   @NotNull
   public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
     for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
-      PsiElement atom = clause.getQAtom().getAtom();
-      if (atom != null) {
-        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
-      }
+      renameAtom(clause.getQAtom(), newName);
     }
     return o;
   }
@@ -731,13 +737,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangTypeDefinition o, @NotNull String newName) {
-    ErlangQAtom qAtom = o.getQAtom();
-    if (qAtom != null) {
-      PsiElement atom = qAtom.getAtom();
-      if (atom != null) {
-        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
-      }
-    }
+    renameAtom(o.getQAtom(), newName);
     return o;
   }
 
@@ -745,8 +745,10 @@ public class ErlangPsiImplUtil {
   public static String getName(@NotNull ErlangModule o) {
     ErlangModuleStub stub = o.getStub();
     if (stub != null) return StringUtil.notNullize(stub.getName());
-    ErlangQAtom atom = o.getQAtom();
-    return atom == null ? "" : atom.getText();
+    ErlangQAtom qAtom = o.getQAtom();
+    if (qAtom == null) return "";
+    ErlangAtom atom = qAtom.getAtom();
+    return atom == null ? qAtom.getText() : atom.getName();
   }
 
   @NotNull
@@ -756,14 +758,7 @@ public class ErlangPsiImplUtil {
       try {
         String ext = FileUtilRt.getExtension(virtualFile.getName());
         virtualFile.rename(o, StringUtil.replace(newName, "'", "") + "." + ext);
-
-        ErlangQAtom qAtom = o.getQAtom();
-        if (qAtom != null) {
-          PsiElement atom = qAtom.getAtom();
-          if (atom != null) {
-            atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
-          }
-        }
+        renameAtom(o.getQAtom(), newName);
       } catch (Exception ignored) {
       }
     }
@@ -772,8 +767,9 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangModule o) {
-    ErlangQAtom atom = o.getQAtom();
-    return atom == null ? o : atom;
+    ErlangQAtom qAtom = o.getQAtom();
+    ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
+    return atom != null ? atom.getNameIdentifier() : o;
   }
 
   public static int getTextOffset(@NotNull ErlangModule o) {
@@ -988,8 +984,8 @@ public class ErlangPsiImplUtil {
   @Nullable
   private static String getAtomName(@Nullable ErlangMaxExpression expression) {
     ErlangQAtom qAtom = expression != null ? expression.getQAtom() : null;
-    PsiElement atom = qAtom != null ? qAtom.getAtom() : null;
-    return atom != null ? atom.getText() : null;
+    ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
+    return atom != null ? atom.getName() : null;
   }
 
   @Nullable
@@ -1054,6 +1050,24 @@ public class ErlangPsiImplUtil {
       }
     }
     return fromIncludes;
+  }
+
+  @NotNull
+  public static PsiElement getNameIdentifier(ErlangAtom atom) {
+    PsiElement name = atom.getAtomName();
+    //TODO fix for '' atoms
+    return name != null ? name : atom;
+  }
+
+  public static ErlangAtomImpl setName(ErlangAtomImpl atom, String newName) {
+    //TODO check if a new name should be quoted
+    //TODO fix for '' atoms
+    atom.getNameIdentifier().replace(ErlangElementFactory.createQAtomFromText(atom.getProject(), newName));
+    return atom;
+  }
+
+  public static String getName(ErlangAtom atom) {
+    return StringUtil.unquoteString(atom.getNameIdentifier().getText());
   }
 
   @NotNull
@@ -1126,10 +1140,7 @@ public class ErlangPsiImplUtil {
 
   public static PsiElement setName(ErlangTypedExpr o, String newName) {
     ErlangQAtom qAtom = o.getQAtom();
-    PsiElement atom = qAtom.getAtom();
-    if (atom != null) {
-      atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
-    }
+    renameAtom(qAtom, newName);
     return o;
   }
 

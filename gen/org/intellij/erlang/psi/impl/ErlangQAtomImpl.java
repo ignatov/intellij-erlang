@@ -24,6 +24,12 @@ public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements Erlan
 
   @Override
   @Nullable
+  public ErlangAtom getAtom() {
+    return findChildByClass(ErlangAtom.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangMacros getMacros() {
     return findChildByClass(ErlangMacros.class);
   }
@@ -32,12 +38,6 @@ public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements Erlan
   @Nullable
   public ErlangMacrosArg getMacrosArg() {
     return findChildByClass(ErlangMacrosArg.class);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getAtom() {
-    return findChildByType(ERL_ATOM);
   }
 
   @Nullable

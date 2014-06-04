@@ -23,8 +23,8 @@ public class ErlangMacrosNameImpl extends ErlangCompositeElementImpl implements 
 
   @Override
   @Nullable
-  public PsiElement getAtom() {
-    return findChildByType(ERL_ATOM);
+  public ErlangAtom getAtom() {
+    return findChildByClass(ErlangAtom.class);
   }
 
   @Override

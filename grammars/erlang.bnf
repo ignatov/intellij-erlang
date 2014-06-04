@@ -74,7 +74,7 @@
   pin(".*(clauses|_exprs|list)(?:_\d.*)?")=1
   pin("config_.*_expression")=1
 
-  implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
+  implements("record_definition|function|q_var|atom|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
   extends("q_var|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
   extends           ("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.psi.impl.ErlangStubbedPsiElementBase<?>"
   elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.ErlangElementTypeFactory.factory"
@@ -88,7 +88,7 @@ private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
 private form_with_period ::= form period {recoverWhile=form_recover pin=1}
 private left period ::= '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
-private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom | bnot | char | float | integer | not | string | var | '.')
+private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.')
 private form ::=
     is_app_config config_expression
   | function
@@ -104,6 +104,11 @@ private form ::=
 
 private is_app_config ::= &<<isApplicationLanguage>>
 private is_console ::= &<<isConsole>>
+
+atom ::= atom_name | (single_quote atom_name single_quote) {
+  pin(".*") = 1
+  methods = [getName setName getNameIdentifier]
+}
 
 q_atom ::= atom | macros_arg | macros {methods=[getReference]}
 q_var ::= '_' | var {

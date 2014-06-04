@@ -43,6 +43,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitFakeBinaryExpression(o);
   }
 
+  public void visitAtom(@NotNull ErlangAtom o) {
+    visitNamedElement(o);
+  }
+
   public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
     visitCompositeElement(o);
   }

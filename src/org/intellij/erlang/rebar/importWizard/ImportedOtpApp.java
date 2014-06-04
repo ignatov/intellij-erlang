@@ -135,9 +135,9 @@ final class ImportedOtpApp {
         if (dependencyAppsList != null) {
           for (ErlangExpression depExpression : dependencyAppsList.getExpressionList()) {
             ErlangQAtom depApp = PsiTreeUtil.getChildOfType(depExpression, ErlangQAtom.class);
-            PsiElement appNameAtom = depApp != null ? depApp.getAtom() : null;
+            ErlangAtom appNameAtom = depApp != null ? depApp.getAtom() : null;
             if (appNameAtom != null) {
-              myDeps.add(appNameAtom.getText());
+              myDeps.add(appNameAtom.getName());
             }
           }
         }

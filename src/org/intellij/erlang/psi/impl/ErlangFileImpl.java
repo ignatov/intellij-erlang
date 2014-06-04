@@ -754,8 +754,8 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     for (ErlangAttribute attribute : getAttributes()) {
       ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
       ErlangQAtom qAtom = null != atomAttribute ? atomAttribute.getQAtom() : null;
-      PsiElement atom = null != qAtom ? qAtom.getAtom() : null;
-      String attributeName = null != atom ? atom.getText() : null;
+      ErlangAtom atom = null != qAtom ? qAtom.getAtom() : null;
+      String attributeName = null != atom ? atom.getName() : null;
       ErlangAttrVal attrVal = atomAttribute != null ? atomAttribute.getAttrVal() : null;
       if (!"compile".equals(attributeName) || attrVal == null) continue;
 

@@ -19,6 +19,7 @@ public interface ErlangTypes {
   IElementType ERL_ARGUMENT_DEFINITION_LIST = new ErlangCompositeElementType("ERL_ARGUMENT_DEFINITION_LIST");
   IElementType ERL_ARGUMENT_LIST = new ErlangCompositeElementType("ERL_ARGUMENT_LIST");
   IElementType ERL_ASSIGNMENT_EXPRESSION = new ErlangCompositeElementType("ERL_ASSIGNMENT_EXPRESSION");
+  IElementType ERL_ATOM = new ErlangCompositeElementType("ERL_ATOM");
   IElementType ERL_ATOM_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATOM_ATTRIBUTE");
   IElementType ERL_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATTRIBUTE");
   IElementType ERL_ATTR_VAL = new ErlangCompositeElementType("ERL_ATTR_VAL");
@@ -140,7 +141,7 @@ public interface ErlangTypes {
   IElementType ERL_ANDALSO = new ErlangTokenType("andalso");
   IElementType ERL_ARROW = new ErlangTokenType("->");
   IElementType ERL_ASSOC = new ErlangTokenType("=>");
-  IElementType ERL_ATOM = new ErlangTokenType("atom");
+  IElementType ERL_ATOM_NAME = new ErlangTokenType("atom_name");
   IElementType ERL_BAND = new ErlangTokenType("band");
   IElementType ERL_BEGIN = new ErlangTokenType("begin");
   IElementType ERL_BIN_END = new ErlangTokenType(">>");
@@ -201,6 +202,7 @@ public interface ErlangTypes {
   IElementType ERL_RECEIVE = new ErlangTokenType("receive");
   IElementType ERL_REM = new ErlangTokenType("rem");
   IElementType ERL_SEMI = new ErlangTokenType(";");
+  IElementType ERL_SINGLE_QUOTE = new ErlangTokenType("single_quote");
   IElementType ERL_STRING = new ErlangTokenType("string");
   IElementType ERL_TRY = new ErlangTokenType("try");
   IElementType ERL_UNI_PATTERN = new ErlangTokenType("_");
@@ -237,6 +239,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_ASSIGNMENT_EXPRESSION) {
         return new ErlangAssignmentExpressionImpl(node);
+      }
+      else if (type == ERL_ATOM) {
+        return new ErlangAtomImpl(node);
       }
       else if (type == ERL_ATOM_ATTRIBUTE) {
         return new ErlangAtomAttributeImpl(node);

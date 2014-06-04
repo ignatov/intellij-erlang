@@ -68,9 +68,9 @@ public final class RebarConfigUtil {
           @Override
           public void consume(ErlangExpression configExpression) {
             ErlangQAtom parseTransform = PsiTreeUtil.getChildOfType(configExpression, ErlangQAtom.class);
-            PsiElement parseTransformAtom = parseTransform != null ? parseTransform.getAtom() : null;
+            ErlangAtom parseTransformAtom = parseTransform != null ? parseTransform.getAtom() : null;
             if (parseTransformAtom != null) {
-              parseTransforms.add(parseTransformAtom.getText());
+              parseTransforms.add(parseTransformAtom.getName());
             }
           }
         });

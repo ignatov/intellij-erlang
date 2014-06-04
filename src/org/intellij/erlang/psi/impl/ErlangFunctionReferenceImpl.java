@@ -191,10 +191,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    PsiElement atom = getElement().getAtom();
-    if (atom != null) {
-      atom.replace(ErlangElementFactory.createQAtomFromText(getElement().getProject(), newElementName));
-    }
+    ErlangPsiImplUtil.renameAtom(getElement(), newElementName);
     return getElement();
   }
 

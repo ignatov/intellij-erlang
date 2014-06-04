@@ -27,7 +27,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.FileContentUtilCore;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -117,11 +116,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
       PsiElement oldHead = descriptor.getPsiElement();
       if (oldHead instanceof ErlangQAtom) {
-        PsiElement newHead = ErlangElementFactory.createQAtomFromText(project, myFunctionName);
-        PsiElement atom = ((ErlangQAtom) oldHead).getAtom();
-        if (atom != null) {
-          atom.replace(newHead);
-        }
+        ErlangPsiImplUtil.renameAtom((ErlangQAtom) oldHead, myFunctionName);
       }
     }
   }

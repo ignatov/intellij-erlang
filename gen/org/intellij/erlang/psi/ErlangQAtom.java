@@ -9,13 +9,13 @@ import com.intellij.psi.PsiReference;
 public interface ErlangQAtom extends ErlangCompositeElement {
 
   @Nullable
+  ErlangAtom getAtom();
+
+  @Nullable
   ErlangMacros getMacros();
 
   @Nullable
   ErlangMacrosArg getMacrosArg();
-
-  @Nullable
-  PsiElement getAtom();
 
   @Nullable
   PsiReference getReference();
