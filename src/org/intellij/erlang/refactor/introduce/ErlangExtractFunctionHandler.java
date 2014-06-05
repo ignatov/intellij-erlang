@@ -103,10 +103,16 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   @NotNull
   private static List<ErlangExpression> getSelectedExpressions(@NotNull PsiElement first, @NotNull PsiElement second) {
     if (second instanceof LeafPsiElement) {
-      final IElementType elementType = ((LeafPsiElement) second).getElementType();
-      if (elementType == ErlangTypes.ERL_DOT || elementType == ErlangTypes.ERL_SEMI) {
-        ASTNode node = FormatterUtil.getPreviousNonWhitespaceSibling((LeafPsiElement) second);
-        second = node == null ? second : PsiTreeUtil.getDeepestLast(node.getPsi());
+      ErlangAtom atom = PsiTreeUtil.getParentOfType(second, ErlangAtom.class, true);
+      if (atom != null) {
+        second = atom;
+      }
+      else {
+        final IElementType elementType = ((LeafPsiElement) second).getElementType();
+        if (elementType == ErlangTypes.ERL_DOT || elementType == ErlangTypes.ERL_SEMI) {
+          ASTNode node = FormatterUtil.getPreviousNonWhitespaceSibling((LeafPsiElement) second);
+          second = node == null ? second : PsiTreeUtil.getDeepestLast(node.getPsi());
+        }
       }
     }
     PsiElement commonParent = PsiTreeUtil.findCommonParent(first, second);

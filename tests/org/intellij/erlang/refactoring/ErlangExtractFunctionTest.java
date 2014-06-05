@@ -27,6 +27,7 @@ public class ErlangExtractFunctionTest extends ErlangLightPlatformCodeInsightFix
 
   public void testSimple() throws Throwable { doTest(); }
   public void testAtom()   throws Throwable { doTest(); }
+  public void testQuotedAtom() throws Throwable { doTest(); }
 
   private void doTest() throws Throwable {
     myFixture.configureByFile(getTestName(true) + ".erl");
