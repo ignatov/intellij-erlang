@@ -19,8 +19,10 @@ package org.intellij.erlang.parser;
 import org.intellij.erlang.ErlangParserDefinition;
 
 public class ErlangAppParserTest extends ErlangParserTestBase {
+  private static final boolean OVERRIDE_TEST_DATA = false;
+
   public ErlangAppParserTest() {
-    super("parser", "app", new ErlangParserDefinition());
+    super("parser", "app", OVERRIDE_TEST_DATA, new ErlangParserDefinition());
   }
 
   public void testRtbCoordinator()  throws Exception { doTest(true, false); }

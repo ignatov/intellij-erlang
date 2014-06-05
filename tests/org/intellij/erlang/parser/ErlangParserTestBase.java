@@ -20,11 +20,18 @@ import com.intellij.core.CoreApplicationEnvironment;
 import com.intellij.lang.LanguageExtensionPoint;
 import com.intellij.lang.ParserDefinition;
 import com.intellij.openapi.extensions.Extensions;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.ParsingTestCase;
 
+import java.io.File;
+import java.io.IOException;
+
 public abstract class ErlangParserTestBase extends ParsingTestCase {
-  public ErlangParserTestBase(String dataPath, String fileExt, ParserDefinition... definitions) {
+  private final boolean myOverrideTestData;
+
+  public ErlangParserTestBase(String dataPath, String fileExt, boolean overrideTestData, ParserDefinition... definitions) {
     super(dataPath, fileExt, definitions);
+    myOverrideTestData = overrideTestData;
   }
 
   @Override
@@ -38,6 +45,9 @@ public abstract class ErlangParserTestBase extends ParsingTestCase {
   }
 
   protected void doTest(boolean checkResult, boolean suppressErrors) {
+    if (myOverrideTestData) {
+      doOverrideTestData();
+    }
     doTest(true);
     if (!suppressErrors) {
       assertFalse(
@@ -53,4 +63,15 @@ public abstract class ErlangParserTestBase extends ParsingTestCase {
     CoreApplicationEnvironment.registerExtensionPoint(Extensions.getRootArea(), "com.intellij.lang.braceMatcher", LanguageExtensionPoint.class);
   }
 
+  private void doOverrideTestData() {
+    try {
+      String testName = getTestName(false);
+      String text = loadFile(testName + "." + myFileExt);
+      myFile = createPsiFile(testName, text);
+      ensureParsed(myFile);
+      FileUtil.writeToFile(new File(myFullDataPath + "/" + testName + ".txt"), toParseTreeText(myFile, skipSpaces(), includeRanges()));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }
