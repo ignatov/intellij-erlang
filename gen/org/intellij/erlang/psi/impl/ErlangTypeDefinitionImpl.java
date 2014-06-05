@@ -12,7 +12,7 @@ import org.intellij.erlang.stubs.ErlangTypeDefinitionStub;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangTypeDefinitionImpl extends ErlangStubbedPsiElementBase<ErlangTypeDefinitionStub> implements ErlangTypeDefinition {
+public class ErlangTypeDefinitionImpl extends ErlangNamedStubbedPsiElementBase<ErlangTypeDefinitionStub> implements ErlangTypeDefinition {
 
   public ErlangTypeDefinitionImpl(ASTNode node) {
     super(node);

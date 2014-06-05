@@ -12,7 +12,7 @@ import org.intellij.erlang.stubs.ErlangRecordDefinitionStub;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangRecordDefinitionImpl extends ErlangStubbedPsiElementBase<ErlangRecordDefinitionStub> implements ErlangRecordDefinition {
+public class ErlangRecordDefinitionImpl extends ErlangNamedStubbedPsiElementBase<ErlangRecordDefinitionStub> implements ErlangRecordDefinition {
 
   public ErlangRecordDefinitionImpl(ASTNode node) {
     super(node);

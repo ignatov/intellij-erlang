@@ -14,7 +14,7 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangModuleImpl extends ErlangStubbedPsiElementBase<ErlangModuleStub> implements ErlangModule {
+public class ErlangModuleImpl extends ErlangNamedStubbedPsiElementBase<ErlangModuleStub> implements ErlangModule {
 
   public ErlangModuleImpl(ASTNode node) {
     super(node);

@@ -14,7 +14,7 @@ import com.intellij.navigation.ItemPresentation;
 import javax.swing.Icon;
 import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangFunctionImpl extends ErlangStubbedPsiElementBase<ErlangFunctionStub> implements ErlangFunction {
+public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangFunctionStub> implements ErlangFunction {
 
   public ErlangFunctionImpl(ASTNode node) {
     super(node);

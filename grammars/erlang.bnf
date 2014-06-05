@@ -76,7 +76,8 @@
 
   implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
   extends("q_var|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
-  extends           ("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.psi.impl.ErlangStubbedPsiElementBase<?>"
+  extends("function|module|record_definition|type_definition|macros_definition")="org.intellij.erlang.psi.impl.ErlangNamedStubbedPsiElementBase<?>"
+  extends("behaviour|type_definition|include|include_lib|callback_spec")="org.intellij.erlang.psi.impl.ErlangStubbedPsiElementBase<?>"
   elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.ErlangElementTypeFactory.factory"
 
   implements("case_expression|try_expression|receive_expression")="org.intellij.erlang.psi.ErlangClauseOwner"

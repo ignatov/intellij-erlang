@@ -12,7 +12,7 @@ import org.intellij.erlang.stubs.ErlangMacrosDefinitionStub;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.stubs.IStubElementType;
 
-public class ErlangMacrosDefinitionImpl extends ErlangStubbedPsiElementBase<ErlangMacrosDefinitionStub> implements ErlangMacrosDefinition {
+public class ErlangMacrosDefinitionImpl extends ErlangNamedStubbedPsiElementBase<ErlangMacrosDefinitionStub> implements ErlangMacrosDefinition {
 
   public ErlangMacrosDefinitionImpl(ASTNode node) {
     super(node);
