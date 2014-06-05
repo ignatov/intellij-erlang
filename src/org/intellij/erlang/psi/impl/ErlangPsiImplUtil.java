@@ -1063,7 +1063,9 @@ public class ErlangPsiImplUtil {
   public static ErlangAtom setName(ErlangAtom atom, String newName) {
     //TODO check if a new name should be quoted
     //TODO fix for '' atoms
-    atom.getNameIdentifier().replace(ErlangElementFactory.createQAtomFromText(atom.getProject(), newName));
+    PsiElement newAtom = ErlangElementFactory.createQAtomFromText(atom.getProject(), newName);
+    assert newAtom instanceof ErlangAtom;
+    atom.getNameIdentifier().replace(((ErlangAtom) newAtom).getNameIdentifier());
     return atom;
   }
 
