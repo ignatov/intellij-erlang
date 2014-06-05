@@ -5,16 +5,14 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangAtom extends ErlangNamedElement {
+public interface ErlangAtom extends ErlangCompositeElement {
 
   @Nullable
   PsiElement getAtomName();
 
-  @NotNull
   String getName();
 
-  @NotNull
-  PsiElement setName(String newName);
+  ErlangAtom setName(String newName);
 
   @NotNull
   PsiElement getNameIdentifier();

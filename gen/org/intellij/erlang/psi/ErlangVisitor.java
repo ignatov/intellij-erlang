@@ -44,7 +44,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitAtom(@NotNull ErlangAtom o) {
-    visitNamedElement(o);
+    visitCompositeElement(o);
   }
 
   public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {

@@ -74,7 +74,7 @@
   pin(".*(clauses|_exprs|list)(?:_\d.*)?")=1
   pin("config_.*_expression")=1
 
-  implements("record_definition|function|q_var|atom|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
+  implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
   extends("q_var|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
   extends           ("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.psi.impl.ErlangStubbedPsiElementBase<?>"
   elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.ErlangElementTypeFactory.factory"
