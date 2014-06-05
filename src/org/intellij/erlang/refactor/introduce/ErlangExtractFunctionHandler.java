@@ -177,7 +177,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
         final PsiFile file = first.getContainingFile();
         new WriteCommandAction(editor.getProject(), "Extract function", file) {
           @Override
-          protected void run(Result result) throws Throwable {
+          protected void run(@NotNull Result result) throws Throwable {
             ErlangFunction newFunction = ErlangElementFactory.createFunctionFromText(project, functionText);
 
             PsiElement functionParent = function.getParent();
