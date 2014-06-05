@@ -117,6 +117,10 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
         boolean inConsole = ErlangParserUtil.isConsole(file);
         PsiElement parent = position.getParent();
+        if (parent instanceof ErlangAtom) {
+          // This assignment makes the code below work the same way as it did before ErlangAtom stopped being a leaf element.
+          parent = parent.getParent();
+        }
         PsiElement grandPa = parent.getParent();
         PsiElement originalPosition = parameters.getOriginalPosition();
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
