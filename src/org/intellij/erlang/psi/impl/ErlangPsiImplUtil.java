@@ -656,7 +656,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangRecordDefinition o) {
     ErlangQAtom atom = o.getQAtom();
-    return atom != null ? atom : o;
+    return atom != null ? getNameIdentifier(atom) : o;
   }
 
   public static int getTextOffset(@NotNull ErlangRecordDefinition o) {
@@ -670,8 +670,14 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  public static PsiElement getNameIdentifier(@NotNull ErlangQAtom o) {
+    ErlangAtom atom = o.getAtom();
+    return atom != null ? getNameIdentifier(atom) : o;
+  }
+
+  @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangFunction o) {
-    return o.getAtomName();
+    return getNameIdentifier(o.getAtomName());
   }
 
   @Nullable
@@ -768,8 +774,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangModule o) {
     ErlangQAtom qAtom = o.getQAtom();
-    ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
-    return atom != null ? atom.getNameIdentifier() : o;
+    return qAtom != null ? getNameIdentifier(qAtom) : o;
   }
 
   public static int getTextOffset(@NotNull ErlangModule o) {
@@ -784,7 +789,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangFunctionCallExpression o) {
-    return o.getQAtom();
+    return getNameIdentifier(o.getQAtom());
   }
 
   public static int getTextOffset(@NotNull ErlangFunctionCallExpression o) {
@@ -1079,9 +1084,8 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement getNameIdentifier(ErlangTypeDefinition o) {
-    ErlangQAtom atom = o.getQAtom();
-    if (atom == null) return o;
-    return atom;
+    ErlangQAtom qAtom = o.getQAtom();
+    return qAtom != null ? getNameIdentifier(qAtom) : o;
   }
 
   public static int getTextOffset(ErlangTypeDefinition o) {
@@ -1146,7 +1150,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement getNameIdentifier(ErlangTypedExpr o) {
-    return o.getQAtom();
+    return getNameIdentifier(o.getQAtom());
   }
 
   public static int getTextOffset(ErlangTypedExpr o) {
