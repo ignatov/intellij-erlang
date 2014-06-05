@@ -40,7 +40,7 @@ import java.util.*;
 public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   public static final ID<String, Void> ERLANG_MODULE_INDEX = ID.create("ErlangModuleIndex");
   private static final int INDEX_VERSION = 1;
-  private final EnumeratorStringDescriptor myDescriptor = new EnumeratorStringDescriptor();
+  private static final EnumeratorStringDescriptor DESCRIPTOR = new EnumeratorStringDescriptor();
   public static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
     @Override
     public boolean acceptInput(@NotNull VirtualFile file) {
@@ -70,7 +70,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   @NotNull
   @Override
   public KeyDescriptor<String> getKeyDescriptor() {
-    return myDescriptor;
+    return DESCRIPTOR;
   }
 
   @NotNull
