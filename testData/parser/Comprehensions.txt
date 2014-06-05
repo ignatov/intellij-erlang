@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('list_generators')
+        ERL_ATOM
+          PsiElement(atom_name)('list_generators')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -24,11 +25,13 @@ ERL_FILE
               ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                 ERL_MODULE_REF
                   ERL_Q_ATOM
-                    PsiElement(atom)('lists')
+                    ERL_ATOM
+                      PsiElement(atom_name)('lists')
                 PsiElement(:)(':')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)('seq')
+                    ERL_ATOM
+                      PsiElement(atom_name)('seq')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
                     ERL_MAX_EXPRESSION
@@ -62,11 +65,13 @@ ERL_FILE
               ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                 ERL_MODULE_REF
                   ERL_Q_ATOM
-                    PsiElement(atom)('lists')
+                    ERL_ATOM
+                      PsiElement(atom_name)('lists')
                 PsiElement(:)(':')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)('seq')
+                    ERL_ATOM
+                      PsiElement(atom_name)('seq')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
                     ERL_MAX_EXPRESSION
@@ -98,11 +103,13 @@ ERL_FILE
               ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                 ERL_MODULE_REF
                   ERL_Q_ATOM
-                    PsiElement(atom)('lists')
+                    ERL_ATOM
+                      PsiElement(atom_name)('lists')
                 PsiElement(:)(':')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)('seq')
+                    ERL_ATOM
+                      PsiElement(atom_name)('seq')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
                     ERL_MAX_EXPRESSION
@@ -116,7 +123,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('binary_generators')
+        ERL_ATOM
+          PsiElement(atom_name)('binary_generators')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -227,7 +235,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('map_generators')
+        ERL_ATOM
+          PsiElement(atom_name)('map_generators')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')

@@ -2,24 +2,27 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
-      PsiElement(atom)('module')
+      PsiElement(atom_name)('module')
       PsiElement(()('(')
       ERL_Q_ATOM
-        PsiElement(atom)('test')
+        ERL_ATOM
+          PsiElement(atom_name)('test')
       PsiElement())(')')
     PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('record')
+    PsiElement(atom_name)('record')
     PsiElement(()('(')
     ERL_Q_ATOM
-      PsiElement(atom)('on_resolve_denied')
+      ERL_ATOM
+        PsiElement(atom_name)('on_resolve_denied')
     PsiElement(,)(',')
     ERL_TYPED_RECORD_FIELDS
       PsiElement({)('{')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('request')
+          ERL_ATOM
+            PsiElement(atom_name)('request')
         PsiElement(::)('::')
         ERL_TOP_TYPE
           ERL_TOP_TYPE_100_T
@@ -27,30 +30,35 @@ ERL_FILE
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
-                  PsiElement(atom)('resolve_request')
+                  ERL_ATOM
+                    PsiElement(atom_name)('resolve_request')
               PsiElement({)('{')
               PsiElement(})('}')
             PsiElement(|)('|')
             ERL_TYPE
               ERL_TYPE_REF
                 ERL_Q_ATOM
-                  PsiElement(atom)('string')
+                  ERL_ATOM
+                    PsiElement(atom_name)('string')
               PsiElement(()('(')
               PsiElement())(')')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('alternative')
+          ERL_ATOM
+            PsiElement(atom_name)('alternative')
         PsiElement(=)('=')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('undefined')
+            ERL_ATOM
+              PsiElement(atom_name)('undefined')
         PsiElement(::)('::')
         ERL_TOP_TYPE
           ERL_TYPE
             ERL_TYPE_REF
               ERL_Q_ATOM
-                PsiElement(atom)('symbol_info_type')
+                ERL_ATOM
+                  PsiElement(atom_name)('symbol_info_type')
             PsiElement(()('(')
             PsiElement())(')')
       PsiElement(})('}')

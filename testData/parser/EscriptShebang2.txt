@@ -2,13 +2,14 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_EXPORT
-      PsiElement(atom)('export')
+      PsiElement(atom_name)('export')
       PsiElement(()('(')
       ERL_EXPORT_FUNCTIONS
         PsiElement([)('[')
         ERL_EXPORT_FUNCTION
           ERL_Q_ATOM
-            PsiElement(atom)('main')
+            ERL_ATOM
+              PsiElement(atom_name)('main')
           PsiElement(/)('/')
           PsiElement(integer)('1')
         PsiElement(])(']')
@@ -19,7 +20,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('main')
+        ERL_ATOM
+          PsiElement(atom_name)('main')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -31,5 +33,6 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
     PsiElement(.)('.')

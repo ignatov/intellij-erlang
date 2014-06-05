@@ -3,17 +3,19 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
-      PsiElement(atom)('module')
+      PsiElement(atom_name)('module')
       PsiElement(()('(')
       ERL_Q_ATOM
-        PsiElement(atom)('test2')
+        ERL_ATOM
+          PsiElement(atom_name)('test2')
       PsiElement())(')')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
-        PsiElement(atom)('author')
+        ERL_ATOM
+          PsiElement(atom_name)('author')
       ERL_ATTR_VAL
         PsiElement(()('(')
         ERL_STRING_LITERAL
@@ -24,7 +26,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_EXPORT
-      PsiElement(atom)('export')
+      PsiElement(atom_name)('export')
       PsiElement(()('(')
       ERL_EXPORT_FUNCTIONS
         PsiElement([)('[')
@@ -34,20 +36,22 @@ ERL_FILE
   PsiComment(function_doc_comment)('%% -include("inc.hrl"). %%The name of file is still green but not navigable by Ctrl+LMButton, "Cannot find declaration to go to"')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
-      PsiElement(atom)('test_func_macro')
+      ERL_ATOM
+        PsiElement(atom_name)('test_func_macro')
     PsiElement(,)(',')
     ERL_MACROS_BODY
       ERL_MAX_EXPRESSION
         ERL_Q_ATOM
-          PsiElement(atom)('test')
+          ERL_ATOM
+            PsiElement(atom_name)('test')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
       PsiElement(var)('TRUE')
@@ -55,13 +59,14 @@ ERL_FILE
     ERL_MACROS_BODY
       ERL_MAX_EXPRESSION
         ERL_Q_ATOM
-          PsiElement(atom)('true')
+          ERL_ATOM
+            PsiElement(atom_name)('true')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_EXPORT
-      PsiElement(atom)('export')
+      PsiElement(atom_name)('export')
       PsiElement(()('(')
       ERL_EXPORT_FUNCTIONS
         PsiElement([)('[')
@@ -70,7 +75,8 @@ ERL_FILE
             ERL_MACROS
               PsiElement(?)('?')
               ERL_MACROS_NAME
-                PsiElement(atom)('test_func_macro')
+                ERL_ATOM
+                  PsiElement(atom_name)('test_func_macro')
           PsiElement(/)('/')
           PsiElement(integer)('0')
         PsiElement(,)(',')
@@ -79,7 +85,8 @@ ERL_FILE
             ERL_MACROS
               PsiElement(?)('?')
               ERL_MACROS_NAME
-                PsiElement(atom)('test_func_macro')
+                ERL_ATOM
+                  PsiElement(atom_name)('test_func_macro')
           PsiElement(/)('/')
           PsiElement(integer)('0')
         PsiElement(])(']')
@@ -88,10 +95,11 @@ ERL_FILE
   PsiComment(function_doc_comment)('%%error')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
-      PsiElement(atom)('a')
+      ERL_ATOM
+        PsiElement(atom_name)('a')
     PsiElement(,)(',')
     ERL_MACROS_BODY
       ERL_MAX_EXPRESSION
@@ -101,7 +109,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('another_func')
+        ERL_ATOM
+          PsiElement(atom_name)('another_func')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -121,7 +130,8 @@ ERL_FILE
         ERL_MACROS
           PsiElement(?)('?')
           ERL_MACROS_NAME
-            PsiElement(atom)('test_func_macro')
+            ERL_ATOM
+              PsiElement(atom_name)('test_func_macro')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -129,7 +139,8 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%error')
   ERL_MACROS_CALL
@@ -138,7 +149,8 @@ ERL_FILE
         ERL_MACROS
           PsiElement(?)('?')
           ERL_MACROS_NAME
-            PsiElement(atom)('a')
+            ERL_ATOM
+              PsiElement(atom_name)('a')
       ERL_ARGUMENT_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -149,7 +161,8 @@ ERL_FILE
         ERL_MACROS
           PsiElement(?)('?')
           ERL_MACROS_NAME
-            PsiElement(atom)('a')
+            ERL_ATOM
+              PsiElement(atom_name)('a')
       ERL_ARGUMENT_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -157,7 +170,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo1')
+        ERL_ATOM
+          PsiElement(atom_name)('foo1')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -170,7 +184,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('xxx')
+        ERL_ATOM
+          PsiElement(atom_name)('xxx')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -181,12 +196,14 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('not_ok')
+            ERL_ATOM
+              PsiElement(atom_name)('not_ok')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foao')
+        ERL_ATOM
+          PsiElement(atom_name)('foao')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -197,7 +214,8 @@ ERL_FILE
             ERL_MACROS
               PsiElement(?)('?')
               ERL_MACROS_NAME
-                PsiElement(atom)('test_func_macro')
+                ERL_ATOM
+                  PsiElement(atom_name)('test_func_macro')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             PsiElement())(')')
@@ -205,7 +223,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -213,12 +232,14 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo1')
+        ERL_ATOM
+          PsiElement(atom_name)('foo1')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -226,12 +247,14 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('f')
+        ERL_ATOM
+          PsiElement(atom_name)('f')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -242,7 +265,8 @@ ERL_FILE
             ERL_MACROS
               PsiElement(?)('?')
               ERL_MACROS_NAME
-                PsiElement(atom)('test_func_macro')
+                ERL_ATOM
+                  PsiElement(atom_name)('test_func_macro')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             PsiElement())(')')
@@ -250,7 +274,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -258,5 +283,6 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
     PsiElement(.)('.')

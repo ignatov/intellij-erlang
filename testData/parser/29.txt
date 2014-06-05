@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -19,7 +20,8 @@ ERL_FILE
           PsiElement(:)(':')
           ERL_FUNCTION_WITH_ARITY
             ERL_Q_ATOM
-              PsiElement(atom)('some_function')
+              ERL_ATOM
+                PsiElement(atom_name)('some_function')
             PsiElement(/)('/')
             PsiElement(integer)('1')
     PsiElement(.)('.')

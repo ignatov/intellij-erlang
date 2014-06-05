@@ -2,21 +2,24 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
-      PsiElement(atom)('module')
+      PsiElement(atom_name)('module')
       PsiElement(()('(')
       ERL_Q_ATOM
-        PsiElement(atom)('m')
+        ERL_ATOM
+          PsiElement(atom_name)('m')
       PsiElement())(')')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
-        PsiElement(atom)('on_load')
+        ERL_ATOM
+          PsiElement(atom_name)('on_load')
       PsiElement(()('(')
       ERL_FUNCTION_WITH_ARITY
         ERL_Q_ATOM
-          PsiElement(atom)('load_my_nifs')
+          ERL_ATOM
+            PsiElement(atom_name)('load_my_nifs')
         PsiElement(/)('/')
         PsiElement(integer)('0')
       PsiElement())(')')
@@ -24,7 +27,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('load_my_nifs')
+        ERL_ATOM
+          PsiElement(atom_name)('load_my_nifs')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -45,16 +49,19 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('info')
+              ERL_ATOM
+                PsiElement(atom_name)('info')
         PsiElement(,)(',')
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
           ERL_MODULE_REF
             ERL_Q_ATOM
-              PsiElement(atom)('erlang')
+              ERL_ATOM
+                PsiElement(atom_name)('erlang')
           PsiElement(:)(':')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('load_nif')
+              ERL_ATOM
+                PsiElement(atom_name)('load_nif')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION

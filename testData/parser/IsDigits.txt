@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('is_digits')
+        ERL_ATOM
+          PsiElement(atom_name)('is_digits')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -42,7 +43,8 @@ ERL_FILE
               PsiElement(->)('->')
               ERL_FUNCTION_CALL_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('is_digits')
+                  ERL_ATOM
+                    PsiElement(atom_name)('is_digits')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
                   ERL_MAX_EXPRESSION
@@ -54,17 +56,20 @@ ERL_FILE
             ERL_GUARD
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('true')
+                  ERL_ATOM
+                    PsiElement(atom_name)('true')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('false')
+                  ERL_ATOM
+                    PsiElement(atom_name)('false')
           PsiElement(end)('end')
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('is_digits')
+        ERL_ATOM
+          PsiElement(atom_name)('is_digits')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -76,5 +81,6 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('true')
+            ERL_ATOM
+              PsiElement(atom_name)('true')
     PsiElement(.)('.')

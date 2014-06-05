@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('bin_test')
+        ERL_ATOM
+          PsiElement(atom_name)('bin_test')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -25,15 +26,18 @@ ERL_FILE
               PsiElement(/)('/')
               ERL_BIT_TYPE
                 ERL_Q_ATOM
-                  PsiElement(atom)('unsigned')
+                  ERL_ATOM
+                    PsiElement(atom_name)('unsigned')
               PsiElement(-)('-')
               ERL_BIT_TYPE
                 ERL_Q_ATOM
-                  PsiElement(atom)('integer')
+                  ERL_ATOM
+                    PsiElement(atom_name)('integer')
               PsiElement(-)('-')
               ERL_BIT_TYPE
                 ERL_Q_ATOM
-                  PsiElement(atom)('unit')
+                  ERL_ATOM
+                    PsiElement(atom_name)('unit')
                 PsiElement(:)(':')
                 PsiElement(integer)('8')
           PsiElement(>>)('>>')
@@ -59,7 +63,8 @@ ERL_FILE
               PsiElement(/)('/')
               ERL_BIT_TYPE
                 ERL_Q_ATOM
-                  PsiElement(atom)('integer')
+                  ERL_ATOM
+                    PsiElement(atom_name)('integer')
           PsiElement(>>)('>>')
         PsiElement(,)(',')
         ERL_BINARY_EXPRESSION
@@ -83,10 +88,12 @@ ERL_FILE
               PsiElement(/)('/')
               ERL_BIT_TYPE
                 ERL_Q_ATOM
-                  PsiElement(atom)('integer')
+                  ERL_ATOM
+                    PsiElement(atom_name)('integer')
               PsiElement(-)('-')
               ERL_BIT_TYPE
                 ERL_Q_ATOM
-                  PsiElement(atom)('little')
+                  ERL_ATOM
+                    PsiElement(atom_name)('little')
           PsiElement(>>)('>>')
     PsiElement(.)('.')

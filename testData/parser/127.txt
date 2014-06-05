@@ -2,18 +2,20 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
-      PsiElement(atom)('module')
+      PsiElement(atom_name)('module')
       PsiElement(()('(')
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
-      PsiElement(atom)('is_alphanum')
+      ERL_ATOM
+        PsiElement(atom_name)('is_alphanum')
     ERL_ARGUMENT_DEFINITION_LIST
       PsiElement(()('(')
       ERL_ARGUMENT_DEFINITION
@@ -75,7 +77,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('uri_encode')
+        ERL_ATOM
+          PsiElement(atom_name)('uri_encode')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -103,7 +106,8 @@ ERL_FILE
               ERL_MACROS
                 PsiElement(?)('?')
                 ERL_MACROS_NAME
-                  PsiElement(atom)('is_alphanum')
+                  ERL_ATOM
+                    PsiElement(atom_name)('is_alphanum')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
@@ -146,7 +150,8 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('uri_encode')
+            ERL_ATOM
+              PsiElement(atom_name)('uri_encode')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             ERL_MAX_EXPRESSION

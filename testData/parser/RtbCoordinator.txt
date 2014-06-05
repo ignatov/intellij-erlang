@@ -3,11 +3,13 @@ ERL_FILE
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
       ERL_Q_ATOM
-        PsiElement(atom)('application')
+        ERL_ATOM
+          PsiElement(atom_name)('application')
     PsiElement(,)(',')
     ERL_CONFIG_EXPRESSION
       ERL_Q_ATOM
-        PsiElement(atom)('rtb_coordinator')
+        ERL_ATOM
+          PsiElement(atom_name)('rtb_coordinator')
     PsiElement(,)(',')
     ERL_LIST_EXPRESSION
       PsiElement([)('[')
@@ -15,7 +17,8 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('description')
+            ERL_ATOM
+              PsiElement(atom_name)('description')
         PsiElement(,)(',')
         ERL_STRING_LITERAL
           PsiElement(string)('"description"')
@@ -25,7 +28,8 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('modules')
+            ERL_ATOM
+              PsiElement(atom_name)('modules')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
@@ -36,7 +40,8 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('registered')
+            ERL_ATOM
+              PsiElement(atom_name)('registered')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
@@ -47,33 +52,40 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('applications')
+            ERL_ATOM
+              PsiElement(atom_name)('applications')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('kernel')
+              ERL_ATOM
+                PsiElement(atom_name)('kernel')
           PsiElement(,)(',')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('stdlib')
+              ERL_ATOM
+                PsiElement(atom_name)('stdlib')
           PsiElement(,)(',')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('crypto')
+              ERL_ATOM
+                PsiElement(atom_name)('crypto')
           PsiElement(,)(',')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('public_key')
+              ERL_ATOM
+                PsiElement(atom_name)('public_key')
           PsiElement(,)(',')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('ssl')
+              ERL_ATOM
+                PsiElement(atom_name)('ssl')
           PsiElement(,)(',')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('cowboy')
+              ERL_ATOM
+                PsiElement(atom_name)('cowboy')
           PsiElement(])(']')
         PsiElement(})('}')
       PsiElement(,)(',')
@@ -81,13 +93,15 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('mod')
+            ERL_ATOM
+              PsiElement(atom_name)('mod')
         PsiElement(,)(',')
         ERL_TUPLE_EXPRESSION
           PsiElement({)('{')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('rtb_coordinator_app')
+              ERL_ATOM
+                PsiElement(atom_name)('rtb_coordinator_app')
           PsiElement(,)(',')
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
@@ -99,7 +113,8 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('env')
+            ERL_ATOM
+              PsiElement(atom_name)('env')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
@@ -107,7 +122,8 @@ ERL_FILE
             PsiElement({)('{')
             ERL_CONFIG_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('orders_db')
+                ERL_ATOM
+                  PsiElement(atom_name)('orders_db')
             PsiElement(,)(',')
             ERL_STRING_LITERAL
               PsiElement(string)('"/var/lib/rtb/coordinator/orders"')
@@ -117,7 +133,8 @@ ERL_FILE
             PsiElement({)('{')
             ERL_CONFIG_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('budget_db')
+                ERL_ATOM
+                  PsiElement(atom_name)('budget_db')
             PsiElement(,)(',')
             ERL_STRING_LITERAL
               PsiElement(string)('"/var/lib/rtb/coordinator/orders"')
@@ -127,7 +144,8 @@ ERL_FILE
             PsiElement({)('{')
             ERL_CONFIG_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('dispatch')
+                ERL_ATOM
+                  PsiElement(atom_name)('dispatch')
             PsiElement(,)(',')
             ERL_LIST_EXPRESSION
               PsiElement([)('[')
@@ -135,7 +153,10 @@ ERL_FILE
                 PsiElement({)('{')
                 ERL_CONFIG_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)(''_'')
+                    ERL_ATOM
+                      PsiElement(single_quote)(''')
+                      PsiElement(atom_name)('_')
+                      PsiElement(single_quote)(''')
                 PsiElement(,)(',')
                 ERL_LIST_EXPRESSION
                   PsiElement([)('[')
@@ -152,7 +173,8 @@ ERL_FILE
                     PsiElement(,)(',')
                     ERL_CONFIG_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('insertion_order_handler')
+                        ERL_ATOM
+                          PsiElement(atom_name)('insertion_order_handler')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
                       PsiElement([)('[')
@@ -171,12 +193,14 @@ ERL_FILE
                       PsiElement(,)(',')
                       ERL_CONFIG_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('data')
+                          ERL_ATOM
+                            PsiElement(atom_name)('data')
                       PsiElement(])(']')
                     PsiElement(,)(',')
                     ERL_CONFIG_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('insertion_order_handler')
+                        ERL_ATOM
+                          PsiElement(atom_name)('insertion_order_handler')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
                       PsiElement([)('[')
@@ -192,7 +216,8 @@ ERL_FILE
                     PsiElement(,)(',')
                     ERL_CONFIG_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('cowboy_http_static')
+                        ERL_ATOM
+                          PsiElement(atom_name)('cowboy_http_static')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
                       PsiElement([)('[')
@@ -200,17 +225,20 @@ ERL_FILE
                         PsiElement({)('{')
                         ERL_CONFIG_EXPRESSION
                           ERL_Q_ATOM
-                            PsiElement(atom)('directory')
+                            ERL_ATOM
+                              PsiElement(atom_name)('directory')
                         PsiElement(,)(',')
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
                           ERL_CONFIG_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('priv_dir')
+                              ERL_ATOM
+                                PsiElement(atom_name)('priv_dir')
                           PsiElement(,)(',')
                           ERL_CONFIG_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('rtb_coordinator')
+                              ERL_ATOM
+                                PsiElement(atom_name)('rtb_coordinator')
                           PsiElement(,)(',')
                           ERL_LIST_EXPRESSION
                             PsiElement([)('[')
@@ -227,7 +255,8 @@ ERL_FILE
                         PsiElement({)('{')
                         ERL_CONFIG_EXPRESSION
                           ERL_Q_ATOM
-                            PsiElement(atom)('file')
+                            ERL_ATOM
+                              PsiElement(atom_name)('file')
                         PsiElement(,)(',')
                         ERL_BINARY_EXPRESSION
                           PsiElement(<<)('<<')
@@ -240,7 +269,8 @@ ERL_FILE
                         PsiElement({)('{')
                         ERL_CONFIG_EXPRESSION
                           ERL_Q_ATOM
-                            PsiElement(atom)('mimetypes')
+                            ERL_ATOM
+                              PsiElement(atom_name)('mimetypes')
                         PsiElement(,)(',')
                         ERL_LIST_EXPRESSION
                           PsiElement([)('[')
@@ -273,12 +303,16 @@ ERL_FILE
                       PsiElement([)('[')
                       ERL_CONFIG_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)(''...'')
+                          ERL_ATOM
+                            PsiElement(single_quote)(''')
+                            PsiElement(atom_name)('...')
+                            PsiElement(single_quote)(''')
                       PsiElement(])(']')
                     PsiElement(,)(',')
                     ERL_CONFIG_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('cowboy_http_static')
+                        ERL_ATOM
+                          PsiElement(atom_name)('cowboy_http_static')
                     PsiElement(,)(',')
                     ERL_LIST_EXPRESSION
                       PsiElement([)('[')
@@ -286,17 +320,20 @@ ERL_FILE
                         PsiElement({)('{')
                         ERL_CONFIG_EXPRESSION
                           ERL_Q_ATOM
-                            PsiElement(atom)('directory')
+                            ERL_ATOM
+                              PsiElement(atom_name)('directory')
                         PsiElement(,)(',')
                         ERL_TUPLE_EXPRESSION
                           PsiElement({)('{')
                           ERL_CONFIG_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('priv_dir')
+                              ERL_ATOM
+                                PsiElement(atom_name)('priv_dir')
                           PsiElement(,)(',')
                           ERL_CONFIG_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('rtb_coordinator')
+                              ERL_ATOM
+                                PsiElement(atom_name)('rtb_coordinator')
                           PsiElement(,)(',')
                           ERL_LIST_EXPRESSION
                             PsiElement([)('[')
@@ -313,7 +350,8 @@ ERL_FILE
                         PsiElement({)('{')
                         ERL_CONFIG_EXPRESSION
                           ERL_Q_ATOM
-                            PsiElement(atom)('mimetypes')
+                            ERL_ATOM
+                              PsiElement(atom_name)('mimetypes')
                         PsiElement(,)(',')
                         ERL_LIST_EXPRESSION
                           PsiElement([)('[')

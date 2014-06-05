@@ -1,10 +1,11 @@
 ERL_FILE
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
-      PsiElement(atom)('get_int32')
+      ERL_ATOM
+        PsiElement(atom_name)('get_int32')
     ERL_ARGUMENT_DEFINITION_LIST
       PsiElement(()('(')
       ERL_ARGUMENT_DEFINITION
@@ -26,17 +27,20 @@ ERL_FILE
           PsiElement(/)('/')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('signed')
+              ERL_ATOM
+                PsiElement(atom_name)('signed')
         PsiElement(-)('-')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('little')
+            ERL_ATOM
+              PsiElement(atom_name)('little')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('parse')
+        ERL_ATOM
+          PsiElement(atom_name)('parse')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -48,7 +52,8 @@ ERL_FILE
                   ERL_MACROS
                     PsiElement(?)('?')
                     ERL_MACROS_NAME
-                      PsiElement(atom)('get_int32')
+                      ERL_ATOM
+                        PsiElement(atom_name)('get_int32')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
                   ERL_MAX_EXPRESSION
@@ -64,7 +69,8 @@ ERL_FILE
                 PsiElement(/)('/')
                 ERL_BIT_TYPE
                   ERL_Q_ATOM
-                    PsiElement(atom)('bits')
+                    ERL_ATOM
+                      PsiElement(atom_name)('bits')
             PsiElement(>>)('>>')
         PsiElement())(')')
       ERL_CLAUSE_BODY
@@ -72,11 +78,13 @@ ERL_FILE
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
           ERL_MODULE_REF
             ERL_Q_ATOM
-              PsiElement(atom)('io')
+              ERL_ATOM
+                PsiElement(atom_name)('io')
           PsiElement(:)(':')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('format')
+              ERL_ATOM
+                PsiElement(atom_name)('format')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_STRING_LITERAL

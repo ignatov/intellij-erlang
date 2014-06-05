@@ -4,11 +4,13 @@ ERL_FILE
     PsiElement({)('{')
     ERL_CONFIG_EXPRESSION
       ERL_Q_ATOM
-        PsiElement(atom)('application')
+        ERL_ATOM
+          PsiElement(atom_name)('application')
     PsiElement(,)(',')
     ERL_CONFIG_EXPRESSION
       ERL_Q_ATOM
-        PsiElement(atom)('aaa')
+        ERL_ATOM
+          PsiElement(atom_name)('aaa')
     PsiElement(,)(',')
     ERL_LIST_EXPRESSION
       PsiElement([)('[')
@@ -16,7 +18,8 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('description')
+            ERL_ATOM
+              PsiElement(atom_name)('description')
         PsiElement(,)(',')
         ERL_STRING_LITERAL
           PsiElement(string)('""')
@@ -26,7 +29,8 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('vsn')
+            ERL_ATOM
+              PsiElement(atom_name)('vsn')
         PsiElement(,)(',')
         ERL_STRING_LITERAL
           PsiElement(string)('"1"')
@@ -36,7 +40,8 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('registered')
+            ERL_ATOM
+              PsiElement(atom_name)('registered')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
@@ -47,17 +52,20 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('applications')
+            ERL_ATOM
+              PsiElement(atom_name)('applications')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('kernel')
+              ERL_ATOM
+                PsiElement(atom_name)('kernel')
           PsiElement(,)(',')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('stdlib')
+              ERL_ATOM
+                PsiElement(atom_name)('stdlib')
           PsiErrorElement:']' expected, got '}'
             <empty list>
         PsiElement(})('}')
@@ -66,13 +74,15 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('mod')
+            ERL_ATOM
+              PsiElement(atom_name)('mod')
         PsiElement(,)(',')
         ERL_TUPLE_EXPRESSION
           PsiElement({)('{')
           ERL_CONFIG_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('aaa')
+              ERL_ATOM
+                PsiElement(atom_name)('aaa')
           PsiElement(,)(',')
           ERL_LIST_EXPRESSION
             PsiElement([)('[')
@@ -84,7 +94,8 @@ ERL_FILE
         PsiElement({)('{')
         ERL_CONFIG_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('env')
+            ERL_ATOM
+              PsiElement(atom_name)('env')
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')

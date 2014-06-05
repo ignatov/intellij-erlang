@@ -1,7 +1,7 @@
 ERL_FILE
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
       PsiElement(var)('VNODE_REQ')
@@ -11,12 +11,13 @@ ERL_FILE
         PsiElement(#)('#')
         ERL_RECORD_REF
           ERL_Q_ATOM
-            PsiElement(atom)('riak_vnode_req_v1')
+            ERL_ATOM
+              PsiElement(atom_name)('riak_vnode_req_v1')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
       PsiElement(var)('COVERAGE_REQ')
@@ -26,12 +27,13 @@ ERL_FILE
         PsiElement(#)('#')
         ERL_RECORD_REF
           ERL_Q_ATOM
-            PsiElement(atom)('riak_coverage_req_v1')
+            ERL_ATOM
+              PsiElement(atom_name)('riak_coverage_req_v1')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
       PsiElement(var)('FOLD_REQ')
@@ -41,13 +43,15 @@ ERL_FILE
         PsiElement(#)('#')
         ERL_RECORD_REF
           ERL_Q_ATOM
-            PsiElement(atom)('riak_core_fold_req_v1')
+            ERL_ATOM
+              PsiElement(atom_name)('riak_core_fold_req_v1')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('handle_call')
+        ERL_ATOM
+          PsiElement(atom_name)('handle_call')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -55,7 +59,8 @@ ERL_FILE
             PsiElement({)('{')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('return_vnode')
+                ERL_ATOM
+                  PsiElement(atom_name)('return_vnode')
             PsiElement(,)(',')
             ERL_ASSIGNMENT_EXPRESSION
               ERL_MAX_EXPRESSION
@@ -71,7 +76,8 @@ ERL_FILE
                   PsiElement({)('{')
                   ERL_RECORD_FIELD
                     ERL_Q_ATOM
-                      PsiElement(atom)('index')
+                      ERL_ATOM
+                        PsiElement(atom_name)('index')
                     PsiElement(=)('=')
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
@@ -88,7 +94,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('handle_call')
+        ERL_ATOM
+          PsiElement(atom_name)('handle_call')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -96,7 +103,8 @@ ERL_FILE
             PsiElement({)('{')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('return_vnode')
+                ERL_ATOM
+                  PsiElement(atom_name)('return_vnode')
             PsiElement(,)(',')
             ERL_ASSIGNMENT_EXPRESSION
               ERL_MAX_EXPRESSION
@@ -122,7 +130,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('handle_call')
+        ERL_ATOM
+          PsiElement(atom_name)('handle_call')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -130,7 +139,8 @@ ERL_FILE
             PsiElement({)('{')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('return_vnode')
+                ERL_ATOM
+                  PsiElement(atom_name)('return_vnode')
             PsiElement(,)(',')
             ERL_ASSIGNMENT_EXPRESSION
               ERL_MAX_EXPRESSION
@@ -145,7 +155,8 @@ ERL_FILE
                 ERL_RECORD_FIELD
                   PsiElement(.)('.')
                   ERL_Q_ATOM
-                    PsiElement(atom)('index')
+                    ERL_ATOM
+                      PsiElement(atom_name)('index')
             PsiElement(})('}')
         PsiElement())(')')
       ERL_CLAUSE_BODY

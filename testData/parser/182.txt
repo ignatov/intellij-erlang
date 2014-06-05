@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('test')
+        ERL_ATOM
+          PsiElement(atom_name)('test')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -12,12 +13,13 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('AA')
           PsiErrorElement:'ok' unexpected
-            PsiElement(atom)('ok')
+            PsiElement(atom_name)('ok')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('send_bars_backfill')
+        ERL_ATOM
+          PsiElement(atom_name)('send_bars_backfill')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -25,5 +27,6 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
     PsiElement(.)('.')

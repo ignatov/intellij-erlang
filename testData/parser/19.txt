@@ -2,11 +2,12 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
-      PsiElement(atom)('module')
+      PsiElement(atom_name)('module')
       PsiElement(()('(')
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiErrorElement:'-', <function>, <rule> or '?' expected, got '.'
+  PsiErrorElement:'-', <function clause>, <q atom> or '?' expected, got '.'
     PsiElement(ERROR_ELEMENT)('.')

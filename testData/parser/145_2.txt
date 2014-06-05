@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('f')
+        ERL_ATOM
+          PsiElement(atom_name)('f')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -30,11 +31,13 @@ ERL_FILE
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
                         ERL_Q_ATOM
-                          PsiElement(atom)('lists')
+                          ERL_ATOM
+                            PsiElement(atom_name)('lists')
                       PsiElement(:)(':')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('sum')
+                          ERL_ATOM
+                            PsiElement(atom_name)('sum')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
@@ -44,7 +47,8 @@ ERL_FILE
                     PsiElement(/)('/')
                     ERL_FUNCTION_CALL_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('length')
+                        ERL_ATOM
+                          PsiElement(atom_name)('length')
                       ERL_ARGUMENT_LIST
                         PsiElement(()('(')
                         ERL_MAX_EXPRESSION

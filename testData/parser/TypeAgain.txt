@@ -2,11 +2,12 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
-      PsiElement(atom)('spec')
+      PsiElement(atom_name)('spec')
       ERL_FUN_TYPE_SIGS
         ERL_SPEC_FUN
           ERL_Q_ATOM
-            PsiElement(atom)('get_value')
+            ERL_ATOM
+              PsiElement(atom_name)('get_value')
         ERL_TYPE_SIG
           ERL_FUN_TYPE
             ERL_FUN_TYPE_ARGUMENTS
@@ -27,7 +28,8 @@ ERL_FILE
                 ERL_TYPE
                   ERL_TYPE_REF
                     ERL_Q_ATOM
-                      PsiElement(atom)('term')
+                      ERL_ATOM
+                        PsiElement(atom_name)('term')
                   PsiElement(()('(')
                   PsiElement())(')')
           ERL_TYPE_SIG_GUARD
@@ -40,7 +42,8 @@ ERL_FILE
                 ERL_TYPE
                   ERL_TYPE_REF
                     ERL_Q_ATOM
-                      PsiElement(atom)('term')
+                      ERL_ATOM
+                        PsiElement(atom_name)('term')
                   PsiElement(()('(')
                   PsiElement())(')')
             PsiElement(,)(',')
@@ -60,7 +63,8 @@ ERL_FILE
                         ERL_TYPE
                           ERL_TYPE_REF
                             ERL_Q_ATOM
-                              PsiElement(atom)('term')
+                              ERL_ATOM
+                                PsiElement(atom_name)('term')
                           PsiElement(()('(')
                           PsiElement())(')')
                       PsiElement(])(']')

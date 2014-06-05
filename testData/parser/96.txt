@@ -2,11 +2,12 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
-      PsiElement(atom)('spec')
+      PsiElement(atom_name)('spec')
       ERL_FUN_TYPE_SIGS
         ERL_SPEC_FUN
           ERL_Q_ATOM
-            PsiElement(atom)('get_all_env')
+            ERL_ATOM
+              PsiElement(atom_name)('get_all_env')
         ERL_TYPE_SIG
           ERL_FUN_TYPE
             ERL_FUN_TYPE_ARGUMENTS
@@ -29,7 +30,8 @@ ERL_FILE
                           ERL_TYPE
                             ERL_TYPE_REF
                               ERL_Q_ATOM
-                                PsiElement(atom)('atom')
+                                ERL_ATOM
+                                  PsiElement(atom_name)('atom')
                             PsiElement(()('(')
                             PsiElement())(')')
                         PsiElement(,)(',')
@@ -37,7 +39,8 @@ ERL_FILE
                           ERL_TYPE
                             ERL_TYPE_REF
                               ERL_Q_ATOM
-                                PsiElement(atom)('any')
+                                ERL_ATOM
+                                  PsiElement(atom_name)('any')
                             PsiElement(()('(')
                             PsiElement())(')')
                         PsiElement(})('}')
@@ -46,7 +49,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('get_all_env')
+        ERL_ATOM
+          PsiElement(atom_name)('get_all_env')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')

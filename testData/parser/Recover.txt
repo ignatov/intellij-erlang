@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -10,14 +11,16 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
         PsiElement(,)(',')
-        PsiErrorElement:'#', '+', '-', <<, <expression>, <module ref>, <q atom>, <q var>, '[', atom, begin, bnot, case, catch, char, float, fun, if, integer, not, receive, string, try or '{' expected, got 'bar'
+        PsiErrorElement:'#', '+', '-', <<, <atom>, <expression>, <q var>, '[', atom_name, begin, bnot, case, catch, char, float, fun, if, integer, not, receive, string, try or '{' expected, got 'bar'
           <empty list>
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('bar')
+        ERL_ATOM
+          PsiElement(atom_name)('bar')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -25,5 +28,6 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
     PsiElement(.)('.')

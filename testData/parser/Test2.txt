@@ -10,6 +10,7 @@ ERL_FILE
         PsiElement(()('(')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('h264_aac_1_flv_test_2')
+            ERL_ATOM
+              PsiElement(atom_name)('h264_aac_1_flv_test_2')
         PsiElement())(')')
     PsiElement(.)('.')

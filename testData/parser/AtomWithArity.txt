@@ -3,20 +3,23 @@ ERL_FILE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
       ERL_Q_ATOM
-        PsiElement(atom)('attr')
+        ERL_ATOM
+          PsiElement(atom_name)('attr')
       ERL_ATTR_VAL
         PsiElement(()('(')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
           ERL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('x')
+              ERL_ATOM
+                PsiElement(atom_name)('x')
             PsiElement(/)('/')
             PsiElement(integer)('2')
           PsiElement(,)(',')
           ERL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('y')
+              ERL_ATOM
+                PsiElement(atom_name)('y')
             PsiElement(/)('/')
             PsiElement(integer)('0')
           PsiElement(])(']')

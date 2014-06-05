@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -13,7 +14,8 @@ ERL_FILE
           ERL_TRY_EXPRESSIONS_CLAUSE
             ERL_FUNCTION_CALL_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('test')
+                ERL_ATOM
+                  PsiElement(atom_name)('test')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
                 PsiElement())(')')
@@ -24,18 +26,21 @@ ERL_FILE
                 ERL_ARGUMENT_DEFINITION
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('ok')
+                      ERL_ATOM
+                        PsiElement(atom_name)('ok')
                 ERL_CLAUSE_BODY
                   PsiElement(->)('->')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('ok')
+                      ERL_ATOM
+                        PsiElement(atom_name)('ok')
           PsiErrorElement:';', after or end expected, got 'bar'
             <empty list>
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('bar')
+        ERL_ATOM
+          PsiElement(atom_name)('bar')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -43,5 +48,6 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('ok')
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
     PsiElement(.)('.')

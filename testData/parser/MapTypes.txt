@@ -1,9 +1,10 @@
 ERL_FILE
   ERL_TYPE_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('type')
+    PsiElement(atom_name)('type')
     ERL_Q_ATOM
-      PsiElement(atom)('map1')
+      ERL_ATOM
+        PsiElement(atom_name)('map1')
     ERL_ARGUMENT_DEFINITION_LIST
       PsiElement(()('(')
       PsiElement())(')')
@@ -17,7 +18,8 @@ ERL_FILE
             ERL_TYPE
               ERL_TYPE_REF
                 ERL_Q_ATOM
-                  PsiElement(atom)('binary')
+                  ERL_ATOM
+                    PsiElement(atom_name)('binary')
               PsiElement(()('(')
               PsiElement())(')')
           PsiElement(=>)('=>')
@@ -25,16 +27,18 @@ ERL_FILE
             ERL_TYPE
               ERL_TYPE_REF
                 ERL_Q_ATOM
-                  PsiElement(atom)('integer')
+                  ERL_ATOM
+                    PsiElement(atom_name)('integer')
               PsiElement(()('(')
               PsiElement())(')')
         PsiElement(})('}')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('type')
+    PsiElement(atom_name)('type')
     ERL_Q_ATOM
-      PsiElement(atom)('map2')
+      ERL_ATOM
+        PsiElement(atom_name)('map2')
     ERL_ARGUMENT_DEFINITION_LIST
       PsiElement(()('(')
       PsiElement())(')')
@@ -49,12 +53,14 @@ ERL_FILE
               ERL_TYPE
                 ERL_TYPE_REF
                   ERL_Q_ATOM
-                    PsiElement(atom)('one')
+                    ERL_ATOM
+                      PsiElement(atom_name)('one')
               PsiElement(|)('|')
               ERL_TYPE
                 ERL_TYPE_REF
                   ERL_Q_ATOM
-                    PsiElement(atom)('two')
+                    ERL_ATOM
+                      PsiElement(atom_name)('two')
           PsiElement(=>)('=>')
           ERL_TOP_TYPE
             ERL_TYPE
@@ -63,7 +69,8 @@ ERL_FILE
                 ERL_TYPE
                   ERL_TYPE_REF
                     ERL_Q_ATOM
-                      PsiElement(atom)('number')
+                      ERL_ATOM
+                        PsiElement(atom_name)('number')
                   PsiElement(()('(')
                   PsiElement())(')')
               PsiElement(])(']')
@@ -72,11 +79,12 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
-      PsiElement(atom)('spec')
+      PsiElement(atom_name)('spec')
       ERL_FUN_TYPE_SIGS
         ERL_SPEC_FUN
           ERL_Q_ATOM
-            PsiElement(atom)('func')
+            ERL_ATOM
+              PsiElement(atom_name)('func')
         ERL_TYPE_SIG
           ERL_FUN_TYPE
             ERL_FUN_TYPE_ARGUMENTS
@@ -102,7 +110,10 @@ ERL_FILE
                       ERL_TYPE
                         ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)(''status'')
+                            ERL_ATOM
+                              PsiElement(single_quote)(''')
+                              PsiElement(atom_name)('status')
+                              PsiElement(single_quote)(''')
                     PsiElement(=>)('=>')
                     ERL_TOP_TYPE
                       ERL_TYPE
@@ -114,13 +125,17 @@ ERL_FILE
                       ERL_TYPE
                         ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)(''c'')
+                            ERL_ATOM
+                              PsiElement(single_quote)(''')
+                              PsiElement(atom_name)('c')
+                              PsiElement(single_quote)(''')
                     PsiElement(=>)('=>')
                     ERL_TOP_TYPE
                       ERL_TYPE
                         ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)('integer')
+                            ERL_ATOM
+                              PsiElement(atom_name)('integer')
                         PsiElement(()('(')
                         PsiElement())(')')
                   PsiElement(})('}')
@@ -135,12 +150,18 @@ ERL_FILE
                   ERL_TYPE
                     ERL_TYPE_REF
                       ERL_Q_ATOM
-                        PsiElement(atom)(''inc'')
+                        ERL_ATOM
+                          PsiElement(single_quote)(''')
+                          PsiElement(atom_name)('inc')
+                          PsiElement(single_quote)(''')
                   PsiElement(|)('|')
                   ERL_TYPE
                     ERL_TYPE_REF
                       ERL_Q_ATOM
-                        PsiElement(atom)(''dec'')
+                        ERL_ATOM
+                          PsiElement(single_quote)(''')
+                          PsiElement(atom_name)('dec')
+                          PsiElement(single_quote)(''')
             PsiElement(,)(',')
             ERL_TYPE_GUARD
               ERL_TOP_TYPE
@@ -155,7 +176,10 @@ ERL_FILE
                       ERL_TYPE
                         ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)(''status'')
+                            ERL_ATOM
+                              PsiElement(single_quote)(''')
+                              PsiElement(atom_name)('status')
+                              PsiElement(single_quote)(''')
                     PsiElement(=>)('=>')
                     ERL_TOP_TYPE
                       ERL_TYPE
@@ -167,13 +191,17 @@ ERL_FILE
                       ERL_TYPE
                         ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)(''c'')
+                            ERL_ATOM
+                              PsiElement(single_quote)(''')
+                              PsiElement(atom_name)('c')
+                              PsiElement(single_quote)(''')
                     PsiElement(=>)('=>')
                     ERL_TOP_TYPE
                       ERL_TYPE
                         ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)('integer')
+                            ERL_ATOM
+                              PsiElement(atom_name)('integer')
                         PsiElement(()('(')
                         PsiElement())(')')
                   PsiElement(})('}')
@@ -187,23 +215,31 @@ ERL_FILE
                   ERL_TYPE
                     ERL_TYPE_REF
                       ERL_Q_ATOM
-                        PsiElement(atom)(''update'')
+                        ERL_ATOM
+                          PsiElement(single_quote)(''')
+                          PsiElement(atom_name)('update')
+                          PsiElement(single_quote)(''')
                   PsiElement(|)('|')
                   ERL_TYPE
                     ERL_TYPE_REF
                       ERL_Q_ATOM
-                        PsiElement(atom)(''keep'')
+                        ERL_ATOM
+                          PsiElement(single_quote)(''')
+                          PsiElement(atom_name)('keep')
+                          PsiElement(single_quote)(''')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('func')
+        ERL_ATOM
+          PsiElement(atom_name)('func')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('inc')
+              ERL_ATOM
+                PsiElement(atom_name)('inc')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
           ERL_ASSIGNMENT_EXPRESSION
@@ -214,16 +250,19 @@ ERL_FILE
                 ERL_MAP_ENTRY
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('status')
+                      ERL_ATOM
+                        PsiElement(atom_name)('status')
                   PsiElement(:=)(':=')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('update')
+                      ERL_ATOM
+                        PsiElement(atom_name)('update')
                 PsiElement(,)(',')
                 ERL_MAP_ENTRY
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('c')
+                      ERL_ATOM
+                        PsiElement(atom_name)('c')
                   PsiElement(:=)(':=')
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
@@ -246,7 +285,8 @@ ERL_FILE
             ERL_MAP_ENTRY
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('c')
+                  ERL_ATOM
+                    PsiElement(atom_name)('c')
               PsiElement(:=)(':=')
               ERL_ADDITIVE_EXPRESSION
                 ERL_MAX_EXPRESSION
@@ -259,13 +299,15 @@ ERL_FILE
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('func')
+        ERL_ATOM
+          PsiElement(atom_name)('func')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('dec')
+              ERL_ATOM
+                PsiElement(atom_name)('dec')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
           ERL_ASSIGNMENT_EXPRESSION
@@ -276,16 +318,19 @@ ERL_FILE
                 ERL_MAP_ENTRY
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('status')
+                      ERL_ATOM
+                        PsiElement(atom_name)('status')
                   PsiElement(:=)(':=')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('update')
+                      ERL_ATOM
+                        PsiElement(atom_name)('update')
                 PsiElement(,)(',')
                 ERL_MAP_ENTRY
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('c')
+                      ERL_ATOM
+                        PsiElement(atom_name)('c')
                   PsiElement(:=)(':=')
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
@@ -308,7 +353,8 @@ ERL_FILE
             ERL_MAP_ENTRY
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('c')
+                  ERL_ATOM
+                    PsiElement(atom_name)('c')
               PsiElement(:=)(':=')
               ERL_ADDITIVE_EXPRESSION
                 ERL_MAX_EXPRESSION
@@ -321,7 +367,8 @@ ERL_FILE
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('func')
+        ERL_ATOM
+          PsiElement(atom_name)('func')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -338,11 +385,13 @@ ERL_FILE
                 ERL_MAP_ENTRY
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('status')
+                      ERL_ATOM
+                        PsiElement(atom_name)('status')
                   PsiElement(:=)(':=')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('keep')
+                      ERL_ATOM
+                        PsiElement(atom_name)('keep')
                 PsiElement(})('}')
             PsiElement(=)('=')
             ERL_MAX_EXPRESSION
@@ -358,11 +407,12 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_SPECIFICATION
-      PsiElement(atom)('spec')
+      PsiElement(atom_name)('spec')
       ERL_FUN_TYPE_SIGS
         ERL_SPEC_FUN
           ERL_Q_ATOM
-            PsiElement(atom)('plist_to_map')
+            ERL_ATOM
+              PsiElement(atom_name)('plist_to_map')
         ERL_TYPE_SIG
           ERL_FUN_TYPE
             ERL_FUN_TYPE_ARGUMENTS
@@ -383,7 +433,8 @@ ERL_FILE
                       ERL_TYPE
                         ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)('binary')
+                            ERL_ATOM
+                              PsiElement(atom_name)('binary')
                         PsiElement(()('(')
                         PsiElement())(')')
                     PsiElement(=>)('=>')
@@ -391,7 +442,8 @@ ERL_FILE
                       ERL_TYPE
                         ERL_TYPE_REF
                           ERL_Q_ATOM
-                            PsiElement(atom)('integer')
+                            ERL_ATOM
+                              PsiElement(atom_name)('integer')
                         PsiElement(()('(')
                         PsiElement())(')')
                   PsiElement(})('}')
@@ -411,7 +463,8 @@ ERL_FILE
                         ERL_TYPE
                           ERL_TYPE_REF
                             ERL_Q_ATOM
-                              PsiElement(atom)('binary')
+                              ERL_ATOM
+                                PsiElement(atom_name)('binary')
                           PsiElement(()('(')
                           PsiElement())(')')
                       PsiElement(,)(',')
@@ -419,7 +472,8 @@ ERL_FILE
                         ERL_TYPE
                           ERL_TYPE_REF
                             ERL_Q_ATOM
-                              PsiElement(atom)('integer')
+                              ERL_ATOM
+                                PsiElement(atom_name)('integer')
                           PsiElement(()('(')
                           PsiElement())(')')
                       PsiElement(})('}')
@@ -428,7 +482,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('plist_to_map')
+        ERL_ATOM
+          PsiElement(atom_name)('plist_to_map')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -440,7 +495,8 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('plist_to_map')
+            ERL_ATOM
+              PsiElement(atom_name)('plist_to_map')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             ERL_MAX_EXPRESSION
@@ -457,7 +513,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('plist_to_map')
+        ERL_ATOM
+          PsiElement(atom_name)('plist_to_map')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -478,7 +535,8 @@ ERL_FILE
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('plist_to_map')
+        ERL_ATOM
+          PsiElement(atom_name)('plist_to_map')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -510,7 +568,8 @@ ERL_FILE
         ERL_GUARD
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('is_binary')
+              ERL_ATOM
+                PsiElement(atom_name)('is_binary')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
@@ -520,7 +579,8 @@ ERL_FILE
           PsiElement(,)(',')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('is_integer')
+              ERL_ATOM
+                PsiElement(atom_name)('is_integer')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
@@ -531,7 +591,8 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('plist_to_map')
+            ERL_ATOM
+              PsiElement(atom_name)('plist_to_map')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             ERL_MAX_EXPRESSION
@@ -548,7 +609,8 @@ ERL_FILE
                 ERL_MAP_ENTRY
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('a')
+                      ERL_ATOM
+                        PsiElement(atom_name)('a')
                   PsiElement(=>)('=>')
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
@@ -558,7 +620,8 @@ ERL_FILE
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('plist_to_map')
+        ERL_ATOM
+          PsiElement(atom_name)('plist_to_map')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -582,7 +645,8 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('plist_to_map')
+            ERL_ATOM
+              PsiElement(atom_name)('plist_to_map')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             ERL_MAX_EXPRESSION

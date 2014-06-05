@@ -1,31 +1,36 @@
 ERL_FILE
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('record')
+    PsiElement(atom_name)('record')
     PsiElement(()('(')
     ERL_Q_ATOM
-      PsiElement(atom)('rec')
+      ERL_ATOM
+        PsiElement(atom_name)('rec')
     PsiElement(,)(',')
     ERL_TYPED_RECORD_FIELDS
       PsiElement({)('{')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('a')
+          ERL_ATOM
+            PsiElement(atom_name)('a')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('b')
+          ERL_ATOM
+            PsiElement(atom_name)('b')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('c')
+          ERL_ATOM
+            PsiElement(atom_name)('c')
       PsiElement(})('}')
     PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('f')
+        ERL_ATOM
+          PsiElement(atom_name)('f')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -40,12 +45,14 @@ ERL_FILE
             PsiElement(#)('#')
             ERL_RECORD_REF
               ERL_Q_ATOM
-                PsiElement(atom)('rec')
+                ERL_ATOM
+                  PsiElement(atom_name)('rec')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELD
                 ERL_Q_ATOM
-                  PsiElement(atom)('a')
+                  ERL_ATOM
+                    PsiElement(atom_name)('a')
                 PsiElement(=)('=')
                 ERL_MAX_EXPRESSION
                   PsiElement(integer)('1')
@@ -55,15 +62,20 @@ ERL_FILE
                 PsiElement(=)('=')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)(''abc'')
+                    ERL_ATOM
+                      PsiElement(single_quote)(''')
+                      PsiElement(atom_name)('abc')
+                      PsiElement(single_quote)(''')
               PsiElement(,)(',')
               ERL_RECORD_FIELD
                 ERL_Q_ATOM
-                  PsiElement(atom)('c')
+                  ERL_ATOM
+                    PsiElement(atom_name)('c')
                 PsiElement(=)('=')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)('abs')
+                    ERL_ATOM
+                      PsiElement(atom_name)('abs')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
                     PsiElement())(')')

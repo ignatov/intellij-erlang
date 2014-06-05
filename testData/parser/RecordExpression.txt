@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('slow_media')
+        ERL_ATOM
+          PsiElement(atom_name)('slow_media')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -12,17 +13,21 @@ ERL_FILE
           PsiElement(#)('#')
           ERL_RECORD_REF
             ERL_Q_ATOM
-              PsiElement(atom)('erlyvideo_event')
+              ERL_ATOM
+                PsiElement(atom_name)('erlyvideo_event')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             ERL_RECORD_FIELD
               ERL_Q_ATOM
-                PsiElement(atom)('event')
+                ERL_ATOM
+                  PsiElement(atom_name)('event')
               PsiElement(=)('=')
               ERL_Q_ATOM
-                PsiElement(atom)('stream')
+                ERL_ATOM
+                  PsiElement(atom_name)('stream')
               PsiElement(.)('.')
               ERL_Q_ATOM
-                PsiElement(atom)('slow_media')
+                ERL_ATOM
+                  PsiElement(atom_name)('slow_media')
             PsiElement(})('}')
     PsiElement(.)('.')

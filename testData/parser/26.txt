@@ -1,16 +1,18 @@
 ERL_FILE
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('record')
+    PsiElement(atom_name)('record')
     PsiElement(()('(')
     ERL_Q_ATOM
-      PsiElement(atom)('nrec0')
+      ERL_ATOM
+        PsiElement(atom_name)('nrec0')
     PsiElement(,)(',')
     ERL_TYPED_RECORD_FIELDS
       PsiElement({)('{')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('name')
+          ERL_ATOM
+            PsiElement(atom_name)('name')
         PsiElement(=)('=')
         ERL_STRING_LITERAL
           PsiElement(string)('"nested0"')
@@ -19,29 +21,33 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('record')
+    PsiElement(atom_name)('record')
     PsiElement(()('(')
     ERL_Q_ATOM
-      PsiElement(atom)('nrec1')
+      ERL_ATOM
+        PsiElement(atom_name)('nrec1')
     PsiElement(,)(',')
     ERL_TYPED_RECORD_FIELDS
       PsiElement({)('{')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('name')
+          ERL_ATOM
+            PsiElement(atom_name)('name')
         PsiElement(=)('=')
         ERL_STRING_LITERAL
           PsiElement(string)('"nested1"')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('nrec0')
+          ERL_ATOM
+            PsiElement(atom_name)('nrec0')
         PsiElement(=)('=')
         ERL_RECORD_EXPRESSION
           PsiElement(#)('#')
           ERL_RECORD_REF
             ERL_Q_ATOM
-              PsiElement(atom)('nrec0')
+              ERL_ATOM
+                PsiElement(atom_name)('nrec0')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             PsiElement(})('}')
@@ -50,29 +56,33 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_RECORD_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('record')
+    PsiElement(atom_name)('record')
     PsiElement(()('(')
     ERL_Q_ATOM
-      PsiElement(atom)('nrec2')
+      ERL_ATOM
+        PsiElement(atom_name)('nrec2')
     PsiElement(,)(',')
     ERL_TYPED_RECORD_FIELDS
       PsiElement({)('{')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('name')
+          ERL_ATOM
+            PsiElement(atom_name)('name')
         PsiElement(=)('=')
         ERL_STRING_LITERAL
           PsiElement(string)('"nested2"')
       PsiElement(,)(',')
       ERL_TYPED_EXPR
         ERL_Q_ATOM
-          PsiElement(atom)('nrec1')
+          ERL_ATOM
+            PsiElement(atom_name)('nrec1')
         PsiElement(=)('=')
         ERL_RECORD_EXPRESSION
           PsiElement(#)('#')
           ERL_RECORD_REF
             ERL_Q_ATOM
-              PsiElement(atom)('nrec1')
+              ERL_ATOM
+                PsiElement(atom_name)('nrec1')
           ERL_RECORD_TUPLE
             PsiElement({)('{')
             PsiElement(})('}')
@@ -82,7 +92,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('f')
+        ERL_ATOM
+          PsiElement(atom_name)('f')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -97,7 +108,8 @@ ERL_FILE
             PsiElement(#)('#')
             ERL_RECORD_REF
               ERL_Q_ATOM
-                PsiElement(atom)('nrec2')
+                ERL_ATOM
+                  PsiElement(atom_name)('nrec2')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               PsiElement(})('}')
@@ -115,27 +127,33 @@ ERL_FILE
                 PsiElement(#)('#')
                 ERL_RECORD_REF
                   ERL_Q_ATOM
-                    PsiElement(atom)('nrec2')
+                    ERL_ATOM
+                      PsiElement(atom_name)('nrec2')
                 ERL_RECORD_FIELD
                   PsiElement(.)('.')
                   ERL_Q_ATOM
-                    PsiElement(atom)('nrec1')
+                    ERL_ATOM
+                      PsiElement(atom_name)('nrec1')
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
-                  PsiElement(atom)('nrec1')
+                  ERL_ATOM
+                    PsiElement(atom_name)('nrec1')
               ERL_RECORD_FIELD
                 PsiElement(.)('.')
                 ERL_Q_ATOM
-                  PsiElement(atom)('nrec0')
+                  ERL_ATOM
+                    PsiElement(atom_name)('nrec0')
             PsiElement(#)('#')
             ERL_RECORD_REF
               ERL_Q_ATOM
-                PsiElement(atom)('nrec0')
+                ERL_ATOM
+                  PsiElement(atom_name)('nrec0')
             ERL_RECORD_FIELD
               PsiElement(.)('.')
               ERL_Q_ATOM
-                PsiElement(atom)('name')
+                ERL_ATOM
+                  PsiElement(atom_name)('name')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
@@ -151,28 +169,34 @@ ERL_FILE
                 PsiElement(#)('#')
                 ERL_RECORD_REF
                   ERL_Q_ATOM
-                    PsiElement(atom)('nrec2')
+                    ERL_ATOM
+                      PsiElement(atom_name)('nrec2')
                 ERL_RECORD_FIELD
                   PsiElement(.)('.')
                   ERL_Q_ATOM
-                    PsiElement(atom)('nrec1')
+                    ERL_ATOM
+                      PsiElement(atom_name)('nrec1')
               PsiElement(#)('#')
               ERL_RECORD_REF
                 ERL_Q_ATOM
-                  PsiElement(atom)('nrec1')
+                  ERL_ATOM
+                    PsiElement(atom_name)('nrec1')
               ERL_RECORD_FIELD
                 PsiElement(.)('.')
                 ERL_Q_ATOM
-                  PsiElement(atom)('nrec0')
+                  ERL_ATOM
+                    PsiElement(atom_name)('nrec0')
             PsiElement(#)('#')
             ERL_RECORD_REF
               ERL_Q_ATOM
-                PsiElement(atom)('nrec0')
+                ERL_ATOM
+                  PsiElement(atom_name)('nrec0')
             ERL_RECORD_TUPLE
               PsiElement({)('{')
               ERL_RECORD_FIELD
                 ERL_Q_ATOM
-                  PsiElement(atom)('name')
+                  ERL_ATOM
+                    PsiElement(atom_name)('name')
                 PsiElement(=)('=')
                 ERL_STRING_LITERAL
                   PsiElement(string)('"nested0a"')

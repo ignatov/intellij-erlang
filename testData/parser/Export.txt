@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('set_master_nodes')
+        ERL_ATOM
+          PsiElement(atom_name)('set_master_nodes')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -15,7 +16,8 @@ ERL_FILE
         ERL_GUARD
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('is_list')
+              ERL_ATOM
+                PsiElement(atom_name)('is_list')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
@@ -31,12 +33,14 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('system_info')
+              ERL_ATOM
+                PsiElement(atom_name)('system_info')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('use_dir')
+                  ERL_ATOM
+                    PsiElement(atom_name)('use_dir')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
@@ -46,12 +50,14 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('system_info')
+              ERL_ATOM
+                PsiElement(atom_name)('system_info')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('is_running')
+                  ERL_ATOM
+                    PsiElement(atom_name)('is_running')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_CASE_EXPRESSION
@@ -64,7 +70,8 @@ ERL_FILE
             ERL_ARGUMENT_DEFINITION
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('yes')
+                  ERL_ATOM
+                    PsiElement(atom_name)('yes')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_ASSIGNMENT_EXPRESSION
@@ -78,16 +85,23 @@ ERL_FILE
                     PsiElement({)('{')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)(''_'')
+                        ERL_ATOM
+                          PsiElement(single_quote)(''')
+                          PsiElement(atom_name)('_')
+                          PsiElement(single_quote)(''')
                     PsiElement(,)(',')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('cstruct')
+                        ERL_ATOM
+                          PsiElement(atom_name)('cstruct')
                     PsiElement(})('}')
                   PsiElement(,)(',')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)(''_'')
+                      ERL_ATOM
+                        PsiElement(single_quote)(''')
+                        PsiElement(atom_name)('_')
+                        PsiElement(single_quote)(''')
                   PsiElement(})('}')
               PsiElement(,)(',')
               ERL_ASSIGNMENT_EXPRESSION
@@ -100,12 +114,14 @@ ERL_FILE
                     ERL_MACROS
                       PsiElement(?)('?')
                       ERL_MACROS_NAME
-                        PsiElement(atom)('ets_match_object')
+                        ERL_ATOM
+                          PsiElement(atom_name)('ets_match_object')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('mnesia_gvar')
+                        ERL_ATOM
+                          PsiElement(atom_name)('mnesia_gvar')
                     PsiElement(,)(',')
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
@@ -144,7 +160,8 @@ ERL_FILE
               PsiElement(,)(',')
               ERL_FUNCTION_CALL_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('log_valid_master_nodes')
+                  ERL_ATOM
+                    PsiElement(atom_name)('log_valid_master_nodes')
                 ERL_ARGUMENT_LIST
                   PsiElement(()('(')
                   ERL_MAX_EXPRESSION
@@ -181,22 +198,26 @@ ERL_FILE
                   ERL_ARGUMENT_DEFINITION
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('true')
+                        ERL_ATOM
+                          PsiElement(atom_name)('true')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
                         ERL_Q_ATOM
-                          PsiElement(atom)('mnesia_lib')
+                          ERL_ATOM
+                            PsiElement(atom_name)('mnesia_lib')
                       PsiElement(:)(':')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('lock_table')
+                          ERL_ATOM
+                            PsiElement(atom_name)('lock_table')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('schema')
+                              ERL_ATOM
+                                PsiElement(atom_name)('schema')
                           PsiElement())(')')
                     PsiElement(,)(',')
                     ERL_ASSIGNMENT_EXPRESSION
@@ -209,11 +230,13 @@ ERL_FILE
                         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                           ERL_MODULE_REF
                             ERL_Q_ATOM
-                              PsiElement(atom)('mnesia_schema')
+                              ERL_ATOM
+                                PsiElement(atom_name)('mnesia_schema')
                           PsiElement(:)(':')
                           ERL_FUNCTION_CALL_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('read_cstructs_from_disc')
+                              ERL_ATOM
+                                PsiElement(atom_name)('read_cstructs_from_disc')
                             ERL_ARGUMENT_LIST
                               PsiElement(()('(')
                               PsiElement())(')')
@@ -224,7 +247,8 @@ ERL_FILE
                               PsiElement({)('{')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('ok')
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('ok')
                               PsiElement(,)(',')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
@@ -234,7 +258,8 @@ ERL_FILE
                             PsiElement(->)('->')
                             ERL_FUNCTION_CALL_EXPRESSION
                               ERL_Q_ATOM
-                                PsiElement(atom)('log_valid_master_nodes')
+                                ERL_ATOM
+                                  PsiElement(atom_name)('log_valid_master_nodes')
                               ERL_ARGUMENT_LIST
                                 PsiElement(()('(')
                                 ERL_MAX_EXPRESSION
@@ -260,7 +285,8 @@ ERL_FILE
                               PsiElement({)('{')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('error')
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('error')
                               PsiElement(,)(',')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
@@ -272,7 +298,8 @@ ERL_FILE
                               PsiElement({)('{')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('error')
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('error')
                               PsiElement(,)(',')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
@@ -283,16 +310,19 @@ ERL_FILE
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
                         ERL_Q_ATOM
-                          PsiElement(atom)('mnesia_lib')
+                          ERL_ATOM
+                            PsiElement(atom_name)('mnesia_lib')
                       PsiElement(:)(':')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('unlock_table')
+                          ERL_ATOM
+                            PsiElement(atom_name)('unlock_table')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('schema')
+                              ERL_ATOM
+                                PsiElement(atom_name)('schema')
                           PsiElement())(')')
                     PsiElement(,)(',')
                     ERL_MAX_EXPRESSION
@@ -303,18 +333,21 @@ ERL_FILE
                   ERL_ARGUMENT_DEFINITION
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('false')
+                        ERL_ATOM
+                          PsiElement(atom_name)('false')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('ok')
+                        ERL_ATOM
+                          PsiElement(atom_name)('ok')
                 PsiElement(end)('end')
           PsiElement(end)('end')
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('set_master_nodes')
+        ERL_ATOM
+          PsiElement(atom_name)('set_master_nodes')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -328,13 +361,15 @@ ERL_FILE
           PsiElement({)('{')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('error')
+              ERL_ATOM
+                PsiElement(atom_name)('error')
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('bad_type')
+                ERL_ATOM
+                  PsiElement(atom_name)('bad_type')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_VAR
@@ -345,7 +380,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('log_valid_master_nodes')
+        ERL_ATOM
+          PsiElement(atom_name)('log_valid_master_nodes')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -396,11 +432,13 @@ ERL_FILE
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
                         ERL_Q_ATOM
-                          PsiElement(atom)('mnesia_lib')
+                          ERL_ATOM
+                            PsiElement(atom_name)('mnesia_lib')
                       PsiElement(:)(':')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('copy_holders')
+                          ERL_ATOM
+                            PsiElement(atom_name)('copy_holders')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
@@ -416,11 +454,13 @@ ERL_FILE
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
                         ERL_Q_ATOM
-                          PsiElement(atom)('mnesia_lib')
+                          ERL_ATOM
+                            PsiElement(atom_name)('mnesia_lib')
                       PsiElement(:)(':')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('intersect')
+                          ERL_ATOM
+                            PsiElement(atom_name)('intersect')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
@@ -441,11 +481,13 @@ ERL_FILE
                       PsiElement(#)('#')
                       ERL_RECORD_REF
                         ERL_Q_ATOM
-                          PsiElement(atom)('cstruct')
+                          ERL_ATOM
+                            PsiElement(atom_name)('cstruct')
                       ERL_RECORD_FIELD
                         PsiElement(.)('.')
                         ERL_Q_ATOM
-                          PsiElement(atom)('name')
+                          ERL_ATOM
+                            PsiElement(atom_name)('name')
                     PsiElement(,)(',')
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
@@ -461,11 +503,13 @@ ERL_FILE
           ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
             ERL_MODULE_REF
               ERL_Q_ATOM
-                PsiElement(atom)('lists')
+                ERL_ATOM
+                  PsiElement(atom_name)('lists')
             PsiElement(:)(':')
             ERL_FUNCTION_CALL_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('map')
+                ERL_ATOM
+                  PsiElement(atom_name)('map')
               ERL_ARGUMENT_LIST
                 PsiElement(()('(')
                 ERL_MAX_EXPRESSION
@@ -480,11 +524,13 @@ ERL_FILE
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
           ERL_MODULE_REF
             ERL_Q_ATOM
-              PsiElement(atom)('mnesia_recover')
+              ERL_ATOM
+                PsiElement(atom_name)('mnesia_recover')
           PsiElement(:)(':')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('log_master_nodes')
+              ERL_ATOM
+                PsiElement(atom_name)('log_master_nodes')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
@@ -503,7 +549,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('set_master_nodes')
+        ERL_ATOM
+          PsiElement(atom_name)('set_master_nodes')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -521,7 +568,8 @@ ERL_FILE
         ERL_GUARD
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('is_list')
+              ERL_ATOM
+                PsiElement(atom_name)('is_list')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
@@ -537,12 +585,14 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('system_info')
+              ERL_ATOM
+                PsiElement(atom_name)('system_info')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('use_dir')
+                  ERL_ATOM
+                    PsiElement(atom_name)('use_dir')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
@@ -552,12 +602,14 @@ ERL_FILE
           PsiElement(=)('=')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('system_info')
+              ERL_ATOM
+                PsiElement(atom_name)('system_info')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('is_running')
+                  ERL_ATOM
+                    PsiElement(atom_name)('is_running')
               PsiElement())(')')
         PsiElement(,)(',')
         ERL_CASE_EXPRESSION
@@ -570,7 +622,8 @@ ERL_FILE
             ERL_ARGUMENT_DEFINITION
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  PsiElement(atom)('yes')
+                  ERL_ATOM
+                    PsiElement(atom_name)('yes')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_CASE_EXPRESSION
@@ -580,7 +633,8 @@ ERL_FILE
                     ERL_MACROS
                       PsiElement(?)('?')
                       ERL_MACROS_NAME
-                        PsiElement(atom)('catch_val')
+                        ERL_ATOM
+                          PsiElement(atom_name)('catch_val')
                   ERL_ARGUMENT_LIST
                     PsiElement(()('(')
                     ERL_TUPLE_EXPRESSION
@@ -591,7 +645,8 @@ ERL_FILE
                       PsiElement(,)(',')
                       ERL_MAX_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('cstruct')
+                          ERL_ATOM
+                            PsiElement(atom_name)('cstruct')
                       PsiElement(})('}')
                     PsiElement())(')')
                 PsiElement(of)('of')
@@ -601,7 +656,10 @@ ERL_FILE
                       PsiElement({)('{')
                       ERL_MAX_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)(''EXIT'')
+                          ERL_ATOM
+                            PsiElement(single_quote)(''')
+                            PsiElement(atom_name)('EXIT')
+                            PsiElement(single_quote)(''')
                       PsiElement(,)(',')
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
@@ -613,13 +671,15 @@ ERL_FILE
                       PsiElement({)('{')
                       ERL_MAX_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('error')
+                          ERL_ATOM
+                            PsiElement(atom_name)('error')
                       PsiElement(,)(',')
                       ERL_TUPLE_EXPRESSION
                         PsiElement({)('{')
                         ERL_MAX_EXPRESSION
                           ERL_Q_ATOM
-                            PsiElement(atom)('no_exists')
+                            ERL_ATOM
+                              PsiElement(atom_name)('no_exists')
                         PsiElement(,)(',')
                         ERL_MAX_EXPRESSION
                           ERL_Q_VAR
@@ -644,11 +704,13 @@ ERL_FILE
                         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                           ERL_MODULE_REF
                             ERL_Q_ATOM
-                              PsiElement(atom)('mnesia_lib')
+                              ERL_ATOM
+                                PsiElement(atom_name)('mnesia_lib')
                           PsiElement(:)(':')
                           ERL_FUNCTION_CALL_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('copy_holders')
+                              ERL_ATOM
+                                PsiElement(atom_name)('copy_holders')
                             ERL_ARGUMENT_LIST
                               PsiElement(()('(')
                               ERL_MAX_EXPRESSION
@@ -685,11 +747,13 @@ ERL_FILE
                           ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                             ERL_MODULE_REF
                               ERL_Q_ATOM
-                                PsiElement(atom)('mnesia_recover')
+                                ERL_ATOM
+                                  PsiElement(atom_name)('mnesia_recover')
                             PsiElement(:)(':')
                             ERL_FUNCTION_CALL_EXPRESSION
                               ERL_Q_ATOM
-                                PsiElement(atom)('log_master_nodes')
+                                ERL_ATOM
+                                  PsiElement(atom_name)('log_master_nodes')
                               ERL_ARGUMENT_LIST
                                 PsiElement(()('(')
                                 ERL_MAX_EXPRESSION
@@ -716,13 +780,15 @@ ERL_FILE
                             PsiElement({)('{')
                             ERL_MAX_EXPRESSION
                               ERL_Q_ATOM
-                                PsiElement(atom)('error')
+                                ERL_ATOM
+                                  PsiElement(atom_name)('error')
                             PsiElement(,)(',')
                             ERL_TUPLE_EXPRESSION
                               PsiElement({)('{')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('no_exists')
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('no_exists')
                               PsiElement(,)(',')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
@@ -753,22 +819,26 @@ ERL_FILE
                   ERL_ARGUMENT_DEFINITION
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('true')
+                        ERL_ATOM
+                          PsiElement(atom_name)('true')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
                         ERL_Q_ATOM
-                          PsiElement(atom)('mnesia_lib')
+                          ERL_ATOM
+                            PsiElement(atom_name)('mnesia_lib')
                       PsiElement(:)(':')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('lock_table')
+                          ERL_ATOM
+                            PsiElement(atom_name)('lock_table')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('schema')
+                              ERL_ATOM
+                                PsiElement(atom_name)('schema')
                           PsiElement())(')')
                     PsiElement(,)(',')
                     ERL_ASSIGNMENT_EXPRESSION
@@ -781,11 +851,13 @@ ERL_FILE
                         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                           ERL_MODULE_REF
                             ERL_Q_ATOM
-                              PsiElement(atom)('mnesia_schema')
+                              ERL_ATOM
+                                PsiElement(atom_name)('mnesia_schema')
                           PsiElement(:)(':')
                           ERL_FUNCTION_CALL_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('read_cstructs_from_disc')
+                              ERL_ATOM
+                                PsiElement(atom_name)('read_cstructs_from_disc')
                             ERL_ARGUMENT_LIST
                               PsiElement(()('(')
                               PsiElement())(')')
@@ -796,7 +868,8 @@ ERL_FILE
                               PsiElement({)('{')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('ok')
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('ok')
                               PsiElement(,)(',')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
@@ -809,11 +882,13 @@ ERL_FILE
                               ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                                 ERL_MODULE_REF
                                   ERL_Q_ATOM
-                                    PsiElement(atom)('lists')
+                                    ERL_ATOM
+                                      PsiElement(atom_name)('lists')
                                 PsiElement(:)(':')
                                 ERL_FUNCTION_CALL_EXPRESSION
                                   ERL_Q_ATOM
-                                    PsiElement(atom)('keysearch')
+                                    ERL_ATOM
+                                      PsiElement(atom_name)('keysearch')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
                                     ERL_MAX_EXPRESSION
@@ -834,7 +909,8 @@ ERL_FILE
                                     PsiElement({)('{')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_ATOM
-                                        PsiElement(atom)('value')
+                                        ERL_ATOM
+                                          PsiElement(atom_name)('value')
                                     PsiElement(,)(',')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
@@ -852,11 +928,13 @@ ERL_FILE
                                       ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                                         ERL_MODULE_REF
                                           ERL_Q_ATOM
-                                            PsiElement(atom)('mnesia_lib')
+                                            ERL_ATOM
+                                              PsiElement(atom_name)('mnesia_lib')
                                         PsiElement(:)(':')
                                         ERL_FUNCTION_CALL_EXPRESSION
                                           ERL_Q_ATOM
-                                            PsiElement(atom)('copy_holders')
+                                            ERL_ATOM
+                                              PsiElement(atom_name)('copy_holders')
                                           ERL_ARGUMENT_LIST
                                             PsiElement(()('(')
                                             ERL_MAX_EXPRESSION
@@ -893,11 +971,13 @@ ERL_FILE
                                         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                                           ERL_MODULE_REF
                                             ERL_Q_ATOM
-                                              PsiElement(atom)('mnesia_recover')
+                                              ERL_ATOM
+                                                PsiElement(atom_name)('mnesia_recover')
                                           PsiElement(:)(':')
                                           ERL_FUNCTION_CALL_EXPRESSION
                                             ERL_Q_ATOM
-                                              PsiElement(atom)('log_master_nodes')
+                                              ERL_ATOM
+                                                PsiElement(atom_name)('log_master_nodes')
                                             ERL_ARGUMENT_LIST
                                               PsiElement(()('(')
                                               ERL_MAX_EXPRESSION
@@ -924,13 +1004,15 @@ ERL_FILE
                                           PsiElement({)('{')
                                           ERL_MAX_EXPRESSION
                                             ERL_Q_ATOM
-                                              PsiElement(atom)('error')
+                                              ERL_ATOM
+                                                PsiElement(atom_name)('error')
                                           PsiElement(,)(',')
                                           ERL_TUPLE_EXPRESSION
                                             PsiElement({)('{')
                                             ERL_MAX_EXPRESSION
                                               ERL_Q_ATOM
-                                                PsiElement(atom)('no_exists')
+                                                ERL_ATOM
+                                                  PsiElement(atom_name)('no_exists')
                                             PsiElement(,)(',')
                                             ERL_MAX_EXPRESSION
                                               ERL_Q_VAR
@@ -947,20 +1029,23 @@ ERL_FILE
                                 ERL_ARGUMENT_DEFINITION
                                   ERL_MAX_EXPRESSION
                                     ERL_Q_ATOM
-                                      PsiElement(atom)('false')
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('false')
                                 ERL_CLAUSE_BODY
                                   PsiElement(->)('->')
                                   ERL_TUPLE_EXPRESSION
                                     PsiElement({)('{')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_ATOM
-                                        PsiElement(atom)('error')
+                                        ERL_ATOM
+                                          PsiElement(atom_name)('error')
                                     PsiElement(,)(',')
                                     ERL_TUPLE_EXPRESSION
                                       PsiElement({)('{')
                                       ERL_MAX_EXPRESSION
                                         ERL_Q_ATOM
-                                          PsiElement(atom)('no_exists')
+                                          ERL_ATOM
+                                            PsiElement(atom_name)('no_exists')
                                       PsiElement(,)(',')
                                       ERL_MAX_EXPRESSION
                                         ERL_Q_VAR
@@ -975,7 +1060,8 @@ ERL_FILE
                               PsiElement({)('{')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('error')
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('error')
                               PsiElement(,)(',')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
@@ -987,7 +1073,8 @@ ERL_FILE
                               PsiElement({)('{')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_ATOM
-                                  PsiElement(atom)('error')
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('error')
                               PsiElement(,)(',')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
@@ -998,16 +1085,19 @@ ERL_FILE
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
                         ERL_Q_ATOM
-                          PsiElement(atom)('mnesia_lib')
+                          ERL_ATOM
+                            PsiElement(atom_name)('mnesia_lib')
                       PsiElement(:)(':')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
-                          PsiElement(atom)('unlock_table')
+                          ERL_ATOM
+                            PsiElement(atom_name)('unlock_table')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
-                              PsiElement(atom)('schema')
+                              ERL_ATOM
+                                PsiElement(atom_name)('schema')
                           PsiElement())(')')
                     PsiElement(,)(',')
                     ERL_MAX_EXPRESSION
@@ -1018,18 +1108,21 @@ ERL_FILE
                   ERL_ARGUMENT_DEFINITION
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('false')
+                        ERL_ATOM
+                          PsiElement(atom_name)('false')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        PsiElement(atom)('ok')
+                        ERL_ATOM
+                          PsiElement(atom_name)('ok')
                 PsiElement(end)('end')
           PsiElement(end)('end')
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('set_master_nodes')
+        ERL_ATOM
+          PsiElement(atom_name)('set_master_nodes')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -1048,13 +1141,15 @@ ERL_FILE
           PsiElement({)('{')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('error')
+              ERL_ATOM
+                PsiElement(atom_name)('error')
           PsiElement(,)(',')
           ERL_TUPLE_EXPRESSION
             PsiElement({)('{')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                PsiElement(atom)('bad_type')
+                ERL_ATOM
+                  PsiElement(atom_name)('bad_type')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_VAR

@@ -1,7 +1,7 @@
 ERL_FILE
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
-    PsiElement(atom)('define')
+    PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
       PsiElement(var)('S')
@@ -17,11 +17,13 @@ ERL_FILE
       ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
         ERL_MODULE_REF
           ERL_Q_ATOM
-            PsiElement(atom)('erlang')
+            ERL_ATOM
+              PsiElement(atom_name)('erlang')
         PsiElement(:)(':')
         ERL_FUNCTION_CALL_EXPRESSION
           ERL_Q_ATOM
-            PsiElement(atom)('display')
+            ERL_ATOM
+              PsiElement(atom_name)('display')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             ERL_MAX_EXPRESSION

@@ -2,7 +2,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('foo')
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -14,7 +15,8 @@ ERL_FILE
                 ERL_MAP_ENTRY
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      PsiElement(atom)('key')
+                      ERL_ATOM
+                        PsiElement(atom_name)('key')
                   PsiElement(:=)(':=')
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
@@ -35,7 +37,8 @@ ERL_FILE
               ERL_MAP_ENTRY
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    PsiElement(atom)('key')
+                    ERL_ATOM
+                      PsiElement(atom_name)('key')
                 PsiElement(:=)(':=')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR

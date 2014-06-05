@@ -2,34 +2,38 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_MODULE
-      PsiElement(atom)('module')
+      PsiElement(atom_name)('module')
       PsiElement(()('(')
       ERL_Q_ATOM
-        PsiElement(atom)('test')
+        ERL_ATOM
+          PsiElement(atom_name)('test')
       PsiElement())(')')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_EXPORT
-      PsiElement(atom)('export')
+      PsiElement(atom_name)('export')
       PsiElement(()('(')
       ERL_EXPORT_FUNCTIONS
         PsiElement([)('[')
         ERL_EXPORT_FUNCTION
           ERL_Q_ATOM
-            PsiElement(atom)('hello')
+            ERL_ATOM
+              PsiElement(atom_name)('hello')
           PsiElement(/)('/')
           PsiElement(integer)('1')
         PsiElement(,)(',')
         ERL_EXPORT_FUNCTION
           ERL_Q_ATOM
-            PsiElement(atom)('hello_world')
+            ERL_ATOM
+              PsiElement(atom_name)('hello_world')
           PsiElement(/)('/')
           PsiElement(integer)('1')
         PsiElement(,)(',')
         ERL_EXPORT_FUNCTION
           ERL_Q_ATOM
-            PsiElement(atom)('naive_reverse')
+            ERL_ATOM
+              PsiElement(atom_name)('naive_reverse')
           PsiElement(/)('/')
           PsiElement(integer)('1')
         PsiElement(])(']')
@@ -38,7 +42,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('naive_reverse')
+        ERL_ATOM
+          PsiElement(atom_name)('naive_reverse')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -58,7 +63,8 @@ ERL_FILE
         ERL_LIST_OP_EXPRESSION
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('naive_reverse')
+              ERL_ATOM
+                PsiElement(atom_name)('naive_reverse')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_MAX_EXPRESSION
@@ -75,7 +81,8 @@ ERL_FILE
     PsiElement(;)(';')
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('naive_reverse')
+        ERL_ATOM
+          PsiElement(atom_name)('naive_reverse')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
@@ -92,7 +99,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('hello_world')
+        ERL_ATOM
+          PsiElement(atom_name)('hello_world')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -101,11 +109,13 @@ ERL_FILE
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
           ERL_MODULE_REF
             ERL_Q_ATOM
-              PsiElement(atom)('io')
+              ERL_ATOM
+                PsiElement(atom_name)('io')
           PsiElement(:)(':')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('fwrite')
+              ERL_ATOM
+                PsiElement(atom_name)('fwrite')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_STRING_LITERAL
@@ -115,7 +125,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('hello_world2')
+        ERL_ATOM
+          PsiElement(atom_name)('hello_world2')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         PsiElement())(')')
@@ -124,11 +135,13 @@ ERL_FILE
         ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
           ERL_MODULE_REF
             ERL_Q_ATOM
-              PsiElement(atom)('io')
+              ERL_ATOM
+                PsiElement(atom_name)('io')
           PsiElement(:)(':')
           ERL_FUNCTION_CALL_EXPRESSION
             ERL_Q_ATOM
-              PsiElement(atom)('fwrite')
+              ERL_ATOM
+                PsiElement(atom_name)('fwrite')
             ERL_ARGUMENT_LIST
               PsiElement(()('(')
               ERL_STRING_LITERAL
@@ -139,7 +152,8 @@ ERL_FILE
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
-        PsiElement(atom)('hello')
+        ERL_ATOM
+          PsiElement(atom_name)('hello')
       ERL_ARGUMENT_DEFINITION_LIST
         PsiElement(()('(')
         ERL_ARGUMENT_DEFINITION
