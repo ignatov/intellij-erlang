@@ -277,9 +277,7 @@ public class ErlangPsiImplUtil {
     ErlangQAtom moduleAtom = moduleReference == null ? null : moduleReference.getQAtom();
     ErlangQAtom nameAtom = o.getQAtom();
 
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(
-      nameAtom, moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
-      nameAtom.getText(), o.getArgumentList().getExpressionList().size());
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(nameAtom, moduleAtom, o.getArgumentList().getExpressionList().size());
   }
 
   @Nullable
@@ -293,8 +291,7 @@ public class ErlangPsiImplUtil {
 
     ErlangQAtom nameAtom = o.getQAtom();
     PsiElement arity = o.getInteger();
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(nameAtom, isModule ? null : moduleAtom, TextRange.from(0, nameAtom.getTextLength()),
-      nameAtom.getText(), getArity(arity));
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(nameAtom, isModule ? null : moduleAtom, getArity(arity));
   }
 
   private static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
@@ -305,8 +302,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportFunction o) {
     PsiElement arity = o.getInteger();
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), null, TextRange.from(0, o.getQAtom().getTextLength()),
-      o.getQAtom().getText(), getArity(arity));
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), null, getArity(arity));
   }
 
   @NotNull
@@ -315,7 +311,7 @@ public class ErlangPsiImplUtil {
     ErlangModuleRef moduleRef = importDirective != null ? importDirective.getModuleRef() : null;
     ErlangQAtom moduleRefQAtom = moduleRef != null ? moduleRef.getQAtom() : null;
     PsiElement arity = o.getInteger();
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), moduleRefQAtom, TextRange.from(0, o.getQAtom().getTextLength()), o.getQAtom().getText(), getArity(arity));
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), moduleRefQAtom, getArity(arity));
   }
 
   public static int getArity(@Nullable PsiElement arity) {
@@ -1164,8 +1160,7 @@ public class ErlangPsiImplUtil {
     Integer arity = getArity(o);
 
     if (arity != null) {
-      return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, moduleRef == null ? null : moduleRef.getQAtom(),
-        TextRange.from(0, atom.getTextLength()), atom.getText(), arity);
+      return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, moduleRef == null ? null : moduleRef.getQAtom(), arity);
     }
     return null;
   }
@@ -1504,7 +1499,7 @@ public class ErlangPsiImplUtil {
     ErlangListExpression list = PsiTreeUtil.getNextSiblingOfType(parent, ErlangListExpression.class);
     ErlangQAtom module = moduleExpression == null ? null : moduleExpression.getQAtom();
     int arity = list == null ? -1 : list.getExpressionList().size();
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, module, TextRange.from(0, atom.getTextLength()), atom.getText(), arity);
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(atom, module, arity);
   }
 
   public static boolean isWhitespaceOrComment(@NotNull PsiElement element) {
@@ -1519,6 +1514,14 @@ public class ErlangPsiImplUtil {
 
   public static boolean is(@Nullable PsiElement element, IElementType type) {
     return element != null && element.getNode().getElementType() == type;
+  }
+
+  public static TextRange getTextRangeForReference(@NotNull ErlangQAtom qAtom) {
+    PsiElement nameIdentifier = getNameIdentifier(qAtom);
+    TextRange qAtomRange = qAtom.getTextRange();
+    TextRange idRange = nameIdentifier.getTextRange();
+    int idStartInQAtom = idRange.getStartOffset() - qAtomRange.getStartOffset();
+    return TextRange.create(idStartInQAtom, idStartInQAtom + idRange.getLength());
   }
 
   public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {

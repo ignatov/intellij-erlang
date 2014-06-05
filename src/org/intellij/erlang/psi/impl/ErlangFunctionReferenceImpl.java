@@ -21,7 +21,6 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -47,9 +46,9 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   protected final String myReferenceName;
   private final int myArity;
 
-  public ErlangFunctionReferenceImpl(@NotNull T element, @Nullable ErlangQAtom moduleAtom, TextRange range, String name, int arity) {
-    super(element, range);
-    myReferenceName = name;
+  public ErlangFunctionReferenceImpl(@NotNull T element, @Nullable ErlangQAtom moduleAtom, int arity) {
+    super(element, ErlangPsiImplUtil.getTextRangeForReference(element));
+    myReferenceName = ErlangPsiImplUtil.getNameIdentifier(element).getText();
     myModuleAtom = moduleAtom;
     myArity = arity;
   }
