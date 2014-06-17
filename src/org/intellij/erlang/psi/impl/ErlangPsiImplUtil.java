@@ -696,7 +696,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static ErlangRecordReferenceImpl<ErlangQAtom> createRecordRef(@NotNull ErlangQAtom atom) {
-    return new ErlangRecordReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getMacros() == null ? atom.getTextLength() : 1), atom.getText());
+    return new ErlangRecordReferenceImpl<ErlangQAtom>(atom);
   }
 
   @Nullable

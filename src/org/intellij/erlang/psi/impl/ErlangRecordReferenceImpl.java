@@ -27,8 +27,8 @@ import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRecordReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBasedReferenceImpl<T> {
-  public ErlangRecordReferenceImpl(@NotNull T element, TextRange range, String name) {
-    super(element, range, name);
+  public ErlangRecordReferenceImpl(@NotNull T element) {
+    super(element, getTextRangeForRecordReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
   }
 
   @Override
@@ -47,5 +47,10 @@ public class ErlangRecordReferenceImpl<T extends ErlangQAtom> extends ErlangAtom
   @Override
   public Object[] getVariants() {
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getRecordLookupElements(myElement.getContainingFile()));
+  }
+
+  @NotNull
+  private static TextRange getTextRangeForRecordReference(@NotNull ErlangQAtom atom) {
+    return atom.getMacros() != null ? TextRange.from(0, 1) : ErlangPsiImplUtil.getTextRangeForReference(atom);
   }
 }
