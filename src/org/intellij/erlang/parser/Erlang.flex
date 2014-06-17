@@ -68,7 +68,7 @@ NameChars = {NameChar}+
 
 QuotedCharacter = \\' | {EscapeSequence}  | [^'\\] /* [a-zA-Z0-9#_.@,;:!?/&%$+*~\^-] */
 QuotedAtomName = {QuotedCharacter}+
-AtomName = ({ErlangLowercase} {NameChar}*)
+AtomName = ({ErlangLowercase} {NameChar}*) | ''
 
 Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars}?)
 

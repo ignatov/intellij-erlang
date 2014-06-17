@@ -1063,7 +1063,6 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement getNameIdentifier(ErlangAtom atom) {
     PsiElement name = atom.getAtomName();
-    //TODO fix for '' atoms
     return name != null ? name : atom;
   }
 
@@ -1077,7 +1076,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static String getName(ErlangAtom atom) {
-    return StringUtil.unquoteString(atom.getNameIdentifier().getText());
+    return atom.getNameIdentifier().getText();
   }
 
   @NotNull
