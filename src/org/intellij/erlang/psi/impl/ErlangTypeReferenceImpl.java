@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.psi.impl;
 
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -31,8 +30,8 @@ public class ErlangTypeReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBa
   @Nullable
   private final ErlangModuleRef myModuleRef;
 
-  public ErlangTypeReferenceImpl(@NotNull T element, @Nullable ErlangModuleRef moduleRef, TextRange range, String name) {
-    super(element, range, name);
+  public ErlangTypeReferenceImpl(@NotNull T element, @Nullable ErlangModuleRef moduleRef) {
+    super(element, ErlangPsiImplUtil.getTextRangeForReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
     myModuleRef = moduleRef;
   }
 

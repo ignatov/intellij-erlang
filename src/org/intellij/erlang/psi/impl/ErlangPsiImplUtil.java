@@ -333,7 +333,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   private static PsiReference getModuleReference(ErlangCompositeElement o, ErlangQAtom atom) {
     ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
-    return new ErlangTypeReferenceImpl<ErlangQAtom>(atom, moduleRef, TextRange.from(0, atom.getTextLength()), atom.getText());
+    return new ErlangTypeReferenceImpl<ErlangQAtom>(atom, moduleRef);
   }
 
   @Nullable
