@@ -201,7 +201,7 @@ public class ErlangPsiImplUtil {
   @Nullable
   private static PsiReference getRecordFieldReference(@Nullable ErlangQAtom atom) {
     if (atom == null) return null;
-    return new ErlangAtomBasedReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), atom.getText()) {
+    return new ErlangAtomBasedReferenceImpl<ErlangQAtom>(atom, getTextRangeForReference(atom), getNameIdentifier(atom).getText()) {
       @Override
       public PsiElement resolve() {
         Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(myElement);
