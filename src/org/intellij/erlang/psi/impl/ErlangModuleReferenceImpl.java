@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.psi.impl;
 
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.containers.ContainerUtil;
@@ -25,8 +24,8 @@ import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangModuleReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBasedReferenceImpl<T> {
-  public ErlangModuleReferenceImpl(@NotNull T element, TextRange range, String name) {
-    super(element, range, name);
+  public ErlangModuleReferenceImpl(@NotNull T element) {
+    super(element, ErlangPsiImplUtil.getTextRangeForReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
   }
 
   @Override

@@ -698,8 +698,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiReference createModuleReference(@NotNull ErlangQAtom atom) {
-    String name = StringUtil.unquoteString(atom.getText());
-    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom, TextRange.from(0, atom.getTextLength()), name);
+    return new ErlangModuleReferenceImpl<ErlangQAtom>(atom);
   }
 
   public static boolean renameAtom(@Nullable ErlangQAtom qAtom, String newName) {
