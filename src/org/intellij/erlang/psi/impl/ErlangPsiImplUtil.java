@@ -645,8 +645,7 @@ public class ErlangPsiImplUtil {
     ErlangRecordDefinitionStub stub = o.getStub();
     if (stub != null) return StringUtil.notNullize(stub.getName());
     ErlangQAtom atom = o.getQAtom();
-    if (atom == null) return "";
-    return atom.getText();
+    return atom != null ? getName(atom) : "";
   }
 
   @NotNull
@@ -669,6 +668,11 @@ public class ErlangPsiImplUtil {
   public static PsiElement getNameIdentifier(@NotNull ErlangQAtom o) {
     ErlangAtom atom = o.getAtom();
     return atom != null ? getNameIdentifier(atom) : o;
+  }
+
+  @NotNull
+  public static String getName(@NotNull ErlangQAtom o) {
+    return getNameIdentifier(o).getText();
   }
 
   @NotNull
@@ -1105,7 +1109,7 @@ public class ErlangPsiImplUtil {
   public static String getName(ErlangMacrosDefinition o) {
     ErlangMacrosDefinitionStub stub = o.getStub();
     if (stub != null) return StringUtil.notNullize(stub.getName());
-    return o.getNameIdentifier().getText();
+    return getNameIdentifier(o).getText();
   }
 
   @NotNull
@@ -1123,7 +1127,7 @@ public class ErlangPsiImplUtil {
     if (stub != null) return StringUtil.notNullize(stub.getName());
     ErlangModuleRef moduleRef = o.getModuleRef();
     ErlangQAtom atom = moduleRef != null ? moduleRef.getQAtom() : null;
-    return atom == null ? "" : atom.getText();
+    return atom == null ? "" : getName(atom);
   }
 
   @NotNull
@@ -1142,7 +1146,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(ErlangTypedExpr o) {
-    return o.getNameIdentifier().getText();
+    return getNameIdentifier(o).getText();
   }
 
   public static PsiElement setName(ErlangTypedExpr o, String newName) {
@@ -1358,6 +1362,11 @@ public class ErlangPsiImplUtil {
   public static String getCallbackSpecName(@NotNull ErlangCallbackSpec spec) {
     ErlangQAtom atom = getCallbackAtom(spec);
     return atom != null ? atom.getText() : null;
+  }
+
+  @NotNull
+  public static String getExportFunctionName(@NotNull ErlangExportFunction exportFunction) {
+    return getNameIdentifier(exportFunction.getQAtom()).getText();
   }
 
   @Nullable

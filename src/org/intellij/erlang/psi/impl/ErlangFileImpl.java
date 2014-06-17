@@ -151,11 +151,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       if (exportFunctions == null) continue;
       List<ErlangExportFunction> list = exportFunctions.getExportFunctionList();
       for (ErlangExportFunction exportFunction : list) {
-        ErlangQAtom qAtom = exportFunction.getQAtom();
         PsiElement integer = exportFunction.getInteger();
         if (integer == null) continue;
-        String text = qAtom.getText();
-        String s = StringUtil.unquoteString(text) + "/" + integer.getText();
+        String s = ErlangPsiImplUtil.getExportFunctionName(exportFunction) + "/" + integer.getText();
         result.add(s);
       }
     }
@@ -332,9 +330,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   public ErlangFunction getFunction(@NotNull String name, final int argsCount) {
     initFunctionsMap();
     MultiMap<String, ErlangFunction> value = myFunctionsMap.getValue();
-    ErlangFunction byName = getFunctionFromMap(value, name, argsCount);
-    ErlangFunction byUnquote = byName == null ? getFunctionFromMap(value, StringUtil.unquoteString(name), argsCount) : byName;
-    return byUnquote == null ? getFunctionFromMap(value, "'" + name + "'", argsCount) : byUnquote;
+    return getFunctionFromMap(value, name, argsCount);
   }
 
   private void initFunctionsMap() {
@@ -356,7 +352,6 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @NotNull
   public Collection<ErlangFunction> getFunctionsByName(@NotNull String name) {
     initFunctionsMap();
-    // todo: quotation
     return myFunctionsMap.getValue().get(name);
   }
 
@@ -440,11 +435,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         }
       }, false);
     }
-    // todo: cleanup
-    Map<String, ErlangTypeDefinition> value = myTypeMap.getValue();
-    ErlangTypeDefinition byName = value.get(name);
-    ErlangTypeDefinition byUnquote = byName == null ? value.get(StringUtil.unquoteString(name)) : byName;
-    return byUnquote == null ? value.get("'" + name + "'") : byUnquote;
+    return myTypeMap.getValue().get(name);
   }
 
   @NotNull
@@ -488,9 +479,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         public Result<Map<String, ErlangMacrosDefinition>> compute() {
           Map<String, ErlangMacrosDefinition> map = new THashMap<String, ErlangMacrosDefinition>();
           for (ErlangMacrosDefinition macros : getMacroses()) {
-            ErlangMacrosName mName = macros.getMacrosName();
-            if (mName == null) continue;
-            String macrosName = mName.getText();
+            String macrosName = ErlangPsiImplUtil.getName(macros);
             if (!map.containsKey(macrosName)) {
               map.put(macrosName, macros);
             }
@@ -499,11 +488,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         }
       }, false);
     }
-    // todo: cleanup
-    Map<String, ErlangMacrosDefinition> value = myMacrosesMap.getValue();
-    ErlangMacrosDefinition byName = value.get(name);
-    ErlangMacrosDefinition byUnquote = byName == null ? value.get(StringUtil.unquoteString(name)) : byName;
-    return byUnquote == null ? value.get("'" + name + "'") : byUnquote;
+    return myMacrosesMap.getValue().get(name);
   }
 
   private List<ErlangRecordDefinition> calcRecords() {
@@ -669,11 +654,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         }
       }, false);
     }
-    // todo: cleanup
-    Map<String, ErlangRecordDefinition> value = myRecordsMap.getValue();
-    ErlangRecordDefinition byName = value.get(name);
-    ErlangRecordDefinition byUnquote = byName == null ? value.get(StringUtil.unquoteString(name)) : byName;
-    return byUnquote == null ? value.get("'" + name + "'") : byUnquote;
+    return myRecordsMap.getValue().get(name);
   }
 
   @NotNull
