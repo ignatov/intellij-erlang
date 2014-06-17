@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.psi.impl;
 
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReferenceBase;
@@ -31,9 +30,9 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangMacrosReferenceImpl<T extends ErlangMacrosName> extends PsiReferenceBase<T> {
   protected final String myReferenceName;
 
-  public ErlangMacrosReferenceImpl(T element, TextRange range, String name) {
-    super(element, range);
-    myReferenceName = name;
+  public ErlangMacrosReferenceImpl(T element) {
+    super(element, ErlangPsiImplUtil.getTextRangeForReference(element));
+    myReferenceName = ErlangPsiImplUtil.getNameIdentifier(element).getText();
   }
 
   @Override

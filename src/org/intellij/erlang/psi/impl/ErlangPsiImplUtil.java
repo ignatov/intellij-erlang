@@ -322,7 +322,7 @@ public class ErlangPsiImplUtil {
   public static PsiReference getReference(@NotNull ErlangMacros o) {
     ErlangMacrosName macrosName = o.getMacrosName();
     if (macrosName == null) return null;
-    return new ErlangMacrosReferenceImpl<ErlangMacrosName>(macrosName, TextRange.from(0, macrosName.getTextLength()), macrosName.getText());
+    return new ErlangMacrosReferenceImpl<ErlangMacrosName>(macrosName);
   }
 
   @Nullable
@@ -669,6 +669,14 @@ public class ErlangPsiImplUtil {
   public static PsiElement getNameIdentifier(@NotNull ErlangQAtom o) {
     ErlangAtom atom = o.getAtom();
     return atom != null ? getNameIdentifier(atom) : o;
+  }
+
+  @NotNull
+  public static PsiElement getNameIdentifier(@NotNull ErlangMacrosName o) {
+    ErlangAtom atom = o.getAtom();
+    if (atom != null) return getNameIdentifier(atom);
+    PsiElement var = o.getVar();
+    return var != null ? var : o;
   }
 
   @NotNull
@@ -1075,8 +1083,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement getNameIdentifier(ErlangMacrosDefinition o) {
     ErlangMacrosName macrosName = o.getMacrosName();
-    if (macrosName == null) return o;
-    return macrosName;
+    return macrosName != null ? getNameIdentifier(macrosName) : o;
   }
 
   @NotNull
@@ -1517,12 +1524,19 @@ public class ErlangPsiImplUtil {
     return element != null && element.getNode().getElementType() == type;
   }
 
+  @NotNull
   public static TextRange getTextRangeForReference(@NotNull ErlangQAtom qAtom) {
-    PsiElement nameIdentifier = getNameIdentifier(qAtom);
-    TextRange qAtomRange = qAtom.getTextRange();
-    TextRange idRange = nameIdentifier.getTextRange();
-    int idStartInQAtom = idRange.getStartOffset() - qAtomRange.getStartOffset();
-    return TextRange.create(idStartInQAtom, idStartInQAtom + idRange.getLength());
+    return rangeInParent(qAtom.getTextRange(), getNameIdentifier(qAtom).getTextRange());
+  }
+
+  public static TextRange getTextRangeForReference(@NotNull ErlangMacrosName macroName) {
+    return rangeInParent(macroName.getTextRange(), getNameIdentifier(macroName).getTextRange());
+  }
+
+  @NotNull
+  private static TextRange rangeInParent(@NotNull TextRange parent, @NotNull TextRange child) {
+    int start = child.getStartOffset() - parent.getStartOffset();
+    return TextRange.create(start, start + child.getLength());
   }
 
   public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {
