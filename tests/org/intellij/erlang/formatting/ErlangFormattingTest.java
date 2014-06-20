@@ -110,6 +110,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test434()    throws Exception { getErlangSettings().ALIGN_MULTILINE_BLOCK = true; doTest(); }
   public void test451()    throws Exception { getErlangSettings().ALIGN_RECORD_FIELD_ASSIGNMENTS = true; setUpCommaFirst(); doTest(); }
   public void test444()    throws Exception { getErlangSettings().ALIGN_MULTILINE_BLOCK = true; doTest(); }
+  public void test478()    throws Exception { doTest(); }
 
   public void test292() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();

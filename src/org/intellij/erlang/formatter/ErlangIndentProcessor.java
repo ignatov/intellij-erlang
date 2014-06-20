@@ -101,12 +101,12 @@ public class ErlangIndentProcessor {
       boolean insideCall = PsiTreeUtil.getParentOfType(node.getPsi(), ErlangArgumentDefinition.class, ErlangParenthesizedExpression.class) != null;
       return insideCall ? Indent.getNormalIndent() : Indent.getNoneIndent();
     }
-    if (parentType == ERL_BEGIN_END_BODY) {
+    if (parentType == ERL_BEGIN_END_BODY || parentType == ERL_TRY_EXPRESSIONS_CLAUSE) {
       return Indent.getNoneIndent();
     }
     if (parentType == ERL_CASE_EXPRESSION || parentType == ERL_RECEIVE_EXPRESSION || parentType == ERL_TRY_EXPRESSION ||
-        parentType == ERL_BEGIN_END_EXPRESSION || parentType == ERL_IF_EXPRESSION) {
-      if (elementType == ERL_CR_CLAUSE || elementType == ERL_IF_CLAUSE || elementType == ERL_BEGIN_END_BODY) {
+        parentType == ERL_BEGIN_END_EXPRESSION || parentType == ERL_IF_EXPRESSION || parentType == ERL_TRY_CATCH) {
+      if (elementType == ERL_CR_CLAUSE || elementType == ERL_IF_CLAUSE || elementType == ERL_BEGIN_END_BODY || elementType == ERL_TRY_EXPRESSIONS_CLAUSE) {
         return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
       }
       if (elementType == ERL_END || elementType == ERL_TRY_CATCH || elementType == ERL_AFTER_CLAUSE) {
