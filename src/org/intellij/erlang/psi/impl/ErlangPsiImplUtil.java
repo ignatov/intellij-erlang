@@ -422,7 +422,7 @@ public class ErlangPsiImplUtil {
       Sdk sdk = module == null ? null : ModuleRootManager.getInstance(module).getSdk();
       ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
       if (qAtom != null) {
-        String moduleName = StringUtil.unquoteString(qAtom.getText());
+        String moduleName = getName(qAtom);
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName));
 
         if (release == null || release.needBifCompletion(moduleName)) {
@@ -1490,7 +1490,7 @@ public class ErlangPsiImplUtil {
     if (stub != null) return stub.isExported();
 
     PsiFile file = o.getContainingFile();
-    String signature = StringUtil.unquoteString(o.getName()) + "/" + o.getArity();
+    String signature = o.getName() + "/" + o.getArity();
     return file instanceof ErlangFile && ((ErlangFile) file).isExported(signature);
   }
 
