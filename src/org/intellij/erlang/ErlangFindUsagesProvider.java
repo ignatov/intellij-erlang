@@ -16,22 +16,39 @@
 
 package org.intellij.erlang;
 
+import com.intellij.lang.cacheBuilder.WordOccurrence;
 import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.psi.ElementDescriptionUtil;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
+import com.intellij.util.Processor;
+import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @Override
   public WordsScanner getWordsScanner() {
-    return null;
-    // todo
-    //new DefaultWordsScanner(new ErlangLexer(), TokenSet.create(ErlangTypes.ERL_ATOM, ErlangTypes.ERL_VAR), ErlangParserDefinition.COMMENTS, TokenSet.create(ErlangTypes.ERL_STRING));
+    return new WordsScanner() {
+      @Override
+      public void processWords(CharSequence fileText, Processor<WordOccurrence> processor) {
+        ErlangLexer lexer = new ErlangLexer();
+        lexer.start(fileText);
+        IElementType tokenType;
+        while ((tokenType = lexer.getTokenType()) != null) {
+          //TODO process occurrences in string literals and comments
+          if (tokenType == ErlangTypes.ERL_ATOM_NAME || tokenType == ErlangTypes.ERL_VAR) {
+            WordOccurrence o = new WordOccurrence(fileText, lexer.getTokenStart(), lexer.getTokenEnd(), WordOccurrence.Kind.CODE);
+            processor.process(o);
+          }
+          lexer.advance();
+        }
+      }
+    };
   }
 
   @Override
