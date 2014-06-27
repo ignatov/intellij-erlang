@@ -32,6 +32,8 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testFunctionUsagesInSingleFile()    { doTest(4); }
   public void testFunctionUsagesInMultipleFiles() { doTest(5, "functionUsagesInSingleFile.erl");}
 
+  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }
+  public void testEmptyAtomFunctionInMultipleFiles() { doTest(3, "emptyAtomFunctionInSingleFile.erl"); }
 
   private void doTest(int expectedResult, String ... extraFiles) {
     String[] files = new String[1 + extraFiles.length];
