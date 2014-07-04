@@ -50,10 +50,7 @@ import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.ArrayUtil;
-import com.intellij.util.Function;
-import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.ProcessingContext;
+import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
@@ -71,6 +68,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
@@ -82,6 +81,9 @@ public class ErlangPsiImplUtil {
     "pos_integer", "ref", "string", "term", "timeout"
   );
   public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
+
+  private static Pattern ATOM_PATTERN = Pattern.compile("[a-z][a-zA-Z_@0-9]*");
+  private static Pattern QUOTED_ATOM_NAME = Pattern.compile("(\\\\\\^.|\\\\.|[^'])*"); //see https://github.com/rvirding/leex/blob/master/examples/erlang_scan.xrl
 
   private ErlangPsiImplUtil() {
   }
@@ -1071,12 +1073,43 @@ public class ErlangPsiImplUtil {
   }
 
   public static ErlangAtom setName(ErlangAtom atom, String newName) {
-    //TODO check if a new name should be quoted
-    //TODO fix for '' atoms
-    PsiElement newAtom = ErlangElementFactory.createQAtomFromText(atom.getProject(), newName);
-    assert newAtom instanceof ErlangAtom;
-    atom.getNameIdentifier().replace(((ErlangAtom) newAtom).getNameIdentifier());
-    return atom;
+    String text = toAtomName(newName);
+    assert text != null;
+    PsiElement newAtom = ErlangElementFactory.createQAtomFromText(atom.getProject(), text);
+    return (ErlangAtom) atom.replace(newAtom);
+  }
+
+  @Nullable
+  public static String toAtomName(String maybeUnquotedAtomName) {
+    ThreeState t = atomNameRequiresQuotes(maybeUnquotedAtomName);
+    if (t == ThreeState.YES) {
+      return '\'' + maybeUnquotedAtomName + '\'';
+    }
+    else if (t == ThreeState.NO) {
+      return maybeUnquotedAtomName;
+    }
+    else {
+      return null;
+    }
+  }
+
+  private static ThreeState atomNameRequiresQuotes(String atomName) {
+    //check if it's a regular atom
+    Matcher matcher = ATOM_PATTERN.matcher(atomName);
+    if (matcher.matches()) {
+      return ThreeState.NO;
+    }
+    //check if it's a quoted atom name
+    matcher = QUOTED_ATOM_NAME.matcher(atomName);
+    if (matcher.matches()) {
+      return ThreeState.YES;
+    }
+    //check if it's already quoted
+    matcher = QUOTED_ATOM_NAME.matcher(StringUtil.unquoteString(atomName, '\''));
+    if (matcher.matches()) {
+      return ThreeState.NO;
+    }
+    return ThreeState.UNSURE;
   }
 
   public static String getName(ErlangAtom atom) {

@@ -17,6 +17,7 @@
 package org.intellij.erlang;
 
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.patterns.ElementPattern;
 import com.intellij.patterns.ElementPatternCondition;
 import com.intellij.psi.PsiElement;
@@ -24,6 +25,7 @@ import com.intellij.refactoring.rename.RenameInputValidator;
 import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangRenameInputValidator implements RenameInputValidator {
@@ -55,13 +57,16 @@ public class ErlangRenameInputValidator implements RenameInputValidator {
         ErlangElementFactory.createQVarFromText(o.getProject(), s);
         return true;
       }
-      else if (o instanceof ErlangQAtom || o instanceof ErlangFunction || o instanceof ErlangRecordDefinition) {
-        ErlangElementFactory.createQAtomFromText(o.getProject(), s);
-        return true;
-      }
-      else if (o instanceof ErlangModule) {
-        ErlangElementFactory.createQAtomFromText(o.getProject(), s);
-        return s != null && s.equals(FileUtil.sanitizeFileName(s));
+      else if (o instanceof ErlangQAtom || o instanceof ErlangFunction || o instanceof ErlangRecordDefinition || o instanceof ErlangModule) {
+        String atomName = ErlangPsiImplUtil.toAtomName(s);
+        if (atomName != null) {
+          ErlangElementFactory.createQAtomFromText(o.getProject(), atomName);
+          if (o instanceof ErlangModule) {
+            String unquoted = StringUtil.unquoteString(atomName, '\'');
+            return unquoted.equals(FileUtil.sanitizeFileName(unquoted));
+          }
+          return true;
+        }
       }
     } catch (Exception ignored) {
     }

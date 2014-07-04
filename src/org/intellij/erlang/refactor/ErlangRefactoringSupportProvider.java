@@ -44,7 +44,8 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
 
   @Override
   public boolean isInplaceRenameAvailable(@NotNull PsiElement element, PsiElement context) {
-    return element instanceof ErlangNamedElement && element.getUseScope() instanceof LocalSearchScope;
+    // variable renaming is handled by ErlangRenameVariableProcessor
+    return element instanceof ErlangNamedElement && !(element instanceof ErlangQVar) && element.getUseScope() instanceof LocalSearchScope;
   }
 
   @Override
