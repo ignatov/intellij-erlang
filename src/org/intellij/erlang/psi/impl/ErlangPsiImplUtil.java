@@ -1149,9 +1149,44 @@ public class ErlangPsiImplUtil {
   public static PsiElement setName(ErlangMacrosDefinition o, String newName) {
     ErlangMacrosName macrosName = o.getMacrosName();
     if (macrosName != null) {
-      macrosName.replace(ErlangElementFactory.createMacrosFromText(o.getProject(), newName));
+      setName(macrosName, newName);
     }
     return o;
+  }
+
+  public static void setName(@NotNull ErlangMacrosName macroName, @NotNull String newName) {
+    PsiElement replacement = createMacroNameReplacement(macroName.getProject(), newName);
+    if (macroName.getAtom() != null) {
+      macroName.getAtom().replace(replacement);
+    }
+    else if (macroName.getVar() != null) {
+      macroName.getVar().replace(replacement);
+    }
+  }
+
+
+  @NotNull
+  private static PsiElement createMacroNameReplacement(Project project, String newName) {
+    ErlangMacrosName macroName = null;
+    try {
+      macroName = (ErlangMacrosName) ErlangElementFactory.createMacrosFromText(project, newName);
+    } catch (Exception ignore) {
+    }
+    if (macroName == null) {
+      try {
+        macroName = (ErlangMacrosName) ErlangElementFactory.createMacrosFromText(project, '\'' + newName + '\'');
+      } catch (Exception ignore) {
+      }
+    }
+    if (macroName != null) {
+      if (macroName.getAtom() != null) {
+        return macroName.getAtom();
+      }
+      else if (macroName.getVar() != null) {
+        return macroName.getVar();
+      }
+    }
+    throw new AssertionError("Cannot create macro name replacement");
   }
 
   @NotNull

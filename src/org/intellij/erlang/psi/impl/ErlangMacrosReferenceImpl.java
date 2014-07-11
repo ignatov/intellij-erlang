@@ -37,7 +37,7 @@ public class ErlangMacrosReferenceImpl<T extends ErlangMacrosName> extends PsiRe
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    myElement.replace(ErlangElementFactory.createMacrosFromText(getElement().getProject(), newElementName));
+    ErlangPsiImplUtil.setName(myElement, newElementName);
     return myElement;
   }
 

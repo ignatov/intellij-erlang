@@ -28,6 +28,9 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testQuotedFunction()    { doTest("bar"); }
   public void testQuoteFunctionName() { doTest("BAR"); }
 
+  public void testUnquotedMacro()     { doTest("bar"); }
+  public void testQuotedMacro()       { doTest("bar"); }
+
   private void doTest(String newName) {
     myFixture.testRename(getTestName(true) + ".erl", getTestName(true) + "-after.erl", newName);
   }
