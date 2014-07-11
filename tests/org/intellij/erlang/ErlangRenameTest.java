@@ -16,6 +16,7 @@
 
 package org.intellij.erlang;
 
+import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -31,7 +32,18 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testUnquotedMacro()     { doTest("bar"); }
   public void testQuotedMacro()       { doTest("bar"); }
 
+  public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
+  public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
+  public void testQuotedModule()       { doTest("quotedModule-after", true); }
+
   private void doTest(String newName) {
+    doTest(newName, false);
+  }
+
+  private void doTest(String newName, boolean isRenameModuleTest) {
     myFixture.testRename(getTestName(true) + ".erl", getTestName(true) + "-after.erl", newName);
+    if (isRenameModuleTest) {
+      assertEquals(StringUtil.unquoteString(newName, '\'') + ".erl", myFixture.getFile().getName());
+    }
   }
 }
