@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.findUsages;
 
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
