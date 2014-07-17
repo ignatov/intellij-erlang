@@ -3,4 +3,5 @@
 set(_, _) -> ok.
 
 construct(Values) ->
-  set(#?MODULE{}, Values).
+  S = ?MODULE_STRING,
+  set(#?MODULE{}, Values ++ S).
