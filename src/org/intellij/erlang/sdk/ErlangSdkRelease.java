@@ -68,7 +68,7 @@ public enum ErlangSdkRelease {
   public static ErlangSdkRelease getSdkRelease(@Nullable String releaseString) {
     if (releaseString == null) return null;
     try {
-      return valueOf(releaseString.startsWith("R") ? releaseString : ("R" + releaseString));
+      return valueOf(releaseString.startsWith("R") ? releaseString : "R" + releaseString);
     } catch (IllegalArgumentException e) {
       return null;
     }
