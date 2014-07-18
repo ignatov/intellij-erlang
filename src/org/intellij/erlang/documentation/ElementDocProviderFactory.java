@@ -30,72 +30,56 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class ElementDocProviderFactory {
-
+public final class ElementDocProviderFactory {
   private ElementDocProviderFactory() {
   }
 
   @Nullable
   static ElementDocProvider create(@NotNull PsiElement psiElement) {
-    final Project project = psiElement.getProject();
+    Project project = psiElement.getProject();
     if (psiElement instanceof ErlangModule) {
-      final VirtualFile virtualFile = getVirtualFile(psiElement);
-      if (virtualFile == null) {
-        return null;
-      }
-      final ErlangModule erlangModule = (ErlangModule) psiElement;
+      VirtualFile virtualFile = getVirtualFile(psiElement);
+      if (virtualFile == null) return null;
+      ErlangModule erlangModule = (ErlangModule) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
         return new ErlangSdkModuleDocProvider(project, virtualFile);
       }
-      else {
-        return new ErlangModuleDocProvider(erlangModule);
-      }
+      return new ErlangModuleDocProvider(erlangModule);
     }
     else if (psiElement instanceof ErlangFunction) {
-      final VirtualFile virtualFile = getVirtualFile(psiElement);
-      if (virtualFile == null) {
-        return null;
-      }
-      final ErlangFunction erlangFunction = (ErlangFunction) psiElement;
+      VirtualFile virtualFile = getVirtualFile(psiElement);
+      if (virtualFile == null) return null;
+      ErlangFunction erlangFunction = (ErlangFunction) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
-        return new ErlangSdkFunctionDocProvider(project, erlangFunction.getName(),
-          erlangFunction.getArity(), virtualFile);
+        return new ErlangSdkFunctionDocProvider(project, erlangFunction.getName(), erlangFunction.getArity(), virtualFile);
       }
-      else {
-        return new ErlangFunctionDocProvider(erlangFunction);
-      }
+      return new ErlangFunctionDocProvider(erlangFunction);
     }
     else if (psiElement instanceof ErlangTypeDefinition) {
-      final VirtualFile virtualFile = getVirtualFile(psiElement);
-      if (virtualFile == null) {
-        return null;
-      }
-      final ErlangTypeDefinition typeDefinition = (ErlangTypeDefinition) psiElement;
+      VirtualFile virtualFile = getVirtualFile(psiElement);
+      if (virtualFile == null) return null;
+      ErlangTypeDefinition typeDefinition = (ErlangTypeDefinition) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
         return new ErlangSdkTypeDocProvider(project, virtualFile, typeDefinition.getName());
       }
-      else {
-        return null; // TODO implement TypeDocProvider
-      }
+      return null; // TODO implement TypeDocProvider
     }
     else {
-      final ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(
+      ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(
         psiElement, ErlangGlobalFunctionCallExpression.class);
       if (erlGlobalFunctionCall != null) {
-        final ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
-        if (moduleRef != null) {
-          final String moduleName = moduleRef.getText();
-          final ErlangFunctionCallExpression erlFunctionCall = erlGlobalFunctionCall.getFunctionCallExpression();
-          final String functionName = erlFunctionCall.getName();
-          final int arity = erlFunctionCall.getArgumentList().getExpressionList().size();
-          if (ErlangBifTable.isBif(moduleName, functionName, arity)) {
-            final PsiReference psiReference = moduleRef.getReference();
-            final PsiElement tentativeErlangModule = psiReference != null ? psiReference.resolve() : null;
-            if (tentativeErlangModule instanceof ErlangModule) {
-              final VirtualFile virtualFile = getVirtualFile(tentativeErlangModule);
-              if (virtualFile != null) {
-                return new ErlangSdkFunctionDocProvider(project, functionName, arity, virtualFile);
-              }
+        ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
+        String moduleName = moduleRef.getText();
+        ErlangFunctionCallExpression erlFunctionCall = erlGlobalFunctionCall.getFunctionCallExpression();
+        String functionName = erlFunctionCall.getName();
+        int arity = erlFunctionCall.getArgumentList().getExpressionList().size();
+        if (ErlangBifTable.isBif(moduleName, functionName, arity)) {
+          PsiReference psiReference = moduleRef.getReference();
+          PsiElement tentativeErlangModule = psiReference != null ? psiReference.resolve() : null;
+          if (tentativeErlangModule instanceof ErlangModule) {
+            VirtualFile virtualFile = getVirtualFile(tentativeErlangModule);
+            if (virtualFile != null) {
+              return new ErlangSdkFunctionDocProvider(project, functionName, arity, virtualFile);
             }
           }
         }
@@ -105,22 +89,18 @@ final class ElementDocProviderFactory {
   }
 
   private static boolean isFileFromErlangSdk(@NotNull Project project, @NotNull VirtualFile virtualFile) {
-    final ProjectRootManager projectRootManager = ProjectRootManager.getInstance(project);
-    final Sdk projectSdk = projectRootManager.getProjectSdk();
-    if (projectSdk == null) {
-      return false;
-    }
+    ProjectRootManager projectRootManager = ProjectRootManager.getInstance(project);
+    Sdk projectSdk = projectRootManager.getProjectSdk();
+    if (projectSdk == null) return false;
     for (VirtualFile sdkSourceRoot : projectSdk.getRootProvider().getFiles(OrderRootType.SOURCES)) {
-      if (virtualFile.getPath().startsWith(sdkSourceRoot.getPath())) {
-        return true;
-      }
+      if (virtualFile.getPath().startsWith(sdkSourceRoot.getPath())) return true;
     }
     return false;
   }
 
   @Nullable
   private static VirtualFile getVirtualFile(@NotNull PsiElement psiElement) {
-    final PsiFile containingFile = psiElement.getContainingFile();
+    PsiFile containingFile = psiElement.getContainingFile();
     return (containingFile == null ? null : containingFile.getVirtualFile());
   }
 }
