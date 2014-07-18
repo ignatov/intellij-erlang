@@ -22,9 +22,9 @@ public class ErlangGlobalFunctionCallExpressionImpl extends ErlangExpressionImpl
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangFunctionCallExpression getFunctionCallExpression() {
-    return findNotNullChildByClass(ErlangFunctionCallExpression.class);
+    return findChildByClass(ErlangFunctionCallExpression.class);
   }
 
   @Override
