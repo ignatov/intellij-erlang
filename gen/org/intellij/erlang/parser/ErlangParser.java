@@ -5575,7 +5575,7 @@ public class ErlangParser implements PsiParser {
   // 8: BINARY(multiplicative_expression)
   // 9: PREFIX(prefix_expression)
   // 10: BINARY(colon_qualified_expression)
-  // 11: ATOM(function_call_expression) PREFIX(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression) POSTFIX(record_expression) ATOM(record2_expression) POSTFIX(map_expression) ATOM(qualified_expression)
+  // 11: ATOM(function_call_expression) ATOM(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression) POSTFIX(record_expression) ATOM(record2_expression) POSTFIX(map_expression) ATOM(qualified_expression)
   // 12: ATOM(max_expression)
   // 13: PREFIX(parenthesized_expression)
   public static boolean expression(PsiBuilder builder_, int level_, int priority_) {
@@ -5775,25 +5775,24 @@ public class ErlangParser implements PsiParser {
     return result_;
   }
 
+  // module_ref ':' (function_call_expression)
   public static boolean global_function_call_expression(PsiBuilder builder_, int level_) {
     if (!recursion_guard_(builder_, level_, "global_function_call_expression")) return false;
     boolean result_;
-    boolean pinned_;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, null);
-    result_ = global_function_call_expression_0(builder_, level_ + 1);
-    pinned_ = result_;
-    result_ = pinned_ && expression(builder_, level_, 10);
-    exit_section_(builder_, level_, marker_, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION, result_, pinned_, null);
-    return result_ || pinned_;
-  }
-
-  // module_ref ':'
-  private static boolean global_function_call_expression_0(PsiBuilder builder_, int level_) {
-    if (!recursion_guard_(builder_, level_, "global_function_call_expression_0")) return false;
-    boolean result_;
-    Marker marker_ = enter_section_(builder_);
+    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<expression>");
     result_ = module_ref(builder_, level_ + 1);
     result_ = result_ && consumeToken(builder_, ERL_COLON);
+    result_ = result_ && global_function_call_expression_2(builder_, level_ + 1);
+    exit_section_(builder_, level_, marker_, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION, result_, false, null);
+    return result_;
+  }
+
+  // (function_call_expression)
+  private static boolean global_function_call_expression_2(PsiBuilder builder_, int level_) {
+    if (!recursion_guard_(builder_, level_, "global_function_call_expression_2")) return false;
+    boolean result_;
+    Marker marker_ = enter_section_(builder_);
+    result_ = function_call_expression(builder_, level_ + 1);
     exit_section_(builder_, marker_, null, result_);
     return result_;
   }

@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangGlobalFunctionCallExpression extends ErlangExpression {
 
-  @Nullable
+  @NotNull
   ErlangFunctionCallExpression getFunctionCallExpression();
 
   @NotNull
