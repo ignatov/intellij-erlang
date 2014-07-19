@@ -104,9 +104,4 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     }
     return false;
   }
-
-  // todo: to be removed
-  public static boolean consumeTokenSmart(PsiBuilder builder_, IElementType token) {
-    return consumeToken(builder_, token);
-  }
 }
