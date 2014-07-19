@@ -62,8 +62,8 @@
   RADIX           = "#"
   QMARK           = "?"
   UNI_PATTERN     = "_"
-  MATCH       = ":="
-  ASSOC       = "=>"
+  MATCH           = ":="
+  ASSOC           = "=>"
 
   extends("assignment_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal|atomic|q_atom|q_var)")=expression
