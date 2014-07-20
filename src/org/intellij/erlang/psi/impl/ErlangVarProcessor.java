@@ -26,7 +26,6 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +33,7 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVarProcessor extends BaseScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
-  private List<ErlangQVar> myVarList = new ArrayList<ErlangQVar>(0);
+  private List<ErlangQVar> myVarList = ContainerUtil.newArrayListWithCapacity(0);
   private final String myRequestedName;
   private final PsiElement myOrigin;
 
