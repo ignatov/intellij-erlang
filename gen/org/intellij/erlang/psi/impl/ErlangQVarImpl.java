@@ -42,7 +42,7 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
     return ErlangPsiImplUtil.getReference(this);
   }
 
-  public boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place) {
+  public boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }
 
