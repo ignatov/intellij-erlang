@@ -16,6 +16,7 @@
 
 package org.intellij.erlang;
 
+import com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation;
 import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionProvider;
 import com.intellij.psi.PsiElement;
@@ -38,6 +39,10 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
     }
     if ((location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) && o instanceof ErlangNamedElement) {
       return ((ErlangNamedElement) o).getName();
+    }
+    if (location == HighlightUsagesDescriptionLocation.INSTANCE) {
+      String d = getElementDescription(o, UsageViewTypeLocation.INSTANCE);
+      return d != null ? d.toLowerCase() : null;
     }
     if (location == UsageViewTypeLocation.INSTANCE) {
       if (o instanceof ErlangModule) return "Module";
