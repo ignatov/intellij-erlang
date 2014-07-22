@@ -479,7 +479,7 @@ if_clause ::= guard_with_mode clause_body {pin=1}
 private meta guarded ::= <<enterMode "GUARD">> (<<p1>> <<exitMode "GUARD">>|<<exitMode "GUARD">> !())
 private guard_with_mode ::= <<guarded guard>>
 
-case_expression ::= case expression of cr_clauses end {pin=1}
+case_expression ::= case expression of cr_clauses end {pin=1 methods=[processDeclarations]}
 private cr_clauses ::= cr_clause (';' cr_clause)*
 cr_clause ::= cr_clause_argument_definition clause_guard? clause_body {pin=1}
 private cr_clause_argument_definition ::= <<guarded argument_definition>>

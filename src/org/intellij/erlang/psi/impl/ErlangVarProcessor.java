@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
@@ -88,6 +89,10 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
         return false;
       }
     }
+    if (narrowestParentScopeOwner instanceof ErlangCrClause) {
+      ErlangCaseExpression caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
+      if (Comparing.equal(PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class), PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class))) return false; 
+    }
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
   }
 
@@ -103,6 +108,11 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
 
     if (caseExpressionOrigin != null && caseExpression == caseExpressionOrigin && crClause != crClauseOrigin) return true;
     return false;
+  }
+
+  @NotNull
+  public List<ErlangQVar> getAllResults() {
+    return myVarList;
   }
 
   @Nullable

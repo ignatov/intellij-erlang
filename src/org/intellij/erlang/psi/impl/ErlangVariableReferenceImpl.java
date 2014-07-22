@@ -18,11 +18,9 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiReferenceBase;
-import com.intellij.psi.ResolveState;
+import com.intellij.psi.*;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
@@ -42,25 +40,45 @@ import java.util.Map;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
-public class ErlangVariableReferenceImpl extends PsiReferenceBase<ErlangQVar> {
+public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<ErlangQVar> {
   public ErlangVariableReferenceImpl(@NotNull ErlangQVar element, TextRange range) {
     super(element, range);
   }
 
+  @NotNull
   @Override
-  public PsiElement resolve() {
+  public ResolveResult[] multiResolve(boolean b) {
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
     ErlangListComprehension lc = PsiTreeUtil.getParentOfType(myElement, ErlangListComprehension.class);
     ErlangCompositeElement place = lc != null ? lc.getLcExprs() : myElement;
     ResolveUtil.treeWalkUp(place, processor);
-    ErlangQVar result = processor.getResult();
-    if (result != null) return result;
+    List<ErlangQVar> result = processor.getAllResults();
+    if (!result.isEmpty()) return PsiElementResolveResult.createResults(result);
 
     ErlangModule module = getErlangModule();
-    if (module == null) return null;
+    if (module == null) return ResolveResult.EMPTY_ARRAY;
     module.processDeclarations(processor, ResolveState.initial(), module, module);
 
-    return processor.getResult();
+    List<ErlangQVar> allResults = processor.getAllResults();
+    return PsiElementResolveResult.createResults(allResults);
+  }
+
+  @Nullable
+  @Override
+  public PsiElement resolve() {
+    ResolveResult[] resolveResults = multiResolve(false);
+    return resolveResults.length > 0 ? resolveResults[0].getElement() : null;
+  }
+
+  @Override
+  public boolean isReferenceTo(PsiElement element) {
+    ResolveResult[] results = this.multiResolve(false);
+    for (ResolveResult result : results) {
+      PsiElement resultElement = result.getElement();
+      if (resultElement instanceof ErlangQVar && Comparing.equal(element.getText(), resultElement.getText())) return true;
+    }
+
+    return false;
   }
 
   @Nullable
