@@ -21,6 +21,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
 import org.intellij.erlang.ErlangModuleType;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -41,14 +42,19 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
         myModulesComboBox.setEnabled(myRunInModuleCheckBox.isSelected());
       }
     });
+    myModulesComboBox.setVisible(!ErlangSystemUtil.isSmallIde());
+    myRunInModuleCheckBox.setVisible(!ErlangSystemUtil.isSmallIde());
   }
 
   @Override
   protected void resetEditorFrom(@NotNull RebarRunConfigurationBase configuration) {
     myCommandText.setText(configuration.getCommand());
     mySkipDependenciesCheckBox.setSelected(configuration.isSkipDependencies());
-    myModulesComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
-    Module module = configuration.getConfigurationModule().getModule();
+    Module module = null;
+    if (!ErlangSystemUtil.isSmallIde()) {
+      myModulesComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+      module = configuration.getConfigurationModule().getModule();
+    }
     if (module != null) {
       setRunInModuleSelected(true);
       myModulesComboBox.setSelectedModule(module);
