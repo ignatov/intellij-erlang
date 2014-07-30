@@ -19,18 +19,16 @@ package org.intellij.erlang;
 import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
 import com.intellij.ide.util.projectWizard.ModuleBuilderListener;
-import com.intellij.ide.util.projectWizard.SourcePathsBuilder;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.projectRoots.SdkTypeId;
 import com.intellij.openapi.roots.ModifiableRootModel;
-import org.intellij.erlang.ErlangModuleType;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangModuleBuilder extends JavaModuleBuilder implements SourcePathsBuilder, ModuleBuilderListener {
+public class ErlangModuleBuilder extends JavaModuleBuilder implements ModuleBuilderListener {
   @Override
   public void setupRootModel(ModifiableRootModel modifiableRootModel) throws ConfigurationException {
     addListener(this);
