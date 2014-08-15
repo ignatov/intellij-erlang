@@ -1,5 +1,6 @@
 ## Erlang plugin
-[Erlang Plugin](http://plugins.jetbrains.com/plugin/?pluginId=7083) turns [IntelliJ IDEA](http://www.jetbrains.com/idea/) to a convenient [Erlang](http://www.erlang.org/) IDE.
+[Erlang Plugin](http://plugins.jetbrains.com/plugin/?pluginId=7083) turns [IntelliJ IDEA](http://www.jetbrains.com/idea/) 
+and other IntelliJ-based (RubyMine, PyCharm, WebStorm, etc.) products to a convenient [Erlang](http://www.erlang.org/) IDE.
 
 ## Pre-release builds
 You can manually set up the latest plugin version from the [releases page](https://github.com/ignatov/intellij-erlang/releases) or from the [intellij-erlang-builds](https://www.dropbox.com/sh/4sbgxzjto5fa21b/1cpM3Nb-yF) folder.
