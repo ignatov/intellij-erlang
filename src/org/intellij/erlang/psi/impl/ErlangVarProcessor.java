@@ -91,7 +91,9 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     }
     if (narrowestParentScopeOwner instanceof ErlangCrClause) {
       ErlangCaseExpression caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
-      if (Comparing.equal(PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class), PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class))) return false; 
+      if (Comparing.equal(
+        PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class),
+        PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false; 
     }
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
   }
