@@ -1626,6 +1626,19 @@ public class ErlangPsiImplUtil {
     return TextRange.create(start, start + child.getLength());
   }
 
+  public static boolean fromTheSameCaseExpression(@NotNull PsiElement origin, @NotNull PsiElement element) {
+    if (element instanceof ErlangQVar && Comparing.equal(element.getText(), element.getText())) {
+      ErlangCompositeElement cr2 = PsiTreeUtil.getParentOfType(element, ErlangCrClause.class);
+      ErlangCompositeElement cr1 = PsiTreeUtil.getParentOfType(origin, ErlangCrClause.class);
+      if (cr1 != null && cr2 != null) {
+        ErlangCaseExpression ce1 = PsiTreeUtil.getParentOfType(element, ErlangCaseExpression.class);
+        ErlangCaseExpression ce2 = PsiTreeUtil.getParentOfType(origin, ErlangCaseExpression.class);
+        if (Comparing.equal(ce1, ce2)) return true;
+      }
+    }
+    return false;
+  }
+
   public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {
     private final String myFunName;
     private final String myModule;

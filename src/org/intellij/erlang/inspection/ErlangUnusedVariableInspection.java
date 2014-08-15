@@ -25,6 +25,7 @@ import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangRenameVariableFix;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,9 +45,15 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
               PsiElement resolve = reference != null ? reference.resolve() : null;
               if (resolve == null) {
                 Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
-                if (search.findFirst() == null) {
-                  problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'", ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());
+                for (PsiReference ref : search) {
+                  PsiElement element = ref.getElement();
+                  if (ErlangPsiImplUtil.fromTheSameCaseExpression(o, element)) {
+                    PsiReference reference1 = element.getReference();
+                    if (reference1 == null || reference1.resolve() == null) continue;
+                  }
+                  return;
                 }
+                problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'", ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());
               }
             }
           }
