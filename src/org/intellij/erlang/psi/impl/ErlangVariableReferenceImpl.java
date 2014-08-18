@@ -18,7 +18,6 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
-import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.intellij.psi.scope.BaseScopeProcessor;
@@ -73,10 +72,9 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
   @Override
   public boolean isReferenceTo(PsiElement element) {
     if (!(element instanceof ErlangQVar)) return false;
-    ResolveResult[] results = multiResolve(false);
-    for (ResolveResult result : results) {
+    for (ResolveResult result : multiResolve(false)) {
       PsiElement resultElement = result.getElement();
-      if (resultElement instanceof ErlangQVar && Comparing.equal(element.getText(), resultElement.getText())) return true;
+      if (resultElement instanceof ErlangQVar && resultElement.isEquivalentTo(element)) return true;
     }
     if (fromTheSameCaseExpression(getElement(), element)) return true;
     return false;

@@ -54,6 +54,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     if (!(psiElement instanceof ErlangQVar)) return true;
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
+    if (inFunArgList(myOrigin)) return true;
     
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
@@ -74,10 +75,17 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
-      return !myVarList.add((ErlangQVar) psiElement); // put all possible variables to list
+      // put all possible variables to list
+      boolean inArgDefList = inFunArgList(psiElement);
+      return !myVarList.add((ErlangQVar) psiElement) && !inArgDefList;
     }
 
     return true;
+  }
+
+  private static boolean inFunArgList(PsiElement psiElement) {
+    ErlangArgumentDefinitionList list = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinitionList.class);
+    return list != null && list.getParent() instanceof ErlangFunClause;
   }
 
   private boolean hasNarrowerParentScope(PsiElement psiElement) {

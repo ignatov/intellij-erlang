@@ -63,6 +63,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test365()               { doTest(); }
   public void test387()               { doTest(); }
   public void testMultiTarget()       { doTest(); }
+  public void testInFunClause()       { doTest(); }
 
   public void testR17SyntaxError() {
     //noinspection unchecked
