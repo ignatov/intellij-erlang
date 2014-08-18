@@ -809,6 +809,17 @@ public class ErlangPsiImplUtil {
   public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return processDeclarationRecursive(o, processor, state);
   }
+  
+  @SuppressWarnings("UnusedParameters")
+  public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    List<ErlangCrClause> crClauseList = o.getCrClauseList();
+    boolean result = true;
+    for (ErlangCrClause c : crClauseList) {
+      ErlangClauseBody clauseBody = c.getClauseBody();
+      if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
+    }
+    return result;
+  }
 
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangModule o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
@@ -1613,6 +1624,19 @@ public class ErlangPsiImplUtil {
   private static TextRange rangeInParent(@NotNull TextRange parent, @NotNull TextRange child) {
     int start = child.getStartOffset() - parent.getStartOffset();
     return TextRange.create(start, start + child.getLength());
+  }
+
+  public static boolean fromTheSameCaseExpression(@NotNull PsiElement origin, @NotNull PsiElement element) {
+    if (element instanceof ErlangQVar && Comparing.equal(element.getText(), element.getText())) {
+      ErlangCompositeElement cr2 = PsiTreeUtil.getParentOfType(element, ErlangCrClause.class);
+      ErlangCompositeElement cr1 = PsiTreeUtil.getParentOfType(origin, ErlangCrClause.class);
+      if (cr1 != null && cr2 != null) {
+        ErlangCaseExpression ce1 = PsiTreeUtil.getParentOfType(element, ErlangCaseExpression.class);
+        ErlangCaseExpression ce2 = PsiTreeUtil.getParentOfType(origin, ErlangCaseExpression.class);
+        if (Comparing.equal(ce1, ce2)) return true;
+      }
+    }
+    return false;
   }
 
   public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {

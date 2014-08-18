@@ -9,6 +9,8 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.ResolveState;
+import com.intellij.psi.scope.PsiScopeProcessor;
 
 public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements ErlangCaseExpression {
 
@@ -49,6 +51,10 @@ public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements Er
   @Nullable
   public PsiElement getOf() {
     return findChildByType(ERL_OF);
+  }
+
+  public boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place) {
+    return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }
 
 }
