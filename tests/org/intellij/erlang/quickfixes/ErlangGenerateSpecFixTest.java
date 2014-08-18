@@ -24,7 +24,7 @@ public class ErlangGenerateSpecFixTest extends ErlangQuickFixTestBase {
   public void testMultipleClauses() throws Throwable { doGenerateSpecTest(); }
 
   public void testNoActionIfSpecExists() throws Throwable {
-    final String testName = getTestName(true);
+    String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
     List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(ErlangGenerateSpecFix.NAME);
     IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);

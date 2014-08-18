@@ -25,10 +25,10 @@ import java.util.List;
 public class ErlangIncludeDirectoriesInspection extends LocalInspectionTool {
   @Nullable
   @Override
-  public ProblemDescriptor[] checkFile(@NotNull final PsiFile psiFile, @NotNull final InspectionManager manager, final boolean isOnTheFly) {
+  public ProblemDescriptor[] checkFile(@NotNull PsiFile psiFile, @NotNull InspectionManager manager, boolean isOnTheFly) {
     if (!(psiFile instanceof ErlangFile)) return ProblemDescriptor.EMPTY_ARRAY;
     VirtualFile file = psiFile.getVirtualFile();
-    final Module module = file != null ? ModuleUtilCore.findModuleForFile(file, psiFile.getProject()) : null;
+    Module module = file != null ? ModuleUtilCore.findModuleForFile(file, psiFile.getProject()) : null;
     if (module == null) return ProblemDescriptor.EMPTY_ARRAY;
     List<VirtualFile> notIncludedPaths = getIncludeFoldersNotMarkedAsIncludeDirectories(module);
     if (!notIncludedPaths.isEmpty()) {

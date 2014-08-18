@@ -81,7 +81,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-      final AccessToken token = WriteAction.start();
+      AccessToken token = WriteAction.start();
       String name;
       try {
         ErlangElementFactory.createQAtomFromText(project, myShouldBeName);
@@ -120,7 +120,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-      final AccessToken token = WriteAction.start();
+      AccessToken token = WriteAction.start();
       try {
         VirtualFile virtualFile = myModule.getContainingFile().getVirtualFile();
         if (virtualFile != null) {

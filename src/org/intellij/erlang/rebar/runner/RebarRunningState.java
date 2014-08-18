@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 final class RebarRunningState extends CommandLineState {
   private final RebarRunConfigurationBase myConfiguration;
 
-  public RebarRunningState(@NotNull final ExecutionEnvironment env, @NotNull final RebarRunConfigurationBase config) {
+  public RebarRunningState(@NotNull ExecutionEnvironment env, @NotNull RebarRunConfigurationBase config) {
     super(env);
     myConfiguration = config;
   }
@@ -41,10 +41,10 @@ final class RebarRunningState extends CommandLineState {
   @NotNull
   @Override
   public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
-    final TextConsoleBuilder consoleBuilder = new TextConsoleBuilderImpl(myConfiguration.getProject()) {
+    TextConsoleBuilder consoleBuilder = new TextConsoleBuilderImpl(myConfiguration.getProject()) {
       @Override
       public ConsoleView getConsole() {
-        final ConsoleView consoleView = super.getConsole();
+        ConsoleView consoleView = super.getConsole();
         ErlangConsoleUtil.attachFilters(myConfiguration.getProject(), consoleView);
         return consoleView;
       }

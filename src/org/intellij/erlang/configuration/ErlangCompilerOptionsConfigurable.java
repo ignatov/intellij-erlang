@@ -26,7 +26,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   private final ErlangCompilerSettings mySettings;
   private final Project myProject;
 
-  public ErlangCompilerOptionsConfigurable(final Project project) {
+  public ErlangCompilerOptionsConfigurable(Project project) {
     super(project);
     myProject = project;
     mySettings = ErlangCompilerSettings.getInstance(project);

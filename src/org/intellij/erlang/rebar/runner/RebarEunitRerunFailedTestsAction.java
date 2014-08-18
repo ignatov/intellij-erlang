@@ -43,7 +43,7 @@ import java.util.Set;
 public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
   static {
     // enables rerun failed tests action in RubyMine
-    final String rerunFailedTestsActionId = "RerunFailedTests";
+    String rerunFailedTestsActionId = "RerunFailedTests";
     ActionManager actionManager = ActionManager.getInstance();
     AnAction rerunFailedTestsAction = actionManager.getAction(rerunFailedTestsActionId);
     if (rerunFailedTestsAction == null) {
@@ -146,7 +146,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       }
 
       private String createFailedTestsListMessage(List<ErlangFunction> failedTests) {
-        final int maxShownTests = 3;
+        int maxShownTests = 3;
         List<String> testNames = takeFunctionNames(failedTests, maxShownTests);
         int notShownTestsCount = failedTests.size() - testNames.size();
         String more = notShownTestsCount > 0 ? " and " + notShownTestsCount + " more" : "";

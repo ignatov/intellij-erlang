@@ -45,7 +45,7 @@ public class ErlangInlineVariableTest extends LightCodeInsightFixtureTestCase {
   }
 
   private void doTest() {
-    final String testName = getTestName(true);
+    String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
     PsiElement element = myFixture.getElementAtCaret();
     assertInstanceOf(element, ErlangQVar.class);

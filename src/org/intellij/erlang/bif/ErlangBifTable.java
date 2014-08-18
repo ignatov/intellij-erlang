@@ -423,7 +423,7 @@ public final class ErlangBifTable {
 
   @NotNull
   public static List<ErlangBifDescriptor> getBifs(@NotNull String moduleName, @NotNull String functionName) {
-    final List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();
+    List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();
     for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {
       if (functionName.equals(bifDescriptor.getName())) {
         bifDescriptors.add(bifDescriptor);
@@ -434,7 +434,7 @@ public final class ErlangBifTable {
 
 
   public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {
-    final Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);
+    Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);
     for (ErlangBifDescriptor bifDescriptor : erlangBifDescriptors) {
       if (bifDescriptor.getModule().equals(moduleName) && bifDescriptor.getName().equals(functionName) &&
         bifDescriptor.getArity() == arity) {

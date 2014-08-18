@@ -39,7 +39,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void doEnterTest() throws Exception { doTest(false); }
 
   public void doTest(boolean format) throws Exception {
-    final String testName = getTestName(true);
+    String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
     String after = doTest(format, testName);
     myFixture.checkResultByFile(after);
@@ -51,7 +51,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void doParasiteTest(boolean format) throws Exception {
     String appendix = "\nfoo() -> ok.";
-    final String testName = getTestName(true).replace("Parasite", "");
+    String testName = getTestName(true).replace("Parasite", "");
     String text = FileUtil.loadFile(new File(getTestDataPath() + testName + ".erl")) + appendix;
     myFixture.configureByText(testName + ".erl", text);
     String after = doTest(format, testName);

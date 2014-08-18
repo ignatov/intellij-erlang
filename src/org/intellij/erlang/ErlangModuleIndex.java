@@ -123,7 +123,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   }
 
   private static List<VirtualFile> getVirtualFilesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
-    final ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();
+    ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();
     Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(ERLANG_MODULE_INDEX, name, searchScope);
     ArrayList<VirtualFile> filesList = new ArrayList<VirtualFile>(files);
     Collections.sort(filesList, new MyProjectFilesComparator(projectFileIndex, searchScope));
@@ -190,7 +190,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   private static class MyDataIndexer implements DataIndexer<String, Void, FileContent> {
     @Override
     @NotNull
-    public Map<String, Void> map(final FileContent inputData) {
+    public Map<String, Void> map(FileContent inputData) {
       return Collections.singletonMap(inputData.getFile().getNameWithoutExtension(), null);
     }
   }

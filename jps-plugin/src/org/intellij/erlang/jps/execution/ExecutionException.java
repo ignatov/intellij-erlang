@@ -16,15 +16,15 @@
 package org.intellij.erlang.jps.execution;
 
 public class ExecutionException extends Exception {
-  public ExecutionException(final String s) {
+  public ExecutionException(String s) {
     super(s);
   }
 
-  public ExecutionException(final Throwable cause) {
+  public ExecutionException(Throwable cause) {
     super(cause == null ? null : cause.getMessage(), cause);
   }
 
-  public ExecutionException(final String s, Throwable cause) {
+  public ExecutionException(String s, Throwable cause) {
     super(s, cause);
   }
 }

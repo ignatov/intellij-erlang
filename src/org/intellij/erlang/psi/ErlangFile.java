@@ -39,7 +39,7 @@ public interface ErlangFile extends PsiFile {
   List<ErlangFunction> getFunctions();
 
   @Nullable
-  ErlangFunction getFunction(@NotNull String name, final int argsCount);
+  ErlangFunction getFunction(@NotNull String name, int argsCount);
 
   @NotNull
   Collection<ErlangFunction> getFunctionsByName(@NotNull String name);

@@ -36,42 +36,42 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
 
   public void setUp() throws Exception {
     super.setUp();
-    final File currentTestRoot = new File("testData/rebar/sampleProject");
+    File currentTestRoot = new File("testData/rebar/sampleProject");
     FileUtil.copyDir(currentTestRoot, new File(getProject().getBaseDir().getPath()));
     setUpProjectSdk();
   }
 
   public void testCompilationErrorRelativePath() {
-    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
-    final String consoleOutput = "some text||src/a_module.erl:123: more text here";
-    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
+    String consoleOutput = "some text||src/a_module.erl:123: more text here";
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(11, result.highlightStartOffset);
     assertEquals(31, result.highlightEndOffset);
     assertNotNull(result.hyperlinkInfo);
   }
 
   public void testCompilationErrorAbsolutePath() {
-    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
-    final String consoleOutput = "some text||" + getProject().getBasePath() + "/src/a_module.erl:123: more text here";
-    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
+    String consoleOutput = "some text||" + getProject().getBasePath() + "/src/a_module.erl:123: more text here";
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(11, result.highlightStartOffset);
     assertEquals(32 + getProject().getBasePath().length(), result.highlightEndOffset);
     assertNotNull(result.hyperlinkInfo);
   }
 
   public void testCompilationErrorMissingPath() {
-    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
-    final String consoleOutput = "some text||src/B_module.erl:123: more text here"; // may be case insensitive
-    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
+    String consoleOutput = "some text||src/B_module.erl:123: more text here"; // may be case insensitive
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(11, result.highlightStartOffset);
     assertEquals(31, result.highlightEndOffset);
     assertNull(result.hyperlinkInfo);
   }
 
   public void testEunitErrorPath() {
-    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH);
-    final String consoleOutput = "some text (src/a_module.erl, line 123) more text here";
-    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH);
+    String consoleOutput = "some text (src/a_module.erl, line 123) more text here";
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(11, result.highlightStartOffset);
     assertEquals(37, result.highlightEndOffset);
     assertNotNull(result.hyperlinkInfo);
@@ -84,31 +84,31 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
     VirtualFile vFile = LocalFileSystem.getInstance().findFileByIoFile(file);
     assertNotNull(vFile);
     String canonicalPath = vFile.getCanonicalPath();
-    final String consoleOutput = "in function bisect_server_test:'-false_test/0-fun-0-'/0 (" + canonicalPath + ", line 14)";
-    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    String consoleOutput = "in function bisect_server_test:'-false_test/0-fun-0-'/0 (" + canonicalPath + ", line 14)";
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertNotNull(result.hyperlinkInfo);
   }
 
   public void testEunitFailurePath() {
-    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.EUNIT_FAILURE_PATH);
-    final String consoleOutput = "some text [{file,\"src/a_module.erl\"},{line,123}] more text here";
-    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.EUNIT_FAILURE_PATH);
+    String consoleOutput = "some text [{file,\"src/a_module.erl\"},{line,123}] more text here";
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertEquals(10, result.highlightStartOffset);
     assertEquals(48, result.highlightEndOffset);
     assertNotNull(result.hyperlinkInfo);
   }
 
   public void testLinkToSdkFile() {
-    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
-    final String consoleOutput = "some text||src/lists.erl:123: more text here";
-    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
+    String consoleOutput = "some text||src/lists.erl:123: more text here";
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertNotNull(result.hyperlinkInfo);
   }
 
   public void testLinkToSdkFileNoSrc() {
-    final FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
-    final String consoleOutput = "some text||lists.erl:123: more text here";
-    final Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
+    String consoleOutput = "some text||lists.erl:123: more text here";
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     assertNotNull(result.hyperlinkInfo);
   }
 

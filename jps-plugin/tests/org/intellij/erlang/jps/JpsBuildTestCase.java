@@ -77,7 +77,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     try {
       File file = new File(FileUtil.toSystemDependentName(path));
       assertTrue("File " + file.getAbsolutePath() + " doesn't exist", file.exists());
-      final File tempFile = new File(file.getParentFile(), "__" + newName);
+      File tempFile = new File(file.getParentFile(), "__" + newName);
       FileUtil.rename(file, tempFile);
       File newFile = new File(file.getParentFile(), newName);
       FileUtil.copyContent(tempFile, newFile);
@@ -105,7 +105,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     super.tearDown();
   }
 
-  protected static void assertOutput(final String outputPath, TestFileSystemBuilder expected) {
+  protected static void assertOutput(String outputPath, TestFileSystemBuilder expected) {
     expected.build().assertDirectoryEqual(new File(FileUtil.toSystemDependentName(outputPath)));
   }
 
@@ -119,7 +119,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     change(filePath, null);
   }
 
-  protected static void change(String filePath, final @Nullable String newContent) {
+  protected static void change(String filePath, @Nullable String newContent) {
     try {
       File file = new File(FileUtil.toSystemDependentName(filePath));
       assertTrue("File " + file.getAbsolutePath() + " doesn't exist", file.exists());
@@ -167,11 +167,11 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
   protected static void delete(String filePath) {
     File file = new File(FileUtil.toSystemDependentName(filePath));
     assertTrue("File " + file.getAbsolutePath() + " doesn't exist", file.exists());
-    final boolean deleted = FileUtil.delete(file);
+    boolean deleted = FileUtil.delete(file);
     assertTrue("Cannot delete file " + file.getAbsolutePath(), deleted);
   }
 
-  protected JpsSdk<JpsDummyElement> addJdk(final String name) {
+  protected JpsSdk<JpsDummyElement> addJdk(String name) {
     try {
       return addJdk(name, FileUtil.toSystemIndependentName(ClasspathBootstrap.getResourceFile(Object.class).getCanonicalPath()));
     }
@@ -180,7 +180,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     }
   }
 
-  protected JpsSdk<JpsDummyElement> addJdk(final String name, final String path) {
+  protected JpsSdk<JpsDummyElement> addJdk(String name, String path) {
     String homePath = System.getProperty("java.home");
     String versionString = System.getProperty("java.version");
     JpsTypedLibrary<JpsSdk<JpsDummyElement>> jdk = myModel.getGlobal().addSdk(name, homePath, versionString, JpsJavaSdkType.INSTANCE);
@@ -192,7 +192,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     return StringUtil.decapitalize(StringUtil.trimStart(getName(), "test"));
   }
 
-  protected ProjectDescriptor createProjectDescriptor(final BuildLoggingManager buildLoggingManager) {
+  protected ProjectDescriptor createProjectDescriptor(BuildLoggingManager buildLoggingManager) {
     try {
       BuildTargetIndexImpl targetIndex = new BuildTargetIndexImpl(myModel);
       ModuleExcludeIndex index = new ModuleExcludeIndexImpl(myModel);
@@ -253,12 +253,12 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
                                                        JpsSdk<T> sdk,
                                                        M moduleType) {
     JpsModule module = myProject.addModule(moduleName, moduleType);
-    final JpsSdkType<T> sdkType = sdk.getSdkType();
-    final JpsSdkReferencesTable sdkTable = module.getSdkReferencesTable();
+    JpsSdkType<T> sdkType = sdk.getSdkType();
+    JpsSdkReferencesTable sdkTable = module.getSdkReferencesTable();
     sdkTable.setSdkReference(sdkType, sdk.createReference());
 
     if (sdkType instanceof JpsJavaSdkTypeWrapper) {
-      final JpsSdkReference<T> wrapperRef = sdk.createReference();
+      JpsSdkReference<T> wrapperRef = sdk.createReference();
       sdkTable.setSdkReference(JpsJavaSdkType.INSTANCE, JpsJavaExtensionService.
         getInstance().createWrappedJavaSdkReference((JpsJavaSdkTypeWrapper)sdkType, wrapperRef));
     }
@@ -312,7 +312,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     myLogger.assertDeleted(new File[]{myProjectDir, myDataStorageRoot}, paths);
   }
 
-  protected BuildResult doBuild(final ProjectDescriptor descriptor, CompileScopeTestBuilder scopeBuilder) {
+  protected BuildResult doBuild(ProjectDescriptor descriptor, CompileScopeTestBuilder scopeBuilder) {
     IncProjectBuilder builder = new IncProjectBuilder(descriptor, BuilderRegistry.getInstance(), myBuildParams, CanceledStatus.NULL, null, true);
     BuildResult result = new BuildResult();
     builder.addMessageHandler(result);
@@ -329,7 +329,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     return createFile(relativePath, "");
   }
 
-  public String createFile(String relativePath, final String text) {
+  public String createFile(String relativePath, String text) {
     try {
       File file = new File(getOrCreateProjectDir(), relativePath);
       FileUtil.writeToFile(file, text);
@@ -378,7 +378,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     return FileUtil.createTempDirectory("prj", null);
   }
 
-  public String getAbsolutePath(final String pathRelativeToProjectRoot) {
+  public String getAbsolutePath(String pathRelativeToProjectRoot) {
     return FileUtil.toSystemIndependentName(new File(getOrCreateProjectDir(), pathRelativeToProjectRoot).getAbsolutePath());
   }
 

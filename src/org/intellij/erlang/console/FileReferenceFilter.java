@@ -64,7 +64,7 @@ public final class FileReferenceFilter implements Filter {
     if (filePathIndex == -1) {
       throw new InvalidExpressionException("Expression must contain " + PATH_MACROS + " macros.");
     }
-    final TreeMap<Integer,String> map = new TreeMap<Integer, String>();
+    TreeMap<Integer,String> map = new TreeMap<Integer, String>();
     map.put(filePathIndex, PATH_MACROS);
     expression = StringUtil.replace(expression, PATH_MACROS, FILE_PATH_REGEXP);
 
@@ -80,9 +80,9 @@ public final class FileReferenceFilter implements Filter {
 
     // The block below determines the registers based on the sorted map.
     int count = 0;
-    for (final Integer integer : map.keySet()) {
+    for (Integer integer : map.keySet()) {
       count++;
-      final String s = map.get(integer);
+      String s = map.get(integer);
 
       if (PATH_MACROS.equals(s)) {
         filePathIndex = count;
@@ -102,17 +102,17 @@ public final class FileReferenceFilter implements Filter {
   }
 
   public Result applyFilter(@NotNull String line, int entireLength) {
-    final Matcher matcher = myPattern.matcher(line);
+    Matcher matcher = myPattern.matcher(line);
     if (!matcher.find()) {
       return null;
     }
-    final String filePath = matcher.group(myFileMatchGroup);
-    final int fileLine = matchGroupToNumber(matcher, myLineMatchGroup);
-    final int fileCol = matchGroupToNumber(matcher, myColumnMatchGroup);
-    final int highlightStartOffset = entireLength - line.length() + matcher.start(0);
-    final int highlightEndOffset = highlightStartOffset + (matcher.end(0) - matcher.start(0));
-    final VirtualFile absolutePath = resolveAbsolutePath(filePath);
-    final HyperlinkInfo hyperLink = (absolutePath != null
+    String filePath = matcher.group(myFileMatchGroup);
+    int fileLine = matchGroupToNumber(matcher, myLineMatchGroup);
+    int fileCol = matchGroupToNumber(matcher, myColumnMatchGroup);
+    int highlightStartOffset = entireLength - line.length() + matcher.start(0);
+    int highlightEndOffset = highlightStartOffset + (matcher.end(0) - matcher.start(0));
+    VirtualFile absolutePath = resolveAbsolutePath(filePath);
+    HyperlinkInfo hyperLink = (absolutePath != null
       ? new OpenFileHyperlinkInfo(myProject, absolutePath, fileLine, fileCol) : null);
     return new Result(highlightStartOffset, highlightEndOffset, hyperLink);
   }
@@ -130,26 +130,26 @@ public final class FileReferenceFilter implements Filter {
 
   @Nullable
   private VirtualFile resolveAbsolutePath(@NotNull String path) {
-    final VirtualFile asIsFile = pathToVirtualFile(path);
+    VirtualFile asIsFile = pathToVirtualFile(path);
     if (asIsFile != null) {
       return asIsFile;
     }
-    final String projectBasedPath = path.startsWith(myProject.getBasePath())
+    String projectBasedPath = path.startsWith(myProject.getBasePath())
       ? path : new File(myProject.getBasePath(), path).getAbsolutePath();
-    final VirtualFile projectBasedFile = pathToVirtualFile(projectBasedPath);
+    VirtualFile projectBasedFile = pathToVirtualFile(projectBasedPath);
     if (projectBasedFile != null) {
       return projectBasedFile;
     }
-    final Matcher filenameMatcher = PATTERN_FILENAME.matcher(path);
+    Matcher filenameMatcher = PATTERN_FILENAME.matcher(path);
     if (filenameMatcher.find()) {
-      final String filename = filenameMatcher.group(1);
-      final GlobalSearchScope projectScope = ProjectScope.getProjectScope(myProject);
-      final PsiFile[] projectFiles = FilenameIndex.getFilesByName(myProject, filename, projectScope);
+      String filename = filenameMatcher.group(1);
+      GlobalSearchScope projectScope = ProjectScope.getProjectScope(myProject);
+      PsiFile[] projectFiles = FilenameIndex.getFilesByName(myProject, filename, projectScope);
       if (projectFiles.length > 0) {
         return projectFiles[0].getVirtualFile();
       }
-      final GlobalSearchScope libraryScope = ProjectScope.getLibrariesScope(myProject);
-      final PsiFile[] libraryFiles = FilenameIndex.getFilesByName(myProject, filename, libraryScope);
+      GlobalSearchScope libraryScope = ProjectScope.getLibrariesScope(myProject);
+      PsiFile[] libraryFiles = FilenameIndex.getFilesByName(myProject, filename, libraryScope);
       if (libraryFiles.length > 0) {
         return libraryFiles[0].getVirtualFile();
       }
@@ -159,7 +159,7 @@ public final class FileReferenceFilter implements Filter {
 
   @Nullable
   private static VirtualFile pathToVirtualFile(@NotNull String path) {
-    final String normalizedPath = path.replace(File.separatorChar, '/');
+    String normalizedPath = path.replace(File.separatorChar, '/');
     return LocalFileSystem.getInstance().findFileByPath(normalizedPath);
   }
 }

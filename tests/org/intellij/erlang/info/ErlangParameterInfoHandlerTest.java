@@ -39,9 +39,9 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
 
   private void doTest(String text, int highlightedParameterIndex) {
     myFixture.configureByText("a.erl", text);
-    final ErlangParameterInfoHandler parameterInfoHandler = new ErlangParameterInfoHandler();
-    final CreateParameterInfoContext createContext = new MockCreateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
-    final ErlangArgumentList list = parameterInfoHandler.findElementForParameterInfo(createContext);
+    ErlangParameterInfoHandler parameterInfoHandler = new ErlangParameterInfoHandler();
+    CreateParameterInfoContext createContext = new MockCreateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
+    ErlangArgumentList list = parameterInfoHandler.findElementForParameterInfo(createContext);
 
     if (highlightedParameterIndex >= 0) {
       assertNotNull(list);
@@ -51,7 +51,7 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
       assertTrue(itemsToShow.length > 0);
     }
     MockUpdateParameterInfoContext updateContext = new MockUpdateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
-    final ErlangArgumentList element = parameterInfoHandler.findElementForUpdatingParameterInfo(updateContext);
+    ErlangArgumentList element = parameterInfoHandler.findElementForUpdatingParameterInfo(updateContext);
     if (element == null) {
       assertEquals(-1, highlightedParameterIndex);
     }

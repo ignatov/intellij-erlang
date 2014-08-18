@@ -82,7 +82,7 @@ public class GeneralCommandLine implements UserDataHolder {
     return myExePath;
   }
 
-  public void setExePath(@NotNull @NonNls final String exePath) {
+  public void setExePath(@NotNull @NonNls String exePath) {
     myExePath = exePath.trim();
   }
 
@@ -90,11 +90,11 @@ public class GeneralCommandLine implements UserDataHolder {
     return myWorkDirectory;
   }
 
-  public void setWorkDirectory(@Nullable @NonNls final String path) {
+  public void setWorkDirectory(@Nullable @NonNls String path) {
     setWorkDirectory(path != null ? new File(path) : null);
   }
 
-  public void setWorkDirectory(@Nullable final File workDirectory) {
+  public void setWorkDirectory(@Nullable File workDirectory) {
     myWorkDirectory = workDirectory;
   }
 
@@ -141,19 +141,19 @@ public class GeneralCommandLine implements UserDataHolder {
     return myPassParentEnvironment;
   }
 
-  public void addParameters(final String... parameters) {
+  public void addParameters(String... parameters) {
     for (String parameter : parameters) {
       addParameter(parameter);
     }
   }
 
-  public void addParameters(@NotNull final List<String> parameters) {
-    for (final String parameter : parameters) {
+  public void addParameters(@NotNull List<String> parameters) {
+    for (String parameter : parameters) {
       addParameter(parameter);
     }
   }
 
-  public void addParameter(@NotNull @NonNls final String parameter) {
+  public void addParameter(@NotNull @NonNls String parameter) {
     myProgramParams.add(parameter);
   }
 
@@ -166,11 +166,11 @@ public class GeneralCommandLine implements UserDataHolder {
     return myCharset;
   }
 
-  public void setCharset(@NotNull final Charset charset) {
+  public void setCharset(@NotNull Charset charset) {
     myCharset = charset;
   }
 
-  public void setRedirectErrorStream(final boolean redirectErrorStream) {
+  public void setRedirectErrorStream(boolean redirectErrorStream) {
     myRedirectErrorStream = redirectErrorStream;
   }
 
@@ -191,8 +191,8 @@ public class GeneralCommandLine implements UserDataHolder {
    * @param exeName use this executable name instead of given by {@link #setExePath(String)}
    * @return single-string representation of this command line.
    */
-  public String getCommandLineString(@Nullable final String exeName) {
-    final List<String> commands = new ArrayList<String>();
+  public String getCommandLineString(@Nullable String exeName) {
+    List<String> commands = new ArrayList<String>();
     if (exeName != null) {
       commands.add(exeName);
     }
@@ -269,7 +269,7 @@ public class GeneralCommandLine implements UserDataHolder {
     }
   }
 
-  private void setupEnvironment(final Map<String, String> environment) {
+  private void setupEnvironment(Map<String, String> environment) {
     environment.clear();
 
     if (myPassParentEnvironment) {
@@ -311,16 +311,16 @@ public class GeneralCommandLine implements UserDataHolder {
   }
 
   @Override
-  public <T> T getUserData(@NotNull final Key<T> key) {
+  public <T> T getUserData(@NotNull Key<T> key) {
     if (myUserData != null) {
-      @SuppressWarnings({"UnnecessaryLocalVariable", "unchecked"}) final T t = (T)myUserData.get(key);
+      @SuppressWarnings({"UnnecessaryLocalVariable", "unchecked"}) T t = (T)myUserData.get(key);
       return t;
     }
     return null;
   }
 
   @Override
-  public <T> void putUserData(@NotNull final Key<T> key, @Nullable final T value) {
+  public <T> void putUserData(@NotNull Key<T> key, @Nullable T value) {
     if (myUserData == null) {
       myUserData = ContainerUtil.newHashMap();
     }

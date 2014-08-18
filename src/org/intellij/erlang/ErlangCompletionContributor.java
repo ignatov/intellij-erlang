@@ -312,7 +312,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       .bold(), KEYWORD_PRIORITY);
   }
 
-  private static List<LookupElement> getLibPathLookupElements(final PsiFile file, final String includeText) {
+  private static List<LookupElement> getLibPathLookupElements(PsiFile file, final String includeText) {
     if (FileUtil.isAbsolute(includeText)) return Collections.emptyList();
 
     final VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
@@ -329,7 +329,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     List<VirtualFile> appDirs = getApplicationDirectories(file.getProject(), appName, !completingAppName);
     List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
 
-    for (final VirtualFile appRoot : appDirs) {
+    for (VirtualFile appRoot : appDirs) {
       final String appFullName = appRoot != null ? appRoot.getName() : null;
       String appShortName = appFullName != null ? getAppShortName(appFullName) : null;
       if (appRoot == null) continue;
@@ -371,7 +371,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     return dashIdx != -1 ? appFullName.substring(0, dashIdx) : appFullName;
   }
 
-  private static List<LookupElement> getModulePathLookupElements(PsiFile file, final String includeText) {
+  private static List<LookupElement> getModulePathLookupElements(PsiFile file, String includeText) {
     VirtualFile includeOwner = file.getOriginalFile().getVirtualFile();
     VirtualFile parentFile = includeOwner != null ? includeOwner.getParent() : null;
     List<LookupElement> result = new ArrayList<LookupElement>();
@@ -471,8 +471,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static Collection<String> suggestKeywords(PsiElement position) {
     TextRange posRange = position.getTextRange();
     ErlangFile posFile = (ErlangFile) position.getContainingFile();
-    final TextRange range = new TextRange(0, posRange.getStartOffset());
-    final String text = range.isEmpty() ? CompletionInitializationContext.DUMMY_IDENTIFIER : range.substring(posFile.getText());
+    TextRange range = new TextRange(0, posRange.getStartOffset());
+    String text = range.isEmpty() ? CompletionInitializationContext.DUMMY_IDENTIFIER : range.substring(posFile.getText());
 
     PsiFile file = PsiFileFactory.getInstance(posFile.getProject()).createFileFromText("a.erl", ErlangLanguage.INSTANCE, text, true, false);
     int completionOffset = posRange.getStartOffset() - range.getStartOffset();

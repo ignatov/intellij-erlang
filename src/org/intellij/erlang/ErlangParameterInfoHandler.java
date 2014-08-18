@@ -100,7 +100,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         context.showHint(args, args.getTextRange().getStartOffset(), this);
       }
       else {
-        final ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
+        ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
         if (erlGlobalFunctionCall != null) {
           ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
           if (moduleRef != null) {
@@ -143,7 +143,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     }
     int index = context.getCurrentParameterIndex();
 
-    final StringBuilder builder = new StringBuilder();
+    StringBuilder builder = new StringBuilder();
 
     boolean disabled = false;
     int start = 0;

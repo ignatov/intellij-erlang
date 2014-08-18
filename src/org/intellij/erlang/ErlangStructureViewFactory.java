@@ -119,9 +119,9 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       if (myElement instanceof ErlangFunctionClause) {
         return EMPTY_ARRAY;
       }
-      final ArrayList<TreeElement> result = new ArrayList<TreeElement>();
+      ArrayList<TreeElement> result = new ArrayList<TreeElement>();
       if (myElement instanceof ErlangFunction) {
-        final List<ErlangFunctionClause> clauses = ((ErlangFunction) myElement).getFunctionClauseList();
+        List<ErlangFunctionClause> clauses = ((ErlangFunction) myElement).getFunctionClauseList();
         if (clauses.size() != 1) {
           for (ErlangFunctionClause o : clauses) {
             result.add(new Element(o));

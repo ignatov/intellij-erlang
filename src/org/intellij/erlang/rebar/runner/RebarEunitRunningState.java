@@ -52,7 +52,7 @@ public class RebarEunitRunningState extends CommandLineState {
 
   private final RebarEunitRunConfiguration myConfiguration;
 
-  public RebarEunitRunningState(@NotNull final ExecutionEnvironment env, @NotNull RebarEunitRunConfiguration configuration) {
+  public RebarEunitRunningState(@NotNull ExecutionEnvironment env, @NotNull RebarEunitRunConfiguration configuration) {
     super(env);
     myConfiguration = configuration;
   }
@@ -159,7 +159,7 @@ public class RebarEunitRunningState extends CommandLineState {
   }
 
   private static void removeReportOptions(List<ErlangTupleExpression> eunitOptsSections) {
-    final Processor<ErlangTupleExpression> deletingProcessor = new Processor<ErlangTupleExpression>() {
+    Processor<ErlangTupleExpression> deletingProcessor = new Processor<ErlangTupleExpression>() {
       @Override
       public boolean process(ErlangTupleExpression erlangTupleExpression) {
         ErlangTermFileUtil.deleteListExpressionItem(erlangTupleExpression);

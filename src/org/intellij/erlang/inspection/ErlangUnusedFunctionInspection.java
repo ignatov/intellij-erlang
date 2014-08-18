@@ -39,13 +39,13 @@ import java.util.List;
 
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
+  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     ErlangFile erlangFile = (file instanceof ErlangFile) ? (ErlangFile) file : null;
     if (erlangFile == null) return;
     if (file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension())) return;
     if (erlangFile.isExportedAll()) return;
 
-    for (final ErlangFunction function : erlangFile.getFunctions()) {
+    for (ErlangFunction function : erlangFile.getFunctions()) {
       if (isUnusedFunction(erlangFile, function)) {
         problemsHolder.registerProblem(function.getNameIdentifier(),
           "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",

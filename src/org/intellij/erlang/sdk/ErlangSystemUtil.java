@@ -37,22 +37,22 @@ public class ErlangSystemUtil {
   }
 
   @NotNull
-  public static ProcessOutput getProcessOutput(@NotNull final String workDir,
-                                               @NotNull final String exePath,
-                                               @NotNull final String... arguments) throws ExecutionException {
+  public static ProcessOutput getProcessOutput(@NotNull String workDir,
+                                               @NotNull String exePath,
+                                               @NotNull String... arguments) throws ExecutionException {
     return getProcessOutput(STANDARD_TIMEOUT, workDir, exePath, arguments);
   }
 
   @NotNull
-  public static ProcessOutput getProcessOutput(final int timeout,
-                                               @NotNull final String workDir,
-                                               @NotNull final String exePath,
-                                               @NotNull final String... arguments) throws ExecutionException {
+  public static ProcessOutput getProcessOutput(int timeout,
+                                               @NotNull String workDir,
+                                               @NotNull String exePath,
+                                               @NotNull String... arguments) throws ExecutionException {
     if (!new File(workDir).isDirectory() || !new File(exePath).canExecute()) {
       return new ProcessOutput();
     }
 
-    final GeneralCommandLine cmd = new GeneralCommandLine();
+    GeneralCommandLine cmd = new GeneralCommandLine();
     cmd.setWorkDirectory(workDir);
     cmd.setExePath(exePath);
     cmd.addParameters(arguments);
@@ -61,25 +61,25 @@ public class ErlangSystemUtil {
   }
 
   @NotNull
-  public static ProcessOutput execute(@NotNull final GeneralCommandLine cmd) throws ExecutionException {
+  public static ProcessOutput execute(@NotNull GeneralCommandLine cmd) throws ExecutionException {
     return execute(cmd, STANDARD_TIMEOUT);
   }
 
   @NotNull
-  public static ProcessOutput execute(@NotNull final GeneralCommandLine cmd, final int timeout) throws ExecutionException {
-    final CapturingProcessHandler processHandler = new CapturingProcessHandler(cmd.createProcess());
+  public static ProcessOutput execute(@NotNull GeneralCommandLine cmd, int timeout) throws ExecutionException {
+    CapturingProcessHandler processHandler = new CapturingProcessHandler(cmd.createProcess());
     return timeout < 0 ? processHandler.runProcess() : processHandler.runProcess(timeout);
   }
 
-  public static void addStdPaths(@NotNull final GeneralCommandLine cmd, @NotNull final Sdk sdk) {
-    final List<VirtualFile> files = new ArrayList<VirtualFile>();
+  public static void addStdPaths(@NotNull GeneralCommandLine cmd, @NotNull Sdk sdk) {
+    List<VirtualFile> files = new ArrayList<VirtualFile>();
     files.addAll(Arrays.asList(sdk.getRootProvider().getFiles(OrderRootType.SOURCES)));
     files.addAll(Arrays.asList(sdk.getRootProvider().getFiles(OrderRootType.CLASSES)));
-    final Set<String> paths = new HashSet<String>();
-    for (final VirtualFile file : files) {
+    Set<String> paths = new HashSet<String>();
+    for (VirtualFile file : files) {
       paths.add(FileUtil.toSystemDependentName(file.getPath()));
     }
-    for (final String path : paths) {
+    for (String path : paths) {
       cmd.addParameter("-I");
       cmd.addParameter(path);
     }

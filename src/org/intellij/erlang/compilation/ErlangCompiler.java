@@ -64,12 +64,12 @@ public class ErlangCompiler implements TranslatingCompiler {
     context.getProgressIndicator().pushState();
     context.getProgressIndicator().setText("Hardcore compile action...");
 
-    final GeneralCommandLine commandLine = new GeneralCommandLine();
+    GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setWorkDirectory(PathUtil.getParentPath(context.getProject().getProjectFilePath()));
     commandLine.setPassParentEnvironment(true);
 
     for (Module module : moduleChunk.getNodes()) {
-      final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
+      ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
 
       for (VirtualFile sourceRoot : moduleRootManager.getSourceRoots()) {
         commandLine.addParameter("-I");
@@ -94,7 +94,7 @@ public class ErlangCompiler implements TranslatingCompiler {
 
 //      commandLine.addParameters("+warn_unused_vars", "+nowarn_shadow_vars", "+warn_unused_import");
 
-      final Sdk sdk = moduleRootManager.getSdk();
+      Sdk sdk = moduleRootManager.getSdk();
 
       if (sdk == null) {
         context.addMessage(CompilerMessageCategory.ERROR, "No SDK for module: " + module.getName(), null, -1, -1);
@@ -140,7 +140,7 @@ public class ErlangCompiler implements TranslatingCompiler {
 
   private static void addErrorToContext(Module module, String error, CompileContext context) {
 
-    final ErlangCompilerError compilerError = ErlangCompilerError.create(PathUtil.getParentPath(module.getModuleFilePath()), error);
+    ErlangCompilerError compilerError = ErlangCompilerError.create(PathUtil.getParentPath(module.getModuleFilePath()), error);
     if (compilerError == null) {
       context.addMessage(CompilerMessageCategory.ERROR, error, null, -1, -1);
       return;

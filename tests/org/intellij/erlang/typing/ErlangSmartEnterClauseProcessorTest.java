@@ -80,7 +80,7 @@ public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCode
     new WriteCommandAction(myFixture.getProject()) {
       @Override
       protected void run(Result result) throws Throwable {
-        final Editor editor = myFixture.getEditor();
+        Editor editor = myFixture.getEditor();
         for (SmartEnterProcessor processor : processors) {
           processor.process(myFixture.getProject(), editor, myFixture.getFile());
         }

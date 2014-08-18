@@ -228,9 +228,9 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
   }
 
   private static void fixUsingIncludeFile(PsiElement problem,
-                                          final PsiFile includeFile) {
+                                          PsiFile includeFile) {
     //Search the module that contains the current(problem) file & fix facets
-    final Module containedModule = ModuleUtilCore.findModuleForPsiElement(problem);
+    Module containedModule = ModuleUtilCore.findModuleForPsiElement(problem);
     if (containedModule == null) return;
     ErlangIncludeDirectoryUtil.markAsIncludeDirectory(containedModule, includeFile.getVirtualFile().getParent());
   }

@@ -13,12 +13,12 @@ public class JpsErlangSdkType extends JpsSdkType<JpsDummyElement> implements Jps
   public static final JpsErlangSdkType INSTANCE = new JpsErlangSdkType();
 
   @NotNull
-  public static File getExecutable(@NotNull final String path, @NotNull final String command) {
+  public static File getExecutable(@NotNull String path, @NotNull String command) {
     return new File(path, SystemInfo.isWindows ? command + ".exe" : command);
   }
 
   @NotNull
-  public static File getByteCodeCompilerExecutable(@NotNull final String sdkHome) {
+  public static File getByteCodeCompilerExecutable(@NotNull String sdkHome) {
     return getExecutable(new File(sdkHome, "bin").getAbsolutePath(), "erlc");
   }
 

@@ -50,7 +50,7 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   @Override
   protected void resetEditorFrom(@NotNull ErlangConsoleRunConfiguration config) {
     myModuleComboBox.removeAllItems();
-    for (final Module module : config.getValidModules()) {
+    for (Module module : config.getValidModules()) {
       if (ModuleType.get(module) == ErlangModuleType.getInstance()) {
         myModuleComboBox.addItem(module);
       }
@@ -83,10 +83,10 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   }
 
   @NotNull
-  private static FileChooserDescriptor addFileChooser(@NotNull final String title,
-                                                      @NotNull final TextFieldWithBrowseButton textField,
-                                                      @NotNull final Project project) {
-    final FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(
+  private static FileChooserDescriptor addFileChooser(@NotNull String title,
+                                                      @NotNull TextFieldWithBrowseButton textField,
+                                                      @NotNull Project project) {
+    FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(
       false, true, false, false, false, false) {
       @Override
       public boolean isFileVisible(VirtualFile file, boolean showHiddenFiles) {

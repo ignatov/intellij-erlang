@@ -33,7 +33,7 @@ public class ErlangModuleStubElementType extends ErlangNamedStubElementType<Erla
   public static final ArrayFactory<ErlangModule> ARRAY_FACTORY = new ArrayFactory<ErlangModule>() {
     @NotNull
     @Override
-    public ErlangModule[] create(final int count) {
+    public ErlangModule[] create(int count) {
       return count == 0 ? EMPTY_ARRAY : new ErlangModule[count];
     }
   };

@@ -60,7 +60,7 @@ public class ErlangNavigationUtil {
   }
 
   @Nullable
-  public static NavigatablePsiElement getNavigatableSpecFun(final String presentation, final PsiElement callbackSpec) {
+  public static NavigatablePsiElement getNavigatableSpecFun(final String presentation, PsiElement callbackSpec) {
     ErlangSpecFun specFun = PsiTreeUtil.findChildOfType(callbackSpec, ErlangSpecFun.class);
 
     if (specFun == null) return null;

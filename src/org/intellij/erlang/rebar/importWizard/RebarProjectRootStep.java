@@ -53,9 +53,9 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
   private RebarConfigurationForm myRebarConfigurationForm;
   private static final boolean ourEnabled = !SystemInfo.isWindows;
 
-  public RebarProjectRootStep(final WizardContext context) {
+  public RebarProjectRootStep(WizardContext context) {
     super(context);
-    final String projectFileDirectory = context.getProjectFileDirectory();
+    String projectFileDirectory = context.getProjectFileDirectory();
     myProjectRootComponent.addBrowseFolderListener("Select rebar.config of a rebar project to import", "", null,
       FileChooserDescriptorFactory.createSingleFolderDescriptor());
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
@@ -66,11 +66,11 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
 
   @Override
   public boolean validate() throws ConfigurationException {
-    final String projectRootPath = myProjectRootComponent.getText();
+    String projectRootPath = myProjectRootComponent.getText();
     if (StringUtil.isEmpty(projectRootPath)) {
       return false;
     }
-    final VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByPath(projectRootPath);
+    VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByPath(projectRootPath);
     if (projectRoot == null) {
       return false;
     }
@@ -96,7 +96,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
 
   @Override
   public void updateDataModel() {
-    final String projectRoot = myProjectRootComponent.getText();
+    String projectRoot = myProjectRootComponent.getText();
     if (!projectRoot.isEmpty()) {
       suggestProjectNameAndPath(null, projectRoot);
     }

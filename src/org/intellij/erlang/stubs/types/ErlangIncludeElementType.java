@@ -35,7 +35,7 @@ public class ErlangIncludeElementType extends ErlangStubElementType<ErlangInclud
   public static final ArrayFactory<ErlangInclude> ARRAY_FACTORY = new ArrayFactory<ErlangInclude>() {
     @NotNull
     @Override
-    public ErlangInclude[] create(final int count) {
+    public ErlangInclude[] create(int count) {
       return count == 0 ? EMPTY_ARRAY : new ErlangInclude[count];
     }
   };

@@ -152,7 +152,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       @Override
       public void visitMacrosName(@NotNull ErlangMacrosName o) {
-        final PsiElement firstChild = o.getFirstChild();
+        PsiElement firstChild = o.getFirstChild();
         if (firstChild != null) {
           setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.MACRO);
         }
@@ -165,7 +165,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       @Override
       public void visitRecordRef(@NotNull ErlangRecordRef o) {
-        final PsiElement firstChild = o.getFirstChild();
+        PsiElement firstChild = o.getFirstChild();
         if (firstChild != null) {
           setHighlighting(firstChild, annotationHolder, ErlangSyntaxHighlighter.RECORDS);
         }
@@ -220,7 +220,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
   private static void highlightEdocTags(@NotNull PsiComment comment, @NotNull AnnotationHolder annotationHolder) {
     IElementType tokenType = comment.getTokenType();
-    final Set<String> edocTags;
+    Set<String> edocTags;
     if (tokenType == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT) {
       edocTags = ErlangDocUtil.EDOC_FUNCTION_TAGS;
     }
@@ -263,7 +263,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
   private static void markFirstChild(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder,
                                      @NotNull TextAttributesKey key) {
-    final PsiElement firstChild = o.getFirstChild();
+    PsiElement firstChild = o.getFirstChild();
     if (firstChild != null) {
       setHighlighting(firstChild, annotationHolder, key);
     }

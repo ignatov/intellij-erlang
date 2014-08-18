@@ -68,7 +68,7 @@ public class BuildResult implements MessageHandler {
   }
 
   public void assertSuccessful() {
-    final Function<BuildMessage,String> toStringFunction = StringUtil.createToStringFunction(BuildMessage.class);
+    Function<BuildMessage,String> toStringFunction = StringUtil.createToStringFunction(BuildMessage.class);
     Assert.assertTrue("Build failed. \nErrors:\n" + StringUtil.join(myErrorMessages, toStringFunction, "\n") +
       "\nInfo messages:\n" + StringUtil.join(myInfoMessages, toStringFunction, "\n"), isSuccessful());
   }

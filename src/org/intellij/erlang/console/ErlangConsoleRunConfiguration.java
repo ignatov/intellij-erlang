@@ -70,7 +70,7 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
   }
 
   @Override
-  public void writeExternal(@NotNull final Element element) throws WriteExternalException {
+  public void writeExternal(@NotNull Element element) throws WriteExternalException {
     super.writeExternal(element);
     writeModule(element);
     XmlSerializer.serializeInto(this, element);
@@ -78,15 +78,15 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
 
   @Override
   public void checkConfiguration() throws RuntimeConfigurationException {
-    final Module selectedModule = getConfigurationModule().getModule();
+    Module selectedModule = getConfigurationModule().getModule();
     if (selectedModule == null) {
-      final Sdk projectSdk = ProjectRootManager.getInstance(getProject()).getProjectSdk();
+      Sdk projectSdk = ProjectRootManager.getInstance(getProject()).getProjectSdk();
       if (projectSdk == null || projectSdk.getSdkType() != ErlangSdkType.getInstance()) {
         throw new RuntimeConfigurationException("Neither Erlang module selected nor Erlang SDK is configured for the project");
       }
     }
     else {
-      final Sdk moduleSdk = ModuleRootManager.getInstance(selectedModule).getSdk();
+      Sdk moduleSdk = ModuleRootManager.getInstance(selectedModule).getSdk();
       if (moduleSdk == null || moduleSdk.getSdkType() != ErlangSdkType.getInstance()) {
         throw new RuntimeConfigurationException("Erlang SDK is not configured for the selected module");
       }
@@ -94,7 +94,7 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
   }
 
   @Override
-  public void readExternal(@NotNull final Element element) throws InvalidDataException {
+  public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
     readModule(element);
     XmlSerializer.deserializeInto(this, element);

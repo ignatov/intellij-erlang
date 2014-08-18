@@ -108,7 +108,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
         second = atom;
       }
       else {
-        final IElementType elementType = ((LeafPsiElement) second).getElementType();
+        IElementType elementType = ((LeafPsiElement) second).getElementType();
         if (elementType == ErlangTypes.ERL_DOT || elementType == ErlangTypes.ERL_SEMI) {
           ASTNode node = FormatterUtil.getPreviousNonWhitespaceSibling((LeafPsiElement) second);
           second = node == null ? second : PsiTreeUtil.getDeepestLast(node.getPsi());
@@ -140,7 +140,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     return res;
   }
 
-  private static void perform(final Editor editor, List<ErlangExpression> selection) {
+  private static void perform(Editor editor, List<ErlangExpression> selection) {
     final ErlangExpression first = ContainerUtil.getFirstItem(selection);
     final ErlangFunction function = PsiTreeUtil.getParentOfType(first, ErlangFunction.class);
     final ErlangExpression last = selection.get(selection.size() - 1);
@@ -159,9 +159,9 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     ErlangExtractFunctionDialog dialog = new ErlangExtractFunctionDialog(project, name, inParams);
 
     if (ApplicationManager.getApplication().isUnitTestMode() || dialog.showAndGet()) {
-      final String functionName = dialog.getFunctionName();
-      final String bindings = bindings(outParams);
-      final String bindingsEx = StringUtil.isEmpty(bindings) ? bindings : ",\n" + bindings;
+      String functionName = dialog.getFunctionName();
+      String bindings = bindings(outParams);
+      String bindingsEx = StringUtil.isEmpty(bindings) ? bindings : ",\n" + bindings;
       final String bindingsS = StringUtil.isEmpty(bindings) ? bindings : bindings + " = ";
 
       final String signature = generateSignature(functionName, inParams);
@@ -174,7 +174,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
         }, ",\n") + bindingsEx + ".";
 
       try {
-        final PsiFile file = first.getContainingFile();
+        PsiFile file = first.getContainingFile();
         new WriteCommandAction(editor.getProject(), "Extract function", file) {
           @Override
           protected void run(@NotNull Result result) throws Throwable {
@@ -226,8 +226,8 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
   public static Pair<List<ErlangNamedElement>, List<ErlangNamedElement>> analyze(@NotNull List<? extends PsiElement> elements) {
     PsiElement first = elements.get(0);
-    final PsiElement scope = PsiTreeUtil.getTopmostParentOfType(first, ErlangFunction.class);
-    final PsiElement lastElement = elements.get(elements.size() - 1);
+    PsiElement scope = PsiTreeUtil.getTopmostParentOfType(first, ErlangFunction.class);
+    PsiElement lastElement = elements.get(elements.size() - 1);
     final int lastElementEndOffset = lastElement.getTextOffset() + lastElement.getTextLength();
     final int firstElementStartOffset = first.getTextOffset();
 
@@ -253,7 +253,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     for (PsiElement element : elements) {
       element.accept(visitor);
     }
-    final Collection<ErlangNamedElement> names = visitor.getComponentNames();
+    Collection<ErlangNamedElement> names = visitor.getComponentNames();
     List<ErlangNamedElement> inComponentNames = ContainerUtil.filter(names, new Condition<ErlangNamedElement>() {
       @Override
       public boolean value(ErlangNamedElement componentName) {
@@ -288,7 +288,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     public void visitElement(PsiElement element) {
       if (element instanceof ErlangQVar) {
         PsiReference reference = element.getReference();
-        final PsiElement resolve = reference != null ? reference.resolve() : null;
+        PsiElement resolve = reference != null ? reference.resolve() : null;
         if (resolve instanceof ErlangNamedElement) {
           myComponentNames.add((ErlangNamedElement) resolve);
         }

@@ -29,7 +29,7 @@ public abstract class ErlangQuickFixTestBase extends ErlangLightPlatformCodeInsi
   }
 
   protected void doTest(String quickFixName) {
-    final String testName = getTestName(true);
+    String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
     List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(quickFixName);
     IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);

@@ -37,7 +37,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
   @Nullable
   @Override
   public List<String> getUrlFor(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
-    final ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
+    ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
     if (elementDocProvider != null) {
       return elementDocProvider.getExternalDocUrls();
     }
@@ -47,7 +47,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
   @Nullable
   @Override
   public String generateDoc(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
-    final ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
+    ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
     if (elementDocProvider != null) {
       return elementDocProvider.getDocText();
     }
@@ -59,26 +59,26 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
   public PsiElement getDocumentationElementForLink(@NotNull PsiManager psiManager,
                                                    @NotNull String link,
                                                    @Nullable PsiElement context) {
-    final Project project = psiManager.getProject();
-    final Matcher linkMatcher = PATTERN_PSI_LINK.matcher(link);
+    Project project = psiManager.getProject();
+    Matcher linkMatcher = PATTERN_PSI_LINK.matcher(link);
     if (linkMatcher.matches()) {
-      final String moduleName = linkMatcher.group(1);
-      final PsiFile[] psiFiles = FilenameIndex.getFilesByName(
+      String moduleName = linkMatcher.group(1);
+      PsiFile[] psiFiles = FilenameIndex.getFilesByName(
         project, moduleName + ".erl", GlobalSearchScope.allScope(project));
       for (PsiFile psiFile : psiFiles) {
         if (psiFile instanceof ErlangFile) {
-          final ErlangFile erlFile = (ErlangFile) psiFile;
+          ErlangFile erlFile = (ErlangFile) psiFile;
           if (linkMatcher.group(2) == null) {
             return erlFile.getModule();
           }
           else {
-            final String functionName = linkMatcher.group(3);
+            String functionName = linkMatcher.group(3);
             if (functionName.equals("type")) {
-              final String typeName = linkMatcher.group(4);
+              String typeName = linkMatcher.group(4);
               return erlFile.getType(typeName);
             }
             else {
-              final int arity = Integer.valueOf(linkMatcher.group(4));
+              int arity = Integer.valueOf(linkMatcher.group(4));
               return erlFile.getFunction(functionName, arity);
             }
           }

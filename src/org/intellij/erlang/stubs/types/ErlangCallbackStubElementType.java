@@ -34,7 +34,7 @@ public class ErlangCallbackStubElementType extends ErlangStubElementType<ErlangC
   public static final ArrayFactory<ErlangCallbackSpec> ARRAY_FACTORY = new ArrayFactory<ErlangCallbackSpec>() {
     @NotNull
     @Override
-    public ErlangCallbackSpec[] create(final int count) {
+    public ErlangCallbackSpec[] create(int count) {
       return count == 0 ? EMPTY_ARRAY : new ErlangCallbackSpec[count];
     }
   };

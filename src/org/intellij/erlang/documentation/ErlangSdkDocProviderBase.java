@@ -51,7 +51,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   static final String HTTP_STYLE;
   static {
-    final String css;
+    String css;
     try {
        css = ResourceUtil.loadText(ResourceUtil.getResource(
          ErlangSdkDocProviderBase.class, "/documentation", "erlang-sdk-doc.css"));
@@ -83,18 +83,18 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @Nullable
   @Override
   public String getDocText() {
-    final List<String> fileUrls = getFileUrls(getOrderEntries(), myVirtualFile);
-    final List<String> httpUrls = getExternalDocUrls();
-    final List<String> urls = new ArrayList<String>(fileUrls.size() + httpUrls.size());
+    List<String> fileUrls = getFileUrls(getOrderEntries(), myVirtualFile);
+    List<String> httpUrls = getExternalDocUrls();
+    List<String> urls = new ArrayList<String>(fileUrls.size() + httpUrls.size());
     urls.addAll(fileUrls);
     urls.addAll(httpUrls);
     for (String urlString : urls) {
-      final BufferedReader reader = createReader(urlString);
+      BufferedReader reader = createReader(urlString);
       if (reader == null) {
         continue;
       }
       try {
-        final String retrievedHtml = retrieveDoc(reader);
+        String retrievedHtml = retrieveDoc(reader);
         if (retrievedHtml != null) {
           return decorateRetrievedHtml(retrievedHtml);
         }
@@ -111,7 +111,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @NotNull
   private List<OrderEntry> getOrderEntries() {
     if (myOrderEntries == null) {
-      final ProjectFileIndex fileIndex = ProjectRootManager.getInstance(myProject).getFileIndex();
+      ProjectFileIndex fileIndex = ProjectRootManager.getInstance(myProject).getFileIndex();
       myOrderEntries = fileIndex.getOrderEntriesForFile(myVirtualFile);
     }
     return myOrderEntries;
@@ -131,7 +131,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
       if (!functionDocFound) {
         return null;
       }
-      final StringBuilder builder = new StringBuilder(1024);
+      StringBuilder builder = new StringBuilder(1024);
       appendCorrectedLine(builder, line);
       while ((line = reader.readLine()) != null && !isDocEnd(line)) {
         appendCorrectedLine(builder, line);
@@ -150,13 +150,13 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @NotNull
   private String appendCorrectedLine(@NotNull StringBuilder builder, @NotNull String line) {
-    final Matcher matcher = PATTERN_HREF.matcher(line);
+    Matcher matcher = PATTERN_HREF.matcher(line);
     int lastCopiedChar = 0;
     while (matcher.find()) {
-      final MatchResult matchResult = matcher.toMatchResult();
+      MatchResult matchResult = matcher.toMatchResult();
       builder.append(line.substring(lastCopiedChar, matchResult.start()));
-      final String linkHref = matchResult.group(1);
-      final String convertedLink = convertLink(linkHref);
+      String linkHref = matchResult.group(1);
+      String convertedLink = convertLink(linkHref);
       builder.append("<a href=\"")
         .append(convertedLink)
         .append("\">");
@@ -178,9 +178,9 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
                                           @NotNull VirtualFile virtualFile,
                                           @NotNull String inDocRef) {
     for (OrderEntry orderEntry : orderEntries) {
-      final String[] docRootUrls = JavadocOrderRootType.getUrls(orderEntry);
-      final String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
-      final List<String> httpUrls = PlatformDocumentationUtil.getHttpRoots(
+      String[] docRootUrls = JavadocOrderRootType.getUrls(orderEntry);
+      String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
+      List<String> httpUrls = PlatformDocumentationUtil.getHttpRoots(
         docRootUrls, sdkHttpDocRelPath + inDocRef);
       if (httpUrls != null) {
         return httpUrls;
@@ -194,8 +194,8 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
                                           @NotNull VirtualFile virtualFile) {
     List<String> fileUrls = null;
     for (OrderEntry orderEntry : orderEntries) {
-      final VirtualFile[] docRootFiles = orderEntry.getFiles(JavadocOrderRootType.getInstance());
-      final String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
+      VirtualFile[] docRootFiles = orderEntry.getFiles(JavadocOrderRootType.getInstance());
+      String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
       for (VirtualFile docRootFile : docRootFiles) {
         if (docRootFile.isInLocalFileSystem()) {
           if (fileUrls == null) {
@@ -211,7 +211,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @Nullable
   private static BufferedReader createReader(@NotNull String urlString) {
     try {
-      final URL url = BrowserUtil.getURL(urlString);
+      URL url = BrowserUtil.getURL(urlString);
       if (url == null) {
         return null;
       }
@@ -228,8 +228,8 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @Nullable
   private static String httpDocRelPath(@NotNull VirtualFile virtualFile) {
-    final String appDirName = virtualFile.getParent().getParent().getName();
-    final String prefix;
+    String appDirName = virtualFile.getParent().getParent().getName();
+    String prefix;
     if (appDirName.startsWith("erts")) {
       prefix = "";
     }
@@ -241,13 +241,13 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @NotNull
   private static BufferedReader createHttpReader(@NotNull URL url) throws IOException {
-    final HttpConfigurable httpConfigurable = HttpConfigurable.getInstance();
+    HttpConfigurable httpConfigurable = HttpConfigurable.getInstance();
     httpConfigurable.prepareURL(url.toString());
-    final URLConnection urlConnection = url.openConnection();
-    final String contentEncoding = urlConnection.getContentEncoding();
-    final InputStream inputStream = urlConnection.getInputStream();
+    URLConnection urlConnection = url.openConnection();
+    String contentEncoding = urlConnection.getContentEncoding();
+    InputStream inputStream = urlConnection.getInputStream();
     //noinspection IOResourceOpenedButNotSafelyClosed
-    final InputStreamReader inputStreamReader = contentEncoding != null
+    InputStreamReader inputStreamReader = contentEncoding != null
       ? new InputStreamReader(inputStream, contentEncoding)
       : new InputStreamReader(inputStream);
     return new BufferedReader(inputStreamReader);
@@ -256,7 +256,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @Nullable
   private static BufferedReader createFileReader(@NotNull URL url) {
     try {
-      final InputStreamReader stream = new InputStreamReader(url.openStream());
+      InputStreamReader stream = new InputStreamReader(url.openStream());
       return new BufferedReader(stream);
     } catch (IOException e) {
       return null;
@@ -270,9 +270,9 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @NotNull
   private String convertLink(@NotNull String href) {
-    final Matcher evaluatedLinkMatcher = PATTERN_EVALUATED_LINK.matcher(href);
-    final String concreteHref = (evaluatedLinkMatcher.matches()) ? evaluatedLinkMatcher.group(1) : href;
-    final Matcher externalLinkMatcher = PATTERN_EXTERNAL_LINK.matcher(concreteHref);
+    Matcher evaluatedLinkMatcher = PATTERN_EVALUATED_LINK.matcher(href);
+    String concreteHref = (evaluatedLinkMatcher.matches()) ? evaluatedLinkMatcher.group(1) : href;
+    Matcher externalLinkMatcher = PATTERN_EXTERNAL_LINK.matcher(concreteHref);
     if (externalLinkMatcher.matches()) {
       return PSI_ELEMENT_PROTOCOL + externalLinkMatcher.group(1) + "#" + externalLinkMatcher.group(2);
     }

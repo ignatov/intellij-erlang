@@ -81,7 +81,7 @@ public class RebarConfigurationForm {
   }
 
   private boolean validateRebarPath() {
-    final String rebarPath = myRebarPathSelector.getText();
+    String rebarPath = myRebarPathSelector.getText();
     if (new File(rebarPath).exists()) {
       String version = ExtProcessUtil.restrictedTimeExec(myRebarPathSelector.getText() + " --version", 3000);
       if (version.startsWith("rebar")) {

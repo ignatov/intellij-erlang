@@ -24,17 +24,17 @@ import org.intellij.erlang.psi.ErlangStringLiteral;
 public class ErlangStringManipulator extends AbstractElementManipulator<ErlangStringLiteral> {
   @Override
   public ErlangStringLiteral handleContentChange(ErlangStringLiteral psi, TextRange range, String newContent) throws IncorrectOperationException {
-    final String oldText = psi.getText();
-    final String newText = oldText.substring(0, range.getStartOffset()) + newContent + oldText.substring(range.getEndOffset());
+    String oldText = psi.getText();
+    String newText = oldText.substring(0, range.getStartOffset()) + newContent + oldText.substring(range.getEndOffset());
     return psi.updateText(newText);
   }
 
   @Override
-  public TextRange getRangeInElement(final ErlangStringLiteral element) {
+  public TextRange getRangeInElement(ErlangStringLiteral element) {
     return getStringTokenRange(element);
   }
 
-  public static TextRange getStringTokenRange(final ErlangStringLiteral element) {
+  public static TextRange getStringTokenRange(ErlangStringLiteral element) {
     return TextRange.from(1, element.getTextLength() - 2);
   }
 }

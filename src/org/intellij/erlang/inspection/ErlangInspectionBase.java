@@ -78,7 +78,7 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     return expression;
   }
 
-  private boolean isSuppressedForParent(PsiElement element, final Class<? extends ErlangCompositeElement> parentClass) {
+  private boolean isSuppressedForParent(PsiElement element, Class<? extends ErlangCompositeElement> parentClass) {
     PsiElement parent = PsiTreeUtil.getParentOfType(element, parentClass, false);
     if (parent == null) return false;
     return isSuppressedForElement(parent);
@@ -121,7 +121,7 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   public static class ErlangSuppressInspectionFix extends AbstractSuppressByNoInspectionCommentFix {
     private final Class<? extends ErlangCompositeElement> myContainerClass;
   
-    public ErlangSuppressInspectionFix(final String ID, final String text, final Class<? extends ErlangCompositeElement> containerClass) {
+    public ErlangSuppressInspectionFix(String ID, String text, Class<? extends ErlangCompositeElement> containerClass) {
       super(ID, false);
       setText(text);
       myContainerClass = containerClass;
@@ -136,8 +136,8 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
 
     @Override
     protected void createSuppression(@NotNull Project project, @NotNull PsiElement element, @NotNull PsiElement container) throws IncorrectOperationException {
-      final PsiParserFacade parserFacade = PsiParserFacade.SERVICE.getInstance(project);
-      final String text = SuppressionUtilCore.SUPPRESS_INSPECTIONS_TAG_NAME + " " + myID;
+      PsiParserFacade parserFacade = PsiParserFacade.SERVICE.getInstance(project);
+      String text = SuppressionUtilCore.SUPPRESS_INSPECTIONS_TAG_NAME + " " + myID;
       PsiComment comment = parserFacade.createLineOrBlockCommentFromText(element.getContainingFile().getLanguage(), text);
       PsiElement where = container.getParent().addBefore(comment, container);
       PsiElement spaceFromText = PsiParserFacade.SERVICE.getInstance(project).createWhiteSpaceFromText("\n");

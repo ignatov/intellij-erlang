@@ -37,7 +37,7 @@ public class ParamsGroup implements Cloneable {
   private String myGroupId;
   private ParametersList myGroupParams = new ParametersList();
 
-  public ParamsGroup(@NotNull final String groupId) {
+  public ParamsGroup(@NotNull String groupId) {
     myGroupId = groupId;
   }
 
@@ -45,27 +45,27 @@ public class ParamsGroup implements Cloneable {
     return myGroupId;
   }
 
-  public void addParameter(@NotNull @NonNls final String parameter) {
+  public void addParameter(@NotNull @NonNls String parameter) {
     myGroupParams.add(parameter);
   }
 
-  public void addParameterAt(int index, @NotNull @NonNls final String parameter) {
+  public void addParameterAt(int index, @NotNull @NonNls String parameter) {
     myGroupParams.addAt(index, parameter);
   }
 
-  public void addParameters(final String... parameters) {
+  public void addParameters(String... parameters) {
     for (String parameter : parameters) {
       addParameter(parameter);
     }
   }
 
-  public void addParameters(@NotNull final List<String> parameters) {
-    for (final String parameter : parameters) {
+  public void addParameters(@NotNull List<String> parameters) {
+    for (String parameter : parameters) {
       addParameter(parameter);
     }
   }
 
-  public void addParametersString(@NotNull @NonNls final String parametersString) {
+  public void addParametersString(@NotNull @NonNls String parametersString) {
     addParameters(ParametersList.parse(parametersString));
   }
 
@@ -80,7 +80,7 @@ public class ParamsGroup implements Cloneable {
   @Override
   public ParamsGroup clone() {
      try {
-       final ParamsGroup clone = (ParamsGroup)super.clone();
+       ParamsGroup clone = (ParamsGroup)super.clone();
        clone.myGroupId = myGroupId;
        clone.myGroupParams = myGroupParams.clone();
        return clone;

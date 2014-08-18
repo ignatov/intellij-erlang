@@ -79,7 +79,7 @@ public class ErlangTypedHandler extends TypedHandlerDelegate {
     BraceMatcher braceMatcher = BraceMatchingUtil.getBraceMatcher(fileType, iterator);
     if (iterator.atEnd()) return;
     IElementType braceTokenType = iterator.getTokenType();
-    final CharSequence fileText = editor.getDocument().getCharsSequence();
+    CharSequence fileText = editor.getDocument().getCharsSequence();
     if (!braceMatcher.isLBraceToken(iterator, fileText, fileType)) return;
 
     if (!iterator.atEnd()) {

@@ -35,7 +35,7 @@ public final class RebarSettings implements PersistentStateComponent<RebarSettin
 
   @NotNull
   public static RebarSettings getInstance(@NotNull Project project) {
-    final RebarSettings persisted = ServiceManager.getService(project, RebarSettings.class);
+    RebarSettings persisted = ServiceManager.getService(project, RebarSettings.class);
     return persisted != null ? persisted : new RebarSettings();
   }
 

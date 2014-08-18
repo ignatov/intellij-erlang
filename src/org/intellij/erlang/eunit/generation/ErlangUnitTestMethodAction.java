@@ -21,10 +21,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnitTestMethodAction extends CodeInsightAction implements CodeInsightActionHandler {
   private static void insertTestFunction(@NotNull Project project, @NotNull Editor editor, String name, boolean needNewline) {
-    final Template template = TemplateManager.getInstance(project).createTemplate("", "");
-    final Expression nameExpr = new ConstantNode(name);
-    final Expression expected = new ConstantNode("expected");
-    final Expression expr = new ConstantNode("expr");
+    Template template = TemplateManager.getInstance(project).createTemplate("", "");
+    Expression nameExpr = new ConstantNode(name);
+    Expression expected = new ConstantNode("expected");
+    Expression expr = new ConstantNode("expr");
     template.addTextSegment("\n" + (needNewline ? "\n" : ""));
     template.addVariable("name", nameExpr, nameExpr, true);
     template.addTextSegment("_test() ->\n");

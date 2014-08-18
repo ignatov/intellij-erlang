@@ -7,7 +7,7 @@ import com.intellij.psi.impl.source.resolve.reference.impl.manipulators.PsiComme
 public class ExtendedPsiCommentManipulator extends PsiCommentManipulator {
   @Override
   public TextRange getRangeInElement(PsiComment element) {
-    final String text = element.getText();
+    String text = element.getText();
     if (text.startsWith("%%%")) return new TextRange(3, element.getTextLength());
     if (text.startsWith("%%")) return new TextRange(2, element.getTextLength());
     if (text.startsWith("%")) return new TextRange(1, element.getTextLength());

@@ -33,7 +33,7 @@ public class ErlangRecordDefinitionElementType extends ErlangNamedStubElementTyp
   public static final ArrayFactory<ErlangRecordDefinition> ARRAY_FACTORY = new ArrayFactory<ErlangRecordDefinition>() {
     @NotNull
     @Override
-    public ErlangRecordDefinition[] create(final int count) {
+    public ErlangRecordDefinition[] create(int count) {
       return count == 0 ? EMPTY_ARRAY : new ErlangRecordDefinition[count];
     }
   };

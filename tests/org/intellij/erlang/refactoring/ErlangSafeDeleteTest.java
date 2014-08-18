@@ -17,7 +17,7 @@ public class ErlangSafeDeleteTest extends LightCodeInsightFixtureTestCase {
     }
 
   private void doTest() {
-    final String testName = getTestName(true);
+    String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
     PsiElement element = myFixture.getElementAtCaret();
     SafeDeleteHandler.invoke(myFixture.getProject(), new PsiElement[]{element}, false);

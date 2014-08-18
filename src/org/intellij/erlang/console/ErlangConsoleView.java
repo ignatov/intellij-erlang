@@ -91,9 +91,9 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
       return;
     }
     LanguageConsoleImpl console = getConsole();
-    final EditorEx consoleEditor = console.getConsoleEditor();
-    final Document editorDocument = consoleEditor.getDocument();
-    final String text = editorDocument.getText();
+    EditorEx consoleEditor = console.getConsoleEditor();
+    Document editorDocument = consoleEditor.getDocument();
+    String text = editorDocument.getText();
 
     PsiFile file = console.getFile();
     final Map<String, ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);

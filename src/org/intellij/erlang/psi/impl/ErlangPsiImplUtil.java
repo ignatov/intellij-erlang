@@ -414,7 +414,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, final boolean withArity, @Nullable ErlangQAtom qAtom) {
+  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, boolean withArity, @Nullable ErlangQAtom qAtom) {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
       List<ErlangFunction> functions = new ArrayList<ErlangFunction>();
 
@@ -471,7 +471,7 @@ public class ErlangPsiImplUtil {
   public static List<LookupElement> createFunctionLookupElements(List<ErlangFunction> functions, final boolean withArity) {
     return ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
       @Override
-      public LookupElement fun(@NotNull final ErlangFunction function) {
+      public LookupElement fun(@NotNull ErlangFunction function) {
         return createFunctionsLookupElement(function, withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY);
       }
     });
@@ -495,8 +495,8 @@ public class ErlangPsiImplUtil {
       new BasicInsertHandler<LookupElement>() {
         @Override
         public void handleInsert(InsertionContext context, LookupElement item) {
-          final Editor editor = context.getEditor();
-          final Document document = editor.getDocument();
+          Editor editor = context.getEditor();
+          Document document = editor.getDocument();
           context.commitDocument();
           PsiElement next = findNextToken(context);
           ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
@@ -513,8 +513,8 @@ public class ErlangPsiImplUtil {
         }
 
         @Nullable
-        private PsiElement findNextToken(final InsertionContext context) {
-          final PsiFile file = context.getFile();
+        private PsiElement findNextToken(InsertionContext context) {
+          PsiFile file = context.getFile();
           PsiElement element = file.findElementAt(context.getTailOffset());
           if (element instanceof PsiWhiteSpace) {
             element = file.findElementAt(element.getTextRange().getEndOffset());
@@ -594,7 +594,7 @@ public class ErlangPsiImplUtil {
         types,
         new Function<ErlangTypeDefinition, LookupElement>() {
           @Override
-          public LookupElement fun(@NotNull final ErlangTypeDefinition rd) {
+          public LookupElement fun(@NotNull ErlangTypeDefinition rd) {
             return PrioritizedLookupElement.withPriority(
               LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(getArity(rd), withArity)),
               ErlangCompletionContributor.TYPE_PRIORITY);
@@ -880,8 +880,8 @@ public class ErlangPsiImplUtil {
 
     if (split != null && split.length >= 2) {
       String libName = split[0];
-      final String relativePath = StringUtil.join(split, 1, split.length, "/");
-      final Project project = includeLib.getProject();
+      String relativePath = StringUtil.join(split, 1, split.length, "/");
+      Project project = includeLib.getProject();
       VirtualFile appDir = ErlangApplicationIndex.getApplicationDirectoryByName(libName, GlobalSearchScope.allScope(project));
       ErlangFile includedFile = getRelativeErlangFile(project, relativePath, appDir);
       if (includedFile != null) {
@@ -964,7 +964,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static Set<String> getImplementedBehaviourModuleNames(@NotNull ErlangFile file) {
-    final Set<String> behaviours = new HashSet<String>();
+    Set<String> behaviours = new HashSet<String>();
     addDeclaredBehaviourModuleNames(file, behaviours);
     for (ErlangFile erlangFile : getIncludedFiles(file)) {
       addDeclaredBehaviourModuleNames(erlangFile, behaviours);
@@ -1422,7 +1422,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static ErlangStringLiteral updateText(@NotNull ErlangStringLiteral o, @NotNull String text) {
-    final ErlangExpression expression = ErlangElementFactory.createExpressionFromText(o.getProject(), text);
+    ErlangExpression expression = ErlangElementFactory.createExpressionFromText(o.getProject(), text);
     return (ErlangStringLiteralImpl)o.replace(expression);
   }
 

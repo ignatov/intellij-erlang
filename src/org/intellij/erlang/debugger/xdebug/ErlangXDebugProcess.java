@@ -198,7 +198,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
       @NotNull
       @Override
       public Document createDocument(@NotNull Project project, @NotNull String text, @Nullable XSourcePosition sourcePosition, @NotNull EvaluationMode mode) {
-        final LightVirtualFile file = new LightVirtualFile("plain-text-erlang-debugger.txt", text);
+        LightVirtualFile file = new LightVirtualFile("plain-text-erlang-debugger.txt", text);
         //noinspection ConstantConditions
         return FileDocumentManager.getInstance().getDocument(file);
       }
@@ -325,7 +325,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
 
   private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
     try {
-      final String[] beams = {"debugnode.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
+      String[] beams = {"debugnode.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
       File tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
       for (String beam : beams) {
         copyBeamTo(beam, tempDirectory);

@@ -28,10 +28,10 @@ import java.util.List;
 
 public class ErlangDuplicateFunctionInspection extends ErlangInspectionBase {
   @Override
-  protected void checkFile(final PsiFile file, final ProblemsHolder problemsHolder) {
+  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
     if (!(file instanceof ErlangFile)) return;
 
-    final MultiMap<Pair<String, Integer>, ErlangFunction> map = new MultiMap<Pair<String, Integer>, ErlangFunction>();
+    MultiMap<Pair<String, Integer>, ErlangFunction> map = new MultiMap<Pair<String, Integer>, ErlangFunction>();
     List<ErlangFunction> funs = ((ErlangFile) file).getFunctions();
     for (ErlangFunction fun : funs) {
       map.putValue(Pair.create(fun.getName(), fun.getArity()), fun);

@@ -50,13 +50,13 @@ public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration
     // TODO parse rebar command line to check if it is valid
   }
 
-  public void writeExternal(@NotNull final Element element) throws WriteExternalException {
+  public void writeExternal(@NotNull Element element) throws WriteExternalException {
     super.writeExternal(element);
     writeModule(element);
     XmlSerializer.serializeInto(this, element);
   }
 
-  public void readExternal(@NotNull final Element element) throws InvalidDataException {
+  public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
     readModule(element);
     XmlSerializer.deserializeInto(this, element);

@@ -52,9 +52,9 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
   private ErlangDocumentationProvider myDocProvider;
 
   public void testSomething() throws Exception {
-    final File bifTableFile = new File(BIF_TABLE_PATH);
-    final String[] bifTableText = StringUtil.splitByLines(FileUtilRt.loadFile(bifTableFile));
-    final PrintStream bifTableJavaBuilder = new PrintStream(new File(GENERATED_FILE));
+    File bifTableFile = new File(BIF_TABLE_PATH);
+    String[] bifTableText = StringUtil.splitByLines(FileUtilRt.loadFile(bifTableFile));
+    PrintStream bifTableJavaBuilder = new PrintStream(new File(GENERATED_FILE));
     try {
       bifTableJavaBuilder.append("package org.intellij.erlang.bif;\n" +
         "\n" +
@@ -136,10 +136,10 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        final Sdk mockSdk = ErlangSdkType.createMockSdk(ERLANG_SDK_PATH);
+        Sdk mockSdk = ErlangSdkType.createMockSdk(ERLANG_SDK_PATH);
         // Set local SDK documentation path
-        final SdkModificator sdkModificator = mockSdk.getSdkModificator();
-        final VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath(ERLANG_DOC_PATH);
+        SdkModificator sdkModificator = mockSdk.getSdkModificator();
+        VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath(ERLANG_DOC_PATH);
         sdkModificator.addRoot(localDocDir, JavadocOrderRootType.getInstance());
         sdkModificator.commitChanges();
         return mockSdk;
@@ -161,13 +161,13 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
   }
 
   private String fetchSpec(@NotNull String moduleName, @NotNull String functionName, int arity) {
-    final String paramList = paramList(arity);
-    final String functionCallText = moduleName + ":" + functionName + "(" + paramList + ")";
-    final ErlangFunctionCallExpression erlFunctionCall = ((ErlangGlobalFunctionCallExpression) ErlangElementFactory.createExpressionFromText(
+    String paramList = paramList(arity);
+    String functionCallText = moduleName + ":" + functionName + "(" + paramList + ")";
+    ErlangFunctionCallExpression erlFunctionCall = ((ErlangGlobalFunctionCallExpression) ErlangElementFactory.createExpressionFromText(
       getProject(), functionCallText)).getFunctionCallExpression();
-    final String httpDoc = myDocProvider.generateDoc(erlFunctionCall, null);
+    String httpDoc = myDocProvider.generateDoc(erlFunctionCall, null);
     if (httpDoc != null) {
-      final Matcher matcher = PATTERN_FUNC_DECLARATION.matcher(httpDoc);
+      Matcher matcher = PATTERN_FUNC_DECLARATION.matcher(httpDoc);
       if (matcher.find()) {
         return matcher.group(1);
       }
@@ -178,7 +178,7 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
   @NotNull
   private static String paramList(int arity) {
     if (arity > 0) {
-      final StringBuilder argumentListBuilder = new StringBuilder();
+      StringBuilder argumentListBuilder = new StringBuilder();
       argumentListBuilder.append("P1");
       for (int i = 2; i <= arity; ++i) {
         argumentListBuilder.append(", P").append(i);

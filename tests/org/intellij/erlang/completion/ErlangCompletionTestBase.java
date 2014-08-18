@@ -49,7 +49,7 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
     IdeaTestFixtureFactory factory = IdeaTestFixtureFactory.getFixtureFactory();
     TestFixtureBuilder<IdeaProjectTestFixture> fixtureBuilder = factory.createLightFixtureBuilder(getProjectDescriptor());
 
-    final IdeaProjectTestFixture fixture = fixtureBuilder.getFixture();
+    IdeaProjectTestFixture fixture = fixtureBuilder.getFixture();
     myFixture = IdeaTestFixtureFactory.getFixtureFactory().createCodeInsightFixture(fixture, new TempDirTestFixtureImpl());
 
     InjectedLanguageManagerImpl.checkInjectorsAreDisposed(getProject());

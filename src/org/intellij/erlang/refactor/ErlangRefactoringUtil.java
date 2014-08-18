@@ -42,13 +42,13 @@ public class ErlangRefactoringUtil {
   }
 
   @NotNull
-  public static List<PsiElement> getOccurrences(@NotNull final PsiElement pattern, @Nullable final PsiElement context) {
+  public static List<PsiElement> getOccurrences(@NotNull final PsiElement pattern, @Nullable PsiElement context) {
     if (context == null) {
       return Collections.emptyList();
     }
     final List<PsiElement> occurrences = new ArrayList<PsiElement>();
-    final PsiRecursiveElementVisitor visitor = new PsiRecursiveElementVisitor() {
-      public void visitElement(@NotNull final PsiElement element) {
+    PsiRecursiveElementVisitor visitor = new PsiRecursiveElementVisitor() {
+      public void visitElement(@NotNull PsiElement element) {
         if (PsiEquivalenceUtil.areElementsEquivalent(element, pattern)) {
           occurrences.add(element);
           return;

@@ -52,10 +52,10 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
   }
 
   @Override
-  public void inlineElement(final Project project, final Editor editor, PsiElement element) {
+  public void inlineElement(final Project project, Editor editor, PsiElement element) {
     if (!(element instanceof ErlangQVar)) return;
 
-    final PsiElement parent = element.getParent();
+    PsiElement parent = element.getParent();
     if (!(parent instanceof ErlangMaxExpression)) return; // popup?
     final PsiElement assignment = parent.getParent();
     if (!(assignment instanceof ErlangAssignmentExpression)) {

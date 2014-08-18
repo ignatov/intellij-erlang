@@ -35,7 +35,7 @@ public class ErlangIncludeLibElementType extends ErlangStubElementType<ErlangInc
   public static final ArrayFactory<ErlangIncludeLib> ARRAY_FACTORY = new ArrayFactory<ErlangIncludeLib>() {
     @NotNull
     @Override
-    public ErlangIncludeLib[] create(final int count) {
+    public ErlangIncludeLib[] create(int count) {
       return count == 0 ? EMPTY_ARRAY : new ErlangIncludeLib[count];
     }
   };

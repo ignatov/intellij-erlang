@@ -18,7 +18,7 @@ package org.intellij.erlang.jps.execution;
 public class ProcessNotCreatedException extends ExecutionException {
   private final GeneralCommandLine myCommandLine;
 
-  public ProcessNotCreatedException(final String s, final Throwable cause, final GeneralCommandLine commandLine) {
+  public ProcessNotCreatedException(String s, Throwable cause, GeneralCommandLine commandLine) {
     super(s, cause);
     myCommandLine = commandLine;
   }

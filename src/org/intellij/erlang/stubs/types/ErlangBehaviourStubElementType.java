@@ -33,7 +33,7 @@ public class ErlangBehaviourStubElementType extends ErlangStubElementType<Erlang
   public static final ArrayFactory<ErlangBehaviour> ARRAY_FACTORY = new ArrayFactory<ErlangBehaviour>() {
     @NotNull
     @Override
-    public ErlangBehaviour[] create(final int count) {
+    public ErlangBehaviour[] create(int count) {
       return count == 0 ? EMPTY_ARRAY : new ErlangBehaviour[count];
     }
   };

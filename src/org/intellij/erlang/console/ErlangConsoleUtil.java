@@ -56,7 +56,7 @@ public final class ErlangConsoleUtil {
   public static List<String> getCodePath(@NotNull Project project, @Nullable Module module, boolean useTestOutputPath) {
     final Set<Module> codePathModules = new HashSet<Module>();
     if (module != null) {
-      final ModuleRootManager moduleRootMgr = ModuleRootManager.getInstance(module);
+      ModuleRootManager moduleRootMgr = ModuleRootManager.getInstance(module);
       moduleRootMgr.orderEntries().recursively().forEachModule(new Processor<Module>() {
         @Override
         public boolean process(@NotNull Module dependencyModule) {
@@ -69,12 +69,12 @@ public final class ErlangConsoleUtil {
       codePathModules.addAll(Arrays.asList(ModuleManager.getInstance(project).getModules()));
     }
 
-    final List<String> codePath = new ArrayList<String>(codePathModules.size() * 2);
+    List<String> codePath = new ArrayList<String>(codePathModules.size() * 2);
     for (Module codePathModule : codePathModules) {
-      final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(codePathModule);
-      final CompilerModuleExtension compilerModuleExt =
+      ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(codePathModule);
+      CompilerModuleExtension compilerModuleExt =
         moduleRootManager.getModuleExtension(CompilerModuleExtension.class);
-      final VirtualFile buildOutput = useTestOutputPath && codePathModule == module ?
+      VirtualFile buildOutput = useTestOutputPath && codePathModule == module ?
         getCompilerOutputPathForTests(compilerModuleExt) : 
         compilerModuleExt.getCompilerOutputPath();
       if (buildOutput != null) {
@@ -92,7 +92,7 @@ public final class ErlangConsoleUtil {
 
   @Nullable
   private static VirtualFile getCompilerOutputPathForTests(CompilerModuleExtension module) {
-    final VirtualFile testPath = module.getCompilerOutputPathForTests();
+    VirtualFile testPath = module.getCompilerOutputPathForTests();
     return testPath == null || !testPath.exists() ? module.getCompilerOutputPath() : testPath;
   }
 
@@ -106,7 +106,7 @@ public final class ErlangConsoleUtil {
 
   @NotNull
   static String getErlPath(@NotNull Project project, @Nullable Module module) throws ExecutionException {
-    final Sdk sdk;
+    Sdk sdk;
     if (module != null) {
       sdk = ModuleRootManager.getInstance(module).getSdk();
     }

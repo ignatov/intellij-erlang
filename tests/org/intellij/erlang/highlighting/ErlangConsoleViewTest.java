@@ -44,9 +44,9 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
   }
 
   public void testConsoleResolve() throws Exception {
-    final PsiFile file = myView.getConsole().getFile();
+    PsiFile file = myView.getConsole().getFile();
 
-    final PsiDocumentManager instance = PsiDocumentManager.getInstance(getProject());
+    PsiDocumentManager instance = PsiDocumentManager.getInstance(getProject());
     final Document document = instance.getDocument(file);
     assert document != null;
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
@@ -61,7 +61,7 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
       }
     });
     instance.commitDocument(document);
-    final HashMap<String, ErlangQVar> map = new HashMap<String, ErlangQVar>();
+    HashMap<String, ErlangQVar> map = new HashMap<String, ErlangQVar>();
     map.put("A", (ErlangQVar) ErlangElementFactory.createQVarFromText(getProject(), "A"));
     map.put("B", (ErlangQVar) ErlangElementFactory.createQVarFromText(getProject(), "B"));
     file.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, map);
@@ -70,7 +70,7 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     assert myEditor != null;
     enableInspectionTool(new ErlangUnboundVariableInspection());
     doDoTest(true, false);
-    final String testName = getTestName(false);
+    String testName = getTestName(false);
     checkResultByFile(testName + ".erl");
     assertEquals(FileUtil.loadFile(new File(getTestDataPath() + testName + ".txt"), true), DebugUtil.psiToString(file, false));
   }

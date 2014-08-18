@@ -38,7 +38,7 @@ public class ErlangRunner extends DefaultProgramRunner {
 
   public static final RunProfileState EMPTY_RUN_STATE = new RunProfileState() {
     @Override
-    public ExecutionResult execute(final Executor executor, @NotNull final ProgramRunner runner) throws ExecutionException {
+    public ExecutionResult execute(Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
       return null;
     }
   };
@@ -60,8 +60,8 @@ public class ErlangRunner extends DefaultProgramRunner {
                                            RunProfileState state,
                                            RunContentDescriptor contentToReuse,
                                            ExecutionEnvironment env) throws ExecutionException {
-    final ErlangRunConfigurationBase configuration = (ErlangRunConfigurationBase) env.getRunProfile();
-    final ErlangRunningState runningState = configuration.createRunningState(env);
+    ErlangRunConfigurationBase configuration = (ErlangRunConfigurationBase) env.getRunProfile();
+    ErlangRunningState runningState = configuration.createRunningState(env);
     FileDocumentManager.getInstance().saveAllDocuments();
     ExecutionResult executionResult = runningState.execute(env.getExecutor(), this);
     return new RunContentBuilder(this, executionResult, env).showRunContent(contentToReuse);

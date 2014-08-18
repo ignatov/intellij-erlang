@@ -29,7 +29,7 @@ public abstract class ErlangStubElementType<S extends StubElement<T>, T extends 
     super(debugName, ErlangLanguage.INSTANCE);
   }
 
-  public void indexStub(@NotNull final S stub, @NotNull final IndexSink sink) {
+  public void indexStub(@NotNull S stub, @NotNull IndexSink sink) {
   }
 
   @NotNull

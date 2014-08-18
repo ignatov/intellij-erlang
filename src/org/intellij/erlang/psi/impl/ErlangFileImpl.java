@@ -327,7 +327,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @Nullable
   @Override
-  public ErlangFunction getFunction(@NotNull String name, final int argsCount) {
+  public ErlangFunction getFunction(@NotNull String name, int argsCount) {
     initFunctionsMap();
     MultiMap<String, ErlangFunction> value = myFunctionsMap.getValue();
     return getFunctionFromMap(value, name, argsCount);

@@ -73,7 +73,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
   private static void runRebar(@Nullable String contentRootPath,
                                @NotNull String rebarPath,
                                boolean addDebugInfo,
-                               @NotNull final CompileContext context) throws ProjectBuildException {
+                               @NotNull CompileContext context) throws ProjectBuildException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setWorkDirectory(contentRootPath);
     commandLine.setExePath(rebarPath);

@@ -35,7 +35,7 @@ public final class EmacsSettings implements PersistentStateComponent<EmacsSettin
 
   @NotNull
   public static EmacsSettings getInstance(@NotNull Project project) {
-    final EmacsSettings persisted = ServiceManager.getService(project, EmacsSettings.class);
+    EmacsSettings persisted = ServiceManager.getService(project, EmacsSettings.class);
     return persisted != null ? persisted : new EmacsSettings();
   }
 

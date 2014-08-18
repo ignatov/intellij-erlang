@@ -54,7 +54,7 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
   @NotNull
   @Override
   public ConsoleView createConsoleView(Executor executor) {
-    final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(getEnvironment().getProject());
+    TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(getEnvironment().getProject());
     return consoleBuilder.getConsole();
   }
 }

@@ -28,7 +28,7 @@ public abstract class ErlangNamedStubElementType<S extends NamedStubBase<T>, T e
     super(debugName);
   }
 
-  public void indexStub(@NotNull final S stub, @NotNull final IndexSink sink) {
+  public void indexStub(@NotNull S stub, @NotNull IndexSink sink) {
     sink.occurrence(ErlangAllNameIndex.KEY, stub.getName());
   }
 

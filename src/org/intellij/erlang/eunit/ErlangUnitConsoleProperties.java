@@ -24,7 +24,7 @@ public class ErlangUnitConsoleProperties extends SMTRunnerConsoleProperties {
 
   private RuntimeConfiguration myConfig;
 
-  public ErlangUnitConsoleProperties(final RuntimeConfiguration config, final Executor executor) {
+  public ErlangUnitConsoleProperties(RuntimeConfiguration config, Executor executor) {
     super(config, "Erlang", executor);
     myConfig = config;
   }

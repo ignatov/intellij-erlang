@@ -79,8 +79,8 @@ final class SelectImportedOtpAppsStep extends SelectImportedProjectsStep<Importe
   }
 
   private void evalDuplicates() {
-    final List<ImportedOtpApp> selectedOtpApps = fileChooser.getMarkedElements();
-    final Set<String> contains = new HashSet<String>(selectedOtpApps.size());
+    List<ImportedOtpApp> selectedOtpApps = fileChooser.getMarkedElements();
+    Set<String> contains = new HashSet<String>(selectedOtpApps.size());
     myDuplicateModuleNames.clear();
     for (ImportedOtpApp importedOtpApp : selectedOtpApps) {
       if (!contains.add(importedOtpApp.getName())) {

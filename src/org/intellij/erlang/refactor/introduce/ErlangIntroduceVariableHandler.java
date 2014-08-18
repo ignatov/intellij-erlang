@@ -104,7 +104,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     return PsiTreeUtil.getParentOfType(parent, ErlangExpression.class);
   }
 
-  private void smartIntroduce(@NotNull final Editor editor, @NotNull PsiFile file) {
+  private void smartIntroduce(@NotNull Editor editor, @NotNull PsiFile file) {
     ErlangRefactoringUtil.smartIntroduce(editor, file,
       new ErlangRefactoringUtil.Extractor() {
         @Override

@@ -30,7 +30,7 @@ public class ErlangAutoIndentTest extends ErlangLightPlatformCodeInsightFixtureT
   }
 
   public void doTest() throws Exception {
-    final String testName = getTestName(true);
+    String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
     myFixture.type("\n");
 

@@ -57,7 +57,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   public void setUp() throws Exception {
     super.setUp();
     createMockSdk();
-    final File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
+    File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
     FileUtil.copyDir(currentTestRoot, new File(getProject().getBaseDir().getPath()));
   }
 
@@ -111,7 +111,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
       @Override
       public void consume(@NotNull ModuleWizardStep moduleWizardStep) {
         if (moduleWizardStep instanceof SelectImportedOtpAppsStep) {
-          final SelectImportedOtpAppsStep theStep = (SelectImportedOtpAppsStep) moduleWizardStep;
+          SelectImportedOtpAppsStep theStep = (SelectImportedOtpAppsStep) moduleWizardStep;
           theStep.autoResolveConflicts();
         }
       }
@@ -119,7 +119,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   public void testEmbeddedRebar() throws Exception {
-    final Project createdProject = doTest(null);
+    Project createdProject = doTest(null);
     if (SystemInfo.isWindows) return;
     assertEquals(createdProject.getBasePath() + "/rebar", RebarSettings.getInstance(createdProject).getRebarPath());
   }
@@ -164,11 +164,11 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   private Project doTest(@Nullable Consumer<ModuleWizardStep> adjuster) throws Exception {
-    final String projectPath = getProject().getBaseDir().getPath();
-    final String importFromPath = projectPath + "/test/";
-    final Module firstModule = importProjectFrom(importFromPath, adjuster,
+    String projectPath = getProject().getBaseDir().getPath();
+    String importFromPath = projectPath + "/test/";
+    Module firstModule = importProjectFrom(importFromPath, adjuster,
       new RebarProjectImportProvider(new RebarProjectImportBuilder()));
-    final Project createdProject = firstModule.getProject();
+    Project createdProject = firstModule.getProject();
     validateProject(createdProject);
     for (Module importedModule : ModuleManager.getInstance(createdProject).getModules()) {
       validateModule(importedModule);
@@ -184,21 +184,21 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   private void validateModule(@NotNull Module module) throws Exception {
-    final String importedModulePath = getProject().getBaseDir().getPath();
+    String importedModulePath = getProject().getBaseDir().getPath();
 
-    final Element actualImlElement = new Element("root");
+    Element actualImlElement = new Element("root");
     ((ModuleRootManagerImpl)ModuleRootManager.getInstance(module)).getState().writeExternal(actualImlElement);
     PathMacros.getInstance().setMacro(MODULE_DIR, importedModulePath);
     PathMacroManager.getInstance(module).collapsePaths(actualImlElement);
     PathMacroManager.getInstance(getProject()).collapsePaths(actualImlElement);
     PathMacros.getInstance().removeMacro(MODULE_DIR);
 
-    final String projectPath = getProject().getBaseDir().getPath();
-    final File expectedImlFile = new File(projectPath + "/expected/" + module.getName() + ".iml");
-    final Document expectedIml = JDOMUtil.loadDocument(expectedImlFile);
-    final Element expectedImlElement = expectedIml.getRootElement();
+    String projectPath = getProject().getBaseDir().getPath();
+    File expectedImlFile = new File(projectPath + "/expected/" + module.getName() + ".iml");
+    Document expectedIml = JDOMUtil.loadDocument(expectedImlFile);
+    Element expectedImlElement = expectedIml.getRootElement();
 
-    final String errorMsg = "Configuration of module " + module.getName() +
+    String errorMsg = "Configuration of module " + module.getName() +
       " does not meet expectations.\nExpected:\n" +
       new String(JDOMUtil.printDocument(expectedIml, "\n")) +
       "\nBut got:\n" +

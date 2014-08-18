@@ -37,17 +37,17 @@ public class ParametersList implements Cloneable {
   private List<String> myParameters = new ArrayList<String>();
   private List<ParamsGroup> myGroups = new ArrayList<ParamsGroup>();
 
-  public boolean hasParameter(@NonNls final String param) {
+  public boolean hasParameter(@NonNls String param) {
     return myParameters.contains(param);
   }
 
-  public boolean hasProperty(@NonNls final String name) {
+  public boolean hasProperty(@NonNls String name) {
     return getPropertyValue(name) != null;
   }
 
   @Nullable
-  public String getPropertyValue(@NotNull @NonNls final String name) {
-    final String prefix = "-D" + name + "=";
+  public String getPropertyValue(@NotNull @NonNls String name) {
+    String prefix = "-D" + name + "=";
     for (String parameter : myParameters) {
       if (parameter.startsWith(prefix)) {
         return parameter.substring(prefix.length());
@@ -84,7 +84,7 @@ public class ParametersList implements Cloneable {
       return Collections.unmodifiableList(myParameters);
     }
 
-    final List<String> params = new ArrayList<String>();
+    List<String> params = new ArrayList<String>();
     params.addAll(myParameters);
     for (ParamsGroup group : myGroups) {
       params.addAll(group.getParameters());
@@ -97,44 +97,44 @@ public class ParametersList implements Cloneable {
     myGroups.clear();
   }
 
-  public void prepend(@NonNls final String parameter) {
+  public void prepend(@NonNls String parameter) {
     addAt(0, parameter);
   }
 
-  public void prependAll(@NonNls final String... parameter) {
+  public void prependAll(@NonNls String... parameter) {
     addAll(parameter);
     Collections.rotate(myParameters, parameter.length);
   }
 
-  public void addParametersString(final String parameters) {
+  public void addParametersString(String parameters) {
     if (parameters != null) {
-      final String[] split = parse(parameters);
+      String[] split = parse(parameters);
       for (String param : split) {
         add(param);
       }
     }
   }
 
-  public void add(@NonNls final String parameter) {
+  public void add(@NonNls String parameter) {
     myParameters.add(expandMacros(parameter));
   }
 
-  public ParamsGroup addParamsGroup(@NotNull final String groupId) {
+  public ParamsGroup addParamsGroup(@NotNull String groupId) {
     return addParamsGroup(new ParamsGroup(groupId));
   }
 
-  public ParamsGroup addParamsGroup(@NotNull final ParamsGroup group) {
+  public ParamsGroup addParamsGroup(@NotNull ParamsGroup group) {
     myGroups.add(group);
     return group;
   }
 
-  public ParamsGroup addParamsGroupAt(final int index, @NotNull final ParamsGroup group) {
+  public ParamsGroup addParamsGroupAt(int index, @NotNull ParamsGroup group) {
     myGroups.add(index, group);
     return group;
   }
 
-  public ParamsGroup addParamsGroupAt(final int index, @NotNull final String groupId) {
-    final ParamsGroup group = new ParamsGroup(groupId);
+  public ParamsGroup addParamsGroupAt(int index, @NotNull String groupId) {
+    ParamsGroup group = new ParamsGroup(groupId);
     myGroups.add(index, group);
     return group;
   }
@@ -151,27 +151,27 @@ public class ParametersList implements Cloneable {
     return Collections.unmodifiableList(myGroups);
   }
 
-  public ParamsGroup getParamsGroupAt(final int index) {
+  public ParamsGroup getParamsGroupAt(int index) {
     return myGroups.get(index);
   }
 
   @Nullable
-  public ParamsGroup getParamsGroup(@NotNull final String name) {
+  public ParamsGroup getParamsGroup(@NotNull String name) {
     for (ParamsGroup group : myGroups) {
       if (name.equals(group.getId())) return group;
     }
     return null;
   }
 
-  public ParamsGroup removeParamsGroup(final int index) {
+  public ParamsGroup removeParamsGroup(int index) {
     return myGroups.remove(index);
   }
 
-  public void addAt(final int index, @NotNull final String parameter) {
+  public void addAt(int index, @NotNull String parameter) {
     myParameters.add(index, expandMacros(parameter));
   }
 
-  public void defineProperty(@NonNls final String propertyName, @NonNls final String propertyValue) {
+  public void defineProperty(@NonNls String propertyName, @NonNls String propertyValue) {
     addProperty(propertyName, propertyValue);
   }
 
@@ -183,13 +183,13 @@ public class ParametersList implements Cloneable {
     myParameters.add("-D" + propertyName + "=" + propertyValue);
   }
 
-  public void replaceOrAppend(final @NonNls String parameterPrefix, final @NonNls String replacement) {
+  public void replaceOrAppend(@NonNls String parameterPrefix, @NonNls String replacement) {
     replaceOrAdd(parameterPrefix, replacement, myParameters.size());
   }
 
-  private void replaceOrAdd(final @NonNls String parameterPrefix, final @NonNls String replacement, final int position) {
+  private void replaceOrAdd(@NonNls String parameterPrefix, @NonNls String replacement, int position) {
     for (ListIterator<String> iterator = myParameters.listIterator(); iterator.hasNext(); ) {
-      final String param = iterator.next();
+      String param = iterator.next();
       if (param.startsWith(parameterPrefix)) {
         if (replacement != null && replacement.isEmpty()) {
           iterator.remove();
@@ -205,11 +205,11 @@ public class ParametersList implements Cloneable {
     }
   }
 
-  public void replaceOrPrepend(final @NonNls String parameter, final @NonNls String replacement) {
+  public void replaceOrPrepend(@NonNls String parameter, @NonNls String replacement) {
     replaceOrAdd(parameter, replacement, 0);
   }
 
-  public void set(int ind, final @NonNls String value) {
+  public void set(int ind, @NonNls String value) {
     myParameters.set(ind, value);
   }
 
@@ -217,16 +217,16 @@ public class ParametersList implements Cloneable {
     return myParameters.get(ind);
   }
 
-  public void add(@NonNls final String name, @NonNls final String value) {
+  public void add(@NonNls String name, @NonNls String value) {
     add(name);
     add(value);
   }
 
-  public void addAll(final String... parameters) {
+  public void addAll(String... parameters) {
     addAll(Arrays.asList(parameters));
   }
 
-  public void addAll(final List<String> parameters) {
+  public void addAll(List<String> parameters) {
     // Don't use myParameters.addAll(parameters) , it does not call expandMacros(parameter)
     for (String parameter : parameters) {
       add(parameter);
@@ -236,7 +236,7 @@ public class ParametersList implements Cloneable {
   @Override
   public ParametersList clone() {
     try {
-      final ParametersList clone = (ParametersList)super.clone();
+      ParametersList clone = (ParametersList)super.clone();
       clone.myParameters = new ArrayList<String>(myParameters);
       clone.myGroups = new ArrayList<ParamsGroup>(myGroups.size() + 1);
       for (ParamsGroup group : myGroups) {
@@ -254,7 +254,7 @@ public class ParametersList implements Cloneable {
    * @see com.intellij.util.execution.ParametersListUtil#join(java.util.List)
    */
   @NotNull
-  public static String join(@NotNull final List<String> parameters) {
+  public static String join(@NotNull List<String> parameters) {
     return ParametersListUtil.join(parameters);
   }
 
@@ -262,7 +262,7 @@ public class ParametersList implements Cloneable {
    * @see com.intellij.util.execution.ParametersListUtil#join(java.util.List)
    */
   @NotNull
-  public static String join(final String... parameters) {
+  public static String join(String... parameters) {
     return ParametersListUtil.join(parameters);
   }
 
@@ -270,15 +270,15 @@ public class ParametersList implements Cloneable {
    * @see com.intellij.util.execution.ParametersListUtil#parseToArray(String)
    */
   @NotNull
-  public static String[] parse(@NotNull final String string) {
+  public static String[] parse(@NotNull String string) {
     return ParametersListUtil.parseToArray(string);
   }
 
   public String expandMacros(String text) {
-    final Map<String, String> macroMap = getMacroMap();
-    final Set<String> set = macroMap.keySet();
-    for (final String from : set) {
-      final String to = macroMap.get(from);
+    Map<String, String> macroMap = getMacroMap();
+    Set<String> set = macroMap.keySet();
+    for (String from : set) {
+      String to = macroMap.get(from);
       text = StringUtil.replace(text, from, to, true);
     }
     return text;

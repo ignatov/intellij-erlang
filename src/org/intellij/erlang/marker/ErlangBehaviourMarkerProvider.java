@@ -55,7 +55,7 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
   public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
   }
 
-  private static LineMarkerInfo createImplementationMarker(final ErlangFunction function,
+  private static LineMarkerInfo createImplementationMarker(ErlangFunction function,
                                                            final Collection<ErlangCallbackSpec> callbackSpecs) {
     final String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
 

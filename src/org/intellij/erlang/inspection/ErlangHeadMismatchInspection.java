@@ -55,7 +55,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
   }
 
   private static void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {
-    final String functionName = function.getName();
+    String functionName = function.getName();
     List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
     if (clauses.size() <= 1) return;
     for (ErlangFunctionClause clause : clauses) {

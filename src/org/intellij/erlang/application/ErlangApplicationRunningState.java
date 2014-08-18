@@ -71,7 +71,7 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
   @NotNull
   @Override
   public ConsoleView createConsoleView(Executor executor) {
-    final TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfiguration.getProject());
+    TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfiguration.getProject());
     return consoleBuilder.getConsole();
   }
 }
