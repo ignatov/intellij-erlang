@@ -80,7 +80,7 @@ public abstract class ErlangExpressionType {
   };
 
   public static final Map<String , ErlangExpressionType> TYPE_MAP = ContainerUtil.newMapFromValues(
-    ContainerUtil.<ErlangExpressionType>list(
+    ContainerUtil.list(
       FLOAT, FUN, INTEGER, LIST, IOLIST, TUPLE, ATOM, BINARY, BITSTRING, STRING, PID, PORT, REF, TERM, BOOLEAN
     ).iterator(), new Convertor<ErlangExpressionType, String>() {
       @Override
