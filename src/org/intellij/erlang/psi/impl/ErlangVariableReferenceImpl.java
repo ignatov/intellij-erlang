@@ -72,6 +72,7 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
 
   @Override
   public boolean isReferenceTo(PsiElement element) {
+    if (!(element instanceof ErlangQVar)) return false;
     ResolveResult[] results = multiResolve(false);
     for (ResolveResult result : results) {
       PsiElement resultElement = result.getElement();
