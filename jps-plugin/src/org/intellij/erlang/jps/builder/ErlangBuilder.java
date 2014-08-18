@@ -135,7 +135,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
   private static String getAppConfigDestinationFileName(String sourceFileName) {
     return sourceFileName.endsWith(".app.src") ?
-      (StringUtil.trimEnd(sourceFileName, ".app.src") + ".app") :
+      StringUtil.trimEnd(sourceFileName, ".app.src") + ".app" :
       sourceFileName;
   }
 

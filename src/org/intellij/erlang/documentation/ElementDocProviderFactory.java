@@ -101,6 +101,6 @@ public final class ElementDocProviderFactory {
   @Nullable
   private static VirtualFile getVirtualFile(@NotNull PsiElement psiElement) {
     PsiFile containingFile = psiElement.getContainingFile();
-    return (containingFile == null ? null : containingFile.getVirtualFile());
+    return containingFile == null ? null : containingFile.getVirtualFile();
   }
 }

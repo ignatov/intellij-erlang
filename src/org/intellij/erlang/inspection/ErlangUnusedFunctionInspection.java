@@ -40,7 +40,7 @@ import java.util.List;
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
-    ErlangFile erlangFile = (file instanceof ErlangFile) ? (ErlangFile) file : null;
+    ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
     if (erlangFile == null) return;
     if (file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension())) return;
     if (erlangFile.isExportedAll()) return;

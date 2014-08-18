@@ -69,7 +69,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
      PsiElement parent = lastElement != null ? lastElement.getParent() : null;
 
     if (!(lastElement instanceof LeafPsiElement && ((LeafPsiElement) lastElement).getElementType().equals(lastElementType))) return false;
-    if (!(expectedParentClass.isInstance(parent))) return false;
+    if (!expectedParentClass.isInstance(parent)) return false;
     if (hasEnd(parent)) return false;
 
     appendEndAndMoveCaret(file, editor, lastElement.getTextRange().getEndOffset(), needCommaAfter(parent));

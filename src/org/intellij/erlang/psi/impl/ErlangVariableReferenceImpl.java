@@ -84,7 +84,7 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
   @Nullable
   private ErlangModule getErlangModule() {
     PsiFile file = myElement.getContainingFile();
-    ErlangFile erlangFile = file instanceof ErlangFile ? ((ErlangFile) file) : null;
+    ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
     return erlangFile != null ? erlangFile.getModule() : null;
   }
 

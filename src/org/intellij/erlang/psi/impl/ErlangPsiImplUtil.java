@@ -1311,7 +1311,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static String getQualifiedFunctionName(@NotNull ErlangFunction function) {
     PsiFile file = function.getContainingFile();
-    ErlangFile erlangFile = file instanceof ErlangFile ? ((ErlangFile) file) : null;
+    ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
     ErlangModule module = erlangFile != null ? erlangFile.getModule() : null;
     return module != null ? module.getName() + ":" + function.getName() : function.getName();
   }
@@ -1413,7 +1413,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {
-    return (prevFunction == null || (spec.getTextOffset() > prevFunction.getTextOffset()));
+    return prevFunction == null || spec.getTextOffset() > prevFunction.getTextOffset();
   }
 
   @SuppressWarnings("UnusedParameters")
@@ -1684,7 +1684,7 @@ public class ErlangPsiImplUtil {
       ErlangModule module = ((ErlangFile) containingFile).getModule();
       String moduleName = module != null ? module.getName() : null;
       if (!myModule.equals(moduleName)) return false;
-      int arity = getArity(((ErlangFunction) resolve));
+      int arity = getArity((ErlangFunction) resolve);
       if (arity != myArity) return false;
       return true;
     }

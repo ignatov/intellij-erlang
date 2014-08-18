@@ -89,7 +89,7 @@ public class ErlangIndentProcessor {
       }
       return Indent.getNormalIndent();
     }
-    if ((parentType == ERL_GUARD || (parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN)) && grandfatherType != ERL_IF_CLAUSE) {
+    if ((parentType == ERL_GUARD || parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN) && grandfatherType != ERL_IF_CLAUSE) {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_LC_EXPRS) {

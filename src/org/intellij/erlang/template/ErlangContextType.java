@@ -79,7 +79,7 @@ public abstract class ErlangContextType extends TemplateContextType {
         if (ErlangPsiImplUtil.is(prev, ErlangTypes.ERL_DOT)) return false;
       }
       PsiElement parent = element.getParent();
-      return parent instanceof ErlangFile || (parent instanceof PsiErrorElement && parent.getParent() instanceof ErlangFile);
+      return parent instanceof ErlangFile || parent instanceof PsiErrorElement && parent.getParent() instanceof ErlangFile;
     }
   }
 

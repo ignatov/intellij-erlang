@@ -56,7 +56,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
        css = ResourceUtil.loadText(ResourceUtil.getResource(
          ErlangSdkDocProviderBase.class, "/documentation", "erlang-sdk-doc.css"));
     } catch (IOException e) {
-      throw (AssertionError) (new AssertionError().initCause(e));
+      throw (AssertionError) new AssertionError().initCause(e);
     }
     HTTP_STYLE = "<style type=\"text/css\">\n" + css + "</style>\n";
   }
@@ -271,7 +271,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @NotNull
   private String convertLink(@NotNull String href) {
     Matcher evaluatedLinkMatcher = PATTERN_EVALUATED_LINK.matcher(href);
-    String concreteHref = (evaluatedLinkMatcher.matches()) ? evaluatedLinkMatcher.group(1) : href;
+    String concreteHref = evaluatedLinkMatcher.matches() ? evaluatedLinkMatcher.group(1) : href;
     Matcher externalLinkMatcher = PATTERN_EXTERNAL_LINK.matcher(concreteHref);
     if (externalLinkMatcher.matches()) {
       return PSI_ELEMENT_PROTOCOL + externalLinkMatcher.group(1) + "#" + externalLinkMatcher.group(2);

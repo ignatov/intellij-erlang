@@ -123,7 +123,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     
     if (commonParent instanceof ErlangExpression) {
       if (ErlangPsiImplUtil.inLeftPartOfAssignment(commonParent, false)) return Collections.emptyList();
-      return ContainerUtil.newSmartList(((ErlangExpression) commonParent));
+      return ContainerUtil.newSmartList((ErlangExpression) commonParent);
     }
 
     PsiElement e = first;
@@ -134,7 +134,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
     List<ErlangExpression> res = ContainerUtil.newArrayList();
     for (PsiElement i = e; i != null && i.getTextOffset() <= second.getTextOffset(); i = i.getNextSibling()) {
-      if (i instanceof ErlangExpression) res.add(((ErlangExpression) i));
+      if (i instanceof ErlangExpression) res.add((ErlangExpression) i);
     }
 
     return res;

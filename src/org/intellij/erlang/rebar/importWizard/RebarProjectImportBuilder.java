@@ -228,7 +228,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     List<Module> createdModules = new ArrayList<Module>();
     final List<ModifiableRootModel> createdRootModels = new ArrayList<ModifiableRootModel>();
     final ModifiableModuleModel obtainedModuleModel =
-      (moduleModel != null ? moduleModel : ModuleManager.getInstance(project).getModifiableModel());
+      moduleModel != null ? moduleModel : ModuleManager.getInstance(project).getModifiableModel();
     for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
       VirtualFile ideaModuleDir = importedOtpApp.getRoot();
       String ideaModuleFile = ideaModuleDir.getCanonicalPath() + File.separator + importedOtpApp.getName() + ".iml";
@@ -393,7 +393,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   private static VirtualFile findFileByExtension(@NotNull VirtualFile dir, @NotNull String extension) {
     for (VirtualFile file : dir.getChildren()) {
       String fileName = file.getName();
-      if (!file.isDirectory() && (fileName.endsWith(extension))) {
+      if (!file.isDirectory() && fileName.endsWith(extension)) {
         return file;
       }
     }

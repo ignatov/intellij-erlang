@@ -44,7 +44,7 @@ final class ErlangSdkTypeDocProvider extends ErlangSdkDocProviderBase {
   @Override
   protected boolean isDocBegin(@NotNull String line) {
     Matcher matcher = PATTERN_TYPE_BEGIN.matcher(line);
-    return (matcher.matches() && matcher.group(1).equals(myTypeName));
+    return matcher.matches() && matcher.group(1).equals(myTypeName);
   }
 
   @Override

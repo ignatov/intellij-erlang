@@ -82,9 +82,9 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
       if (!funExpressionClauseNamesAreEqual(firstClauseName, funClauseName)) {
         String problemDescription = firstClauseName == null ?
           "Head mismatch: named clause in an unnamed fun expression" :
-          (funClauseName == null ?
+          funClauseName == null ?
             "Head mismatch: unnamed clause in a named fun expression" :
-            "Head mismatch: should be '" + firstClauseName.getName() + "'");
+            "Head mismatch: should be '" + firstClauseName.getName() + "'";
         PsiElement elementForRange = funClauseName != null ? funClauseName : funClause.getArgumentDefinitionList();
         TextRange range = TextRange.create(elementForRange.getStartOffsetInParent(),
           elementForRange.getStartOffsetInParent() + elementForRange.getTextLength());

@@ -183,7 +183,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
             //noinspection unchecked
             boolean insideImport = PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective;
-            if (inside || (inConsole && !isDot(position)) || insideImport) {
+            if (inside || inConsole && !isDot(position) || insideImport) {
               boolean withColon = !insideImport && null == PsiTreeUtil.getParentOfType(position, ErlangFunctionCallExpression.class, false);
               suggestModules(result, position, withColon);
             }
@@ -422,8 +422,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
   private static String getCompletedString(String beforeCompletion, VirtualFile lookedUpFile, @Nullable String appName) {
     String prefixPath = beforeCompletion.substring(0, beforeCompletion.lastIndexOf('/') + 1);
-    String completion = (appName == null ? lookedUpFile.getName() : appName);
-    String pathSeparator = (appName != null || lookedUpFile.isDirectory()) ? "/" : "";
+    String completion = appName == null ? lookedUpFile.getName() : appName;
+    String pathSeparator = appName != null || lookedUpFile.isDirectory() ? "/" : "";
     return prefixPath + completion + pathSeparator;
   }
 

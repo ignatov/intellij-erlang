@@ -119,7 +119,7 @@ public abstract class ErlangExpressionType {
         PsiReference reference = o.getReference();
         PsiElement element = reference != null ? reference.resolve() : null ;
         if (element instanceof ErlangFunction) {
-          ref.set(calculateFunctionType(((ErlangFunction) element)));
+          ref.set(calculateFunctionType((ErlangFunction) element));
         }
       }
 

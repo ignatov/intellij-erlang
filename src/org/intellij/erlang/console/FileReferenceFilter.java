@@ -110,10 +110,10 @@ public final class FileReferenceFilter implements Filter {
     int fileLine = matchGroupToNumber(matcher, myLineMatchGroup);
     int fileCol = matchGroupToNumber(matcher, myColumnMatchGroup);
     int highlightStartOffset = entireLength - line.length() + matcher.start(0);
-    int highlightEndOffset = highlightStartOffset + (matcher.end(0) - matcher.start(0));
+    int highlightEndOffset = highlightStartOffset + matcher.end(0) - matcher.start(0);
     VirtualFile absolutePath = resolveAbsolutePath(filePath);
-    HyperlinkInfo hyperLink = (absolutePath != null
-      ? new OpenFileHyperlinkInfo(myProject, absolutePath, fileLine, fileCol) : null);
+    HyperlinkInfo hyperLink = absolutePath != null
+      ? new OpenFileHyperlinkInfo(myProject, absolutePath, fileLine, fileCol) : null;
     return new Result(highlightStartOffset, highlightEndOffset, hyperLink);
   }
 
@@ -125,7 +125,7 @@ public final class FileReferenceFilter implements Filter {
       } catch (NumberFormatException e) { // Ignore
       }
     }
-    return (number > 0 ? number - 1 : 0);
+    return number > 0 ? number - 1 : 0;
   }
 
   @Nullable

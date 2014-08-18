@@ -139,7 +139,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
       for (ErlangCallbackSpec spec : myCallbackSpecs) {
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
         int arity = ErlangPsiImplUtil.getCallBackSpecArguments(spec).size();
-        ErlangFunction function = (name != null && arity >= 0) ? file.getFunction(name, arity) : null;
+        ErlangFunction function = name != null && arity >= 0 ? file.getFunction(name, arity) : null;
         if (function != null && ErlangUnusedFunctionInspection.isUnusedFunction(file, function)) {
           ErlangExportFunctionFix.processFunction(project, function);
         }

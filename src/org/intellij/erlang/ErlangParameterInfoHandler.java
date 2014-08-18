@@ -224,7 +224,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       }
       else {
         end = bifParams.indexOf(',', start + 1);
-        end = (end == -1 ? bifParams.length() : end);
+        end = end == -1 ? bifParams.length() : end;
       }
     }
 
