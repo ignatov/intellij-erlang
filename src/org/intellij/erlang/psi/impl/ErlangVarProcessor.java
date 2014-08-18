@@ -124,9 +124,4 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   public List<ErlangQVar> getAllResults() {
     return myVarList;
   }
-
-  @Nullable
-  public ErlangQVar getResult() {
-    return ContainerUtil.getFirstItem(myVarList); // return the topmost one
-  }
 }
