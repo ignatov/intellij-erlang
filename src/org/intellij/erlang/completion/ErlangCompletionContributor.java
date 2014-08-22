@@ -42,6 +42,7 @@ import com.intellij.util.Function;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import gnu.trove.THashSet;
+import org.intellij.erlang.context.ErlangPathResolver;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
@@ -413,7 +414,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       result.addAll(getModulePathLookupElements(includeDir, includeOwner, includeText));
     }
     if (ErlangSystemUtil.isSmallIde()) {
-      VirtualFile otpAppRoot = getContainingOtpAppRoot(file.getProject(), includeOwner);
+      VirtualFile otpAppRoot = ErlangPathResolver.getContainingOtpAppRoot(file.getProject(), includeOwner);
       VirtualFile otpIncludeDirectory = otpAppRoot != null ? otpAppRoot.findChild("include") : null;
       result.addAll(getModulePathLookupElements(otpIncludeDirectory, includeOwner, includeText));
       ErlangFile rebarConfigPsi = RebarConfigUtil.getRebarConfig(file.getProject(), otpAppRoot);
