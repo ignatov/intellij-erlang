@@ -14,6 +14,7 @@ public interface ErlangStringLiteral extends ErlangExpression, PsiLanguageInject
 
   boolean isValidHost();
 
+  @NotNull
   ErlangStringLiteral updateText(String text);
 
   @NotNull

@@ -12,6 +12,7 @@ public interface ErlangAtom extends ErlangCompositeElement {
 
   String getName();
 
+  @NotNull
   ErlangAtom setName(String newName);
 
   @NotNull

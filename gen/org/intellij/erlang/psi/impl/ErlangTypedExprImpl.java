@@ -56,6 +56,7 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @NotNull
   public PsiElement setName(String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }

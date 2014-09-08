@@ -31,6 +31,7 @@ public class ErlangAtomImpl extends ErlangCompositeElementImpl implements Erlang
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @NotNull
   public ErlangAtom setName(String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }

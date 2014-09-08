@@ -32,6 +32,7 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
     return ErlangPsiImplUtil.isValidHost(this);
   }
 
+  @NotNull
   public ErlangStringLiteral updateText(String text) {
     return ErlangPsiImplUtil.updateText(this, text);
   }
