@@ -18,12 +18,13 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangModuleReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBasedReferenceImpl<T> {
+public class ErlangModuleReferenceImpl<T extends ErlangQAtom> extends ErlangQAtomBasedReferenceImpl<T> {
   public ErlangModuleReferenceImpl(@NotNull T element) {
     super(element, ErlangPsiImplUtil.getTextRangeForReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
   }
@@ -36,6 +37,6 @@ public class ErlangModuleReferenceImpl<T extends ErlangQAtom> extends ErlangAtom
   @NotNull
   @Override
   public Object[] getVariants() {
-    return new Object[0];
+    return ArrayUtil.EMPTY_OBJECT_ARRAY;
   }
 }

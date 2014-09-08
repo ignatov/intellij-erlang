@@ -26,7 +26,7 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ErlangTypeReferenceImpl<T extends ErlangQAtom> extends ErlangAtomBasedReferenceImpl<T> {
+public class ErlangTypeReferenceImpl<T extends ErlangQAtom> extends ErlangQAtomBasedReferenceImpl<T> {
   @Nullable
   private final ErlangModuleRef myModuleRef;
 

@@ -22,10 +22,10 @@ import com.intellij.psi.PsiReferenceBase;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangQAtom;
 
-public abstract class ErlangAtomBasedReferenceImpl<T extends ErlangQAtom> extends PsiReferenceBase<T> {
+public abstract class ErlangQAtomBasedReferenceImpl<T extends ErlangQAtom> extends PsiReferenceBase<T> {
   protected final String myReferenceName;
 
-  public ErlangAtomBasedReferenceImpl(T element, TextRange range, String name) {
+  public ErlangQAtomBasedReferenceImpl(T element, TextRange range, String name) {
     super(element, range);
     myReferenceName = name;
   }
