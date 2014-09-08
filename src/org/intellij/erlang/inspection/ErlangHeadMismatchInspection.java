@@ -116,7 +116,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
       PsiElement oldHead = descriptor.getPsiElement();
       if (oldHead instanceof ErlangQAtom) {
-        ErlangPsiImplUtil.renameAtom((ErlangQAtom) oldHead, myFunctionName);
+        ErlangPsiImplUtil.renameQAtom((ErlangQAtom) oldHead, myFunctionName);
       }
     }
   }

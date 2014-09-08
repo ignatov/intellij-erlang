@@ -32,7 +32,7 @@ public abstract class ErlangAtomBasedReferenceImpl<T extends ErlangQAtom> extend
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    ErlangPsiImplUtil.renameAtom(myElement, newElementName);
+    ErlangPsiImplUtil.renameQAtom(myElement, newElementName);
     return myElement;
   }
 }

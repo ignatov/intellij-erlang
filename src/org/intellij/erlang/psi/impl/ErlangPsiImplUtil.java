@@ -727,8 +727,11 @@ public class ErlangPsiImplUtil {
     return new ErlangModuleReferenceImpl<ErlangQAtom>(atom);
   }
 
-  public static boolean renameAtom(@Nullable ErlangQAtom qAtom, String newName) {
-    ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
+  public static boolean renameQAtom(@Nullable ErlangQAtom qAtom, String newName) {
+    return renameAtom(qAtom != null ? qAtom.getAtom() : null, newName);
+  }
+
+  public static boolean renameAtom(@Nullable ErlangAtom atom, String newName) {
     if (atom != null) {
       atom.setName(newName);
       return true;
@@ -739,7 +742,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
     for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
-      renameAtom(clause.getQAtom(), newName);
+      renameQAtom(clause.getQAtom(), newName);
     }
     return o;
   }
@@ -764,7 +767,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangTypeDefinition o, @NotNull String newName) {
-    renameAtom(o.getQAtom(), newName);
+    renameQAtom(o.getQAtom(), newName);
     return o;
   }
 
@@ -785,7 +788,7 @@ public class ErlangPsiImplUtil {
       try {
         String ext = FileUtilRt.getExtension(virtualFile.getName());
         virtualFile.rename(o, StringUtil.replace(newName, "'", "") + "." + ext);
-        renameAtom(o.getQAtom(), newName);
+        renameQAtom(o.getQAtom(), newName);
       } catch (Exception ignored) {
       }
     }
@@ -1239,7 +1242,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement setName(@NotNull ErlangTypedExpr o, String newName) {
     ErlangQAtom qAtom = o.getQAtom();
-    renameAtom(qAtom, newName);
+    renameQAtom(qAtom, newName);
     return o;
   }
 
