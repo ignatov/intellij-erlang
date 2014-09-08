@@ -49,7 +49,7 @@ public class ErlangMacrosReferenceImpl<T extends ErlangMacrosName> extends PsiRe
       if (macros != null) {
         return macros;
       }
-      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangMacrosesFromIncludes((ErlangFile) containingFile, false, myReferenceName));
+      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangMacrosFromIncludes((ErlangFile) containingFile, false, myReferenceName));
     }
     return null;
   }

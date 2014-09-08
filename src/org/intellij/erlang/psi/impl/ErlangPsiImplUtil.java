@@ -541,7 +541,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<LookupElement> getMacrosLookupElements(@NotNull PsiFile containingFile) {
     if (containingFile instanceof ErlangFile) {
-      List<ErlangMacrosDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getMacroses(), getErlangMacrosesFromIncludes((ErlangFile) containingFile, true, ""));
+      List<ErlangMacrosDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getMacroses(), getErlangMacrosFromIncludes((ErlangFile) containingFile, true, ""));
       List<LookupElement> fromFile = ContainerUtil.map(
         concat,
         new Function<ErlangMacrosDefinition, LookupElement>() {
@@ -1062,9 +1062,9 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  static List<ErlangMacrosDefinition> getErlangMacrosesFromIncludes(@NotNull ErlangFile containingFile,
-                                                                    boolean forCompletion,
-                                                                    @NotNull String name) {
+  static List<ErlangMacrosDefinition> getErlangMacrosFromIncludes(@NotNull ErlangFile containingFile,
+                                                                  boolean forCompletion,
+                                                                  @NotNull String name) {
     List<ErlangMacrosDefinition> fromIncludes = new ArrayList<ErlangMacrosDefinition>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
