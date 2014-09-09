@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.rename;
 
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -43,6 +43,7 @@ public class ErlangRenameInputValidator implements RenameInputValidator {
           o instanceof ErlangFunction || o instanceof ErlangRecordDefinition || o instanceof ErlangModule;
       }
 
+      @Nullable
       @Override
       public ElementPatternCondition<PsiElement> getCondition() {
         return null;

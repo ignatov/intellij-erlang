@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.rename;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
