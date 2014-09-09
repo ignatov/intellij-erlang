@@ -43,14 +43,14 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
   }
 
   @Override
-  public boolean isInplaceRenameAvailable(@NotNull PsiElement element, PsiElement context) {
+  public boolean isInplaceRenameAvailable(@NotNull PsiElement o, PsiElement context) {
     // variable renaming is handled by ErlangRenameVariableProcessor
-    return element instanceof ErlangNamedElement && !(element instanceof ErlangQVar) && element.getUseScope() instanceof LocalSearchScope;
+    return (o instanceof ErlangNamedElement || o instanceof ErlangQAtom) && !(o instanceof ErlangQVar) && o.getUseScope() instanceof LocalSearchScope;
   }
 
   @Override
-  public boolean isMemberInplaceRenameAvailable(@NotNull PsiElement element, PsiElement context) {
-    return element instanceof ErlangNamedElement;
+  public boolean isMemberInplaceRenameAvailable(@NotNull PsiElement o, PsiElement context) {
+    return o instanceof ErlangNamedElement || o instanceof ErlangQAtom;
   }
 
   @Nullable

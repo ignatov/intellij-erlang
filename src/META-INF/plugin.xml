@@ -72,6 +72,7 @@
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.ErlangCompletionContributor"/>
         <renameInputValidator implementation="org.intellij.erlang.ErlangRenameInputValidator"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.ErlangRenameVariableProcessor"/>
+        <renamePsiElementProcessor implementation="org.intellij.erlang.ErlangRenameAtomProcessor"/>
 
         <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor"/>
 
@@ -132,6 +133,11 @@
         <gotoSymbolContributor implementation="org.intellij.erlang.go.ErlangSymbolContributor"/>
         <gotoClassContributor implementation="org.intellij.erlang.go.ErlangModuleContributor"/>
         <actionPromoter implementation="org.intellij.erlang.console.ErlangConsoleActionPromoter"/>
+
+        <useScopeEnlarger implementation="org.intellij.erlang.ErlangUseScopeEnlarger"/>
+        <findUsagesHandlerFactory implementation="org.intellij.erlang.ErlangFindUsagesHandlerFactory"/>
+        <referencesSearch implementation="org.intellij.erlang.ErlangAtomSearch"/>
+        <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.ErlangTargetElementEvaluator"/>
 
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariable" displayName="Unbound variable"

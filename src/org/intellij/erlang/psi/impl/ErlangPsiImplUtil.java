@@ -44,6 +44,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.ResolveScopeManager;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
+import com.intellij.psi.impl.source.resolve.reference.impl.PsiMultiReference;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
@@ -99,8 +100,44 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static PsiReference getReference(@NotNull ErlangQAtom o) {
-    return ArrayUtil.getFirstElement(ReferenceProvidersRegistry.getReferencesFromProviders(o));
+  public static PsiReference getReference(@NotNull ErlangQAtom o) { // todo: use multi reference
+    PsiReference[] referencesFromProviders = ReferenceProvidersRegistry.getReferencesFromProviders(o);
+    PsiReference atomReference = createAtomReference(o);
+    PsiReference[] psiReferences = atomReference == null ? referencesFromProviders : ArrayUtil.append(referencesFromProviders, atomReference);
+    if (psiReferences.length == 0) return null;
+    return new PsiMultiReference(psiReferences, o);
+  }
+
+  @Nullable
+  private static PsiReference createAtomReference(final ErlangQAtom o) {
+    ErlangAtom atom = o.getAtom();
+    if (atom == null) return null;
+    if (!(o.getParent() instanceof ErlangMaxExpression)) return null;
+    return new PsiPolyVariantReferenceBase<ErlangQAtom>(o, TextRange.create(0, o.getTextLength())) {
+      @NotNull
+      @Override
+      public ResolveResult[] multiResolve(boolean b) {
+        return new ResolveResult[]{};
+      }
+
+      @Override
+      public boolean isReferenceTo(PsiElement element) {
+        return element instanceof ErlangQAtom && element.getParent() instanceof ErlangMaxExpression &&
+          Comparing.equal(element.getText(), getElement().getText());
+      }
+
+      @Override
+      public PsiElement handleElementRename(String newName) throws IncorrectOperationException {
+        renameQAtom(o, newName);
+        return getElement();
+      }
+
+      @NotNull
+      @Override
+      public Object[] getVariants() { // todo
+        return ArrayUtil.EMPTY_OBJECT_ARRAY;
+      }
+    };
   }
 
   @NotNull
@@ -755,13 +792,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangRecordDefinition o, @NotNull String newName) {
-    ErlangQAtom qAtom = o.getQAtom();
-    if (qAtom != null) {
-      PsiElement atom = qAtom.getAtom();
-      if (atom != null) {
-        atom.replace(ErlangElementFactory.createQAtomFromText(o.getProject(), newName));
-      }
-    }
+    renameQAtom(o.getQAtom(), newName);
     return o;
   }
 

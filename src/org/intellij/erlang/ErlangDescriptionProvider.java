@@ -25,20 +25,19 @@ import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewShortNameLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
-    if (o instanceof ErlangQAtom) {
-      return "Atom '" + o.getText() + "'";
-    }
-    if (location == UsageViewNodeTextLocation.INSTANCE && o instanceof ErlangNamedElement) {
+    if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom)) {
       return getElementDescription(o, UsageViewTypeLocation.INSTANCE) + " " +
         "'" + getElementDescription(o, UsageViewShortNameLocation.INSTANCE) + "'";
     }
-    if ((location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) && o instanceof ErlangNamedElement) {
-      return ((ErlangNamedElement) o).getName();
+    if (location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) {
+      if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
+      if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
     }
     if (location == HighlightUsagesDescriptionLocation.INSTANCE) {
       String d = getElementDescription(o, UsageViewTypeLocation.INSTANCE);
@@ -53,6 +52,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (o instanceof ErlangTypedExpr) return "Record field";
       if (o instanceof ErlangTypeDefinition) return "Type";
       if (o instanceof ErlangAttribute) return "Attribute";
+      if (o instanceof ErlangQAtom) return "Atom";
     }
     return null;
   }
