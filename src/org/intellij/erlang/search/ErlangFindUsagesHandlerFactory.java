@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.search;
 
 import com.intellij.find.findUsages.AbstractFindUsagesDialog;
 import com.intellij.find.findUsages.FindUsagesHandler;
 import com.intellij.find.findUsages.FindUsagesHandlerFactory;
 import com.intellij.ide.DataManager;
 import com.intellij.psi.PsiElement;
+import org.intellij.erlang.CommonFindUsagesDialog;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

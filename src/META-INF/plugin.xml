@@ -134,10 +134,10 @@
         <gotoClassContributor implementation="org.intellij.erlang.go.ErlangModuleContributor"/>
         <actionPromoter implementation="org.intellij.erlang.console.ErlangConsoleActionPromoter"/>
 
-        <useScopeEnlarger implementation="org.intellij.erlang.ErlangUseScopeEnlarger"/>
-        <findUsagesHandlerFactory implementation="org.intellij.erlang.ErlangFindUsagesHandlerFactory"/>
-        <referencesSearch implementation="org.intellij.erlang.ErlangAtomSearch"/>
-        <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.ErlangTargetElementEvaluator"/>
+        <useScopeEnlarger implementation="org.intellij.erlang.search.ErlangUseScopeEnlarger"/>
+        <findUsagesHandlerFactory implementation="org.intellij.erlang.search.ErlangFindUsagesHandlerFactory"/>
+        <referencesSearch implementation="org.intellij.erlang.search.ErlangAtomSearch"/>
+        <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.search.ErlangTargetElementEvaluator"/>
 
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariable" displayName="Unbound variable"

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.search;
 
 import com.intellij.codeInsight.TargetElementEvaluatorEx;
 import com.intellij.codeInsight.TargetElementUtilBase;
