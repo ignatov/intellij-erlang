@@ -56,6 +56,8 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.*;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
+import org.intellij.erlang.index.ErlangApplicationIndex;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;

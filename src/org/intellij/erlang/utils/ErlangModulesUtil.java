@@ -32,9 +32,10 @@ import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.Convertor;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.ErlangModuleIndex;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -48,7 +49,7 @@ public final class ErlangModulesUtil {
   public static ErlangModule getErlangModule(final Project project, final String moduleName) {
     return new ReadAction<ErlangModule>() {
       @Override
-      protected void run(Result<ErlangModule> result) throws Throwable {
+      protected void run(@NotNull Result<ErlangModule> result) throws Throwable {
         result.setResult(ContainerUtil.getFirstItem(ErlangModuleIndex.getModulesByName(project, moduleName, GlobalSearchScope.allScope(project))));
       }
     }.execute().getResultObject();

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.index;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -29,6 +29,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.*;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
+import org.intellij.erlang.ErlangFileType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,11 +59,13 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     return DATA_INDEXER;
   }
 
+  @NotNull
   @Override
   public KeyDescriptor<String> getKeyDescriptor() {
     return KEY_DESCRIPTOR;
   }
 
+  @NotNull
   @Override
   public FileBasedIndex.InputFilter getInputFilter() {
     return INPUT_FILTER;
@@ -169,7 +172,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
 
   private static class ErlangApplicationInputFilter implements FileBasedIndex.InputFilter {
     @Override
-    public boolean acceptInput(VirtualFile file) {
+    public boolean acceptInput(@NotNull VirtualFile file) {
       return isApplicationFile(file) && isInsideEbinOrSrcDirectory(file);
     }
 

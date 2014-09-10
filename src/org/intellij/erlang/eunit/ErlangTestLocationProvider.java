@@ -28,7 +28,7 @@ import com.intellij.testIntegration.TestLocationProvider;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.ErlangModuleIndex;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;

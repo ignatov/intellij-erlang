@@ -48,6 +48,8 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashSet;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
+import org.intellij.erlang.index.ErlangApplicationIndex;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
@@ -344,7 +346,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         @Nullable
         @Override
         public LookupElement fun(VirtualFile f) {
-          return f == virtualFile ? null : getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true);
+          return f.equals(virtualFile) ? null : getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true);
         }
       }));
       matchingFiles.clear();
@@ -406,7 +408,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       @Nullable
       @Override
       public LookupElement fun(VirtualFile f) {
-        return f == includeOwner ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
+        return f.equals(includeOwner) ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
       }
     });
   }

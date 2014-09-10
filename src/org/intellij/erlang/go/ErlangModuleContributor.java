@@ -24,7 +24,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ArrayUtil;
-import org.intellij.erlang.ErlangModuleIndex;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.ErlangStructureViewFactory;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangNamedElement;

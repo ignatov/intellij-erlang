@@ -126,8 +126,8 @@
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
         <codeInsight.gotoSuper language="Erlang" implementationClass="org.intellij.erlang.navigation.ErlangGotoSuperHandler"/>
 
-        <fileBasedIndex implementation="org.intellij.erlang.ErlangModuleIndex"/>
-        <fileBasedIndex implementation="org.intellij.erlang.ErlangApplicationIndex"/>
+        <fileBasedIndex implementation="org.intellij.erlang.index.ErlangModuleIndex"/>
+        <fileBasedIndex implementation="org.intellij.erlang.index.ErlangApplicationIndex"/>
 
         <stubIndex implementation="org.intellij.erlang.stubs.index.ErlangAllNameIndex"/>
 
