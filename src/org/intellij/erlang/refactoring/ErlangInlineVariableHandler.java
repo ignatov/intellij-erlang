@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.refactor;
+package org.intellij.erlang.refactoring;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.Language;

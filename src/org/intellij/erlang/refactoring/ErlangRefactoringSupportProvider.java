@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.refactor;
+package org.intellij.erlang.refactoring;
 
 import com.intellij.lang.refactoring.RefactoringSupportProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.refactoring.RefactoringActionHandler;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.refactor.introduce.ErlangExtractFunctionHandler;
-import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
+import org.intellij.erlang.refactoring.introduce.ErlangExtractFunctionHandler;
+import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

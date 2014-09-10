@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.refactoring;
 
-import org.intellij.erlang.refactor.introduce.ErlangExtractFunctionHandler;
+import org.intellij.erlang.refactoring.introduce.ErlangExtractFunctionHandler;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangExtractFunctionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {

@@ -66,9 +66,9 @@
         <lang.braceMatcher language="Erlang" implementationClass="org.intellij.erlang.ErlangBraceMatcher"/>
         <lang.commenter language="Erlang" implementationClass="org.intellij.erlang.ErlangCommenter"/>
         <lang.psiStructureViewFactory language="Erlang" implementationClass="org.intellij.erlang.ErlangStructureViewFactory"/>
-        <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactor.ErlangRefactoringSupportProvider"/>
+        <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactoring.ErlangRefactoringSupportProvider"/>
         <lang.namesValidator language="Erlang" implementationClass="org.intellij.erlang.ErlangNamesValidator"/>
-        <refactoring.safeDeleteProcessor implementation="org.intellij.erlang.refactor.ErlangSafeDeleteProcessor" />
+        <refactoring.safeDeleteProcessor implementation="org.intellij.erlang.refactoring.ErlangSafeDeleteProcessor" />
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangCompletionContributor"/>
       
         <renameInputValidator implementation="org.intellij.erlang.rename.ErlangRenameInputValidator"/>
@@ -77,7 +77,7 @@
 
         <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor"/>
 
-        <inlineActionHandler implementation="org.intellij.erlang.refactor.ErlangInlineVariableHandler"/>
+        <inlineActionHandler implementation="org.intellij.erlang.refactoring.ErlangInlineVariableHandler"/>
 
         <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler"/>
         <typedHandler implementation="org.intellij.erlang.editor.ErlangTypedHandler" id="ErlangBinary"/>

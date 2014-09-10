@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.refactor;
+package org.intellij.erlang.refactoring;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;

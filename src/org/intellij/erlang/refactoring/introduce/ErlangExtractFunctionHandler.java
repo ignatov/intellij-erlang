@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.refactor.introduce;
+package org.intellij.erlang.refactoring.introduce;
 
 import com.google.common.base.CaseFormat;
 import com.intellij.lang.ASTNode;
@@ -48,7 +48,7 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.refactor.ErlangRefactoringUtil;
+import org.intellij.erlang.refactoring.ErlangRefactoringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.refactor.introduce;
+package org.intellij.erlang.refactoring.introduce;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;

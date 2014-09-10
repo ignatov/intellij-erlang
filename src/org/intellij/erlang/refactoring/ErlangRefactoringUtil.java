@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.refactor;
+package org.intellij.erlang.refactoring;
 
 import com.intellij.codeInsight.PsiEquivalenceUtil;
 import com.intellij.openapi.application.ApplicationManager;

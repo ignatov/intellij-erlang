@@ -17,10 +17,10 @@
 package org.intellij.erlang.refactoring;
 
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
-import org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler;
+import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
 
-import static org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
-import static org.intellij.erlang.refactor.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.*;
+import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
+import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.*;
 
 public class ErlangIntroduceVariableTest extends LightPlatformCodeInsightFixtureTestCase {
   @Override
