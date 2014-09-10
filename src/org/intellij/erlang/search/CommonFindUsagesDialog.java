@@ -1,5 +1,5 @@
 
-package org.intellij.erlang;
+package org.intellij.erlang.search;
 
 import com.intellij.find.findUsages.*;
 import com.intellij.lang.findUsages.DescriptiveNameUtil;

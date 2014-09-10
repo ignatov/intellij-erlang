@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.search;
 
 import com.intellij.lang.cacheBuilder.WordOccurrence;
 import com.intellij.lang.cacheBuilder.WordsScanner;
@@ -26,6 +26,7 @@ import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
 import com.intellij.util.Processor;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;

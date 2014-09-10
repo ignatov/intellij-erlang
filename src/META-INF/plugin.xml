@@ -57,7 +57,7 @@
         <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
         <iconProvider implementation="org.intellij.erlang.ErlangIconProvider"/>
         <updateAddedFileProcessor implementation="org.intellij.erlang.ErlangUpdateAddedFileProcessor"/>
-        <lang.findUsagesProvider language="Erlang" implementationClass="org.intellij.erlang.ErlangFindUsagesProvider"/>
+        <lang.findUsagesProvider language="Erlang" implementationClass="org.intellij.erlang.search.ErlangFindUsagesProvider"/>
         <elementDescriptionProvider implementation="org.intellij.erlang.ErlangDescriptionProvider"/>
         <lang.parserDefinition language="Erlang" implementationClass="org.intellij.erlang.ErlangParserDefinition"/>
         <lang.ast.factory language="Erlang" implementationClass="org.intellij.erlang.psi.impl.ErlangASTFactory"/>
