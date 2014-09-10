@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
-  public static final ID<String, Void> ERLANG_APPLICAION_INDEX = ID.create("ErlangApplicationIndex");
+  private static final ID<String, Void> ERLANG_APPLICATION_INDEX = ID.create("ErlangApplicationIndex");
 
   private static final FileBasedIndex.InputFilter INPUT_FILTER = new ErlangApplicationInputFilter();
   private static final int INDEX_VERSION = 1;
@@ -50,7 +50,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   @NotNull
   @Override
   public ID<String, Void> getName() {
-    return ERLANG_APPLICAION_INDEX;
+    return ERLANG_APPLICATION_INDEX;
   }
 
   @NotNull
@@ -84,7 +84,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   @Nullable
   public static VirtualFile getApplicationDirectoryByName(@NotNull String appName, @NotNull GlobalSearchScope searchScope) {
     ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
-    FileBasedIndex.getInstance().processValues(ERLANG_APPLICAION_INDEX, appName, null, processor, searchScope);
+    FileBasedIndex.getInstance().processValues(ERLANG_APPLICATION_INDEX, appName, null, processor, searchScope);
     Project project = searchScope.getProject();
     if (project != null) {
       processAppFiles(getAppFilesFromEbinDirectories(project), appName, processor);
@@ -98,11 +98,11 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     final FileBasedIndex index = FileBasedIndex.getInstance();
     final List<VirtualFile> appFilesFromEbinDirectories = getAppFilesFromEbinDirectories(project);
 
-    index.processAllKeys(ERLANG_APPLICAION_INDEX, new Processor<String>() {
+    index.processAllKeys(ERLANG_APPLICATION_INDEX, new Processor<String>() {
       @Override
       public boolean process(String appName) {
         ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
-        index.processValues(ERLANG_APPLICAION_INDEX, appName, null, processor, searchScope);
+        index.processValues(ERLANG_APPLICATION_INDEX, appName, null, processor, searchScope);
         processAppFiles(appFilesFromEbinDirectories, appName, processor);
         //TODO examine: processor does not get called for some appNames when running
         //              ErlangSmallIdeHighlightingTest.testIncludeFromOtpIncludeDirResolve()
