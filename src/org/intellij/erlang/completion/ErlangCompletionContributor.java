@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
@@ -47,6 +47,10 @@ import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashSet;
+import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.index.ErlangApplicationIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;

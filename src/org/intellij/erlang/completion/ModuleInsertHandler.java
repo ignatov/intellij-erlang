@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.AutoPopupController;
 import com.intellij.codeInsight.completion.InsertionContext;
