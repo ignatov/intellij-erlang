@@ -18,7 +18,7 @@ package org.intellij.erlang.refactoring;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
-import org.intellij.erlang.ErlangInlineVariableHandler;
+import org.intellij.erlang.refactor.ErlangInlineVariableHandler;
 import org.intellij.erlang.psi.ErlangQVar;
 
 public class ErlangInlineVariableTest extends LightCodeInsightFixtureTestCase {

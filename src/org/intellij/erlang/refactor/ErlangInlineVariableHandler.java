@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.refactor;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.Language;
@@ -32,6 +32,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.HelpID;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.Query;
+import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;

@@ -77,7 +77,7 @@
 
         <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor"/>
 
-        <inlineActionHandler implementation="org.intellij.erlang.ErlangInlineVariableHandler"/>
+        <inlineActionHandler implementation="org.intellij.erlang.refactor.ErlangInlineVariableHandler"/>
 
         <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler"/>
         <typedHandler implementation="org.intellij.erlang.editor.ErlangTypedHandler" id="ErlangBinary"/>
