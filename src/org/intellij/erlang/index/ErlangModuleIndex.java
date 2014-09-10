@@ -130,7 +130,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   private static List<VirtualFile> getVirtualFilesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
     ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();
     Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(ERLANG_MODULE_INDEX, name, searchScope);
-    ArrayList<VirtualFile> filesList = new ArrayList<VirtualFile>(files);
+    List<VirtualFile> filesList = ContainerUtil.newArrayList(files);
     Collections.sort(filesList, new MyProjectFilesComparator(projectFileIndex, searchScope));
     return filesList;
   }
