@@ -211,7 +211,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             Module module = ModuleUtilCore.findModuleForPsiElement(position);
             GlobalSearchScope scope = module != null && moduleScope ? GlobalSearchScope.moduleScope(module) : ProjectScope.getProjectScope(project);
 
-            Collection<String> names = ErlangAtomIndex.getNames(scope);
+            Collection<String> names = ErlangAtomIndex.getNames(project, scope);
             for (String name : names) {
               result.addElement(PrioritizedLookupElement.withPriority(
                 LookupElementBuilder.create(name).withLookupString(name.toLowerCase()).withIcon(ErlangIcons.ATOM), 50));

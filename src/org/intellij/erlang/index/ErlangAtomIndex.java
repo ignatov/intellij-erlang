@@ -16,8 +16,8 @@
 
 package org.intellij.erlang.index;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.CommonProcessors;
 import com.intellij.util.indexing.*;
@@ -34,7 +34,7 @@ import java.util.Collection;
 import java.util.Map;
 
 public class ErlangAtomIndex extends ScalarIndexExtension<String> {
-  public static final ID<String, Void> ERLANG_ATOM_INDEX = ID.create("ErlangSymbolIndex");
+  private static final ID<String, Void> ERLANG_ATOM_INDEX = ID.create("erlang.atom.index");
   private static final int INDEX_VERSION = 1;
 
   @NotNull
@@ -57,7 +57,7 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
       public Map<String, Void> map(final FileContent inputData) {
         final Map<String, Void> result = new THashMap<String, Void>();
         PsiFile file = inputData.getPsiFile();
-        if (file instanceof ErlangFile && PsiManager.getInstance(file.getProject()).isInProject(file)) { // todo: process all files
+        if (file instanceof ErlangFile) {
           file.accept(new ErlangRecursiveVisitor() {
             @Override
             public void visitQAtom(@NotNull ErlangQAtom o) {
@@ -89,13 +89,13 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
 
   @Override
   public boolean traceKeyHashToVirtualFileMapping() {
-    return FileBasedIndex.ourEnableTracingOfKeyHashToVirtualFileMapping;
+    return true;
   }
 
   @NotNull
-  public static Collection<String> getNames(@NotNull GlobalSearchScope searchScope) {
+  public static Collection<String> getNames(@NotNull Project project, @NotNull GlobalSearchScope searchScope) {
     CommonProcessors.CollectUniquesProcessor<String> processor = new CommonProcessors.CollectUniquesProcessor<String>();
-    FileBasedIndex.getInstance().processAllKeys(ERLANG_ATOM_INDEX, processor, searchScope, null);
+    FileBasedIndex.getInstance().processAllKeys(ERLANG_ATOM_INDEX, processor, searchScope, IdFilter.getProjectIdFilter(project, false));
     return processor.getResults();
   }
 }
