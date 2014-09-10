@@ -89,7 +89,7 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
 
   @Override
   public boolean traceKeyHashToVirtualFileMapping() {
-    return true;
+    return FileBasedIndex.ourEnableTracingOfKeyHashToVirtualFileMapping;
   }
 
   @NotNull
