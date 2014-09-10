@@ -29,7 +29,7 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.ErlangModuleType;
+import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.jetbrains.annotations.NotNull;

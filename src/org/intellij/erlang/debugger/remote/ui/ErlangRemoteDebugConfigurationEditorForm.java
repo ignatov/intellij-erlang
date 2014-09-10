@@ -19,7 +19,7 @@ package org.intellij.erlang.debugger.remote.ui;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
-import org.intellij.erlang.ErlangModuleType;
+import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 

@@ -16,7 +16,7 @@
 
 <idea-plugin version="2">
   <extensions defaultExtensionNs="com.intellij">
-    <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.ErlangModuleType"/>
+    <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.module.ErlangModuleType"/>
     <compiler implementation="org.intellij.erlang.compilation.ErlangCompiler"/>
     <compileServer.plugin classpath="jps/jps-plugin.jar;jps-shared.jar"/>
     <facetType implementation="org.intellij.erlang.facet.ErlangFacetType"/>

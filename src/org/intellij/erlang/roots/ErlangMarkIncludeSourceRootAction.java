@@ -19,7 +19,7 @@ package org.intellij.erlang.roots;
 import com.intellij.ide.projectView.actions.MarkSourceRootAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
-import org.intellij.erlang.ErlangModuleType;
+import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.jetbrains.annotations.NotNull;
 
