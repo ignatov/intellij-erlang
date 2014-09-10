@@ -29,7 +29,6 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.*;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
-import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.jetbrains.annotations.NotNull;
@@ -42,12 +41,6 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   private static final ID<String, Void> ERLANG_MODULE_INDEX = ID.create("ErlangModuleIndex");
   private static final int INDEX_VERSION = 1;
   private static final EnumeratorStringDescriptor DESCRIPTOR = new EnumeratorStringDescriptor();
-  private static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
-    @Override
-    public boolean acceptInput(@NotNull VirtualFile file) {
-      return file.getFileType() == ErlangFileType.MODULE;
-    }
-  };
 
   @NotNull
   private DataIndexer<String, Void, FileContent> myDataIndexer = new MyDataIndexer();
@@ -78,7 +71,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   @NotNull
   @Override
   public FileBasedIndex.InputFilter getInputFilter() {
-    return ERLANG_MODULE_FILTER;
+    return ErlangIndexUtil.ERLANG_MODULE_FILTER;
   }
 
   @Override

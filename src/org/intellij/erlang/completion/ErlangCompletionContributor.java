@@ -22,6 +22,7 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
+import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
@@ -40,6 +41,7 @@ import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.ProjectScope;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
@@ -48,11 +50,12 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashSet;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.index.ErlangApplicationIndex;
+import org.intellij.erlang.index.ErlangAtomIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
@@ -196,6 +199,31 @@ public class ErlangCompletionContributor extends CompletionContributor {
           }
           if (colonQualified == null && grandPa instanceof ErlangExpression && (inFunction(position) || inConsole)) {
             result.addAllElements(getFunctionLookupElements(file, false, null));
+          }
+
+          int invocationCount = parameters.getInvocationCount();
+          boolean moduleScope = invocationCount > 0 && invocationCount % 2 == 0;
+          boolean moduleWithDeps = invocationCount > 0 && invocationCount % 3 == 0;
+          
+          if (moduleScope || moduleWithDeps) {
+            Project project = file.getProject();
+
+            Module module = ModuleUtilCore.findModuleForPsiElement(position);
+            GlobalSearchScope scope = module != null && moduleScope ? GlobalSearchScope.moduleScope(module) : ProjectScope.getProjectScope(project);
+
+            Collection<String> names = ErlangAtomIndex.getNames(scope);
+            for (String name : names) {
+              result.addElement(PrioritizedLookupElement.withPriority(
+                LookupElementBuilder.create(name).withLookupString(name.toLowerCase()), 50));
+            }
+          }
+
+          String shortcut = getActionShortcut(IdeActions.ACTION_CODE_COMPLETION);
+          if (invocationCount == 1 && new Random().nextBoolean()) {
+            result.addLookupAdvertisement("Press " + shortcut + " to activate atom completion from application scope");
+          }
+          if (moduleScope) {
+            result.addLookupAdvertisement("Press " + shortcut + " to activate atom completion from project scope");
           }
         }
       }

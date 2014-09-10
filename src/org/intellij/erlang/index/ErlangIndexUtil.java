@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.search;
+package org.intellij.erlang.index;
 
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.SearchScope;
-import com.intellij.psi.search.UseScopeEnlarger;
-import org.intellij.erlang.psi.ErlangQAtom;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.indexing.FileBasedIndex;
+import org.intellij.erlang.ErlangFileType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class ErlangUseScopeEnlarger extends UseScopeEnlarger {
-  @Nullable
-  @Override
-  public SearchScope getAdditionalUseScope(@NotNull PsiElement element) {
-    if (element instanceof ErlangQAtom) return GlobalSearchScope.allScope(element.getProject()).union(element.getUseScope());
-    return null;
+public final class ErlangIndexUtil {
+  private ErlangIndexUtil() {
   }
+
+  public static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
+    @Override
+    public boolean acceptInput(@NotNull VirtualFile file) {
+      return file.getFileType() == ErlangFileType.MODULE;
+    }
+  };
 }

@@ -31,7 +31,6 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
-import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.documentation.ErlangDocUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -175,10 +174,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       public void visitQAtom(@NotNull ErlangQAtom o) {
         PsiElement atom = o.getAtom();
         PsiElement parent = o.getParent();
-        PsiElement parentNextSibling = parent.getNextSibling();
-        boolean needHighlighting =
-          parent instanceof ErlangMaxExpression
-            || parent instanceof ErlangTypeRef && (parentNextSibling == null || parentNextSibling.getNode().getElementType() != ErlangTypes.ERL_PAR_LEFT);
+        boolean needHighlighting = ErlangPsiImplUtil.standaloneAtom(o);
         if (atom != null && needHighlighting) {
           setHighlighting(atom, annotationHolder, ErlangSyntaxHighlighter.ATOM);
         }

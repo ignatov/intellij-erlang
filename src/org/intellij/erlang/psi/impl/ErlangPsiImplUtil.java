@@ -113,10 +113,8 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  private static PsiReference createAtomReference(final ErlangQAtom o) {
-    ErlangAtom atom = o.getAtom();
-    if (atom == null) return null;
-    if (!(o.getParent() instanceof ErlangMaxExpression)) return null;
+  private static PsiReference createAtomReference(@NotNull final ErlangQAtom o) {
+    if (!standaloneAtom(o)) return null;
     return new PsiPolyVariantReferenceBase<ErlangQAtom>(o, TextRange.create(0, o.getTextLength())) {
       @NotNull
       @Override
@@ -126,8 +124,7 @@ public class ErlangPsiImplUtil {
 
       @Override
       public boolean isReferenceTo(PsiElement element) {
-        return element instanceof ErlangQAtom && element.getParent() instanceof ErlangMaxExpression &&
-          Comparing.equal(element.getText(), getElement().getText());
+        return element instanceof ErlangQAtom && standaloneAtom(o) && Comparing.equal(element.getText(), getElement().getText());
       }
 
       @Override
@@ -142,6 +139,13 @@ public class ErlangPsiImplUtil {
         return ArrayUtil.EMPTY_OBJECT_ARRAY;
       }
     };
+  }
+
+  public static boolean standaloneAtom(@NotNull ErlangQAtom o) {
+    if (o.getAtom() == null) return false;
+    PsiElement parent = o.getParent();
+    return parent instanceof ErlangMaxExpression || 
+      (parent instanceof ErlangTypeRef || parent instanceof ErlangBitType) && !FormatterUtil.isFollowedBy(parent.getNode(), ErlangTypes.ERL_PAR_LEFT);
   }
 
   @NotNull
@@ -211,13 +215,13 @@ public class ErlangPsiImplUtil {
       ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
       List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
       for (ErlangExpression ee : expressionList) {
-        if (ee instanceof ErlangMaxExpression){
+        if (ee instanceof ErlangMaxExpression) {
           ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
           ContainerUtil.addIfNotNull(atoms, qAtom);
         }
         else if (ee instanceof ErlangAssignmentExpression) {
           ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
-          if (left instanceof ErlangMaxExpression){
+          if (left instanceof ErlangMaxExpression) {
             ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
             ContainerUtil.addIfNotNull(atoms, qAtom);
           }
