@@ -23,7 +23,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangCompositeElementImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;

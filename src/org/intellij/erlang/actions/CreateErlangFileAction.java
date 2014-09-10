@@ -24,7 +24,7 @@ import com.intellij.openapi.ui.InputValidatorEx;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDirectory;
-import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 
 public class CreateErlangFileAction extends CreateFileFromTemplateAction implements DumbAware {

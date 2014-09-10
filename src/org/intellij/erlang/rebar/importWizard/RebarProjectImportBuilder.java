@@ -45,7 +45,7 @@ import com.intellij.packaging.artifacts.ModifiableArtifactModel;
 import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.facet.ErlangFacet;

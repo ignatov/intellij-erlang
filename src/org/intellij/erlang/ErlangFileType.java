@@ -17,6 +17,7 @@
 package org.intellij.erlang;
 
 import com.intellij.openapi.fileTypes.LanguageFileType;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

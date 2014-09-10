@@ -19,7 +19,7 @@ package org.intellij.erlang.roots;
 import com.intellij.openapi.actionSystem.CustomShortcutSet;
 import com.intellij.openapi.roots.ui.configuration.ModuleSourceRootEditHandler;
 import com.intellij.ui.JBColor;
-import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

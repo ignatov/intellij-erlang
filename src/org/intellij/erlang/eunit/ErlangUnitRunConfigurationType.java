@@ -21,7 +21,7 @@ import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
-import org.intellij.erlang.ErlangIcons;
+import org.intellij.erlang.icons.ErlangIcons;
 
 public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
   public static final String PROTOCOL = "eunit";
