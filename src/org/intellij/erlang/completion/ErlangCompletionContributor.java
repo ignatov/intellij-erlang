@@ -214,7 +214,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             Collection<String> names = ErlangAtomIndex.getNames(scope);
             for (String name : names) {
               result.addElement(PrioritizedLookupElement.withPriority(
-                LookupElementBuilder.create(name).withLookupString(name.toLowerCase()), 50));
+                LookupElementBuilder.create(name).withLookupString(name.toLowerCase()).withIcon(ErlangIcons.ATOM), 50));
             }
           }
 

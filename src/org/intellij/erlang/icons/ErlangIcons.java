@@ -34,6 +34,7 @@ public interface ErlangIcons {
   Icon FIELD = PlatformIcons.FIELD_ICON;
   Icon TYPE = IconLoader.getIcon("/icons/type.png");
   Icon CALLBACK = AllIcons.Nodes.Interface;
+  Icon ATOM = IconLoader.getIcon("/icons/atom.png");
   Icon ERLANG_MARK = IconLoader.getIcon("/icons/erlang-mark.png");
   Icon ERLANG_MODULE_NODE = new LayeredIcon(PlatformIcons.FOLDER_ICON, ERLANG_MARK);
   Icon ERLANG_BIG = IconLoader.getIcon("/icons/erlang-big.png");
