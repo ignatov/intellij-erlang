@@ -38,16 +38,17 @@ import java.io.File;
 import java.util.*;
 
 public class ErlangModuleIndex extends ScalarIndexExtension<String> {
-  public static final ID<String, Void> ERLANG_MODULE_INDEX = ID.create("ErlangModuleIndex");
+  private static final ID<String, Void> ERLANG_MODULE_INDEX = ID.create("ErlangModuleIndex");
   private static final int INDEX_VERSION = 1;
   private static final EnumeratorStringDescriptor DESCRIPTOR = new EnumeratorStringDescriptor();
-  public static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
+  private static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
     @Override
     public boolean acceptInput(@NotNull VirtualFile file) {
       return file.getFileType() == ErlangFileType.MODULE;
     }
   };
 
+  @NotNull
   private DataIndexer<String, Void, FileContent> myDataIndexer = new MyDataIndexer();
 
   @NotNull
@@ -84,6 +85,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     return false;
   }
 
+  @NotNull
   public static Collection<String> getNames(@NotNull Project project) {
     return FileBasedIndex.getInstance().getAllKeys(ERLANG_MODULE_INDEX, project);
   }
@@ -93,7 +95,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     return getByName(project, name, searchScope, new Function<ErlangFile, ErlangModule>() {
       @Nullable
       @Override
-      public ErlangModule fun(ErlangFile erlangFile) {
+      public ErlangModule fun(@NotNull ErlangFile erlangFile) {
         return erlangFile.getModule();
       }
     });
@@ -109,19 +111,21 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     });
   }
 
-  private static <T> List<T> getByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope, final Function<ErlangFile, T> psiMapper) {
+  @NotNull
+  private static <T> List<T> getByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope, @NotNull final Function<ErlangFile, T> psiMapper) {
     final PsiManager psiManager = PsiManager.getInstance(project);
     List<VirtualFile> virtualFiles = getVirtualFilesByName(project, name, searchScope);
     return ContainerUtil.mapNotNull(virtualFiles, new Function<VirtualFile, T>() {
       @Nullable
       @Override
-      public T fun(VirtualFile virtualFile) {
+      public T fun(@NotNull VirtualFile virtualFile) {
         PsiFile psiFile = psiManager.findFile(virtualFile);
         return psiFile instanceof ErlangFile ? psiMapper.fun((ErlangFile)psiFile) : null;
       }
     });
   }
 
+  @NotNull
   private static List<VirtualFile> getVirtualFilesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
     ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();
     Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(ERLANG_MODULE_INDEX, name, searchScope);
@@ -140,7 +144,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     }
 
     @Override
-    public int compare(VirtualFile f1, VirtualFile f2) {
+    public int compare(@NotNull VirtualFile f1, @NotNull VirtualFile f2) {
       // according to http://www.erlang.org/doc/man/code.html, modules that belong to
       // 'kernel' and 'stdlib' applications always appear before any user-defined modules
       if (isKernelOrStdlibModule(f1)) return -1;
@@ -161,7 +165,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
       return f1.getPath().length() - f2.getPath().length();
     }
 
-    private boolean isKernelOrStdlibModule(VirtualFile file) {
+    private boolean isKernelOrStdlibModule(@NotNull VirtualFile file) {
       VirtualFile kernelAppDir = ErlangApplicationIndex.getApplicationDirectoryByName("kernel", mySearchScope);
       if (kernelAppDir != null && VfsUtilCore.isAncestor(kernelAppDir, file, true)) return true;
       VirtualFile stdlibAppDir = ErlangApplicationIndex.getApplicationDirectoryByName("stdlib", mySearchScope);
@@ -178,11 +182,11 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
       return false;
     }
 
-    private boolean isInLibrary(VirtualFile file) {
+    private boolean isInLibrary(@NotNull VirtualFile file) {
       return myProjectFileIndex.isInLibraryClasses(file) || myProjectFileIndex.isInLibrarySource(file);
     }
 
-    private boolean isInSource(VirtualFile file) {
+    private boolean isInSource(@NotNull VirtualFile file) {
       return myProjectFileIndex.isInSource(file);
     }
   }
@@ -190,7 +194,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   private static class MyDataIndexer implements DataIndexer<String, Void, FileContent> {
     @Override
     @NotNull
-    public Map<String, Void> map(FileContent inputData) {
+    public Map<String, Void> map(@NotNull FileContent inputData) {
       return Collections.singletonMap(inputData.getFile().getNameWithoutExtension(), null);
     }
   }
