@@ -25,8 +25,11 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.projectRoots.SdkTypeId;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import org.intellij.erlang.facet.ErlangFacet;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
 
 public class ErlangModuleBuilder extends JavaModuleBuilder implements ModuleBuilderListener {
   @Override
@@ -49,5 +52,10 @@ public class ErlangModuleBuilder extends JavaModuleBuilder implements ModuleBuil
   public void moduleCreated(@NotNull Module module) {
     ErlangFacet.createFacet(module);
     CompilerWorkspaceConfiguration.getInstance(module.getProject()).CLEAR_OUTPUT_DIRECTORY = false;
+  }
+
+  @Override
+  public Icon getNodeIcon() {
+    return ErlangIcons.ERLANG_SMALL;
   }
 }

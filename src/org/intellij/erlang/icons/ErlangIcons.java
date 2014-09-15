@@ -38,6 +38,7 @@ public interface ErlangIcons {
   Icon ERLANG_MARK = IconLoader.getIcon("/icons/erlang-mark.png");
   Icon ERLANG_MODULE_NODE = new LayeredIcon(PlatformIcons.FOLDER_ICON, ERLANG_MARK);
   Icon ERLANG_BIG = IconLoader.getIcon("/icons/erlang-big.png");
+  Icon ERLANG_SMALL = IconLoader.getIcon("/icons/erlang-small-16.png");
   Icon RECURSIVE_CALL = AllIcons.Gutter.RecursiveMethod;
 
   Icon FILE = IconLoader.getIcon("/icons/erlang-module-16.png");
