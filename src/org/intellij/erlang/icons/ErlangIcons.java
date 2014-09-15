@@ -55,7 +55,8 @@ public interface ErlangIcons {
   Icon REBAR = IconLoader.getIcon("/icons/rebar-16.png");
   Icon REBAR_MODULE_CONFLICT = AllIcons.Actions.Cancel;
   Icon REBAR_EUNIT = new LayeredIcon(REBAR, AllIcons.Nodes.JunitTestMark);
-  Icon ERLANG_CONSOLE = new LayeredIcon(IconLoader.getIcon("/icons/console.png"), ERLANG_MARK);
+  Icon CONSOLE = IconLoader.getIcon("/icons/console.png");
+  Icon ERLANG_CONSOLE = new LayeredIcon(CONSOLE, ERLANG_MARK);
 
   Icon DEBUGGER_PRIMITIVE_VALUE = AllIcons.Debugger.Db_primitive;
   Icon DEBUGGER_VALUE = AllIcons.Debugger.Value;
