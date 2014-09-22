@@ -1,6 +1,6 @@
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2" use-idea-classloader="true">
     <id>org.jetbrains.erlang</id>
-    <version>0.5.7</version>
+    <version>0.5.8</version>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
     <idea-version since-build="135.1063" until-build="135.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -9,10 +9,11 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
-            <p>0.5.7</p>
+            <p>0.5.8</p>
             <ul>
-              <li>Erlang 17 support</li>
-              <li>Function separators (<a href="https://github.com/ignatov/intellij-erlang/issues/452">#452</a>)</li>
+              <li>Search, rename, and completion for atoms (<a href="https://github.com/ignatov/intellij-erlang/issues/186">#186</a>)</li>
+              <li>Better name resolution for variables (<a href="https://github.com/ignatov/intellij-erlang/issues/198">#198</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/437">#437</a>)</li>
+              <li>Updated icons (also with retina support)</li>
               <li>Bugfixes</li>
             </ul>
         ]]>

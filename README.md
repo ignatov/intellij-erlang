@@ -14,12 +14,7 @@ Note for **Mac OS X** users: you need to download the entire zip file, not a sev
 We are going to release a standalone Erlang IDE. If you are interested on it, please [contact](mailto:ignatovs@gmail.com) to me.
 
 ## Recent changes
-### Version 0.5.7
-* Erlang 17 support
-* Function separators ([#452](https://github.com/ignatov/intellij-erlang/issues/452))
-* Bugfixes
-
-### Version 0.5.*
+### Version 0.5.8
 * Search, rename, and completion for atoms ([#186](https://github.com/ignatov/intellij-erlang/issues/186))
 * Better name resolution for variables ([#198](https://github.com/ignatov/intellij-erlang/issues/198), [#437](https://github.com/ignatov/intellij-erlang/issues/437))
 * Updated icons (also with retina support)
