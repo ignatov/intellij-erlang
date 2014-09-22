@@ -20,9 +20,9 @@ We are going to release a standalone Erlang IDE. If you are interested on it, pl
 * Bugfixes
 
 ### Version 0.5.*
-* Updated icons (also with retina support)
-* Search, rename, and completion for atoms ([#186](https://github.com/ignatov/intellij-erlang/issues/186)
+* Search, rename, and completion for atoms ([#186](https://github.com/ignatov/intellij-erlang/issues/186))
 * Better name resolution for variables ([#198](https://github.com/ignatov/intellij-erlang/issues/198), [#437](https://github.com/ignatov/intellij-erlang/issues/437))
+* Updated icons (also with retina support)
 * Bugfixes
 
 ### Work in progress
