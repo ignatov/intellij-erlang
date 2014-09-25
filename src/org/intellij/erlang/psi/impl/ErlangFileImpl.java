@@ -17,7 +17,6 @@
 package org.intellij.erlang.psi.impl;
 
 import com.intellij.extapi.psi.PsiFileBase;
-import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Condition;
@@ -43,6 +42,7 @@ import gnu.trove.THashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.stubs.ErlangCallbackSpecStub;
 import org.intellij.erlang.stubs.ErlangFileStub;
@@ -767,7 +767,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       @Override
       public boolean process(PsiElement psiElement) {
         for (PsiElement child = psiElement.getFirstChild(); child != null; child = child.getNextSibling()) {
-          if (child instanceof GeneratedParserUtilBase.DummyBlock) {
+          if (child instanceof ErlangParserUtil.DummyBlock) {
             if (!process(child)) return false;
           }
           else if (!processor.process(child)) return false;

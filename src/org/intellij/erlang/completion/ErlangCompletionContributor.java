@@ -21,7 +21,6 @@ import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
-import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -510,14 +509,15 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
     PsiFile file = PsiFileFactory.getInstance(posFile.getProject()).createFileFromText("a.erl", ErlangLanguage.INSTANCE, text, true, false);
     int completionOffset = posRange.getStartOffset() - range.getStartOffset();
-    GeneratedParserUtilBase.CompletionState state = new GeneratedParserUtilBase.CompletionState(completionOffset) {
+    ErlangParserUtil.CompletionState state = new ErlangParserUtil.CompletionState(completionOffset) {
       @Override
       public String convertItem(Object o) {
         if (o instanceof IElementType && ErlangLexer.KEYWORDS.contains((IElementType) o)) return o.toString();
         return o instanceof String ? (String) o : null;
       }
     };
-    file.putUserData(GeneratedParserUtilBase.COMPLETION_STATE_KEY, state);
+    //noinspection StaticFieldReferencedViaSubclass
+    file.putUserData(ErlangParserUtil.COMPLETION_STATE_KEY, state);
     TreeUtil.ensureParsed(file.getNode());
     return state.items;
   }
