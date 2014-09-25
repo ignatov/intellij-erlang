@@ -59,8 +59,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
 
         if (size < 2) return;
 
-        ErlangModuleRef moduleRef = o.getModuleRef();
-        PsiReference moduleReference = moduleRef != null ? moduleRef.getReference() : null;
+        PsiReference moduleReference = o.getModuleRef().getReference();
         PsiElement resolve = moduleReference != null ? moduleReference.resolve() : null;
 
         if (resolve instanceof ErlangModule) {
