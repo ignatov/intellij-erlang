@@ -3,10 +3,8 @@ package org.intellij.erlang.parser;
 
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiBuilder.Marker;
-import com.intellij.openapi.diagnostic.Logger;
 import static org.intellij.erlang.ErlangTypes.*;
 import static org.intellij.erlang.parser.ErlangParserUtil.*;
-import com.intellij.lang.LighterASTNode;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.tree.TokenSet;
@@ -15,9 +13,12 @@ import com.intellij.lang.PsiParser;
 @SuppressWarnings({"SimplifiableIfStatement", "UnusedAssignment"})
 public class ErlangParser implements PsiParser {
 
-  public static final Logger LOG_ = Logger.getInstance("org.intellij.erlang.parser.ErlangParser");
-
   public ASTNode parse(IElementType root_, PsiBuilder builder_) {
+    parse_only_(root_, builder_);
+    return builder_.getTreeBuilt();
+  }
+
+  public void parse_only_(IElementType root_, PsiBuilder builder_) {
     boolean result_;
     builder_ = adapt_builder_(root_, builder_, this, EXTENDS_SETS_);
     Marker marker_ = enter_section_(builder_, 0, _COLLAPSE_, null);
@@ -400,10 +401,9 @@ public class ErlangParser implements PsiParser {
       result_ = parse_root_(root_, builder_, 0);
     }
     exit_section_(builder_, 0, marker_, root_, result_, true, TRUE_CONDITION);
-    return builder_.getTreeBuilt();
   }
 
-  protected boolean parse_root_(final IElementType root_, final PsiBuilder builder_, final int level_) {
+  protected boolean parse_root_(IElementType root_, PsiBuilder builder_, int level_) {
     return forms(builder_, level_ + 1);
   }
 
@@ -5603,71 +5603,57 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "expression_0")) return false;
     boolean result_ = true;
     while (true) {
-      Marker left_marker_ = (Marker) builder_.getLatestDoneMarker();
-      if (!invalid_left_marker_guard_(builder_, left_marker_, "expression_0")) return false;
-      Marker marker_ = builder_.mark();
+      Marker marker_ = enter_section_(builder_, level_, _LEFT_, null);
       if (priority_ < 1 && consumeTokenSmart(builder_, ERL_OP_EQ)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 0));
-        marker_.drop();
-        left_marker_.precede().done(ERL_ASSIGNMENT_EXPRESSION);
+        result_ = expression(builder_, level_, 0);
+        exit_section_(builder_, level_, marker_, ERL_ASSIGNMENT_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 2 && consumeTokenSmart(builder_, ERL_OP_EXL)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 1));
-        marker_.drop();
-        left_marker_.precede().done(ERL_SEND_EXPRESSION);
+        result_ = expression(builder_, level_, 1);
+        exit_section_(builder_, level_, marker_, ERL_SEND_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 3 && consumeTokenSmart(builder_, ERL_ORELSE)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 3));
-        marker_.drop();
-        left_marker_.precede().done(ERL_ORELSE_EXPRESSION);
+        result_ = expression(builder_, level_, 3);
+        exit_section_(builder_, level_, marker_, ERL_ORELSE_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 4 && consumeTokenSmart(builder_, ERL_ANDALSO)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 4));
-        marker_.drop();
-        left_marker_.precede().done(ERL_ANDALSO_EXPRESSION);
+        result_ = expression(builder_, level_, 4);
+        exit_section_(builder_, level_, marker_, ERL_ANDALSO_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 5 && comp_op(builder_, level_ + 1)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 5));
-        marker_.drop();
-        left_marker_.precede().done(ERL_COMP_OP_EXPRESSION);
+        result_ = expression(builder_, level_, 5);
+        exit_section_(builder_, level_, marker_, ERL_COMP_OP_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 6 && list_op(builder_, level_ + 1)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 5));
-        marker_.drop();
-        left_marker_.precede().done(ERL_LIST_OP_EXPRESSION);
+        result_ = expression(builder_, level_, 5);
+        exit_section_(builder_, level_, marker_, ERL_LIST_OP_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 7 && add_op(builder_, level_ + 1)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 7));
-        marker_.drop();
-        left_marker_.precede().done(ERL_ADDITIVE_EXPRESSION);
+        result_ = expression(builder_, level_, 7);
+        exit_section_(builder_, level_, marker_, ERL_ADDITIVE_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 8 && multiplicative_expression_0(builder_, level_ + 1)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 8));
-        marker_.drop();
-        left_marker_.precede().done(ERL_MULTIPLICATIVE_EXPRESSION);
+        result_ = expression(builder_, level_, 8);
+        exit_section_(builder_, level_, marker_, ERL_MULTIPLICATIVE_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 10 && consumeTokenSmart(builder_, ERL_COLON)) {
-        result_ = report_error_(builder_, expression(builder_, level_, 10));
-        marker_.drop();
-        left_marker_.precede().done(ERL_COLON_QUALIFIED_EXPRESSION);
+        result_ = expression(builder_, level_, 10);
+        exit_section_(builder_, level_, marker_, ERL_COLON_QUALIFIED_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 11 && anonymous_call_expression_0(builder_, level_ + 1)) {
         result_ = true;
-        marker_.drop();
-        left_marker_.precede().done(ERL_ANONYMOUS_CALL_EXPRESSION);
+        exit_section_(builder_, level_, marker_, ERL_ANONYMOUS_CALL_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 11 && record_tail(builder_, level_ + 1)) {
         result_ = true;
-        marker_.drop();
-        left_marker_.precede().done(ERL_RECORD_EXPRESSION);
+        exit_section_(builder_, level_, marker_, ERL_RECORD_EXPRESSION, result_, true, null);
       }
       else if (priority_ < 11 && map_tuple(builder_, level_ + 1)) {
         result_ = true;
-        marker_.drop();
-        left_marker_.precede().done(ERL_MAP_EXPRESSION);
+        exit_section_(builder_, level_, marker_, ERL_MAP_EXPRESSION, result_, true, null);
       }
       else {
-        exit_section_(builder_, marker_, null, false);
+        exit_section_(builder_, level_, marker_, null, false, false, null);
         break;
       }
     }
