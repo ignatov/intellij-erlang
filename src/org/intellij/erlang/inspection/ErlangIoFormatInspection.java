@@ -108,7 +108,9 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
       for (int i = 1; i < 5; i++) {
         if (matcher.group(i) != null) expectedArgumentsCount++;
       }
-      if (matcher.group(4) == null && matcher.group(5) == null) {
+      String controlSequenceType = matcher.group(4);
+      if ("P".equals(controlSequenceType)) expectedArgumentsCount++;
+      if (controlSequenceType == null && matcher.group(5) == null) {
         throw new InvalidControlSequenceException(matcher.start());
       }
       previousMatchEnd = matcher.end();

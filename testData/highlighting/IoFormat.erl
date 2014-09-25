@@ -20,4 +20,8 @@ bar() ->
   io:format(<warning>"~*w"</warning>, [1]),
   io:format(<warning>"~*.*.xlw"</warning>, [1, 2]),
   io:format("~..\tlp", [1]),
-  io:format(<warning>"~..w~"</warning>, [boo]).
+  io:format(<warning>"~..w~"</warning>, [boo]),
+  io:format(<warning>"~P"</warning>, [x]),
+  io:format("~P", [x, 10]),
+  io:format(<warning>"~*.*.*P"</warning>, [10, 10, 10, x]),
+  io:format("~*.*.*P", [10, 10, 10, x, 2]).
