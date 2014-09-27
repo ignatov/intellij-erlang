@@ -408,6 +408,8 @@ public class ErlangParser implements PsiParser {
   }
 
   public static final TokenSet[] EXTENDS_SETS_ = new TokenSet[] {
+    create_token_set_(ERL_ARGUMENT_DEFINITION, ERL_ARGUMENT_LIST),
+    create_token_set_(ERL_ATOM_ATTRIBUTE, ERL_BINARY_EXPRESSION),
     create_token_set_(ERL_ADDITIVE_EXPRESSION, ERL_ANDALSO_EXPRESSION, ERL_ANONYMOUS_CALL_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION,
       ERL_BEGIN_END_EXPRESSION, ERL_BINARY_EXPRESSION, ERL_CASE_EXPRESSION, ERL_CATCH_EXPRESSION,
       ERL_COLON_QUALIFIED_EXPRESSION, ERL_COMP_OP_EXPRESSION, ERL_CONFIG_CALL_EXPRESSION, ERL_CONFIG_EXPRESSION,
@@ -417,9 +419,13 @@ public class ErlangParser implements PsiParser {
       ERL_MULTIPLICATIVE_EXPRESSION, ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION,
       ERL_QUALIFIED_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION,
       ERL_STRING_LITERAL, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
+    create_token_set_(ERL_LIST_COMPREHENSION, ERL_LIST_EXPRESSION),
+    create_token_set_(ERL_MAP_EXPRESSION, ERL_MAX_EXPRESSION),
+    create_token_set_(ERL_RECORD_EXPRESSION, ERL_RECORD_FIELD),
     create_token_set_(ERL_BINARY_TYPE, ERL_BIN_BASE_TYPE, ERL_BIN_UNIT_TYPE, ERL_FIELD_TYPE,
       ERL_FUN_TYPE, ERL_FUN_TYPE_100_T, ERL_INT_TYPE, ERL_MAP_ENTRY_TYPE,
-      ERL_MAP_TYPE, ERL_RECORD_LIKE_TYPE, ERL_TOP_TYPE_100_T, ERL_TYPE),
+      ERL_MAP_TYPE, ERL_RECORD_LIKE_TYPE, ERL_TOP_TYPE_100_T, ERL_TUPLE_EXPRESSION,
+      ERL_TYPE),
   };
 
   /* ********************************************************** */
@@ -4020,7 +4026,7 @@ public class ErlangParser implements PsiParser {
     if (!recursion_guard_(builder_, level_, "record_field")) return false;
     boolean result_;
     boolean pinned_;
-    Marker marker_ = enter_section_(builder_, level_, _NONE_, "<record field>");
+    Marker marker_ = enter_section_(builder_, level_, _COLLAPSE_, "<record field>");
     result_ = record_field_0(builder_, level_ + 1);
     pinned_ = result_; // pin = 1
     result_ = result_ && report_error_(builder_, consumeToken(builder_, ERL_OP_EQ));
