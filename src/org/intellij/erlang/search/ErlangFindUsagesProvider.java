@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.search;
 
+import com.intellij.lang.HelpID;
 import com.intellij.lang.cacheBuilder.WordOccurrence;
 import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
@@ -63,7 +64,7 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
 
   @Override
   public String getHelpId(@NotNull PsiElement psiElement) {
-    return "reference.dialogs.findUsages.other"; // todo: after 13.1 use HelpID
+    return HelpID.FIND_OTHER_USAGES;
   }
 
   @NotNull
