@@ -17,6 +17,7 @@
 package org.intellij.erlang.lexer;
 
 import com.intellij.lexer.Lexer;
+import org.intellij.erlang.context.ErlangCompileContext;
 
 /**
  * @author savenko
@@ -24,7 +25,7 @@ import com.intellij.lexer.Lexer;
 public class ErlangMacroSubstitutingLexerTest extends ErlangLexerTestBase {
   @Override
   protected Lexer createLexer() {
-    return new ErlangMacroSubstitutingLexer();
+    return new ErlangMacroSubstitutingLexer(new ErlangCompileContext("test"));
   }
 
   @Override
@@ -49,4 +50,5 @@ public class ErlangMacroSubstitutingLexerTest extends ErlangLexerTestBase {
   public void testWhitespaceMacroArgument()       throws Exception { doTest(); }
   public void testCommasInMacroCallArguments()    throws Exception { doTest(); }
   public void testUnresolvedMacroInsideMacroBody()throws Exception { doTest(); }
+  public void testUndefinitionPreventsExpansion() throws Exception { doTest(); }
 }

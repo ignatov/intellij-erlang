@@ -28,6 +28,7 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
+import org.intellij.erlang.context.ErlangCompileContextManager;
 import org.intellij.erlang.lexer.ErlangMacroSubstitutingLexer;
 import org.intellij.erlang.parser.ErlangParser;
 import org.intellij.erlang.psi.ErlangTokenType;
@@ -47,7 +48,7 @@ public class ErlangParserDefinition implements ParserDefinition {
   @NotNull
   @Override
   public Lexer createLexer(Project project) {
-    return new ErlangMacroSubstitutingLexer();
+    return new ErlangMacroSubstitutingLexer(ErlangCompileContextManager.getInstance(project).getContext(project, null));
   }
 
   @Override
