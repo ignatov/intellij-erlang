@@ -28,6 +28,7 @@ import com.intellij.util.containers.Stack;
 import org.intellij.erlang.ErlangBraceMatcher;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.context.ErlangCompileContext;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,18 +41,16 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
   private static final BracePair[] BRACE_PAIRS = new ErlangBraceMatcher().getPairs();
 
   private final ErlangMacroContext myMacroContext;
+  private final ErlangCompileContext myCompileContext;
 
-  public ErlangMacroSubstitutingLexer() {
-    this(new ErlangFormsLexer());
+  public ErlangMacroSubstitutingLexer(ErlangCompileContext compileContext) {
+    this(new ErlangFormsLexer(), new ErlangMacroContext(), compileContext);
   }
 
-  public ErlangMacroSubstitutingLexer(Lexer baseLexer) {
-    this(baseLexer, new ErlangMacroContext());
-  }
-
-  public ErlangMacroSubstitutingLexer(Lexer baseLexer, ErlangMacroContext context) {
+  public ErlangMacroSubstitutingLexer(Lexer baseLexer, ErlangMacroContext context, ErlangCompileContext compileContext) {
     super(baseLexer);
     myMacroContext = context;
+    myCompileContext = compileContext;
   }
 
   @Override
@@ -310,23 +309,44 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
         //TODO report ill-formed macro call
         return;
       }
-      // this code handles calls like ?MACRO(arg1, arg2) where arguments may not be a MACRO's arguments
-      ErlangMacro macro = null;
-      List<String> macroArguments = macroCall.getPossibleArgumentsList();
-      if (macroArguments != null) {
-        macro = myMacroContext.getParameterizedMacro(macroCall.getName(), macroArguments.size());
+
+      String substitution = null;
+      ErlangMacroDefinitionState macroDefinitionState = myMacroContext.getMacroDefinitionState(macroCall.getName());
+      if (ErlangMacroDefinitionState.DEFINED == macroDefinitionState) {
+        // this code handles calls like ?MACRO(arg1, arg2) where arguments may not be a MACRO's arguments
+        ErlangMacro macro = null;
+        List<String> macroArguments = macroCall.getPossibleArgumentsList();
+        if (macroArguments != null) {
+          macro = myMacroContext.getParameterizedMacro(macroCall.getName(), macroArguments.size());
+        }
+        if (macro == null) {
+          macro = myMacroContext.getParameterlessMacro(macroCall.getName());
+          if (macro != null) {
+            macroArguments = null;
+            myMacroNameEndPosition.restore();
+          }
+        }
+        if (macro != null) {
+          substitution = macro.substitute(macroArguments);
+        }
       }
-      if (macro == null) {
-        macro = myMacroContext.getParameterlessMacro(macroCall.getName());
-        macroArguments = null;
-        myMacroNameEndPosition.restore();
+
+      // If no substitution was produced at this point, it's either a free macro or there was no macro definition with appropriate arity.
+      // We can now try too look a definition up in compile context.
+      if (substitution == null && (ErlangMacroDefinitionState.DEFINED == macroDefinitionState || ErlangMacroDefinitionState.FREE == macroDefinitionState)) {
+        String macroBody = myCompileContext.getMacroDefinitions().get(macroCall.getName());
+        if (macroBody != null) {
+          myMacroNameEndPosition.restore();
+          substitution = macroBody;
+        }
       }
-      if (macro != null) {
-        String substitution = macro.substitute(macroArguments);
-        ErlangLexer substitutionLexer = new ErlangLexer();
+
+      if (substitution != null) {
+        ErlangLexer substitutionLexer = new ErlangLexer(); //TODO use a macro substituting lexer here. (beware of recursive macros!)
         substitutionLexer.start(substitution);
         myLexersStack.push(substitutionLexer);
       }
+
       myMacroNameEndPosition = null;
       resetMacroCallParsing();
     }

@@ -20,43 +20,46 @@ import com.intellij.util.containers.MultiMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 /**
  * @author savenko
  */
-class ErlangMacroContext {
-  private final MultiMap<String, ErlangMacro> myDefinedMacros = new MultiMap<String, ErlangMacro>();
-  private final ErlangMacroContext myParent;
-
-  public ErlangMacroContext() {
-    this(null);
-  }
-
-  public ErlangMacroContext(@Nullable ErlangMacroContext parent) {
-    myParent = parent;
-  }
+final class ErlangMacroContext {
+  private final MultiMap<String, ErlangMacro> myDefinitions = new MultiMap<String, ErlangMacro>();
+  private final Set<String> myUndefinitions = new HashSet<String>();
 
   public void defineMacro(@NotNull ErlangMacro m) {
     //TODO handle redefinition
-    myDefinedMacros.putValue(m.getName(), m);
+    myDefinitions.putValue(m.getName(), m);
+    myUndefinitions.remove(m.getName());
+  }
+
+  public void undefineMacro(@NotNull String macroName) {
+    myDefinitions.remove(macroName);
+    myUndefinitions.add(macroName);
+  }
+
+  public ErlangMacroDefinitionState getMacroDefinitionState(@NotNull String macroName) {
+    return myUndefinitions.contains(macroName) ? ErlangMacroDefinitionState.UNDEFINED :
+      myDefinitions.containsKey(macroName) ? ErlangMacroDefinitionState.DEFINED : ErlangMacroDefinitionState.FREE;
   }
 
   @Nullable
-  public ErlangMacro getParameterlessMacro(String macroName) {
+  public ErlangMacro getParameterlessMacro(@NotNull String macroName) {
     return getParameterizedMacro(macroName, -1);
   }
 
   @Nullable
-  public ErlangMacro getParameterizedMacro(String macroName, int arity) {
+  public ErlangMacro getParameterizedMacro(@NotNull String macroName, int arity) {
     ErlangMacro foundMacro = null;
-    for (ErlangMacro m : myDefinedMacros.get(macroName)) {
+    for (ErlangMacro m : myDefinitions.get(macroName)) {
       if (arity == m.getArity()) {
         foundMacro = m;
         break;
       }
-    }
-    if (foundMacro == null && myParent != null) {
-      foundMacro = myParent.getParameterizedMacro(macroName, arity);
     }
     return foundMacro;
   }

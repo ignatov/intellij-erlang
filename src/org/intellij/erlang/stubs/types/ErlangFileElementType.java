@@ -16,6 +16,11 @@
 
 package org.intellij.erlang.stubs.types;
 
+import com.intellij.lang.ASTNode;
+import com.intellij.lang.PsiBuilder;
+import com.intellij.lang.PsiBuilderFactory;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.StubBuilder;
 import com.intellij.psi.stubs.DefaultStubBuilder;
@@ -24,6 +29,10 @@ import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.intellij.psi.tree.IStubFileElementType;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.context.ErlangCompileContext;
+import org.intellij.erlang.context.ErlangCompileContextManager;
+import org.intellij.erlang.lexer.ErlangMacroSubstitutingLexer;
+import org.intellij.erlang.parser.ErlangParser;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.stubs.ErlangFileStub;
 import org.jetbrains.annotations.NotNull;
@@ -66,6 +75,18 @@ public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> 
   @Override
   public ErlangFileStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
     return new ErlangFileStub(null, dataStream.readBoolean(), dataStream.readName());
+  }
+
+  @Override
+  protected ASTNode doParseContents(@NotNull ASTNode chameleon, @NotNull PsiElement psi) {
+    PsiFile psiFile = psi.getContainingFile();
+    VirtualFile virtualFile = psiFile != null ? psiFile.getVirtualFile() : null;
+    ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(psi.getProject()).getContext(psi.getProject(), virtualFile);
+    //TODO should we use the preprocessing lexer here?
+    //TODO pass current file to lexer
+    ErlangMacroSubstitutingLexer lexer = new ErlangMacroSubstitutingLexer(compileContext);
+    PsiBuilder builder = PsiBuilderFactory.getInstance().createBuilder(psi.getProject(), chameleon, lexer, ErlangLanguage.INSTANCE, chameleon.getChars());
+    return new ErlangParser().parse(chameleon.getElementType(), builder).getFirstChildNode();
   }
 
   @NotNull
