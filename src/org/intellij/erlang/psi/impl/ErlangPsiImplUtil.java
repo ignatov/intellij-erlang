@@ -1663,12 +1663,16 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static TextRange getTextRangeForReference(@NotNull ErlangQAtom qAtom) {
-    return rangeInParent(qAtom.getTextRange(), getNameIdentifier(qAtom).getTextRange());
+    return getTextRangeInParent(qAtom, getNameIdentifier(qAtom));
   }
 
   @NotNull
   public static TextRange getTextRangeForReference(@NotNull ErlangMacrosName macroName) {
-    return rangeInParent(macroName.getTextRange(), getNameIdentifier(macroName).getTextRange());
+    return getTextRangeInParent(macroName, getNameIdentifier(macroName));
+  }
+
+  private static TextRange getTextRangeInParent(@NotNull PsiElement parent, @NotNull PsiElement child) {
+    return child instanceof ForeignLeafPsiElement ? parent.getTextRange() : rangeInParent(parent.getTextRange(), child.getTextRange());
   }
 
   @NotNull
