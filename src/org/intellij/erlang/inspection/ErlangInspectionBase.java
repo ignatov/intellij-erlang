@@ -196,6 +196,9 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
                                                           @NotNull String descriptionTemplate,
                                                           ProblemHighlightType highlightType,
                                                           LocalQuickFix... fixes) {
+    if (PsiTreeUtil.getParentOfType(psiElement, ErlangMacroCallArgumentList.class) != null) {
+      return;
+    }
     PsiElement targetElement = rightmostNonForeignElementBefore(psiElement);
     if (targetElement == null) return;
     ProblemDescriptor problemDescriptor = targetElement != psiElement ?
