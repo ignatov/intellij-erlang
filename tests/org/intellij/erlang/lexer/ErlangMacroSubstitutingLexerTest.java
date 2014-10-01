@@ -51,4 +51,10 @@ public class ErlangMacroSubstitutingLexerTest extends ErlangLexerTestBase {
   public void testCommasInMacroCallArguments()    throws Exception { doTest(); }
   public void testUnresolvedMacroInsideMacroBody()throws Exception { doTest(); }
   public void testUndefinitionPreventsExpansion() throws Exception { doTest(); }
+  public void testDisabledBranchIsCommentedOut()  throws Exception { doTest(); }
+  public void testFreeMacroIsUndefined()          throws Exception { doTest(); }
+  public void testIfAndElseBlocksAreExclusive()   throws Exception { doTest(); }
+  public void testNestedIfElse()                  throws Exception { doTest(); }
+  public void testNestedIfElseInInactiveBranch()  throws Exception { doTest(); }
+  public void testIgnoreInactiveDirectives()      throws Exception { doTest(); }
 }

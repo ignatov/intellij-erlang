@@ -42,6 +42,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
 
   private final ErlangMacroContext myMacroContext;
   private final ErlangCompileContext myCompileContext;
+  private final Stack<ConditionalBranchType> myConditionalBranchesStack = ContainerUtil.newStack();
 
   public ErlangMacroSubstitutingLexer(ErlangCompileContext compileContext) {
     this(new ErlangFormsLexer(), new ErlangMacroContext(), compileContext);
@@ -56,7 +57,8 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
   @Override
   protected void lookAhead(Lexer baseLexer) {
     if (baseLexer.getTokenType() == ErlangInterimTokenTypes.FORM) {
-      formLookAhead(baseLexer.getBufferSequence(), baseLexer.getTokenStart(), baseLexer.getTokenEnd());
+      ConditionalBranchType branchType = interpretConditionalDirective(baseLexer.getBufferSequence(), baseLexer.getTokenStart(), baseLexer.getTokenEnd());
+      formLookAhead(baseLexer.getBufferSequence(), baseLexer.getTokenStart(), baseLexer.getTokenEnd(), branchType);
       baseLexer.advance();
     }
     else {
@@ -64,7 +66,13 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     }
   }
 
-  private void formLookAhead(CharSequence formBuffer, int formStartIdx, int formEndIdx) {
+  private void formLookAhead(CharSequence formBuffer, int formStartIdx, int formEndIdx, ConditionalBranchType branchType) {
+    if (branchType == ConditionalBranchType.HAS_INACTIVE_PARENT || branchType == ConditionalBranchType.INACTIVE) {
+      //TODO use a special comment type for inactive forms (?)
+      addToken(formEndIdx, ErlangParserDefinition.ERL_COMMENT);
+      return;
+    }
+
     ErlangLexer lexer = new ErlangLexer();
     lexer.start(formBuffer, formStartIdx, formEndIdx);
 
@@ -87,6 +95,64 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     }
     //consume remaining tokens
     addAllTokensWithMacroSubstitution(lexer);
+  }
+
+  private ConditionalBranchType interpretConditionalDirective(CharSequence formBuffer, int formStartIdx, int formEndIdx) {
+    ErlangLexer lexer = new ErlangLexer();
+    lexer.start(formBuffer, formStartIdx, formEndIdx);
+
+    if (lexer.getTokenType() != ErlangTypes.ERL_OP_MINUS) return currentBranchType();
+    skipTokenAndWhitespace(lexer);
+
+    String attributeName = lexer.getTokenText();
+    if ("ifdef".equals(attributeName) || "ifndef".equals(attributeName)) { //TODO upon entering an ifdef or an ifndef block you can decide whether some macro is defined or not
+                                                                           //TODO be sure to clean this information up upon leaving if(n)def-endif block
+      if (!myConditionalBranchesStack.isEmpty() &&
+        (myConditionalBranchesStack.peek() == ConditionalBranchType.HAS_INACTIVE_PARENT ||
+          myConditionalBranchesStack.peek() == ConditionalBranchType.INACTIVE)) {
+        myConditionalBranchesStack.push(ConditionalBranchType.HAS_INACTIVE_PARENT);
+        return ConditionalBranchType.HAS_INACTIVE_PARENT;
+      }
+
+      skipTokenAndWhitespace(lexer);
+      if (lexer.getTokenType() != ErlangTypes.ERL_PAR_LEFT) return currentBranchType();
+      skipTokenAndWhitespace(lexer);
+      String macroName = skipMacroNameTokens(lexer);
+      if (macroName == null || lexer.getTokenType() != ErlangTypes.ERL_PAR_RIGHT) return currentBranchType();
+
+      ErlangMacroDefinitionState macroDefinitionState = myMacroContext.getMacroDefinitionState(macroName);
+      if (macroDefinitionState == ErlangMacroDefinitionState.FREE && myCompileContext.getMacroDefinitions().containsKey(macroName)) {
+        macroDefinitionState =  ErlangMacroDefinitionState.DEFINED;
+      }
+
+      boolean ifndef = "ifndef".equals(attributeName);
+      ConditionalBranchType newBranchType = macroDefinitionState == ErlangMacroDefinitionState.DEFINED ?
+        (ifndef ? ConditionalBranchType.INACTIVE : ConditionalBranchType.ACTIVE) :
+        (ifndef ? ConditionalBranchType.ACTIVE : ConditionalBranchType.INACTIVE);
+      myConditionalBranchesStack.push(newBranchType);
+      return ConditionalBranchType.ACTIVE;
+    }
+    else if ("else".equals(attributeName)) {
+      ConditionalBranchType branchType = myConditionalBranchesStack.tryPop();
+      ConditionalBranchType newBranchType = branchType == ConditionalBranchType.ACTIVE ? ConditionalBranchType.INACTIVE :
+        branchType == ConditionalBranchType.INACTIVE ? ConditionalBranchType.ACTIVE : branchType;
+      if (newBranchType != null) {
+        ConditionalBranchType containingBranchType = currentBranchType();
+        myConditionalBranchesStack.push(newBranchType);
+        if (containingBranchType == ConditionalBranchType.ACTIVE || containingBranchType == ConditionalBranchType.FREE) {
+          return ConditionalBranchType.ACTIVE;
+        }
+      }
+    }
+    else if ("endif".equals(attributeName)) {
+      myConditionalBranchesStack.tryPop();
+    }
+
+    return currentBranchType();
+  }
+
+  private ConditionalBranchType currentBranchType() {
+    return myConditionalBranchesStack.isEmpty() ? ConditionalBranchType.ACTIVE : myConditionalBranchesStack.peek();
   }
 
   private void macroDefinitionLookAhead(ErlangLexer lexer) {
@@ -201,6 +267,25 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     return macroName;
   }
 
+  @Nullable
+  private static String skipMacroNameTokens(Lexer lexer) {
+    String macroName;
+    boolean macroNameIsQuoted = lexer.getTokenType() == ErlangTypes.ERL_SINGLE_QUOTE;
+    if (macroNameIsQuoted) {
+      lexer.advance();
+      if (lexer.getTokenType() != ErlangTypes.ERL_ATOM_NAME) return null;
+      macroName = lexer.getTokenText();
+      lexer.advance();
+      if (lexer.getTokenType() != ErlangTypes.ERL_SINGLE_QUOTE) return null;
+    }
+    else {
+      if (lexer.getTokenType() != ErlangTypes.ERL_ATOM_NAME && lexer.getTokenType() != ErlangTypes.ERL_VAR) return null;
+      macroName = lexer.getTokenText();
+    }
+    skipTokenAndWhitespace(lexer); // eat up the a single quote, atom_name or var
+    return macroName;
+  }
+
   private void addAllTokensFrom(Lexer lexer) {
     while (lexer.getTokenType() != null) {
       addTokenFrom(lexer);
@@ -216,6 +301,18 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     while (ErlangParserDefinition.WS.contains(lexer.getTokenType()) ||
       ErlangParserDefinition.COMMENTS.contains(lexer.getTokenType())) {
       addTokenFrom(lexer);
+    }
+  }
+
+  private static void skipTokenAndWhitespace(Lexer lexer) {
+    lexer.advance();
+    skipWhitespace(lexer);
+  }
+
+  private static void skipWhitespace(Lexer lexer) {
+    while (ErlangParserDefinition.WS.contains(lexer.getTokenType()) ||
+      ErlangParserDefinition.COMMENTS.contains(lexer.getTokenType())) {
+      lexer.advance();
     }
   }
 
@@ -546,5 +643,9 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     public List<String> getPossibleArgumentsList() {
       return myPossibleArgumentsList;
     }
+  }
+
+  private static enum ConditionalBranchType {
+    ACTIVE, INACTIVE, HAS_INACTIVE_PARENT, FREE
   }
 }

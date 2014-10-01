@@ -30,31 +30,7 @@ ERL_FILE
         PsiElement(var)('DM')
       PsiElement())(')')
     PsiElement(.)('.')
-  ERL_MACROS_DEFINITION
-    PsiElement(-)('-')
-    PsiElement(atom_name)('define')
-    PsiElement(()('(')
-    ERL_MACROS_NAME
-      PsiElement(var)('D')
-    ERL_ARGUMENT_DEFINITION_LIST
-      PsiElement(()('(')
-      ERL_ARGUMENT_DEFINITION
-        ERL_MAX_EXPRESSION
-          ERL_Q_VAR
-            PsiElement(var)('S')
-      PsiElement())(')')
-    PsiElement(,)(',')
-    ERL_MACROS_BODY
-      PsiElement(atom_name)('io')
-      PsiElement(:)(':')
-      PsiElement(atom_name)('format')
-      PsiElement(()('(')
-      PsiElement(string)('"dbg"')
-      PsiElement(++)('++')
-      PsiElement(var)('S')
-      PsiElement())(')')
-    PsiElement())(')')
-    PsiElement(.)('.')
+  PsiComment(ERL_LINE_COMMENT)('-define(D(S), io:format("dbg" ++ S)).')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
