@@ -30,7 +30,7 @@ ERL_FILE
         PsiElement(var)('DM')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('-define(D(S), io:format("dbg" ++ S)).')
+  PsiComment(ERL_DISABLED_FORM)('-define(D(S), io:format("dbg" ++ S)).')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE

@@ -68,8 +68,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
 
   private void formLookAhead(CharSequence formBuffer, int formStartIdx, int formEndIdx, ConditionalBranchType branchType) {
     if (branchType == ConditionalBranchType.HAS_INACTIVE_PARENT || branchType == ConditionalBranchType.INACTIVE) {
-      //TODO use a special comment type for inactive forms (?)
-      addToken(formEndIdx, ErlangParserDefinition.ERL_COMMENT);
+      addToken(formEndIdx, ErlangParserDefinition.ERL_DISABLED_FORM);
       return;
     }
 

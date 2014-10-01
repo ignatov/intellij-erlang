@@ -710,8 +710,8 @@ ERL_FILE
         PsiElement(var)('DEBUG')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('-import(erl_types, [t_to_string/1]).')
-  PsiComment(ERL_LINE_COMMENT)('-define(debug(S_, L_), io:format(S_, L_)).')
+  PsiComment(ERL_DISABLED_FORM)('-import(erl_types, [t_to_string/1]).')
+  PsiComment(ERL_DISABLED_FORM)('-define(debug(S_, L_), io:format(S_, L_)).')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -45394,7 +45394,7 @@ ERL_FILE
         PsiElement(var)('DEBUG')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('debug_pp_map(Map = {Map0, _Subst}) ->\n  Keys = dict:fetch_keys(Map0),\n  io:format("Map:\n", []),\n  lists:foreach(fun (Key) ->\n\t\t    io:format("\t~w :: ~s\n",\n\t\t\t      [Key, t_to_string(lookup_type(Key, Map))])\n\t\tend, Keys),\n  ok.')
+  PsiComment(ERL_DISABLED_FORM)('debug_pp_map(Map = {Map0, _Subst}) ->\n  Keys = dict:fetch_keys(Map0),\n  io:format("Map:\n", []),\n  lists:foreach(fun (Key) ->\n\t\t    io:format("\t~w :: ~s\n",\n\t\t\t      [Key, t_to_string(lookup_type(Key, Map))])\n\t\tend, Keys),\n  ok.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -58366,8 +58366,8 @@ ERL_FILE
         PsiElement(var)('DEBUG_PP')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('debug_pp(Tree, true) ->\n  io:put_chars(cerl_prettypr:format(Tree, [{hook, cerl_typean:pp_hook()}])),\n  io:nl(),\n  ok;\ndebug_pp(Tree, false) ->\n  io:put_chars(cerl_prettypr:format(strip_annotations(Tree))),\n  io:nl(),\n  ok.')
-  PsiComment(ERL_LINE_COMMENT)('strip_annotations(Tree) ->\n  Fun = fun(T) ->\n\t    case cerl:type(T) of\n\t      var ->\n\t\tcerl:set_ann(T, [{label, cerl_trees:get_label(T)}]);\n\t      'fun' ->\n\t\tcerl:set_ann(T, [{label, cerl_trees:get_label(T)}]);\n\t      _ ->\n\t\tcerl:set_ann(T, [])\n\t    end\n\tend,\n  cerl_trees:map(Fun, Tree).')
+  PsiComment(ERL_DISABLED_FORM)('debug_pp(Tree, true) ->\n  io:put_chars(cerl_prettypr:format(Tree, [{hook, cerl_typean:pp_hook()}])),\n  io:nl(),\n  ok;\ndebug_pp(Tree, false) ->\n  io:put_chars(cerl_prettypr:format(strip_annotations(Tree))),\n  io:nl(),\n  ok.')
+  PsiComment(ERL_DISABLED_FORM)('strip_annotations(Tree) ->\n  Fun = fun(T) ->\n\t    case cerl:type(T) of\n\t      var ->\n\t\tcerl:set_ann(T, [{label, cerl_trees:get_label(T)}]);\n\t      'fun' ->\n\t\tcerl:set_ann(T, [{label, cerl_trees:get_label(T)}]);\n\t      _ ->\n\t\tcerl:set_ann(T, [])\n\t    end\n\tend,\n  cerl_trees:map(Fun, Tree).')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
@@ -58448,7 +58448,7 @@ ERL_FILE
         PsiElement(var)('DOT')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiComment(ERL_LINE_COMMENT)('to_dot(CG) ->\n  dialyzer_callgraph:to_dot(CG).')
+  PsiComment(ERL_DISABLED_FORM)('to_dot(CG) ->\n  dialyzer_callgraph:to_dot(CG).')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
