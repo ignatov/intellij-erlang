@@ -16,8 +16,10 @@
 
 package org.intellij.erlang.context;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.annotations.Tag;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -34,16 +36,19 @@ public class ErlangCompileContext implements Serializable {
   //TODO add code path specification here (-pa and -pz compiler options)
   //TODO add other compiler options
 
+  private transient Project myProject;
+
   // serialization
   @SuppressWarnings("UnusedDeclaration")
   public ErlangCompileContext() {
   }
 
   public ErlangCompileContext(String name) {
-    this(name, Collections.<String, String>emptyMap(), ContainerUtil.<String>emptyList());
+    this(null, name, Collections.<String, String>emptyMap(), ContainerUtil.<String>emptyList());
   }
 
-  public ErlangCompileContext(String name, Map<String, String> macroDefinitions, List<String> includePaths) {
+  public ErlangCompileContext(@Nullable Project project, String name, Map<String, String> macroDefinitions, List<String> includePaths) {
+    myProject = project;
     myName = name;
     myMacroDefinitions = macroDefinitions;
     myIncludePaths = includePaths;
@@ -71,5 +76,14 @@ public class ErlangCompileContext implements Serializable {
 
   public void setIncludePaths(List<String> includePaths) {
     myIncludePaths = includePaths;
+  }
+
+  @Nullable
+  public Project getProject() {
+    return myProject;
+  }
+
+  public void setProject(@Nullable Project project) {
+    myProject = project;
   }
 }

@@ -21,6 +21,9 @@ import com.intellij.lexer.Lexer;
 import com.intellij.lexer.LexerPosition;
 import com.intellij.lexer.LookAheadLexer;
 import com.intellij.openapi.util.Condition;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
@@ -29,9 +32,12 @@ import org.intellij.erlang.ErlangBraceMatcher;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.context.ErlangCompileContext;
+import org.intellij.erlang.context.ErlangPathResolver;
 import org.intellij.erlang.parser.ErlangLexer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -43,15 +49,17 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
   private final ErlangMacroContext myMacroContext;
   private final ErlangCompileContext myCompileContext;
   private final Stack<ConditionalBranchType> myConditionalBranchesStack = ContainerUtil.newStack();
+  private final Stack<VirtualFile> myIncludeOwnersStack; //TODO replace with an immutable stack
 
-  public ErlangMacroSubstitutingLexer(ErlangCompileContext compileContext) {
-    this(new ErlangFormsLexer(), new ErlangMacroContext(), compileContext);
+  public ErlangMacroSubstitutingLexer(@NotNull ErlangCompileContext compileContext, @Nullable VirtualFile file) {
+    this(new ErlangFormsLexer(), new ErlangMacroContext(), compileContext, file != null ? ContainerUtil.newStack(file) : ContainerUtil.<VirtualFile>newStack());
   }
 
-  public ErlangMacroSubstitutingLexer(Lexer baseLexer, ErlangMacroContext context, ErlangCompileContext compileContext) {
+  private ErlangMacroSubstitutingLexer(Lexer baseLexer, ErlangMacroContext context, ErlangCompileContext compileContext, Stack<VirtualFile> includeOwnersStack) {
     super(baseLexer);
     myMacroContext = context;
     myCompileContext = compileContext;
+    myIncludeOwnersStack = includeOwnersStack;
   }
 
   @Override
@@ -231,11 +239,11 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
   }
 
   private void includeLookAhead(Lexer lexer) {
-    //TODO implement
+    processInclusion(lexer, false);
   }
 
   private void includeLibLookAhead(Lexer lexer) {
-    //TODO implement
+    processInclusion(lexer, true);
   }
 
   private void undefLookAhead(Lexer lexer) {
@@ -245,6 +253,41 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     if (macroName != null) {
       myMacroContext.undefineMacro(macroName);
     }
+  }
+
+  private void processInclusion(Lexer lexer, boolean isIncludeLib) {
+    if (lexer.getTokenType() != ErlangTypes.ERL_PAR_LEFT) return;
+    addTokenAndWhitespaceFrom(lexer);
+    if (lexer.getTokenType() != ErlangTypes.ERL_STRING) return;
+
+    String includeString = StringUtil.unquoteString(lexer.getTokenText());
+    VirtualFile inclusion = isIncludeLib ?
+      ErlangPathResolver.resolveIncludeLib(myCompileContext.getProject(), myIncludeOwnersStack, includeString) :
+      ErlangPathResolver.resolveInclude(myCompileContext.getProject(), myIncludeOwnersStack, includeString);
+    if (inclusion != null) {
+      myIncludeOwnersStack.push(inclusion);
+
+      try {
+        //TODO handle recursive inclusion
+        String text = VfsUtilCore.loadText(inclusion);
+        ErlangMacroSubstitutingLexer inclusionLexer = new ErlangMacroSubstitutingLexer(new ErlangFormsLexer(), myMacroContext, myCompileContext, myIncludeOwnersStack);
+        inclusionLexer.start(text);
+        while (inclusionLexer.getTokenType() != null) {
+          inclusionLexer.advance();
+        }
+      } catch (IOException e) {
+        //TODO report error
+        e.printStackTrace();
+      }
+      finally {
+        myIncludeOwnersStack.pop();
+      }
+    } else if (!myIncludeOwnersStack.isEmpty()) {
+      //TODO report error
+      System.err.println("Unresolved inclusion: " + includeString + " in " + myIncludeOwnersStack.peek());
+    }
+
+    addAllTokensFrom(lexer);
   }
 
   @Nullable

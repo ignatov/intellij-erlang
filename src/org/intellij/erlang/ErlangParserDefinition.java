@@ -50,7 +50,7 @@ public class ErlangParserDefinition implements ParserDefinition {
   @NotNull
   @Override
   public Lexer createLexer(Project project) {
-    return new ErlangMacroSubstitutingLexer(ErlangCompileContextManager.getInstance(project).getContext(project, null));
+    return new ErlangMacroSubstitutingLexer(ErlangCompileContextManager.getInstance(project).getContext(project, null), null);
   }
 
   @Override

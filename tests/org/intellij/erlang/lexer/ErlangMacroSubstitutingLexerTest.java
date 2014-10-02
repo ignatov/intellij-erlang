@@ -25,7 +25,7 @@ import org.intellij.erlang.context.ErlangCompileContext;
 public class ErlangMacroSubstitutingLexerTest extends ErlangLexerTestBase {
   @Override
   protected Lexer createLexer() {
-    return new ErlangMacroSubstitutingLexer(new ErlangCompileContext("test"));
+    return new ErlangMacroSubstitutingLexer(new ErlangCompileContext("test"), null);
   }
 
   @Override

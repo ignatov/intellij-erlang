@@ -80,11 +80,10 @@ public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> 
   @Override
   protected ASTNode doParseContents(@NotNull ASTNode chameleon, @NotNull PsiElement psi) {
     PsiFile psiFile = psi.getContainingFile();
+    psiFile = psiFile != null ? psiFile.getOriginalFile() : null;
     VirtualFile virtualFile = psiFile != null ? psiFile.getVirtualFile() : null;
     ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(psi.getProject()).getContext(psi.getProject(), virtualFile);
-    //TODO should we use the preprocessing lexer here?
-    //TODO pass current file to lexer
-    ErlangMacroSubstitutingLexer lexer = new ErlangMacroSubstitutingLexer(compileContext);
+    ErlangMacroSubstitutingLexer lexer = new ErlangMacroSubstitutingLexer(compileContext, virtualFile);
     PsiBuilder builder = PsiBuilderFactory.getInstance().createBuilder(psi.getProject(), chameleon, lexer, ErlangLanguage.INSTANCE, chameleon.getChars());
     return new ErlangParser().parse(chameleon.getElementType(), builder).getFirstChildNode();
   }

@@ -26,12 +26,12 @@ import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.containers.Stack;
 import org.intellij.erlang.index.ErlangApplicationIndex;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -44,7 +44,31 @@ public final class ErlangPathResolver {
   //TODO use compile context for resolution
 
   @Nullable
-  public static VirtualFile resolveInclude(@NotNull Project project, @Nullable VirtualFile owner, @Nullable String includeString) {
+  public static VirtualFile resolveInclude(@Nullable Project project, @Nullable Stack<VirtualFile> owners, @Nullable String includeString) {
+    return resolveInclude(project, owners, includeString, false);
+  }
+
+  @Nullable
+  public static VirtualFile resolveIncludeLib(@Nullable Project project, @Nullable Stack<VirtualFile> owners, @Nullable String includeString) {
+    return resolveInclude(project, owners, includeString, true);
+  }
+
+  @Nullable
+  public static VirtualFile resolveInclude(@Nullable Project project, @Nullable Stack<VirtualFile> owners, @Nullable String includeString, boolean isIncludeLib) {
+    if (includeString == null || owners == null) return null;
+
+    //TODO make sure this is the correct way to resolve inclusions
+    for (VirtualFile owner : owners) {
+      VirtualFile includeFile = isIncludeLib ? resolveIncludeLib(project, owner, includeString) : resolveInclude(project, owner, includeString);
+      if (includeFile != null) {
+        return includeFile;
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  public static VirtualFile resolveInclude(@Nullable Project project, @Nullable VirtualFile owner, @Nullable String includeString) {
     if (owner == null || includeString == null) return null;
 
     //try to find a file relatively to owner's direct parent
@@ -53,7 +77,7 @@ public final class ErlangPathResolver {
     if (relativeToDirectParent != null) return relativeToDirectParent;
 
     //let's search in owner module's include source roots
-    Module module = ModuleUtilCore.findModuleForFile(owner, project);
+    Module module = project != null ? ModuleUtilCore.findModuleForFile(owner, project) : null;
     if (module != null) {
       for (VirtualFile includeDirectory : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
         VirtualFile includedFile = VfsUtilCore.findRelativeFile(includeString, includeDirectory);
@@ -95,8 +119,8 @@ public final class ErlangPathResolver {
   }
 
   @Nullable
-  public static VirtualFile resolveIncludeLib(@NotNull Project project, @Nullable VirtualFile owner, @Nullable String includeString) {
-    if (owner == null || includeString == null) return null;
+  public static VirtualFile resolveIncludeLib(@Nullable Project project, @Nullable VirtualFile owner, @Nullable String includeString) {
+    if (owner == null || includeString == null || project == null) return null;
 
     String[] split = includeString.split("/");
     if (split.length >= 2) {
@@ -114,8 +138,8 @@ public final class ErlangPathResolver {
   }
 
   @Nullable
-  public static VirtualFile getContainingOtpAppRoot(@NotNull Project project, @Nullable final VirtualFile file) {
-    if (file == null) return null;
+  public static VirtualFile getContainingOtpAppRoot(@Nullable Project project, @Nullable final VirtualFile file) {
+    if (file == null || project == null) return null;
     List<VirtualFile> allOtpAppRoots = ErlangApplicationIndex.getAllApplicationDirectories(project, GlobalSearchScope.allScope(project));
     List<VirtualFile> containingOtpAppRoots = ContainerUtil.filter(allOtpAppRoots, new Condition<VirtualFile>() {
       @Override
