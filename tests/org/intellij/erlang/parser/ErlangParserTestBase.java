@@ -27,12 +27,12 @@ import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.DebugUtil;
 import com.intellij.psi.impl.PsiFileFactoryImpl;
-import com.intellij.testFramework.LightPlatformCodeInsightTestCase;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.testFramework.TestDataFile;
 import com.intellij.testFramework.UsefulTestCase;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +43,7 @@ import java.util.Set;
 /**
  * initialization and testing logic copied from com.intellij.testFramework.ParsingTestCase
  */
-public abstract class ErlangParserTestBase extends LightPlatformCodeInsightTestCase {
+public abstract class ErlangParserTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private final boolean myOverrideTestData;
 
   protected String myFileExt;
@@ -54,7 +54,6 @@ public abstract class ErlangParserTestBase extends LightPlatformCodeInsightTestC
     myOverrideTestData = overrideTestData;
     myFullDataPath = getTestDataPath() + "/" + dataPath;
     myFileExt = fileExt;
-    System.setProperty("idea.platform.prefix", "Idea");
   }
 
   @NotNull
@@ -133,7 +132,7 @@ public abstract class ErlangParserTestBase extends LightPlatformCodeInsightTestC
     return createFile(virtualFile);
   }
 
-  protected static PsiFile createFile(LightVirtualFile virtualFile) {
+  protected PsiFile createFile(LightVirtualFile virtualFile) {
     PsiFileFactory psiFileFactory = PsiFileFactory.getInstance(getProject());
     assert psiFileFactory instanceof PsiFileFactoryImpl;
     //noinspection ConstantConditions
