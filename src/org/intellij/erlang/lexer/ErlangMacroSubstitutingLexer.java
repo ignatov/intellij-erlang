@@ -264,7 +264,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     VirtualFile inclusion = isIncludeLib ?
       ErlangPathResolver.resolveIncludeLib(myCompileContext.getProject(), myIncludeOwnersStack, includeString) :
       ErlangPathResolver.resolveInclude(myCompileContext.getProject(), myIncludeOwnersStack, includeString);
-    if (inclusion != null) {
+    if (inclusion != null && inclusion.isValid() && !inclusion.isDirectory()) {
       myIncludeOwnersStack.push(inclusion);
 
       try {
