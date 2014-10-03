@@ -1,0 +1,3 @@
+-ifdef(define_x).
+-define(X, 1).
+-endif.
