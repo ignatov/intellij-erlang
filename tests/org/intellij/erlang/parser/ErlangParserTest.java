@@ -16,13 +16,11 @@
 
 package org.intellij.erlang.parser;
 
-import org.intellij.erlang.ErlangParserDefinition;
-
 public class ErlangParserTest extends ErlangParserTestBase {
   private static final boolean OVERRIDE_TEST_DATA = false;
 
   public ErlangParserTest() {
-    super("parser", "erl", OVERRIDE_TEST_DATA, new ErlangParserDefinition());
+    super("parser", "erl", OVERRIDE_TEST_DATA);
   }
 
   public void testHelloWorld()        { doTest(true, false); }

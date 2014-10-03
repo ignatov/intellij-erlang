@@ -22,6 +22,8 @@ import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
@@ -56,8 +58,10 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   public static boolean isApplicationConfigFileType(@NotNull PsiFile file) {
     FileType fileType = file.getViewProvider().getVirtualFile().getFileType();
+    String extension = FileUtilRt.getExtension(file.getName());
     return fileType == ErlangFileType.APP || fileType == ErlangFileType.TERMS ||
-      ApplicationManager.getApplication().isUnitTestMode() && (fileType.getDefaultExtension().equals("app") || fileType.getDefaultExtension().equals("config"));
+      ApplicationManager.getApplication().isUnitTestMode() &&
+        (ErlangFileType.APP.getDefaultExtension().equals(extension) || ErlangFileType.TERMS.getDefaultExtension().equals(extension));
   }
 
   private static final Key<TObjectLongHashMap<String>> MODES_KEY = Key.create("MODES_KEY");
