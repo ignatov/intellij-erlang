@@ -57,4 +57,5 @@ public class ErlangMacroSubstitutingLexerTest extends ErlangLexerTestBase {
   public void testNestedIfElse()                  throws Exception { doTest(); }
   public void testNestedIfElseInInactiveBranch()  throws Exception { doTest(); }
   public void testIgnoreInactiveDirectives()      throws Exception { doTest(); }
+  public void testStringifyMacroArgument()        throws Exception { doTest(); }
 }
