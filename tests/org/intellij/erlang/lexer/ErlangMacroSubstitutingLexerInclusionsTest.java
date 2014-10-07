@@ -48,7 +48,7 @@ public class ErlangMacroSubstitutingLexerInclusionsTest extends ErlangLightPlatf
     ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(getProject()).getContext(getProject(), source);
     ErlangMacroSubstitutingLexer lexer = new ErlangMacroSubstitutingLexer(compileContext, source);
     String sourceText = VfsUtilCore.loadText(source);
-    lexer.start(sourceText);
+    lexer.start(StringUtil.convertLineSeparators(sourceText));
     String actualTokens = printTokens(lexer);
 
     assertSameLinesWithFile(getTestDataPath() + getTestName(true) + ".txt", actualTokens);
