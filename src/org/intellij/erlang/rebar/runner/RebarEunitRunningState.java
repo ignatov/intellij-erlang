@@ -84,7 +84,7 @@ public class RebarEunitRunningState extends CommandLineState {
     consoleView.attachToProcess(processHandler);
 
     RebarEunitRerunFailedTestsAction rerunAction = new RebarEunitRerunFailedTestsAction(consoleView);
-    rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties(), getEnvironment());
+    rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties());
     rerunAction.setModelProvider(new Getter<TestFrameworkRunningModel>() {
       @Override
       public TestFrameworkRunningModel get() {

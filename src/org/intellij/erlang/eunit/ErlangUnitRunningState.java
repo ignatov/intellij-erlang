@@ -101,7 +101,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
 
     ErlangUnitRerunFailedTestsAction rerunAction = new ErlangUnitRerunFailedTestsAction(consoleView);
-    rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties(), getEnvironment());
+    rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties());
     rerunAction.setModelProvider(new Getter<TestFrameworkRunningModel>() {
       @Override
       public TestFrameworkRunningModel get() {

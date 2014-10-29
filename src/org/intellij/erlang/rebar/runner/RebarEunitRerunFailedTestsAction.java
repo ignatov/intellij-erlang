@@ -32,6 +32,7 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.module.Module;
@@ -63,9 +64,13 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
     ActionManager actionManager = ActionManager.getInstance();
     AnAction rerunFailedTestsAction = actionManager.getAction(rerunFailedTestsActionId);
     if (rerunFailedTestsAction == null) {
-      AbstractRerunFailedTestsAction action = new AbstractRerunFailedTestsAction();
+      AnAction action = new AnAction(AllIcons.RunConfigurations.RerunFailedTests) {
+        @Override
+        public void actionPerformed(@NotNull AnActionEvent e) {
+          throw new IllegalStateException("Should only be used as a template for other actions!");
+        }
+      };
       actionManager.registerAction(rerunFailedTestsActionId, action, PluginId.getId("org.jetbrains.erlang"));
-      action.getTemplatePresentation().setIcon(AllIcons.RunConfigurations.RerunFailedTests);
     }
   }
 

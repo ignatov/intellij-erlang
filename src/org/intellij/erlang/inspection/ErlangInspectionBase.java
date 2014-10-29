@@ -114,7 +114,7 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     return m.matches() && SuppressionUtil.isInspectionToolIdMentioned(m.group(1), getSuppressId());
   }
   
-  private String getSuppressId() {
+  protected String getSuppressId() {
     return getShortName().replace("Inspection", "");
   }
 
