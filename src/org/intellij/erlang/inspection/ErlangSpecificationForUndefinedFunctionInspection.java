@@ -18,32 +18,30 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunTypeSigs;
-import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangSpecificationForUndefinedFunctionInspection extends ErlangInspectionBase {
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!StringUtil.endsWith(file.getName(), ErlangFileType.MODULE.getDefaultExtension())) return;
-
-    file.accept(new ErlangRecursiveVisitor() {
-      @Override
-      public void visitSpecification(@NotNull ErlangSpecification o) {
-        //supported functions without modules only for now
-        ErlangFunTypeSigs signature = o.getSignature();
-        if (signature != null) {
-          PsiReference reference = signature.getReference();
-          if (reference != null && reference.resolve() == null) {
-            problemsHolder.registerProblem(o, "Specification for undefined function '" + signature.getSpecFun().getText() + "'");
-          }
-        }
-      }
-    });
+  protected boolean canRunOn(@NotNull ErlangFile file) {
+    return StringUtil.endsWith(file.getName(), ErlangFileType.MODULE.getDefaultExtension());
   }
 
+  @Override
+  protected void checkFile(@NotNull ErlangFile file, @NotNull final ProblemsHolder problemsHolder) {
+    for (ErlangSpecification spec : file.getSpecifications()) {
+      //supported functions without modules only for now
+      ErlangFunTypeSigs signature = spec.getSignature();
+      if (signature != null) {
+        PsiReference reference = signature.getReference();
+        if (reference != null && reference.resolve() == null) {
+          problemsHolder.registerProblem(spec, "Specification for undefined function '" + signature.getSpecFun().getText() + "'");
+        }
+      }
+    }
+  }
 }

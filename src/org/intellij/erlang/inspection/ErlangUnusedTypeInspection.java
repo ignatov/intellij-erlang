@@ -18,13 +18,11 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.Query;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveTypeFix;
@@ -32,20 +30,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnusedTypeInspection extends ErlangInspectionBase {
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    file.accept(new ErlangRecursiveVisitor() {
-      @Override
-      public void visitTypeDefinition(@NotNull ErlangTypeDefinition o) {
-        Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(o.getContainingFile()));
-        if (search.findFirst() == null) {
-          problemsHolder.registerProblem(o.getNameIdentifier(),
-            "Unused function " + "'" + o.getName() + "'",
-            ProblemHighlightType.LIKE_UNUSED_SYMBOL,
-            new ErlangRemoveTypeFix(),
-            new ErlangExportTypeFix());
-        }
+  protected void checkFile(@NotNull ErlangFile file, @NotNull final ProblemsHolder problemsHolder) {
+    for (ErlangTypeDefinition o : file.getTypes()) {
+      Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(o.getContainingFile()));
+      if (search.findFirst() == null) {
+        problemsHolder.registerProblem(o.getNameIdentifier(),
+          "Unused function " + "'" + o.getName() + "'",
+          ProblemHighlightType.LIKE_UNUSED_SYMBOL,
+          new ErlangRemoveTypeFix(),
+          new ErlangExportTypeFix());
       }
-    });
+    }
   }
 }

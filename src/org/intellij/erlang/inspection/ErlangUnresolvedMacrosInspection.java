@@ -16,23 +16,19 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangMacros;
-import org.intellij.erlang.psi.ErlangMacrosName;
-import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangIntroduceMacroQuickFix;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
+  @NotNull
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    file.accept(new ErlangRecursiveVisitor() {
-
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    return new ErlangVisitor() {
       @Override
       public void visitMacros(@NotNull ErlangMacros o) {
         ErlangMacrosName macrosName = o.getMacrosName();
@@ -40,9 +36,9 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
+          holder.registerProblem(o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
         }
       }
-    });
+    };
   }
 }

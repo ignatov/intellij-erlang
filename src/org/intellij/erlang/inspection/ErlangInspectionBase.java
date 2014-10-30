@@ -34,19 +34,44 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 abstract public class ErlangInspectionBase extends LocalInspectionTool implements CustomSuppressableInspectionTool {
+  private static final PsiElementVisitor DUMMY_VISITOR = new PsiElementVisitor() { };
   private static final Pattern SUPPRESS_PATTERN = Pattern.compile(SuppressionUtil.COMMON_SUPPRESS_REGEXP);
 
+  @NotNull
   @Override
-  public ProblemDescriptor[] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly) {
-    ProblemsHolder problemsHolder = new ProblemsHolder(manager, file, isOnTheFly);
-    try {
-      checkFile(file, problemsHolder);
-    } catch (PsiInvalidElementAccessException ignored) {
-    }
-    return problemsHolder.getResultsArray();
+  public final PsiElementVisitor buildVisitor(@NotNull ProblemsHolder holder, boolean isOnTheFly, @NotNull LocalInspectionToolSession session) {
+    ErlangFile file = ObjectUtils.tryCast(session.getFile(), ErlangFile.class);
+    return file != null && canRunOn(file) ? buildErlangVisitor(holder, session) : DUMMY_VISITOR;
   }
 
-  protected abstract void checkFile(PsiFile file, ProblemsHolder problemsHolder);
+  @NotNull
+  @Override
+  public final PsiElementVisitor buildVisitor(@NotNull ProblemsHolder holder, boolean isOnTheFly) {
+    throw new IllegalStateException();
+  }
+
+  @Nullable
+  @Override
+  public final ProblemDescriptor[] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly) {
+    throw new IllegalStateException();
+  }
+
+  protected boolean canRunOn(@NotNull ErlangFile file) {
+    return true;
+  }
+
+  @NotNull
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    return new ErlangVisitor() {
+      @Override
+      public void visitFile(PsiFile file) {
+        checkFile((ErlangFile)file, holder);
+      }
+    };
+  }
+
+  protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
+  }
 
   @Nullable
   @Override

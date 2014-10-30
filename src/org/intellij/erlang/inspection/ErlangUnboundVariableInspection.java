@@ -19,28 +19,25 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.ConstantNode;
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiUtilBase;
-import org.intellij.erlang.psi.ErlangClauseBody;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangQVar;
-import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.quickfixes.ErlangQuickFixBase;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
+  @NotNull
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    file.accept(new ErlangRecursiveVisitor() {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    return new ErlangVisitor() {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         if (inArgumentDefinition(o) && !inArgumentList(o)
@@ -52,10 +49,10 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
         }
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
+          holder.registerProblem(o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
         }
       }
-    });
+    };
   }
 
   private static class ErlangIntroduceVariableQuickFix extends ErlangQuickFixBase {

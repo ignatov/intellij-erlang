@@ -19,7 +19,6 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -33,9 +32,8 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    for (ErlangFunction function : ((ErlangFile) file).getFunctions()) {
+  protected void checkFile(@NotNull ErlangFile file, @NotNull final ProblemsHolder problemsHolder) {
+    for (ErlangFunction function : file.getFunctions()) {
       for (final ErlangFunctionClause functionClause : function.getFunctionClauseList()) {
         functionClause.accept(new ErlangRecursiveVisitor() {
           @Override

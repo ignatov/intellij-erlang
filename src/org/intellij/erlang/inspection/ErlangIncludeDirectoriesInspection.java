@@ -16,7 +16,10 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.*;
+import com.intellij.codeInspection.LocalQuickFix;
+import com.intellij.codeInspection.ProblemDescriptor;
+import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.codeInspection.ex.DisableInspectionToolAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -27,38 +30,28 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ErlangIncludeDirectoriesInspection extends LocalInspectionTool {
-  @Nullable
+public class ErlangIncludeDirectoriesInspection extends ErlangInspectionBase {
   @Override
-  public ProblemDescriptor[] checkFile(@NotNull PsiFile psiFile, @NotNull InspectionManager manager, boolean isOnTheFly) {
-    if (!(psiFile instanceof ErlangFile)) return ProblemDescriptor.EMPTY_ARRAY;
-    VirtualFile file = psiFile.getVirtualFile();
-    Module module = file != null ? ModuleUtilCore.findModuleForFile(file, psiFile.getProject()) : null;
-    if (module == null) return ProblemDescriptor.EMPTY_ARRAY;
-    List<VirtualFile> notIncludedPaths = getIncludeFoldersNotMarkedAsIncludeDirectories(module);
-    if (!notIncludedPaths.isEmpty()) {
-      return createProblemDescriptors(psiFile, "Some 'include' folders are not marked as include directories.", manager, isOnTheFly);
+  protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
+    VirtualFile virtualFile = file.getVirtualFile();
+    Module module = virtualFile != null ? ModuleUtilCore.findModuleForFile(virtualFile, file.getProject()) : null;
+    if (module != null) {
+      List<VirtualFile> notIncludedPaths = getIncludeFoldersNotMarkedAsIncludeDirectories(module);
+      if (!notIncludedPaths.isEmpty()) {
+        problemsHolder.registerProblem(file,
+          "Some 'include' folders are not marked as include directories.", ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+          new ErlangIncludeDirectoriesQuickFix(true), new ErlangIncludeDirectoriesQuickFix(false));
+      }
     }
-    return ProblemDescriptor.EMPTY_ARRAY;
-  }
-
-  private static ProblemDescriptor[] createProblemDescriptors(PsiFile psiFile, String message, InspectionManager manager, boolean isOnTheFly) {
-    return new ProblemDescriptor[]{
-      manager.createProblemDescriptor(
-        psiFile, message, new LocalQuickFix[]{new ErlangIncludeDirectoriesQuickFix(true), new ErlangIncludeDirectoriesQuickFix(false)},
-        ProblemHighlightType.GENERIC_ERROR_OR_WARNING, isOnTheFly, false)
-    };
   }
 
   private static List<VirtualFile> getIncludeFoldersNotMarkedAsIncludeDirectories(Module module) {

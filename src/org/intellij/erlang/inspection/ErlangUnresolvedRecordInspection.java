@@ -16,9 +16,9 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.psi.*;
@@ -27,23 +27,23 @@ import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFix;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
+  @NotNull
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    file.accept(new ErlangRecursiveVisitor() {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    return new ErlangVisitor() {
       @Override
       public void visitRecordRef(@NotNull ErlangRecordRef o) {
         if (o.getQAtom().getMacros() != null) return;
-        process(o, problemsHolder);
+        process(o, holder);
       }
 
       @Override
       public void visitQAtom(@NotNull ErlangQAtom o) {
         if (ErlangPsiImplUtil.secondAtomInIsRecord().accepts(o, new ProcessingContext())) {
-          process(o, problemsHolder);
+          process(o, holder);
         }
       }
-    });
+    };
   }
 
   private static void process(@NotNull PsiElement o, @NotNull ProblemsHolder problemsHolder) {

@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.LocalQuickFixBase;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
@@ -24,7 +25,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -36,22 +36,20 @@ import java.util.List;
 
 //TODO add arity mismatch checks
 public class ErlangHeadMismatchInspection extends ErlangInspectionBase implements DumbAware {
+  @NotNull
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    file.accept(new ErlangRecursiveVisitor() {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    return new ErlangVisitor() {
       @Override
       public void visitFunction(@NotNull ErlangFunction function) {
-        super.visitFunction(function); // for fun expressions
-        checkFunction(function, problemsHolder);
+        checkFunction(function, holder);
       }
 
       @Override
       public void visitFunExpression(@NotNull ErlangFunExpression funExpression) {
-        super.visitFunExpression(funExpression); // for nested fun expressions
-        checkFunExpression(funExpression, problemsHolder);
+        checkFunExpression(funExpression, holder);
       }
-    });
+    };
   }
 
   private static void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {

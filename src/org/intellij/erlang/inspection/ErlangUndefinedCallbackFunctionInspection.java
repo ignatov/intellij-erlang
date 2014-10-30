@@ -41,9 +41,7 @@ import java.util.Map;
 
 public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionBase {
   @Override
-  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-
+  protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
     //noinspection unchecked
     ErlangCompositeElement warningHolder = PsiTreeUtil.getChildOfAnyType(file, ErlangAttribute.class, ErlangModule.class);
     if (warningHolder == null) return;
@@ -51,7 +49,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     List<ErlangCallbackSpec> toOverwrite = new LinkedList<ErlangCallbackSpec>();
     List<Pair<String, String >> namesAndNames = new LinkedList<Pair<String, String>>();
 
-    for (ErlangBehaviour behaviour : ((ErlangFile) file).getBehaviours()) {
+    for (ErlangBehaviour behaviour : file.getBehaviours()) {
       ErlangModuleRef moduleRef = behaviour.getModuleRef();
       PsiReference reference = moduleRef != null ? moduleRef.getReference() : null;
       PsiElement resolve = reference != null ? reference.resolve() : null;
@@ -64,7 +62,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
             String fullName = entry.getKey();
             List<String> split = StringUtil.split(fullName, "/");
             if (split.size() != 2) continue;
-            ErlangFunction function = ((ErlangFile) file).getFunction(split.get(0), StringUtil.parseInt(split.get(1), -1));
+            ErlangFunction function = file.getFunction(split.get(0), StringUtil.parseInt(split.get(1), -1));
             if (function == null) {
               ErlangCallbackSpec spec = entry.getValue();
               toOverwrite.add(spec);

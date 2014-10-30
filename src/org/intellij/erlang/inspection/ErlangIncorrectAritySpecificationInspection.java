@@ -17,30 +17,24 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunTypeSigs;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.ErlangTypeSig;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangIncorrectAritySpecificationInspection extends ErlangInspectionBase {
   @Override
-  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    for (ErlangSpecification spec : ((ErlangFile) file).getSpecifications()) {
+  protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
+    for (ErlangSpecification spec : file.getSpecifications()) {
       ErlangFunTypeSigs signature = spec.getSignature();
-      if (signature != null) {
-        PsiElement psiArity = signature.getSpecFun().getInteger();
-        if (psiArity != null) {
-          try {
-            int arity = Integer.parseInt(psiArity.getText());
-            for (ErlangTypeSig typeSig : signature.getTypeSigList()) {
-              if (typeSig.getFunType().getFunTypeArguments().getTopTypeList().size() != arity) {
-                problemsHolder.registerProblem(spec, "Specification has the wrong arity '" + signature.getSpecFun().getText() + "'");
-              }
-            }
-          } catch (NumberFormatException ignore) {
-
+      PsiElement psiArity = signature != null ? signature.getSpecFun().getInteger() : null;
+      int arity = psiArity != null ? ErlangPsiImplUtil.getArity(psiArity) : -1;
+      if (arity != -1) {
+        for (ErlangTypeSig typeSig : signature.getTypeSigList()) {
+          if (typeSig.getFunType().getFunTypeArguments().getTopTypeList().size() != arity) {
+            problemsHolder.registerProblem(spec, "Specification has the wrong arity '" + signature.getSpecFun().getText() + "'");
           }
         }
       }

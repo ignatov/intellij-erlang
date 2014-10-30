@@ -38,13 +38,11 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
   private static final Logger LOG = Logger.getInstance(ErlangUnresolvedIncludeLibInspection.class);
 
   @Override
-  protected void checkFile(PsiFile file, @NotNull ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-
-    for (ErlangIncludeLib erlangIncludeLib : ((ErlangFile) file).getIncludeLibs()) {
+  protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
+    for (ErlangIncludeLib erlangIncludeLib : file.getIncludeLibs()) {
       ErlangIncludeString includeString = erlangIncludeLib.getIncludeStringSafe();
       if (includeString == null) continue;
-      processInclude(problemsHolder, ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangIncludeLib, (ErlangFile) file), includeString, INCLUDE_LIB_LABEL);
+      processInclude(problemsHolder, ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangIncludeLib, file), includeString, INCLUDE_LIB_LABEL);
     }
   }
 

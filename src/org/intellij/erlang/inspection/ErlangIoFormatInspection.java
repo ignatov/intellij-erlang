@@ -16,11 +16,11 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
@@ -46,11 +46,10 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
   private final Set<String> MODULE_NAMES = ContainerUtil.set("io", "io_lib");
   private final Set<String> FUNCTION_NAMES = ContainerUtil.set("format", "fwrite");
 
+  @NotNull
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-
-    file.accept(new ErlangRecursiveVisitor() {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    return new ErlangVisitor() {
       @Override
       public void visitGlobalFunctionCallExpression(@NotNull ErlangGlobalFunctionCallExpression o) {
         ErlangFunctionCallExpression expression = o.getFunctionCallExpression();
@@ -80,13 +79,13 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
                     expectedArgumentsCount = getExpectedFormatArgsCount(formatString);
                   } catch (InvalidControlSequenceException e) {
                     int start = e.getInvalidSequenceStartIdx() + 1;
-                    problemsHolder.registerProblem(str, TextRange.create(start, str.getTextLength() - 1), "Invalid control sequence");
+                    holder.registerProblem(str, TextRange.create(start, str.getTextLength() - 1), "Invalid control sequence");
                     return;
                   }
                   if (args instanceof ErlangListExpression) {
                     int passedArgumentsCount = ((ErlangListExpression) args).getExpressionList().size();
                     if (expectedArgumentsCount != passedArgumentsCount) {
-                      problemsHolder.registerProblem(str, "Wrong number of arguments in format call, should be " + expectedArgumentsCount);
+                      holder.registerProblem(str, "Wrong number of arguments in format call, should be " + expectedArgumentsCount);
                     }
                   }
                 }
@@ -95,7 +94,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
           }
         }
       }
-    });
+    };
   }
 
   private static int getExpectedFormatArgsCount(String formatString) throws InvalidControlSequenceException {

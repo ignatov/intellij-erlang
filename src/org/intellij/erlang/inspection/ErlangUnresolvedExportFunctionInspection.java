@@ -16,31 +16,32 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import org.intellij.erlang.psi.ErlangExportFunction;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnresolvedExportFunctionInspection extends ErlangInspectionBase {
+  @NotNull
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    file.accept(new ErlangRecursiveVisitor() {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    return new ErlangVisitor() {
       @Override
       public void visitExportFunction(@NotNull ErlangExportFunction o) {
         PsiReference reference = o.getReference();
         if (reference.resolve() == null) {
           String name = o.getQAtom().getText();
           int arity = ErlangPsiImplUtil.getArity(o.getInteger());
-          if (arity < 0) return;
-          problemsHolder.registerProblem(o, "Unresolved function " + "'" + o.getText() + "'", new ErlangCreateFunctionQuickFix(name, arity));
+          if (arity >= 0) {
+            holder.registerProblem(o, "Unresolved function " + "'" + o.getText() + "'",
+              new ErlangCreateFunctionQuickFix(name, arity));
+          }
         }
       }
-    });
+    };
   }
 }

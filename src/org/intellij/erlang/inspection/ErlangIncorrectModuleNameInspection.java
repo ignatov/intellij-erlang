@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
@@ -26,21 +27,17 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
-import org.intellij.erlang.psi.ErlangCompositeElement;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangModule;
-import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
 public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
+  @NotNull
   @Override
-  protected void checkFile(PsiFile file, final ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-    file.accept(new ErlangRecursiveVisitor() {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    return new ErlangVisitor() {
       @Override
       public void visitModule(@NotNull ErlangModule o) {
         String ext = FileUtilRt.getExtension(o.getContainingFile().getName());
@@ -48,14 +45,15 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
         String moduleName = StringUtil.replace(o.getName(), "'", "");
         ErlangCompositeElement atom = o.getQAtom();
         if (atom != null && !StringUtil.equals(moduleName, withoutExtension)) {
-          problemsHolder.registerProblem(atom, "Module with name '" + moduleName + "' should be declared in a file named '" +
-            moduleName + "." + ext + "'.",
+          holder.registerProblem(atom, "Module with name '" + moduleName + "' should be declared in a file named '" +
+              moduleName + "." + ext + "'.",
             new ErlangRenameModuleFix(o, withoutExtension),
             new ErlangRenameFileFix(o)
           );
         }
+
       }
-    });
+    };
   }
 
   private static class ErlangRenameModuleFix implements LocalQuickFix {

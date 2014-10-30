@@ -20,7 +20,6 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Condition;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -39,14 +38,14 @@ import java.util.List;
 
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
-  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
-    ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
-    if (erlangFile == null) return;
-    if (file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension())) return;
-    if (erlangFile.isExportedAll()) return;
+  protected boolean canRunOn(@NotNull ErlangFile file) {
+    return !file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension()) && !file.isExportedAll();
+  }
 
-    for (ErlangFunction function : erlangFile.getFunctions()) {
-      if (isUnusedFunction(erlangFile, function)) {
+  @Override
+  protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
+    for (ErlangFunction function : file.getFunctions()) {
+      if (isUnusedFunction(file, function)) {
         problemsHolder.registerProblem(function.getNameIdentifier(),
           "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",
           ProblemHighlightType.LIKE_UNUSED_SYMBOL,

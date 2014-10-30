@@ -17,11 +17,11 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiFile;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangInclude;
 import org.intellij.erlang.psi.ErlangIncludeString;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -29,13 +29,11 @@ public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
   public static String INCLUDE_LABEL = "include";
 
   @Override
-  protected void checkFile(PsiFile file, ProblemsHolder problemsHolder) {
-    if (!(file instanceof ErlangFile)) return;
-
-    for (ErlangInclude erlangInclude : ((ErlangFile) file).getIncludes()) {
+  protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
+    for (ErlangInclude erlangInclude : file.getIncludes()) {
       ErlangIncludeString string = erlangInclude.getIncludeStringSafe();
       if (string == null) continue;
-      List<ErlangFile> files = ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangInclude, (ErlangFile) file);
+      List<ErlangFile> files = ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangInclude, file);
       ErlangUnresolvedIncludeLibInspection.processInclude(problemsHolder, files, string, INCLUDE_LABEL);
     }
   }
