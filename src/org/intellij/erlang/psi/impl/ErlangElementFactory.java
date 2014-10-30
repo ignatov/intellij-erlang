@@ -46,6 +46,13 @@ public class ErlangElementFactory {
     return fileFromText.getFunctions().get(0).getFunctionClauseList().get(0).getClauseBody().getExpressionList().get(0);
   }
 
+  public static ErlangArgumentDefinition createFunExpressionNameFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, "foo() -> fun " + text + "() -> ok end.");
+    ErlangFunctionClause clause = fileFromText.getFunctions().get(0).getFunctionClauseList().get(0);
+    ErlangFunExpression funExpression = (ErlangFunExpression)clause.getClauseBody().getExpressionList().get(0);
+    return funExpression.getFunClauses().getFunClauseList().get(0).getArgumentDefinition();
+  }
+
   @NotNull
   public static ErlangFunction createFunctionFromText(@NotNull Project project, @NotNull String text) {
     ErlangFile fileFromText = createFileFromText(project, text);
