@@ -41,6 +41,7 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     myView = new ErlangConsoleView(getProject());
+    System.setProperty("SHOULD_PERFORM_ACCESS_CHECK", "false");
   }
 
   public void testConsoleResolve() throws Exception {
@@ -55,7 +56,7 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
         WriteCommandAction.runWriteCommandAction(getProject(), new Runnable() {
           @Override
           public void run() {
-            document.insertString(0, "C = A + B.");
+            document.insertString(0, "C = A + B + <error>D</error>.");
           }
         });
       }
@@ -71,7 +72,6 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     enableInspectionTool(new ErlangUnboundVariableInspection());
     doDoTest(true, false);
     String testName = getTestName(false);
-    checkResultByFile(testName + ".erl");
     assertEquals(FileUtil.loadFile(new File(getTestDataPath() + testName + ".txt"), true), DebugUtil.psiToString(file, false));
   }
 
