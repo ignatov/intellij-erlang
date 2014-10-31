@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.search;
 
+import com.intellij.openapi.application.QueryExecutorBase;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
@@ -25,25 +26,28 @@ import com.intellij.psi.search.TextOccurenceProcessor;
 import com.intellij.psi.search.UsageSearchContext;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.Processor;
-import com.intellij.util.QueryExecutor;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangAtomSearch implements QueryExecutor<PsiReference, ReferencesSearch.SearchParameters> {
+public class ErlangAtomSearch extends QueryExecutorBase<PsiReference, ReferencesSearch.SearchParameters> {
+  protected ErlangAtomSearch() {
+    super(true);
+  }
+
   @Override
-  public boolean execute(@NotNull ReferencesSearch.SearchParameters parameters, @NotNull Processor<PsiReference> consumer) {
+  public void processQuery(@NotNull ReferencesSearch.SearchParameters parameters,
+                           @NotNull Processor<PsiReference> consumer) {
     PsiElement element = parameters.getElementToSearch();
-    if (!(element instanceof ErlangQAtom)) return true;
+    if (!(element instanceof ErlangQAtom)) return;
 
     String name = ErlangPsiImplUtil.getName((ErlangQAtom) element);
-    if (StringUtil.isEmpty(name)) return true;
+    if (StringUtil.isEmpty(name)) return;
 
     SearchScope searchScope = parameters.getEffectiveSearchScope();
     RubyCodeOccurenceProcessor processor = new RubyCodeOccurenceProcessor(element, consumer);
     short searchContext = UsageSearchContext.IN_CODE | UsageSearchContext.IN_STRINGS;
-    return PsiSearchHelper.SERVICE.getInstance(element.getProject()).
-      processElementsWithWord(processor, searchScope, name, searchContext, true);
+    PsiSearchHelper.SERVICE.getInstance(element.getProject()).processElementsWithWord(processor, searchScope, name, searchContext, true);
   }
 
   public static class RubyCodeOccurenceProcessor implements TextOccurenceProcessor {
@@ -55,7 +59,7 @@ public class ErlangAtomSearch implements QueryExecutor<PsiReference, ReferencesS
       myPsiReferenceProcessor = psiReferenceProcessor;
     }
 
-    public boolean execute(PsiElement element, int offsetInElement) {
+    public boolean execute(@NotNull PsiElement element, int offsetInElement) {
       PsiReference ref = element.getReference();
       if (ref!=null && ref.isReferenceTo(myElement)) {
         return myPsiReferenceProcessor.process(ref);
