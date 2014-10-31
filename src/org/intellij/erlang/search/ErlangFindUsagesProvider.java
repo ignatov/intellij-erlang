@@ -20,6 +20,8 @@ import com.intellij.lang.HelpID;
 import com.intellij.lang.cacheBuilder.WordOccurrence;
 import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.ElementDescriptionUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
@@ -44,8 +46,12 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
         while ((tokenType = lexer.getTokenType()) != null) {
           //TODO process occurrences in string literals and comments
           if (tokenType == ErlangTypes.ERL_ATOM_NAME || tokenType == ErlangTypes.ERL_VAR) {
-            WordOccurrence o = new WordOccurrence(fileText, lexer.getTokenStart(), lexer.getTokenEnd(), WordOccurrence.Kind.CODE);
-            processor.process(o);
+            int tokenStart = lexer.getTokenStart();
+            for (TextRange wordRange : StringUtil.getWordIndicesIn(lexer.getTokenText())) {
+              int start = tokenStart + wordRange.getStartOffset();
+              int end = tokenStart + wordRange.getEndOffset();
+              processor.process(new WordOccurrence(fileText, start, end, WordOccurrence.Kind.CODE));
+            }
           }
           lexer.advance();
         }
