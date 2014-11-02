@@ -27,7 +27,10 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.intellij.erlang.psi.*;
+import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.ErlangCompositeElement;
+import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +39,8 @@ import java.io.IOException;
 public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
   @NotNull
   @Override
-  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder,
+                                             @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
       @Override
       public void visitModule(@NotNull ErlangModule o) {
@@ -47,8 +51,8 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
         if (atom != null && !StringUtil.equals(moduleName, withoutExtension)) {
           holder.registerProblem(atom, "Module with name '" + moduleName + "' should be declared in a file named '" +
               moduleName + "." + ext + "'.",
-            new ErlangRenameModuleFix(o, withoutExtension),
-            new ErlangRenameFileFix(o)
+            new ErlangRenameModuleFix(withoutExtension),
+            new ErlangRenameFileFix()
           );
         }
 
@@ -57,11 +61,9 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
   }
 
   private static class ErlangRenameModuleFix implements LocalQuickFix {
-    private final ErlangModule myModule;
     private final String myShouldBeName;
 
-    public ErlangRenameModuleFix(ErlangModule module, String shouldBeName) {
-      myModule = module;
+    public ErlangRenameModuleFix(String shouldBeName) {
       myShouldBeName = shouldBeName;
     }
 
@@ -79,6 +81,8 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+      ErlangModule module = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangModule.class);
+      if (module == null) return;
       AccessToken token = WriteAction.start();
       String name;
       try {
@@ -88,7 +92,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
         name = "'" + myShouldBeName + "'";
       }
       try {
-        myModule.setName(name);
+        module.setName(name);
       } finally {
         token.finish();
       }
@@ -96,14 +100,6 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
   }
 
   private static class ErlangRenameFileFix implements LocalQuickFix {
-    private final ErlangModule myModule;
-    private final String myExtension;
-
-    public ErlangRenameFileFix(ErlangModule module) {
-      myModule = module;
-      myExtension = FileUtilRt.getExtension(myModule.getContainingFile().getName());
-    }
-
     @NotNull
     @Override
     public String getName() {
@@ -118,13 +114,16 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+      ErlangModule module = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangModule.class);
+      if (module == null) return;
       AccessToken token = WriteAction.start();
       try {
-        VirtualFile virtualFile = myModule.getContainingFile().getVirtualFile();
+        VirtualFile virtualFile = module.getContainingFile().getVirtualFile();
+        String extension = FileUtilRt.getExtension(module.getContainingFile().getName());
         if (virtualFile != null) {
-          virtualFile.rename(problemDescriptor, StringUtil.replace(myModule.getName(), "'", "") + "." + myExtension);
+          virtualFile.rename(problemDescriptor, StringUtil.replace(module.getName(), "'", "") + "." + extension);
         }
-      } catch (IOException e) { //
+      } catch (IOException ignored) {
       } finally {
         token.finish();
       }
