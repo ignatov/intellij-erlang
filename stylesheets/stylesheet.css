@@ -354,10 +354,6 @@ h1, h2, h3, h4, h5 {
   color: #333;
 }
 
-h1 a, h2 a, h3 a, h4 a, h5 a {
-  color: #504545;
-}
-
 body {
   text-rendering: optimizeLegibility;
   font-family: "Source Sans", "Helvetica Neue", sans-serif;
@@ -367,15 +363,13 @@ body {
   position: relative;
 }
 
-h2 > a { text-decoration: none; }
-h3 > a { text-decoration: none; }
+h2 > a { color: #333; text-decoration: none; }
+h3 > a { color: #333; text-decoration: none; }
 
-a:hover {
-}
 
 a {
   text-decoration: underline;
   /*font-weight: bold;*/
-  color: #444;
+  /*color: #444;*/
 }
 
