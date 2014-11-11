@@ -16,13 +16,13 @@
 
 package org.intellij.erlang.utils;
 
-import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.application.Result;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleFileIndex;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -40,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 public final class ErlangModulesUtil {
   private ErlangModulesUtil() {
@@ -47,19 +48,32 @@ public final class ErlangModulesUtil {
 
   @Nullable
   public static ErlangModule getErlangModule(final Project project, final String moduleName) {
-    return new ReadAction<ErlangModule>() {
+    return ApplicationManager.getApplication().runReadAction(new Computable<ErlangModule>() {
+      @Nullable
       @Override
-      protected void run(@NotNull Result<ErlangModule> result) throws Throwable {
-        result.setResult(ContainerUtil.getFirstItem(ErlangModuleIndex.getModulesByName(project, moduleName, GlobalSearchScope.allScope(project))));
+      public ErlangModule compute() {
+        return doGetErlangModule(project, moduleName);
       }
-    }.execute().getResultObject();
+    });
   }
 
   @Nullable
-  public static ErlangFile getErlangModuleFile(Project project, String moduleName) {
-    ErlangModule module = getErlangModule(project, moduleName);
-    PsiFile containingFile = module != null ? module.getContainingFile() : null;
-    return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
+  public static ErlangFile getErlangModuleFile(final Project project, final String moduleName) {
+    return ApplicationManager.getApplication().runReadAction(new Computable<ErlangFile>() {
+      @Nullable
+      @Override
+      public ErlangFile compute() {
+        ErlangModule module = doGetErlangModule(project, moduleName);
+        PsiFile containingFile = module != null ? module.getContainingFile() : null;
+        return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
+      }
+    });
+  }
+
+  @Nullable
+  private static ErlangModule doGetErlangModule(@NotNull Project project, @NotNull String moduleName) {
+    List<ErlangModule> modules = ErlangModuleIndex.getModulesByName(project, moduleName, GlobalSearchScope.allScope(project));
+    return ContainerUtil.getFirstItem(modules);
   }
 
   public static Collection<ErlangFile> getErlangModules(Project project) {
