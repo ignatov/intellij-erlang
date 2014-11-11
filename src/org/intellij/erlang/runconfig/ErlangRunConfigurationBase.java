@@ -17,6 +17,7 @@
 package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ModuleBasedConfiguration;
 import com.intellij.execution.configurations.RuntimeConfigurationException;
@@ -28,6 +29,8 @@ import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,13 +67,12 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
     XmlSerializer.deserializeInto(this, element);
   }
 
-  public final RunningState createRunningState(ExecutionEnvironment env) throws ExecutionException {
+  @Nullable
+  @Override
+  public final RunningState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment) throws ExecutionException {
     ErlangModuleBasedConfiguration configuration = getConfigurationModule();
     Module module = configuration.getModule();
-    if (module == null) {
-      throw new ExecutionException("No Erlang configuration for run configuration: " + getName());
-    }
-    return newRunningState(env, module);
+    return module != null ? newRunningState(environment, module) : null;
   }
 
   public abstract boolean isTestRunConfiguration();

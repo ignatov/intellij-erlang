@@ -23,7 +23,6 @@ import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.GenericProgramRunner;
 import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.openapi.project.Project;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugProcessStarter;
 import com.intellij.xdebugger.XDebugSession;
@@ -39,16 +38,14 @@ public class ErlangDebugRunner extends GenericProgramRunner {
 
   @Nullable
   @Override
-  protected RunContentDescriptor doExecute(Project project,
-                                           RunProfileState state,
-                                           RunContentDescriptor contentToReuse,
-                                           final ExecutionEnvironment env) throws ExecutionException {
-    XDebuggerManager xDebuggerManager = XDebuggerManager.getInstance(project);
-    return xDebuggerManager.startSession(this, env, contentToReuse, new XDebugProcessStarter() {
+  protected RunContentDescriptor doExecute(@NotNull RunProfileState state,
+                                           @NotNull final ExecutionEnvironment environment) throws ExecutionException {
+    XDebuggerManager xDebuggerManager = XDebuggerManager.getInstance(environment.getProject());
+    return xDebuggerManager.startSession(environment, new XDebugProcessStarter() {
       @NotNull
       @Override
       public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-        return new ErlangXDebugProcess(session, env);
+        return new ErlangXDebugProcess(session, environment);
       }
     }).getRunContentDescriptor();
   }

@@ -307,7 +307,11 @@ public class ErlangXDebugProcess extends XDebugProcess {
   }
 
   private ErlangRunningState createRunningState() throws ExecutionException {
-    return getRunConfiguration().createRunningState(myExecutionEnvironment);
+    ErlangRunningState state = getRunConfiguration().getState(myExecutionEnvironment.getExecutor(), myExecutionEnvironment);
+    if (state == null) {
+      throw new ExecutionException("Failed to execute a run configuration.");
+    }
+    return state;
   }
 
   private void runDebugTarget() throws ExecutionException {

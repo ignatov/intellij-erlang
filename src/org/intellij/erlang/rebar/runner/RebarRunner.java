@@ -16,17 +16,9 @@
 
 package org.intellij.erlang.rebar.runner;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.configurations.RunProfile;
-import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.DefaultProgramRunner;
-import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.runners.RunContentBuilder;
-import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
 public final class RebarRunner extends DefaultProgramRunner {
@@ -41,15 +33,5 @@ public final class RebarRunner extends DefaultProgramRunner {
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
     return DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && profile instanceof RebarRunConfigurationBase;
-  }
-
-  @Override
-  protected RunContentDescriptor doExecute(Project project,
-                                           RunProfileState state,
-                                           RunContentDescriptor contentToReuse,
-                                           ExecutionEnvironment env) throws ExecutionException {
-    FileDocumentManager.getInstance().saveAllDocuments();
-    ExecutionResult result = state.execute(env.getExecutor(), this);
-    return new RunContentBuilder(this, result, env).showRunContent(contentToReuse);
   }
 }

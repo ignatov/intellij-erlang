@@ -16,8 +16,6 @@
 
 package org.intellij.erlang.application;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
@@ -31,7 +29,6 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.runconfig.ErlangModuleBasedConfiguration;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
-import org.intellij.erlang.runconfig.ErlangRunner;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
@@ -55,11 +52,6 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
     return new ErlangRunConfigurationEditorForm();
-  }
-
-  @Override
-  public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) throws ExecutionException {
-    return ErlangRunner.EMPTY_RUN_STATE; // todo: CommandLineState
   }
 
   @Override

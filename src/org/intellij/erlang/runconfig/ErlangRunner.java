@@ -16,32 +16,15 @@
 
 package org.intellij.erlang.runconfig;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.ExecutionResult;
-import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RunProfile;
-import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.DefaultProgramRunner;
-import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.execution.runners.RunContentBuilder;
-import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.project.Project;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRunner extends DefaultProgramRunner {
   public static final String ERLANG_RUNNER_ID = "ErlangRunner";
-
-  public static final RunProfileState EMPTY_RUN_STATE = new RunProfileState() {
-    @Override
-    public ExecutionResult execute(Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
-      return null;
-    }
-  };
 
   @NotNull
   @Override
@@ -53,17 +36,5 @@ public class ErlangRunner extends DefaultProgramRunner {
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
     return DefaultRunExecutor.EXECUTOR_ID.equals(executorId) &&
       (profile instanceof ErlangApplicationConfiguration || profile instanceof ErlangUnitRunConfiguration);
-  }
-
-  @Override
-  protected RunContentDescriptor doExecute(Project project,
-                                           RunProfileState state,
-                                           RunContentDescriptor contentToReuse,
-                                           ExecutionEnvironment env) throws ExecutionException {
-    ErlangRunConfigurationBase configuration = (ErlangRunConfigurationBase) env.getRunProfile();
-    ErlangRunningState runningState = configuration.createRunningState(env);
-    FileDocumentManager.getInstance().saveAllDocuments();
-    ExecutionResult executionResult = runningState.execute(env.getExecutor(), this);
-    return new RunContentBuilder(this, executionResult, env).showRunContent(contentToReuse);
   }
 }
