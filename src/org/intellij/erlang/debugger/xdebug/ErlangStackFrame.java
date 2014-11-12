@@ -80,7 +80,7 @@ public class ErlangStackFrame extends XStackFrame {
         ErlangFunExpression funExpression = ErlangPsiImplUtil.findFunExpression(function, mySourcePosition.getFunExpressionArity());
         if (funExpression != null) {
           int line = 1 + StringUtil.offsetToLineNumber(funExpression.getContainingFile().getText(), funExpression.getTextOffset());
-          title += ": fun at line " + line;
+          title += ": " + mySourcePosition.getFunExpressionName() + " at line " + line;
         }
         component.append(title, SimpleTextAttributes.REGULAR_ATTRIBUTES);
         component.setIcon(AllIcons.Debugger.StackFrame);

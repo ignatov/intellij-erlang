@@ -37,18 +37,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class ErlangSourcePosition {
-  private static final Pattern FUN_PATTERN = Pattern.compile("^-(.*)/(\\d+)-fun-(\\d+)-$");
+  private static final Pattern FUN_PATTERN = Pattern.compile("^-(.*)/(\\d+)-(\\w+)-(\\d+)-$");
 
   private final XSourcePosition mySourcePosition;
   private final String myFunctionName;
   private final int myFunctionArity;
+  private final String myFunExpressionName;
   private final int myFunExpressionArity;
 
+  private ErlangSourcePosition(@NotNull XSourcePosition sourcePosition) {
+    this(sourcePosition, null, -1);
+  }
+
   private ErlangSourcePosition(@NotNull XSourcePosition sourcePosition,
-                               @Nullable String functionName, int functionArity, int funExpressionArity) {
+                               @Nullable String functionName, int functionArity) {
+    this(sourcePosition, functionName, functionArity, null, -1);
+  }
+
+  private ErlangSourcePosition(@NotNull XSourcePosition sourcePosition,
+                               @Nullable String functionName, int functionArity,
+                               @Nullable String funExpressionName, int funExpressionArity) {
     mySourcePosition = sourcePosition;
     myFunctionName = functionName;
     myFunctionArity = functionArity;
+    myFunExpressionName = funExpressionName;
     myFunExpressionArity = funExpressionArity;
   }
 
@@ -64,6 +76,11 @@ public final class ErlangSourcePosition {
 
   public int getFunctionArity() {
     return myFunctionArity;
+  }
+
+  @Nullable
+  public String getFunExpressionName() {
+    return myFunExpressionName;
   }
 
   public int getFunExpressionArity() {
@@ -95,6 +112,7 @@ public final class ErlangSourcePosition {
     return myFunExpressionArity == that.myFunExpressionArity &&
       myFunctionArity == that.myFunctionArity &&
       Comparing.equal(myFunctionName, that.myFunctionName) &&
+      Comparing.equal(myFunExpressionName, that.myFunExpressionName) &&
       Comparing.equal(getFile(), that.getFile()) &&
       Comparing.equal(getLine(), that.getLine());
   }
@@ -102,6 +120,7 @@ public final class ErlangSourcePosition {
   @Override
   public int hashCode() {
     int result = myFunctionName != null ? myFunctionName.hashCode() : 0;
+    result = 31 * result + (myFunExpressionName != null ? myFunExpressionName.hashCode() : 0);
     result = 31 * result + myFunctionArity;
     result = 31 * result + myFunExpressionArity;
     result = 31 * result + getFile().hashCode();
@@ -111,7 +130,7 @@ public final class ErlangSourcePosition {
 
   @NotNull
   public static ErlangSourcePosition create(@NotNull XSourcePosition position) {
-    return new ErlangSourcePosition(position, null, -1, -1);
+    return new ErlangSourcePosition(position);
   }
 
   @Nullable
@@ -131,13 +150,14 @@ public final class ErlangSourcePosition {
     ErlangFile file = ErlangModulesUtil.getErlangModuleFile(project, module);
     VirtualFile moduleFile = file != null ? file.getVirtualFile() : null;
     XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(moduleFile, line);
-    return sourcePosition != null ? new ErlangSourcePosition(sourcePosition, null, -1, -1) : null;
+    return sourcePosition != null ? new ErlangSourcePosition(sourcePosition) : null;
   }
 
   @Nullable
   public static ErlangSourcePosition create(@NotNull final Project project, @NotNull final String module,
                                             @NotNull String functionOrFunExpression, int arity) {
     final String functionName;
+    final String funExpressionName;
     final int functionArity;
     final int funExpressionArity;
 
@@ -146,10 +166,12 @@ public final class ErlangSourcePosition {
     if (inFunExpression) {
       functionName = matcher.group(1);
       functionArity = Integer.parseInt(matcher.group(2));
-      funExpressionArity = Integer.parseInt(matcher.group(3));
+      funExpressionName = matcher.group(3);
+      funExpressionArity = Integer.parseInt(matcher.group(4));
     } else {
       functionName = functionOrFunExpression;
       functionArity = arity;
+      funExpressionName = null;
       funExpressionArity = -1;
     }
 
@@ -160,6 +182,7 @@ public final class ErlangSourcePosition {
         ErlangFile erlangModule = ErlangModulesUtil.getErlangModuleFile(project, module);
         if (erlangModule == null) return null;
 
+        //TODO use fun expression name to improve resolution (?)
         ErlangFunction function = erlangModule.getFunction(functionName, functionArity);
         ErlangCompositeElement clarifyingElement = inFunExpression && function != null ?
           ErlangPsiImplUtil.findFunExpression(function, funExpressionArity) : function;
@@ -171,6 +194,7 @@ public final class ErlangSourcePosition {
       }
     });
 
-    return position != null ? new ErlangSourcePosition(position, functionName, functionArity, funExpressionArity) : null;
+    return position != null ?
+      new ErlangSourcePosition(position, functionName, functionArity, funExpressionName, funExpressionArity) : null;
   }
 }
