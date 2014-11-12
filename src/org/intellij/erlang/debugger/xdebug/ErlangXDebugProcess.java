@@ -54,7 +54,6 @@ import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunningState;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.intellij.erlang.utils.ErlangModulesUtil;
@@ -81,7 +80,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
     super(session);
     session.setPauseActionSupported(false);
     myExecutionEnvironment = env;
-    myDebuggerNode = new ErlangDebuggerNode(myExecutionEnvironment.getProject());
+    myDebuggerNode = new ErlangDebuggerNode();
     setDebuggerNodeListener();
     setModulesToInterpret();
   }
@@ -94,14 +93,9 @@ public class ErlangXDebugProcess extends XDebugProcess {
       }
 
       @Override
-      public void failedToInterpretModules(String nodeName, List<ErlangModule> modules) {
+      public void failedToInterpretModules(String nodeName, List<String> modules) {
         String messagePrefix = "Failed to interpret modules on node " + nodeName + ": ";
-        String modulesString = StringUtil.join(modules, new Function<ErlangModule, String>() {
-          @Override
-          public String fun(ErlangModule erlangModule) {
-            return FileUtil.getNameWithoutExtension(erlangModule.getContainingFile().getName());
-          }
-        }, ", ");
+        String modulesString = StringUtil.join(modules, ", ");
         String messageSuffix = ".\nMake sure they are compiled with debug_info option, their sources are located in same directory as .beam files, modules are available on the node.";
         String message = messagePrefix + modulesString + messageSuffix;
         getSession().reportMessage(message, MessageType.WARNING);
@@ -119,15 +113,16 @@ public class ErlangXDebugProcess extends XDebugProcess {
       }
 
       @Override
-      public void failedToSetBreakpoint(ErlangFile module, int line, String errorMessage) {
-        XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = myPositionToLineBreakpointMap.get(new ErlangSourcePosition(module, line));
+      public void failedToSetBreakpoint(String module, int line, String errorMessage) {
+        ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(getSession().getProject(), module, line);
+        XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);
         if (breakpoint != null) {
           getSession().updateBreakpointPresentation(breakpoint, AllIcons.Debugger.Db_invalid_breakpoint, errorMessage);
         }
       }
 
       @Override
-      public void breakpointIsSet(ErlangFile module, int line) {
+      public void breakpointIsSet(String module, int line) {
       }
 
       @Override
@@ -139,10 +134,9 @@ public class ErlangXDebugProcess extends XDebugProcess {
           }
         });
         assert processInBreakpoint != null;
-        ErlangSourcePosition breakPosition = processInBreakpoint.getBreakPosition();
-        assert breakPosition != null;
-        XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = myPositionToLineBreakpointMap.get(breakPosition);
-        ErlangSuspendContext suspendContext = new ErlangSuspendContext(pid, snapshots);
+        ErlangSourcePosition breakPosition = ErlangSourcePosition.create(getSession().getProject(), processInBreakpoint);
+        XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);
+        ErlangSuspendContext suspendContext = new ErlangSuspendContext(getSession().getProject(), pid, snapshots);
         if (breakpoint == null) {
           getSession().positionReached(suspendContext);
         }
@@ -158,6 +152,11 @@ public class ErlangXDebugProcess extends XDebugProcess {
       public void debuggerStopped() {
         getSession().reportMessage("Debug process stopped", MessageType.INFO);
         getSession().stop();
+      }
+
+      @Nullable
+      private XLineBreakpoint<ErlangLineBreakpointProperties> getLineBreakpoint(@Nullable ErlangSourcePosition sourcePosition) {
+        return sourcePosition != null ? myPositionToLineBreakpointMap.get(sourcePosition) : null;
       }
     });
   }
@@ -285,10 +284,9 @@ public class ErlangXDebugProcess extends XDebugProcess {
   }
 
   @Nullable
-  private ErlangSourcePosition getErlangSourcePosition(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
-    Project project = myExecutionEnvironment.getProject();
+  private static ErlangSourcePosition getErlangSourcePosition(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
     XSourcePosition sourcePosition = breakpoint.getSourcePosition();
-    return sourcePosition != null ? new ErlangSourcePosition(project, sourcePosition) : null;
+    return sourcePosition != null ? ErlangSourcePosition.create(sourcePosition) : null;
   }
 
   private void failDebugProcess(String message) {

@@ -21,7 +21,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 
-class DebugRemoteNodeResponseEvent implements ErlangDebuggerEvent {
+class DebugRemoteNodeResponseEvent extends ErlangDebuggerEvent {
   public static final String NAME = "debug_remote_node_response";
 
   private final String myNodeName;

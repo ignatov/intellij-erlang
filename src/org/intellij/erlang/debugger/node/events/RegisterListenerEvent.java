@@ -23,7 +23,7 @@ import com.ericsson.otp.erlang.OtpErlangTuple;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 
-class RegisterListenerEvent implements ErlangDebuggerEvent {
+class RegisterListenerEvent extends ErlangDebuggerEvent {
   public static final String NAME = "register_listener";
 
   private final OtpErlangPid myRemoteCommandListener;

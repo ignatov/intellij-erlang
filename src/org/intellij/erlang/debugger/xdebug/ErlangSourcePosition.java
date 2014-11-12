@@ -16,92 +16,73 @@
 
 package org.intellij.erlang.debugger.xdebug;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.util.Comparing;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
+import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.XSourcePosition;
+import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
+import org.intellij.erlang.debugger.node.ErlangTraceElement;
+import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunExpression;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ErlangSourcePosition {
+public final class ErlangSourcePosition {
   private static final Pattern FUN_PATTERN = Pattern.compile("^-(.*)/(\\d+)-fun-(\\d+)-$");
-  private final ErlangFile myErlangFile;
-  private final int myLine;
-  private final ErlangFunction myFunction;
-  private final ErlangFunExpression myFunExpression;
 
-  public ErlangSourcePosition(ErlangFile erlangFile, int line) {
-    myErlangFile = erlangFile;
-    myLine = line;
-    myFunction = null;
-    myFunExpression = null;
+  private final XSourcePosition mySourcePosition;
+  private final String myFunctionName;
+  private final int myFunctionArity;
+  private final int myFunExpressionArity;
+
+  private ErlangSourcePosition(@NotNull XSourcePosition sourcePosition,
+                               @Nullable String functionName, int functionArity, int funExpressionArity) {
+    mySourcePosition = sourcePosition;
+    myFunctionName = functionName;
+    myFunctionArity = functionArity;
+    myFunExpressionArity = funExpressionArity;
   }
 
-  public ErlangSourcePosition(Project project, XSourcePosition sourcePosition) {
-    PsiFile psiFile = PsiManager.getInstance(project).findFile(sourcePosition.getFile());
-    if (!(psiFile instanceof ErlangFile)) throw new IllegalArgumentException("Invalid source position.");
-    myErlangFile = (ErlangFile) psiFile;
-    myLine = sourcePosition.getLine();
-    myFunction = null;
-    myFunExpression = null;
+  @NotNull
+  public XSourcePosition getSourcePosition() {
+    return mySourcePosition;
   }
 
-  public ErlangSourcePosition(ErlangFile module, String functionOrFunExpression, int arity) {
-    Matcher matcher = FUN_PATTERN.matcher(functionOrFunExpression);
-    boolean inFunExpression = matcher.matches();
-    String functionName = functionOrFunExpression;
-    int functionArity = arity;
-    int funExpressionArity = -1;
-    if (inFunExpression) {
-      functionName = matcher.group(1);
-      functionArity = Integer.parseInt(matcher.group(2));
-      funExpressionArity = Integer.parseInt(matcher.group(3));
-    }
-    myErlangFile = module;
-    myFunction = module.getFunction(functionName, functionArity);
-    if (myFunction != null) {
-      myFunExpression = inFunExpression ? ErlangPsiImplUtil.findFunExpression(myFunction, funExpressionArity) : null;
-      int offset = myFunExpression != null ? myFunExpression.getTextOffset() : myFunction.getTextOffset();
-      myLine = StringUtil.offsetToLineNumber(module.getText(), offset);
-    }
-    else {
-      myLine = 0;
-      myFunExpression = null;
-    }
+  @Nullable
+  public String getFunctionName() {
+    return myFunctionName;
+  }
+
+  public int getFunctionArity() {
+    return myFunctionArity;
+  }
+
+  public int getFunExpressionArity() {
+    return myFunExpressionArity;
   }
 
   @NotNull
   public String getErlangModuleName() {
-    return FileUtil.getNameWithoutExtension(myErlangFile.getName());
-  }
-
-  @NotNull
-  public ErlangFile getErlangFile() {
-    return myErlangFile;
+    //TODO check this works for modules like 'weird module . name.erl'
+    return mySourcePosition.getFile().getNameWithoutExtension();
   }
 
   public int getLine() {
-    return myLine;
+    return mySourcePosition.getLine();
   }
 
-  @Nullable
-  public ErlangFunction getFunction() {
-    return myFunction;
-  }
-
-  @Nullable
-  public ErlangFunExpression getFunExpression() {
-    return myFunExpression;
+  @NotNull
+  public VirtualFile getFile() {
+    return mySourcePosition.getFile();
   }
 
   @Override
@@ -111,22 +92,85 @@ public class ErlangSourcePosition {
 
     ErlangSourcePosition that = (ErlangSourcePosition) o;
 
-    if (myLine != that.myLine) return false;
-    if (myErlangFile != that.myErlangFile) return false;
-
-    return true;
+    return myFunExpressionArity == that.myFunExpressionArity &&
+      myFunctionArity == that.myFunctionArity &&
+      Comparing.equal(myFunctionName, that.myFunctionName) &&
+      Comparing.equal(getFile(), that.getFile()) &&
+      Comparing.equal(getLine(), that.getLine());
   }
 
   @Override
   public int hashCode() {
-    int result = 0;
-    if (myErlangFile != null) {
-      VirtualFile virtualFile = myErlangFile.getVirtualFile();
-      if (virtualFile != null) {
-        result = virtualFile.getPath().hashCode();
-      }
-    }
-    result = 31 * result + myLine;
+    int result = myFunctionName != null ? myFunctionName.hashCode() : 0;
+    result = 31 * result + myFunctionArity;
+    result = 31 * result + myFunExpressionArity;
+    result = 31 * result + getFile().hashCode();
+    result = 31 * result + getLine();
     return result;
+  }
+
+  @NotNull
+  public static ErlangSourcePosition create(@NotNull XSourcePosition position) {
+    return new ErlangSourcePosition(position, null, -1, -1);
+  }
+
+  @Nullable
+  public static ErlangSourcePosition create(@NotNull Project project, @NotNull ErlangProcessSnapshot snapshot) {
+    String module = snapshot.getBreakModule();
+    int line = snapshot.getBreakLine();
+    return module != null ? create(project, module, line) : null;
+  }
+
+  @Nullable
+  public static ErlangSourcePosition create(@NotNull Project project, @NotNull ErlangTraceElement traceElement) {
+    return create(project, traceElement.getModule(), traceElement.getFunction(), traceElement.getFunctionArgs().arity());
+  }
+
+  @Nullable
+  public static ErlangSourcePosition create(@NotNull Project project, @NotNull String module, int line) {
+    ErlangFile file = ErlangModulesUtil.getErlangModuleFile(project, module);
+    VirtualFile moduleFile = file != null ? file.getVirtualFile() : null;
+    XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(moduleFile, line);
+    return sourcePosition != null ? new ErlangSourcePosition(sourcePosition, null, -1, -1) : null;
+  }
+
+  @Nullable
+  public static ErlangSourcePosition create(@NotNull final Project project, @NotNull final String module,
+                                            @NotNull String functionOrFunExpression, int arity) {
+    final String functionName;
+    final int functionArity;
+    final int funExpressionArity;
+
+    Matcher matcher = FUN_PATTERN.matcher(functionOrFunExpression);
+    final boolean inFunExpression = matcher.matches();
+    if (inFunExpression) {
+      functionName = matcher.group(1);
+      functionArity = Integer.parseInt(matcher.group(2));
+      funExpressionArity = Integer.parseInt(matcher.group(3));
+    } else {
+      functionName = functionOrFunExpression;
+      functionArity = arity;
+      funExpressionArity = -1;
+    }
+
+    XSourcePosition position = ApplicationManager.getApplication().runReadAction(new Computable<XSourcePosition>() {
+      @Nullable
+      @Override
+      public XSourcePosition compute() {
+        ErlangFile erlangModule = ErlangModulesUtil.getErlangModuleFile(project, module);
+        if (erlangModule == null) return null;
+
+        ErlangFunction function = erlangModule.getFunction(functionName, functionArity);
+        ErlangCompositeElement clarifyingElement = inFunExpression && function != null ?
+          ErlangPsiImplUtil.findFunExpression(function, funExpressionArity) : function;
+
+        VirtualFile virtualFile = erlangModule.getVirtualFile();
+        int offset = clarifyingElement != null ? clarifyingElement.getTextOffset() : 0;
+
+        return XDebuggerUtil.getInstance().createPositionByOffset(virtualFile, offset);
+      }
+    });
+
+    return position != null ? new ErlangSourcePosition(position, functionName, functionArity, funExpressionArity) : null;
   }
 }

@@ -18,25 +18,20 @@ package org.intellij.erlang.debugger.node.events;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
-import com.intellij.openapi.project.Project;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 
-class SetBreakpointResponseEvent implements ErlangDebuggerEvent {
+class SetBreakpointResponseEvent extends ErlangDebuggerEvent {
   public static final String NAME = "set_breakpoint_response";
 
-  private final ErlangFile myFile;
+  private final String myModule;
   private final int myLine;
   private final String myError;
 
-  public SetBreakpointResponseEvent(@NotNull Project project, @NotNull OtpErlangTuple message) throws DebuggerEventFormatException {
-    String moduleName = OtpErlangTermUtil.getAtomText(message.elementAt(1));
-    ErlangFile file = moduleName != null ? ErlangModulesUtil.getErlangModuleFile(project, moduleName) : null;
-    if (file == null) throw new DebuggerEventFormatException();
-    myFile = file;
+  public SetBreakpointResponseEvent(@NotNull OtpErlangTuple message) throws DebuggerEventFormatException {
+    myModule = OtpErlangTermUtil.getAtomText(message.elementAt(1));
+    if (myModule == null) throw new DebuggerEventFormatException();
 
     Integer line = OtpErlangTermUtil.getIntegerValue(message.elementAt(2));
     if (line == null) throw new DebuggerEventFormatException();
@@ -59,10 +54,10 @@ class SetBreakpointResponseEvent implements ErlangDebuggerEvent {
   @Override
   public void process(ErlangDebuggerNode debuggerNode, @NotNull ErlangDebuggerEventListener eventListener) {
     if (myError == null) {
-      eventListener.breakpointIsSet(myFile, myLine);
+      eventListener.breakpointIsSet(myModule, myLine);
     }
     else {
-      eventListener.failedToSetBreakpoint(myFile, myLine, myError);
+      eventListener.failedToSetBreakpoint(myModule, myLine, myError);
     }
   }
 }

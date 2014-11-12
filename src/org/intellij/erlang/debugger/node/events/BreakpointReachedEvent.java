@@ -20,11 +20,8 @@ import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.ericsson.otp.erlang.OtpErlangTuple;
-import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.debugger.node.*;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,13 +31,13 @@ import java.util.List;
 
 import static org.intellij.erlang.debugger.node.events.OtpErlangTermUtil.*;
 
-class BreakpointReachedEvent implements ErlangDebuggerEvent {
+class BreakpointReachedEvent extends ErlangDebuggerEvent {
   public static final String NAME = "breakpoint_reached";
 
   private final OtpErlangPid myActivePid;
   private final List<ErlangProcessSnapshot> mySnapshots;
 
-  public BreakpointReachedEvent(@NotNull Project project, OtpErlangTuple breakpointReachedMessage) throws DebuggerEventFormatException {
+  public BreakpointReachedEvent(OtpErlangTuple breakpointReachedMessage) throws DebuggerEventFormatException {
     OtpErlangPid activePid = getPidValue(elementAt(breakpointReachedMessage, 1));
     OtpErlangList snapshots = getListValue(elementAt(breakpointReachedMessage, 2));
     if (activePid == null || snapshots == null) throw new DebuggerEventFormatException();
@@ -51,10 +48,10 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
       OtpErlangTuple snapshotTuple = getTupleValue(snapshot); // {Pid, Function, Status, Info, Stack}
 
       OtpErlangPid pid = getPidValue(elementAt(snapshotTuple, 0));
-      ErlangTraceElement init = getTraceElement(project, getTupleValue(elementAt(snapshotTuple, 1)), null);
+      ErlangTraceElement init = getTraceElement(getTupleValue(elementAt(snapshotTuple, 1)), null);
       String status = getAtomText(elementAt(snapshotTuple, 2));
       OtpErlangObject info = elementAt(snapshotTuple, 3);
-      List<ErlangTraceElement> stack = getStack(project, getListValue(elementAt(snapshotTuple, 4)));
+      List<ErlangTraceElement> stack = getStack(getListValue(elementAt(snapshotTuple, 4)));
 
       if (pid == null || init == null || status == null || info == null || stack == null) {
         throw new DebuggerEventFormatException();
@@ -62,9 +59,8 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
 
       if ("break".equals(status)) {
         OtpErlangTuple infoTuple = getTupleValue(info);
-        String breakModuleName = getAtomText(elementAt(infoTuple, 0));
+        String breakModule = getAtomText(elementAt(infoTuple, 0));
         Integer breakLine = getIntegerValue(elementAt(infoTuple, 1));
-        ErlangFile breakModule = breakModuleName != null ? ErlangModulesUtil.getErlangModuleFile(project, breakModuleName) : null;
         if (breakLine == null || breakModule == null) throw new DebuggerEventFormatException();
         mySnapshots.add(new ErlangProcessSnapshot(pid, init, status, breakModule, breakLine - 1, null, stack));
       }
@@ -85,7 +81,7 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
   }
 
   @Nullable
-  private static List<ErlangTraceElement> getStack(@NotNull Project project, @Nullable OtpErlangList traceElementsList) {
+  private static List<ErlangTraceElement> getStack(@Nullable OtpErlangList traceElementsList) {
     if (traceElementsList == null) return null;
     List<ErlangTraceElement> stack = new ArrayList<ErlangTraceElement>(traceElementsList.arity());
     for (OtpErlangObject traceElementObject : traceElementsList) {
@@ -93,7 +89,7 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
       // ignoring SP at 0
       OtpErlangTuple moduleFunctionArgsTuple = getTupleValue(elementAt(traceElementTuple, 1));
       OtpErlangList bindingsList = getListValue(elementAt(traceElementTuple, 2));
-      ErlangTraceElement traceElement = getTraceElement(project, moduleFunctionArgsTuple, bindingsList);
+      ErlangTraceElement traceElement = getTraceElement(moduleFunctionArgsTuple, bindingsList);
       if (traceElement == null) return null;
       stack.add(traceElement);
     }
@@ -101,16 +97,14 @@ class BreakpointReachedEvent implements ErlangDebuggerEvent {
   }
 
   @Nullable
-  private static ErlangTraceElement getTraceElement(@NotNull Project project,
-                                                    @Nullable OtpErlangTuple moduleFunctionArgsTuple,
+  private static ErlangTraceElement getTraceElement(@Nullable OtpErlangTuple moduleFunctionArgsTuple,
                                                     @Nullable OtpErlangList bindingsList) {
     String moduleName = getAtomText(elementAt(moduleFunctionArgsTuple, 0));
-    ErlangFile module = moduleName != null ? ErlangModulesUtil.getErlangModuleFile(project, moduleName) : null;
     String functionName = getAtomText(elementAt(moduleFunctionArgsTuple, 1));
     OtpErlangList args = getListValue(elementAt(moduleFunctionArgsTuple, 2));
     Collection<ErlangVariableBinding> bindings = getBindings(bindingsList);
-    if (module == null || functionName == null || args == null) return null; // bindings are not necessarily present
-    return new ErlangTraceElement(module, functionName, args, bindings);
+    if (moduleName == null || functionName == null || args == null) return null; // bindings are not necessarily present
+    return new ErlangTraceElement(moduleName, functionName, args, bindings);
   }
 
   @NotNull

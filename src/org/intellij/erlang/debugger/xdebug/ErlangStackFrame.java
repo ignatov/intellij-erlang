@@ -18,53 +18,66 @@ package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiFile;
 import com.intellij.ui.ColoredTextContainer;
 import com.intellij.ui.SimpleTextAttributes;
-import com.intellij.xdebugger.XDebuggerUtil;
+import com.intellij.util.ObjectUtils;
 import com.intellij.xdebugger.XSourcePosition;
-import com.intellij.xdebugger.frame.*;
+import com.intellij.xdebugger.frame.XCompositeNode;
+import com.intellij.xdebugger.frame.XStackFrame;
+import com.intellij.xdebugger.frame.XValue;
+import com.intellij.xdebugger.frame.XValueChildrenList;
 import org.intellij.erlang.debugger.node.ErlangTraceElement;
 import org.intellij.erlang.debugger.node.ErlangVariableBinding;
 import org.intellij.erlang.debugger.xdebug.xvalue.ErlangXValueFactory;
+import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunExpression;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-
 public class ErlangStackFrame extends XStackFrame {
+  private final Project myProject;
+  private final ErlangTraceElement myTraceElement;
   private final ErlangSourcePosition mySourcePosition;
-  private final Collection<ErlangVariableBinding> myBindings;
 
-  public ErlangStackFrame(@NotNull ErlangTraceElement traceElement) {
-    this(traceElement, new ErlangSourcePosition(traceElement.getModule(), traceElement.getFunction(), traceElement.getFunctionArgs().arity()));
+  public ErlangStackFrame(@NotNull Project project, @NotNull ErlangTraceElement traceElement) {
+    this(project, traceElement, ErlangSourcePosition.create(project, traceElement));
   }
 
-  public ErlangStackFrame(@NotNull ErlangTraceElement traceElement, @Nullable ErlangSourcePosition sourcePosition) {
+  public ErlangStackFrame(@NotNull Project project, @NotNull ErlangTraceElement traceElement, @Nullable ErlangSourcePosition sourcePosition) {
+    myProject = project;
+    myTraceElement = traceElement;
     mySourcePosition = sourcePosition;
-    myBindings = traceElement.getBindings();
   }
 
   @Nullable
   @Override
   public XSourcePosition getSourcePosition() {
     if (mySourcePosition == null) return null;
-    VirtualFile virtualFile = mySourcePosition.getErlangFile().getVirtualFile();
-    assert virtualFile != null;
-    return XDebuggerUtil.getInstance().createPosition(virtualFile, mySourcePosition.getLine());
+    return mySourcePosition.getSourcePosition();
   }
 
   @Override
-  public void customizePresentation(ColoredTextContainer component) {
-    if (mySourcePosition != null) {
-      ErlangFunction function = mySourcePosition.getFunction();
-      ErlangFunExpression funExpression = mySourcePosition.getFunExpression();
+  public void customizePresentation(@NotNull ColoredTextContainer component) {
+    String functionName = mySourcePosition != null ? mySourcePosition.getFunctionName() : null;
+    if (functionName != null) {
+      VirtualFile file = mySourcePosition.getSourcePosition().getFile();
+      Document document = FileDocumentManager.getInstance().getDocument(file);
+      PsiFile psiFile = document != null ? PsiDocumentManager.getInstance(myProject).getPsiFile(document) : null;
+      ErlangFile module = ObjectUtils.tryCast(psiFile, ErlangFile.class);
+
+      ErlangFunction function = module != null ? module.getFunction(functionName, mySourcePosition.getFunctionArity()) : null;
       if (function != null) {
         String title = ErlangPsiImplUtil.getQualifiedFunctionName(function);
+        ErlangFunExpression funExpression = ErlangPsiImplUtil.findFunExpression(function, mySourcePosition.getFunExpressionArity());
         if (funExpression != null) {
           int line = 1 + StringUtil.offsetToLineNumber(funExpression.getContainingFile().getText(), funExpression.getTextOffset());
           title += ": fun at line " + line;
@@ -79,8 +92,8 @@ public class ErlangStackFrame extends XStackFrame {
 
   @Override
   public void computeChildren(@NotNull XCompositeNode node) {
-    XValueChildrenList myVariables = new XValueChildrenList(myBindings.size());
-    for (ErlangVariableBinding binding : myBindings) {
+    XValueChildrenList myVariables = new XValueChildrenList(myTraceElement.getBindings().size());
+    for (ErlangVariableBinding binding : myTraceElement.getBindings()) {
       myVariables.add(binding.getName(), getVariableValue(binding.getValue()));
     }
     node.addChildren(myVariables, true);

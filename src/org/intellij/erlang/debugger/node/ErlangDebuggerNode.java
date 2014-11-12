@@ -19,11 +19,8 @@ package org.intellij.erlang.debugger.node;
 import com.ericsson.otp.erlang.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.Project;
 import org.intellij.erlang.debugger.node.commands.ErlangDebuggerCommandsProducer;
 import org.intellij.erlang.debugger.node.events.ErlangDebuggerEvent;
-import org.intellij.erlang.debugger.node.events.ErlangDebuggerEventsProducer;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -44,14 +41,8 @@ public class ErlangDebuggerNode {
   private OtpErlangPid myRemoteCommandListener;
   private OtpErlangPid myLastSuspendedPid;
 
-  private final ErlangDebuggerEventsProducer myDebuggerEventsProducer;
-
   private final Queue<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand> myCommandsQueue = new LinkedList<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand>();
   private ErlangDebuggerEventListener myEventsListener;
-
-  public ErlangDebuggerNode(@Nullable Project project) {
-    myDebuggerEventsProducer = new ErlangDebuggerEventsProducer(project);
-  }
 
   public void startNode() throws ErlangDebuggerNodeException {
     if (myOtpNode != null) return;
@@ -158,7 +149,7 @@ public class ErlangDebuggerNode {
   private void receiveMessage() {
     try {
       OtpErlangObject receivedMessage = myMessageBox.receive(RECEIVE_TIMEOUT);
-      ErlangDebuggerEvent event = myDebuggerEventsProducer.produce(receivedMessage);
+      ErlangDebuggerEvent event = ErlangDebuggerEvent.create(receivedMessage);
       if (event != null && myEventsListener != null) {
         event.process(this, myEventsListener);
       } else if (receivedMessage != null) {
@@ -166,7 +157,7 @@ public class ErlangDebuggerNode {
       }
     } catch (OtpErlangExit otpErlangExit) {
       if (myEventsListener != null) {
-        ErlangDebuggerEventsProducer.produce(otpErlangExit).process(this, myEventsListener);
+        ErlangDebuggerEvent.create(otpErlangExit).process(this, myEventsListener);
       }
       LOG.info("Erlang node exited.", otpErlangExit);
     } catch (OtpErlangDecodeException e) {

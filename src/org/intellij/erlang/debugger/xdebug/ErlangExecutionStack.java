@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.debugger.xdebug;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.xdebugger.frame.XExecutionStack;
 import com.intellij.xdebugger.frame.XStackFrame;
@@ -27,11 +28,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ErlangExecutionStack extends XExecutionStack {
+  private final Project myProject;
   private final ErlangProcessSnapshot myProcessSnapshot;
   private final List<ErlangStackFrame> myStack;
 
-  public ErlangExecutionStack(ErlangProcessSnapshot snapshot) {
+  public ErlangExecutionStack(Project project, ErlangProcessSnapshot snapshot) {
     super(snapshot.getPidString());
+    myProject = project;
     myProcessSnapshot = snapshot;
     myStack = new ArrayList<ErlangStackFrame>(snapshot.getStack().size());
   }
@@ -48,9 +51,9 @@ public class ErlangExecutionStack extends XExecutionStack {
       List<ErlangTraceElement> traceElements = myProcessSnapshot.getStack();
       for (ErlangTraceElement traceElement : traceElements) {
         boolean isTopStackFrame = myStack.isEmpty(); // if it's a top stack frame we can set a line that's being executed.
-        ErlangStackFrame stackFrame = isTopStackFrame ? 
-          new ErlangStackFrame(traceElement, myProcessSnapshot.getBreakPosition()) : 
-          new ErlangStackFrame(traceElement);
+        ErlangStackFrame stackFrame = isTopStackFrame ?
+          new ErlangStackFrame(myProject, traceElement, ErlangSourcePosition.create(myProject, myProcessSnapshot)) :
+          new ErlangStackFrame(myProject, traceElement);
         myStack.add(stackFrame);
       }
       container.addStackFrames(myStack, true);

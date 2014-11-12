@@ -17,8 +17,6 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.OtpErlangPid;
-import org.intellij.erlang.debugger.xdebug.ErlangSourcePosition;
-import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,21 +26,19 @@ public class ErlangProcessSnapshot {
   private final OtpErlangPid myPid;
   private final ErlangTraceElement myInit;
   private final String myStatus;
-  private final ErlangSourcePosition myBreakPosition;
+  private final String myBreakModule;
+  private final int myBreakLine;
   private final String myExitReason;
   private final List<ErlangTraceElement> myStack;
 
-  public ErlangProcessSnapshot(@NotNull OtpErlangPid pid, 
-                               @NotNull ErlangTraceElement init,
-                               @NotNull String status, 
-                               @Nullable ErlangFile breakModule,
-                               int breakLine, 
-                               @Nullable String exitReason,
-                               @NotNull List<ErlangTraceElement> stack) {
+  public ErlangProcessSnapshot(@NotNull OtpErlangPid pid, @NotNull ErlangTraceElement init, @NotNull String status,
+                               @Nullable String breakModule, int breakLine,
+                               @Nullable String exitReason, @NotNull List<ErlangTraceElement> stack) {
     myPid = pid;
     myInit = init;
     myStatus = status;
-    myBreakPosition = breakModule != null ? new ErlangSourcePosition(breakModule, breakLine) : null;
+    myBreakModule = breakModule;
+    myBreakLine = breakLine;
     myExitReason = exitReason;
     myStack = stack;
   }
@@ -68,8 +64,12 @@ public class ErlangProcessSnapshot {
   }
 
   @Nullable
-  public ErlangSourcePosition getBreakPosition() {
-    return myBreakPosition;
+  public String getBreakModule() {
+    return myBreakModule;
+  }
+
+  public int getBreakLine() {
+    return myBreakLine;
   }
 
   @Nullable

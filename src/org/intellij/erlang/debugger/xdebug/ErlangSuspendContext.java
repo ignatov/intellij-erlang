@@ -17,26 +17,31 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangPid;
+import com.intellij.openapi.project.Project;
 import com.intellij.xdebugger.frame.XExecutionStack;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public class ErlangSuspendContext extends XSuspendContext {
-  private XExecutionStack[] myExecutionStacks;
-  private int myActiveExecutionStackIdx;
+  private final XExecutionStack[] myExecutionStacks;
+  private final int myActiveStackIdx;
 
-  public ErlangSuspendContext(OtpErlangPid activePid, List<ErlangProcessSnapshot> snapshots) {
+  public ErlangSuspendContext(@NotNull Project project, @NotNull OtpErlangPid activePid,
+                              @NotNull List<ErlangProcessSnapshot> snapshots) {
     myExecutionStacks = new XExecutionStack[snapshots.size()];
+    int activeStackIdx = 0;
     for (int i = 0; i < snapshots.size(); i++) {
       ErlangProcessSnapshot snapshot = snapshots.get(i);
       if (snapshot.getPid().equals(activePid)) {
-        myActiveExecutionStackIdx = i;
+        activeStackIdx = i;
       }
-      myExecutionStacks[i] = new ErlangExecutionStack(snapshot);
+      myExecutionStacks[i] = new ErlangExecutionStack(project, snapshot);
     }
+    myActiveStackIdx = activeStackIdx;
   }
 
   @Override
@@ -47,6 +52,6 @@ public class ErlangSuspendContext extends XSuspendContext {
   @Nullable
   @Override
   public XExecutionStack getActiveExecutionStack() {
-    return myExecutionStacks[myActiveExecutionStackIdx];
+    return myExecutionStacks[myActiveStackIdx];
   }
 }

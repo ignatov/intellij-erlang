@@ -17,20 +17,17 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.OtpErlangList;
-import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
 public class ErlangTraceElement {
-  private final ErlangFile myModule;
+  private final String myModule;
   private final String myFunction;
   private final OtpErlangList myFunctionArgs;
   private final Collection<ErlangVariableBinding> myBindings;
 
-  public ErlangTraceElement(@NotNull ErlangFile module,
-                            @NotNull String function,
-                            @NotNull OtpErlangList functionArgs,
+  public ErlangTraceElement(@NotNull String module, @NotNull String function, @NotNull OtpErlangList functionArgs,
                             @NotNull Collection<ErlangVariableBinding> bindings) {
     myModule = module;
     myFunction = function;
@@ -39,7 +36,7 @@ public class ErlangTraceElement {
   }
 
   @NotNull
-  public ErlangFile getModule() {
+  public String getModule() {
     return myModule;
   }
 

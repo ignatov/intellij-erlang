@@ -16,9 +16,39 @@
 
 package org.intellij.erlang.debugger.node.events;
 
+import com.ericsson.otp.erlang.OtpErlangExit;
+import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangTuple;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
+import org.jetbrains.annotations.Nullable;
 
-public interface ErlangDebuggerEvent {
-  void process(ErlangDebuggerNode debuggerNode, ErlangDebuggerEventListener eventListener);
+public abstract class ErlangDebuggerEvent {
+
+  public abstract void process(ErlangDebuggerNode debuggerNode, ErlangDebuggerEventListener eventListener);
+
+  @Nullable
+  public static ErlangDebuggerEvent create(OtpErlangObject message) {
+    if (!(message instanceof OtpErlangTuple)) return null;
+    OtpErlangTuple messageTuple = (OtpErlangTuple) message;
+    String messageName = OtpErlangTermUtil.getAtomText(messageTuple.elementAt(0));
+    if (messageName == null) return null;
+
+    try {
+      if (RegisterListenerEvent.NAME.equals(messageName)) return new RegisterListenerEvent(messageTuple);
+      if (InterpretModulesResponseEvent.NAME.equals(messageName)) {
+        return new InterpretModulesResponseEvent(messageTuple);
+      }
+      if (SetBreakpointResponseEvent.NAME.equals(messageName)) return new SetBreakpointResponseEvent(messageTuple);
+      if (BreakpointReachedEvent.NAME.equals(messageName)) return new BreakpointReachedEvent(messageTuple);
+      if (DebugRemoteNodeResponseEvent.NAME.equals(messageName)) return new DebugRemoteNodeResponseEvent(messageTuple);
+    } catch (DebuggerEventFormatException e) {
+      return new UnknownMessageEvent(messageTuple);
+    }
+    return new UnknownMessageEvent(messageTuple);
+  }
+
+  public static ErlangDebuggerEvent create(OtpErlangExit exitMessage) {
+    return new DebuggerStoppedEvent(exitMessage);
+  }
 }

@@ -16,23 +16,23 @@
 
 package org.intellij.erlang.debugger;
 
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.xdebugger.XSourcePosition;
-import com.intellij.xdebugger.impl.XSourcePositionImpl;
 import org.intellij.erlang.debugger.xdebug.ErlangSourcePosition;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunClause;
+import org.intellij.erlang.psi.ErlangFunExpression;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  private static final String MODULE_NAME = "erlang-source-position";
   private ErlangFile myErlangFile;
 
   @Override
   protected void setUp() throws Exception {
     System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
-    myFixture.configureByFile("erlang-source-position.erl");
+    myFixture.configureByFile(MODULE_NAME + ".erl");
     myErlangFile = (ErlangFile) myFixture.getFile();
   }
 
@@ -42,31 +42,34 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
   }
 
   public void testFunctionSourcePositionConstructor() throws Exception {
-    ErlangSourcePosition sourcePosition = new ErlangSourcePosition(myErlangFile, "function", 0);
+    ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(getProject(), MODULE_NAME, "function", 0);
     ErlangFunction function = myErlangFile.getFunction("function", 0);
+
+    assertNotNull(sourcePosition);
     assertNotNull(function);
-    assertEquals(function, sourcePosition.getFunction());
-    int functionLineNumber = StringUtil.offsetToLineNumber(myErlangFile.getText(), function.getTextOffset());
-    assertEquals(functionLineNumber, sourcePosition.getLine());
-    assertNull(sourcePosition.getFunExpression());
+    assertEquals(MODULE_NAME, sourcePosition.getErlangModuleName());
+    assertEquals(myErlangFile.getVirtualFile(), sourcePosition.getFile());
+    assertEquals(function.getTextOffset(), sourcePosition.getSourcePosition().getOffset());
+    assertEquals(0, sourcePosition.getFunctionArity());
+    assertEquals(-1, sourcePosition.getFunExpressionArity());
   }
 
   public void testFunExpressionSourcePositionConstructor() throws Exception {
-    ErlangSourcePosition sourcePosition = new ErlangSourcePosition(myErlangFile, "-function_with_fun_expression/0-fun-0-", 0);
+    ErlangSourcePosition sourcePosition =
+      ErlangSourcePosition.create(getProject(), MODULE_NAME, "-function_with_fun_expression/0-fun-0-", 0);
     ErlangFunction function = myErlangFile.getFunction("function_with_fun_expression", 0);
-    assertNotNull(function);
-    assertEquals(function, sourcePosition.getFunction());
-    assertNotNull(sourcePosition.getFunExpression());
-    assertTrue(PsiTreeUtil.isAncestor(function, sourcePosition.getFunExpression(), true));
-    int funExpressionLineNumber = StringUtil.offsetToLineNumber(myErlangFile.getText(), sourcePosition.getFunExpression().getTextOffset());
-    assertEquals(funExpressionLineNumber, sourcePosition.getLine());
-  }
+    ErlangFunExpression funExpression = PsiTreeUtil.findChildOfType(function, ErlangFunExpression.class, true);
+    ErlangFunClause funExpressionClause = PsiTreeUtil.findChildOfType(funExpression, ErlangFunClause.class, true);
 
-  public void testXSourcePositionConstructor() throws Exception {
-    XSourcePosition xSourcePosition = XSourcePositionImpl.create(myErlangFile.getVirtualFile(), 3);
-    assertNotNull(xSourcePosition);
-    ErlangSourcePosition sourcePosition = new ErlangSourcePosition(getProject(), xSourcePosition);
-    assertEquals(xSourcePosition.getLine(), sourcePosition.getLine());
-    assertEquals(myErlangFile, sourcePosition.getErlangFile());
+    assertNotNull(sourcePosition);
+    assertNotNull(function);
+    assertNotNull(funExpression);
+    assertNotNull(funExpressionClause);
+
+    assertEquals(MODULE_NAME, sourcePosition.getErlangModuleName());
+    assertEquals(myErlangFile.getVirtualFile(), sourcePosition.getFile());
+    assertEquals(0, sourcePosition.getFunctionArity());
+    assertEquals(funExpressionClause.getArgumentDefinitionList().getArgumentDefinitionList().size(), sourcePosition.getFunExpressionArity());
+    assertEquals(funExpression.getTextOffset(), sourcePosition.getSourcePosition().getOffset());
   }
 }
