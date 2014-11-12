@@ -89,7 +89,6 @@ public final class ErlangSourcePosition {
 
   @NotNull
   public String getErlangModuleName() {
-    //TODO check this works for modules like 'weird module . name.erl'
     return mySourcePosition.getFile().getNameWithoutExtension();
   }
 
