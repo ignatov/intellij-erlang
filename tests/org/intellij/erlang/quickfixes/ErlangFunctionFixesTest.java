@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.quickfixes;
 
+import org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection;
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 
 public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
@@ -24,6 +25,8 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     super.setUp();
     //noinspection unchecked
     myFixture.enableInspections(ErlangUnusedFunctionInspection.class);
+    //noinspection unchecked
+    myFixture.enableInspections(ErlangDuplicateFunctionExportInspection.class);
   }
 
   @Override
@@ -36,4 +39,8 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testCommon()     throws Throwable  { doTest("Export function"); }
   public void testDelete()     throws Throwable  { doTest("Remove function"); }
   public void testDeleteSpec() throws Throwable  { doTest("Remove function"); }
+
+  public void testOneDuplicateExport1() throws Throwable  { doTest("Remove duplicate export"); }
+  public void testOneDuplicateExport2() throws Throwable  { doTest("Remove duplicate export"); }
+  public void testFewDuplicateExport()  throws Throwable  { doTest("Remove duplicate export"); }
 }
