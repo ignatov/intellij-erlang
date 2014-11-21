@@ -1,4 +1,3 @@
-%%  Copyright (c) 2012. Sergey Ignatov.
 -export([foo/0]).
 
 -export([foo<caret>/0]).

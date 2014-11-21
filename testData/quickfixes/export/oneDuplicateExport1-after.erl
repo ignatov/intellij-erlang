@@ -1,4 +1,3 @@
-%%  Copyright (c) 2012. Sergey Ignatov.
 -export([foo<caret>/0]).
 -export([bar/0, tar/0]).
 

@@ -24,9 +24,10 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   protected void setUp() throws Exception {
     super.setUp();
     //noinspection unchecked
-    myFixture.enableInspections(ErlangUnusedFunctionInspection.class);
-    //noinspection unchecked
-    myFixture.enableInspections(ErlangDuplicateFunctionExportInspection.class);
+    myFixture.enableInspections(
+      ErlangUnusedFunctionInspection.class,
+      ErlangDuplicateFunctionExportInspection.class
+    );
   }
 
   @Override
