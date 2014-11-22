@@ -64,6 +64,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test387()               { doTest(); }
   public void testMultiTarget()       { doTest(); }
   public void testInFunClause()       { doTest(); }
+  public void testDuplicateExport1()  { doTest(); }
+  public void testDuplicateExport2()  { doTest(); }
 
   public void testR17SyntaxError() {
     //noinspection unchecked
@@ -85,5 +87,5 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncludeLibResolve()          { enableUnresolvedMacroInspection(); doTestWithApp(); }
   public void testRecursiveIncludeResolve()    { enableUnresolvedMacroInspection(); doTestWithApp(); }
   public void testRecursiveIncludeLibResolve() { enableUnresolvedMacroInspection(); doTestWithApp(); }
-  public void testRelativePathInclude()  { doTestWithApp(); }
+  public void testRelativePathInclude()        { doTestWithApp(); }
 }
