@@ -20,3 +20,6 @@ We are going to release a standalone Erlang IDE. If you are interested on it, pl
 ### Work in progress
 * Enhanced and remote debugger
 * Preprocessing support
+
+## Grammar-Kit version
+[Download](https://github.com/JetBrains/Grammar-Kit/releases/tag/1.2.0.2) the right version of Grammar-Kit.
