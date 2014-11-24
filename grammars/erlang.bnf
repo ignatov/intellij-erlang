@@ -121,7 +121,7 @@ macros ::= '?' macros_name {
   pin=1
   methods = [getReference]
 }
-macros_name ::= atom | var
+macros_name ::= atom | var | '_'
 
 private tuple_recoverer ::= !('}'|',')
 

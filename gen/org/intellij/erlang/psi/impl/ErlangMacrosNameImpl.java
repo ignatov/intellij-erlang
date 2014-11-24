@@ -29,6 +29,12 @@ public class ErlangMacrosNameImpl extends ErlangCompositeElementImpl implements 
 
   @Override
   @Nullable
+  public PsiElement getUniPattern() {
+    return findChildByType(ERL_UNI_PATTERN);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getVar() {
     return findChildByType(ERL_VAR);
   }

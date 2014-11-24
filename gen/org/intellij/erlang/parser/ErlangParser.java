@@ -3218,13 +3218,14 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // atom | var
+  // atom | var | '_'
   public static boolean macros_name(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_name")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, "<macros name>");
     r = atom(b, l + 1);
     if (!r) r = consumeToken(b, ERL_VAR);
+    if (!r) r = consumeToken(b, ERL_UNI_PATTERN);
     exit_section_(b, l, m, ERL_MACROS_NAME, r, false, null);
     return r;
   }
