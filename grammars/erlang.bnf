@@ -82,8 +82,6 @@
   elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.ErlangElementTypeFactory.factory"
 
   implements("case_expression|try_expression|receive_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
-  
-  generate=[names="classic"]
 }
 
 forms ::= console_expression | form_with_period *
