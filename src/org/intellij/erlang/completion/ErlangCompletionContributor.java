@@ -306,7 +306,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
               List<ErlangTypeSig> typeSigList = signature != null ? signature.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
               for (ErlangTypeSig sig : typeSigList) {
                 ErlangFunTypeArguments arguments = sig.getFunType().getFunTypeArguments();
-                ErlangType type = arguments.getTopTypeList().get(pos).getType();
+                ErlangType type = arguments.getTypeList().get(pos);
+                if (type == null) continue;
                 processType(type, expectedTypes);
               }
             }
@@ -317,8 +318,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
       }
 
       private void processType(@NotNull ErlangType type, @NotNull Set<ErlangExpressionType> expectedTypes) {
-        for (PsiElement childType : type.getChildren()) {
-          if (childType instanceof ErlangType) processType((ErlangType) childType, expectedTypes);
+        for (ErlangType childType : PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class)) {
+          processType(childType, expectedTypes);
         }
         ErlangTypeRef typeRef = type.getTypeRef();
         String key = typeRef != null ? typeRef.getText() : type.getFirstChild().getText();

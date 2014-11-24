@@ -16,35 +16,31 @@ ERL_FILE
             ERL_TOP_TYPE_CLAUSE
               PsiElement(->)('->')
               ERL_TOP_TYPE
-                ERL_TOP_TYPE_100_T
-                  ERL_TYPE
-                    PsiElement([)('[')
-                    PsiElement(])(']')
-                  PsiElement(|)('|')
-                  ERL_TYPE
-                    PsiElement([)('[')
-                    ERL_TOP_TYPE
-                      ERL_RECORD_LIKE_TYPE
-                        PsiElement({)('{')
-                        ERL_TOP_TYPE
-                          ERL_TYPE
-                            ERL_TYPE_REF
-                              ERL_Q_ATOM
-                                ERL_ATOM
-                                  PsiElement(atom_name)('atom')
-                            PsiElement(()('(')
-                            PsiElement())(')')
-                        PsiElement(,)(',')
-                        ERL_TOP_TYPE
-                          ERL_TYPE
-                            ERL_TYPE_REF
-                              ERL_Q_ATOM
-                                ERL_ATOM
-                                  PsiElement(atom_name)('any')
-                            PsiElement(()('(')
-                            PsiElement())(')')
-                        PsiElement(})('}')
-                    PsiElement(])(']')
+                ERL_TYPE
+                  PsiElement([)('[')
+                  PsiElement(])(']')
+                PsiElement(|)('|')
+                ERL_TYPE
+                  PsiElement([)('[')
+                  ERL_RECORD_LIKE_TYPE
+                    PsiElement({)('{')
+                    ERL_TYPE
+                      ERL_TYPE_REF
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('atom')
+                      PsiElement(()('(')
+                      PsiElement())(')')
+                    PsiElement(,)(',')
+                    ERL_TYPE
+                      ERL_TYPE_REF
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('any')
+                      PsiElement(()('(')
+                      PsiElement())(')')
+                    PsiElement(})('}')
+                  PsiElement(])(']')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE

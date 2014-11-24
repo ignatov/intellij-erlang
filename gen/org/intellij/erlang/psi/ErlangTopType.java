@@ -5,13 +5,13 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangTopType extends ErlangCompositeElement {
+public interface ErlangTopType extends ErlangType {
 
   @Nullable
   ErlangQVar getQVar();
 
   @NotNull
-  ErlangType getType();
+  List<ErlangType> getTypeList();
 
   @Nullable
   PsiElement getColonColon();

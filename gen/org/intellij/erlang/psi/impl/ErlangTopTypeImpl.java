@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangTopTypeImpl extends ErlangCompositeElementImpl implements ErlangTopType {
+public class ErlangTopTypeImpl extends ErlangTypeImpl implements ErlangTopType {
 
   public ErlangTopTypeImpl(ASTNode node) {
     super(node);
@@ -29,8 +29,8 @@ public class ErlangTopTypeImpl extends ErlangCompositeElementImpl implements Erl
 
   @Override
   @NotNull
-  public ErlangType getType() {
-    return findNotNullChildByClass(ErlangType.class);
+  public List<ErlangType> getTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
   }
 
   @Override

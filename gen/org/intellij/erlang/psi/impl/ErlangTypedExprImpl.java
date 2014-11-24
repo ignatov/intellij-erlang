@@ -35,8 +35,8 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
 
   @Override
   @Nullable
-  public ErlangTopType getTopType() {
-    return findChildByClass(ErlangTopType.class);
+  public ErlangType getType() {
+    return findChildByClass(ErlangType.class);
   }
 
   @Override

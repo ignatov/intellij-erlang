@@ -16,7 +16,7 @@ public interface ErlangTypeDefinition extends ErlangNamedElement, StubBasedPsiEl
   ErlangQAtom getQAtom();
 
   @Nullable
-  ErlangTopType getTopType();
+  ErlangType getType();
 
   @Nullable
   PsiElement getColonColon();

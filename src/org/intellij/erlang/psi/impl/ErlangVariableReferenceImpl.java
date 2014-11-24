@@ -149,7 +149,7 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
     }
 
     @Override
-    public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
+    public boolean execute(@NotNull PsiElement psiElement, @NotNull ResolveState resolveState) {
       if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_") && !inColonQualified(myElement)) {
         boolean ancestor = PsiTreeUtil.isAncestor(myScopeOwner, psiElement, false);
         if ((ancestor || myForce) && (inArgumentDefinition(psiElement) || inLeftPartOfAssignment(psiElement) || inFunctionTypeArgument(psiElement))) {

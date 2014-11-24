@@ -118,7 +118,6 @@ public interface ErlangTypes {
   IElementType ERL_SPEC_FUN = new ErlangCompositeElementType("ERL_SPEC_FUN");
   IElementType ERL_STRING_LITERAL = new ErlangCompositeElementType("ERL_STRING_LITERAL");
   IElementType ERL_TOP_TYPE = new ErlangCompositeElementType("ERL_TOP_TYPE");
-  IElementType ERL_TOP_TYPE_100_T = new ErlangCompositeElementType("ERL_TOP_TYPE_100_T");
   IElementType ERL_TOP_TYPE_CLAUSE = new ErlangCompositeElementType("ERL_TOP_TYPE_CLAUSE");
   IElementType ERL_TRY_CATCH = new ErlangCompositeElementType("ERL_TRY_CATCH");
   IElementType ERL_TRY_CLAUSE = new ErlangCompositeElementType("ERL_TRY_CLAUSE");
@@ -536,9 +535,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_TOP_TYPE) {
         return new ErlangTopTypeImpl(node);
-      }
-      else if (type == ERL_TOP_TYPE_100_T) {
-        return new ErlangTopType100TImpl(node);
       }
       else if (type == ERL_TOP_TYPE_CLAUSE) {
         return new ErlangTopTypeClauseImpl(node);

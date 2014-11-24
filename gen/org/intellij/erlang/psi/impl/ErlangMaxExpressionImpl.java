@@ -22,6 +22,12 @@ public class ErlangMaxExpressionImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
+  @NotNull
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
+  }
+
+  @Override
   @Nullable
   public ErlangQAtom getQAtom() {
     return findChildByClass(ErlangQAtom.class);

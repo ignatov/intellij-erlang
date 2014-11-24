@@ -33,7 +33,7 @@ public class ErlangIncorrectAritySpecificationInspection extends ErlangInspectio
       int arity = psiArity != null ? ErlangPsiImplUtil.getArity(psiArity) : -1;
       if (arity != -1) {
         for (ErlangTypeSig typeSig : signature.getTypeSigList()) {
-          if (typeSig.getFunType().getFunTypeArguments().getTopTypeList().size() != arity) {
+          if (typeSig.getFunType().getFunTypeArguments().getTypeList().size() != arity) {
             problemsHolder.registerProblem(spec, "Specification has the wrong arity '" + signature.getSpecFun().getText() + "'");
           }
         }

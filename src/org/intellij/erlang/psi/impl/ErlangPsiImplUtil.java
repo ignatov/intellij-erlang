@@ -53,7 +53,9 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.*;
+import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.ErlangStringLiteralEscaper;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.completion.ErlangCompletionContributor;
@@ -408,7 +410,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inFunctionTypeArgument(PsiElement psiElement) {
-    ErlangTopType topType = PsiTreeUtil.getParentOfType(psiElement, ErlangTopType.class);
+    ErlangType topType = PsiTreeUtil.getParentOfType(psiElement, ErlangType.class);
     return PsiTreeUtil.getParentOfType(topType, ErlangFunTypeArguments.class) != null;
   }
 
@@ -1312,7 +1314,7 @@ public class ErlangPsiImplUtil {
     Integer arity = null;
     if (integer != null) arity = getArity(integer);
     ErlangTypeSig sigs = PsiTreeUtil.getNextSiblingOfType(o, ErlangTypeSig.class);
-    if (arity == null && sigs != null) arity = sigs.getFunType().getFunTypeArguments().getTopTypeList().size();
+    if (arity == null && sigs != null) arity = sigs.getFunType().getFunTypeArguments().getTypeList().size();
     return arity;
   }
 
@@ -1374,7 +1376,7 @@ public class ErlangPsiImplUtil {
 
     List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : null;
     ErlangTypeSig first = ContainerUtil.getFirstItem(typeSigList);
-    int arity = first != null ? first.getFunType().getFunTypeArguments().getTopTypeList().size() : 0;
+    int arity = first != null ? first.getFunType().getFunTypeArguments().getTypeList().size() : 0;
 
     return funName + "/" + arity;
   }
@@ -1518,13 +1520,13 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<ErlangTopType> getCallBackSpecArguments(@NotNull ErlangCallbackSpec spec) {
+  public static List<ErlangType> getCallBackSpecArguments(@NotNull ErlangCallbackSpec spec) {
     ErlangFunTypeSigs funTypeSigs = getFunTypeSigs(spec);
     List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
     ErlangTypeSig typeSig = ContainerUtil.getFirstItem(typeSigList);
     ErlangFunType funType = typeSig != null ? typeSig.getFunType() : null;
     ErlangFunTypeArguments arguments = funType != null ? funType.getFunTypeArguments() : null;
-    return arguments != null ? arguments.getTopTypeList() : ContainerUtil.<ErlangTopType>emptyList();
+    return arguments != null ? arguments.getTypeList() : ContainerUtil.<ErlangType>emptyList();
   }
 
   public static boolean isPrivateFunction(@NotNull PsiFile containingFile, @NotNull ErlangFunction function) {

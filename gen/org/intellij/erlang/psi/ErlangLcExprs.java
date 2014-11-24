@@ -8,6 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ErlangLcExprs extends ErlangCompositeElement {
 
   @NotNull
-  List<ErlangExpression> getExpressionList();
+  List<ErlangLcExpression> getLcExpressionList();
 
 }

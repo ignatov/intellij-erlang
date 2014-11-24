@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ErlangFunTypeArguments extends ErlangCompositeElement {
 
   @NotNull
-  List<ErlangTopType> getTopTypeList();
+  List<ErlangType> getTypeList();
 
   @NotNull
   PsiElement getParLeft();

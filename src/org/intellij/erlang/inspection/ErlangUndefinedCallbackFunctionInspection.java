@@ -111,10 +111,10 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     private void addCallbackImplementations(@NotNull Project project, @NotNull ErlangFile file) {
       for (ErlangCallbackSpec spec : myCallbackSpecs) {
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
-        List<ErlangTopType> topTypeList = ErlangPsiImplUtil.getCallBackSpecArguments(spec);
+        List<ErlangType> topTypeList = ErlangPsiImplUtil.getCallBackSpecArguments(spec);
 
         List<String> vars = new LinkedList<String>();
-        for (ErlangTopType type : topTypeList) {
+        for (ErlangType type : topTypeList) {
           ErlangQVar qVar = type.getQVar();
           vars.add(qVar != null ? qVar.getName() : "_");
         }

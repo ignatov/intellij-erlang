@@ -23,6 +23,12 @@ public class ErlangConfigExpressionImpl extends ErlangExpressionImpl implements 
 
   @Override
   @Nullable
+  public ErlangExpression getExpression() {
+    return findChildByClass(ErlangExpression.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangQAtom getQAtom() {
     return findChildByClass(ErlangQAtom.class);
   }

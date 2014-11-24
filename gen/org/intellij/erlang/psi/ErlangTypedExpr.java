@@ -14,7 +14,7 @@ public interface ErlangTypedExpr extends ErlangNamedElement {
   ErlangQAtom getQAtom();
 
   @Nullable
-  ErlangTopType getTopType();
+  ErlangType getType();
 
   @Nullable
   PsiElement getColonColon();

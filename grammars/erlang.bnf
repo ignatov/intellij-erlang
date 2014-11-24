@@ -71,6 +71,7 @@
   name(".*_(expression|comprehension|literal|atomic)")=expression
   name(".*attribute")=attribute
   name(".*type|.*_t")=type
+  extends(".*type|.*_t")=type
   pin(".*(clauses|_exprs|list)(?:_\d.*)?")=1
   pin("config_.*_expression")=1
 
@@ -81,6 +82,8 @@
   elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec")="org.intellij.erlang.ErlangElementTypeFactory.factory"
 
   implements("case_expression|try_expression|receive_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
+  
+  generate=[names="classic"]
 }
 
 forms ::= console_expression | form_with_period *
@@ -246,8 +249,8 @@ type_sig_guard ::= when type_guard_list
 private type_guard_list ::= type_guard (',' type_guard)*
 type_guard ::= q_atom '(' top_type_list ')' | top_type
 private top_type_list ::= top_type (',' top_type)*
-top_type ::= [q_var '::'] top_type_100_t
-top_type_100_t ::= type ['|' top_type_100_t] {pin(".*")=1 extends=type}
+top_type ::= [q_var '::'] type_list
+private type_list ::= type ('|' type)*
 map_type ::= '#' '{' map_entry_type_list? '}' {pin=1 extends=type}
 private map_entry_type_list ::= map_entry_type (',' map_entry_type)* {pin(".*")=1}
 map_entry_type ::= top_type '=>' top_type {pin=2 extends=type}
@@ -263,9 +266,9 @@ type ::=
   | record_like_type
   | record_hash record_ref '{' field_type_list? '}'
   | map_type {pin(".*")=1}
-record_like_type ::= '{' top_type_list? '}' {extends=type}
+record_like_type ::= '{' top_type_list? '}'
 
-int_type ::= '-'? (integer | macros argument_list?) {extends=type}
+int_type ::= '-'? (integer | macros argument_list?)
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {extends=type pin(".*")=1}
 fun_type ::= fun_type_arguments top_type_clause {extends=type pin=1}
 top_type_clause ::= '->' top_type {pin=1}
@@ -275,8 +278,8 @@ field_type ::= q_atom '::' top_type {extends=type pin=1 methods=[getReference]}
 
 binary_type ::= '<<' [bin_base_type | bin_unit_type | bin_base_type_list] '>>' {extends=type pin=1}
 private bin_base_type_list ::= bin_base_type ',' bin_unit_type
-bin_base_type ::= q_var ':' integer {extends=type}
-bin_unit_type ::= q_var ':' q_var '*' integer {extends=type}
+bin_base_type ::= q_var ':' integer
+bin_unit_type ::= q_var ':' q_var '*' integer
 
 attr_val ::= '(' exprs ')' | exprs {name="attribute value"}
 

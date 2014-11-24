@@ -32,7 +32,4 @@ public interface ErlangQVar extends ErlangNamedElement {
   @NotNull
   PsiElement getNameIdentifier();
 
-  @NotNull
-  SearchScope getUseScope();
-
 }
