@@ -61,4 +61,9 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @NotNull
+  public SearchScope getUseScope() {
+    return ErlangPsiImplUtil.getUseScope(this);
+  }
+
 }

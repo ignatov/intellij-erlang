@@ -23,8 +23,8 @@ public class ErlangLcExprsImpl extends ErlangCompositeElementImpl implements Erl
 
   @Override
   @NotNull
-  public List<ErlangLcExpression> getLcExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangLcExpression.class);
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
 }

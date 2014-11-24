@@ -12,7 +12,7 @@ public interface ErlangFieldType extends ErlangType {
   ErlangQAtom getQAtom();
 
   @Nullable
-  ErlangTopType getTopType();
+  ErlangType getType();
 
   @Nullable
   PsiElement getColonColon();

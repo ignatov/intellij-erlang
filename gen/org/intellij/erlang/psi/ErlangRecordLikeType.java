@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ErlangRecordLikeType extends ErlangType {
 
   @NotNull
-  List<ErlangTopType> getTopTypeList();
+  List<ErlangType> getTypeList();
 
   @NotNull
   PsiElement getCurlyLeft();
