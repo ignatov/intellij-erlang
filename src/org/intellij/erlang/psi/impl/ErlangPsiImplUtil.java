@@ -740,7 +740,9 @@ public class ErlangPsiImplUtil {
     ErlangAtom atom = o.getAtom();
     if (atom != null) return getNameIdentifier(atom);
     PsiElement var = o.getVar();
-    return var != null ? var : o;
+    if (var != null) return var;
+    PsiElement uniPattern = o.getUniPattern();
+    return uniPattern != null ? uniPattern : o;
   }
 
   @NotNull
@@ -1225,8 +1227,12 @@ public class ErlangPsiImplUtil {
     else if (macroName.getVar() != null) {
       macroName.getVar().replace(replacement);
     }
+    else {
+      PsiElement uniPattern = macroName.getUniPattern();
+      assert uniPattern != null;
+      uniPattern.replace(replacement); // todo [savenko]: move _ to var
+    }
   }
-
 
   @NotNull
   private static PsiElement createMacroNameReplacement(@NotNull Project project, @NotNull String newName) {
