@@ -18,10 +18,6 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
@@ -34,10 +30,8 @@ import java.util.List;
 public class ErlangR17SyntaxInspection extends ErlangInspectionBase {
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
-    Module module = ModuleUtilCore.findModuleForPsiElement(file);
-    Sdk sdk = module == null ? null : ModuleRootManager.getInstance(module).getSdk();
-    ErlangSdkRelease release = sdk != null ? ErlangSdkType.getRelease(sdk) : null;
-    return release == null || !release.isNewerThan(ErlangSdkRelease.R17);
+    ErlangSdkRelease release = ErlangSdkType.getRelease(file);
+    return release == null || ErlangSdkRelease.V_17_0.isNewerThan(release);
   }
 
   @NotNull

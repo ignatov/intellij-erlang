@@ -16,33 +16,24 @@
 
 package org.intellij.erlang.settings;
 
-import com.intellij.openapi.application.AccessToken;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.*;
-import com.intellij.openapi.roots.libraries.Library;
-import com.intellij.openapi.roots.libraries.LibraryTable;
-import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.TitledSeparator;
-import com.intellij.util.ArrayUtil;
-import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.dialyzer.DialyzerSettings;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
 import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.sdk.ErlangSdkForSmallIdes;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NonNls;
@@ -55,7 +46,7 @@ import java.util.List;
 
 public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
   public static final String ERLANG_RELATED_TOOLS = "Erlang External Tools";
-  public static final String ERLANG_LIBRARY_NAME = "Erlang SDK";
+
   private final Project myProject;
   private JPanel myPanel;
   private TextFieldWithBrowseButton myEmacsPathSelector;
@@ -150,7 +141,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
          !myRebarSettings.getRebarPath().equals(myRebarConfigurationForm.getPath())
       || !myEmacsSettings.getEmacsPath().equals(emacsSelectedPath)
       || !myDialyzerSettings.getCurrentPltPath().equals(myPltPathSelector.getText())
-      || !getErlangSdkPath().equals(mySdkPathSelector.getText());
+      || !StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)).equals(mySdkPathSelector.getText());
   }
 
   @Override
@@ -158,7 +149,9 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myRebarSettings.setRebarPath(myRebarConfigurationForm.getPath());
     myEmacsSettings.setEmacsPath(myEmacsPathSelector.getText());
     myDialyzerSettings.setCurrentPltPath(myPltPathSelector.getText());
-    setUpOrUpdateSdk(mySdkPathSelector.getText());
+    if (ErlangSystemUtil.isSmallIde()) {
+      ErlangSdkForSmallIdes.setUpOrUpdateSdk(myProject, mySdkPathSelector.getText());
+    }
   }
 
   @Override
@@ -166,7 +159,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myRebarConfigurationForm.setPath(myRebarSettings.getRebarPath());
     myEmacsPathSelector.setText(myEmacsSettings.getEmacsPath());
     myPltPathSelector.setText(myDialyzerSettings.getCurrentPltPath());
-    mySdkPathSelector.setText(getErlangSdkPath());
+    mySdkPathSelector.setText(StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)));
     validateEmacsPath();
   }
 
@@ -182,78 +175,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     }
     else {
       myEmacsVersionText.setText("N/A");
-    }
-  }
-
-  @NotNull
-  public String getErlangSdkPath() {
-    return getErlangSdkPath(myProject);
-  }
-
-  @NotNull
-  public static String getErlangSdkPath(@NotNull Project project) {
-    AccessToken token = ApplicationManager.getApplication().acquireReadActionLock();
-    try {
-      LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
-      Library lib = table.getLibraryByName(ERLANG_LIBRARY_NAME);
-      String[] urls = lib == null ? ArrayUtil.EMPTY_STRING_ARRAY : lib.getUrls(OrderRootType.CLASSES);
-      return VfsUtilCore.urlToPath(ObjectUtils.notNull(ArrayUtil.getFirstElement(urls), ""));
-    }
-    finally {
-      token.finish();
-    }
-  }
-  
-  private void setUpOrUpdateSdk(@NotNull final String path) {
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(myProject);
-        Library get = table.getLibraryByName(ERLANG_LIBRARY_NAME);
-        Library lib = get != null ? get : table.createLibrary(ERLANG_LIBRARY_NAME);
-
-        Library.ModifiableModel libraryModel = lib.getModifiableModel();
-        String libUrl = ArrayUtil.getFirstElement(lib.getUrls(OrderRootType.CLASSES));
-        if (libUrl != null) {
-          libraryModel.removeRoot(libUrl, OrderRootType.CLASSES);
-        }
-
-        String url = VfsUtilCore.pathToUrl(path);
-        libraryModel.addRoot(url, OrderRootType.CLASSES);
-        libraryModel.commit();
-        
-        boolean remove = path.isEmpty();
-        if (remove) {
-          updateModules(lib, true);
-          table.removeLibrary(lib);
-        }
-
-        table.getModifiableModel().commit();
-
-        if (!remove) {
-          updateModules(lib, false);
-        }
-      }
-    });
-  }
-
-  private void updateModules(@NotNull Library lib, boolean remove) {
-    Module[] modules = ModuleManager.getInstance(myProject).getModules();
-    for (Module module : modules) {
-      ModifiableRootModel model = ModuleRootManager.getInstance(module).getModifiableModel();
-      if (!remove) {
-        if (model.findLibraryOrderEntry(lib) == null) {
-          LibraryOrderEntry entry = model.addLibraryEntry(lib);
-          entry.setScope(DependencyScope.PROVIDED);
-        }
-      }
-      else {
-        LibraryOrderEntry entry = model.findLibraryOrderEntry(lib);
-        if (entry != null) {
-          model.removeOrderEntry(entry);
-        }
-      }
-      model.commit();
     }
   }
 }

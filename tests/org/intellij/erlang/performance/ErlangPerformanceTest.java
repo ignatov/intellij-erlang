@@ -22,6 +22,7 @@ import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ThrowableRunnable;
 import org.intellij.erlang.highlighting.ErlangHighlightingTestBase;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -36,7 +37,7 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
       }
     };
   }

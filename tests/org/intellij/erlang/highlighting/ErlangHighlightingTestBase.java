@@ -22,6 +22,7 @@ import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.impl.CodeInsightTestFixtureImpl;
 import org.intellij.erlang.inspection.*;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +41,7 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/");
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
       }
     };
   }

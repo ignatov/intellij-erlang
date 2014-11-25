@@ -20,6 +20,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.inspection.ErlangR17SyntaxInspection;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
 public class ErlangR17HighlightingTest extends ErlangHighlightingTestBase {
@@ -28,7 +29,7 @@ public class ErlangR17HighlightingTest extends ErlangHighlightingTestBase {
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk("testData/mockSdk-R17/");
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R17/", ErlangSdkRelease.V_17_0);
       }
     };
   }

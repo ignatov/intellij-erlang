@@ -19,17 +19,16 @@ package org.intellij.erlang.sdk;
 import junit.framework.TestCase;
 
 public class ErlangSdkReleaseTest extends TestCase {
-  public void testNeedCompletion1() throws Exception { assertTrue(ErlangSdkRelease.R15B03.needBifCompletion("empty")); }
-  public void testNeedCompletion2() throws Exception { assertFalse(ErlangSdkRelease.R16A.needBifCompletion("empty")); }
-  public void testNeedCompletion3() throws Exception { assertFalse(ErlangSdkRelease.R16B.needBifCompletion("empty")); }
-  public void testNeedCompletion4() throws Exception { assertTrue(ErlangSdkRelease.R15B03.needBifCompletion("lager")); }
-  public void testNeedCompletion5() throws Exception { assertTrue(ErlangSdkRelease.R16A.needBifCompletion("lager")); }
-  public void testNeedCompletion6() throws Exception { assertTrue(ErlangSdkRelease.R16B.needBifCompletion("lager")); }
+  public void testNeedCompletion1() throws Exception { assertTrue(ErlangSdkRelease.V_R15B02.needBifCompletion("empty")); }
+  public void testNeedCompletion2() throws Exception { assertFalse(ErlangSdkRelease.V_R16A.needBifCompletion("empty")); }
+  public void testNeedCompletion3() throws Exception { assertFalse(ErlangSdkRelease.V_R16B.needBifCompletion("empty")); }
+  public void testNeedCompletion4() throws Exception { assertTrue(ErlangSdkRelease.V_R15B02.needBifCompletion("lager")); }
+  public void testNeedCompletion5() throws Exception { assertTrue(ErlangSdkRelease.V_R16A.needBifCompletion("lager")); }
+  public void testNeedCompletion6() throws Exception { assertTrue(ErlangSdkRelease.V_R16B.needBifCompletion("lager")); }
 
-  public void testReleaseString() throws Exception {
-    assertNotNull(ErlangSdkRelease.getSdkRelease("17"));
-    for (ErlangSdkRelease erlangSdkRelease : ErlangSdkRelease.values()) {
-      assertNotNull(ErlangSdkRelease.getSdkRelease(erlangSdkRelease.name()));
-    }
+  public void testIsNewerThan() {
+    assertTrue(ErlangSdkRelease.V_17_0.isNewerThan(ErlangSdkRelease.V_R16A));
+    assertFalse(ErlangSdkRelease.V_R16A.isNewerThan(ErlangSdkRelease.V_17_0));
+    assertFalse(ErlangSdkRelease.V_17_0.isNewerThan(ErlangSdkRelease.V_17_0));
   }
 }

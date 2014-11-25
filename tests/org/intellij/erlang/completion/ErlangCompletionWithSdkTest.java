@@ -19,6 +19,7 @@ package org.intellij.erlang.completion;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
 public class ErlangCompletionWithSdkTest extends ErlangCompletionTestBase {
@@ -27,7 +28,7 @@ public class ErlangCompletionWithSdkTest extends ErlangCompletionTestBase {
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk("testData/mockSdk-R16B/");
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R16B/", ErlangSdkRelease.V_R16B);
       }
     };
   }  
