@@ -18,6 +18,7 @@ package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.Platform;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
@@ -66,6 +67,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 
 public class ErlangXDebugProcess extends XDebugProcess {
   private final ExecutionEnvironment myExecutionEnvironment;
@@ -313,41 +316,64 @@ public class ErlangXDebugProcess extends XDebugProcess {
   }
 
   private void runDebugTarget() throws ExecutionException {
-    ErlangRunningState runningState = createRunningState();
-    GeneralCommandLine commandLine = new GeneralCommandLine();
-    runningState.setExePath(commandLine);
-    runningState.setWorkDirectory(commandLine);
-    setUpErlangDebuggerCodePath(commandLine);
-    runningState.setCodePath(commandLine);
-    commandLine.addParameters("-sname", "test_node" + System.currentTimeMillis());
-    commandLine.addParameters("-run", "debugnode", "main", myDebuggerNode.getName(), myDebuggerNode.getMessageBoxName());
-    runningState.setErlangFlags(commandLine);
-    runningState.setNoShellMode(commandLine);
-    runningState.setStopErlang(commandLine);
-    Process process = commandLine.createProcess();
-    myErlangProcessHandler = new OSProcessHandler(process, commandLine.getCommandLineString());
-    getSession().getConsoleView().attachToProcess(myErlangProcessHandler);
-    myErlangProcessHandler.startNotify();
-    if (runningState instanceof ErlangRemoteDebugRunningState) {
-      ErlangRemoteDebugRunConfiguration runConfiguration = (ErlangRemoteDebugRunConfiguration) getRunConfiguration();
-      if (StringUtil.isEmptyOrSpaces(runConfiguration.getErlangNode())) {
-        throw new ExecutionException("Bad run configuration: remote Erlang node is not specified.");
+    LOG.debug("Preparing to run debug target.");
+    try {
+      ErlangRunningState runningState = createRunningState();
+      GeneralCommandLine commandLine = new GeneralCommandLine();
+      runningState.setExePath(commandLine);
+      runningState.setWorkDirectory(commandLine);
+      setUpErlangDebuggerCodePath(commandLine);
+      runningState.setCodePath(commandLine);
+      commandLine.addParameters("-sname", "test_node" + System.currentTimeMillis());
+      commandLine.addParameters("-run", "debugnode", "main", myDebuggerNode.getName(), myDebuggerNode.getMessageBoxName());
+      runningState.setErlangFlags(commandLine);
+      runningState.setNoShellMode(commandLine);
+      runningState.setStopErlang(commandLine);
+
+      LOG.debug("Running debugger process. Command line (platform-independent): ");
+      LOG.debug(commandLine.getCommandLineString());
+
+      Process process = commandLine.createProcess();
+      myErlangProcessHandler = new OSProcessHandler(process, commandLine.getCommandLineString());
+      getSession().getConsoleView().attachToProcess(myErlangProcessHandler);
+      myErlangProcessHandler.startNotify();
+
+      LOG.debug("Debugger process started.");
+
+      if (runningState instanceof ErlangRemoteDebugRunningState) {
+        LOG.debug("Initializing remote node debugging.");
+        ErlangRemoteDebugRunConfiguration runConfiguration = (ErlangRemoteDebugRunConfiguration) getRunConfiguration();
+        if (StringUtil.isEmptyOrSpaces(runConfiguration.getErlangNode())) {
+          throw new ExecutionException("Bad run configuration: remote Erlang node is not specified.");
+        }
+        LOG.debug("Remote node: " + runConfiguration.getErlangNode());
+        LOG.debug("Cookie: " + runConfiguration.getCookie());
+        myDebuggerNode.debugRemoteNode(runConfiguration.getErlangNode(), runConfiguration.getCookie());
       }
-      myDebuggerNode.debugRemoteNode(runConfiguration.getErlangNode(), runConfiguration.getCookie());
+      else {
+        LOG.debug("Initializing local debugging.");
+        ErlangRunningState.ErlangEntryPoint entryPoint = runningState.getDebugEntryPoint();
+        LOG.debug("Entry point: " + entryPoint.getModuleName() + ":" + entryPoint.getFunctionName() +
+          "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ")");
+        myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
+      }
+    } catch (ExecutionException e) {
+      LOG.debug("Failed to run debug target.", e);
+      throw e;
     }
-    else {
-      ErlangRunningState.ErlangEntryPoint entryPoint = runningState.getDebugEntryPoint();
-      myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
-    }
+    LOG.debug("Debug target should now be running.");
   }
 
   private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
+    LOG.debug("Setting up debugger environment.");
     try {
       String[] beams = {"debugnode.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
       File tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
+      LOG.debug("Debugger beams will be put to: " + tempDirectory.getPath());
       for (String beam : beams) {
         copyBeamTo(beam, tempDirectory);
       }
+      LOG.debug("Debugger beams were copied successfully.");
       commandLine.addParameters("-pa", tempDirectory.getPath());
     } catch (IOException e) {
       throw new ExecutionException("Failed to setup debugger environment", e);

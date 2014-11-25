@@ -18,7 +18,6 @@ package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.*;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
 import org.intellij.erlang.debugger.node.commands.ErlangDebuggerCommandsProducer;
 import org.intellij.erlang.debugger.node.events.ErlangDebuggerEvent;
 
@@ -28,8 +27,9 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
+
 public class ErlangDebuggerNode {
-  private static final Logger LOG = Logger.getInstance(ErlangDebuggerNode.class);
   private static final String MESSAGE_BOX_NAME = "idea_dbg_box";
   private static final int RECEIVE_TIMEOUT = 50;
 
@@ -47,14 +47,20 @@ public class ErlangDebuggerNode {
   public void startNode() throws ErlangDebuggerNodeException {
     if (myOtpNode != null) return;
     try {
+      LOG.debug("Starting an OTP node.");
       myOtpNode = new OtpNode("idea_dbg_" + System.currentTimeMillis());
+      LOG.debug("We're now running as an OTP node '" + myOtpNode.alive() + "'");
+
       myMessageBox = myOtpNode.createMbox(MESSAGE_BOX_NAME);
-      assert myMessageBox != null;
+      assert myMessageBox != null : "A message box named " + MESSAGE_BOX_NAME + " was already registered on this node!";
+
+      LOG.debug("Accepting messages at mailbox '" + MESSAGE_BOX_NAME + "'");
     } catch (IOException e) {
       String failedToConnectMessage = "Failed to connect to epmd.";
       LOG.debug(failedToConnectMessage, e);
       throw new ErlangDebuggerNodeException(failedToConnectMessage, e);
     }
+    LOG.debug("Starting send/receive loop.");
     ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
       @Override
       public void run() {
@@ -149,17 +155,22 @@ public class ErlangDebuggerNode {
   private void receiveMessage() {
     try {
       OtpErlangObject receivedMessage = myMessageBox.receive(RECEIVE_TIMEOUT);
+      if (receivedMessage == null) return;
+
+      LOG.debug("Message received: " + String.valueOf(receivedMessage));
+
       ErlangDebuggerEvent event = ErlangDebuggerEvent.create(receivedMessage);
-      if (event != null && myEventsListener != null) {
+      boolean messageRecognized = event != null && myEventsListener != null;
+      if (messageRecognized) {
         event.process(this, myEventsListener);
-      } else if (receivedMessage != null) {
-        unsupportedMessage(receivedMessage);
       }
+
+      LOG.debug("Message processed: " + messageRecognized);
     } catch (OtpErlangExit otpErlangExit) {
+      LOG.info("Erlang node exited.", otpErlangExit);
       if (myEventsListener != null) {
         ErlangDebuggerEvent.create(otpErlangExit).process(this, myEventsListener);
       }
-      LOG.info("Erlang node exited.", otpErlangExit);
     } catch (OtpErlangDecodeException e) {
       LOG.debug("Failed to decode received message.", e);
     }
@@ -169,12 +180,11 @@ public class ErlangDebuggerNode {
     if (myRemoteCommandListener == null) return;
     synchronized (myCommandsQueue) {
       while (!myCommandsQueue.isEmpty()) {
-        myMessageBox.send(myRemoteCommandListener, myCommandsQueue.remove().toMessage());
+        OtpErlangTuple message = myCommandsQueue.remove().toMessage();
+        LOG.debug("Sending message: " + message);
+        myMessageBox.send(myRemoteCommandListener, message);
       }
     }
   }
 
-  private static void unsupportedMessage(OtpErlangObject message) {
-    LOG.debug("Unsupported message: " + message.toString());
-  }
 }
