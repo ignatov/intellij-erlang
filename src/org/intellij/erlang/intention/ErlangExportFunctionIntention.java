@@ -45,7 +45,7 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function != null) {
-      ErlangExportFunctionFix.processFunction(project, function);
+      new ErlangExportFunctionFix(false).processFunction(project, function);
     }
   }
 

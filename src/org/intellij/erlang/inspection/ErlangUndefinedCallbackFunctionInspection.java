@@ -139,7 +139,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
         int arity = ErlangPsiImplUtil.getCallBackSpecArguments(spec).size();
         ErlangFunction function = name != null && arity >= 0 ? file.getFunction(name, arity) : null;
         if (function != null && ErlangUnusedFunctionInspection.isUnusedFunction(file, function)) {
-          ErlangExportFunctionFix.processFunction(project, function);
+          new ErlangExportFunctionFix(false).processFunction(project, function);
         }
       }
     }

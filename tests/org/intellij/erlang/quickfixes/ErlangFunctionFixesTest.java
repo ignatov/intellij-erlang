@@ -16,8 +16,13 @@
 
 package org.intellij.erlang.quickfixes;
 
+import com.intellij.psi.PsiFile;
 import org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection;
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
+import org.intellij.erlang.psi.ErlangExport;
+import org.intellij.erlang.psi.ErlangFile;
+
+import java.util.List;
 
 public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   @Override
@@ -44,4 +49,24 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testOneDuplicateExport1() throws Throwable  { doTest("Remove duplicate export"); }
   public void testOneDuplicateExport2() throws Throwable  { doTest("Remove duplicate export"); }
   public void testFewDuplicateExport()  throws Throwable  { doTest("Remove duplicate export"); }
+
+  public void testFewEmpties()            throws Throwable  { doTest("Export function"); }
+  public void testFewNonEmpties1()        throws Throwable  { doTest("Export function"); }
+  public void testFewNonEmpties2()        throws Throwable  { doTest("Export function"); }
+
+  public void testExportsToShowInPopupAllEmpty() {
+    myFixture.configureByFile("without.erl");
+    assertEquals(getExportsToShow(myFixture.getFile()).size(), 0);
+    myFixture.configureByFile("fewEmpties.erl");
+    assertEquals(getExportsToShow(myFixture.getFile()).size(), 0);
+    myFixture.configureByFile("fewNonEmpties1.erl");
+    assertEquals(getExportsToShow(myFixture.getFile()).size(), 2);
+    myFixture.configureByFile("fewNonEmpties2.erl");
+    assertEquals(getExportsToShow(myFixture.getFile()).size(), 2);
+  }
+
+  private List<ErlangExport> getExportsToShow(PsiFile file) {
+    return ErlangExportFunctionFix.getNotEmptyExports(ErlangExportFunctionFix.getExportPsiElements((ErlangFile) file));
+  }
+
 }
