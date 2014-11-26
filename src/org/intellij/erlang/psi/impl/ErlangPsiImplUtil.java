@@ -465,11 +465,6 @@ public class ErlangPsiImplUtil {
     return false;
   }
 
-  //TODO remove this
-  public static boolean isMacros(@NotNull ErlangQVar o) {
-    return o.getName().startsWith("?");
-  }
-
   public static boolean isForceSkipped(@NotNull ErlangQVar o) {
     return o.getName().startsWith("_");
   }

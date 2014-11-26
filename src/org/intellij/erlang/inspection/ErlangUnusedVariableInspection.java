@@ -38,7 +38,7 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
         functionClause.accept(new ErlangRecursiveVisitor() {
           @Override
           public void visitQVar(@NotNull ErlangQVar o) {
-            if (isForceSkipped(o) || isMacros(o) || inMacroCallArguments(o) ||
+            if (isForceSkipped(o) || inMacroCallArguments(o) ||
               !inLeftPartOfAssignment(o) && (!inArgumentDefinition(o) || inArgumentList(o))) {
               return;
             }
