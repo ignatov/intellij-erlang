@@ -19,7 +19,6 @@ package org.intellij.erlang.highlighting;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import org.intellij.erlang.inspection.Erlang17SyntaxInspection;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
@@ -35,8 +34,7 @@ public class Erlang17HighlightingTest extends ErlangHighlightingTestBase {
   }
 
   public void testErlang17SyntaxNoError() {
-    //noinspection unchecked
-    myFixture.enableInspections(Erlang17SyntaxInspection.class);
+    enableErlang17SyntaxInspection();
     doTest();
   }
 }

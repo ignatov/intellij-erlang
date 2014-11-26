@@ -44,7 +44,7 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
           || inDefinitionBeforeArgumentList(o)
           || inLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o)
           || isForceSkipped(o) || inSpecification(o) || inDefine(o)
-          || inCallback(o) || inRecordDefinition(o)) {
+          || inCallback(o) || inRecordDefinition(o) || inMacroCallArguments(o)) {
           return;
         }
         PsiReference reference = o.getReference();

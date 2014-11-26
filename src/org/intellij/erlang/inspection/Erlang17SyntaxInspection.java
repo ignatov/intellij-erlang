@@ -21,6 +21,7 @@ import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +41,7 @@ public class Erlang17SyntaxInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitFunExpression(@NotNull ErlangFunExpression funExpression) {
+        if (ErlangPsiImplUtil.inMacroCallArguments(funExpression)) return;
         ErlangFunClauses funClauses = funExpression.getFunClauses();
         List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : null;
         if (ContainerUtil.isEmpty(funClauseList)) return;
@@ -57,6 +59,7 @@ public class Erlang17SyntaxInspection extends ErlangInspectionBase {
 
       @Override
       public void visitMapExpression(@NotNull ErlangMapExpression mapExpression) {
+        if (ErlangPsiImplUtil.inMacroCallArguments(mapExpression)) return;
         holder.registerProblem(mapExpression, "Maps require Erlang/OTP 17.0");
       }
     };

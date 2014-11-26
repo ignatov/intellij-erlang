@@ -21,6 +21,7 @@ import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFieldFix;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,6 +32,8 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase 
     return new ErlangVisitor() {
       @Override
       public void visitRecordField(@NotNull ErlangRecordField o) {
+        if (ErlangPsiImplUtil.inMacroCallArguments(o)) return;
+
         ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(o, ErlangRecordExpression.class);
         if (recordExpression != null) {
           PsiReference reference = recordExpression.getReferenceInternal();

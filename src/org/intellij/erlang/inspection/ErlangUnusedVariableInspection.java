@@ -38,22 +38,26 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
         functionClause.accept(new ErlangRecursiveVisitor() {
           @Override
           public void visitQVar(@NotNull ErlangQVar o) {
-            if (!isForceSkipped(o) && !isMacros(o) && (inArgumentDefinition(o) && !inArgumentList(o) || inLeftPartOfAssignment(o))) {
-              PsiReference reference = o.getReference();
-              PsiElement resolve = reference != null ? reference.resolve() : null;
-              if (resolve == null) {
-                Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
-                for (PsiReference ref : search) {
-                  PsiElement element = ref.getElement();
-                  if (ErlangPsiImplUtil.fromTheSameCaseExpression(o, element)) {
-                    PsiReference reference1 = element.getReference();
-                    if (reference1 == null || reference1.resolve() == null) continue;
-                  }
-                  return;
-                }
-                problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'", ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());
-              }
+            if (isForceSkipped(o) || isMacros(o) || inMacroCallArguments(o) ||
+              !inLeftPartOfAssignment(o) && (!inArgumentDefinition(o) || inArgumentList(o))) {
+              return;
             }
+
+            PsiReference reference = o.getReference();
+            PsiElement resolve = reference != null ? reference.resolve() : null;
+            if (resolve != null) return;
+
+            Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
+            for (PsiReference ref : search) {
+              PsiElement element = ref.getElement();
+              if (ErlangPsiImplUtil.fromTheSameCaseExpression(o, element)) {
+                PsiReference reference1 = element.getReference();
+                if (reference1 == null || reference1.resolve() == null) continue;
+              }
+              return;
+            }
+
+            problemsHolder.registerProblem(o, "Unused variable " + "'" + o.getText() + "'", ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());
           }
         });
       }

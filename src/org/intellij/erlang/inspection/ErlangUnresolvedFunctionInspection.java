@@ -25,6 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFunctionReferenceImpl;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +38,8 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
+        if (ErlangPsiImplUtil.inMacroCallArguments(o)) return;
+
         PsiReference reference = o.getReference();
         if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
           if (o.getQAtom().getMacros() != null) return;
@@ -74,6 +77,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
 
       @Override
       public void visitFunctionWithArity(@NotNull ErlangFunctionWithArity o) {
+        if (ErlangPsiImplUtil.inMacroCallArguments(o)) return;
         inspect(o, o.getQAtom(), o.getReference());
       }
 

@@ -24,6 +24,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//TODO make this inspection work when using -import attribute for io, io_lib
 public class ErlangIoFormatInspection extends ErlangInspectionBase {
   private static final Pattern CONTROL_SEQUENCE_PATTERN;
   static {
@@ -52,6 +54,8 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitGlobalFunctionCallExpression(@NotNull ErlangGlobalFunctionCallExpression o) {
+        if (ErlangPsiImplUtil.inMacroCallArguments(o)) return;
+
         ErlangFunctionCallExpression expression = o.getFunctionCallExpression();
         List<ErlangExpression> expressionList = expression.getArgumentList().getExpressionList();
         int size = expressionList.size();

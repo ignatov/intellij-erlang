@@ -111,8 +111,11 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
 
   protected void enableUnresolvedMacroInspection() {
     //noinspection unchecked
-    myFixture.enableInspections(
-      ErlangUnresolvedMacrosInspection.class
-    );
+    myFixture.enableInspections(ErlangUnresolvedMacrosInspection.class);
+  }
+
+  protected void enableErlang17SyntaxInspection() {
+    //noinspection unchecked
+    myFixture.enableInspections(Erlang17SyntaxInspection.class);
   }
 }

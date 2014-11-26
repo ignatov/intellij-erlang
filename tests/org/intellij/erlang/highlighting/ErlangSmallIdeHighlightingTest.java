@@ -16,8 +16,6 @@
 
 package org.intellij.erlang.highlighting;
 
-import org.intellij.erlang.inspection.Erlang17SyntaxInspection;
-
 public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
   public ErlangSmallIdeHighlightingTest() {
     super(true);
@@ -39,8 +37,7 @@ public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
   }
 
   public void testErlang17SyntaxError() {
-    //noinspection unchecked
-    myFixture.enableInspections(Erlang17SyntaxInspection.class);
+    enableErlang17SyntaxInspection();
     doTest();
   }
 }

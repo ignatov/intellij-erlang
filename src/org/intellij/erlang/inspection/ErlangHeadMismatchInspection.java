@@ -47,6 +47,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
 
       @Override
       public void visitFunExpression(@NotNull ErlangFunExpression funExpression) {
+        if (ErlangPsiImplUtil.inMacroCallArguments(funExpression)) return;
         checkFunExpression(funExpression, holder);
       }
     };

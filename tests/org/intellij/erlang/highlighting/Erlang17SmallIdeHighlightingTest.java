@@ -18,7 +18,6 @@ package org.intellij.erlang.highlighting;
 
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import org.intellij.erlang.inspection.Erlang17SyntaxInspection;
 import org.intellij.erlang.sdk.ErlangSdkForSmallIdes;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -50,8 +49,7 @@ public class Erlang17SmallIdeHighlightingTest extends ErlangHighlightingTestBase
   }
 
   public void testErlang17SyntaxNoError() {
-    //noinspection unchecked
-    myFixture.enableInspections(Erlang17SyntaxInspection.class);
+    enableErlang17SyntaxInspection();
     doTest();
   }
 }
