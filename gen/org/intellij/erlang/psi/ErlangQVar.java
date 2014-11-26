@@ -11,10 +11,7 @@ import com.intellij.psi.search.SearchScope;
 
 public interface ErlangQVar extends ErlangNamedElement {
 
-  @Nullable
-  PsiElement getUniPattern();
-
-  @Nullable
+  @NotNull
   PsiElement getVar();
 
   @Nullable

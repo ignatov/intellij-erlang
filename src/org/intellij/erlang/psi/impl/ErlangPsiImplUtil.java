@@ -734,11 +734,10 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangMacrosName o) {
     ErlangAtom atom = o.getAtom();
-    if (atom != null) return getNameIdentifier(atom);
-    PsiElement var = o.getVar();
-    if (var != null) return var;
-    PsiElement uniPattern = o.getUniPattern();
-    return uniPattern != null ? uniPattern : o;
+    if (atom != null) {
+      return getNameIdentifier(atom);
+    }
+    return ObjectUtils.notNull(o.getVar(), o);
   }
 
   @NotNull
@@ -1224,9 +1223,7 @@ public class ErlangPsiImplUtil {
       macroName.getVar().replace(replacement);
     }
     else {
-      PsiElement uniPattern = macroName.getUniPattern();
-      assert uniPattern != null;
-      uniPattern.replace(replacement); // todo [savenko]: move _ to var
+      throw new AssertionError("Unexpected PSI structure");
     }
   }
 

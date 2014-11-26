@@ -45,7 +45,7 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
         IElementType tokenType;
         while ((tokenType = lexer.getTokenType()) != null) {
           //TODO process occurrences in string literals and comments
-          if (tokenType == ErlangTypes.ERL_ATOM_NAME || tokenType == ErlangTypes.ERL_VAR || tokenType == ErlangTypes.ERL_UNI_PATTERN) {
+          if (tokenType == ErlangTypes.ERL_ATOM_NAME || tokenType == ErlangTypes.ERL_VAR) {
             int tokenStart = lexer.getTokenStart();
             for (TextRange wordRange : StringUtil.getWordIndicesIn(lexer.getTokenText())) {
               int start = tokenStart + wordRange.getStartOffset();

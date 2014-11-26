@@ -61,7 +61,6 @@
   ARROW           = "->"
   RADIX           = "#"
   QMARK           = "?"
-  UNI_PATTERN     = "_"
   MATCH           = ":="
   ASSOC           = "=>"
 
@@ -90,7 +89,7 @@ private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
 private form_with_period ::= form period {recoverWhile=form_recover pin=1}
 private left period ::= '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
-private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.')
+private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.')
 private form ::=
     is_app_config config_expression
   | function
@@ -113,7 +112,7 @@ atom ::= atom_name | (single_quote atom_name single_quote) {
 }
 
 q_atom ::= atom | macros_arg | macros {methods=[getReference]}
-q_var ::= '_' | var {
+q_var ::= var {
   methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
 }
 macros_arg ::= '?''?' macros_name
@@ -121,7 +120,7 @@ macros ::= '?' macros_name {
   pin=1
   methods = [getReference]
 }
-macros_name ::= atom | var | '_'
+macros_name ::= atom | var
 
 private tuple_recoverer ::= !('}'|',')
 

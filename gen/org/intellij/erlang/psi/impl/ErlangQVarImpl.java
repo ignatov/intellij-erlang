@@ -26,15 +26,9 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
   }
 
   @Override
-  @Nullable
-  public PsiElement getUniPattern() {
-    return findChildByType(ERL_UNI_PATTERN);
-  }
-
-  @Override
-  @Nullable
+  @NotNull
   public PsiElement getVar() {
-    return findChildByType(ERL_VAR);
+    return findNotNullChildByType(ERL_VAR);
   }
 
   @Nullable

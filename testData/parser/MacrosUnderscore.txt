@@ -14,7 +14,7 @@ ERL_FILE
     PsiElement(atom_name)('define')
     PsiElement(()('(')
     ERL_MACROS_NAME
-      PsiElement(_)('_')
+      PsiElement(var)('_')
     PsiElement(,)(',')
     ERL_MACROS_BODY
       ERL_FUNCTION_CALL_EXPRESSION
@@ -63,7 +63,7 @@ ERL_FILE
             ERL_MACROS
               PsiElement(?)('?')
               ERL_MACROS_NAME
-                PsiElement(_)('_')
+                PsiElement(var)('_')
           ERL_ARGUMENT_LIST
             PsiElement(()('(')
             PsiElement())(')')

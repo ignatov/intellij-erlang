@@ -227,7 +227,7 @@ ERL_FILE
             ERL_ARGUMENT_DEFINITION
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
-                  PsiElement(_)('_')
+                  PsiElement(var)('_')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
               ERL_FUNCTION_CALL_EXPRESSION
@@ -393,7 +393,7 @@ ERL_FILE
                           PsiElement(,)(',')
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
-                              PsiElement(_)('_')
+                              PsiElement(var)('_')
                           PsiElement(})('}')
                       ERL_CLAUSE_BODY
                         PsiElement(->)('->')
@@ -408,7 +408,7 @@ ERL_FILE
                           PsiElement({)('{')
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
-                              PsiElement(_)('_')
+                              PsiElement(var)('_')
                           PsiElement(,)(',')
                           ERL_STRING_LITERAL
                             PsiElement(string)('""')

@@ -204,7 +204,6 @@ public interface ErlangTypes {
   IElementType ERL_SINGLE_QUOTE = new ErlangTokenType("single_quote");
   IElementType ERL_STRING = new ErlangTokenType("string");
   IElementType ERL_TRY = new ErlangTokenType("try");
-  IElementType ERL_UNI_PATTERN = new ErlangTokenType("_");
   IElementType ERL_VAR = new ErlangTokenType("var");
   IElementType ERL_WHEN = new ErlangTokenType("when");
   IElementType ERL_XOR = new ErlangTokenType("xor");

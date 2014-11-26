@@ -11,9 +11,6 @@ public interface ErlangMacrosName extends ErlangCompositeElement {
   ErlangAtom getAtom();
 
   @Nullable
-  PsiElement getUniPattern();
-
-  @Nullable
   PsiElement getVar();
 
 }

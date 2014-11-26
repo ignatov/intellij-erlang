@@ -857,13 +857,13 @@ public class ErlangParser implements PsiParser {
   // q_var ':' integer
   public static boolean bin_base_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_base_type")) return false;
-    if (!nextTokenIs(b, "<type>", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<type>");
+    Marker m = enter_section_(b);
     r = q_var(b, l + 1);
     r = r && consumeToken(b, ERL_COLON);
     r = r && consumeToken(b, ERL_INTEGER);
-    exit_section_(b, l, m, ERL_BIN_BASE_TYPE, r, false, null);
+    exit_section_(b, m, ERL_BIN_BASE_TYPE, r);
     return r;
   }
 
@@ -871,7 +871,7 @@ public class ErlangParser implements PsiParser {
   // bin_base_type ',' bin_unit_type
   static boolean bin_base_type_list(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_base_type_list")) return false;
-    if (!nextTokenIs(b, "", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
     r = bin_base_type(b, l + 1);
@@ -993,15 +993,15 @@ public class ErlangParser implements PsiParser {
   // q_var ':' q_var '*' integer
   public static boolean bin_unit_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_unit_type")) return false;
-    if (!nextTokenIs(b, "<type>", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<type>");
+    Marker m = enter_section_(b);
     r = q_var(b, l + 1);
     r = r && consumeToken(b, ERL_COLON);
     r = r && q_var(b, l + 1);
     r = r && consumeToken(b, ERL_OP_AR_MUL);
     r = r && consumeToken(b, ERL_INTEGER);
-    exit_section_(b, l, m, ERL_BIN_UNIT_TYPE, r, false, null);
+    exit_section_(b, m, ERL_BIN_UNIT_TYPE, r);
     return r;
   }
 
@@ -1994,7 +1994,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // !('+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.')
+  // !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.')
   static boolean form_recover(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "form_recover")) return false;
     boolean r;
@@ -2004,7 +2004,7 @@ public class ErlangParser implements PsiParser {
     return r;
   }
 
-  // '+' | '-' | '<<' | '?' | '[' | '_' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.'
+  // '+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.'
   private static boolean form_recover_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "form_recover_0")) return false;
     boolean r;
@@ -2014,7 +2014,6 @@ public class ErlangParser implements PsiParser {
     if (!r) r = consumeToken(b, ERL_BIN_START);
     if (!r) r = consumeToken(b, ERL_QMARK);
     if (!r) r = consumeToken(b, ERL_BRACKET_LEFT);
-    if (!r) r = consumeToken(b, ERL_UNI_PATTERN);
     if (!r) r = consumeToken(b, ERL_CURLY_LEFT);
     if (!r) r = consumeToken(b, ERL_ATOM_NAME);
     if (!r) r = consumeToken(b, ERL_SINGLE_QUOTE);
@@ -2071,6 +2070,7 @@ public class ErlangParser implements PsiParser {
   // fun_name? argument_definition_list clause_guard? clause_body
   public static boolean fun_clause(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_clause")) return false;
+    if (!nextTokenIs(b, "<fun clause>", ERL_PAR_LEFT, ERL_VAR)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, "<fun clause>");
     r = fun_clause_0(b, l + 1);
@@ -2100,6 +2100,7 @@ public class ErlangParser implements PsiParser {
   // fun_clause (';' fun_clause)*
   public static boolean fun_clauses(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_clauses")) return false;
+    if (!nextTokenIs(b, "<fun clauses>", ERL_PAR_LEFT, ERL_VAR)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, "<fun clauses>");
     r = fun_clause(b, l + 1);
@@ -2162,6 +2163,7 @@ public class ErlangParser implements PsiParser {
   // fun_clauses end
   static boolean fun_expression_block(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_expression_block")) return false;
+    if (!nextTokenIs(b, "", ERL_PAR_LEFT, ERL_VAR)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
     r = fun_clauses(b, l + 1);
@@ -2227,11 +2229,11 @@ public class ErlangParser implements PsiParser {
   // fun_name_var
   public static boolean fun_name(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_name")) return false;
-    if (!nextTokenIs(b, "<fun name>", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<fun name>");
+    Marker m = enter_section_(b);
     r = fun_name_var(b, l + 1);
-    exit_section_(b, l, m, ERL_ARGUMENT_DEFINITION, r, false, null);
+    exit_section_(b, m, ERL_ARGUMENT_DEFINITION, r);
     return r;
   }
 
@@ -2239,11 +2241,11 @@ public class ErlangParser implements PsiParser {
   // q_var
   public static boolean fun_name_var(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_name_var")) return false;
-    if (!nextTokenIs(b, "<fun name var>", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<fun name var>");
+    Marker m = enter_section_(b);
     r = q_var(b, l + 1);
-    exit_section_(b, l, m, ERL_MAX_EXPRESSION, r, false, null);
+    exit_section_(b, m, ERL_MAX_EXPRESSION, r);
     return r;
   }
 
@@ -2451,9 +2453,9 @@ public class ErlangParser implements PsiParser {
   // q_var '/' (integer|q_var)
   public static boolean function_with_arity_variables(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_with_arity_variables")) return false;
-    if (!nextTokenIs(b, "<function with arity variables>", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<function with arity variables>");
+    Marker m = enter_section_(b, l, _NONE_, null);
     r = q_var(b, l + 1);
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_OP_AR_DIV));
@@ -3218,14 +3220,13 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // atom | var | '_'
+  // atom | var
   public static boolean macros_name(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_name")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, "<macros name>");
     r = atom(b, l + 1);
     if (!r) r = consumeToken(b, ERL_VAR);
-    if (!r) r = consumeToken(b, ERL_UNI_PATTERN);
     exit_section_(b, l, m, ERL_MACROS_NAME, r, false, null);
     return r;
   }
@@ -3488,9 +3489,9 @@ public class ErlangParser implements PsiParser {
   // q_var ['::' top_type]
   public static boolean model_field(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "model_field")) return false;
-    if (!nextTokenIs(b, "<model field>", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<model field>");
+    Marker m = enter_section_(b, l, _NONE_, null);
     r = q_var(b, l + 1);
     p = r; // pin = 1
     r = r && model_field_1(b, l + 1);
@@ -3819,15 +3820,14 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '_' | var
+  // var
   public static boolean q_var(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "q_var")) return false;
-    if (!nextTokenIs(b, "<q var>", ERL_UNI_PATTERN, ERL_VAR)) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<q var>");
-    r = consumeToken(b, ERL_UNI_PATTERN);
-    if (!r) r = consumeToken(b, ERL_VAR);
-    exit_section_(b, l, m, ERL_Q_VAR, r, false, null);
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_VAR);
+    exit_section_(b, m, ERL_Q_VAR, r);
     return r;
   }
 
@@ -3928,7 +3928,7 @@ public class ErlangParser implements PsiParser {
     boolean r;
     Marker m = enter_section_(b);
     r = q_atom(b, l + 1);
-    if (!r) r = consumeToken(b, ERL_UNI_PATTERN);
+    if (!r) r = consumeToken(b, "_");
     exit_section_(b, m, null, r);
     return r;
   }

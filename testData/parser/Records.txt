@@ -1309,7 +1309,7 @@ ERL_FILE
         PsiElement(::)('::')
         ERL_TYPE
           ERL_Q_VAR
-            PsiElement(_)('_')
+            PsiElement(var)('_')
       PsiElement(,)(',')
       PsiComment(function_doc_comment)('%% XXX: recursive')
       ERL_TYPED_EXPR
@@ -1747,7 +1747,7 @@ ERL_FILE
                       PsiElement(,)(',')
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
-                          PsiElement(_)('_')
+                          PsiElement(var)('_')
                       PsiElement(,)(',')
                       ERL_TUPLE_EXPRESSION
                         PsiElement({)('{')
@@ -1822,11 +1822,11 @@ ERL_FILE
                       PsiElement(,)(',')
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
-                          PsiElement(_)('_')
+                          PsiElement(var)('_')
                       PsiElement(,)(',')
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
-                          PsiElement(_)('_')
+                          PsiElement(var)('_')
                       PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
