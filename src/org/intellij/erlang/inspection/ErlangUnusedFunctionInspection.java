@@ -16,19 +16,24 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Condition;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementVisitor;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
+import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
@@ -42,17 +47,24 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
     return !file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension()) && !file.isExportedAll();
   }
 
-  @Override
-  protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
-    for (ErlangFunction function : file.getFunctions()) {
-      if (isUnusedFunction(file, function)) {
-        problemsHolder.registerProblem(function.getNameIdentifier(),
-          "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",
-          ProblemHighlightType.LIKE_UNUSED_SYMBOL,
-          new ErlangRemoveFunctionFix(),
-          new ErlangExportFunctionFix());
+  @NotNull
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder,
+                                             @NotNull LocalInspectionToolSession session,
+                                             final boolean isOnTheFly) {
+    return new ErlangVisitor() {
+      @Override
+      public void visitFile(final PsiFile file) {
+        for (ErlangFunction function : ((ErlangFile) file).getFunctions()) {
+          if (isUnusedFunction((ErlangFile) file, function)) {
+            holder.registerProblem(function.getNameIdentifier(),
+              "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",
+              ProblemHighlightType.LIKE_UNUSED_SYMBOL,
+              new ErlangRemoveFunctionFix(),
+              new ErlangExportFunctionFix(isOnTheFly));
+          }
+        }
       }
-    }
+    };
   }
 
   public static boolean isUnusedFunction(@NotNull ErlangFile file, @NotNull final ErlangFunction function) {

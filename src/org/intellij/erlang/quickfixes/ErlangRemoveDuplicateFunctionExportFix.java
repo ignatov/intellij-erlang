@@ -46,6 +46,7 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
       if (export == null) continue;
       ErlangExportFunctions exportFunctions = export.getExportFunctions();
       if (exportFunctions == null) continue;
+      if (exportFunctions.getChildren().length == 0) continue;
       StringBuilder newExport = new StringBuilder();
       for (ErlangExportFunction ef : exportFunctions.getExportFunctionList()) {
         if (ef == function || !ef.getText().equals(function.getText())) {

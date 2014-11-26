@@ -43,7 +43,7 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   @Override
   public final PsiElementVisitor buildVisitor(@NotNull ProblemsHolder holder, boolean isOnTheFly, @NotNull LocalInspectionToolSession session) {
     ErlangFile file = ObjectUtils.tryCast(session.getFile(), ErlangFile.class);
-    return file != null && canRunOn(file) ? buildErlangVisitor(holder, session) : DUMMY_VISITOR;
+    return file != null && canRunOn(file) ? buildErlangVisitor(holder, session, isOnTheFly) : DUMMY_VISITOR;
   }
 
   @NotNull
@@ -63,13 +63,20 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   }
 
   @NotNull
-  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder,
+                                             @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
       @Override
       public void visitFile(PsiFile file) {
         checkFile((ErlangFile)file, holder);
       }
     };
+  }
+
+  @NotNull
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder,
+                                             @NotNull LocalInspectionToolSession session, boolean isOnTheFly) {
+    return buildErlangVisitor(holder, session);
   }
 
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
