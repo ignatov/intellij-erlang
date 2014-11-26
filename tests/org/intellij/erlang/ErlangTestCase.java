@@ -60,7 +60,8 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangParserTest.class);
     suite.addTestSuite(ErlangAppParserTest.class);
     suite.addTestSuite(ErlangHighlightingTest.class);
-    suite.addTestSuite(ErlangR17HighlightingTest.class);
+    suite.addTestSuite(Erlang17HighlightingTest.class);
+    suite.addTestSuite(Erlang17SmallIdeHighlightingTest.class);
     suite.addTestSuite(ErlangSmallIdeHighlightingTest.class);
     suite.addTestSuite(ErlangFormattingTest.class);
     suite.addTestSuite(ErlangAutoIndentTest.class);

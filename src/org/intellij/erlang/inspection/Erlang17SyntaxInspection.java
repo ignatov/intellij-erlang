@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class ErlangR17SyntaxInspection extends ErlangInspectionBase {
+public class Erlang17SyntaxInspection extends ErlangInspectionBase {
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
     ErlangSdkRelease release = ErlangSdkType.getRelease(file);

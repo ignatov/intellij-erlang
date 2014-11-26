@@ -197,6 +197,7 @@ public class ErlangSdkType extends SdkType {
   @TestOnly
   @NotNull
   public static Sdk createMockSdk(@NotNull String sdkHome, @NotNull ErlangSdkRelease version) {
+    getInstance().mySdkHomeToReleaseCache.put(sdkHome, version); // we'll not try to detect sdk version in tests environment
     Sdk sdk = new ProjectJdkImpl(getDefaultSdkName(sdkHome, version), getInstance());
     SdkModificator sdkModificator = sdk.getSdkModificator();
     sdkModificator.setHomePath(sdkHome);

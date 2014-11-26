@@ -78,7 +78,7 @@ public abstract class ErlangSdkForSmallIdes {
         LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
         Library lib = table.getLibraryByName(LIBRARY_NAME);
         String[] urls = lib == null ? ArrayUtil.EMPTY_STRING_ARRAY : lib.getUrls(OrderRootType.CLASSES);
-        return ArrayUtil.getFirstElement(urls);
+        return VfsUtilCore.urlToPath(ArrayUtil.getFirstElement(urls));
       }
     });
   }
