@@ -46,11 +46,10 @@ public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
     };
   }
 
-  private static void process(@NotNull PsiElement o, @NotNull ProblemsHolder problemsHolder) {
-    if (ErlangPsiImplUtil.inMacroCallArguments(o)) return;
+  private void process(@NotNull PsiElement o, @NotNull ProblemsHolder problemsHolder) {
     PsiReference ref = o.getReference();
     if (ref == null || ref.resolve() == null) {
-      problemsHolder.registerProblem(o, "Unresolved record " + "'" + o.getText() + "'", new ErlangIntroduceRecordFix());
+      registerProblem(problemsHolder, o, "Unresolved record " + "'" + o.getText() + "'", new ErlangIntroduceRecordFix());
     }
   }
 }

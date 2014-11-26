@@ -21,12 +21,14 @@ import com.intellij.codeInspection.*;
 import com.intellij.lang.Commenter;
 import com.intellij.lang.LanguageCommenters;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -141,6 +143,18 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   
   protected String getSuppressId() {
     return getShortName().replace("Inspection", "");
+  }
+
+  protected void registerProblem(@NotNull ProblemsHolder holder, @NotNull PsiElement target, @NotNull String text,
+                                 LocalQuickFix... fixes) {
+    registerProblem(holder, target, text, null, null, fixes);
+  }
+
+  protected void registerProblem(@NotNull ProblemsHolder holder,@NotNull PsiElement target, @NotNull String text,
+                                 @Nullable TextRange range, @Nullable ProblemHighlightType severity, LocalQuickFix... fixes) {
+    severity = ErlangPsiImplUtil.inMacroCallArguments(target) ? ProblemHighlightType.WEAK_WARNING :
+      ObjectUtils.notNull(severity, ProblemHighlightType.GENERIC_ERROR_OR_WARNING);
+    holder.registerProblem(holder.getManager().createProblemDescriptor(target, range, text, severity, false, fixes));
   }
 
   public static class ErlangSuppressInspectionFix extends AbstractSuppressByNoInspectionCommentFix {

@@ -20,11 +20,10 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -54,48 +53,40 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitGlobalFunctionCallExpression(@NotNull ErlangGlobalFunctionCallExpression o) {
-        if (ErlangPsiImplUtil.inMacroCallArguments(o)) return;
-
         ErlangFunctionCallExpression expression = o.getFunctionCallExpression();
         List<ErlangExpression> expressionList = expression.getArgumentList().getExpressionList();
         int size = expressionList.size();
 
         if (size < 2) return;
 
-        PsiReference moduleReference = o.getModuleRef().getReference();
-        PsiElement resolve = moduleReference != null ? moduleReference.resolve() : null;
+        PsiReference moduleRef = o.getModuleRef().getReference();
+        ErlangModule module = ObjectUtils.tryCast(moduleRef != null ? moduleRef.resolve() : null, ErlangModule.class);
+        if (module == null || !MODULE_NAMES.contains(module.getName())) return;
 
-        if (resolve instanceof ErlangModule) {
-          if (MODULE_NAMES.contains(((ErlangModule) resolve).getName())) {
-            PsiReference reference = expression.getReference();
-            PsiElement function = reference != null ? reference.resolve() : null;
-            if (function instanceof ErlangFunction) {
-              if (FUNCTION_NAMES.contains(((ErlangFunction) function).getName())) {
-                List<ErlangExpression> reverse = ContainerUtil.reverse(expressionList);
-                ErlangExpression args = reverse.get(0);
-                ErlangExpression str = reverse.get(1);
+        PsiReference ref = expression.getReference();
+        ErlangFunction function = ObjectUtils.tryCast(ref != null ? ref.resolve() : null, ErlangFunction.class);
+        if (function == null || !FUNCTION_NAMES.contains(function.getName())) return;
 
-                int strLen = str.getText().length();
-                if (str instanceof ErlangStringLiteral && strLen >= 2) {
-                  String formatString = str.getText().substring(1, strLen - 1);
-                  int expectedArgumentsCount;
-                  try {
-                    expectedArgumentsCount = getExpectedFormatArgsCount(formatString);
-                  } catch (InvalidControlSequenceException e) {
-                    int start = e.getInvalidSequenceStartIdx() + 1;
-                    holder.registerProblem(str, TextRange.create(start, str.getTextLength() - 1), "Invalid control sequence");
-                    return;
-                  }
-                  if (args instanceof ErlangListExpression) {
-                    int passedArgumentsCount = ((ErlangListExpression) args).getExpressionList().size();
-                    if (expectedArgumentsCount != passedArgumentsCount) {
-                      holder.registerProblem(str, "Wrong number of arguments in format call, should be " + expectedArgumentsCount);
-                    }
-                  }
-                }
-              }
-            }
-          }
+        List<ErlangExpression> reverse = ContainerUtil.reverse(expressionList);
+        ErlangListExpression args = ObjectUtils.tryCast(reverse.get(0), ErlangListExpression.class);
+        ErlangStringLiteral formatLiteral = ObjectUtils.tryCast(reverse.get(1), ErlangStringLiteral.class);
+        String formatString = formatLiteral != null ? formatLiteral.getString().getText() : null;
+        if (formatString == null || formatString.length() < 2) return;
+
+
+        int expectedArgumentsCount;
+        try {
+          expectedArgumentsCount = getExpectedFormatArgsCount(formatString);
+        } catch (InvalidControlSequenceException e) {
+          registerProblem(holder, formatLiteral, "Invalid control sequence",
+            TextRange.create(e.getInvalidSequenceStartIdx(), formatString.length() - 1), null);
+          return;
+        }
+
+        int passedArgumentsCount = args != null ? args.getExpressionList().size() : -1;
+        if (passedArgumentsCount >= 0 && expectedArgumentsCount != passedArgumentsCount) {
+          String problemDescription = "Wrong number of arguments in format call, should be " + expectedArgumentsCount;
+          registerProblem(holder, formatLiteral, problemDescription);
         }
       }
     };

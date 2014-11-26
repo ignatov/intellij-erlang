@@ -41,7 +41,6 @@ public class Erlang17SyntaxInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitFunExpression(@NotNull ErlangFunExpression funExpression) {
-        if (ErlangPsiImplUtil.inMacroCallArguments(funExpression)) return;
         ErlangFunClauses funClauses = funExpression.getFunClauses();
         List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : null;
         if (ContainerUtil.isEmpty(funClauseList)) return;
@@ -50,7 +49,7 @@ public class Erlang17SyntaxInspection extends ErlangInspectionBase {
           public boolean process(ErlangFunClause funClause) {
             ErlangArgumentDefinition funName = funClause.getArgumentDefinition();
             if (funName != null) {
-              holder.registerProblem(funName, "Named funs require Erlang/OTP 17.0");
+              registerProblem(holder, funName, "Named funs require Erlang/OTP 17.0");
             }
             return true;
           }
@@ -59,8 +58,7 @@ public class Erlang17SyntaxInspection extends ErlangInspectionBase {
 
       @Override
       public void visitMapExpression(@NotNull ErlangMapExpression mapExpression) {
-        if (ErlangPsiImplUtil.inMacroCallArguments(mapExpression)) return;
-        holder.registerProblem(mapExpression, "Maps require Erlang/OTP 17.0");
+        registerProblem(holder, mapExpression, "Maps require Erlang/OTP 17.0");
       }
     };
   }

@@ -44,12 +44,12 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
           || inDefinitionBeforeArgumentList(o)
           || inLeftPartOfAssignment(o) || inAtomAttribute(o)
           || isForceSkipped(o) || inSpecification(o) || inDefine(o)
-          || inCallback(o) || inRecordDefinition(o) || inMacroCallArguments(o)) {
+          || inCallback(o) || inRecordDefinition(o)) {
           return;
         }
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          holder.registerProblem(o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
+          registerProblem(holder, o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
         }
       }
     };
