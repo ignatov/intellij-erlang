@@ -52,8 +52,10 @@ public class ErlangDebuggerNode {
       LOG.debug("We're now running as an OTP node '" + myOtpNode.alive() + "'");
 
       myMessageBox = myOtpNode.createMbox(MESSAGE_BOX_NAME);
-      assert myMessageBox != null : "A message box named " + MESSAGE_BOX_NAME + " was already registered on this node!";
-
+      if (myMessageBox == null) {
+        String message = "A message box named " + MESSAGE_BOX_NAME + " was already registered on this node!";
+        throw new ErlangDebuggerNodeException(message);
+      }
       LOG.debug("Accepting messages at mailbox '" + MESSAGE_BOX_NAME + "'");
     } catch (IOException e) {
       String failedToConnectMessage = "Failed to connect to epmd.";
