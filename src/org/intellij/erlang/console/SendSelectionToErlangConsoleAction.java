@@ -33,21 +33,21 @@ public class SendSelectionToErlangConsoleAction extends AnAction {
     DataContext dataContext = actionEvent.getDataContext();
     PsiFile psiFile = CommonDataKeys.PSI_FILE.getData(dataContext);
     if (!(psiFile instanceof ErlangFile)) {
-      presentation.setEnabled(false);
+      presentation.setEnabledAndVisible(false);
       return;
     }
     Editor editor = CommonDataKeys.EDITOR.getData(dataContext);
     if (editor == null || editor.getSelectionModel().getSelectedText() == null) {
-      presentation.setEnabled(false);
+      presentation.setEnabledAndVisible(false);
       return;
     }
     Project project = editor.getProject();
     if (project == null) {
-      presentation.setEnabled(false);
+      presentation.setEnabledAndVisible(false);
       return;
     }
     ErlangConsoleView consoleView = ErlangConsoleViewDirectory.getInstance().getConsole(project);
-    presentation.setEnabled(consoleView != null && consoleView.isRunning());
+    presentation.setEnabledAndVisible(consoleView != null && consoleView.isRunning());
   }
 
   @Override
