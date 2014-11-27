@@ -29,7 +29,7 @@ public class SendSelectionToErlangConsoleAction extends AnAction {
   public void update(@NotNull AnActionEvent actionEvent) {
     Presentation presentation = actionEvent.getPresentation();
     presentation.setIcon(ErlangIcons.ERLANG_CONSOLE);
-    presentation.setVisible(true);
+    presentation.setEnabledAndVisible(true);
     DataContext dataContext = actionEvent.getDataContext();
     PsiFile psiFile = CommonDataKeys.PSI_FILE.getData(dataContext);
     if (!(psiFile instanceof ErlangFile)) {
