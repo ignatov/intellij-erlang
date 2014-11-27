@@ -21,7 +21,7 @@ import com.intellij.execution.console.LanguageConsoleImpl;
 import com.intellij.execution.console.LanguageConsoleViewImpl;
 import com.intellij.execution.process.ConsoleHistoryModel;
 import com.intellij.execution.process.ProcessHandler;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
@@ -78,7 +78,7 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
   }
 
   public void append(@NotNull final String text) {
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+    WriteCommandAction.runWriteCommandAction(getProject(), new Runnable() {
       public void run() {
         Document document = getConsole().getCurrentEditor().getDocument();
         document.insertString(document.getTextLength(), text);
