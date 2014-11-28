@@ -75,19 +75,21 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
     if (erlFunctionCall != null) {
       PsiReference reference = erlFunctionCall.getReference();
-      PsiElement resolve = reference != null ? reference.resolve() : null;
       List<ErlangFunctionClause> clauses = new ArrayList<ErlangFunctionClause>();
-      if (resolve instanceof ErlangFunction) {
-        List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
-        clauses.addAll(clauseList);
-      }
-      else if (reference instanceof PsiPolyVariantReference) {
+      if (reference instanceof PsiPolyVariantReference) {
         ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
         for (ResolveResult result : resolveResults) {
           PsiElement element = result.getElement();
           if (element instanceof ErlangFunction) {
             clauses.addAll(((ErlangFunction) element).getFunctionClauseList());
           }
+        }
+      }
+      if (clauses.isEmpty()) {
+        PsiElement resolve = reference != null ? reference.resolve() : null;
+        if (resolve instanceof ErlangFunction) {
+          List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
+          clauses.addAll(clauseList);
         }
       }
       if (clauses.size() > 0) {
