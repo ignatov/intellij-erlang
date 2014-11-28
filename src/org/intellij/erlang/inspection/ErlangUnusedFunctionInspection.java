@@ -21,13 +21,11 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Condition;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
@@ -48,9 +46,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   }
 
   @NotNull
-  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder,
-                                             @NotNull LocalInspectionToolSession session,
-                                             final boolean isOnTheFly) {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
       @Override
       public void visitFile(final PsiFile file) {
@@ -60,7 +56,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
               "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'",
               ProblemHighlightType.LIKE_UNUSED_SYMBOL,
               new ErlangRemoveFunctionFix(),
-              new ErlangExportFunctionFix(isOnTheFly));
+              new ErlangExportFunctionFix(function));
           }
         }
       }
