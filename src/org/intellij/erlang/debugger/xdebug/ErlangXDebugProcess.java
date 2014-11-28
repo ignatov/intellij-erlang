@@ -18,11 +18,11 @@ package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.intellij.execution.ExecutionException;
-import com.intellij.execution.Platform;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.editor.Document;
@@ -70,98 +70,111 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 
-public class ErlangXDebugProcess extends XDebugProcess {
+public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebuggerEventListener {
   private final ExecutionEnvironment myExecutionEnvironment;
-  @NotNull private ErlangDebuggerNode myDebuggerNode;
-  private ProcessHandler myErlangProcessHandler;
+  private final ErlangRunningState myRunningState;
+  private final ErlangDebuggerNode myDebuggerNode;
+  private final OSProcessHandler myErlangProcessHandler;
+
   private XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>>();
 
-  public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) {
+  public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
     super(session);
+
     session.setPauseActionSupported(false);
+
     myExecutionEnvironment = env;
-    myDebuggerNode = new ErlangDebuggerNode();
-    setDebuggerNodeListener();
+    myRunningState = getRunConfiguration().getState(myExecutionEnvironment.getExecutor(), myExecutionEnvironment);
+    if (myRunningState == null) {
+      throw new ExecutionException("Failed to execute a run configuration.");
+    }
+
+    try {
+      //TODO add the debugger node to disposable hierarchy (we may fail to initialize session so the session will not be stopped!)
+      myDebuggerNode = new ErlangDebuggerNode(this);
+    } catch (ErlangDebuggerNodeException e) {
+      throw new ExecutionException(e);
+    }
+
+    // it's important to set modules to interpret before running debug target
     setModulesToInterpret();
+    //TODO split running debug target and debugger process spawning
+    myErlangProcessHandler = runDebugTarget();
   }
 
-  private void setDebuggerNodeListener() {
-    myDebuggerNode.setListener(new ErlangDebuggerEventListener() {
-      @Override
-      public void debuggerStarted() {
-        getSession().reportMessage("Debug process started", MessageType.INFO);
-      }
+  @Override
+  public void debuggerStarted() {
+    getSession().reportMessage("Debug process started", MessageType.INFO);
+  }
 
-      @Override
-      public void failedToInterpretModules(String nodeName, List<String> modules) {
-        String messagePrefix = "Failed to interpret modules on node " + nodeName + ": ";
-        String modulesString = StringUtil.join(modules, ", ");
-        String messageSuffix = ".\nMake sure they are compiled with debug_info option, their sources are located in same directory as .beam files, modules are available on the node.";
-        String message = messagePrefix + modulesString + messageSuffix;
-        getSession().reportMessage(message, MessageType.WARNING);
-      }
+  @Override
+  public void failedToInterpretModules(String nodeName, List<String> modules) {
+    String messagePrefix = "Failed to interpret modules on node " + nodeName + ": ";
+    String modulesString = StringUtil.join(modules, ", ");
+    String messageSuffix = ".\nMake sure they are compiled with debug_info option, their sources are located in same directory as .beam files, modules are available on the node.";
+    String message = messagePrefix + modulesString + messageSuffix;
+    getSession().reportMessage(message, MessageType.WARNING);
+  }
 
-      @Override
-      public void failedToDebugRemoteNode(String nodeName, String error) {
-        String message = "Failed to debug remote node '" + nodeName + "'. Details: " + error;
-        getSession().reportMessage(message, MessageType.ERROR);
-      }
+  @Override
+  public void failedToDebugRemoteNode(String nodeName, String error) {
+    String message = "Failed to debug remote node '" + nodeName + "'. Details: " + error;
+    getSession().reportMessage(message, MessageType.ERROR);
+  }
 
-      @Override
-      public void unknownMessage(String messageText) {
-        getSession().reportMessage("Unknown message received: " + messageText, MessageType.WARNING);
-      }
+  @Override
+  public void unknownMessage(String messageText) {
+    getSession().reportMessage("Unknown message received: " + messageText, MessageType.WARNING);
+  }
 
-      @Override
-      public void failedToSetBreakpoint(String module, int line, String errorMessage) {
-        ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(getSession().getProject(), module, line);
-        XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);
-        if (breakpoint != null) {
-          getSession().updateBreakpointPresentation(breakpoint, AllIcons.Debugger.Db_invalid_breakpoint, errorMessage);
-        }
-      }
+  @Override
+  public void failedToSetBreakpoint(String module, int line, String errorMessage) {
+    ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(getSession().getProject(), module, line);
+    XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);
+    if (breakpoint != null) {
+      getSession().updateBreakpointPresentation(breakpoint, AllIcons.Debugger.Db_invalid_breakpoint, errorMessage);
+    }
+  }
 
-      @Override
-      public void breakpointIsSet(String module, int line) {
-      }
+  @Override
+  public void breakpointIsSet(String module, int line) {
+  }
 
+  @Override
+  public void breakpointReached(final OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) {
+    ErlangProcessSnapshot processInBreakpoint = ContainerUtil.find(snapshots, new Condition<ErlangProcessSnapshot>() {
       @Override
-      public void breakpointReached(final OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) {
-        ErlangProcessSnapshot processInBreakpoint = ContainerUtil.find(snapshots, new Condition<ErlangProcessSnapshot>() {
-          @Override
-          public boolean value(ErlangProcessSnapshot erlangProcessSnapshot) {
-            return erlangProcessSnapshot.getPid().equals(pid);
-          }
-        });
-        assert processInBreakpoint != null;
-        ErlangSourcePosition breakPosition = ErlangSourcePosition.create(getSession().getProject(), processInBreakpoint);
-        XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);
-        ErlangSuspendContext suspendContext = new ErlangSuspendContext(getSession().getProject(), pid, snapshots);
-        if (breakpoint == null) {
-          getSession().positionReached(suspendContext);
-        }
-        else {
-          boolean shouldSuspend = getSession().breakpointReached(breakpoint, null, suspendContext);
-          if (!shouldSuspend) {
-            resume();
-          }
-        }
-      }
-
-      @Override
-      public void debuggerStopped() {
-        getSession().reportMessage("Debug process stopped", MessageType.INFO);
-        getSession().stop();
-      }
-
-      @Nullable
-      private XLineBreakpoint<ErlangLineBreakpointProperties> getLineBreakpoint(@Nullable ErlangSourcePosition sourcePosition) {
-        return sourcePosition != null ? myPositionToLineBreakpointMap.get(sourcePosition) : null;
+      public boolean value(ErlangProcessSnapshot erlangProcessSnapshot) {
+        return erlangProcessSnapshot.getPid().equals(pid);
       }
     });
+    assert processInBreakpoint != null;
+    ErlangSourcePosition breakPosition = ErlangSourcePosition.create(getSession().getProject(), processInBreakpoint);
+    XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);
+    ErlangSuspendContext suspendContext = new ErlangSuspendContext(getSession().getProject(), pid, snapshots);
+    if (breakpoint == null) {
+      getSession().positionReached(suspendContext);
+    }
+    else {
+      boolean shouldSuspend = getSession().breakpointReached(breakpoint, null, suspendContext);
+      if (!shouldSuspend) {
+        resume();
+      }
+    }
+  }
+
+  @Override
+  public void debuggerStopped() {
+    getSession().reportMessage("Debug process stopped", MessageType.INFO);
+    getSession().stop();
+  }
+
+  @Nullable
+  private XLineBreakpoint<ErlangLineBreakpointProperties> getLineBreakpoint(@Nullable ErlangSourcePosition sourcePosition) {
+    return sourcePosition != null ? myPositionToLineBreakpointMap.get(sourcePosition) : null;
   }
 
   private void setModulesToInterpret() {
@@ -190,11 +203,10 @@ public class ErlangXDebugProcess extends XDebugProcess {
   @NotNull
   @Override
   public ExecutionConsole createConsole() {
-    try {
-      return createRunningState().createConsoleView(myExecutionEnvironment.getExecutor());
-    } catch (ExecutionException e) {
-      return super.createConsole();
-    }
+    ConsoleView consoleView = myRunningState.createConsoleView(myExecutionEnvironment.getExecutor());
+    consoleView.attachToProcess(getProcessHandler());
+    myErlangProcessHandler.startNotify();
+    return consoleView;
   }
 
   @NotNull
@@ -253,19 +265,6 @@ public class ErlangXDebugProcess extends XDebugProcess {
     //TODO implement me
   }
 
-  @Override
-  public void sessionInitialized() {
-    super.sessionInitialized();
-    try {
-      initErlangDebuggerNode();
-      runDebugTarget();
-    } catch (ErlangDebuggerNodeException e) {
-      failDebugProcess(e.getMessage());
-    } catch (ExecutionException e) {
-      failDebugProcess(e.getMessage());
-    }
-  }
-
   @Nullable
   @Override
   protected ProcessHandler doGetProcessHandler() {
@@ -292,55 +291,36 @@ public class ErlangXDebugProcess extends XDebugProcess {
     return sourcePosition != null ? ErlangSourcePosition.create(sourcePosition) : null;
   }
 
-  private void failDebugProcess(String message) {
-    getSession().reportMessage("Failed to start debugger. Reason: " + message, MessageType.ERROR);
-    getSession().stop();
-  }
-
-  private void initErlangDebuggerNode() throws ErlangDebuggerNodeException {
-    myDebuggerNode.startNode();
-  }
-
   private ErlangRunConfigurationBase<?> getRunConfiguration() {
     ErlangRunConfigurationBase<?> runConfig = (ErlangRunConfigurationBase) getSession().getRunProfile();
     assert runConfig != null;
     return runConfig;
   }
 
-  private ErlangRunningState createRunningState() throws ExecutionException {
-    ErlangRunningState state = getRunConfiguration().getState(myExecutionEnvironment.getExecutor(), myExecutionEnvironment);
-    if (state == null) {
-      throw new ExecutionException("Failed to execute a run configuration.");
-    }
-    return state;
-  }
-
-  private void runDebugTarget() throws ExecutionException {
+  @NotNull
+  private OSProcessHandler runDebugTarget() throws ExecutionException {
+    OSProcessHandler erlangProcessHandler;
     LOG.debug("Preparing to run debug target.");
     try {
-      ErlangRunningState runningState = createRunningState();
       GeneralCommandLine commandLine = new GeneralCommandLine();
-      runningState.setExePath(commandLine);
-      runningState.setWorkDirectory(commandLine);
+      myRunningState.setExePath(commandLine);
+      myRunningState.setWorkDirectory(commandLine);
       setUpErlangDebuggerCodePath(commandLine);
-      runningState.setCodePath(commandLine);
-      commandLine.addParameters("-sname", "test_node" + System.currentTimeMillis());
-      commandLine.addParameters("-run", "debugnode", "main", myDebuggerNode.getName(), myDebuggerNode.getMessageBoxName());
-      runningState.setErlangFlags(commandLine);
-      runningState.setNoShellMode(commandLine);
-      runningState.setStopErlang(commandLine);
+      myRunningState.setCodePath(commandLine);
+      commandLine.addParameters("-run", "debugnode", "main", String.valueOf(myDebuggerNode.getLocalDebuggerPort()));
+      myRunningState.setErlangFlags(commandLine);
+      myRunningState.setNoShellMode(commandLine);
+      myRunningState.setStopErlang(commandLine);
 
       LOG.debug("Running debugger process. Command line (platform-independent): ");
       LOG.debug(commandLine.getCommandLineString());
 
       Process process = commandLine.createProcess();
-      myErlangProcessHandler = new OSProcessHandler(process, commandLine.getCommandLineString());
-      getSession().getConsoleView().attachToProcess(myErlangProcessHandler);
-      myErlangProcessHandler.startNotify();
+      erlangProcessHandler = new OSProcessHandler(process, commandLine.getCommandLineString());
 
       LOG.debug("Debugger process started.");
 
-      if (runningState instanceof ErlangRemoteDebugRunningState) {
+      if (myRunningState instanceof ErlangRemoteDebugRunningState) {
         LOG.debug("Initializing remote node debugging.");
         ErlangRemoteDebugRunConfiguration runConfiguration = (ErlangRemoteDebugRunConfiguration) getRunConfiguration();
         if (StringUtil.isEmptyOrSpaces(runConfiguration.getErlangNode())) {
@@ -352,7 +332,7 @@ public class ErlangXDebugProcess extends XDebugProcess {
       }
       else {
         LOG.debug("Initializing local debugging.");
-        ErlangRunningState.ErlangEntryPoint entryPoint = runningState.getDebugEntryPoint();
+        ErlangRunningState.ErlangEntryPoint entryPoint = myRunningState.getDebugEntryPoint();
         LOG.debug("Entry point: " + entryPoint.getModuleName() + ":" + entryPoint.getFunctionName() +
           "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ")");
         myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
@@ -362,12 +342,13 @@ public class ErlangXDebugProcess extends XDebugProcess {
       throw e;
     }
     LOG.debug("Debug target should now be running.");
+    return erlangProcessHandler;
   }
 
   private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
     LOG.debug("Setting up debugger environment.");
     try {
-      String[] beams = {"debugnode.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
+      String[] beams = {"debugnode.beam", "remote_debugger.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
       File tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
       LOG.debug("Debugger beams will be put to: " + tempDirectory.getPath());
       for (String beam : beams) {

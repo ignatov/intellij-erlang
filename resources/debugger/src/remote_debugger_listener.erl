@@ -93,7 +93,7 @@ run_debugger(Module, Function, ArgsString) ->
       %%TODO report error
       exit(normal);
     ArgsList ->
-      spawn_opt(Module, Function, ArgsList, [monitor, link])
+      spawn_opt(Module, Function, ArgsList, [monitor])
   end.
 
 step_into(Pid) ->

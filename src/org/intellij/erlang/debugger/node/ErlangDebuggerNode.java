@@ -17,66 +17,51 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.*;
+import com.intellij.concurrency.AsyncFutureFactory;
+import com.intellij.concurrency.AsyncFutureResult;
 import com.intellij.openapi.application.ApplicationManager;
 import org.intellij.erlang.debugger.node.commands.ErlangDebuggerCommandsProducer;
 import org.intellij.erlang.debugger.node.events.ErlangDebuggerEvent;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 
 public class ErlangDebuggerNode {
-  private static final String MESSAGE_BOX_NAME = "idea_dbg_box";
   private static final int RECEIVE_TIMEOUT = 50;
 
-  private OtpNode myOtpNode;
-  @SuppressWarnings("FieldAccessedSynchronizedAndUnsynchronized")
-  private OtpMbox myMessageBox;
-  private AtomicBoolean myStopped = new AtomicBoolean(false);
-  @SuppressWarnings("FieldAccessedSynchronizedAndUnsynchronized")
-  private OtpErlangPid myRemoteCommandListener;
   private OtpErlangPid myLastSuspendedPid;
 
   private final Queue<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand> myCommandsQueue = new LinkedList<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand>();
-  private ErlangDebuggerEventListener myEventsListener;
+  private int myLocalDebuggerPort = -1;
+  private final ErlangDebuggerEventListener myEventListener;
+  private AtomicBoolean myStopped = new AtomicBoolean(false);
 
-  public void startNode() throws ErlangDebuggerNodeException {
-    if (myOtpNode != null) return;
+  public ErlangDebuggerNode(@NotNull ErlangDebuggerEventListener eventListener) throws ErlangDebuggerNodeException {
+    myEventListener = eventListener;
+    LOG.debug("Starting debugger server.");
     try {
-      LOG.debug("Starting an OTP node.");
-      myOtpNode = new OtpNode("idea_dbg_" + System.currentTimeMillis());
-      LOG.debug("We're now running as an OTP node '" + myOtpNode.alive() + "'");
-
-      myMessageBox = myOtpNode.createMbox(MESSAGE_BOX_NAME);
-      if (myMessageBox == null) {
-        String message = "A message box named " + MESSAGE_BOX_NAME + " was already registered on this node!";
-        throw new ErlangDebuggerNodeException(message);
-      }
-      LOG.debug("Accepting messages at mailbox '" + MESSAGE_BOX_NAME + "'");
-    } catch (IOException e) {
-      String failedToConnectMessage = "Failed to connect to epmd.";
-      LOG.debug(failedToConnectMessage, e);
-      throw new ErlangDebuggerNodeException(failedToConnectMessage, e);
+      myLocalDebuggerPort = runDebuggerServer().get();
+    } catch (Throwable e) {
+      throw new ErlangDebuggerNodeException("Failed to start debugger server", e);
     }
-    LOG.debug("Starting send/receive loop.");
-    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-      @Override
-      public void run() {
-        loop();
-      }
-    });
   }
 
-  public String getName() {
-    return myOtpNode.alive();
-  }
-
-  public String getMessageBoxName() {
-    return myMessageBox.getName();
+  public int getLocalDebuggerPort() {
+    return myLocalDebuggerPort;
   }
 
   public void stop() {
@@ -87,17 +72,8 @@ public class ErlangDebuggerNode {
     return myStopped.get();
   }
 
-  public void setRemoteCommandListener(OtpErlangPid pid) throws OtpErlangExit {
-    myMessageBox.link(pid);
-    myRemoteCommandListener = pid;
-  }
-
   public void processSuspended(OtpErlangPid pid) {
     myLastSuspendedPid = pid;
-  }
-
-  public void setListener(ErlangDebuggerEventListener listener) {
-    myEventsListener = listener;
   }
 
   public void setBreakpoint(String module, int line) {
@@ -142,51 +118,157 @@ public class ErlangDebuggerNode {
     }
   }
 
-  private void loop() {
+  private Future<Integer> runDebuggerServer() {
+    final AsyncFutureResult<Integer> portFuture = AsyncFutureFactory.getInstance().createAsyncFutureResult();
+    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+      @Override
+      public void run() {
+        runDebuggerServerImpl(portFuture);
+      }
+    });
+    return portFuture;
+  }
+
+  private void runDebuggerServerImpl(AsyncFutureResult<Integer> portFuture) {
+    try {
+      Exception cachedException = null;
+      LOG.debug("Opening a server socket.");
+      ServerSocket serverSocket = new ServerSocket(0);
+      try {
+        portFuture.set(serverSocket.getLocalPort());
+
+        LOG.debug("Listening on port " + serverSocket.getLocalPort() + ".");
+
+        Socket debuggerSocket = serverSocket.accept();
+        try {
+          LOG.debug("Debugger connected, closing the server socket.");
+          serverSocket.close();
+          myEventListener.debuggerStarted();
+          LOG.debug("Starting send/receive loop.");
+          serverLoop(debuggerSocket);
+        } catch (Exception e) {
+          cachedException = e;
+          throw e;
+        } finally {
+          debuggerSocket.close();
+        }
+      } catch (Exception e) {
+        if (cachedException != null) {
+          if (e.getCause() == null) {
+            e.initCause(cachedException);
+          }
+          else {
+            LOG.debug("Lost exception.", cachedException);
+          }
+        }
+        throw e;
+      } finally {
+        serverSocket.close();
+      }
+    } catch (Exception th) {
+      if (!portFuture.isDone()) {
+        portFuture.setException(th);
+      }
+      else {
+        LOG.debug(th);
+      }
+    }
+  }
+
+  private void serverLoop(@NotNull Socket debuggerSocket) throws IOException {
+    debuggerSocket.setSoTimeout(RECEIVE_TIMEOUT);
+
     while (!isStopped()) {
       if (!isStopped()) {
-        receiveMessage();
+        receiveMessage(debuggerSocket);
       }
       if (!isStopped()) {
-        sendMessages();
+        sendMessages(debuggerSocket);
       }
-    }
-    myOtpNode.close();
-  }
-
-  private void receiveMessage() {
-    try {
-      OtpErlangObject receivedMessage = myMessageBox.receive(RECEIVE_TIMEOUT);
-      if (receivedMessage == null) return;
-
-      LOG.debug("Message received: " + String.valueOf(receivedMessage));
-
-      ErlangDebuggerEvent event = ErlangDebuggerEvent.create(receivedMessage);
-      boolean messageRecognized = event != null && myEventsListener != null;
-      if (messageRecognized) {
-        event.process(this, myEventsListener);
-      }
-
-      LOG.debug("Message processed: " + messageRecognized);
-    } catch (OtpErlangExit otpErlangExit) {
-      LOG.info("Erlang node exited.", otpErlangExit);
-      if (myEventsListener != null) {
-        ErlangDebuggerEvent.create(otpErlangExit).process(this, myEventsListener);
-      }
-    } catch (OtpErlangDecodeException e) {
-      LOG.debug("Failed to decode received message.", e);
     }
   }
 
-  private void sendMessages() {
-    if (myRemoteCommandListener == null) return;
+  private void receiveMessage(@NotNull Socket socket) {
+    OtpErlangObject receivedMessage = receive(socket);
+    if (receivedMessage == null) return;
+
+    LOG.debug("Message received: " + String.valueOf(receivedMessage));
+
+    ErlangDebuggerEvent event = ErlangDebuggerEvent.create(receivedMessage);
+    boolean messageRecognized = event != null;
+    if (messageRecognized) {
+      event.process(this, myEventListener);
+    }
+
+    LOG.debug("Message processed: " + messageRecognized);
+  }
+
+  private void sendMessages(@NotNull Socket socket) {
     synchronized (myCommandsQueue) {
       while (!myCommandsQueue.isEmpty()) {
         OtpErlangTuple message = myCommandsQueue.remove().toMessage();
         LOG.debug("Sending message: " + message);
-        myMessageBox.send(myRemoteCommandListener, message);
+        send(socket, message);
       }
     }
   }
 
+  private static void send(@NotNull Socket socket, @NotNull OtpErlangObject message) {
+    try {
+      OutputStream out = socket.getOutputStream();
+
+      byte[] bytes = new OtpOutputStream(message).toByteArray();
+      byte[] sizeBytes = ByteBuffer.allocate(4).putInt(1 + bytes.length).array();
+
+      out.write(sizeBytes);
+      out.write(OtpExternal.versionTag);
+      out.write(bytes);
+    } catch (IOException e) {
+      LOG.debug(e);
+    }
+  }
+
+  @Nullable
+  private static OtpErlangObject receive(@NotNull Socket socket) {
+    try {
+      InputStream in = socket.getInputStream();
+
+      int objectSize = readObjectSize(in);
+      if (objectSize == -1) return null;
+
+      byte[] objectBytes = readBytes(in, objectSize);
+      return objectBytes == null ? null : decode(objectBytes);
+    } catch (IOException e) {
+      LOG.debug(e);
+    }
+    return null;
+  }
+
+  private static int readObjectSize(InputStream in) {
+    byte[] bytes = readBytes(in, 4);
+    return bytes != null ? ByteBuffer.wrap(bytes).getInt() : -1;
+  }
+
+  @Nullable
+  private static byte[] readBytes(InputStream in, int size) {
+    try {
+      byte[] buffer = new byte[size];
+      return size == in.read(buffer) ? buffer : null;
+    } catch (SocketTimeoutException ignore) {
+      return null;
+    } catch (IOException e) {
+      LOG.debug(e);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static OtpErlangObject decode(byte[] bytes) {
+    try {
+      return new OtpInputStream(bytes).read_any();
+    } catch (OtpErlangDecodeException e) {
+      LOG.debug("Failed to decode an erlang term.", e);
+      return null;
+    }
+  }
 }
