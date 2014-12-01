@@ -23,6 +23,7 @@ reader_loop(Socket, Listener) ->
     {ok, Packet} ->
       Message = erlang:binary_to_term(Packet),
       Listener ! Message;
-    _ -> ignore
+    {error, Reason} ->
+      erlang:exit({recv_failed, Reason})
   end,
   reader_loop(Socket, Listener).
