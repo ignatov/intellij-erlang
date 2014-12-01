@@ -7,6 +7,9 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangMaxExpression extends ErlangExpression {
 
+  @NotNull
+  List<ErlangExpression> getExpressionList();
+
   @Nullable
   ErlangQAtom getQAtom();
 

@@ -92,7 +92,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitBitType(@NotNull ErlangBitType o) {
-    visitCompositeElement(o);
+    visitType(o);
   }
 
   public void visitCallbackSpec(@NotNull ErlangCallbackSpec o) {
@@ -149,7 +149,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitExportType(@NotNull ErlangExportType o) {
-    visitCompositeElement(o);
+    visitType(o);
   }
 
   public void visitExportTypeAttribute(@NotNull ErlangExportTypeAttribute o) {
@@ -443,10 +443,6 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitTopType(@NotNull ErlangTopType o) {
-    visitCompositeElement(o);
-  }
-
-  public void visitTopType100T(@NotNull ErlangTopType100T o) {
     visitType(o);
   }
 

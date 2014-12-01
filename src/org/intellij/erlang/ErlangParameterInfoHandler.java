@@ -33,7 +33,10 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangArgumentList, Object> {
   @Override
@@ -72,19 +75,21 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
     if (erlFunctionCall != null) {
       PsiReference reference = erlFunctionCall.getReference();
-      PsiElement resolve = reference != null ? reference.resolve() : null;
       List<ErlangFunctionClause> clauses = new ArrayList<ErlangFunctionClause>();
-      if (resolve instanceof ErlangFunction) {
-        List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
-        clauses.addAll(clauseList);
-      }
-      else if (reference instanceof PsiPolyVariantReference) {
+      if (reference instanceof PsiPolyVariantReference) {
         ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
         for (ResolveResult result : resolveResults) {
           PsiElement element = result.getElement();
           if (element instanceof ErlangFunction) {
             clauses.addAll(((ErlangFunction) element).getFunctionClauseList());
           }
+        }
+      }
+      if (clauses.isEmpty()) {
+        PsiElement resolve = reference != null ? reference.resolve() : null;
+        if (resolve instanceof ErlangFunction) {
+          List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
+          clauses.addAll(clauseList);
         }
       }
       if (clauses.size() > 0) {
@@ -103,13 +108,11 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
         if (erlGlobalFunctionCall != null) {
           ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
-          if (moduleRef != null) {
-            String moduleName = moduleRef.getText();
-            String functionName = erlFunctionCall.getName();
-            List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.<ErlangBifDescriptor>emptyList();
-            context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs(moduleName, functionName), moduleInfo)));
-            context.showHint(args, args.getTextRange().getStartOffset(), this);
-          }
+          String moduleName = moduleRef.getText();
+          String functionName = erlFunctionCall.getName();
+          List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.<ErlangBifDescriptor>emptyList();
+          context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs(moduleName, functionName), moduleInfo)));
+          context.showHint(args, args.getTextRange().getStartOffset(), this);
         }
         else {
           String name = erlFunctionCall.getName();
@@ -165,25 +168,24 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
 
       List<ErlangArgumentDefinition> args = ((ErlangFunctionClause) p).getArgumentDefinitionList().getArgumentDefinitionList();
 
-      @Nullable ErlangFunTypeArguments arguments = argsRef.get();
-      List<ErlangTopType> topTypeList = arguments == null ? ContainerUtil.<ErlangTopType>emptyList() : arguments.getTopTypeList();
-      boolean typesAvailable = topTypeList.size() == args.size();
+      ErlangFunTypeArguments arguments = argsRef.get();
+      List<ErlangType> typeList = arguments == null ? ContainerUtil.<ErlangType>emptyList() : arguments.getTypeList();
+      boolean typesAvailable = typeList.size() == args.size();
 
       for (int i = 0; i < args.size(); i++) {
         if (i != 0) builder.append(", ");
         if (index == i) start = builder.length();
         builder.append(args.get(i).getExpression().getText().replaceAll(" ", "").trim());
         if (typesAvailable) {
-          ErlangTopType topType = topTypeList.get(i);
-          ErlangType type = topType.getType();
-          final ErlangQVar var = type.getQVar();
+          ErlangType type = typeList.get(i);
+          final ErlangQVar var = type != null ? type.getQVar() : null;
           if (var != null) {
             if (specification != null) {
               final Ref<ErlangType> itemTypeRef = Ref.create();
               specification.accept(new ErlangRecursiveVisitor() {
                 @Override
                 public void visitTypeGuard(@NotNull ErlangTypeGuard o) {
-                  ErlangTopType item = ContainerUtil.getFirstItem(o.getTopTypeList());
+                  ErlangType item = ContainerUtil.getFirstItem(o.getTypeList());
                   ErlangQVar qVar = item == null ? null : item.getQVar();
                   PsiReference reference = qVar == null ? null : qVar.getReference();
                   PsiElement resolve = reference == null ? null : reference.resolve();
@@ -198,7 +200,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
               }
             }
           }
-          else {
+          else if (type != null) {
             builder.append(" :: ");
             builder.append(type.getText());
           }

@@ -42,14 +42,14 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
       public void visitQVar(@NotNull ErlangQVar o) {
         if (inArgumentDefinition(o) && !inArgumentList(o)
           || inDefinitionBeforeArgumentList(o)
-          || inLeftPartOfAssignment(o) || inAtomAttribute(o) || isMacros(o)
+          || inLeftPartOfAssignment(o) || inAtomAttribute(o)
           || isForceSkipped(o) || inSpecification(o) || inDefine(o)
           || inCallback(o) || inRecordDefinition(o)) {
           return;
         }
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          holder.registerProblem(o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
+          registerProblem(holder, o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
         }
       }
     };

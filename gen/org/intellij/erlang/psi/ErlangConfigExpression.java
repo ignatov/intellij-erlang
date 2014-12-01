@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface ErlangConfigExpression extends ErlangExpression {
 
   @Nullable
+  ErlangExpression getExpression();
+
+  @Nullable
   ErlangQAtom getQAtom();
 
   @Nullable

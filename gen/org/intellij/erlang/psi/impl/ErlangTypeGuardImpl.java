@@ -29,8 +29,8 @@ public class ErlangTypeGuardImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @NotNull
-  public List<ErlangTopType> getTopTypeList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
+  public List<ErlangType> getTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
   }
 
   @Override

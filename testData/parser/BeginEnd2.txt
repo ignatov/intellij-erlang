@@ -22,7 +22,7 @@ ERL_FILE
                 ERL_ATOM
                   PsiElement(atom_name)('test')
             PsiElement(,)(',')
-            PsiErrorElement:'#', '+', '-', <<, <atom>, <expression>, <q var>, '[', atom_name, begin, bnot, case, char, float, fun, if, integer, not, receive, string, try or '{' expected, got 'bar'
+            PsiErrorElement:'#', '+', '-', <<, <atom>, <expression>, '[', atom_name, begin, bnot, case, char, float, fun, if, integer, not, receive, string, try, var or '{' expected, got 'bar'
               <empty list>
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE

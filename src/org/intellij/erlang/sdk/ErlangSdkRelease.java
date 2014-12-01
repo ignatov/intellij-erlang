@@ -16,61 +16,55 @@
 
 package org.intellij.erlang.sdk;
 
-import com.intellij.util.text.VersionComparatorUtil;
+import com.sun.xml.internal.ws.util.VersionUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum ErlangSdkRelease {
-  R17   ("6.0"),
-  R16B03("5.10.4"),
-  R16B02("5.10.3"),
-  R16B01("5.10.2"),
-  R16B  ("5.10.1"),
-  R16A  ("5.10"  ),
-  R15B03("5.9.3" ),
-  R15B02("5.9.2" ),
-  R15B01("5.9.1" ),
-  R15B  ("5.9"   ),
-  R14B04("5.8.5" ),
-  R14B03("5.8.4" ),
-  R14B02("5.8.3" ),
-  R14B01("5.8.2" ),
-  R14B  ("5.8.1" ),
-  R14A  ("5.8"   ),
-  R13B04("5.7.5" ),
-  R13B03("5.7.4" ),
-  R13B02("5.7.3" ),
-  R13B01("5.7.2" ),
-  R13B  ("5.7.1" ),
-  R13A  ("5.7"   );
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-  @NotNull
-  private final String myVersion;
+public final class ErlangSdkRelease {
+  public static final ErlangSdkRelease V_R15B02 = new ErlangSdkRelease("R15B02", "5.9.2");
+  public static final ErlangSdkRelease V_R16A = new ErlangSdkRelease("R16A", "5.10");
+  public static final ErlangSdkRelease V_R16B = new ErlangSdkRelease("R16B", "5.10.1");
+  public static final ErlangSdkRelease V_17_0 = new ErlangSdkRelease("17", "6.0");
 
-  private ErlangSdkRelease(@NotNull String version) {
-    myVersion = version;
+  private static final Pattern VERSION_PATTERN = Pattern.compile("Erlang/OTP (\\S+) \\[erts-(\\S+)\\]");
+
+  private final String myOtpRelease;
+  private final String myErtsVersion;
+
+  public ErlangSdkRelease(@NotNull String otpRelease, @NotNull String ertsVersion) {
+    myOtpRelease = otpRelease;
+    myErtsVersion = ertsVersion;
   }
 
   @NotNull
-  public String getVersion() {
-    return myVersion;
+  public String getOtpRelease() {
+    return myOtpRelease;
+  }
+
+  @NotNull
+  public String getErtsVersion() {
+    return myErtsVersion;
+  }
+
+  public boolean isNewerThan(@NotNull ErlangSdkRelease other) {
+    return VersionUtil.compare(myErtsVersion, other.myErtsVersion) > 0;
   }
 
   public boolean needBifCompletion(@NotNull String moduleName) {
-    return VersionComparatorUtil.compare(myVersion, "5.10") < 0  || "lager".equals(moduleName) || moduleName.isEmpty();
+    return V_R16A.isNewerThan(this) || "lager".equals(moduleName) || moduleName.isEmpty();
   }
 
-  public boolean isNewerThan(@NotNull ErlangSdkRelease release) {
-    return VersionComparatorUtil.compare(myVersion, release.getVersion()) >= 0;
+  @Override
+  public String toString() {
+    return "Erlang/OTP " + getOtpRelease() + " [erts-" + getErtsVersion() + "]";
   }
 
   @Nullable
-  public static ErlangSdkRelease getSdkRelease(@Nullable String releaseString) {
-    if (releaseString == null) return null;
-    try {
-      return valueOf(releaseString.startsWith("R") ? releaseString : "R" + releaseString);
-    } catch (IllegalArgumentException e) {
-      return null;
-    }
+  static ErlangSdkRelease fromString(@Nullable String versionString) {
+    Matcher m = versionString != null ? VERSION_PATTERN.matcher(versionString) : null;
+    return m != null && m.matches() ? new ErlangSdkRelease(m.group(1), m.group(2)) : null;
   }
 }

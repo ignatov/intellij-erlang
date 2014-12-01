@@ -822,7 +822,7 @@ ERL_FILE
                         PsiElement(|)('|')
                         ERL_MAX_EXPRESSION
                           ERL_Q_VAR
-                            PsiElement(_)('_')
+                            PsiElement(var)('_')
                         PsiElement(])(']')
                       PsiElement(=)('=')
                       ERL_MAX_EXPRESSION
@@ -2137,7 +2137,7 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
-              PsiElement(_)('_')
+              PsiElement(var)('_')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
           ERL_MAX_EXPRESSION
@@ -2383,12 +2383,12 @@ ERL_FILE
         ERL_ARGUMENT_DEFINITION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
-              PsiElement(_)('_')
+              PsiElement(var)('_')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
           ERL_MAX_EXPRESSION
             ERL_Q_VAR
-              PsiElement(_)('_')
+              PsiElement(var)('_')
         PsiElement(,)(',')
         ERL_ARGUMENT_DEFINITION
           ERL_MAX_EXPRESSION
@@ -2432,7 +2432,7 @@ ERL_FILE
               PsiElement(,)(',')
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
-                  PsiElement(_)('_')
+                  PsiElement(var)('_')
               PsiElement(})('}')
             PsiElement(|)('|')
             ERL_MAX_EXPRESSION
@@ -2549,7 +2549,7 @@ ERL_FILE
               PsiElement(,)(',')
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
-                  PsiElement(_)('_')
+                  PsiElement(var)('_')
               PsiElement(})('}')
             PsiElement(|)('|')
             ERL_MAX_EXPRESSION
@@ -2859,7 +2859,7 @@ ERL_FILE
                   ERL_BIN_ELEMENT
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
-                        PsiElement(_)('_')
+                        PsiElement(var)('_')
                     PsiElement(:)(':')
                     ERL_MAX_EXPRESSION
                       PsiElement(integer)('32')
@@ -5840,7 +5840,7 @@ ERL_FILE
             ERL_BIN_ELEMENT
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
-                  PsiElement(_)('_')
+                  PsiElement(var)('_')
               PsiElement(:)(':')
               ERL_MAX_EXPRESSION
                 PsiElement(integer)('12')
@@ -5870,7 +5870,7 @@ ERL_FILE
             ERL_BIN_ELEMENT
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
-                  PsiElement(_)('_')
+                  PsiElement(var)('_')
               ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
                 ERL_BIT_TYPE
@@ -6761,7 +6761,7 @@ ERL_FILE
               ERL_BIN_ELEMENT
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
-                    PsiElement(_)('_')
+                    PsiElement(var)('_')
                 PsiElement(:)(':')
                 ERL_MAX_EXPRESSION
                   PsiElement(integer)('32')
@@ -6868,7 +6868,7 @@ ERL_FILE
               ERL_ARGUMENT_DEFINITION
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
-                    PsiElement(_)('_')
+                    PsiElement(var)('_')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 ERL_MAX_EXPRESSION
@@ -7358,7 +7358,7 @@ ERL_FILE
             ERL_BIN_ELEMENT
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
-                  PsiElement(_)('_')
+                  PsiElement(var)('_')
               PsiElement(:)(':')
               ERL_MAX_EXPRESSION
                 PsiElement(integer)('32')
@@ -7718,7 +7718,7 @@ ERL_FILE
                     ERL_ARGUMENT_DEFINITION
                       ERL_MAX_EXPRESSION
                         ERL_Q_VAR
-                          PsiElement(_)('_')
+                          PsiElement(var)('_')
                     PsiElement(<-)('<-')
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
@@ -7796,7 +7796,7 @@ ERL_FILE
                 ERL_ARGUMENT_DEFINITION
                   ERL_MAX_EXPRESSION
                     ERL_Q_VAR
-                      PsiElement(_)('_')
+                      PsiElement(var)('_')
                 PsiElement(<-)('<-')
                 ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                   ERL_MODULE_REF

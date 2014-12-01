@@ -30,8 +30,8 @@ public class ErlangFieldTypeImpl extends ErlangTypeImpl implements ErlangFieldTy
 
   @Override
   @Nullable
-  public ErlangTopType getTopType() {
-    return findChildByClass(ErlangTopType.class);
+  public ErlangType getType() {
+    return findChildByClass(ErlangType.class);
   }
 
   @Override

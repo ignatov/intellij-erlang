@@ -64,15 +64,13 @@ STRING_BAD1 = \" ({CHAR} | \') *
 StringLiteral = {STRING_BAD1} \"
 
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
-NameChars = {NameChar}+
+NameChars = {NameChar}*
 
 QuotedCharacter = \\' | {EscapeSequence}  | [^'\\] /* [a-zA-Z0-9#_.@,;:!?/&%$+*~\^-] */
 QuotedAtomName = {QuotedCharacter}+
 AtomName = ({ErlangLowercase} {NameChar}*) | ''
 
-Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars}?)
-
-UniversalPattern = _
+Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
 %state IN_QUOTES
 
@@ -135,7 +133,6 @@ UniversalPattern = _
 
 <YYINITIAL> {IntegerLiteral}              { return ERL_INTEGER; }
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
-<YYINITIAL> {UniversalPattern}            { return ERL_UNI_PATTERN; }
 
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }

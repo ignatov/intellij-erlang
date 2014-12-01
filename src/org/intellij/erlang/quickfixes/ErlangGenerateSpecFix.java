@@ -62,11 +62,11 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     if (!(containingFile instanceof ErlangFile)) return;
     ErlangFile file = (ErlangFile) containingFile;
     Project project = function.getProject();
-    PsiElement spec = createSpecTemplate(function, file, project);
+    ErlangAttribute spec = createSpecTemplate(function, file, project);
     runSpecTemplateEditor(editor, spec);
   }
 
-  private static void runSpecTemplateEditor(final Editor editor, final PsiElement spec) {
+  private static void runSpecTemplateEditor(final Editor editor, final ErlangAttribute attr) {
     if (ApplicationManager.getApplication().isUnitTestMode()) return;
     ApplicationManager.getApplication().invokeLater(new Runnable() {
       @Override
@@ -77,9 +77,10 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
             ApplicationManager.getApplication().runWriteAction(new Runnable() {
               @Override
               public void run() {
-                TemplateBuilder templateBuilder = TemplateBuilderFactory.getInstance().createTemplateBuilder(spec);
-                Collection<ErlangTopType> types = PsiTreeUtil.findChildrenOfType(spec, ErlangTopType.class);
-                for (ErlangTopType type : types) {
+                TemplateBuilder templateBuilder = TemplateBuilderFactory.getInstance().createTemplateBuilder(attr);
+                ErlangFunType funType = PsiTreeUtil.findChildOfType(attr, ErlangFunType.class);
+                Collection<ErlangType> types = PsiTreeUtil.findChildrenOfType(funType, ErlangType.class);
+                for (ErlangType type : types) {
                   templateBuilder.replaceElement(type, type.getText());
                 }
                 templateBuilder.run(editor, false);
@@ -91,16 +92,11 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     });
   }
 
-  private static PsiElement createSpecTemplate(ErlangFunction function, ErlangFile file, Project project) {
-    StringBuilder specText = new StringBuilder();
-    specText.append(function.getName())
-            .append('(').append(computeArgsTypeSpecs(function)).append(')')
-            .append(" -> ")
-            .append(getTypeString(computeReturnType(function)))
-            .append('.');
-    PsiElement spec = file.addBefore(ErlangElementFactory.createSpecFromText(project, specText.toString()), function);
+  private static ErlangAttribute createSpecTemplate(ErlangFunction function, ErlangFile file, Project project) {
+    String text = function.getName() + '(' + computeArgsTypeSpecs(function) + ')' + " -> " + getTypeString(computeReturnType(function)) + '.';
+    PsiElement spec = file.addBefore(ErlangElementFactory.createSpecFromText(project, text), function);
     file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n"), function);
-    return spec;
+    return (ErlangAttribute) spec;
   }
 
   private static String computeArgsTypeSpecs(ErlangFunction function) {

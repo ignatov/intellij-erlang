@@ -8,14 +8,10 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.SearchScope;
-import org.intellij.erlang.psi.impl.ErlangQVarImpl;
 
 public interface ErlangQVar extends ErlangNamedElement {
 
-  @Nullable
-  PsiElement getUniPattern();
-
-  @Nullable
+  @NotNull
   PsiElement getVar();
 
   @Nullable

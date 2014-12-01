@@ -20,6 +20,7 @@ import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.Convertor;
 import org.intellij.erlang.ErlangTypes;
@@ -175,8 +176,7 @@ public abstract class ErlangExpressionType {
     for (ErlangTypeSig typeSig : signature.getTypeSigList()) {
       ErlangFunType funType = typeSig.getFunType();
       ErlangTopTypeClause typeClause = funType.getTopTypeClause();
-      ErlangTopType topType = typeClause != null ? typeClause.getTopType() : null;
-      ErlangType type = topType != null ? topType.getType() : null;
+      ErlangType type = PsiTreeUtil.getChildOfType(typeClause, ErlangType.class);
       ErlangTypeRef typeRef = type != null ? type.getTypeRef() : null;
       String text = typeRef != null ? typeRef.getText() : null;
       ErlangExpressionType expressionType = TYPE_MAP.get(text);

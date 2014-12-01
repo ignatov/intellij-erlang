@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangBitType extends ErlangCompositeElement {
+public interface ErlangBitType extends ErlangType {
 
   @NotNull
   ErlangQAtom getQAtom();

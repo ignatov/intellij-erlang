@@ -114,8 +114,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<ErlangFunction>>() {
       @Override
       public Result<Set<ErlangFunction>> compute() {
-        ErlangFileImpl erlangFile = ErlangFileImpl.this;
-        return Result.create(calcExportedFunctions(), erlangFile);
+        return Result.create(calcExportedFunctions(), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangAttribute>> myAttributeValue =

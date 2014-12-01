@@ -24,32 +24,29 @@ ERL_FILE
       PsiElement())(')')
     PsiElement(::)('::')
     ERL_TOP_TYPE
-      ERL_TOP_TYPE_100_T
-        ERL_TYPE
-          ERL_TYPE_REF
-            ERL_Q_ATOM
-              ERL_ATOM
-                PsiElement(atom_name)('spades')
-        PsiElement(|)('|')
-        ERL_TOP_TYPE_100_T
-          ERL_TYPE
-            ERL_TYPE_REF
-              ERL_Q_ATOM
-                ERL_ATOM
-                  PsiElement(atom_name)('clubs')
-          PsiElement(|)('|')
-          ERL_TOP_TYPE_100_T
-            ERL_TYPE
-              ERL_TYPE_REF
-                ERL_Q_ATOM
-                  ERL_ATOM
-                    PsiElement(atom_name)('hearts')
-            PsiElement(|)('|')
-            ERL_TYPE
-              ERL_TYPE_REF
-                ERL_Q_ATOM
-                  ERL_ATOM
-                    PsiElement(atom_name)('diamonds')
+      ERL_TYPE
+        ERL_TYPE_REF
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('spades')
+      PsiElement(|)('|')
+      ERL_TYPE
+        ERL_TYPE_REF
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('clubs')
+      PsiElement(|)('|')
+      ERL_TYPE
+        ERL_TYPE_REF
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('hearts')
+      PsiElement(|)('|')
+      ERL_TYPE
+        ERL_TYPE_REF
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('diamonds')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -81,12 +78,11 @@ ERL_FILE
               PsiElement())(')')
             ERL_TOP_TYPE_CLAUSE
               PsiElement(->)('->')
-              ERL_TOP_TYPE
-                ERL_TYPE
-                  ERL_TYPE_REF
-                    ERL_Q_ATOM
-                      ERL_ATOM
-                        PsiElement(atom_name)('ok')
+              ERL_TYPE
+                ERL_TYPE_REF
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      PsiElement(atom_name)('ok')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE

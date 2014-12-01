@@ -1,3 +1,4 @@
+-module('Erlang17SyntaxError').
 -export([foo/0]).
 foo() ->
   fun

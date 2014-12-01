@@ -64,7 +64,7 @@ ERL_FILE
             ERL_BIN_ELEMENT
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
-                  PsiElement(_)('_')
+                  PsiElement(var)('_')
               ERL_OPT_BIT_TYPE_LIST
                 PsiElement(/)('/')
                 ERL_BIT_TYPE

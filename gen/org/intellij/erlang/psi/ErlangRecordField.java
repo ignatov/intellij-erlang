@@ -21,9 +21,6 @@ public interface ErlangRecordField extends ErlangCompositeElement {
   PsiElement getOpEq();
 
   @Nullable
-  PsiElement getUniPattern();
-
-  @Nullable
   PsiReference getReference();
 
   @Nullable

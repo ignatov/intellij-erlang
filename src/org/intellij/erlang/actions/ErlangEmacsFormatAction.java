@@ -32,8 +32,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
@@ -44,10 +42,8 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.ExceptionUtil;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.sdk.ErlangSystemUtil;
-import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
@@ -86,7 +82,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       commandLine.setExePath(emacsPath);
       commandLine.addParameters("--batch", "--eval");
 
-      String sdkPath = getSdkPath(project);
+      String sdkPath = ErlangSdkType.getSdkPath(project);
 
       if (StringUtil.isEmpty(sdkPath)) {
         Notifications.Bus.notify(
@@ -174,17 +170,6 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
         psiFile.getName() + " formatting with Emacs failed", ExceptionUtil.getUserStackTrace(ex, LOG),
         NotificationType.ERROR), project);
       LOG.error(ex);
-    }
-  }
-
-  @NotNull
-  private static String getSdkPath(@NotNull Project project) {
-    if (ErlangSystemUtil.isSmallIde()) {
-      return ErlangExternalToolsConfigurable.getErlangSdkPath(project);
-    }
-    else {
-      Sdk projectSdk = ProjectRootManager.getInstance(project).getProjectSdk();
-      return projectSdk != null ? StringUtil.notNullize(projectSdk.getHomePath()) : "";
     }
   }
 }

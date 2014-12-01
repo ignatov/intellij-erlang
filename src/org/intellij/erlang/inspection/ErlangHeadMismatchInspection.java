@@ -52,7 +52,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     };
   }
 
-  private static void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {
+  private void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {
     String functionName = function.getName();
     List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
     if (clauses.size() <= 1) return;
@@ -63,13 +63,13 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
       String functionSignature = ErlangPsiImplUtil.createFunctionPresentation(function);
 
       if (!functionSignature.equals(clauseSignature)) {
-        problemsHolder.registerProblem(clauseHead,
-          "Head mismatch: should be '" + functionSignature + "'", new RenameFunctionClauseHeadQuickFix(functionName));
+        registerProblem(problemsHolder, clauseHead, "Head mismatch: should be '" + functionSignature + "'",
+          new RenameFunctionClauseHeadQuickFix(functionName));
       }
     }
   }
 
-  private static void checkFunExpression(ErlangFunExpression funExpression, ProblemsHolder problemsHolder) {
+  private void checkFunExpression(ErlangFunExpression funExpression, ProblemsHolder problemsHolder) {
     ErlangFunClauses funClauses = funExpression.getFunClauses();
     List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : Collections.<ErlangFunClause>emptyList();
     if (funClauseList.size() <= 1) return;
@@ -87,7 +87,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
         if (elementForRange != null) {
           TextRange range = TextRange.create(elementForRange.getStartOffsetInParent(),
             elementForRange.getStartOffsetInParent() + elementForRange.getTextLength());
-          problemsHolder.registerProblem(funClause, range, problemDescription, new ChangeFunExpressionNameQuickFix(firstClauseName));
+          registerProblem(problemsHolder, funClause, problemDescription, range, null, new ChangeFunExpressionNameQuickFix(firstClauseName));
         }
       }
     }

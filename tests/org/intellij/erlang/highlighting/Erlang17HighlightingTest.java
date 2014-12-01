@@ -19,23 +19,22 @@ package org.intellij.erlang.highlighting;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import org.intellij.erlang.inspection.ErlangR17SyntaxInspection;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
-public class ErlangR17HighlightingTest extends ErlangHighlightingTestBase {
+public class Erlang17HighlightingTest extends ErlangHighlightingTestBase {
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk("testData/mockSdk-R17/");
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R17/", ErlangSdkRelease.V_17_0);
       }
     };
   }
 
-  public void testR17SyntaxNoError() {
-    //noinspection unchecked
-    myFixture.enableInspections(ErlangR17SyntaxInspection.class);
+  public void testErlang17SyntaxNoError() {
+    enableErlang17SyntaxInspection();
     doTest();
   }
 }

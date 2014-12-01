@@ -7,11 +7,11 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangFunType100T extends ErlangType {
 
-  @NotNull
-  List<ErlangTopType> getTopTypeList();
-
   @Nullable
   ErlangTopTypeClause getTopTypeClause();
+
+  @NotNull
+  List<ErlangType> getTypeList();
 
   @Nullable
   PsiElement getDotDotDot();

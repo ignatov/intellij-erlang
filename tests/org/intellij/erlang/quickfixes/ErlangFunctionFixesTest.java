@@ -40,19 +40,19 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/export/";
   }
 
-  public void testEmpty()      throws Throwable  { doTest("Export function"); }
-  public void testWithout()    throws Throwable  { doTest("Export function"); }
-  public void testCommon()     throws Throwable  { doTest("Export function"); }
-  public void testDelete()     throws Throwable  { doTest("Remove function"); }
-  public void testDeleteSpec() throws Throwable  { doTest("Remove function"); }
+  public void testEmpty()      { doTest("Export function"); }
+  public void testWithout()    { doTest("Export function"); }
+  public void testCommon()     { doTest("Export function"); }
+  public void testDelete()     { doTest("Remove function"); }
+  public void testDeleteSpec() { doTest("Remove function"); }
 
-  public void testOneDuplicateExport1() throws Throwable  { doTest("Remove duplicate export"); }
-  public void testOneDuplicateExport2() throws Throwable  { doTest("Remove duplicate export"); }
-  public void testFewDuplicateExport()  throws Throwable  { doTest("Remove duplicate export"); }
+  public void testOneDuplicateExport1() { doTest("Remove duplicate export"); }
+  public void testOneDuplicateExport2() { doTest("Remove duplicate export"); }
+  public void testFewDuplicateExport()  { doTest("Remove duplicate export"); }
 
-  public void testFewEmpties()            throws Throwable  { doTest("Export function"); }
-  public void testFewNonEmpties1()        throws Throwable  { doTest("Export function"); }
-  public void testFewNonEmpties2()        throws Throwable  { doTest("Export function"); }
+  public void testFewEmpties()          { doTest("Export function"); }
+  public void testFewNonEmpties1()      { doTest("Export function"); }
+  public void testFewNonEmpties2()      { doTest("Export function"); }
 
   public void testExportsToShowInPopupAllEmpty() {
     myFixture.configureByFile("without.erl");
@@ -65,7 +65,7 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     assertEquals(getExportsToShow(myFixture.getFile()).size(), 2);
   }
 
-  private List<ErlangExport> getExportsToShow(PsiFile file) {
+  private static List<ErlangExport> getExportsToShow(PsiFile file) {
     return ErlangExportFunctionFix.getNotEmptyExports(ErlangExportFunctionFix.getExportPsiElements((ErlangFile) file));
   }
 

@@ -16,8 +16,6 @@
 
 package org.intellij.erlang.highlighting;
 
-import org.intellij.erlang.inspection.ErlangR17SyntaxInspection;
-
 public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testHelloWorld()        { doTest(); }
   public void testExport()            { doTest(); }
@@ -67,9 +65,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
 
-  public void testR17SyntaxError() {
-    //noinspection unchecked
-    myFixture.enableInspections(ErlangR17SyntaxInspection.class);
+  public void testErlang17SyntaxError() {
+    enableErlang17SyntaxInspection();
     doTest();
   }
 
@@ -80,6 +77,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
 
   public void test176() {                    
     myFixture.configureByText("aaa.hrl", "foo() -> ok.");
+    doTest();
+  }
+
+  public void testNoHighlightingInsideMacroCalls() {
+    enableUnresolvedMacroInspection();
+    enableErlang17SyntaxInspection();
     doTest();
   }
 

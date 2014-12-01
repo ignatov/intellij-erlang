@@ -12,26 +12,23 @@ ERL_FILE
           ERL_FUN_TYPE
             ERL_FUN_TYPE_ARGUMENTS
               PsiElement(()('(')
-              ERL_TOP_TYPE
-                ERL_TYPE
-                  ERL_Q_VAR
-                    PsiElement(var)('Key')
+              ERL_TYPE
+                ERL_Q_VAR
+                  PsiElement(var)('Key')
               PsiElement(,)(',')
-              ERL_TOP_TYPE
-                ERL_TYPE
-                  ERL_Q_VAR
-                    PsiElement(var)('List')
+              ERL_TYPE
+                ERL_Q_VAR
+                  PsiElement(var)('List')
               PsiElement())(')')
             ERL_TOP_TYPE_CLAUSE
               PsiElement(->)('->')
-              ERL_TOP_TYPE
-                ERL_TYPE
-                  ERL_TYPE_REF
-                    ERL_Q_ATOM
-                      ERL_ATOM
-                        PsiElement(atom_name)('term')
-                  PsiElement(()('(')
-                  PsiElement())(')')
+              ERL_TYPE
+                ERL_TYPE_REF
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      PsiElement(atom_name)('term')
+                PsiElement(()('(')
+                PsiElement())(')')
           ERL_TYPE_SIG_GUARD
             PsiElement(when)('when')
             ERL_TYPE_GUARD
@@ -56,16 +53,14 @@ ERL_FILE
                   ERL_Q_VAR
                     PsiElement(var)('List')
                   PsiElement(::)('::')
-                  ERL_TOP_TYPE
+                  ERL_TYPE
+                    PsiElement([)('[')
                     ERL_TYPE
-                      PsiElement([)('[')
-                      ERL_TOP_TYPE
-                        ERL_TYPE
-                          ERL_TYPE_REF
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('term')
-                          PsiElement(()('(')
-                          PsiElement())(')')
-                      PsiElement(])(']')
+                      ERL_TYPE_REF
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('term')
+                      PsiElement(()('(')
+                      PsiElement())(')')
+                    PsiElement(])(']')
     PsiElement(.)('.')

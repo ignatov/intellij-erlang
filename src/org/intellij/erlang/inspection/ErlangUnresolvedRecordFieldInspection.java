@@ -20,7 +20,10 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.psi.ErlangRecordExpression;
+import org.intellij.erlang.psi.ErlangRecordField;
+import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFieldFix;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +46,7 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase 
         if (reference == null || reference.resolve() == null) {
           ErlangQAtom atom = o.getFieldNameAtom();
           if (atom == null || atom.getMacros() != null) return;
-          holder.registerProblem(atom, "Unresolved record field " + "'" + atom.getText() + "'", new ErlangIntroduceRecordFieldFix());
+          registerProblem(holder, atom, "Unresolved record field " + "'" + atom.getText() + "'", new ErlangIntroduceRecordFieldFix());
         }
       }
     };

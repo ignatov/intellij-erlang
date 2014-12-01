@@ -39,6 +39,7 @@ import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -154,7 +155,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   private static void createMockSdk() {
-    final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR);
+    final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR, ErlangSdkRelease.V_R15B02);
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {

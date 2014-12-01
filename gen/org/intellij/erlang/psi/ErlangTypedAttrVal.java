@@ -11,7 +11,7 @@ public interface ErlangTypedAttrVal extends ErlangCompositeElement {
   ErlangExpression getExpression();
 
   @Nullable
-  ErlangTopType getTopType();
+  ErlangType getType();
 
   @Nullable
   ErlangTypedRecordFields getTypedRecordFields();

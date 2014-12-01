@@ -11,7 +11,7 @@ import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 import com.intellij.psi.PsiReference;
 
-public class ErlangExportTypeImpl extends ErlangCompositeElementImpl implements ErlangExportType {
+public class ErlangExportTypeImpl extends ErlangTypeImpl implements ErlangExportType {
 
   public ErlangExportTypeImpl(ASTNode node) {
     super(node);

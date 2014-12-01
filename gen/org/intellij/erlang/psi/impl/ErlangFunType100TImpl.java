@@ -22,15 +22,15 @@ public class ErlangFunType100TImpl extends ErlangTypeImpl implements ErlangFunTy
   }
 
   @Override
-  @NotNull
-  public List<ErlangTopType> getTopTypeList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTopType.class);
-  }
-
-  @Override
   @Nullable
   public ErlangTopTypeClause getTopTypeClause() {
     return findChildByClass(ErlangTopTypeClause.class);
+  }
+
+  @Override
+  @NotNull
+  public List<ErlangType> getTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
   }
 
   @Override

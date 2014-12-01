@@ -29,6 +29,7 @@ import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangGlobalFunctionCallExpression;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
@@ -136,7 +137,7 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        Sdk mockSdk = ErlangSdkType.createMockSdk(ERLANG_SDK_PATH);
+        Sdk mockSdk = ErlangSdkType.createMockSdk(ERLANG_SDK_PATH, ErlangSdkRelease.V_R16B);
         // Set local SDK documentation path
         SdkModificator sdkModificator = mockSdk.getSdkModificator();
         VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath(ERLANG_DOC_PATH);

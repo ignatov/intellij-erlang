@@ -10,7 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangBitTypeImpl extends ErlangCompositeElementImpl implements ErlangBitType {
+public class ErlangBitTypeImpl extends ErlangTypeImpl implements ErlangBitType {
 
   public ErlangBitTypeImpl(ASTNode node) {
     super(node);

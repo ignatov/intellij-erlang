@@ -35,4 +35,9 @@ public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
       "smallIdeRebarConfigInclude/src/test.app.src",
       "smallIdeRebarConfigInclude/rebar.config");
   }
+
+  public void testErlang17SyntaxError() {
+    enableErlang17SyntaxInspection();
+    doTest();
+  }
 }
