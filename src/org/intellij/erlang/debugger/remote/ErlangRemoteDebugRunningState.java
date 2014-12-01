@@ -23,12 +23,18 @@ import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 public class ErlangRemoteDebugRunningState extends ErlangRunningState {
-  public ErlangRemoteDebugRunningState(ExecutionEnvironment env, Module module) {
+  private final ErlangRemoteDebugRunConfiguration myConfiguration;
+
+  public ErlangRemoteDebugRunningState(ExecutionEnvironment env, Module module, ErlangRemoteDebugRunConfiguration configuration) {
     super(env, module);
+    myConfiguration = configuration;
   }
 
   @Override
@@ -56,5 +62,12 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
   public ConsoleView createConsoleView(Executor executor) {
     TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(getEnvironment().getProject());
     return consoleBuilder.getConsole();
+  }
+
+  @Override
+  protected List<String> getErlFlags() {
+    String nodeNameFlag = myConfiguration.isUseShortNames() ? "-sname" : "-name";
+    String nodeName = "debugger_node_" + System.currentTimeMillis();
+    return ContainerUtil.list(nodeNameFlag, nodeName);
   }
 }

@@ -323,12 +323,12 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       if (myRunningState instanceof ErlangRemoteDebugRunningState) {
         LOG.debug("Initializing remote node debugging.");
         ErlangRemoteDebugRunConfiguration runConfiguration = (ErlangRemoteDebugRunConfiguration) getRunConfiguration();
-        if (StringUtil.isEmptyOrSpaces(runConfiguration.getErlangNode())) {
+        if (StringUtil.isEmptyOrSpaces(runConfiguration.getRemoteErlangNodeName())) {
           throw new ExecutionException("Bad run configuration: remote Erlang node is not specified.");
         }
-        LOG.debug("Remote node: " + runConfiguration.getErlangNode());
+        LOG.debug("Remote node: " + runConfiguration.getRemoteErlangNodeName());
         LOG.debug("Cookie: " + runConfiguration.getCookie());
-        myDebuggerNode.debugRemoteNode(runConfiguration.getErlangNode(), runConfiguration.getCookie());
+        myDebuggerNode.debugRemoteNode(runConfiguration.getRemoteErlangNodeName(), runConfiguration.getCookie());
       }
       else {
         LOG.debug("Initializing local debugging.");

@@ -28,7 +28,8 @@ import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRemoteDebugRunConfiguration extends ErlangRunConfigurationBase<ErlangRemoteDebugRunningState> implements RunConfigurationWithSuppressedDefaultRunAction {
-  private String myErlangNode;
+  private String myRemoteErlangNodeName;
+  private boolean myUseShortNames = true; // controls whether to use -name or -sname for specifying local node name
   private String myCookie;
 
   public ErlangRemoteDebugRunConfiguration(Project project, String name) {
@@ -42,7 +43,7 @@ public class ErlangRemoteDebugRunConfiguration extends ErlangRunConfigurationBas
 
   @Override
   protected ErlangRemoteDebugRunningState newRunningState(ExecutionEnvironment env, Module module) {
-    return new ErlangRemoteDebugRunningState(env, module);
+    return new ErlangRemoteDebugRunningState(env, module, this);
   }
 
   @NotNull
@@ -51,12 +52,20 @@ public class ErlangRemoteDebugRunConfiguration extends ErlangRunConfigurationBas
     return new ErlangRemoteDebugConfigurationEditorForm();
   }
 
-  public String getErlangNode() {
-    return myErlangNode;
+  public String getRemoteErlangNodeName() {
+    return myRemoteErlangNodeName;
   }
 
-  public void setErlangNode(String erlangNode) {
-    myErlangNode = erlangNode;
+  public void setRemoteErlangNodeName(String remoteErlangNodeName) {
+    myRemoteErlangNodeName = remoteErlangNodeName;
+  }
+
+  public boolean isUseShortNames() {
+    return myUseShortNames;
+  }
+
+  public void setUseShortNames(boolean useShortNames) {
+    myUseShortNames = useShortNames;
   }
 
   public String getCookie() {

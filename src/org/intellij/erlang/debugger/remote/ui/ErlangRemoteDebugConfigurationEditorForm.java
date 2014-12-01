@@ -30,20 +30,23 @@ public class ErlangRemoteDebugConfigurationEditorForm extends SettingsEditor<Erl
   private ModulesCombobox myModuleComboBox;
   private JTextField myNodeTextField;
   private JTextField myCookieTextField;
+  private JCheckBox myUseShortNamesCheckBox;
 
   @Override
   protected void resetEditorFrom(ErlangRemoteDebugRunConfiguration configuration) {
     myModuleComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
     myModuleComboBox.setSelectedModule(configuration.getConfigurationModule().getModule());
-    myNodeTextField.setText(configuration.getErlangNode());
+    myNodeTextField.setText(configuration.getRemoteErlangNodeName());
     myCookieTextField.setText(configuration.getCookie());
+    myUseShortNamesCheckBox.setSelected(configuration.isUseShortNames());
   }
 
   @Override
   protected void applyEditorTo(ErlangRemoteDebugRunConfiguration configuration) throws ConfigurationException {
     configuration.setModule(myModuleComboBox.getSelectedModule());
-    configuration.setErlangNode(myNodeTextField.getText());
+    configuration.setRemoteErlangNodeName(myNodeTextField.getText());
     configuration.setCookie(myCookieTextField.getText());
+    configuration.setUseShortNames(myUseShortNamesCheckBox.isSelected());
   }
 
   @NotNull
