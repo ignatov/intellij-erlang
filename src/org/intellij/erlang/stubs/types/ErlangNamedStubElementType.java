@@ -29,7 +29,10 @@ public abstract class ErlangNamedStubElementType<S extends NamedStubBase<T>, T e
   }
 
   public void indexStub(@NotNull S stub, @NotNull IndexSink sink) {
-    sink.occurrence(ErlangAllNameIndex.KEY, stub.getName());
+    String name = stub.getName();
+    if (name != null) {
+      sink.occurrence(ErlangAllNameIndex.KEY, name);
+    }
   }
 
   @NotNull
