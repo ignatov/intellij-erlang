@@ -131,7 +131,8 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testMultiModule() throws Throwable {
     myFixture.configureByFiles("multi-module/a.erl");
     myFixture.configureByFile("multi-module/b.erl");
-    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo", "module_info", "module_info");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo",
+      "module_info", "module_info", "a:bar", "a:bar", "a:foo", "a:foo");
     // means "bar/1", "bar/0", "foo/1", "foo/0", "module_info/0", "module_info/1"
   }
 
@@ -186,13 +187,55 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testImportModule() throws Throwable {
     myFixture.configureByFiles("multi-module/a.erl");
     myFixture.configureByFile("multi-module/b.erl");
-    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo", "module_info", "module_info");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo",
+      "module_info", "module_info", "a:bar", "a:bar", "a:foo", "a:foo");
     // means "bar/1", "bar/0", "foo/1", "foo/0", "module_info/0", "module_info/1"
   }
 
-  public void testModuleCompletion() throws Throwable {
+  public void testModuleCompletionContainsModule() throws Throwable {
     myFixture.configureByFiles("module-completion/use_module.erl", "module-completion/test_module.erl");
     doTestVariantsInner(CompletionType.BASIC, 2, CheckType.INCLUDES, "test_module");
+  }
+
+  public void testModuleCompletionContainsFunctions() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestInclude("foo() -> fake_mod<caret>", "fake_module:bar");
+  }
+
+  public void testModuleCompletionExcludeFunctions() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestVariants("foo() -> fake_mod<caret>", CompletionType.BASIC, 1, CheckType.EXCLUDES, "far", "fake_module:far");
+  }
+
+  public void testFunctionCompletionByPartialName() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestInclude("foo() -> fmba<caret>", "fake_module:bar");
+  }
+
+  public void testFunctionCompletionExcludeByPartialName() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestVariants("foo() -> fmba<caret>", CompletionType.BASIC, 1, CheckType.EXCLUDES,
+      "tar", "fake_module:tar",
+      "far", "fake_module:far");
+  }
+
+  public void testFunctionCompletionByPartialNameWithColon() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestInclude("foo() -> fm:ba<caret>", "fake_module:bar");
+  }
+
+  public void testFunctionCompletionCheckFirst() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    myFixture.configureByText("a.erl", "bar() -> ok. foo() -> bar<caret>");
+    myFixture.complete(CompletionType.BASIC, 1);
+    List<String> compList = myFixture.getLookupElementStrings();
+    assertNotNull(compList);
+    assertEquals(compList.get(0), "bar");
+  }
+
+  public void testFunctionExpandByPartialName() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doCheckResult("foo() -> fmta<caret>", "foo() -> fake_module:tar()<caret>");
   }
 
   public void testModuleCompletionWithColon() throws Throwable {
