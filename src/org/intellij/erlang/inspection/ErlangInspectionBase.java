@@ -110,12 +110,12 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     if (parent == null) return false;
     return isSuppressedForElement(parent);
   }
-  
+
   private boolean isSuppressedForElement(@Nullable PsiElement element) {
     if (element == null) return false;
     Commenter commenter = LanguageCommenters.INSTANCE.forLanguage(ErlangLanguage.INSTANCE);
     String prefix = ObjectUtils.notNull(commenter == null ? null : commenter.getLineCommentPrefix(), "");
-    
+
     PsiElement prevSibling = element.getPrevSibling();
     if (prevSibling == null) {
       PsiElement parent = element.getParent();
@@ -140,7 +140,7 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     Matcher m = SUPPRESS_PATTERN.matcher(commentText);
     return m.matches() && SuppressionUtil.isInspectionToolIdMentioned(m.group(1), getSuppressId());
   }
-  
+
   protected String getSuppressId() {
     return getShortName().replace("Inspection", "");
   }
@@ -159,13 +159,13 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
 
   public static class ErlangSuppressInspectionFix extends AbstractSuppressByNoInspectionCommentFix {
     private final Class<? extends ErlangCompositeElement> myContainerClass;
-  
+
     public ErlangSuppressInspectionFix(String ID, String text, Class<? extends ErlangCompositeElement> containerClass) {
       super(ID, false);
       setText(text);
       myContainerClass = containerClass;
     }
-  
+
     @Override
     @Nullable
     protected PsiElement getContainer(PsiElement context) {
