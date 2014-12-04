@@ -132,7 +132,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.configureByFiles("multi-module/a.erl");
     myFixture.configureByFile("multi-module/b.erl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo",
-      "module_info", "module_info", "a:bar", "a:bar", "a:foo", "a:foo");
+      "module_info", "module_info");
     // means "bar/1", "bar/0", "foo/1", "foo/0", "module_info/0", "module_info/1"
   }
 
@@ -188,7 +188,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.configureByFiles("multi-module/a.erl");
     myFixture.configureByFile("multi-module/b.erl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "bar", "bar", "foo", "foo",
-      "module_info", "module_info", "a:bar", "a:bar", "a:foo", "a:foo");
+      "module_info", "module_info");
     // means "bar/1", "bar/0", "foo/1", "foo/0", "module_info/0", "module_info/1"
   }
 
