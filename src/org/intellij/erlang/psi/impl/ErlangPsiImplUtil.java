@@ -470,7 +470,10 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, boolean withArity, @Nullable ErlangQAtom qAtom) {
+  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile,
+                                                              boolean withArity,
+                                                              boolean withModule,
+                                                              @Nullable ErlangQAtom qAtom) {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
       List<ErlangFunction> functions = new ArrayList<ErlangFunction>();
 
@@ -489,7 +492,13 @@ public class ErlangPsiImplUtil {
       else {
         ErlangFile erlangFile = (ErlangFile) containingFile;
         functions.addAll(erlangFile.getFunctions());
-        functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"));
+
+        if (withModule) {
+          lookupElements.addAll(getAllExportedFunctionsWithModuleLookupElements(erlangFile.getProject(), withArity, null));
+        }
+        else {
+          functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"));
+        }
 
         for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
           lookupElements.add(createFunctionLookupElement(importFunction.getQAtom().getText(), getArity(importFunction.getInteger()), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
@@ -514,6 +523,26 @@ public class ErlangPsiImplUtil {
     for (ErlangBifDescriptor bif : bifs) {
       lookupElements.add(createFunctionLookupElement(bif.getName(), bif.getArity(), false, ErlangCompletionContributor.BIF_PRIORITY));
     }
+  }
+
+  public static Collection<LookupElement> getAllExportedFunctionsWithModuleLookupElements(@NotNull Project project,
+                                                                                          boolean withArity,
+                                                                                          @Nullable String exclude) {
+    List<LookupElement> lookupElements = ContainerUtil.newArrayList();
+    for (String moduleName : ErlangModuleIndex.getNames(project)) {
+      if (exclude != null && moduleName.equals(exclude)) continue;
+      for (ErlangFunction function : getExternalFunctionForCompletion(project, moduleName)) {
+        String fullName = moduleName + ":" + function.getName();
+        int arity = function.getArity();
+        lookupElements.add(
+          PrioritizedLookupElement.withPriority(
+            LookupElementBuilder.create(function, fullName)
+              .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
+              .withInsertHandler(getInsertHandler(arity, withArity)),
+            ErlangCompletionContributor.EXTERNAL_FUNCTIONS_PRIORITY));
+      }
+    }
+    return lookupElements;
   }
 
   private static void addBifs(@NotNull List<LookupElement> lookupElements, @NotNull Collection<ErlangBifDescriptor> bifs, boolean withArity) {

@@ -76,11 +76,13 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangCompletionContributor extends CompletionContributor {
-  public static final int MODULE_PRIORITY = -15;
-  public static final int KEYWORD_PRIORITY = -10;
-  public static final int MODULE_FUNCTIONS_PRIORITY = -4;
-  public static final int TYPE_PRIORITY = 10;
-  public static final int BIF_PRIORITY = -5;
+  public static final int TYPE_PRIORITY               = 10;
+  public static final int MODULE_FUNCTIONS_PRIORITY   = -4;
+  public static final int BIF_PRIORITY                = -5;
+  public static final int EXTERNAL_FUNCTIONS_PRIORITY = -7;
+  public static final int KEYWORD_PRIORITY            = -10;
+  public static final int MODULE_PRIORITY             = -15;
+
   public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
     "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour"
   );
@@ -161,7 +163,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
           if (colonQualified != null && (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null || inConsole)) {
             ErlangQAtom qAtom = getQAtom(colonQualified);
-            result.addAllElements(getFunctionLookupElements(file, false, qAtom));
+            result.addAllElements(getFunctionLookupElements(file, false, false, qAtom));
+            ErlangColonQualifiedExpression originalColonQExpr = PsiTreeUtil.getParentOfType(originalPosition, ErlangColonQualifiedExpression.class);
+            if (originalColonQExpr != null)
+              result = result.withPrefixMatcher(originalColonQExpr.getText());
+            result.addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, qAtom != null ? qAtom.getText() : null));
           }
           else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordTuple) {
             Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(grandPa);
@@ -197,7 +203,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
             }
           }
           if (colonQualified == null && grandPa instanceof ErlangExpression && (inFunction(position) || inConsole)) {
-            result.addAllElements(getFunctionLookupElements(file, false, null));
+            result.addAllElements(getFunctionLookupElements(file, false, originalPosition != null && originalPosition.getTextLength() > 0, null
+            ));
           }
 
           int invocationCount = parameters.getInvocationCount();
@@ -269,7 +276,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
 
         if (clause == null) return;
-        List<LookupElement> functionLookupElements = getFunctionLookupElements(clause.getContainingFile(), false, null);
+        List<LookupElement> functionLookupElements = getFunctionLookupElements(clause.getContainingFile(), false, false, null);
         for (LookupElement lookupElement : functionLookupElements) {
           PsiElement psiElement = lookupElement.getPsiElement();
           if (psiElement instanceof ErlangFunction) {
