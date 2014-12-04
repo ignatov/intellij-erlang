@@ -496,9 +496,7 @@ public class ErlangPsiImplUtil {
         if (withModule) {
           lookupElements.addAll(getAllExportedFunctionsWithModuleLookupElements(erlangFile.getProject(), withArity, null));
         }
-        else {
-          functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"));
-        }
+        functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"));
 
         for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
           lookupElements.add(createFunctionLookupElement(importFunction.getQAtom().getText(), getArity(importFunction.getInteger()), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));

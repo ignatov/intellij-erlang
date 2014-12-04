@@ -202,7 +202,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
               suggestModules(result, position, withColon);
             }
           }
-          if (colonQualified == null && grandPa instanceof ErlangExpression && (inFunction(position) || inConsole)) {
+          if (colonQualified == null
+            && grandPa instanceof ErlangExpression
+            && (inFunction(position) || inConsole || PsiTreeUtil.getParentOfType(position, ErlangTypedRecordFields.class) != null)) {
             boolean withModule = originalPosition != null && originalPosition.getTextLength() > 0;
             result.addAllElements(getFunctionLookupElements(file, false, withModule, null));
           }
