@@ -36,6 +36,13 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "bar(A)-> <caret>", "foo", "buzz");
   }
 
+  public void testFunctionCompletionInTypedList() throws Throwable {
+    doTestInclude("foo() -> ok. -record(state, {first = <caret>}).",
+      "begin", "try", "fun", "if",
+      "node", "pid_to_list", "spawn", "binary_to_list",
+      "foo");
+  }
+
   public void testRecords() throws Throwable {
     doTestInclude(
       "-record(foo, {id}).\n" +
