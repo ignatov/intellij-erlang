@@ -205,7 +205,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
           if (colonQualified == null
             && grandPa instanceof ErlangExpression
             && (inFunction(position) || inConsole || PsiTreeUtil.getParentOfType(position, ErlangTypedRecordFields.class) != null)) {
-            result.addAllElements(getFunctionLookupElements(file, false, originalPosition != null && originalPosition.getTextLength() > 0, null));
+            boolean withModule = originalPosition != null && originalPosition.getTextLength() > 0;
+            result.addAllElements(getFunctionLookupElements(file, false, withModule, null));
           }
 
           int invocationCount = parameters.getInvocationCount();
