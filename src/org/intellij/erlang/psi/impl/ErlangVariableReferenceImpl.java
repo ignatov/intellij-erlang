@@ -111,7 +111,8 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
       }
 
       ErlangQAtom qAtom = getQAtom(PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class));
-      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(file, myElement.getParent() instanceof ErlangFunctionWithArityVariables, false, qAtom));
+      boolean withArity = myElement.getParent() instanceof ErlangFunctionWithArityVariables;
+      result.addAll(ErlangPsiImplUtil.getFunctionLookupElements(file, withArity, false, qAtom));
     }
 
     Map<String, ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
