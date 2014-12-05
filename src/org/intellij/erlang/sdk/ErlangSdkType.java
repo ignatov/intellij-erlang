@@ -18,6 +18,7 @@ package org.intellij.erlang.sdk;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
@@ -45,6 +46,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
+import org.jetbrains.generate.tostring.util.StringUtil;
 
 import javax.swing.*;
 import java.io.File;
@@ -197,7 +199,7 @@ public class ErlangSdkType extends SdkType {
   @TestOnly
   @NotNull
   public static Sdk createMockSdk(@NotNull String sdkHome, @NotNull ErlangSdkRelease version) {
-    getInstance().mySdkHomeToReleaseCache.put(sdkHome, version); // we'll not try to detect sdk version in tests environment
+    getInstance().mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), version); // we'll not try to detect sdk version in tests environment
     Sdk sdk = new ProjectJdkImpl(getDefaultSdkName(sdkHome, version), getInstance());
     SdkModificator sdkModificator = sdk.getSdkModificator();
     sdkModificator.setHomePath(sdkHome);
@@ -209,10 +211,12 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   private ErlangSdkRelease detectSdkVersion(@Nullable String sdkHome) {
-    ErlangSdkRelease cachedRelease = mySdkHomeToReleaseCache.get(sdkHome);
+    ErlangSdkRelease cachedRelease = mySdkHomeToReleaseCache.get(getVersionCacheKey(sdkHome));
     if (cachedRelease != null) {
       return cachedRelease;
     }
+
+    assert !ApplicationManager.getApplication().isUnitTestMode() : "Unit tests should have their SDK versions pre-cached!";
 
     File erl = sdkHome != null ? getTopLevelExecutable(sdkHome) : null;
     if (erl == null || !erl.canExecute()) return null;
@@ -224,7 +228,7 @@ public class ErlangSdkType extends SdkType {
         ContainerUtil.<String>emptyList() : output.getStdoutLines();
       if (lines.size() == 2) {
         ErlangSdkRelease release = new ErlangSdkRelease(lines.get(0), lines.get(1));
-        mySdkHomeToReleaseCache.put(sdkHome, release);
+        mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), release);
         return release;
       }
     } catch (ExecutionException ignore) {
@@ -256,6 +260,8 @@ public class ErlangSdkType extends SdkType {
       File stdLibDir = new File(new File(sdkHome), "lib");
       if (tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir)) return;
     }
+
+    assert !ApplicationManager.getApplication().isUnitTestMode() : "Failed to setup a mock SDK!";
 
     try {
       String exePath = JpsErlangSdkType.getByteCodeCompilerExecutable(sdkHome).getAbsolutePath();
@@ -317,6 +323,12 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   private static ErlangSdkRelease getReleaseForSmallIde(@NotNull Project project) {
-    return getInstance().detectSdkVersion(getSdkPath(project));
+    String sdkPath = getSdkPath(project);
+    return StringUtil.isEmpty(sdkPath) ? null : getInstance().detectSdkVersion(sdkPath);
+  }
+
+  @Nullable
+  private static String getVersionCacheKey(@Nullable String sdkHome) {
+    return sdkHome != null ? new File(sdkHome).getAbsolutePath() : null;
   }
 }
