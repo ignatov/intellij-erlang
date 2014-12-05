@@ -1,11 +1,11 @@
 -module(erlang).
 
--export([crc32/1, crc32/2]).
+-export([binary_to_integer/1, binary_to_integer/2]).
 
-%% crc32/1
--spec erlang:crc32(Data) -> non_neg_integer() when
-      Data :: iodata().
-crc32(_Data) ->
+%% binary_to_integer/1
+-spec binary_to_integer(Binary) -> integer() when
+      Binary :: binary().
+binary_to_integer(_Binary) ->
     erlang:nif_error(undefined).
 
 is_record(_Term,_RecordTag) ->

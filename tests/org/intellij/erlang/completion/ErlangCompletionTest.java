@@ -331,10 +331,10 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testCameCaseModules() throws Throwable {
-    myFixture.configureByText("CamelCase.erl", "");
-    myFixture.configureByText("a.erl", "bar() -> Cam<caret>");
+    myFixture.configureByText("CammelCase.erl", "");
+    myFixture.configureByText("a.erl", "bar() -> Camm<caret>");
     myFixture.complete(CompletionType.BASIC, 2);
-    myFixture.checkResult("bar() -> 'CamelCase':<caret>");
+    myFixture.checkResult("bar() -> 'CammelCase':<caret>");
   }
 
   public void testFunctionsFromCameCaseModule() throws Throwable {
