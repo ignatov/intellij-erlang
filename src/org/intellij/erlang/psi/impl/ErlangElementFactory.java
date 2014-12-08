@@ -66,6 +66,14 @@ public class ErlangElementFactory {
   }
 
   @NotNull
+  public static PsiElement createFunctionWithModuleCallExpression(@NotNull Project project,
+                                                                  @NotNull String moduleName,
+                                                                  @NotNull String functionCallExpr) {
+    ErlangFile fileFromText = createFileFromText(project, "f() -> " + moduleName + ":" + functionCallExpr + ".");
+    return fileFromText.getFunctions().get(0).getFunctionClauseList().get(0).getClauseBody().getLastChild();
+  }
+
+  @NotNull
   public static PsiElement createStringFromText(@NotNull Project project, @NotNull String text) {
     return createIncludeString(project, text).getString();
   }
