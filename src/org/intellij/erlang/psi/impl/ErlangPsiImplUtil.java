@@ -1396,6 +1396,7 @@ public class ErlangPsiImplUtil {
   public static String createFunctionPresentation(@NotNull ErlangFunction function) {
     return function.getName() + "/" + function.getArity();
   }
+
   @NotNull
   public static String getQualifiedFunctionName(@NotNull ErlangFunction function) {
     PsiFile file = function.getContainingFile();
