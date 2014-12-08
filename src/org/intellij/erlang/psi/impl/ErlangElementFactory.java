@@ -82,6 +82,11 @@ public class ErlangElementFactory {
   }
 
   @NotNull
+  public static PsiElement createImportFromText(@NotNull Project project, @NotNull String moduleName, @NotNull String text) {
+    return createAttributeFromText(project, "-import(" + moduleName + ", [" + text + "]).");
+  }
+
+  @NotNull
   public static PsiElement createExportTypeFromText(@NotNull Project project, @NotNull String text) {
     return createAttributeFromText(project, "-export_type([" + text + "]).");
   }

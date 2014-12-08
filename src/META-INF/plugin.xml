@@ -204,6 +204,9 @@
         <localInspection language="Erlang" shortName="ErlangDuplicateFunctionExport" displayName="Duplicate export"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection"/>
+        <localInspection language="Erlang" shortName="ErlangDefiningImportedFunction" displayName="Defining imported function"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangDefiningImportedFunctionInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
 
