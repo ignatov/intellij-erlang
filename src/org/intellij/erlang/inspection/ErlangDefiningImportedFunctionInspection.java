@@ -27,6 +27,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangImportFunction;
 import org.intellij.erlang.psi.ErlangVisitor;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFromImportFix;
 import org.jetbrains.annotations.NotNull;
@@ -47,13 +48,13 @@ public class ErlangDefiningImportedFunctionInspection extends ErlangInspectionBa
       public void visitFile(final PsiFile file) {
         Set<String> importedFunctionNames = ContainerUtil.newHashSet();
         for (ErlangImportFunction f : ((ErlangFile) file).getImportedFunctions()) {
-          importedFunctionNames.add(f.getText());
+          importedFunctionNames.add(ErlangPsiImplUtil.createFunctionPresentation(f));
         }
         for (ErlangFunction function : ((ErlangFile) file).getFunctions()) {
-          String fullName = function.getName() + "/" + function.getArity();
+          String fullName = ErlangPsiImplUtil.createFunctionPresentation(function);
           if (importedFunctionNames.contains(fullName)) {
             holder.registerProblem(function.getNameIdentifier(), "Defining imported function " + "'" + fullName + "'",
-              ProblemHighlightType.GENERIC_ERROR,
+              ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
               new ErlangRemoveFunctionFix(),
               new ErlangRemoveFunctionFromImportFix());
           }

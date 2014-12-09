@@ -64,8 +64,9 @@ public final class ErlangBifDescriptor implements Comparable<ErlangBifDescriptor
 
   @Override
   public String toString() {
-    if (myModule.isEmpty())
+    if (myModule.isEmpty()) {
       return myName + "/" + myArity;
+    }
     return myModule + ":" + myName + "/" + myArity;
   }
 

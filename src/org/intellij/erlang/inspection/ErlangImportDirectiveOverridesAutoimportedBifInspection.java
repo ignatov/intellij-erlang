@@ -16,18 +16,21 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.*;
+import com.intellij.codeInspection.LocalInspectionToolSession;
+import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiReference;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangFunctionReferenceImpl;
-import org.intellij.erlang.quickfixes.*;
+import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFromImportFix;
+import org.intellij.erlang.quickfixes.ErlangSpecifyModulePrefixFix;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangAmbiguousCallOfAutoimportedFunctionInspection extends ErlangInspectionBase {
+public class ErlangImportDirectiveOverridesAutoimportedBifInspection extends ErlangInspectionBase {
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
     ErlangSdkRelease release = ErlangSdkType.getRelease(file);
@@ -38,26 +41,19 @@ public class ErlangAmbiguousCallOfAutoimportedFunctionInspection extends ErlangI
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
       @Override
-      public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-        if (o.getParent() instanceof ErlangGlobalFunctionCallExpression) return;
-        if (o.getQAtom().getMacros() != null) return;
+      public void visitImportFunction(@NotNull ErlangImportFunction o) {
         PsiReference reference = o.getReference();
         if (!(reference instanceof ErlangFunctionReferenceImpl) || reference.resolve() == null) return;
         ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
         String name = r.getName();
         int arity = r.getArity();
         ErlangBifDescriptor bifDescriptor = ErlangBifTable.getBif("erlang", name, arity);
-        if (((ErlangFile)o.getContainingFile()).getFunction(name, arity) == null
-          || bifDescriptor == null
-          || !bifDescriptor.isAutoImported())
-          return;
-        holder.registerProblem(o.getNameIdentifier(),
-          "Ambiguous call of overridden pre R14 auto-imported BIF " + "'" + r.getSignature() + "'",
-          ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-          new ErlangSpecifyModulePrefixFix("erlang"));
+        if (bifDescriptor == null || !bifDescriptor.isAutoImported())  return;
+        holder.registerProblem(o, "Import directive overrides pre R14 auto-imported BIF " + "'" + r.getSignature() + "'",
+          ProblemHighlightType.GENERIC_ERROR,
+          new ErlangRemoveFunctionFromImportFix());
       }
     };
   }
 
 }
-
