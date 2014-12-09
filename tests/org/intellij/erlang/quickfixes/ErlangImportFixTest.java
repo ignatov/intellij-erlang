@@ -31,23 +31,13 @@ public class ErlangImportFixTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/import/";
   }
 
-  public void testCommon() throws Throwable {
+  private void doTest() {
     doTest("Remove from import");
   }
 
-  public void testMultipleImportLines() throws Throwable {
-    doTest("Remove from import");
-  }
-
-  public void testOneImport() throws Throwable {
-    doTest("Remove from import");
-  }
-
-  public void testDuplicateImport() throws Throwable {
-    doTest("Remove from import");
-  }
-
-  public void testNoImport() throws Throwable {
-    doTest("Remove from import");
-  }
+  public void testCommon()              { doTest(); }
+  public void testMultipleImportLines() { doTest(); }
+  public void testOneImport()           { doTest(); }
+  public void testDuplicateImport()     { doTest(); }
+  public void testNoImport()            { doTest(); }
 }

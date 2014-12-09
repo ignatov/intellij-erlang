@@ -18,10 +18,13 @@ package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -35,31 +38,32 @@ public class ErlangRemoveFunctionFromImportFix  extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-    ErlangFunction function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunction.class, false);
+    ErlangFunction function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunction.class);
     if (function == null) return;
     PsiFile file = function.getContainingFile();
     if (!(file instanceof ErlangFile)) return;
     List<ErlangAttribute> attributes = ((ErlangFile) file).getAttributes();
     for (ErlangAttribute attribute : attributes) {
       ErlangImportDirective importDirective = attribute.getImportDirective();
-      if (importDirective == null || importDirective.getModuleRef() == null) continue;
-      ErlangImportFunctions importFunctions = importDirective.getImportFunctions();
-      if (importFunctions == null) continue;
-      if (importFunctions.getImportFunctionList().size() == 0) continue;
-      if (importFunctions.getImportFunctionList().size() == 1) {
+      if (importDirective == null
+        || importDirective.getModuleRef() == null
+        || importDirective.getImportFunctions() == null)
+        continue;
+      List<ErlangImportFunction> importFunctionList = importDirective.getImportFunctions().getImportFunctionList();
+      if (importFunctionList.isEmpty()) continue;
+      if (importFunctionList.size() == 1) {
         attribute.delete();
         continue;
       }
-      StringBuilder newImport = new StringBuilder();
-      for (ErlangImportFunction ef : importFunctions.getImportFunctionList()) {
-        if (!ef.getText().equals(function.getName() + "/" + function.getArity())) {
-          if (newImport.length() > 0)
-            newImport.append(", ");
-          newImport.append(ef.getText());
+      List<String> newImports = ContainerUtil.newArrayList();
+      String fullName = ErlangPsiImplUtil.createFunctionPresentation(function);
+      for (ErlangImportFunction f : importFunctionList) {
+        if (!f.getText().equals(fullName)) {
+          newImports.add(f.getText());
         }
       }
       String moduleName = importDirective.getModuleRef().getText();
-      attribute.replace(ErlangElementFactory.createImportFromText(project, moduleName, newImport.toString()));
+      attribute.replace(ErlangElementFactory.createImportFromText(project, moduleName, StringUtil.join(newImports, ", ")));
     }
   }
 

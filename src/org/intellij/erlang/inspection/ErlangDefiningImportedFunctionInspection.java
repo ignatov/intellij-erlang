@@ -32,6 +32,7 @@ import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFromImportFix;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Set;
 
 public class ErlangDefiningImportedFunctionInspection extends ErlangInspectionBase {
   @Override
@@ -44,12 +45,10 @@ public class ErlangDefiningImportedFunctionInspection extends ErlangInspectionBa
     return new ErlangVisitor() {
       @Override
       public void visitFile(final PsiFile file) {
-        List<String> importedFunctionNames = ContainerUtil.map(((ErlangFile) file).getImportedFunctions(), new Function<ErlangImportFunction, String>() {
-          @Override
-          public String fun(ErlangImportFunction erlangImportFunction) {
-            return erlangImportFunction.getText();
-          }
-        });
+        Set<String> importedFunctionNames = ContainerUtil.newHashSet();
+        for (ErlangImportFunction f : ((ErlangFile) file).getImportedFunctions()) {
+          importedFunctionNames.add(f.getText());
+        }
         for (ErlangFunction function : ((ErlangFile) file).getFunctions()) {
           String fullName = function.getName() + "/" + function.getArity();
           if (importedFunctionNames.contains(fullName)) {
