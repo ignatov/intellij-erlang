@@ -25,6 +25,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangGlobalFunctionCallExpression;
@@ -35,7 +36,10 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,19 +48,28 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
   private static final Pattern PATTERN_FUNC_DECLARATION = Pattern.compile(
     "<span\\s+class=\"bold_code\">.*\\((.*)\\) -&gt;.*</span>", Pattern.MULTILINE);
   private static final String BIF_TABLE_PATH = "src/org/intellij/erlang/bif/bif.tab.txt";
+  private static final String BIF_AUTOIMPORT_TABLE_PATH = "src/org/intellij/erlang/bif/bif.autoimport.tab.txt";
   private static final String GENERATED_FILE = "src/org/intellij/erlang/bif/ErlangBifTable.java";
   private static final String ERLANG_SDK_PATH = "/usr/lib/erlang";
-  private static final String ERLANG_DOC_PATH = "/home/ignatov/Downloads/otp_doc_html_R16B";
+  private static final String ERLANG_DOC_PATH = "/home/user/Downloads/otp_doc_html_R16B";
   private static final Pattern BIF_DECLARATION = Pattern.compile("bif (\\w+)\\:(\\w+)/(\\d+)");
   private static final Pattern BIF_SEPARATOR = Pattern.compile("# New Bifs in (R.+)");
 
   private ErlangDocumentationProvider myDocProvider;
 
+  private Set<String> getAutoimportedFunctions() throws IOException {
+    File bifAutoimportTableFile = new File(BIF_AUTOIMPORT_TABLE_PATH);
+    String[] bifAutoimportTableText = StringUtil.splitByLines(FileUtilRt.loadFile(bifAutoimportTableFile));
+    return new HashSet<String>(ContainerUtil.set(bifAutoimportTableText));
+  }
+
   public void testSomething() throws Exception {
     File bifTableFile = new File(BIF_TABLE_PATH);
     String[] bifTableText = StringUtil.splitByLines(FileUtilRt.loadFile(bifTableFile));
+
     PrintStream bifTableJavaBuilder = new PrintStream(new File(GENERATED_FILE));
     try {
+      Set<String> autoimported = getAutoimportedFunctions();
       bifTableJavaBuilder.append("package org.intellij.erlang.bif;\n" +
         "\n" +
         "import org.jetbrains.annotations.NotNull;\n" +
@@ -83,10 +96,11 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
           String module = matcher.group(1);
           String name = matcher.group(2);
           String arity = matcher.group(3);
+          String isAuroimport = autoimported.contains(name + "/" + arity) ? ", true" : "";
           bifTableJavaBuilder.append("    bifMap.putValue(\"").append(module)
             .append("\", new ErlangBifDescriptor(\"")
             .append(module).append("\", \"").append(name).append("\", ").append(arity)
-            .append(", \"").append(fetchSpec(module, name, Integer.valueOf(arity))).append("\"));\n");
+            .append(", \"").append(fetchSpec(module, name, Integer.valueOf(arity))).append("\"").append(isAuroimport).append("));\n");
         }
         else if ((matcher = BIF_SEPARATOR.matcher(s)).find()) {
           String version = matcher.group(1).replaceAll("\\.", "");

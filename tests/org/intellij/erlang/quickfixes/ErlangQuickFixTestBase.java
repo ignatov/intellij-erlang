@@ -38,4 +38,12 @@ public abstract class ErlangQuickFixTestBase extends ErlangLightPlatformCodeInsi
     String after = String.format("%s-after.erl", testName);
     myFixture.checkResultByFile(after);
   }
+
+  protected void assertNoIntention(String prefix) {
+    String testName = getTestName(true);
+    myFixture.configureByFile(testName + ".erl");
+    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(prefix);
+    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
+    assertNull(action);
+  }
 }

@@ -24,11 +24,23 @@ public final class ErlangBifDescriptor implements Comparable<ErlangBifDescriptor
   private final int myArity;
   @NotNull private final String myParams;
 
+  private final boolean myIsAutoImported;
+
   public ErlangBifDescriptor(@NotNull String module, @NotNull String name, int arity, @NotNull String params) {
+    this(module, name, arity, params, false);
+  }
+
+  public ErlangBifDescriptor(@NotNull String module, @NotNull String name, int arity, @NotNull String params,
+                             boolean isAutoImported) {
     myModule = module;
     myName = name;
     myArity = arity;
     myParams = params;
+    myIsAutoImported = isAutoImported;
+  }
+
+  public boolean isAutoImported() {
+    return myIsAutoImported;
   }
 
   @NotNull
@@ -52,6 +64,8 @@ public final class ErlangBifDescriptor implements Comparable<ErlangBifDescriptor
 
   @Override
   public String toString() {
+    if (myModule.isEmpty())
+      return myName + "/" + myArity;
     return myModule + ":" + myName + "/" + myArity;
   }
 

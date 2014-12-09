@@ -67,6 +67,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testDefineImported1()   { doTest(); }
   public void testDefineImported2()   { doTest(); }
 
+  public void testAmbiguousAutoimportCall1()   { doTest(); }
+  public void testAmbiguousAutoimportCall2()   { doTest(); }
+  public void testAmbiguousAutoimportCall3()   { doTest(); }
+
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
     doTest();

@@ -207,6 +207,9 @@
         <localInspection language="Erlang" shortName="ErlangDefiningImportedFunction" displayName="Defining imported function"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangDefiningImportedFunctionInspection"/>
+      <localInspection language="Erlang" shortName="ErlangAmbiguousCallOfAutoimportedFunction" displayName="Ambiguous call of auto-imported BIF"
+                       groupName="Erlang" enabledByDefault="true" level="ERROR"
+                       implementationClass="org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoimportedFunctionInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
 
