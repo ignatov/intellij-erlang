@@ -1,0 +1,4 @@
+-import(incl, [crc32/1, crc32/2, crc32/2]).
+-import(incl, [<error>crc32/1</error>, foo/0]).
+-import(incl, [<error>foo/0</error>, bar/0]).
+-import(incl, [<error>foo/0</error>, dt_get_tag/0]).

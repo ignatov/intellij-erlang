@@ -1422,6 +1422,20 @@ public class ErlangPsiImplUtil {
     return type.getName() + "/" + getArity(type);
   }
 
+
+  @Nullable
+  public static String createFunctionPresentation(@NotNull ErlangImportFunction function) {
+    PsiReference reference = function.getReference();
+    PsiElement resolve = reference.resolve();
+    if (resolve == null && reference instanceof ErlangFunctionReferenceImpl) {
+      return ((ErlangFunctionReferenceImpl)reference).getSignature();
+    }
+    if (resolve instanceof ErlangFunction) {
+      return createFunctionPresentation((ErlangFunction) resolve);
+    }
+    return null;
+  }
+
   @NotNull
   @SuppressWarnings("UnusedParameters")
   public static Icon getIcon(@NotNull ErlangFunction o, int flags) {

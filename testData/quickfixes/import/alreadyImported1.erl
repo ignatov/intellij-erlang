@@ -1,0 +1,2 @@
+-import(incl, [crc32/1, crc32/2]).
+-import(incl, [crc32<caret>/1, crc32/2]).

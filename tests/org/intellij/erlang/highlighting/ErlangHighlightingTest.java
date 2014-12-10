@@ -64,6 +64,39 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testInFunClause()       { doTest(); }
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
+  public void testDefineImported1()   { doTest(); }
+  public void testDefineImported2()   { doTest(); }
+
+  public void testAmbiguousAutoimportCall1()   { doTest(); }
+  public void testAmbiguousAutoimportCall2()   { doTest(); }
+  public void testAmbiguousAutoimportCall3()   { doTest(); }
+
+  private void loadIncluded() {
+    myFixture.configureByText("incl.erl",
+      "-module(incl).\n" +
+        "-export([crc32/1, abs/1, dt_get_tag/0, bar/0, abs/0]).\n" +
+        "\n" +
+        "crc32(Data) -> Data.\n" +
+        "abs(D) -> D.\n" +
+        "abs() -> zero.\n" +
+        "dt_get_tag() -> ok.\n" +
+        "bar() -> ok.");
+  }
+
+  public void testImportAutoimported()   {
+    loadIncluded();
+    doTest();
+  }
+
+  public void testAlreadyImported1()   {
+    loadIncluded();
+    doTest();
+  }
+
+  public void testAlreadyImported2()   {
+    loadIncluded();
+    doTest();
+  }
 
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
