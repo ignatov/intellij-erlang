@@ -1426,6 +1426,9 @@ public class ErlangPsiImplUtil {
   public static String createFunctionPresentation(@NotNull ErlangImportFunction function) {
     PsiReference reference = function.getReference();
     PsiElement resolve = reference.resolve();
+    if (resolve == null && reference instanceof ErlangFunctionReferenceImpl) {
+      return ((ErlangFunctionReferenceImpl)reference).getSignature();
+    }
     if (resolve instanceof ErlangFunction) {
       return createFunctionPresentation((ErlangFunction) resolve);
     }

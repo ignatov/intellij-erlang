@@ -1,5 +1,7 @@
--import(nio, [crc32/2]).
--import(nio, [foo/1, bar/2]).
+-import(incl, [crc32/2]).
+-import(incl, [foo/0, bar/0]).
+-import(erlang, [asdfadf/1]).
+-import(erlang, [dt_get_tag/0]).
 -export([crc32/1]).
 
-crc32(Data) -> Data.
+crc32<caret>(Data) -> Data.

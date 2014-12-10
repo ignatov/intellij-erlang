@@ -71,7 +71,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testAmbiguousAutoimportCall2()   { doTest(); }
   public void testAmbiguousAutoimportCall3()   { doTest(); }
 
-  public void testImportAutoimported()   {
+  private void loadIncluded() {
     myFixture.configureByText("incl.erl",
       "-module(incl).\n" +
         "-export([crc32/1, abs/1, dt_get_tag/0, bar/0, abs/0]).\n" +
@@ -81,6 +81,20 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
         "abs() -> zero.\n" +
         "dt_get_tag() -> ok.\n" +
         "bar() -> ok.");
+  }
+
+  public void testImportAutoimported()   {
+    loadIncluded();
+    doTest();
+  }
+
+  public void testAlreadyImported1()   {
+    loadIncluded();
+    doTest();
+  }
+
+  public void testAlreadyImported2()   {
+    loadIncluded();
     doTest();
   }
 

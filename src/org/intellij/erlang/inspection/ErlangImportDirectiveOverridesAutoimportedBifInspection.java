@@ -50,7 +50,7 @@ public class ErlangImportDirectiveOverridesAutoimportedBifInspection extends Erl
         ErlangBifDescriptor bifDescriptor = ErlangBifTable.getBif("erlang", name, arity);
         if (bifDescriptor == null || !bifDescriptor.isAutoImported())  return;
         holder.registerProblem(o, "Import directive overrides pre R14 auto-imported BIF " + "'" + r.getSignature() + "'",
-          ProblemHighlightType.GENERIC_ERROR,
+          ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
           new ErlangRemoveFunctionFromImportFix());
       }
     };

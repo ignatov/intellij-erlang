@@ -17,6 +17,7 @@
 package org.intellij.erlang.quickfixes;
 
 import org.intellij.erlang.inspection.ErlangDefiningImportedFunctionInspection;
+import org.intellij.erlang.inspection.ErlangFunctionAlreadyImportedInspection;
 import org.intellij.erlang.inspection.ErlangImportDirectiveOverridesAutoimportedBifInspection;
 
 public class ErlangImportFixTest extends ErlangQuickFixTestBase {
@@ -26,7 +27,8 @@ public class ErlangImportFixTest extends ErlangQuickFixTestBase {
     //noinspection unchecked
     myFixture.enableInspections(
       ErlangDefiningImportedFunctionInspection.class,
-      ErlangImportDirectiveOverridesAutoimportedBifInspection.class
+      ErlangImportDirectiveOverridesAutoimportedBifInspection.class,
+      ErlangFunctionAlreadyImportedInspection.class
       );
   }
 
@@ -36,7 +38,21 @@ public class ErlangImportFixTest extends ErlangQuickFixTestBase {
   }
 
   private void doTest() {
+    loadModule();
     doTest("Remove from import");
+  }
+
+  private void loadModule() {
+    myFixture.configureByText("incl.erl",
+      "-module(incl).\n" +
+        "-export([crc32/1, crc32/2, abs/1, dt_get_tag/0, bar/0, abs/0, foo/0]).\n" +
+        "foo() -> ok.\n" +
+        "crc32(Data) -> Data.\n" +
+        "crc32(D, T) -> ok.\n" +
+        "abs(D) -> D.\n" +
+        "abs() -> zero.\n" +
+        "dt_get_tag() -> ok.\n" +
+        "bar() -> ok.");
   }
 
   public void testCommon()              { doTest(); }
@@ -44,16 +60,8 @@ public class ErlangImportFixTest extends ErlangQuickFixTestBase {
   public void testOneImport()           { doTest(); }
   public void testDuplicateImport()     { doTest(); }
   public void testNoImport()            { doTest(); }
-  public void testImportAutoimported() {
-    myFixture.configureByText("incl.erl",
-      "-module(incl).\n" +
-        "-export([crc32/1, abs/1, dt_get_tag/0, bar/0, abs/0]).\n" +
-        "\n" +
-        "crc32(Data) -> Data.\n" +
-        "abs(D) -> D.\n" +
-        "abs() -> zero.\n" +
-        "dt_get_tag() -> ok.\n" +
-        "bar() -> ok.");
-    doTest();
-  }
+  public void testImportAutoimported()  { doTest(); }
+  public void testAlreadyImported1()    { doTest(); }
+  public void testAlreadyImported2()    { doTest(); }
+
 }
