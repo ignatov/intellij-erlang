@@ -1422,6 +1422,12 @@ public class ErlangPsiImplUtil {
     return type.getName() + "/" + getArity(type);
   }
 
+
+  @NotNull
+  public static String createFunctionPresentation(@NotNull ErlangImportFunction function) {
+    return getName(function.getQAtom()) + "/" + getArity(function.getInteger());
+  }
+
   @NotNull
   @SuppressWarnings("UnusedParameters")
   public static Icon getIcon(@NotNull ErlangFunction o, int flags) {

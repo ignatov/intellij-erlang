@@ -128,7 +128,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testBif() throws Throwable {
-    doTestInclude("foo() -> <caret>", "is_function", "is_record", "universaltime_to_posixtime");
+    doTestInclude("foo() -> <caret>", "is_function", "is_record", "abs");
   }
 
   public void testBifFromModules() throws Throwable {
