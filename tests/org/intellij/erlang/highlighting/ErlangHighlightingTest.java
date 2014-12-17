@@ -64,6 +64,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testInFunClause()       { doTest(); }
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
+  public void testDefineImported1()   { doTest(); }
+  public void testDefineImported2()   { doTest(); }
 
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
