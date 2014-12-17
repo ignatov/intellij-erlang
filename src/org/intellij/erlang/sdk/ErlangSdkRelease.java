@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class ErlangSdkRelease {
+  public static final ErlangSdkRelease V_R14A = new ErlangSdkRelease("R14A", "5.8");
   public static final ErlangSdkRelease V_R15B02 = new ErlangSdkRelease("R15B02", "5.9.2");
   public static final ErlangSdkRelease V_R16A = new ErlangSdkRelease("R16A", "5.10");
   public static final ErlangSdkRelease V_R16B = new ErlangSdkRelease("R16B", "5.10.1");
