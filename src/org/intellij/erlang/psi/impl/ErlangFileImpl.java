@@ -22,19 +22,13 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.FileViewProvider;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNameIdentifierOwner;
-import com.intellij.psi.PsiReference;
+import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.stubs.StubTree;
 import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.util.CachedValue;
-import com.intellij.psi.util.CachedValueProvider;
-import com.intellij.psi.util.CachedValuesManager;
-import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.util.*;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
@@ -241,11 +235,25 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         return Result.create(calcExportAll(), ErlangFileImpl.this);
       }
     }, false);
+  private CachedValue<Boolean> myNoAutoImportAll =
+    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Boolean>() {
+      @Override
+      public Result<Boolean> compute() {
+        return Result.create(calcNoAutoImportAll(), ErlangFileImpl.this);
+      }
+    }, false);
   private CachedValue<Set<String>> myExportedFunctionsSignatures =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<String>>() {
       @Override
       public Result<Set<String>> compute() {
         return Result.create(calcExportedSignatures(), ErlangFileImpl.this);
+      }
+    }, false);
+  private CachedValue<Set<String>> myNoAutoImportFunctionsSignatures =
+    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<String>>() {
+      @Override
+      public Result<Set<String>> compute() {
+        return Result.create(calcNoAutoImportSignatures(), ErlangFileImpl.this);
       }
     }, false);
 
@@ -268,6 +276,12 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return myExportedFunctionsSignatures.getValue().contains(signature);
   }
 
+  @Override
+  public boolean isNoAutoImport(@NotNull String name, int arity) {
+    if (isNoAutoImportAll()) return true;
+    return myNoAutoImportFunctionsSignatures.getValue().contains(name + "/" + arity);
+  }
+
   @NotNull
   private Set<String> calcExportedSignatures() {
     Set<String> result = ContainerUtil.newHashSet();
@@ -286,6 +300,59 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return result;
   }
 
+  @NotNull
+  private List<ErlangExpression> getCompileDirectiveExpressions() {
+    List<ErlangExpression> result = ContainerUtil.newArrayList();
+    for (ErlangAttribute attribute : getAttributes()) {
+      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+      if (atomAttribute == null) continue;
+      if (!"compile".equals(atomAttribute.getQAtom().getText())) continue;
+      if (atomAttribute.getAttrVal() == null) continue;
+      result.addAll(atomAttribute.getAttrVal().getExpressionList());
+    }
+    return result;
+  }
+
+  @NotNull
+  private Set<String> calcNoAutoImportSignatures() {
+    Set<String> result = ContainerUtil.newHashSet();
+    for (ErlangExpression expression : getCompileDirectiveExpressions()) {
+      if (expression instanceof ErlangListExpression) {
+        for (ErlangExpression tuple : ((ErlangListExpression) expression).getExpressionList()) {
+          if (tuple instanceof ErlangTupleExpression) {
+            result.addAll(getNoAutoImportFunctionSignaturesFromTuple((ErlangTupleExpression) tuple));
+          }
+        }
+      }
+      else if (expression instanceof ErlangTupleExpression) {
+        result.addAll(getNoAutoImportFunctionSignaturesFromTuple((ErlangTupleExpression) expression));
+      }
+    }
+    return result;
+  }
+
+  @NotNull
+  private static Set<String> getNoAutoImportFunctionSignaturesFromTuple(@Nullable ErlangTupleExpression tupleExpression) {
+    Set<String> result = ContainerUtil.newHashSet();
+    if (tupleExpression == null || tupleExpression.getExpressionList().size() != 2) return result;
+    ErlangExpression first = tupleExpression.getExpressionList().get(0);
+    ErlangExpression second = tupleExpression.getExpressionList().get(1);
+    if (!(first instanceof ErlangMaxExpression)
+      || !"no_auto_import".equals(first.getText())
+      || !(second instanceof ErlangListExpression))
+      return result;
+    for (ErlangExpression fun : ((ErlangListExpression)second).getExpressionList()) {
+      List<String> name = ContainerUtil.newArrayList();
+      for (PsiElement e : PsiTreeUtil.getChildrenOfTypeAsList(fun, PsiElement.class)) {
+        if (!(e instanceof PsiWhiteSpace) && !(e instanceof PsiComment)) {
+          name.add(e.getText());
+        }
+      }
+      result.add(StringUtil.join(name, ""));
+    }
+    return result;
+  }
+
   @Override
   public boolean isExportedAll() {
     //TODO do we use stubs?
@@ -296,27 +363,29 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return myExportAll.getValue();
   }
 
-  private Boolean calcExportAll() {
-    for (ErlangAttribute attribute : getAttributes()) {
-      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
-      if (atomAttribute != null) {
-        if ("compile".equals(atomAttribute.getQAtom().getText())) {
-          ErlangAttrVal attrVal = atomAttribute.getAttrVal();
-          if (attrVal != null) {
-            List<ErlangExpression> expressionList = attrVal.getExpressionList();
-            for (ErlangExpression expression : expressionList) {
-              if (expression instanceof ErlangListExpression) {
-                for (ErlangExpression e : ((ErlangListExpression) expression).getExpressionList()) {
-                  if (e instanceof ErlangMaxExpression && e.getText().equals("export_all")) return true;
-                }
-              }
-              else if (expression instanceof ErlangMaxExpression && expression.getText().equals("export_all")) return true;
-            }
-          }
+  private Boolean containsCompileDirectiveWithOption(@NotNull String option) {
+    for (ErlangExpression expression : getCompileDirectiveExpressions()) {
+      if (expression instanceof ErlangListExpression) {
+        for (ErlangExpression e : ((ErlangListExpression) expression).getExpressionList()) {
+          if (e instanceof ErlangMaxExpression && e.getText().equals(option)) return true;
         }
       }
+      else if (expression instanceof ErlangMaxExpression && expression.getText().equals(option)) return true;
     }
     return false;
+  }
+
+  @Override
+  public boolean isNoAutoImportAll() {
+    return myNoAutoImportAll.getValue();
+  }
+
+  private Boolean calcNoAutoImportAll() {
+    return containsCompileDirectiveWithOption("no_auto_import");
+  }
+
+  private Boolean calcExportAll() {
+    return containsCompileDirectiveWithOption("export_all");
   }
 
   @NotNull
