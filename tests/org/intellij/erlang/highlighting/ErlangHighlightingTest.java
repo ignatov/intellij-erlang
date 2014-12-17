@@ -91,6 +91,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   }
 
   public void testImportAutoimported()    {doTestWithInclude(); }
+  public void testAlreadyImported1()      {doTestWithInclude(); }
+  public void testAlreadyImported2()      {doTestWithInclude(); }
 
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();

@@ -184,6 +184,9 @@
         <localInspection language="Erlang" shortName="ErlangImportDirectiveOverridesAutoimportedBif" displayName="Import overrides auto-imported BIF"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangImportDirectiveOverridesAutoimportedBifInspection"/>
+        <localInspection language="Erlang" shortName="ErlangFunctionAlreadyImported" displayName="Function already imported"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangFunctionAlreadyImportedInspection"/>
 
         <!--warnings-->
         <localInspection language="Erlang" shortName="ErlangUnresolvedFunction" displayName="Unresolved function"
