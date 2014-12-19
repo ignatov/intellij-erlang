@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyVariantReferenceBase<T> {
+public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyVariantReferenceBase<T> implements ErlangFunctionReference {
   @Nullable
   private final ErlangQAtom myModuleAtom;
   protected final String myReferenceName;
@@ -183,14 +183,17 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     return getElement();
   }
 
+  @Override
   public String getSignature() {
     return myReferenceName + "/" + myArity;
   }
 
+  @Override
   public String getName() {
     return myReferenceName;
   }
 
+  @Override
   public int getArity() {
     return myArity;
   }

@@ -24,7 +24,6 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangFunctionReferenceImpl;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,9 +37,9 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
       @Override
       public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
         PsiReference reference = o.getReference();
-        if (reference instanceof ErlangFunctionReferenceImpl && reference.resolve() == null) {
+        if (reference instanceof ErlangFunctionReference && reference.resolve() == null) {
           if (o.getQAtom().getMacros() != null) return;
-          ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
+          ErlangFunctionReference r = (ErlangFunctionReference) reference;
 
           String name = r.getName();
           int arity = r.getArity();
@@ -79,11 +78,11 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
 
       private void inspect(PsiElement what, ErlangQAtom target, @Nullable PsiReference reference) {
         if (PsiTreeUtil.getParentOfType(what, ErlangCallbackSpec.class) != null || target.getMacros() != null ||
-          !(reference instanceof ErlangFunctionReferenceImpl) || reference.resolve() != null) {
+          !(reference instanceof ErlangFunctionReference) || reference.resolve() != null) {
           return;
         }
 
-        ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
+        ErlangFunctionReference r = (ErlangFunctionReference) reference;
         if (r.getArity() < 0) return; //there is no need to inspect incomplete/erroneous code
         LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(what, ErlangModuleRef.class) != null ?
           new LocalQuickFix[]{} : new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(r.getName(), r.getArity())};
