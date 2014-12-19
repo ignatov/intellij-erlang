@@ -1096,8 +1096,12 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  private static String getAtomName(@Nullable ErlangMaxExpression expression) {
-    ErlangQAtom qAtom = expression != null ? expression.getQAtom() : null;
+  public static String getAtomName(@Nullable ErlangMaxExpression expression) {
+    return expression != null ? getAtomName(expression.getQAtom()) : null;
+  }
+
+  @Nullable
+  public static String getAtomName(@Nullable ErlangQAtom qAtom) {
     ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
     return atom != null ? atom.getName() : null;
   }
@@ -1385,6 +1389,11 @@ public class ErlangPsiImplUtil {
         return o.getIcon(0);
       }
     };
+  }
+
+  @NotNull
+  public static String createFunctionPresentation(@NotNull ErlangAtomWithArityExpression function) {
+    return getName(function.getQAtom()) + "/" + getArity(function.getInteger());
   }
 
   @NotNull

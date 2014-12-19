@@ -110,6 +110,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangModuleResolutionTest.class);
     suite.addTestSuite(ErlangMethodSeparatorProviderTest.class);
     suite.addTestSuite(ErlangMacroParameterResolutionTest.class);
+    suite.addTestSuite(ErlangAmbiguousCallTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }
