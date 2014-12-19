@@ -50,10 +50,13 @@ import org.jetbrains.generate.tostring.util.StringUtil;
 
 import javax.swing.*;
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ErlangSdkType extends SdkType {
-  private final WeakHashMap<String, ErlangSdkRelease> mySdkHomeToReleaseCache = new WeakHashMap<String, ErlangSdkRelease>();
+  private final Map<String, ErlangSdkRelease> mySdkHomeToReleaseCache = ApplicationManager.getApplication().isUnitTestMode() ?
+    new HashMap<String, ErlangSdkRelease>() : new WeakHashMap<String, ErlangSdkRelease>();
 
   @NotNull
   public static ErlangSdkType getInstance() {
