@@ -43,6 +43,13 @@ public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangF
     return p2.getQAtom();
   }
 
+  @Override
+  @NotNull
+  public ErlangFunctionClause getFirstClause() {
+    List<ErlangFunctionClause> p1 = getFunctionClauseList();
+    return p1.get(0);
+  }
+
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);

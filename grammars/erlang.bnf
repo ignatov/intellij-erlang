@@ -284,6 +284,7 @@ function ::= function_clause (';' function_clause)* {
   pin(".*")=1
   methods = [
     atom_name = "function_clause[0]/q_atom"
+    first_clause = "function_clause[0]"
     getName
     setName
     getArity

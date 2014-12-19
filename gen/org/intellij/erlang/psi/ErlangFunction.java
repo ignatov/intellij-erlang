@@ -18,6 +18,9 @@ public interface ErlangFunction extends ErlangNamedElement, StubBasedPsiElement<
   ErlangQAtom getAtomName();
 
   @NotNull
+  ErlangFunctionClause getFirstClause();
+
+  @NotNull
   String getName();
 
   @NotNull

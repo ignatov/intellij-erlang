@@ -729,7 +729,7 @@ public class ErlangPsiImplUtil {
   public static int getArity(@NotNull ErlangFunction o) {
     ErlangFunctionStub stub = o.getStub();
     if (stub != null) return stub.getArity();
-    return o.getFunctionClauseList().get(0).getArgumentDefinitionList().getArgumentDefinitionList().size();
+    return o.getFirstClause().getArgumentDefinitionList().getArgumentDefinitionList().size();
   }
 
   @NotNull

@@ -43,12 +43,12 @@ public class ErlangElementFactory {
   @NotNull
   public static ErlangExpression createExpressionFromText(@NotNull Project project, @NotNull String text) {
     ErlangFile fileFromText = createFileFromText(project, "f(" + text + ") -> " + text + ".");
-    return fileFromText.getFunctions().get(0).getFunctionClauseList().get(0).getClauseBody().getExpressionList().get(0);
+    return fileFromText.getFunctions().get(0).getFirstClause().getClauseBody().getExpressionList().get(0);
   }
 
   public static ErlangArgumentDefinition createFunExpressionNameFromText(@NotNull Project project, @NotNull String text) {
     ErlangFile fileFromText = createFileFromText(project, "foo() -> fun " + text + "() -> ok end.");
-    ErlangFunctionClause clause = fileFromText.getFunctions().get(0).getFunctionClauseList().get(0);
+    ErlangFunctionClause clause = fileFromText.getFunctions().get(0).getFirstClause();
     ErlangFunExpression funExpression = (ErlangFunExpression)clause.getClauseBody().getExpressionList().get(0);
     return funExpression.getFunClauses().getFunClauseList().get(0).getArgumentDefinition();
   }
