@@ -1208,6 +1208,7 @@ public class ErlangPsiImplUtil {
     return ThreeState.UNSURE;
   }
 
+  @NotNull
   public static String getName(@NotNull ErlangAtom atom) {
     return atom.getNameIdentifier().getText();
   }
