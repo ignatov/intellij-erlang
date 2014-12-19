@@ -42,8 +42,9 @@ public abstract class ErlangRemoveFunctionFromImportFixBase extends ErlangQuickF
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
     String fullName = getSignature(descriptor.getPsiElement());
-    if (fullName == null) return;
-    removeFunctionFromImport(getAttributesForProcessing(descriptor.getPsiElement()), fullName);
+    if (fullName != null) {
+      removeFunctionFromImport(getAttributesForProcessing(descriptor.getPsiElement()), fullName);
+    }
   }
 
   @Nullable
@@ -87,8 +88,9 @@ public abstract class ErlangRemoveFunctionFromImportFixBase extends ErlangQuickF
     PsiElement maybeComma = backward
       ? PsiTreeUtil.skipSiblingsBackward(function, PsiWhiteSpace.class, PsiComment.class)
       : PsiTreeUtil.skipSiblingsForward(function, PsiWhiteSpace.class, PsiComment.class);
-    if (maybeComma == null || maybeComma.getNode().getElementType() != ErlangTypes.ERL_COMMA) return;
-    maybeComma.delete();
+    if (maybeComma != null && maybeComma.getNode().getElementType() == ErlangTypes.ERL_COMMA) {
+      maybeComma.delete();
+    }
   }
 
   public static class ErlangRemoveFunctionFromAllImportsFix extends ErlangRemoveFunctionFromImportFixBase {

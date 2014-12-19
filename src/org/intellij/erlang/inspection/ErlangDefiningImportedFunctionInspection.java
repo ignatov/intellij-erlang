@@ -43,16 +43,13 @@ public class ErlangDefiningImportedFunctionInspection extends ErlangInspectionBa
     for (ErlangFunction function : file.getFunctions()) {
       String fullName = ErlangPsiImplUtil.createFunctionPresentation(function);
       if (importedFunctionNames.contains(fullName)) {
-        //noinspection ConstantConditions
-        problemsHolder.registerProblem(InspectionManager.getInstance(file.getProject()).createProblemDescriptor(
+        problemsHolder.registerProblem(
           function.getNameIdentifier(),
-          ContainerUtil.getFirstItem(function.getFunctionClauseList()).getArgumentDefinitionList(),
           "Defining imported function '" + fullName + "'",
-          ProblemHighlightType.GENERIC_ERROR_OR_WARNING, true,
+          ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
           new ErlangRemoveFunctionFix(),
-          new ErlangRemoveFunctionFromImportFixBase.ErlangRemoveFunctionFromAllImportsFix()));
+          new ErlangRemoveFunctionFromImportFixBase.ErlangRemoveFunctionFromAllImportsFix());
       }
     }
   }
-
 }
