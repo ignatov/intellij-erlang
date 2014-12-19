@@ -1398,6 +1398,11 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  public static String createFunctionPresentation(@NotNull ErlangImportFunction function) {
+    return getName(function.getQAtom()) + "/" + getArity(function.getInteger());
+  }
+
+  @NotNull
   public static String getQualifiedFunctionName(@NotNull ErlangFunction function) {
     PsiFile file = function.getContainingFile();
     ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
