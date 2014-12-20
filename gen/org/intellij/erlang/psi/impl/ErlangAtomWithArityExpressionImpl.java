@@ -10,36 +10,33 @@ import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
 
-public class ErlangAtomImpl extends ErlangCompositeElementImpl implements ErlangAtom {
+public class ErlangAtomWithArityExpressionImpl extends ErlangExpressionImpl implements ErlangAtomWithArityExpression {
 
-  public ErlangAtomImpl(ASTNode node) {
+  public ErlangAtomWithArityExpressionImpl(ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAtom(this);
+    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAtomWithArityExpression(this);
     else super.accept(visitor);
   }
 
   @Override
-  @Nullable
-  public PsiElement getAtomName() {
-    return findChildByType(ERL_ATOM_NAME);
+  @NotNull
+  public ErlangQAtom getQAtom() {
+    return findNotNullChildByClass(ErlangQAtom.class);
   }
 
+  @Override
   @NotNull
-  public String getName() {
-    return ErlangPsiImplUtil.getName(this);
+  public PsiElement getOpArDiv() {
+    return findNotNullChildByType(ERL_OP_AR_DIV);
   }
 
+  @Override
   @NotNull
-  public ErlangAtom setName(String newName) {
-    return ErlangPsiImplUtil.setName(this, newName);
-  }
-
-  @NotNull
-  public PsiElement getNameIdentifier() {
-    return ErlangPsiImplUtil.getNameIdentifier(this);
+  public PsiElement getInteger() {
+    return findNotNullChildByType(ERL_INTEGER);
   }
 
 }

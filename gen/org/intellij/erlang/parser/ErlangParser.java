@@ -35,7 +35,7 @@ public class ErlangParser implements PsiParser {
       r = expression(b, 0, 3);
     }
     else if (t == ERL_ANONYMOUS_CALL_EXPRESSION) {
-      r = expression(b, 0, 10);
+      r = expression(b, 0, 11);
     }
     else if (t == ERL_ARGUMENT_DEFINITION) {
       r = argument_definition(b, 0);
@@ -54,6 +54,9 @@ public class ErlangParser implements PsiParser {
     }
     else if (t == ERL_ATOM_ATTRIBUTE) {
       r = atom_attribute(b, 0);
+    }
+    else if (t == ERL_ATOM_WITH_ARITY_EXPRESSION) {
+      r = atom_with_arity_expression(b, 0);
     }
     else if (t == ERL_ATTR_VAL) {
       r = attr_val(b, 0);
@@ -104,7 +107,7 @@ public class ErlangParser implements PsiParser {
       r = clause_guard(b, 0);
     }
     else if (t == ERL_COLON_QUALIFIED_EXPRESSION) {
-      r = expression(b, 0, 9);
+      r = expression(b, 0, 10);
     }
     else if (t == ERL_COMP_OP_EXPRESSION) {
       r = expression(b, 0, 4);
@@ -257,7 +260,7 @@ public class ErlangParser implements PsiParser {
       r = map_entry_type(b, 0);
     }
     else if (t == ERL_MAP_EXPRESSION) {
-      r = expression(b, 0, 10);
+      r = expression(b, 0, 11);
     }
     else if (t == ERL_MAP_TUPLE) {
       r = map_tuple(b, 0);
@@ -308,7 +311,7 @@ public class ErlangParser implements PsiParser {
       r = record_definition(b, 0);
     }
     else if (t == ERL_RECORD_EXPRESSION) {
-      r = expression(b, 0, 10);
+      r = expression(b, 0, 11);
     }
     else if (t == ERL_RECORD_FIELD) {
       r = record_field(b, 0);
@@ -412,14 +415,14 @@ public class ErlangParser implements PsiParser {
       ERL_INT_TYPE, ERL_MAP_ENTRY_TYPE, ERL_MAP_TYPE, ERL_RECORD_LIKE_TYPE,
       ERL_TOP_TYPE, ERL_TYPE),
     create_token_set_(ERL_ADDITIVE_EXPRESSION, ERL_ANDALSO_EXPRESSION, ERL_ANONYMOUS_CALL_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION,
-      ERL_BEGIN_END_EXPRESSION, ERL_BINARY_EXPRESSION, ERL_CASE_EXPRESSION, ERL_CATCH_EXPRESSION,
-      ERL_COLON_QUALIFIED_EXPRESSION, ERL_COMP_OP_EXPRESSION, ERL_CONFIG_CALL_EXPRESSION, ERL_CONFIG_EXPRESSION,
-      ERL_EXPRESSION, ERL_FUNCTION_CALL_EXPRESSION, ERL_FUN_EXPRESSION, ERL_GENERIC_FUNCTION_CALL_EXPRESSION,
-      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION, ERL_IF_EXPRESSION, ERL_LC_EXPRESSION, ERL_LIST_COMPREHENSION,
-      ERL_LIST_EXPRESSION, ERL_LIST_OP_EXPRESSION, ERL_MAP_EXPRESSION, ERL_MAX_EXPRESSION,
-      ERL_MULTIPLICATIVE_EXPRESSION, ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION, ERL_PREFIX_EXPRESSION,
-      ERL_QUALIFIED_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION, ERL_SEND_EXPRESSION,
-      ERL_STRING_LITERAL, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
+      ERL_ATOM_WITH_ARITY_EXPRESSION, ERL_BEGIN_END_EXPRESSION, ERL_BINARY_EXPRESSION, ERL_CASE_EXPRESSION,
+      ERL_CATCH_EXPRESSION, ERL_COLON_QUALIFIED_EXPRESSION, ERL_COMP_OP_EXPRESSION, ERL_CONFIG_CALL_EXPRESSION,
+      ERL_CONFIG_EXPRESSION, ERL_EXPRESSION, ERL_FUNCTION_CALL_EXPRESSION, ERL_FUN_EXPRESSION,
+      ERL_GENERIC_FUNCTION_CALL_EXPRESSION, ERL_GLOBAL_FUNCTION_CALL_EXPRESSION, ERL_IF_EXPRESSION, ERL_LC_EXPRESSION,
+      ERL_LIST_COMPREHENSION, ERL_LIST_EXPRESSION, ERL_LIST_OP_EXPRESSION, ERL_MAP_EXPRESSION,
+      ERL_MAX_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION, ERL_ORELSE_EXPRESSION, ERL_PARENTHESIZED_EXPRESSION,
+      ERL_PREFIX_EXPRESSION, ERL_QUALIFIED_EXPRESSION, ERL_RECEIVE_EXPRESSION, ERL_RECORD_EXPRESSION,
+      ERL_SEND_EXPRESSION, ERL_STRING_LITERAL, ERL_TRY_EXPRESSION, ERL_TUPLE_EXPRESSION),
   };
 
   /* ********************************************************** */
@@ -615,19 +618,6 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom '/' integer
-  public static boolean atom_with_arity_expression(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "atom_with_arity_expression")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<expression>");
-    r = q_atom(b, l + 1);
-    r = r && consumeToken(b, ERL_OP_AR_DIV);
-    r = r && consumeToken(b, ERL_INTEGER);
-    exit_section_(b, l, m, ERL_EXPRESSION, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
   // q_atom !'(' | integer | string_literal+ | float | char
   static boolean atomic(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic")) return false;
@@ -714,7 +704,7 @@ public class ErlangParser implements PsiParser {
   //   | behaviour
   //   | on_load
   //   | else_atom_attribute <<enterMode "ELSE">>
-  //   | atom_attribute
+  //   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   //   )
   public static boolean attribute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "attribute")) return false;
@@ -737,7 +727,7 @@ public class ErlangParser implements PsiParser {
   //   | behaviour
   //   | on_load
   //   | else_atom_attribute <<enterMode "ELSE">>
-  //   | atom_attribute
+  //   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   private static boolean attribute_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "attribute_1")) return false;
     boolean r;
@@ -751,7 +741,7 @@ public class ErlangParser implements PsiParser {
     if (!r) r = behaviour(b, l + 1);
     if (!r) r = on_load(b, l + 1);
     if (!r) r = attribute_1_8(b, l + 1);
-    if (!r) r = atom_attribute(b, l + 1);
+    if (!r) r = withOn(b, l + 1, "ATOM_ATTRIBUTE", atom_attribute_parser_);
     exit_section_(b, m, null, r);
     return r;
   }
@@ -2962,44 +2952,6 @@ public class ErlangParser implements PsiParser {
       if (!empty_element_parsed_guard_(b, "left_accessors_1", c)) break;
       c = current_position_(b);
     }
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // '[' atom_with_arity_expression (',' atom_with_arity_expression)* ']'
-  public static boolean list_atom_with_arity_expression(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "list_atom_with_arity_expression")) return false;
-    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_BRACKET_LEFT);
-    r = r && atom_with_arity_expression(b, l + 1);
-    r = r && list_atom_with_arity_expression_2(b, l + 1);
-    r = r && consumeToken(b, ERL_BRACKET_RIGHT);
-    exit_section_(b, m, ERL_LIST_EXPRESSION, r);
-    return r;
-  }
-
-  // (',' atom_with_arity_expression)*
-  private static boolean list_atom_with_arity_expression_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "list_atom_with_arity_expression_2")) return false;
-    int c = current_position_(b);
-    while (true) {
-      if (!list_atom_with_arity_expression_2_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "list_atom_with_arity_expression_2", c)) break;
-      c = current_position_(b);
-    }
-    return true;
-  }
-
-  // ',' atom_with_arity_expression
-  private static boolean list_atom_with_arity_expression_2_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "list_atom_with_arity_expression_2_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_COMMA);
-    r = r && atom_with_arity_expression(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
@@ -5418,17 +5370,19 @@ public class ErlangParser implements PsiParser {
   // 6: BINARY(list_op_expression)
   // 7: BINARY(additive_expression)
   // 8: BINARY(multiplicative_expression)
-  // 9: PREFIX(prefix_expression)
-  // 10: BINARY(colon_qualified_expression)
-  // 11: ATOM(function_call_expression) ATOM(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression) POSTFIX(record_expression) ATOM(record2_expression) POSTFIX(map_expression) ATOM(qualified_expression)
-  // 12: ATOM(max_expression)
-  // 13: PREFIX(parenthesized_expression)
+  // 9: ATOM(atom_with_arity_expression)
+  // 10: PREFIX(prefix_expression)
+  // 11: BINARY(colon_qualified_expression)
+  // 12: ATOM(function_call_expression) ATOM(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression) POSTFIX(record_expression) ATOM(record2_expression) POSTFIX(map_expression) ATOM(qualified_expression)
+  // 13: ATOM(max_expression)
+  // 14: PREFIX(parenthesized_expression)
   public static boolean expression(PsiBuilder b, int l, int g) {
     if (!recursion_guard_(b, l, "expression")) return false;
     addVariant(b, "<expression>");
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, "<expression>");
     r = catch_expression(b, l + 1);
+    if (!r) r = atom_with_arity_expression(b, l + 1);
     if (!r) r = prefix_expression(b, l + 1);
     if (!r) r = function_call_expression(b, l + 1);
     if (!r) r = global_function_call_expression(b, l + 1);
@@ -5480,19 +5434,19 @@ public class ErlangParser implements PsiParser {
         r = expression(b, l, 8);
         exit_section_(b, l, m, ERL_MULTIPLICATIVE_EXPRESSION, r, true, null);
       }
-      else if (g < 10 && consumeTokenSmart(b, ERL_COLON)) {
-        r = expression(b, l, 10);
+      else if (g < 11 && consumeTokenSmart(b, ERL_COLON)) {
+        r = expression(b, l, 11);
         exit_section_(b, l, m, ERL_COLON_QUALIFIED_EXPRESSION, r, true, null);
       }
-      else if (g < 11 && anonymous_call_expression_0(b, l + 1)) {
+      else if (g < 12 && anonymous_call_expression_0(b, l + 1)) {
         r = true;
         exit_section_(b, l, m, ERL_ANONYMOUS_CALL_EXPRESSION, r, true, null);
       }
-      else if (g < 11 && record_tail(b, l + 1)) {
+      else if (g < 12 && record_tail(b, l + 1)) {
         r = true;
         exit_section_(b, l, m, ERL_RECORD_EXPRESSION, r, true, null);
       }
-      else if (g < 11 && map_tuple(b, l + 1)) {
+      else if (g < 12 && map_tuple(b, l + 1)) {
         r = true;
         exit_section_(b, l, m, ERL_MAP_EXPRESSION, r, true, null);
       }
@@ -5570,13 +5524,26 @@ public class ErlangParser implements PsiParser {
     return r;
   }
 
+  // <<isModeOn "ATOM_ATTRIBUTE">> q_atom '/' integer
+  public static boolean atom_with_arity_expression(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atom_with_arity_expression")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, "<expression>");
+    r = isModeOn(b, l + 1, "ATOM_ATTRIBUTE");
+    r = r && q_atom(b, l + 1);
+    r = r && consumeToken(b, ERL_OP_AR_DIV);
+    r = r && consumeToken(b, ERL_INTEGER);
+    exit_section_(b, l, m, ERL_ATOM_WITH_ARITY_EXPRESSION, r, false, null);
+    return r;
+  }
+
   public static boolean prefix_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "prefix_expression")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
     r = prefix_op(b, l + 1);
     p = r;
-    r = p && expression(b, l, 9);
+    r = p && expression(b, l, 10);
     exit_section_(b, l, m, ERL_PREFIX_EXPRESSION, r, p, null);
     return r || p;
   }
@@ -5735,7 +5702,6 @@ public class ErlangParser implements PsiParser {
   // atomic
   //   | q_var
   //   | tuple_expression
-  //   | list_atom_with_arity_expression
   //   | list_expression
   //   | case_expression
   //   | if_expression
@@ -5755,7 +5721,6 @@ public class ErlangParser implements PsiParser {
     r = atomic(b, l + 1);
     if (!r) r = q_var(b, l + 1);
     if (!r) r = tuple_expression(b, l + 1);
-    if (!r) r = list_atom_with_arity_expression(b, l + 1);
     if (!r) r = list_expression(b, l + 1);
     if (!r) r = case_expression(b, l + 1);
     if (!r) r = if_expression(b, l + 1);
@@ -5788,6 +5753,11 @@ public class ErlangParser implements PsiParser {
   final static Parser argument_definition_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return argument_definition(b, l + 1);
+    }
+  };
+  final static Parser atom_attribute_parser_ = new Parser() {
+    public boolean parse(PsiBuilder b, int l) {
+      return atom_attribute(b, l + 1);
     }
   };
   final static Parser config_expr_recover_parser_ = new Parser() {

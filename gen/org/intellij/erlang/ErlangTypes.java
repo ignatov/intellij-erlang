@@ -21,6 +21,7 @@ public interface ErlangTypes {
   IElementType ERL_ASSIGNMENT_EXPRESSION = new ErlangCompositeElementType("ERL_ASSIGNMENT_EXPRESSION");
   IElementType ERL_ATOM = new ErlangCompositeElementType("ERL_ATOM");
   IElementType ERL_ATOM_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATOM_ATTRIBUTE");
+  IElementType ERL_ATOM_WITH_ARITY_EXPRESSION = new ErlangCompositeElementType("ERL_ATOM_WITH_ARITY_EXPRESSION");
   IElementType ERL_ATTRIBUTE = new ErlangCompositeElementType("ERL_ATTRIBUTE");
   IElementType ERL_ATTR_VAL = new ErlangCompositeElementType("ERL_ATTR_VAL");
   IElementType ERL_BEGIN_END_BODY = new ErlangCompositeElementType("ERL_BEGIN_END_BODY");
@@ -243,6 +244,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_ATOM_ATTRIBUTE) {
         return new ErlangAtomAttributeImpl(node);
+      }
+      else if (type == ERL_ATOM_WITH_ARITY_EXPRESSION) {
+        return new ErlangAtomWithArityExpressionImpl(node);
       }
       else if (type == ERL_ATTRIBUTE) {
         return new ErlangAttributeImpl(node);

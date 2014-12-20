@@ -159,7 +159,7 @@ attribute ::= '-' (
   | behaviour
   | on_load
   | else_atom_attribute <<enterMode "ELSE">>
-  | atom_attribute
+  | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   ) {pin=1}
 
 private meta attribute_tail ::= !'(' <<p1>> | '(' <<p1>> ')'
@@ -332,6 +332,7 @@ expression ::=
   | list_op_expression
   | additive_expression
   | multiplicative_expression
+  | atom_with_arity_expression
   | prefix_expression
   | colon_qualified_expression
   | max_group
@@ -368,7 +369,6 @@ max_expression ::=
     atomic
   | q_var
   | tuple_expression
-  | list_atom_with_arity_expression
   | list_expression
   | case_expression
   | if_expression
@@ -382,8 +382,7 @@ max_expression ::=
   | binary_expression
   | begin_end_expression
 
-list_atom_with_arity_expression ::= '[' atom_with_arity_expression (',' atom_with_arity_expression)* ']' {elementType="list_expression" pin=0}
-atom_with_arity_expression ::= q_atom '/' integer {elementType="expression" pin=0}
+atom_with_arity_expression ::= <<isModeOn "ATOM_ATTRIBUTE">> q_atom '/' integer
 
 begin_end_expression ::= begin begin_end_body end {pin=1}
 begin_end_body ::= exprs {name="expression"}

@@ -51,6 +51,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitAtomWithArityExpression(@NotNull ErlangAtomWithArityExpression o) {
+    visitExpression(o);
+  }
+
   public void visitAttrVal(@NotNull ErlangAttrVal o) {
     visitCompositeElement(o);
   }

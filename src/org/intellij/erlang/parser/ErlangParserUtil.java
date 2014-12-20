@@ -27,7 +27,7 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-import gnu.trove.TObjectIntHashMap;
+import gnu.trove.TObjectLongHashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -56,10 +56,11 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       ApplicationManager.getApplication().isUnitTestMode() && (fileType.getDefaultExtension().equals("app") || fileType.getDefaultExtension().equals("config"));
   }
 
-  private static final Key<TObjectIntHashMap<String>> MODES_KEY = Key.create("MODES_KEY");
-  private static TObjectIntHashMap<String> getParsingModes(PsiBuilder builder_) {
-    TObjectIntHashMap<String> flags = builder_.getUserDataUnprotected(MODES_KEY);
-    if (flags == null) builder_.putUserDataUnprotected(MODES_KEY, flags = new TObjectIntHashMap<String>());
+  private static final Key<TObjectLongHashMap<String>> MODES_KEY = Key.create("MODES_KEY");
+
+  private static TObjectLongHashMap<String> getParsingModes(PsiBuilder builder_) {
+    TObjectLongHashMap<String> flags = builder_.getUserDataUnprotected(MODES_KEY);
+    if (flags == null) builder_.putUserDataUnprotected(MODES_KEY, flags = new TObjectLongHashMap<String>());
     return flags;
   }
 
@@ -71,15 +72,33 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return getParsingModes(builder_).get(mode) == 0;
   }
 
+  public static boolean withOn(PsiBuilder builder_, int level_, String mode, Parser parser) {
+    return withImpl(builder_, level_, mode, true, parser, parser);
+  }
+
+  public static boolean withCleared(PsiBuilder builder_, int level_, String mode, Parser whenOn, Parser whenOff) {
+    return withImpl(builder_, level_, mode, false, whenOn, whenOff);
+  }
+
+  private static boolean withImpl(PsiBuilder builder_, int level_, String mode, boolean onOff, Parser whenOn, Parser whenOff) {
+    TObjectLongHashMap<String> map = getParsingModes(builder_);
+    long prev = map.get(mode);
+    boolean change = ((prev & 1) == 0) == onOff;
+    if (change) map.put(mode, prev << 1 | (onOff? 1 : 0));
+    boolean result = (change ? whenOn : whenOff).parse(builder_, level_);
+    if (change) map.put(mode, prev);
+    return result;
+  }
+
   public static boolean enterMode(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
-    TObjectIntHashMap<String> flags = getParsingModes(builder_);
+    TObjectLongHashMap<String> flags = getParsingModes(builder_);
     if (!flags.increment(mode)) flags.put(mode, 1);
     return true;
   }
 
   public static boolean exitMode(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
-    TObjectIntHashMap<String> flags = getParsingModes(builder_);
-    int count = flags.get(mode);
+    TObjectLongHashMap<String> flags = getParsingModes(builder_);
+    long count = flags.get(mode);
     if (count == 1) flags.remove(mode);
     else if (count > 1) flags.put(mode, count -1);
     else builder_.error("Could not exit inactive '" + mode + "' mode at offset " + builder_.getCurrentOffset());

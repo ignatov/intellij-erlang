@@ -9,14 +9,14 @@ ERL_FILE
         PsiElement(()('(')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
-          ERL_EXPRESSION
+          ERL_ATOM_WITH_ARITY_EXPRESSION
             ERL_Q_ATOM
               ERL_ATOM
                 PsiElement(atom_name)('x')
             PsiElement(/)('/')
             PsiElement(integer)('2')
           PsiElement(,)(',')
-          ERL_EXPRESSION
+          ERL_ATOM_WITH_ARITY_EXPRESSION
             ERL_Q_ATOM
               ERL_ATOM
                 PsiElement(atom_name)('y')

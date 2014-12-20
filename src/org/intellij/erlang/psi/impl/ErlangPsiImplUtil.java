@@ -144,7 +144,7 @@ public class ErlangPsiImplUtil {
   public static boolean standaloneAtom(@NotNull ErlangQAtom o) {
     if (o.getAtom() == null) return false;
     PsiElement parent = o.getParent();
-    return parent instanceof ErlangMaxExpression || 
+    return parent instanceof ErlangMaxExpression || parent instanceof ErlangAtomWithArityExpression ||
       (parent instanceof ErlangTypeRef || parent instanceof ErlangBitType) && !FormatterUtil.isFollowedBy(parent.getNode(), ErlangTypes.ERL_PAR_LEFT);
   }
 

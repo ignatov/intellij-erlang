@@ -5,18 +5,15 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangAtom extends ErlangCompositeElement {
-
-  @Nullable
-  PsiElement getAtomName();
+public interface ErlangAtomWithArityExpression extends ErlangExpression {
 
   @NotNull
-  String getName();
+  ErlangQAtom getQAtom();
 
   @NotNull
-  ErlangAtom setName(String newName);
+  PsiElement getOpArDiv();
 
   @NotNull
-  PsiElement getNameIdentifier();
+  PsiElement getInteger();
 
 }
