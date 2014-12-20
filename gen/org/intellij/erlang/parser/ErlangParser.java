@@ -714,7 +714,7 @@ public class ErlangParser implements PsiParser {
   //   | behaviour
   //   | on_load
   //   | else_atom_attribute <<enterMode "ELSE">>
-  //   | atom_attribute
+  //   | <<enterMode "ATTR">> atom_attribute <<exitMode "ATTR">>
   //   )
   public static boolean attribute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "attribute")) return false;
@@ -737,7 +737,7 @@ public class ErlangParser implements PsiParser {
   //   | behaviour
   //   | on_load
   //   | else_atom_attribute <<enterMode "ELSE">>
-  //   | atom_attribute
+  //   | <<enterMode "ATTR">> atom_attribute <<exitMode "ATTR">>
   private static boolean attribute_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "attribute_1")) return false;
     boolean r;
@@ -751,7 +751,7 @@ public class ErlangParser implements PsiParser {
     if (!r) r = behaviour(b, l + 1);
     if (!r) r = on_load(b, l + 1);
     if (!r) r = attribute_1_8(b, l + 1);
-    if (!r) r = atom_attribute(b, l + 1);
+    if (!r) r = attribute_1_9(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
@@ -763,6 +763,18 @@ public class ErlangParser implements PsiParser {
     Marker m = enter_section_(b);
     r = else_atom_attribute(b, l + 1);
     r = r && enterMode(b, l + 1, "ELSE");
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // <<enterMode "ATTR">> atom_attribute <<exitMode "ATTR">>
+  private static boolean attribute_1_9(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "attribute_1_9")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = enterMode(b, l + 1, "ATTR");
+    r = r && atom_attribute(b, l + 1);
+    r = r && exitMode(b, l + 1, "ATTR");
     exit_section_(b, m, null, r);
     return r;
   }
@@ -5735,7 +5747,7 @@ public class ErlangParser implements PsiParser {
   // atomic
   //   | q_var
   //   | tuple_expression
-  //   | list_atom_with_arity_expression
+  //   | <<isModeOn "ATTR">> list_atom_with_arity_expression
   //   | list_expression
   //   | case_expression
   //   | if_expression
@@ -5755,7 +5767,7 @@ public class ErlangParser implements PsiParser {
     r = atomic(b, l + 1);
     if (!r) r = q_var(b, l + 1);
     if (!r) r = tuple_expression(b, l + 1);
-    if (!r) r = list_atom_with_arity_expression(b, l + 1);
+    if (!r) r = max_expression_3(b, l + 1);
     if (!r) r = list_expression(b, l + 1);
     if (!r) r = case_expression(b, l + 1);
     if (!r) r = if_expression(b, l + 1);
@@ -5769,6 +5781,17 @@ public class ErlangParser implements PsiParser {
     if (!r) r = binary_expression(b, l + 1);
     if (!r) r = begin_end_expression(b, l + 1);
     exit_section_(b, l, m, ERL_MAX_EXPRESSION, r, false, null);
+    return r;
+  }
+
+  // <<isModeOn "ATTR">> list_atom_with_arity_expression
+  private static boolean max_expression_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "max_expression_3")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = isModeOn(b, l + 1, "ATTR");
+    r = r && list_atom_with_arity_expression(b, l + 1);
+    exit_section_(b, m, null, r);
     return r;
   }
 
