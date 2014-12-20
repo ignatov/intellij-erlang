@@ -45,6 +45,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testFailedRecord()      { doTest(true, true);  }
   public void testRecords2()          { doTest(true, false); }
   public void testAtomWithArity()     { doTest(true, false); }
+  public void testNoAtomsWithArity()  { doTest(true, false); }
   public void test77()                { doTest(true, false); }
   public void test74()                { doTest(true, false); }
   public void testErrors()            { doTest(true, true);  }
