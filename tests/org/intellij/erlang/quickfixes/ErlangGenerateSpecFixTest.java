@@ -35,11 +35,11 @@ public class ErlangGenerateSpecFixTest extends ErlangQuickFixTestBase {
 
   private void doGenerateSpecTest() { doTest(ErlangGenerateSpecFix.NAME); }
 
-  public void testNoArgs()          throws Throwable { doGenerateSpecTest(); }
-  public void testWithArgs()        throws Throwable { doGenerateSpecTest(); }
-  public void testMultipleClauses() throws Throwable { doGenerateSpecTest(); }
+  public void testNoArgs()          { doGenerateSpecTest(); }
+  public void testWithArgs()        { doGenerateSpecTest(); }
+  public void testMultipleClauses() { doGenerateSpecTest(); }
 
-  public void testNoActionIfSpecExists() throws Throwable {
+  public void testNoActionIfSpecExists() {
     String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
     List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(ErlangGenerateSpecFix.NAME);

@@ -37,20 +37,20 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     return "testData/highlighting/behaviour/";
   }
 
-  public void testSimple() throws Exception {
+  public void testSimple() {
     myFixture.configureByFiles("b1.erl", "b2.erl", "test.erl");
     myFixture.checkHighlighting(true, false, false);
   }
 
-  public void testCallbackImplementationsAreExportedOnce() throws Exception { doImplementCallbacksFixTest("testExported.erl", "b1.erl", "b2.erl"); }
-  public void testTest()                                   throws Exception { doImplementCallbacksFixTest("test-qf.erl", "b1.erl", "b2.erl"); }
+  public void testCallbackImplementationsAreExportedOnce() { doImplementCallbacksFixTest("testExported.erl", "b1.erl", "b2.erl"); }
+  public void testTest()                                   { doImplementCallbacksFixTest("test-qf.erl", "b1.erl", "b2.erl"); }
 
   @Override
   protected boolean isWriteActionRequired() {
     return false;
   }
 
-  private void doImplementCallbacksFixTest(String ... files) throws Exception {
+  private void doImplementCallbacksFixTest(String ... files) {
     myFixture.configureByFiles(files);
     applyImplementAllCallbacksFix();
     String expectedResultFile = FileUtil.getNameWithoutExtension(files[0]) + "-after.erl";
