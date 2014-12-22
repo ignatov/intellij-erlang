@@ -16,13 +16,9 @@
 
 package org.intellij.erlang.highlighting;
 
-import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
-
-import java.util.List;
 
 public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -52,15 +48,8 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
 
   private void doImplementCallbacksFixTest(String ... files) {
     myFixture.configureByFiles(files);
-    applyImplementAllCallbacksFix();
+    launchIntention("Implement all callbacks");
     String expectedResultFile = FileUtil.getNameWithoutExtension(files[0]) + "-after.erl";
     myFixture.checkResultByFile(expectedResultFile);
-  }
-
-  private void applyImplementAllCallbacksFix() {
-    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions("Implement all callbacks");
-    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
-    assertNotNull(action);
-    myFixture.launchAction(action);
   }
 }

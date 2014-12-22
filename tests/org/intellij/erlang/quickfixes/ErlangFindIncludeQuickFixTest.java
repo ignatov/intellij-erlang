@@ -16,10 +16,8 @@
 
 package org.intellij.erlang.quickfixes;
 
-import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.inspection.ErlangUnresolvedIncludeInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedIncludeLibInspection;
@@ -58,16 +56,9 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
 
   private void doIncludeTest(String expectedIncludePath, String ... files) throws Exception {
     myFixture.configureByFiles(files);
-    runQuickFix();
+    launchIntention("Find include");
     List<VirtualFile> includeDirectories = ErlangIncludeDirectoryUtil.getIncludeDirectories(myFixture.getModule());
     assertEquals(1, includeDirectories.size());
     assertTrue(includeDirectories.get(0).getPath().endsWith(expectedIncludePath));
-  }
-
-  private void runQuickFix() {
-    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions("Find include");
-    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
-    assertNotNull(action);
-    myFixture.launchAction(action);
   }
 }

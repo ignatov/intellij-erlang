@@ -16,12 +16,18 @@
 
 package org.intellij.erlang.utils;
 
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.PlatformUtils;
+import com.intellij.util.containers.ContainerUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends LightPlatformCodeInsightFixtureTestCase {
   private String myBackedUpPlatformPrefix;
@@ -61,5 +67,22 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Ligh
         ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
       }
     });
+  }
+
+  protected void launchIntention(@NotNull String name) {
+    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(name);
+    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
+    assertNotNull(action);
+    myFixture.launchAction(action);
+  }
+
+  protected void assertNoIntentionsAvailable(@NotNull String name, @Nullable String message) {
+    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(name);
+    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
+    assertNull(message, action);
+  }
+  
+  protected void assertNoIntentionsAvailable(@NotNull String name) {
+    assertNoIntentionsAvailable(name, null);
   }
 }

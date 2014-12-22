@@ -16,11 +16,7 @@
 
 package org.intellij.erlang.quickfixes;
 
-import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
-
-import java.util.List;
 
 public abstract class ErlangQuickFixTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -31,10 +27,7 @@ public abstract class ErlangQuickFixTestBase extends ErlangLightPlatformCodeInsi
   protected void doTest(String quickFixName) {
     String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
-    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(quickFixName);
-    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
-    assertNotNull(action);
-    myFixture.launchAction(action);
+    launchIntention(quickFixName);
     String after = String.format("%s-after.erl", testName);
     myFixture.checkResultByFile(after);
   }
