@@ -17,13 +17,17 @@
 package org.intellij.erlang.quickfixes;
 
 import org.intellij.erlang.inspection.ErlangDefiningImportedFunctionInspection;
+import org.intellij.erlang.inspection.ErlangImportDirectiveOverridesAutoimportedBifInspection;
 
 public class ErlangImportFixTest extends ErlangQuickFixTestBase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     //noinspection unchecked
-    myFixture.enableInspections(ErlangDefiningImportedFunctionInspection.class);
+    myFixture.enableInspections(
+      ErlangDefiningImportedFunctionInspection.class,
+      ErlangImportDirectiveOverridesAutoimportedBifInspection.class
+      );
   }
 
   @Override

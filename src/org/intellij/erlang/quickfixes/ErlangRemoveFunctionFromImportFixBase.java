@@ -109,4 +109,19 @@ public abstract class ErlangRemoveFunctionFromImportFixBase extends ErlangQuickF
       return ((ErlangFile) descriptorElement.getContainingFile()).getAttributes();
     }
   }
+
+  public static class ErlangRemoveFunctionFromImportFix extends ErlangRemoveFunctionFromImportFixBase {
+    @Nullable
+    @Override
+    protected String getSignature(@NotNull PsiElement function) {
+      ErlangImportFunction f = PsiTreeUtil.getParentOfType(function, ErlangImportFunction.class, false);
+      return f != null ? ErlangPsiImplUtil.createFunctionPresentation(f) : null;
+    }
+
+    @NotNull
+    @Override
+    protected Collection<? extends ErlangAttribute> getAttributesForProcessing(@NotNull PsiElement descriptorElement) {
+      return ContainerUtil.createMaybeSingletonList(PsiTreeUtil.getParentOfType(descriptorElement, ErlangAttribute.class));
+    }
+  }
 }
