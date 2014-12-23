@@ -70,5 +70,4 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   private static List<ErlangExport> getExportsToShow(PsiFile file) {
     return ErlangExportFunctionFix.getNotEmptyExports(ErlangExportFunctionFix.getExportPsiElements((ErlangFile) file));
   }
-
 }

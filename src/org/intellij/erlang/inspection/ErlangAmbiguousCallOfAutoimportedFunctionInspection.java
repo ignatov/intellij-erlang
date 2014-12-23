@@ -39,19 +39,22 @@ public class ErlangAmbiguousCallOfAutoimportedFunctionInspection extends ErlangI
   }
 
   @NotNull
-  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder,
+                                             @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
       @Override
-      public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {if (o.getParent() instanceof ErlangGlobalFunctionCallExpression) return;
+      public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
+        if (o.getParent() instanceof ErlangGlobalFunctionCallExpression) return;
         if (o.getQAtom().getMacros() != null) return;
         String name = o.getName();
         int arity = o.getArgumentList().getExpressionList().size();
         ErlangBifDescriptor bifDescriptor = ErlangBifTable.getBif("erlang", name, arity);
         if (bifDescriptor == null
           || !bifDescriptor.isAutoImported()
-          || ((ErlangFile)o.getContainingFile()).isNoAutoImport(name, arity)
-          || ((ErlangFile)o.getContainingFile()).getFunction(name, arity) == null)
+          || ((ErlangFile) o.getContainingFile()).isNoAutoImport(name, arity)
+          || ((ErlangFile) o.getContainingFile()).getFunction(name, arity) == null) {
           return;
+        }
         holder.registerProblem(o.getNameIdentifier(),
           "Ambiguous call of overridden pre R14 auto-imported BIF " + "'" + name + "/" + arity + "'",
           ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
@@ -59,6 +62,5 @@ public class ErlangAmbiguousCallOfAutoimportedFunctionInspection extends ErlangI
       }
     };
   }
-
 }
 

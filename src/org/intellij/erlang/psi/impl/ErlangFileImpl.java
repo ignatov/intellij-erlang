@@ -46,6 +46,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getAtomName;
+
 public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
   public ErlangFileImpl(@NotNull FileViewProvider viewProvider) {
     super(viewProvider, ErlangLanguage.INSTANCE);
@@ -305,10 +307,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     List<ErlangExpression> result = ContainerUtil.newArrayList();
     for (ErlangAttribute attribute : getAttributes()) {
       ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
-      if (atomAttribute == null) continue;
-      if (!"compile".equals(atomAttribute.getQAtom().getText())) continue;
-      if (atomAttribute.getAttrVal() == null) continue;
-      result.addAll(atomAttribute.getAttrVal().getExpressionList());
+      if (atomAttribute != null && "compile".equals(atomAttribute.getQAtom().getText()) && atomAttribute.getAttrVal() != null) {
+        result.addAll(atomAttribute.getAttrVal().getExpressionList());
+      }
     }
     return result;
   }
@@ -339,17 +340,17 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     ErlangExpression second = ContainerUtil.getLastItem(tupleExpression.getExpressionList());
     if (!(first instanceof ErlangMaxExpression)
       || !(second instanceof ErlangListExpression)
-      || !"no_auto_import".equals(ErlangPsiImplUtil.getAtomName((ErlangMaxExpression) first)))
+      || !"no_auto_import".equals(getAtomName((ErlangMaxExpression) first))) {
       return result;
+    }
     second.accept(new PsiRecursiveElementWalkingVisitor() {
       @Override
       public void visitElement(PsiElement element) {
         if (element instanceof ErlangAtomWithArityExpression) {
           result.add(ErlangPsiImplUtil.createFunctionPresentation((ErlangAtomWithArityExpression) element));
+          return;
         }
-        else {
-          super.visitElement(element);
-        }
+        super.visitElement(element);
       }
     });
     return result;
@@ -369,14 +370,12 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     for (ErlangExpression expression : getCompileDirectiveExpressions()) {
       if (expression instanceof ErlangListExpression) {
         for (ErlangExpression e : ((ErlangListExpression) expression).getExpressionList()) {
-          if (e instanceof ErlangMaxExpression
-            && option.equals(ErlangPsiImplUtil.getAtomName((ErlangMaxExpression) e))) {
+          if (e instanceof ErlangMaxExpression && option.equals(getAtomName((ErlangMaxExpression) e))) {
             return true;
           }
         }
       }
-      else if (expression instanceof ErlangMaxExpression
-        && option.equals(ErlangPsiImplUtil.getAtomName((ErlangMaxExpression) expression))) {
+      else if (expression instanceof ErlangMaxExpression && option.equals(getAtomName((ErlangMaxExpression) expression))) {
         return true;
       }
     }

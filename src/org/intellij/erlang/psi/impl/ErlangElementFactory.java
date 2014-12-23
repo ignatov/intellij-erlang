@@ -42,10 +42,11 @@ public class ErlangElementFactory {
 
   @NotNull
   public static ErlangExpression createExpressionFromText(@NotNull Project project, @NotNull String text) {
-    ErlangFile fileFromText = createFileFromText(project, "f(" + text + ") -> " + text + ".");
+    ErlangFile fileFromText = createFileFromText(project, "f() -> " + text + ".");
     return fileFromText.getFunctions().get(0).getFirstClause().getClauseBody().getExpressionList().get(0);
   }
 
+  @NotNull
   public static ErlangArgumentDefinition createFunExpressionNameFromText(@NotNull Project project, @NotNull String text) {
     ErlangFile fileFromText = createFileFromText(project, "foo() -> fun " + text + "() -> ok end.");
     ErlangFunctionClause clause = fileFromText.getFunctions().get(0).getFirstClause();
@@ -66,11 +67,11 @@ public class ErlangElementFactory {
   }
 
   @NotNull
-  public static PsiElement createFunctionWithModuleCallExpression(@NotNull Project project,
+  public static ErlangGlobalFunctionCallExpression createFunctionWithModuleCallExpression(@NotNull Project project,
                                                                  @NotNull String moduleName,
                                                                   @NotNull String functionCallExpr) {
     ErlangFile fileFromText = createFileFromText(project, "f() -> " + moduleName + ":" + functionCallExpr + ".");
-    return fileFromText.getFunctions().get(0).getFirstClause().getClauseBody().getLastChild();
+    return (ErlangGlobalFunctionCallExpression) fileFromText.getFunctions().get(0).getFirstClause().getClauseBody().getExpressionList().get(0);
   }
 
   @NotNull
