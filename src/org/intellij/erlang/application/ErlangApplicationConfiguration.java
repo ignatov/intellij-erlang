@@ -23,6 +23,7 @@ import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.search.GlobalSearchScope;
 import org.intellij.erlang.application.ui.ErlangRunConfigurationEditorForm;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -110,7 +111,7 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
     ErlangRunningState.ErlangEntryPoint entryPoint = ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction(myModuleAndFunction, myParams);
     if (entryPoint == null) throw new RuntimeConfigurationError("Invalid module and function entry point");
 
-    ErlangModule erlangModule = ErlangModulesUtil.getErlangModule(getProject(), entryPoint.getModuleName());
+    ErlangModule erlangModule = ErlangModulesUtil.getErlangModule(getProject(), entryPoint.getModuleName(), GlobalSearchScope.moduleScope(module));
     if (erlangModule == null) {
       throw new RuntimeConfigurationError("Invalid module name '" + entryPoint.getModuleName() + "'");
     }

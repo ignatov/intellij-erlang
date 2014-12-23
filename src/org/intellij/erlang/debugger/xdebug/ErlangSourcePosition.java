@@ -21,6 +21,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
@@ -146,7 +147,8 @@ public final class ErlangSourcePosition {
 
   @Nullable
   public static ErlangSourcePosition create(@NotNull Project project, @NotNull String module, int line) {
-    ErlangFile file = ErlangModulesUtil.getErlangModuleFile(project, module);
+    GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+    ErlangFile file = ErlangModulesUtil.getErlangModuleFile(project, module, scope);
     VirtualFile moduleFile = file != null ? file.getVirtualFile() : null;
     XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(moduleFile, line);
     return sourcePosition != null ? new ErlangSourcePosition(sourcePosition) : null;
@@ -178,7 +180,8 @@ public final class ErlangSourcePosition {
       @Nullable
       @Override
       public XSourcePosition compute() {
-        ErlangFile erlangModule = ErlangModulesUtil.getErlangModuleFile(project, module);
+        GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+        ErlangFile erlangModule = ErlangModulesUtil.getErlangModuleFile(project, module, scope);
         if (erlangModule == null) return null;
 
         //TODO use fun expression name to improve resolution (?)

@@ -47,23 +47,25 @@ public final class ErlangModulesUtil {
   }
 
   @Nullable
-  public static ErlangModule getErlangModule(final Project project, final String moduleName) {
+  public static ErlangModule getErlangModule(@NotNull final Project project,
+                                             @NotNull final String moduleName,
+                                             @NotNull final GlobalSearchScope scope) {
     return ApplicationManager.getApplication().runReadAction(new Computable<ErlangModule>() {
       @Nullable
       @Override
       public ErlangModule compute() {
-        return doGetErlangModule(project, moduleName);
+        return doGetErlangModule(project, moduleName, scope);
       }
     });
   }
 
   @Nullable
-  public static ErlangFile getErlangModuleFile(final Project project, final String moduleName) {
+  public static ErlangFile getErlangModuleFile(@NotNull final Project project, @NotNull final String moduleName, final GlobalSearchScope scope) {
     return ApplicationManager.getApplication().runReadAction(new Computable<ErlangFile>() {
       @Nullable
       @Override
       public ErlangFile compute() {
-        ErlangModule module = doGetErlangModule(project, moduleName);
+        ErlangModule module = doGetErlangModule(project, moduleName, scope);
         PsiFile containingFile = module != null ? module.getContainingFile() : null;
         return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
       }
@@ -71,12 +73,15 @@ public final class ErlangModulesUtil {
   }
 
   @Nullable
-  private static ErlangModule doGetErlangModule(@NotNull Project project, @NotNull String moduleName) {
-    List<ErlangModule> modules = ErlangModuleIndex.getModulesByName(project, moduleName, GlobalSearchScope.allScope(project));
+  private static ErlangModule doGetErlangModule(@NotNull Project project,
+                                                @NotNull String moduleName,
+                                                @NotNull GlobalSearchScope scope) {
+    List<ErlangModule> modules = ErlangModuleIndex.getModulesByName(project, moduleName, scope);
     return ContainerUtil.getFirstItem(modules);
   }
 
-  public static Collection<ErlangFile> getErlangModules(Project project) {
+  @NotNull
+  public static Collection<ErlangFile> getErlangModules(@NotNull Project project) {
     HashSet<ErlangFile> erlangModules = new HashSet<ErlangFile>();
     for (Module module : ModuleManager.getInstance(project).getModules()) {
       addErlangModules(module, false, erlangModules);
@@ -84,11 +89,13 @@ public final class ErlangModulesUtil {
     return erlangModules;
   }
 
-  public static Collection<ErlangFile> getErlangModules(Module module, boolean onlyTestModules) {
+  @NotNull
+  public static Collection<ErlangFile> getErlangModules(@NotNull Module module, boolean onlyTestModules) {
     return addErlangModules(module, onlyTestModules, new HashSet<ErlangFile>());
   }
 
-  private static Collection<ErlangFile> addErlangModules(Module module, boolean onlyTestModules, Collection<ErlangFile> erlangModules) {
+  @NotNull
+  private static Collection<ErlangFile> addErlangModules(@NotNull Module module, boolean onlyTestModules, @NotNull Collection<ErlangFile> erlangModules) {
     ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
     ModuleFileIndex moduleFileIndex = rootManager.getFileIndex();
     Processor<VirtualFile> modulesCollector = getErlangModulesCollector(PsiManager.getInstance(module.getProject()), erlangModules);
@@ -101,28 +108,31 @@ public final class ErlangModulesUtil {
     return erlangModules;
   }
 
-  private static Convertor<VirtualFile, Boolean> getSourceDirectoriesFilter(final ModuleFileIndex moduleFileIndex) {
+  @NotNull
+  private static Convertor<VirtualFile, Boolean> getSourceDirectoriesFilter(@NotNull final ModuleFileIndex moduleFileIndex) {
     return new Convertor<VirtualFile, Boolean>() {
       @Override
-      public Boolean convert(VirtualFile dir) {
+      public Boolean convert(@NotNull VirtualFile dir) {
         return moduleFileIndex.isInSourceContent(dir);
       }
     };
   }
 
-  private static Convertor<VirtualFile, Boolean> getTestDirectoriesFilter(final ModuleFileIndex moduleFileIndex) {
+  @NotNull
+  private static Convertor<VirtualFile, Boolean> getTestDirectoriesFilter(@NotNull final ModuleFileIndex moduleFileIndex) {
     return new Convertor<VirtualFile, Boolean>() {
       @Override
-      public Boolean convert(VirtualFile dir) {
+      public Boolean convert(@NotNull VirtualFile dir) {
         return moduleFileIndex.isInTestSourceContent(dir);
       }
     };
   }
 
-  private static Processor<VirtualFile> getErlangModulesCollector(final PsiManager psiManager, final Collection<ErlangFile> erlangFiles) {
+  @Nullable
+  private static Processor<VirtualFile> getErlangModulesCollector(@NotNull final PsiManager psiManager, @NotNull final Collection<ErlangFile> erlangFiles) {
     return new Processor<VirtualFile>() {
       @Override
-      public boolean process(VirtualFile virtualFile) {
+      public boolean process(@NotNull VirtualFile virtualFile) {
         if (virtualFile.getFileType() == ErlangFileType.MODULE) {
           PsiFile psiFile = psiManager.findFile(virtualFile);
           if (psiFile instanceof ErlangFile) {
