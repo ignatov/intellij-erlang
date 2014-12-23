@@ -30,7 +30,7 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangAmbiguousCallOfAutoimportedFunctionInspection extends ErlangInspectionBase {
+public class ErlangAmbiguousCallOfAutoImportedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
     if (file.isNoAutoImportAll()) return false;

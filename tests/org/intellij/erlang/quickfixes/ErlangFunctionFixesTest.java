@@ -17,7 +17,7 @@
 package org.intellij.erlang.quickfixes;
 
 import com.intellij.psi.PsiFile;
-import org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoimportedFunctionInspection;
+import org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoImportedFunctionInspection;
 import org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection;
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 import org.intellij.erlang.psi.ErlangExport;
@@ -33,7 +33,7 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     myFixture.enableInspections(
       ErlangUnusedFunctionInspection.class,
       ErlangDuplicateFunctionExportInspection.class,
-      ErlangAmbiguousCallOfAutoimportedFunctionInspection.class
+      ErlangAmbiguousCallOfAutoImportedFunctionInspection.class
     );
   }
 

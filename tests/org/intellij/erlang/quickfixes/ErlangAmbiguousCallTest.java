@@ -16,11 +16,7 @@
 
 package org.intellij.erlang.quickfixes;
 
-import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoimportedFunctionInspection;
-
-import java.util.List;
+import org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoImportedFunctionInspection;
 
 public class ErlangAmbiguousCallTest extends ErlangQuickFixTestBase {
   @Override
@@ -28,7 +24,7 @@ public class ErlangAmbiguousCallTest extends ErlangQuickFixTestBase {
     super.setUp();
     //noinspection unchecked
     myFixture.enableInspections(
-      ErlangAmbiguousCallOfAutoimportedFunctionInspection.class
+      ErlangAmbiguousCallOfAutoImportedFunctionInspection.class
     );
   }
 

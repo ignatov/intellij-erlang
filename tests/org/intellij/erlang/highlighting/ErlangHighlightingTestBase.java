@@ -82,7 +82,7 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
       ErlangIoFormatInspection.class,
       ErlangDuplicateFunctionExportInspection.class,
       ErlangDefiningImportedFunctionInspection.class,
-      ErlangAmbiguousCallOfAutoimportedFunctionInspection.class
+      ErlangAmbiguousCallOfAutoImportedFunctionInspection.class
     );
   }
 
