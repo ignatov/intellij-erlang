@@ -17,6 +17,7 @@
 package org.intellij.erlang.debugger;
 
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.debugger.xdebug.ErlangDebugLocationResolver;
 import org.intellij.erlang.debugger.xdebug.ErlangSourcePosition;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunClause;
@@ -42,7 +43,7 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
   }
 
   public void testFunctionSourcePositionConstructor() throws Exception {
-    ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(getProject(), MODULE_NAME, "function", 0);
+    ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(createResolver(), MODULE_NAME, "function", 0);
     ErlangFunction function = myErlangFile.getFunction("function", 0);
 
     assertNotNull(sourcePosition);
@@ -56,7 +57,7 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
 
   public void testFunExpressionSourcePositionConstructor() throws Exception {
     ErlangSourcePosition sourcePosition =
-      ErlangSourcePosition.create(getProject(), MODULE_NAME, "-function_with_fun_expression/0-fun-0-", 0);
+      ErlangSourcePosition.create(createResolver(), MODULE_NAME, "-function_with_fun_expression/0-fun-0-", 0);
     ErlangFunction function = myErlangFile.getFunction("function_with_fun_expression", 0);
     ErlangFunExpression funExpression = PsiTreeUtil.findChildOfType(function, ErlangFunExpression.class, true);
     ErlangFunClause funExpressionClause = PsiTreeUtil.findChildOfType(funExpression, ErlangFunClause.class, true);
@@ -71,5 +72,9 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
     assertEquals(0, sourcePosition.getFunctionArity());
     assertEquals(funExpressionClause.getArgumentDefinitionList().getArgumentDefinitionList().size(), sourcePosition.getFunExpressionArity());
     assertEquals(funExpression.getTextOffset(), sourcePosition.getSourcePosition().getOffset());
+  }
+
+  private ErlangDebugLocationResolver createResolver() {
+    return new ErlangDebugLocationResolver(getProject(), myModule, false);
   }
 }

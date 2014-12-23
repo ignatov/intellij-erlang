@@ -46,6 +46,13 @@ public final class ErlangModulesUtil {
   private ErlangModulesUtil() {
   }
 
+  @NotNull
+  public static GlobalSearchScope getModuleWithDependenciesScope(@NotNull Module module, boolean includeTests) {
+    return GlobalSearchScope
+      .moduleWithDependenciesAndLibrariesScope(module, includeTests)
+      .intersectWith(GlobalSearchScope.moduleWithDependenciesScope(module));
+  }
+
   @Nullable
   public static ErlangModule getErlangModule(@NotNull final Project project,
                                              @NotNull final String moduleName,
@@ -60,7 +67,9 @@ public final class ErlangModulesUtil {
   }
 
   @Nullable
-  public static ErlangFile getErlangModuleFile(@NotNull final Project project, @NotNull final String moduleName, final GlobalSearchScope scope) {
+  public static ErlangFile getErlangModuleFile(@NotNull final Project project,
+                                               @NotNull final String moduleName,
+                                               @NotNull final GlobalSearchScope scope) {
     return ApplicationManager.getApplication().runReadAction(new Computable<ErlangFile>() {
       @Nullable
       @Override

@@ -18,16 +18,9 @@ package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.intellij.icons.AllIcons;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiFile;
 import com.intellij.ui.ColoredTextContainer;
 import com.intellij.ui.SimpleTextAttributes;
-import com.intellij.util.ObjectUtils;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
@@ -44,16 +37,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangStackFrame extends XStackFrame {
-  private final Project myProject;
+  private final ErlangDebugLocationResolver myResolver;
   private final ErlangTraceElement myTraceElement;
   private final ErlangSourcePosition mySourcePosition;
 
-  public ErlangStackFrame(@NotNull Project project, @NotNull ErlangTraceElement traceElement) {
-    this(project, traceElement, ErlangSourcePosition.create(project, traceElement));
+  public ErlangStackFrame(@NotNull ErlangDebugLocationResolver resolver,
+                          @NotNull ErlangTraceElement traceElement) {
+    this(resolver, traceElement, ErlangSourcePosition.create(resolver, traceElement));
   }
 
-  public ErlangStackFrame(@NotNull Project project, @NotNull ErlangTraceElement traceElement, @Nullable ErlangSourcePosition sourcePosition) {
-    myProject = project;
+  public ErlangStackFrame(@NotNull ErlangDebugLocationResolver resolver,
+                          @NotNull ErlangTraceElement traceElement,
+                          @Nullable ErlangSourcePosition sourcePosition) {
+    myResolver = resolver;
     myTraceElement = traceElement;
     mySourcePosition = sourcePosition;
   }
@@ -69,11 +65,7 @@ public class ErlangStackFrame extends XStackFrame {
   public void customizePresentation(@NotNull ColoredTextContainer component) {
     String functionName = mySourcePosition != null ? mySourcePosition.getFunctionName() : null;
     if (functionName != null) {
-      VirtualFile file = mySourcePosition.getSourcePosition().getFile();
-      Document document = FileDocumentManager.getInstance().getDocument(file);
-      PsiFile psiFile = document != null ? PsiDocumentManager.getInstance(myProject).getPsiFile(document) : null;
-      ErlangFile module = ObjectUtils.tryCast(psiFile, ErlangFile.class);
-
+      ErlangFile module = myResolver.findPsi(mySourcePosition.getSourcePosition().getFile());
       ErlangFunction function = module != null ? module.getFunction(functionName, mySourcePosition.getFunctionArity()) : null;
       if (function != null) {
         String title = ErlangPsiImplUtil.getQualifiedFunctionName(function);

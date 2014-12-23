@@ -17,11 +17,9 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
@@ -30,7 +28,6 @@ import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -134,28 +131,24 @@ public final class ErlangSourcePosition {
   }
 
   @Nullable
-  public static ErlangSourcePosition create(@NotNull Project project, @NotNull ErlangProcessSnapshot snapshot) {
+  public static ErlangSourcePosition create(@NotNull ErlangDebugLocationResolver resolver, @NotNull ErlangProcessSnapshot snapshot) {
     String module = snapshot.getBreakModule();
-    int line = snapshot.getBreakLine();
-    return module != null ? create(project, module, line) : null;
+    return module != null ? create(resolver, module, snapshot.getBreakLine()) : null;
   }
 
   @Nullable
-  public static ErlangSourcePosition create(@NotNull Project project, @NotNull ErlangTraceElement traceElement) {
-    return create(project, traceElement.getModule(), traceElement.getFunction(), traceElement.getFunctionArgs().arity());
+  public static ErlangSourcePosition create(@NotNull ErlangDebugLocationResolver resolver, @NotNull ErlangTraceElement traceElement) {
+    return create(resolver, traceElement.getModule(), traceElement.getFunction(), traceElement.getFunctionArgs().arity());
   }
 
   @Nullable
-  public static ErlangSourcePosition create(@NotNull Project project, @NotNull String module, int line) {
-    GlobalSearchScope scope = GlobalSearchScope.projectScope(project); // todo [savenko]: use smaller scope
-    ErlangFile file = ErlangModulesUtil.getErlangModuleFile(project, module, scope);
-    VirtualFile moduleFile = file != null ? file.getVirtualFile() : null;
-    XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(moduleFile, line);
+  public static ErlangSourcePosition create(@NotNull ErlangDebugLocationResolver resolver, @NotNull String module, int line) {
+    XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(resolver.resolveModuleFile(module), line);
     return sourcePosition != null ? new ErlangSourcePosition(sourcePosition) : null;
   }
 
   @Nullable
-  public static ErlangSourcePosition create(@NotNull final Project project, @NotNull final String module,
+  public static ErlangSourcePosition create(@NotNull final ErlangDebugLocationResolver resolver, @NotNull final String module,
                                             @NotNull String functionOrFunExpression, int arity) {
     final String functionName;
     final String funExpressionName;
@@ -180,8 +173,7 @@ public final class ErlangSourcePosition {
       @Nullable
       @Override
       public XSourcePosition compute() {
-        GlobalSearchScope scope = GlobalSearchScope.projectScope(project); // todo [savenko]: use smaller scope
-        ErlangFile erlangModule = ErlangModulesUtil.getErlangModuleFile(project, module, scope);
+        ErlangFile erlangModule = resolver.resolveModule(module);
         if (erlangModule == null) return null;
 
         //TODO use fun expression name to improve resolution (?)

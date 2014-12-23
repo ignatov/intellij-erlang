@@ -75,6 +75,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final ErlangRunningState myRunningState;
   private final ErlangDebuggerNode myDebuggerNode;
   private final OSProcessHandler myErlangProcessHandler;
+  private final ErlangDebugLocationResolver myLocationResolver;
 
   private XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
@@ -103,6 +104,10 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     setModulesToInterpret();
     //TODO split running debug target and debugger process spawning
     myErlangProcessHandler = runDebugTarget();
+
+    ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
+    myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
+      runConfig.getConfigurationModule().getModule(), runConfig.isTestRunConfiguration());
   }
 
   @Override
@@ -132,7 +137,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void failedToSetBreakpoint(String module, int line, String errorMessage) {
-    ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(getSession().getProject(), module, line);
+    ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(myLocationResolver, module, line);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);
     if (breakpoint != null) {
       getSession().updateBreakpointPresentation(breakpoint, AllIcons.Debugger.Db_invalid_breakpoint, errorMessage);
@@ -152,9 +157,9 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       }
     });
     assert processInBreakpoint != null;
-    ErlangSourcePosition breakPosition = ErlangSourcePosition.create(getSession().getProject(), processInBreakpoint);
+    ErlangSourcePosition breakPosition = ErlangSourcePosition.create(myLocationResolver, processInBreakpoint);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);
-    ErlangSuspendContext suspendContext = new ErlangSuspendContext(getSession().getProject(), pid, snapshots);
+    ErlangSuspendContext suspendContext = new ErlangSuspendContext(myLocationResolver, pid, snapshots);
     if (breakpoint == null) {
       getSession().positionReached(suspendContext);
     }

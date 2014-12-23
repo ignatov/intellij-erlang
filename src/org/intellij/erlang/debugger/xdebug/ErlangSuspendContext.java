@@ -17,7 +17,6 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangPid;
-import com.intellij.openapi.project.Project;
 import com.intellij.xdebugger.frame.XExecutionStack;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
@@ -30,7 +29,8 @@ public class ErlangSuspendContext extends XSuspendContext {
   private final XExecutionStack[] myExecutionStacks;
   private final int myActiveStackIdx;
 
-  public ErlangSuspendContext(@NotNull Project project, @NotNull OtpErlangPid activePid,
+  public ErlangSuspendContext(@NotNull ErlangDebugLocationResolver resolver,
+                              @NotNull OtpErlangPid activePid,
                               @NotNull List<ErlangProcessSnapshot> snapshots) {
     myExecutionStacks = new XExecutionStack[snapshots.size()];
     int activeStackIdx = 0;
@@ -39,7 +39,7 @@ public class ErlangSuspendContext extends XSuspendContext {
       if (snapshot.getPid().equals(activePid)) {
         activeStackIdx = i;
       }
-      myExecutionStacks[i] = new ErlangExecutionStack(project, snapshot);
+      myExecutionStacks[i] = new ErlangExecutionStack(resolver, snapshot);
     }
     myActiveStackIdx = activeStackIdx;
   }
