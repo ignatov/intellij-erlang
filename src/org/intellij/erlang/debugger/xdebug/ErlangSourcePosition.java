@@ -147,7 +147,7 @@ public final class ErlangSourcePosition {
 
   @Nullable
   public static ErlangSourcePosition create(@NotNull Project project, @NotNull String module, int line) {
-    GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+    GlobalSearchScope scope = GlobalSearchScope.projectScope(project); // todo [savenko]: use smaller scope
     ErlangFile file = ErlangModulesUtil.getErlangModuleFile(project, module, scope);
     VirtualFile moduleFile = file != null ? file.getVirtualFile() : null;
     XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(moduleFile, line);
@@ -180,7 +180,7 @@ public final class ErlangSourcePosition {
       @Nullable
       @Override
       public XSourcePosition compute() {
-        GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+        GlobalSearchScope scope = GlobalSearchScope.projectScope(project); // todo [savenko]: use smaller scope
         ErlangFile erlangModule = ErlangModulesUtil.getErlangModuleFile(project, module, scope);
         if (erlangModule == null) return null;
 
