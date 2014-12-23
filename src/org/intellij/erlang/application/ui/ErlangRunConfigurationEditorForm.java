@@ -17,25 +17,27 @@
 package org.intellij.erlang.application.ui;
 
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
-import org.intellij.erlang.module.ErlangModuleType;
+import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
+import org.intellij.erlang.module.ErlangModuleType;
+import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangApplicationConfiguration> {
+public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigurationEditor<ErlangApplicationConfiguration> {
   private JPanel component;
   private ModulesCombobox myComboModules;
   private JTextField myParamsField;
   private JTextField myModuleAndFunctionField;
   private JTextField myErlFlagsTextField;
   private JCheckBox myStopErlangInterpreterCheckBox;
+  @SuppressWarnings("unused")
+  private HideableTitledPanel myDebugOptionsHideablePanel;
 
-  @SuppressWarnings("unchecked")
   @Override
-  protected void resetEditorFrom(ErlangApplicationConfiguration configuration) {
+  protected void doResetEditorFrom(ErlangApplicationConfiguration configuration) {
     myComboModules.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
     myComboModules.setSelectedModule(configuration.getConfigurationModule().getModule());
     myParamsField.setText(configuration.getParams());
@@ -45,7 +47,7 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
   }
 
   @Override
-  protected void applyEditorTo(ErlangApplicationConfiguration configuration) throws ConfigurationException {
+  protected void doApplyEditorTo(ErlangApplicationConfiguration configuration) throws ConfigurationException {
     configuration.setModule(myComboModules.getSelectedModule());
     configuration.setParams(myParamsField.getText());
     configuration.setModuleAndFunction(myModuleAndFunctionField.getText());
@@ -62,5 +64,9 @@ public class ErlangRunConfigurationEditorForm extends SettingsEditor<ErlangAppli
   @Override
   protected void disposeEditor() {
     component.setVisible(false);
+  }
+
+  private void createUIComponents() {
+    myDebugOptionsHideablePanel = createDebugOptionsHideablePanel();
   }
 }

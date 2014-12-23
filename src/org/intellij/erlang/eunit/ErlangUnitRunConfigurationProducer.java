@@ -17,34 +17,29 @@
 package org.intellij.erlang.eunit;
 
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.execution.actions.RunConfigurationProducer;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.util.Condition;
-import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
-public class ErlangUnitRunConfigurationProducer extends RunConfigurationProducer<ErlangUnitRunConfiguration> {
+public class ErlangUnitRunConfigurationProducer extends ErlangDebuggableRunConfigurationProducer<ErlangUnitRunConfiguration> {
   public ErlangUnitRunConfigurationProducer() {
     super(ErlangUnitRunConfigurationType.getInstance());
   }
 
   @Override
-  protected boolean setupConfigurationFromContext(@NotNull ErlangUnitRunConfiguration configuration,
-                                                  @NotNull ConfigurationContext context,
-                                                  @NotNull Ref<PsiElement> sourceElement) {
-    PsiElement psiElement = sourceElement.get();
-    if (psiElement == null || !psiElement.isValid() ||
-      !ErlangTestRunConfigProducersUtil.shouldProduceEunitTestRunConfiguration(context.getProject(), context.getModule())) {
+  protected boolean setupConfigurationFromContextImpl(@NotNull ErlangUnitRunConfiguration configuration,
+                                                      @NotNull ConfigurationContext context,
+                                                      @NotNull PsiElement psiElement) {
+    if (!ErlangTestRunConfigProducersUtil.shouldProduceEunitTestRunConfiguration(context.getProject(), context.getModule())) {
       return false;
     }
 
@@ -68,17 +63,9 @@ public class ErlangUnitRunConfigurationProducer extends RunConfigurationProducer
   }
 
   @Override
-  public boolean isConfigurationFromContext(@NotNull ErlangUnitRunConfiguration configuration, @NotNull ConfigurationContext context) {
-    PsiElement psiElement = context.getPsiLocation();
-    if (psiElement == null || !psiElement.isValid()) {
-      return false;
-    }
-    
-    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
-    if (module == null || !module.equals(configuration.getConfigurationModule().getModule())) {
-      return false;
-    }
-
+  public boolean isConfigurationFromContextImpl(@NotNull ErlangUnitRunConfiguration configuration,
+                                                @NotNull ConfigurationContext context,
+                                                @NotNull PsiElement psiElement) {
     ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind configurationKind = configuration.getConfigData().getKind();
     if (configurationKind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
       LinkedHashSet<String> testFunctionNames = findTestFunctionNames(psiElement);

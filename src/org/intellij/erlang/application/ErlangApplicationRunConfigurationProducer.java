@@ -17,10 +17,8 @@
 package org.intellij.erlang.application;
 
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
-import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -29,23 +27,19 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangApplicationRunConfigurationProducer extends RunConfigurationProducer<ErlangApplicationConfiguration> {
+public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableRunConfigurationProducer<ErlangApplicationConfiguration> {
   public ErlangApplicationRunConfigurationProducer() {
     super(ErlangApplicationRunConfigurationType.getInstance());
   }
 
   @Override
-  protected boolean setupConfigurationFromContext(ErlangApplicationConfiguration configuration,
-                                                  ConfigurationContext context,
-                                                  Ref<PsiElement> sourceElement) {
-    PsiElement psiElement = sourceElement.get();
-    if (psiElement == null || !psiElement.isValid()) {
-      return false;
-    }
-
-    ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
+  protected boolean setupConfigurationFromContextImpl(@NotNull ErlangApplicationConfiguration configuration,
+                                                      @NotNull  ConfigurationContext context,
+                                                      @NotNull PsiElement psiElement) {
+    ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class, false);
     PsiFile containingFile = psiElement.getContainingFile();
 
     if (!(containingFile instanceof ErlangFile) || function == null ||
@@ -69,18 +63,9 @@ public class ErlangApplicationRunConfigurationProducer extends RunConfigurationP
   }
 
   @Override
-  public boolean isConfigurationFromContext(ErlangApplicationConfiguration configuration,
-                                            ConfigurationContext context) {
-    PsiElement psiElement = context.getPsiLocation();
-    if (psiElement == null || !psiElement.isValid()) {
-      return false;
-    }
-
-    Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
-    if (module == null || !module.equals(configuration.getConfigurationModule().getModule())) {
-      return false;
-    }
-
+  public boolean isConfigurationFromContextImpl(@NotNull ErlangApplicationConfiguration configuration,
+                                                @NotNull ConfigurationContext context,
+                                                @NotNull PsiElement psiElement) {
     ErlangFunction function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
     PsiFile containingFile = psiElement.getContainingFile();
     VirtualFile vFile = containingFile != null ? containingFile.getVirtualFile() : null;

@@ -47,6 +47,7 @@ import org.intellij.erlang.refactoring.ErlangIntroduceVariableTest;
 import org.intellij.erlang.refactoring.ErlangSafeDeleteTest;
 import org.intellij.erlang.rename.ErlangRenameTest;
 import org.intellij.erlang.resolve.*;
+import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducerTest;
 import org.intellij.erlang.sdk.ErlangSdkReleaseTest;
 import org.intellij.erlang.selection.ErlangWordSelectionTest;
 import org.intellij.erlang.typing.ErlangEnterHandlerTest;
@@ -111,6 +112,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangMethodSeparatorProviderTest.class);
     suite.addTestSuite(ErlangMacroParameterResolutionTest.class);
     suite.addTestSuite(ErlangAmbiguousCallTest.class);
+    suite.addTestSuite(ErlangDebuggableRunConfigurationProducerTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
     return suite;
   }

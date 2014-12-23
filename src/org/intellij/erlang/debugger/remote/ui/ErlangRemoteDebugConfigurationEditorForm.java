@@ -17,23 +17,25 @@
 package org.intellij.erlang.debugger.remote.ui;
 
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
-import org.intellij.erlang.module.ErlangModuleType;
+import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
+import org.intellij.erlang.module.ErlangModuleType;
+import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-public class ErlangRemoteDebugConfigurationEditorForm extends SettingsEditor<ErlangRemoteDebugRunConfiguration> {
+public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRunConfigurationEditor<ErlangRemoteDebugRunConfiguration> {
   private JPanel myComponent;
   private ModulesCombobox myModuleComboBox;
   private JTextField myNodeTextField;
   private JTextField myCookieTextField;
   private JCheckBox myUseShortNamesCheckBox;
+  private HideableTitledPanel myDebugOptionsPanel;
 
   @Override
-  protected void resetEditorFrom(ErlangRemoteDebugRunConfiguration configuration) {
+  protected void doResetEditorFrom(ErlangRemoteDebugRunConfiguration configuration) {
     myModuleComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
     myModuleComboBox.setSelectedModule(configuration.getConfigurationModule().getModule());
     myNodeTextField.setText(configuration.getRemoteErlangNodeName());
@@ -42,7 +44,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends SettingsEditor<Erl
   }
 
   @Override
-  protected void applyEditorTo(ErlangRemoteDebugRunConfiguration configuration) throws ConfigurationException {
+  protected void doApplyEditorTo(ErlangRemoteDebugRunConfiguration configuration) throws ConfigurationException {
     configuration.setModule(myModuleComboBox.getSelectedModule());
     configuration.setRemoteErlangNodeName(myNodeTextField.getText());
     configuration.setCookie(myCookieTextField.getText());
@@ -53,5 +55,10 @@ public class ErlangRemoteDebugConfigurationEditorForm extends SettingsEditor<Erl
   @Override
   protected JComponent createEditor() {
     return myComponent;
+  }
+
+  private void createUIComponents() {
+    myDebugOptionsPanel = createDebugOptionsHideablePanel();
+    myDebugOptionsPanel.setOn(true);
   }
 }

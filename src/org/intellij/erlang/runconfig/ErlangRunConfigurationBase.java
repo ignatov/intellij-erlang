@@ -32,13 +32,27 @@ import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunningState> extends ModuleBasedConfiguration<ErlangModuleBasedConfiguration>
   implements RunConfigurationWithSuppressedDefaultRunAction {
+  private ErlangDebugOptions myDebugOptions = new ErlangDebugOptions();
+
   public ErlangRunConfigurationBase(String name, ErlangModuleBasedConfiguration configurationModule, ConfigurationFactory factory) {
     super(name, configurationModule, factory);
+  }
+
+  @NotNull
+  public ErlangDebugOptions getDebugOptions() {
+    return myDebugOptions;
+  }
+
+  public void setDebugOptions(@NotNull ErlangDebugOptions debugOptions) {
+    myDebugOptions = debugOptions;
   }
 
   @Override
@@ -61,6 +75,11 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   }
 
   @Override
+  public void checkSettingsBeforeRun() throws RuntimeConfigurationException {
+    ErlangDebuggableRunConfigurationProducer.updateDebugOptions(this);
+  }
+
+  @Override
   public void readExternal(Element element) throws InvalidDataException {
     super.readExternal(element);
     readModule(element);
@@ -78,4 +97,46 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   public abstract boolean isTestRunConfiguration();
 
   protected abstract RunningState newRunningState(ExecutionEnvironment env, Module module);
+
+  public static final class ErlangDebugOptions implements Serializable {
+    private boolean myAutoUpdateModulesNotToInterpret = true;
+    private Set<String> myModulesNotToInterpret = new HashSet<String>();
+
+    public boolean isAutoUpdateModulesNotToInterpret() {
+      return myAutoUpdateModulesNotToInterpret;
+    }
+
+    public void setAutoUpdateModulesNotToInterpret(boolean autoUpdateModulesNotToInterpret) {
+      myAutoUpdateModulesNotToInterpret = autoUpdateModulesNotToInterpret;
+    }
+
+    @NotNull
+    public Set<String> getModulesNotToInterpret() {
+      return myModulesNotToInterpret;
+    }
+
+    public void setModulesNotToInterpret(@NotNull Set<String> modulesNotToInterpret) {
+      myModulesNotToInterpret = modulesNotToInterpret;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      ErlangDebugOptions that = (ErlangDebugOptions) o;
+
+      if (myAutoUpdateModulesNotToInterpret != that.myAutoUpdateModulesNotToInterpret) return false;
+      if (!myModulesNotToInterpret.equals(that.myModulesNotToInterpret)) return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = (myAutoUpdateModulesNotToInterpret ? 1 : 0);
+      result = 31 * result + myModulesNotToInterpret.hashCode();
+      return result;
+    }
+  }
 }

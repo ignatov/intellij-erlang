@@ -202,6 +202,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
         return virtualFile.getNameWithoutExtension();
       }
     });
+    modulesToInterpret.removeAll(runConfiguration.getDebugOptions().getModulesNotToInterpret());
     myDebuggerNode.interpretModules(modulesToInterpret);
   }
 

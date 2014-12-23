@@ -17,12 +17,13 @@
 package org.intellij.erlang.eunit.ui;
 
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.ui.HideableTitledPanel;
 import com.intellij.ui.ListCellRendererWrapper;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
+import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -33,7 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangUnitRunConfiguration> {
+public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunConfigurationEditor<ErlangUnitRunConfiguration> {
   private JPanel component;
   private ModulesCombobox myModuleComboBox;
   private JTextField myErlangModulesField;
@@ -41,6 +42,7 @@ public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangU
   private JLabel myErlangModulesLabel;
   private JLabel myErlangFunctionsLabel;
   private JComboBox myTestKindComboBox;
+  private HideableTitledPanel myDebugOptionsHideablePanel;
 
   public ErlangUnitRunConfigurationEditorForm() {
     myTestKindComboBox.addActionListener(new ActionListener() {
@@ -52,7 +54,7 @@ public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangU
   }
 
   @Override
-  protected void resetEditorFrom(ErlangUnitRunConfiguration configuration) {
+  protected void doResetEditorFrom(ErlangUnitRunConfiguration configuration) {
     myModuleComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
     myModuleComboBox.setSelectedModule(configuration.getConfigurationModule().getModule());
 
@@ -71,7 +73,7 @@ public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangU
   }
 
   @Override
-  protected void applyEditorTo(ErlangUnitRunConfiguration configuration) throws ConfigurationException {
+  protected void doApplyEditorTo(ErlangUnitRunConfiguration configuration) throws ConfigurationException {
     configuration.setModule(myModuleComboBox.getSelectedModule());
 
     ErlangUnitRunConfiguration.ErlangUnitConfigData configData = configuration.getConfigData();
@@ -132,5 +134,9 @@ public class ErlangUnitRunConfigurationEditorForm extends SettingsEditor<ErlangU
 
   private static String getCommaSeparatedNamesString(Set<String> names) {
     return StringUtil.join(names, ", ");
+  }
+
+  private void createUIComponents() {
+    myDebugOptionsHideablePanel = createDebugOptionsHideablePanel();
   }
 }
