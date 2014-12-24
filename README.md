@@ -18,7 +18,12 @@ We are going to release a standalone Erlang IDE. If you are interested on it, pl
 * Bugfixes
 
 ### Work in progress
-* Enhanced and remote debugger
+* New inspection: multiple function exports
+* Fixed false-positive error highlighting (<a href="https://github.com/ignatov/intellij-erlang/issues/499">#499</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/505">#505</a>)
+* Reworked Erlang/OTP version detection (<a href="https://github.com/ignatov/intellij-erlang/issues/514">#514</a>
+* Improved "Export Function" intention action (<a href="https://github.com/ignatov/intellij-erlang/issues/440">#440</a>)
+* Improved debugger (<a href="https://github.com/ignatov/intellij-erlang/issues/501">#501</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/546">#546</a>)
+* New completion variant: e.g. ```ilfo``` completes to ```io_lib:format()```
 * Preprocessing support
 
 ## Grammar-Kit version
