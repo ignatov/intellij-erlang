@@ -26,6 +26,8 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.execution.console.LanguageConsoleImpl;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
+import com.intellij.openapi.application.AccessToken;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
@@ -47,6 +49,7 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
@@ -1506,24 +1509,19 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static ErlangSpecification getSpecification(@Nullable ErlangFunction function) {
-    function = getOriginalErlangFunction(function);
     if (function == null) return null;
-    List<ErlangSpecification> specifications = ((ErlangFile) function.getContainingFile()).getSpecifications();
-    for (ErlangSpecification spec : specifications) {
-      ErlangSpecFun specFun = spec != null ? PsiTreeUtil.findChildOfType(spec, ErlangSpecFun.class) : null;
-      if (specFun != null && specFun.getReference() != null && specFun.getReference().isReferenceTo(function)) {
-        return spec;
-      }
+    PsiFile file = function.getContainingFile();
+    if (!(file instanceof ErlangFile)) return null;
+    List<ErlangSpecification> specifications = ((ErlangFile) file).getSpecifications();
+    LocalSearchScope scope = new LocalSearchScope(ArrayUtil.toObjectArray(specifications, ErlangSpecification.class));
+    AccessToken token = ApplicationManager.getApplication().acquireReadActionLock();
+    try {
+      Query<PsiReference> search = ReferencesSearch.search(function, scope);
+      PsiReference first = search.findFirst();
+      return PsiTreeUtil.getParentOfType(first != null ? first.getElement() : null, ErlangSpecification.class);
+    } finally {
+      token.finish();
     }
-    return null;
-  }
-
-  @Nullable
-  public static ErlangFunction getOriginalErlangFunction(@Nullable ErlangFunction function) {
-    if (function != null && function.getContainingFile().getVirtualFile() == null) {
-      function = ((ErlangFile) function.getContainingFile().getOriginalFile()).getFunction(function.getName(), function.getArity());
-    }
-    return function;
   }
 
   public static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {

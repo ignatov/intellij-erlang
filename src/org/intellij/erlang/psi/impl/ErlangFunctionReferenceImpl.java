@@ -52,7 +52,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   public PsiElement resolve() {
     if (suppressResolve()) return null; // for #132
 
-    PsiFile file = getElement().getContainingFile().getOriginalFile();
+    PsiFile file = getElement().getContainingFile();
 
     if (myModuleAtom != null) {
       ErlangFunction explicitFunction = getExternalFunction(getModuleFileName());
