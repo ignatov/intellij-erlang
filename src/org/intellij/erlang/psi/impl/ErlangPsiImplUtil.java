@@ -1101,7 +1101,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static String getAtomName(@Nullable ErlangQAtom qAtom) {
+  private static String getAtomName(@Nullable ErlangQAtom qAtom) {
     ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
     return atom != null ? atom.getName() : null;
   }
@@ -1505,15 +1505,25 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static ErlangSpecification getSpecification(@Nullable ErlangFunction function) { // todo: use ref search
+  public static ErlangSpecification getSpecification(@Nullable ErlangFunction function) {
+    function = getOriginalErlangFunction(function);
     if (function == null) return null;
-    PsiElement prevSibling = function.getPrevSibling();
-    while (!(prevSibling instanceof ErlangFunction) && !(prevSibling instanceof ErlangAttribute) && prevSibling != null) {
-      prevSibling = prevSibling.getPrevSibling();
+    List<ErlangSpecification> specifications = ((ErlangFile) function.getContainingFile()).getSpecifications();
+    for (ErlangSpecification spec : specifications) {
+      ErlangSpecFun specFun = spec != null ? PsiTreeUtil.findChildOfType(spec, ErlangSpecFun.class) : null;
+      if (specFun != null && specFun.getReference() != null && specFun.getReference().isReferenceTo(function)) {
+        return spec;
+      }
     }
-    if (prevSibling instanceof ErlangFunction) return null;
+    return null;
+  }
 
-    return PsiTreeUtil.getChildOfType(prevSibling, ErlangSpecification.class);
+  @Nullable
+  public static ErlangFunction getOriginalErlangFunction(@Nullable ErlangFunction function) {
+    if (function != null && function.getContainingFile().getVirtualFile() == null) {
+      function = ((ErlangFile) function.getContainingFile().getOriginalFile()).getFunction(function.getName(), function.getArity());
+    }
+    return function;
   }
 
   public static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {
