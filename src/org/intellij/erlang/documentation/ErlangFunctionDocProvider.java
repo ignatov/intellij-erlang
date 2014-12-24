@@ -44,7 +44,7 @@ final class ErlangFunctionDocProvider implements ElementDocProvider {
   @Override
   public String getDocText() {
     ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, ErlangFunction.class);
-    ErlangSpecification spec = ErlangPsiImplUtil.getSpecification(myErlangFunction);
+    ErlangSpecification spec = myErlangFunction.findSpecification();
     PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, PsiComment.class);
 
     String commentText = "";

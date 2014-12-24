@@ -22,7 +22,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangGenerateSpecFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,10 +36,8 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
     if (!(file instanceof ErlangFile)) return false;
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function == null) return false;
-
-    return ErlangPsiImplUtil.getSpecification(function) == null;
+    return function.findSpecification() == null;
   }
-
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
@@ -51,7 +48,7 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
     if (function == null) {
       throw new IncorrectOperationException("Cursor should be placed on Erlang function.");
     }
-    if (ErlangPsiImplUtil.getSpecification(function) != null) {
+    if (function.findSpecification() != null) {
       throw new IncorrectOperationException("Specification for this function already exists.");
     }
     ErlangGenerateSpecFix.generateSpec(editor, function);

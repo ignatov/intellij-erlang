@@ -169,7 +169,7 @@ public abstract class ErlangExpressionType {
 
   @NotNull
   public static ErlangExpressionType calculateFunctionType(@NotNull ErlangFunction function) {
-    ErlangSpecification spec = ErlangPsiImplUtil.getSpecification(function);
+    ErlangSpecification spec = function.findSpecification();
     if (spec == null) return UNKNOWN;
     ErlangFunTypeSigs signature = ErlangPsiImplUtil.getSignature(spec);
     if (signature == null) return UNKNOWN;

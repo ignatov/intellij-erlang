@@ -33,7 +33,6 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,7 +97,7 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
   @Override
   public Collection<PsiElement> getAdditionalElementsToDelete(PsiElement element, Collection<PsiElement> allElementsToDelete, boolean askUser) {
     if (element instanceof ErlangFunction) {
-      ErlangSpecification specification = ErlangPsiImplUtil.getSpecification((ErlangFunction) element);
+      ErlangSpecification specification = ((ErlangFunction) element).findSpecification();
       if (specification != null) {
         return ContainerUtil.newSmartList(specification.getParent());
       }

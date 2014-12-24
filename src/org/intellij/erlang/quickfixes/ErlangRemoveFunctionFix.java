@@ -21,7 +21,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRemoveFunctionFix extends ErlangQuickFixBase {
@@ -35,7 +34,7 @@ public class ErlangRemoveFunctionFix extends ErlangQuickFixBase {
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
     ErlangFunction function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunction.class);
     if (function != null) {
-      ErlangSpecification specification = ErlangPsiImplUtil.getSpecification(function);
+      ErlangSpecification specification = function.findSpecification();
       if (specification != null) {
         specification.getParent().delete();
       }

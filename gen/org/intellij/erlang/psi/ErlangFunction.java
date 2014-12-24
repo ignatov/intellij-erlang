@@ -39,4 +39,7 @@ public interface ErlangFunction extends ErlangNamedElement, StubBasedPsiElement<
 
   boolean isExported();
 
+  @Nullable
+  ErlangSpecification findSpecification();
+
 }

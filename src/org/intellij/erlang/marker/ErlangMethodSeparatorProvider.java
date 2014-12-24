@@ -57,7 +57,7 @@ public class ErlangMethodSeparatorProvider implements LineMarkerProvider {
   public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
   }
 
-  private static PsiElement findAnchorElementForMethodSeparator(ErlangFunction function) {
+  private static PsiElement findAnchorElementForMethodSeparator(@NotNull ErlangFunction function) {
     ErlangAttribute specAttribute = getSpecAttributeForFunction(function);
     PsiElement leftmostPossibleAnchor = function;
     PsiElement leftmostElement = function;
@@ -71,8 +71,8 @@ public class ErlangMethodSeparatorProvider implements LineMarkerProvider {
   }
 
   @Nullable
-  private static ErlangAttribute getSpecAttributeForFunction(ErlangFunction function) {
-    ErlangSpecification spec = ErlangPsiImplUtil.getSpecification(function);
+  private static ErlangAttribute getSpecAttributeForFunction(@NotNull ErlangFunction function) {
+    ErlangSpecification spec = function.findSpecification();
     ErlangFunTypeSigs signature = ErlangPsiImplUtil.getSignature(spec);
     ErlangSpecFun specFun = signature != null ? signature.getSpecFun() : null;
     PsiReference reference = specFun != null ? specFun.getReference() : null;

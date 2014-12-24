@@ -83,4 +83,9 @@ public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangF
     return ErlangPsiImplUtil.isExported(this);
   }
 
+  @Nullable
+  public ErlangSpecification findSpecification() {
+    return ErlangPsiImplUtil.findSpecification(this);
+  }
+
 }

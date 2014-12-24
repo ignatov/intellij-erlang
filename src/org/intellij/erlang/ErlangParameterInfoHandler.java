@@ -29,7 +29,6 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -155,8 +154,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       final Ref<ErlangFunTypeArguments> argsRef = Ref.create();
 
       PsiElement parent = ((ErlangFunctionClause) p).getParent();
-      ErlangSpecification specification = parent instanceof ErlangFunction
-        ? ErlangPsiImplUtil.getSpecification((ErlangFunction) parent) : null;
+      ErlangSpecification specification = parent instanceof ErlangFunction ? ((ErlangFunction) parent).findSpecification() : null;
       if (specification != null) {
         specification.accept(new ErlangRecursiveVisitor() {
           @Override

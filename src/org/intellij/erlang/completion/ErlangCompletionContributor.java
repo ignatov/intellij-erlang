@@ -309,7 +309,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           for (ResolveResult r : resolveResults) {
             PsiElement element = r.getElement();
             if (element instanceof ErlangFunction) {
-              ErlangSpecification spec = getSpecification((ErlangFunction) element);
+              ErlangSpecification spec = ((ErlangFunction) element).findSpecification();
               if (spec == null) return expectedTypes;
               ErlangFunTypeSigs signature = getSignature(spec);
               List<ErlangTypeSig> typeSigList = signature != null ? signature.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();

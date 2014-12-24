@@ -292,6 +292,7 @@ function ::= function_clause (';' function_clause)* {
     getPresentation
     getIcon
     isExported
+    findSpecification
   ]
   stubClass="org.intellij.erlang.stubs.ErlangFunctionStub"
 }

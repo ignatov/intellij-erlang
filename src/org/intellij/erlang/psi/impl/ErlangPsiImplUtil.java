@@ -1508,7 +1508,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static ErlangSpecification getSpecification(@Nullable ErlangFunction function) {
+  public static ErlangSpecification findSpecification(@Nullable ErlangFunction function) {
     if (function == null) return null;
     PsiFile file = function.getContainingFile();
     if (!(file instanceof ErlangFile)) return null;
