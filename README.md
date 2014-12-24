@@ -24,6 +24,7 @@ We are going to release a standalone Erlang IDE. If you are interested on it, pl
 * Improved "Export Function" intention action (<a href="https://github.com/ignatov/intellij-erlang/issues/440">#440</a>)
 * Improved debugger (<a href="https://github.com/ignatov/intellij-erlang/issues/501">#501</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/546">#546</a>)
 * New completion variant: e.g. ```ilfo``` completes to ```io_lib:format()```
+* Improved specification resolution
 * Preprocessing support
 
 ## Grammar-Kit version
