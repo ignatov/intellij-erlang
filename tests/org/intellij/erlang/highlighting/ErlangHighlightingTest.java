@@ -79,6 +79,21 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport6()     { doTest(); }
   public void testNoAutoImport7()     { doTest(); }
 
+  private void doTestWithInclude() {
+    myFixture.configureByText("incl.erl",
+      "-module(incl).\n" +
+        "-export([crc32/1, abs/1, dt_get_tag/0, bar/0, abs/0]).\n" +
+        "\n" +
+        "crc32(Data) -> Data.\n" +
+        "abs(D) -> D.\n" +
+        "abs() -> zero.\n" +
+        "dt_get_tag() -> ok.\n" +
+        "bar() -> ok.");
+    doTest();
+  }
+
+  public void testImportAutoimported()    {doTestWithInclude(); }
+
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
     doTest();
@@ -89,6 +104,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testAlreadyImported1()      {doTestWithInclude(); }
+  public void testAlreadyImported2()      {doTestWithInclude(); }
   public void test176() {                    
     myFixture.configureByText("aaa.hrl", "foo() -> ok.");
     doTest();

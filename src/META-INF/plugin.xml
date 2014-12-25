@@ -181,6 +181,12 @@
         <localInspection language="Erlang" shortName="ErlangAmbiguousCallOfAutoImportedFunction" displayName="Ambiguous call of auto-imported BIF"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoImportedFunctionInspection"/>
+        <localInspection language="Erlang" shortName="ErlangImportDirectiveOverridesAutoImportedBif" displayName="Import overrides auto-imported BIF"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangImportDirectiveOverridesAutoImportedBifInspection"/>
+        <localInspection language="Erlang" shortName="ErlangFunctionAlreadyImported" displayName="Function already imported"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangFunctionAlreadyImportedInspection"/>
 
         <!--warnings-->
         <localInspection language="Erlang" shortName="ErlangUnresolvedFunction" displayName="Unresolved function"
