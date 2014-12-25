@@ -17,6 +17,7 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionProvider;
 import com.intellij.psi.PsiElement;
@@ -32,16 +33,14 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
     if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom)) {
-      return getElementDescription(o, UsageViewTypeLocation.INSTANCE) + " " +
-        "'" + getElementDescription(o, UsageViewShortNameLocation.INSTANCE) + "'";
+      return getDescription(o, false);
     }
     if (location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) {
       if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
       if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
     }
     if (location == HighlightUsagesDescriptionLocation.INSTANCE) {
-      String d = getElementDescription(o, UsageViewTypeLocation.INSTANCE);
-      return d != null ? d.toLowerCase() : null;
+      return getDescription(o, true);
     }
     if (location == UsageViewTypeLocation.INSTANCE) {
       if (o instanceof ErlangModule) return "Module";
@@ -55,5 +54,11 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (o instanceof ErlangQAtom) return "Atom";
     }
     return null;
+  }
+
+  @NotNull
+  private String getDescription(@NotNull PsiElement o, boolean lowercase) {
+    String type = getElementDescription(o, UsageViewTypeLocation.INSTANCE);
+    return (lowercase ? StringUtil.toLowerCase(type) : type) + " '" + getElementDescription(o, UsageViewShortNameLocation.INSTANCE) + "'";
   }
 }
