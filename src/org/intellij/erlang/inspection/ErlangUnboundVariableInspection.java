@@ -27,7 +27,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiUtilBase;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangClauseBody;
+import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.quickfixes.ErlangQuickFixBase;
 import org.jetbrains.annotations.NotNull;
 

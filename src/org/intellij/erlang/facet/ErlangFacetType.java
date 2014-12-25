@@ -21,8 +21,8 @@ import com.intellij.facet.FacetType;
 import com.intellij.facet.FacetTypeId;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
-import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.jps.model.ErlangFacetConstants;
+import org.intellij.erlang.module.ErlangModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

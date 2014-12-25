@@ -16,7 +16,8 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.*;
+import com.intellij.codeInspection.ProblemHighlightType;
+import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
