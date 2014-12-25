@@ -1,3 +1,19 @@
+<!--
+  ~ Copyright 2012-2014 Sergey Ignatov
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2" use-idea-classloader="true">
     <id>org.jetbrains.erlang</id>
     <version>0.5.9</version>
@@ -137,6 +153,8 @@
         <findUsagesHandlerFactory implementation="org.intellij.erlang.search.ErlangFindUsagesHandlerFactory"/>
         <referencesSearch implementation="org.intellij.erlang.search.ErlangAtomSearch"/>
         <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.search.ErlangTargetElementEvaluator"/>
+
+        <editorNotificationProvider implementation="org.intellij.erlang.inspection.SetupSDKNotificationProvider"/>
 
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariable" displayName="Unbound variable"
