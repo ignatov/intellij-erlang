@@ -11,3 +11,4 @@ The following people have made contributions (in no particular order):
 * David Robakowski (github @drobakowski)
 * Matt Campbell (github @xenolinguist)
 * Alexander Zolotov (github @zolotov)
+* Ivan Arbuzov (github @smolcoder)
