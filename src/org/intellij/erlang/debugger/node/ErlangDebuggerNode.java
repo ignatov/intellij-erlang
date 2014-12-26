@@ -236,6 +236,8 @@ public class ErlangDebuggerNode {
       int objectSize = readObjectSize(in);
       if (objectSize == -1) return null;
 
+      LOG.debug("Incoming packet size: " + objectSize + " bytes");
+
       byte[] objectBytes = readBytes(in, objectSize);
       return objectBytes == null ? null : decode(objectBytes);
     } catch (IOException e) {
