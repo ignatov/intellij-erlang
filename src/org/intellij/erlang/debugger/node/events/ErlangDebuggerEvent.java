@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.debugger.node.events;
 
-import com.ericsson.otp.erlang.OtpErlangExit;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
@@ -43,9 +42,5 @@ public abstract class ErlangDebuggerEvent {
       return new UnknownMessageEvent(messageTuple);
     }
     return new UnknownMessageEvent(messageTuple);
-  }
-
-  public static ErlangDebuggerEvent create(OtpErlangExit exitMessage) {
-    return new DebuggerStoppedEvent(exitMessage);
   }
 }
