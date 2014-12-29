@@ -76,6 +76,7 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangCompletionContributor extends CompletionContributor {
+  public static final int ATOM_PRIORITY               = 50;
   public static final int TYPE_PRIORITY               = 10;
   public static final int MODULE_FUNCTIONS_PRIORITY   = -4;
   public static final int BIF_PRIORITY                = -5;
@@ -222,7 +223,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             Collection<String> names = ErlangAtomIndex.getNames(project, scope);
             for (String name : names) {
               result.addElement(PrioritizedLookupElement.withPriority(
-                LookupElementBuilder.create(name).withLookupString(name.toLowerCase()).withIcon(ErlangIcons.ATOM), 50));
+                LookupElementBuilder.create(name).withLookupString(name.toLowerCase()).withIcon(ErlangIcons.ATOM), ATOM_PRIORITY));
             }
           }
 
