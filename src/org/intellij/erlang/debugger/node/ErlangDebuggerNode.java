@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
@@ -150,6 +151,8 @@ public class ErlangDebuggerNode {
           cachedException = e;
           throw e;
         } finally {
+          myStopped.set(true);
+          myEventListener.debuggerStopped();
           debuggerSocket.close();
         }
       } catch (Exception e) {
@@ -188,7 +191,7 @@ public class ErlangDebuggerNode {
     }
   }
 
-  private void receiveMessage(@NotNull Socket socket) {
+  private void receiveMessage(@NotNull Socket socket) throws SocketException {
     OtpErlangObject receivedMessage = receive(socket);
     if (receivedMessage == null) return;
 
@@ -203,7 +206,7 @@ public class ErlangDebuggerNode {
     LOG.debug("Message processed: " + messageRecognized);
   }
 
-  private void sendMessages(@NotNull Socket socket) {
+  private void sendMessages(@NotNull Socket socket) throws SocketException {
     synchronized (myCommandsQueue) {
       while (!myCommandsQueue.isEmpty()) {
         OtpErlangTuple message = myCommandsQueue.remove().toMessage();
@@ -213,7 +216,7 @@ public class ErlangDebuggerNode {
     }
   }
 
-  private static void send(@NotNull Socket socket, @NotNull OtpErlangObject message) {
+  private static void send(@NotNull Socket socket, @NotNull OtpErlangObject message) throws SocketException {
     try {
       OutputStream out = socket.getOutputStream();
 
@@ -223,13 +226,15 @@ public class ErlangDebuggerNode {
       out.write(sizeBytes);
       out.write(OtpExternal.versionTag);
       out.write(bytes);
-    } catch (IOException e) {
+    } catch (SocketException e) {
+      throw e;
+    } catch(IOException e) {
       LOG.debug(e);
     }
   }
 
   @Nullable
-  private static OtpErlangObject receive(@NotNull Socket socket) {
+  private static OtpErlangObject receive(@NotNull Socket socket) throws SocketException {
     try {
       InputStream in = socket.getInputStream();
 
@@ -240,24 +245,28 @@ public class ErlangDebuggerNode {
 
       byte[] objectBytes = readBytes(in, objectSize);
       return objectBytes == null ? null : decode(objectBytes);
+    } catch (SocketException e) {
+      throw e;
     } catch (IOException e) {
       LOG.debug(e);
     }
     return null;
   }
 
-  private static int readObjectSize(InputStream in) {
+  private static int readObjectSize(InputStream in) throws SocketException {
     byte[] bytes = readBytes(in, 4);
     return bytes != null ? ByteBuffer.wrap(bytes).getInt() : -1;
   }
 
   @Nullable
-  private static byte[] readBytes(InputStream in, int size) {
+  private static byte[] readBytes(InputStream in, int size) throws SocketException {
     try {
       byte[] buffer = new byte[size];
       return size == in.read(buffer) ? buffer : null;
     } catch (SocketTimeoutException ignore) {
       return null;
+    } catch (SocketException e) {
+      throw e;
     } catch (IOException e) {
       LOG.debug(e);
       return null;
