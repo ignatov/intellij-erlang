@@ -215,7 +215,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             result.addAllElements(getFunctionLookupElements(file, false, null));
 
             // If we have some input, we can suggest modules and functions which match the input
-            if (originalPosition != null && originalPosition.getTextLength() > 0) {
+            if (is(originalPosition, ErlangTypes.ERL_ATOM_NAME)) {
               result.addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, null));
             }
           }
