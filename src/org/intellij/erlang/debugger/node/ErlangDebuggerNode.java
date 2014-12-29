@@ -43,6 +43,7 @@ import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 
 public class ErlangDebuggerNode {
   private static final int RECEIVE_TIMEOUT = 50;
+  private static final int RETRIES_ON_TIMEOUT = 10;
 
   private OtpErlangPid myLastSuspendedPid;
 
@@ -156,7 +157,7 @@ public class ErlangDebuggerNode {
           debuggerSocket.close();
         }
       } catch (Exception e) {
-        if (cachedException != null) {
+        if (cachedException != null && cachedException != e) {
           if (e.getCause() == null) {
             e.initCause(cachedException);
           }
@@ -243,7 +244,7 @@ public class ErlangDebuggerNode {
 
       LOG.debug("Incoming packet size: " + objectSize + " bytes");
 
-      byte[] objectBytes = readBytes(in, objectSize);
+      byte[] objectBytes = readBytes(in, objectSize, true);
       return objectBytes == null ? null : decode(objectBytes);
     } catch (SocketException e) {
       throw e;
@@ -254,17 +255,49 @@ public class ErlangDebuggerNode {
   }
 
   private static int readObjectSize(InputStream in) throws SocketException {
-    byte[] bytes = readBytes(in, 4);
+    byte[] bytes = readBytes(in, 4, false);
     return bytes != null ? ByteBuffer.wrap(bytes).getInt() : -1;
   }
 
+  /**
+   * Reads size bytes from passed socket input stream.
+   * <p/>
+   * Makes #RETRIES_ON_TIMEOUT attempts to read input unless the read request is not forced and no bytes were read.
+   *
+   * @param in
+   * @param size
+   * @param force
+   * @return bytes read or null if the request was not forced and it timed out, or if an I/O exception occurred.
+   * @throws SocketException when a socket exception is thrown from passed input stream or if a number of
+   *                         retry attempts was exceeded.
+   */
   @Nullable
-  private static byte[] readBytes(InputStream in, int size) throws SocketException {
+  private static byte[] readBytes(InputStream in, int size, boolean force) throws SocketException {
     try {
+      int bytesReadTotal = 0;
       byte[] buffer = new byte[size];
-      return size == in.read(buffer) ? buffer : null;
-    } catch (SocketTimeoutException ignore) {
-      return null;
+
+      int attemptsMade = 0;
+      while (size != bytesReadTotal) {
+        try {
+          int bytesRead = in.read(buffer, bytesReadTotal, size - bytesReadTotal);
+          if (bytesRead < 0) {
+            throw new SocketException("A socket was closed.");
+          }
+
+          bytesReadTotal += bytesRead;
+        } catch (SocketTimeoutException e) {
+          // if we're not forced to read, but we touched the stream, we're forced
+          if (bytesReadTotal == 0 && !force) {
+            return null;
+          }
+          if (++attemptsMade >= RETRIES_ON_TIMEOUT) {
+            throw e;
+          }
+        }
+      }
+
+      return buffer;
     } catch (SocketException e) {
       throw e;
     } catch (IOException e) {
