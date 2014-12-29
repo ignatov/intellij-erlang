@@ -166,9 +166,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
             ErlangQAtom qAtom = getQAtom(colonQualified);
             result.addAllElements(getFunctionLookupElements(file, false, false, qAtom));
             ErlangColonQualifiedExpression originalColonQExpr = PsiTreeUtil.getParentOfType(originalPosition, ErlangColonQualifiedExpression.class);
-            if (originalColonQExpr != null)
-              result = result.withPrefixMatcher(originalColonQExpr.getText());
-            result.addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, qAtom != null ? qAtom.getText() : null));
+            (originalColonQExpr != null ? result.withPrefixMatcher(originalColonQExpr.getText()) : result)
+              .addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, qAtom != null ? qAtom.getText() : null));
           }
           else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordTuple) {
             Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(grandPa);
