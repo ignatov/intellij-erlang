@@ -180,14 +180,16 @@ public class ErlangCompletionContributor extends CompletionContributor {
             Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(grandPa);
             final boolean withoutEq = is(grandPa.getFirstChild(), ErlangTypes.ERL_DOT);
             result.addAllElements(ContainerUtil.map(recordFields.first, new Function<ErlangTypedExpr, LookupElement>() {
+              @NotNull
               @Override
-              public LookupElement fun(ErlangTypedExpr a) {
-                return createFieldLookupElement(a.getProject(), a.getName(), withoutEq);
+              public LookupElement fun(@NotNull ErlangTypedExpr e) {
+                return createFieldLookupElement(e.getProject(), e.getName(), withoutEq);
               }
             }));
             result.addAllElements(ContainerUtil.map(recordFields.second, new Function<ErlangQAtom, LookupElement>() {
+              @NotNull
               @Override
-              public LookupElement fun(ErlangQAtom a) {
+              public LookupElement fun(@NotNull ErlangQAtom a) {
                 return createFieldLookupElement(a.getProject(), a.getText(), withoutEq);
               }
             }));
@@ -213,11 +215,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             && grandPa instanceof ErlangExpression
             && (inFunction(position) || inConsole || PsiTreeUtil.getParentOfType(position, ErlangTypedRecordFields.class) != null)) {
             result.addAllElements(getFunctionLookupElements(file, false, null));
-
-            // If we have some input, we can suggest modules and functions which match the input
-            if (is(originalPosition, ErlangTypes.ERL_ATOM_NAME)) {
-              result.addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, null));
-            }
+            result.addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, null));
           }
 
           int invocationCount = parameters.getInvocationCount();
@@ -299,7 +297,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
       }
 
-      private boolean contains(Set<ErlangExpressionType> expectedTypes, ErlangExpressionType varType) {
+      private boolean contains(@NotNull Set<ErlangExpressionType> expectedTypes, ErlangExpressionType varType) {
         for (ErlangExpressionType type : expectedTypes) {
           if (type.accept(varType)) return true;
         }
@@ -366,7 +364,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
       .bold(), KEYWORD_PRIORITY);
   }
 
-  private static List<LookupElement> getLibPathLookupElements(PsiFile file, final String includeText) {
+  @NotNull
+  private static List<LookupElement> getLibPathLookupElements(@NotNull PsiFile file, @NotNull final String includeText) {
     if (FileUtil.isAbsolute(includeText)) return Collections.emptyList();
 
     final VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
@@ -397,7 +396,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       result.addAll(ContainerUtil.mapNotNull(matchingFiles, new Function<VirtualFile, LookupElement>() {
         @Nullable
         @Override
-        public LookupElement fun(VirtualFile f) {
+        public LookupElement fun(@NotNull VirtualFile f) {
           return f.equals(virtualFile) ? null : getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true);
         }
       }));
@@ -407,25 +406,28 @@ public class ErlangCompletionContributor extends CompletionContributor {
     return result;
   }
 
-  private static List<VirtualFile> getApplicationDirectories(Project project, final String appName, boolean nameIsComplete) {
+  @NotNull
+  private static List<VirtualFile> getApplicationDirectories(@NotNull Project project, @NotNull final String appName, boolean nameIsComplete) {
     GlobalSearchScope searchScope = GlobalSearchScope.allScope(project);
     if (nameIsComplete) {
       return ContainerUtil.createMaybeSingletonList(ErlangApplicationIndex.getApplicationDirectoryByName(appName, searchScope));
     }
     return ContainerUtil.filter(ErlangApplicationIndex.getAllApplicationDirectories(project, searchScope), new Condition<VirtualFile>() {
       @Override
-      public boolean value(VirtualFile virtualFile) {
+      public boolean value(@Nullable VirtualFile virtualFile) {
         return virtualFile != null && virtualFile.getName().startsWith(appName);
       }
     });
   }
 
-  private static String getAppShortName(String appFullName) {
+  @NotNull
+  private static String getAppShortName(@NotNull String appFullName) {
     int dashIdx = appFullName.indexOf('-');
     return dashIdx != -1 ? appFullName.substring(0, dashIdx) : appFullName;
   }
 
-  private static List<LookupElement> getModulePathLookupElements(PsiFile file, String includeText) {
+  @NotNull
+  private static List<LookupElement> getModulePathLookupElements(@NotNull PsiFile file, @NotNull String includeText) {
     VirtualFile includeOwner = file.getOriginalFile().getVirtualFile();
     VirtualFile parentFile = includeOwner != null ? includeOwner.getParent() : null;
     List<LookupElement> result = new ArrayList<LookupElement>();
@@ -452,6 +454,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     return result;
   }
 
+  @NotNull
   private static List<LookupElement> getModulePathLookupElements(@Nullable VirtualFile includeDir, @Nullable final VirtualFile includeOwner, @NotNull final String includeText) {
     if (includeDir == null || !includeDir.isDirectory()) return ContainerUtil.emptyList();
     List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
@@ -459,13 +462,13 @@ public class ErlangCompletionContributor extends CompletionContributor {
     return ContainerUtil.mapNotNull(matchingFiles, new Function<VirtualFile, LookupElement>() {
       @Nullable
       @Override
-      public LookupElement fun(VirtualFile f) {
+      public LookupElement fun(@NotNull VirtualFile f) {
         return f.equals(includeOwner) ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
       }
     });
   }
 
-  private static LookupElementBuilder getDefaultPathLookupElementBuilder(String includeText, VirtualFile lookedUpFile, @Nullable String appName) {
+  private static LookupElementBuilder getDefaultPathLookupElementBuilder(@NotNull String includeText, @NotNull VirtualFile lookedUpFile, @Nullable String appName) {
     String slash = lookedUpFile.isDirectory() ? "/" : "";
     Icon icon = lookedUpFile.isDirectory() ? ErlangIcons.MODULE : ErlangFileType.getIconForFile(lookedUpFile.getName());
     return LookupElementBuilder.create(getCompletedString(includeText, lookedUpFile, appName))
@@ -474,14 +477,15 @@ public class ErlangCompletionContributor extends CompletionContributor {
                                .withInsertHandler(new RunCompletionInsertHandler());
   }
 
-  private static String getCompletedString(String beforeCompletion, VirtualFile lookedUpFile, @Nullable String appName) {
+  @NotNull
+  private static String getCompletedString(@NotNull String beforeCompletion, @NotNull VirtualFile lookedUpFile, @Nullable String appName) {
     String prefixPath = beforeCompletion.substring(0, beforeCompletion.lastIndexOf('/') + 1);
     String completion = appName == null ? lookedUpFile.getName() : appName;
     String pathSeparator = appName != null || lookedUpFile.isDirectory() ? "/" : "";
     return prefixPath + completion + pathSeparator;
   }
 
-  private static void addMatchingFiles(VirtualFile searchRoot, String includeText, List<VirtualFile> result) {
+  private static void addMatchingFiles(VirtualFile searchRoot, @NotNull String includeText, @NotNull List<VirtualFile> result) {
     String[] split = includeText.split("/");
 
     if (split.length != 0) {
@@ -508,7 +512,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     return prev != null && prev.getElementType() == ErlangTypes.ERL_RADIX;
   }
 
-  private static void suggestModules(CompletionResultSet result, PsiElement position, boolean withColon) {
+  private static void suggestModules(@NotNull CompletionResultSet result, @NotNull PsiElement position, boolean withColon) {
     Project project = position.getProject();
 
     Collection<String> names = ErlangModuleIndex.getNames(project);
@@ -522,7 +526,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
     }
   }
 
-  private static Collection<String> suggestKeywords(PsiElement position) {
+  @NotNull
+  private static Collection<String> suggestKeywords(@NotNull PsiElement position) {
     TextRange posRange = position.getTextRange();
     ErlangFile posFile = (ErlangFile) position.getContainingFile();
     TextRange range = new TextRange(0, posRange.getStartOffset());
@@ -545,7 +550,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
   private static class RunCompletionInsertHandler implements InsertHandler<LookupElement> {
     @Override
-    public void handleInsert(final InsertionContext context, LookupElement item) {
+    public void handleInsert(@NotNull final InsertionContext context, @NotNull LookupElement item) {
       if (item.getLookupString().endsWith("/"))
         context.setLaterRunnable(new Runnable() {
           @Override
@@ -571,7 +576,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     }
 
     @Override
-    public void handleInsert(InsertionContext context, LookupElement item) {
+    public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
       super.handleInsert(context, item);
       Editor editor = context.getEditor();
 
@@ -584,7 +589,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       if (insertBrackets()) doInsert(editor, document, "[", "]");
     }
 
-    private static void doInsert(Editor editor, Document document, String open, String closed) {
+    private static void doInsert(@NotNull Editor editor, @NotNull Document document, @NotNull String open, @NotNull String closed) {
       int offset = editor.getCaretModel().getOffset();
       document.insertString(offset, open);
       document.insertString(offset + 1, closed);

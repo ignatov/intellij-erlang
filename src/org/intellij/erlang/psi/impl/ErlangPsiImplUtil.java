@@ -519,6 +519,7 @@ public class ErlangPsiImplUtil {
     }
   }
 
+  @NotNull
   public static Collection<LookupElement> getAllExportedFunctionsWithModuleLookupElements(@NotNull Project project,
                                                                                           boolean withArity,
                                                                                           @Nullable String exclude) {
@@ -1299,7 +1300,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project, @NotNull String moduleName) {
-    List<ErlangFunction> result = new ArrayList<ErlangFunction>();
+    List<ErlangFunction> result = ContainerUtil.newArrayList();
     List<ErlangFile> erlangModules = ErlangModuleIndex.getFilesByName(project, moduleName, GlobalSearchScope.allScope(project));
     for (ErlangFile file : erlangModules) {
       result.addAll(file.getExportedFunctions());
@@ -1307,7 +1308,7 @@ public class ErlangPsiImplUtil {
     return result;
   }
 
-  public static boolean inFunction(PsiElement position) {
+  public static boolean inFunction(@Nullable PsiElement position) {
     return PsiTreeUtil.getParentOfType(position, ErlangFunction.class) != null;
   }
 

@@ -272,21 +272,13 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     // means "fake_module:bar/0", "fake_module:bar/1"
   }
 
-  public void testNoModuleFunctionCompletionForEmptyText() throws Throwable {
+  public void testModuleFunctionCompletionForEmptyText() throws Throwable {
     myFixture.configureByFiles("module-completion/fake_module.erl");
-    myFixture.configureByText("a.erl", "foo() -> <caret>.");
-    myFixture.completeBasic();
-
-    List<String> variants = myFixture.getLookupElementStrings();
-    assertNotNull("Possibly a single variant was auto-completed.", variants);
-
-    List<String> moduleFunctionCompletions = ContainerUtil.findAll(variants, new Condition<String>() {
-      @Override
-      public boolean value(String s) {
-        return s.startsWith("fake_module:");
-      }
-    });
-    assertEmpty(moduleFunctionCompletions);
+    doTestInclude("foo() -> <caret>.",
+      "fake_module",
+      "fake_module:bar",
+      "fake_module:tar",
+      "finish_after_on_load");
   }
 
   public void testModuleCompletionWithColon() throws Throwable {
