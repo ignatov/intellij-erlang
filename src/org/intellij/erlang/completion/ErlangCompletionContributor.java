@@ -173,7 +173,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             String prefix = originalColonQExpr != null ?
               StringUtil.first(originalColonQExpr.getText(), parameters.getOffset() - originalColonQExpr.getTextOffset(), false) :
               moduleName != null ? moduleName + ":" : null;
-            (StringUtil.isEmpty(prefix) ? result : result.withPrefixMatcher(prefix))
+            (StringUtil.isEmpty(prefix) ? result : result.withPrefixMatcher(result.getPrefixMatcher().cloneWithPrefix(prefix) ))
               .addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, moduleName));
           }
           else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordTuple) {
