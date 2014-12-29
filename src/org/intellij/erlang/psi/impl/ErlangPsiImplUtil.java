@@ -473,10 +473,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile,
-                                                              boolean withArity,
-                                                              boolean withModule,
-                                                              @Nullable ErlangQAtom moduleAtom) {
+  public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, boolean withArity, @Nullable ErlangQAtom moduleAtom) {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
       List<ErlangFunction> functions = new ArrayList<ErlangFunction>();
 
@@ -495,10 +492,6 @@ public class ErlangPsiImplUtil {
       else {
         ErlangFile erlangFile = (ErlangFile) containingFile;
         functions.addAll(erlangFile.getFunctions());
-
-        if (withModule) {
-          lookupElements.addAll(getAllExportedFunctionsWithModuleLookupElements(erlangFile.getProject(), withArity, null));
-        }
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"));
 
         for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {

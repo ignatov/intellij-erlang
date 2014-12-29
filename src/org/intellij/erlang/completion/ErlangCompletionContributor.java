@@ -165,7 +165,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           if (colonQualified != null && (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null || inConsole)) {
             ErlangQAtom moduleAtom = getQAtom(colonQualified);
 
-            result.addAllElements(getFunctionLookupElements(file, false, false, moduleAtom));
+            result.addAllElements(getFunctionLookupElements(file, false, moduleAtom));
 
             // when completing at my_module:<caret>, ... the cursor is actually located at comma and not at the colon qualified expression
             ErlangColonQualifiedExpression originalColonQExpr = PsiTreeUtil.getParentOfType(originalPosition, ErlangColonQualifiedExpression.class);
@@ -212,8 +212,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
           if (colonQualified == null
             && grandPa instanceof ErlangExpression
             && (inFunction(position) || inConsole || PsiTreeUtil.getParentOfType(position, ErlangTypedRecordFields.class) != null)) {
-            boolean withModule = originalPosition != null && originalPosition.getTextLength() > 0;
-            result.addAllElements(getFunctionLookupElements(file, false, withModule, null));
+            result.addAllElements(getFunctionLookupElements(file, false, null));
+
+            // If we have some input, we can suggest modules and functions which match the input
+            if (originalPosition != null && originalPosition.getTextLength() > 0) {
+              result.addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, null));
+            }
           }
 
           int invocationCount = parameters.getInvocationCount();
@@ -285,7 +289,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
 
         if (clause == null) return;
-        List<LookupElement> functionLookupElements = getFunctionLookupElements(clause.getContainingFile(), false, false, null);
+        List<LookupElement> functionLookupElements = getFunctionLookupElements(clause.getContainingFile(), false, null);
         for (LookupElement lookupElement : functionLookupElements) {
           PsiElement psiElement = lookupElement.getPsiElement();
           if (psiElement instanceof ErlangFunction) {
