@@ -163,11 +163,18 @@ public class ErlangCompletionContributor extends CompletionContributor {
         else {
           ErlangColonQualifiedExpression colonQualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
           if (colonQualified != null && (PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class) != null || inConsole)) {
-            ErlangQAtom qAtom = getQAtom(colonQualified);
-            result.addAllElements(getFunctionLookupElements(file, false, false, qAtom));
+            ErlangQAtom moduleAtom = getQAtom(colonQualified);
+
+            result.addAllElements(getFunctionLookupElements(file, false, false, moduleAtom));
+
+            // when completing at my_module:<caret>, ... the cursor is actually located at comma and not at the colon qualified expression
             ErlangColonQualifiedExpression originalColonQExpr = PsiTreeUtil.getParentOfType(originalPosition, ErlangColonQualifiedExpression.class);
-            (originalColonQExpr != null ? result.withPrefixMatcher(originalColonQExpr.getText()) : result)
-              .addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, qAtom != null ? qAtom.getText() : null));
+            String moduleName = moduleAtom != null ? getName(moduleAtom) : null;
+            String prefix = originalColonQExpr != null ?
+              StringUtil.first(originalColonQExpr.getText(), parameters.getOffset() - originalColonQExpr.getTextOffset(), false) :
+              moduleName != null ? moduleName + ":" : null;
+            (StringUtil.isEmpty(prefix) ? result : result.withPrefixMatcher(prefix))
+              .addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, moduleName));
           }
           else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordTuple) {
             Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(grandPa);

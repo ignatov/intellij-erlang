@@ -476,15 +476,15 @@ public class ErlangPsiImplUtil {
   public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile,
                                                               boolean withArity,
                                                               boolean withModule,
-                                                              @Nullable ErlangQAtom qAtom) {
+                                                              @Nullable ErlangQAtom moduleAtom) {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
       List<ErlangFunction> functions = new ArrayList<ErlangFunction>();
 
       List<LookupElement> lookupElements = ContainerUtil.newArrayList();
 
       ErlangSdkRelease release = ErlangSdkType.getRelease(containingFile);
-      if (qAtom != null) {
-        String moduleName = getName(qAtom);
+      if (moduleAtom != null) {
+        String moduleName = getName(moduleAtom);
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), moduleName));
 
         if (release == null || release.needBifCompletion(moduleName)) {

@@ -245,6 +245,33 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("foo() -> fmta<caret>", "foo() -> fake_module:tar()<caret>");
   }
 
+  public void testModuleNameIsMatchedFromTextBeforeColon() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestEquals("foo() -> famo:<caret>",
+      "fake_module:bar", "fake_module:bar", "fake_module:tar", "module_info", "module_info");
+    // means "fake_module:bar/0", "fake_module:bar/1", "fake_module:tar/0", "module_info/0", "module_info/1"
+  }
+
+  public void testModuleNameIsMatchedFromTextBeforeColonAtComma() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestEquals("foo() -> famo:<caret>, ok.",
+      "fake_module:bar", "fake_module:bar", "fake_module:tar", "module_info", "module_info");
+    // means "fake_module:bar/0", "fake_module:bar/1", "fake_module:tar/0", "module_info/0", "module_info/1"
+  }
+
+  public void testModuleNameIsMatchedFromTextBeforeColonAtIncompleteClause() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestEquals("foo() -> famo:<caret> ok.",
+      "fake_module:bar", "fake_module:bar", "fake_module:tar", "module_info", "module_info");
+    // means "fake_module:bar/0", "fake_module:bar/1", "fake_module:tar/0", "module_info/0", "module_info/1"
+  }
+
+  public void testModuleNameIsMatchedFromTextBeforeColonWithPartialMatch() throws Throwable {
+    myFixture.configureByFiles("module-completion/fake_module.erl");
+    doTestEquals("foo() -> famo:ba<caret>ckend", "fake_module:bar", "fake_module:bar");
+    // means "fake_module:bar/0", "fake_module:bar/1"
+  }
+
   public void testModuleCompletionWithColon() throws Throwable {
     myFixture.configureByFiles("module-completion/test_module.erl");
     doCheckResult("foo() -> test_modul<caret>", "foo() -> test_module:");
