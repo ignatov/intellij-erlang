@@ -60,6 +60,7 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.completion.ErlangCompletionContributor;
+import org.intellij.erlang.completion.QuoteInsertHandler;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.index.ErlangApplicationIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;
@@ -476,7 +477,6 @@ public class ErlangPsiImplUtil {
   public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, boolean withArity, @Nullable ErlangQAtom moduleAtom) {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
       List<ErlangFunction> functions = ContainerUtil.newArrayList();
-
       List<LookupElement> lookupElements = ContainerUtil.newArrayList();
 
       ErlangSdkRelease release = ErlangSdkType.getRelease(containingFile);
@@ -527,13 +527,14 @@ public class ErlangPsiImplUtil {
     for (String moduleName : ErlangModuleIndex.getNames(project)) {
       if (exclude != null && moduleName.equals(exclude)) continue;
       for (ErlangFunction function : getExternalFunctionForCompletion(project, moduleName)) {
-        String fullName = moduleName + ":" + function.getName();
+        String functionName = function.getName();
+        String fullName = moduleName + ":" + functionName;
         int arity = function.getArity();
         lookupElements.add(
           PrioritizedLookupElement.withPriority(
             LookupElementBuilder.create(function, fullName)
               .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
-              .withInsertHandler(getInsertHandler(arity, withArity)),
+              .withInsertHandler(getInsertHandler(functionName, moduleName, arity, withArity)),
             ErlangCompletionContributor.EXTERNAL_FUNCTIONS_PRIORITY));
       }
     }
@@ -562,22 +563,28 @@ public class ErlangPsiImplUtil {
     int arity = function.getArity();
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(function)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
-      .withInsertHandler(getInsertHandler(arity, withArity)), priority);
+      .withInsertHandler(getInsertHandler(function.getName(), arity, withArity)), priority);
   }
 
   @NotNull
   private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name + arity, name)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
-      .withInsertHandler(getInsertHandler(arity, withArity)), (double) priority);
+      .withInsertHandler(getInsertHandler(name, arity, withArity)), (double) priority);
   }
 
-  @Nullable
-  private static InsertHandler<LookupElement> getInsertHandler(final int arity, boolean withArity) {
+  @NotNull
+  private static InsertHandler<LookupElement> getInsertHandler(final String name, final int arity, boolean withArity) {
+    return getInsertHandler(name, null, arity, withArity);
+  }
+
+  @NotNull
+  private static InsertHandler<LookupElement> getInsertHandler(@NotNull final String name, @Nullable final String moduleName, final int arity, boolean withArity) {
     return withArity ?
       new BasicInsertHandler<LookupElement>() {
         @Override
         public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
+          QuoteInsertHandler.process(context.getProject(), name, moduleName, context);
           Editor editor = context.getEditor();
           Document document = editor.getDocument();
           context.commitDocument();
@@ -604,9 +611,14 @@ public class ErlangPsiImplUtil {
           }
           return element;
         }
-
       } :
       new ParenthesesInsertHandler<LookupElement>() {
+        @Override
+        public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
+          QuoteInsertHandler.process(context.getProject(), name, moduleName, context);
+          super.handleInsert(context, item);
+        }
+
         @Override
         protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
           return arity > 0;
@@ -683,7 +695,7 @@ public class ErlangPsiImplUtil {
           @Override
           public LookupElement fun(@NotNull ErlangTypeDefinition rd) {
             return PrioritizedLookupElement.withPriority(
-              LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(getArity(rd), withArity)),
+              LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(rd.getName(), getArity(rd), withArity)),
               ErlangCompletionContributor.TYPE_PRIORITY);
           }
         });

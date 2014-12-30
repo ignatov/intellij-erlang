@@ -22,8 +22,10 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Comparing;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class QuoteInsertHandler extends SingleCharInsertHandler {
   public static final String QUOTA = "'";
@@ -37,21 +39,36 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
   @Override
   public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
     Project project = context.getProject();
-    if (needQuotation(project, myName)) {
+    process(project, myName, context);
+    if (needColon()) {
+      AutoPopupController.getInstance(project).autoPopupMemberLookup(context.getEditor(), null);
+      super.handleInsert(context, item);
+    }
+  }
+
+  public static void process(@NotNull Project project, @NotNull String name, @NotNull InsertionContext context) {
+    process(project, name, null, context);
+  }
+
+  public static void process(@NotNull Project project, @NotNull String name, @Nullable String moduleName, @NotNull InsertionContext context) {
+    if (needQuotation(project, moduleName)) {
+      Editor editor = context.getEditor();
+      Document document = editor.getDocument();
+      context.commitDocument();
+      int startOffset = context.getStartOffset();
+      document.insertString(startOffset, QUOTA);
+      document.insertString(startOffset + moduleName.length() + 1, QUOTA);
+    }
+    if (needQuotation(project, name)) {
       Editor editor = context.getEditor();
       Document document = editor.getDocument();
       context.commitDocument();
       int tailOffset = context.getTailOffset();
-      int startOffset = context.getStartOffset();
-
+      int startOffset = moduleName == null ? context.getStartOffset() : tailOffset - name.length();
       document.insertString(startOffset, QUOTA);
       document.insertString(tailOffset + 1, QUOTA);
       editor.getCaretModel().moveToOffset(tailOffset + 2);
       context.setTailOffset(tailOffset + 2);
-    }
-    if (needColon()) {
-      AutoPopupController.getInstance(project).autoPopupMemberLookup(context.getEditor(), null);
-      super.handleInsert(context, item);
     }
   }
 
@@ -59,10 +76,10 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
     return false;
   }
 
-  private static boolean needQuotation(@NotNull Project project, @NotNull String name) {
+  private static boolean needQuotation(@NotNull Project project, @Nullable String name) {
+    if (name == null) return false;
     try {
-      ErlangElementFactory.createQAtomFromText(project, name);
-      return false;
+      return !Comparing.equal(ErlangElementFactory.createQAtomFromText(project, name).getText(), name);
     } catch (Exception ignored) {
     }
     return true;

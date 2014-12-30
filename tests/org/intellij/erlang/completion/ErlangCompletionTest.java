@@ -274,13 +274,29 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testModuleFunctionCompletionForEmptyText() throws Throwable {
     myFixture.configureByFiles("module-completion/fake_module.erl");
-    doTestInclude("foo() -> <caret>.",
-      "fake_module",
-      "fake_module:bar",
-      "fake_module:tar",
-      "finish_after_on_load");
+    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "finish_after_on_load");
   }
-
+  
+  public void testModuleFunctionCompletionQuoted() throws Throwable {
+    myFixture.configureByText("OTP-PUB-KEY.erl", "-module('OTP-PUB-KEY'). -export(['dec_D-1'/2]). 'dec_D-1'(Tlv, TagIn) -> 1.");
+    doCheckResult("foo() -> Odec<caret>", "foo() -> 'OTP-PUB-KEY':'dec_D-1'(<caret>)");
+  }
+  
+  public void testModuleFunctionCompletionQuoted2() throws Throwable {
+    myFixture.configureByText("OTP-PUB-KEY.erl", "-module('OTP-PUB-KEY'). -export([dec_D1/2]). dec_D1(Tlv, TagIn) -> 1.");
+    doCheckResult("foo() -> Odec<caret>", "foo() -> 'OTP-PUB-KEY':dec_D1(<caret>)");
+  }
+  
+  public void testModuleFunctionCompletionQuoted3() throws Throwable {
+    myFixture.configureByText("OTP-PUB-KEY.erl", "-module('OTP-PUB-KEY'). -export(['dec_D1'/2]). 'dec_D1'(Tlv, TagIn) -> 1.");
+    doCheckResult("foo() -> Odec<caret>", "foo() -> 'OTP-PUB-KEY':dec_D1(<caret>)");
+  }
+  
+  public void testModuleFunctionCompletionQuoted4() throws Throwable {
+    myFixture.configureByText("otp_pub_key.erl", "-module(otp_pub_key). -export(['dec_D-1'/2]). 'dec_D-1'(Tlv, TagIn) -> 1.");
+    doCheckResult("foo() -> otpdec<caret>", "foo() -> otp_pub_key:'dec_D-1'(<caret>)");
+  }
+  
   public void testModuleCompletionWithColon() throws Throwable {
     myFixture.configureByFiles("module-completion/test_module.erl");
     doCheckResult("foo() -> test_modul<caret>", "foo() -> test_module:");
@@ -293,7 +309,6 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void test176() throws Throwable {
     myFixture.configureByFiles("headers/a.erl", "headers/header.hrl");
-
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "foo");
   }
 
