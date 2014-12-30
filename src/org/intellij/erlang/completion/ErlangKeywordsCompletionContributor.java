@@ -148,5 +148,4 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
       return myNeedQuotas;
     }
   }
-
 }
