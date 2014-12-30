@@ -17,13 +17,10 @@
 package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.*;
-import com.intellij.codeInsight.completion.util.ParenthesesInsertHandler;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.IdeActions;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
@@ -38,28 +35,22 @@ import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
-import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
-import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashSet;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.index.ErlangApplicationIndex;
 import org.intellij.erlang.index.ErlangAtomIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;
-import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
@@ -83,10 +74,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
   public static final int EXTERNAL_FUNCTIONS_PRIORITY = -7;
   public static final int KEYWORD_PRIORITY            = -10;
   public static final int MODULE_PRIORITY             = -15;
-
-  public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
-    "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour"
-  );
 
   @Override
   public void beforeCompletion(@NotNull CompletionInitializationContext context) {
@@ -119,7 +106,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
   }
 
   public ErlangCompletionContributor() {
-    extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFileImpl.class)), new CompletionProvider<CompletionParameters>() {
+    extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFile.class)), new CompletionProvider<CompletionParameters>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
@@ -199,9 +186,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
             return;
           }
           else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
-            for (String keyword : suggestKeywords(position)) {
-              result.addElement(createKeywordLookupElement(keyword));
-            }
             //noinspection unchecked
             boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
             //noinspection unchecked
@@ -351,17 +335,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
     ErlangCodeStyleSettings customSettings = CodeStyleSettingsManager.getSettings(project).getCustomSettings(ErlangCodeStyleSettings.class);
     boolean surroundWithSpaces = customSettings.SPACE_AROUND_EQ_IN_RECORDS;
     return LookupElementBuilder.create(text).withIcon(ErlangIcons.FIELD).withInsertHandler(withoutEq ? null : new SingleCharInsertHandler('=', surroundWithSpaces));
-  }
-
-  @NotNull
-  private static LookupElement createKeywordLookupElement(@NotNull String keyword) {
-    boolean needHandler = KEYWORDS_WITH_PARENTHESIS.contains(keyword);
-    boolean needQuotas = "include".equalsIgnoreCase(keyword) || "include_lib".equalsIgnoreCase(keyword);
-    boolean needBrackets = "export".equalsIgnoreCase(keyword) || "export_type".equalsIgnoreCase(keyword);
-    return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword)
-      .withInsertHandler(needHandler ? new ErlangKeywordInsertHandler(needQuotas, needBrackets) : null)
-      .withTailText(needHandler ? "()" : null)
-      .bold(), KEYWORD_PRIORITY);
   }
 
   @NotNull
@@ -526,28 +499,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
     }
   }
 
-  @NotNull
-  private static Collection<String> suggestKeywords(@NotNull PsiElement position) {
-    TextRange posRange = position.getTextRange();
-    ErlangFile posFile = (ErlangFile) position.getContainingFile();
-    TextRange range = new TextRange(0, posRange.getStartOffset());
-    String text = range.isEmpty() ? CompletionInitializationContext.DUMMY_IDENTIFIER : range.substring(posFile.getText());
-
-    PsiFile file = PsiFileFactory.getInstance(posFile.getProject()).createFileFromText("a.erl", ErlangLanguage.INSTANCE, text, true, false);
-    int completionOffset = posRange.getStartOffset() - range.getStartOffset();
-    ErlangParserUtil.CompletionState state = new ErlangParserUtil.CompletionState(completionOffset) {
-      @Override
-      public String convertItem(Object o) {
-        if (o instanceof IElementType && ErlangLexer.KEYWORDS.contains((IElementType) o)) return o.toString();
-        return o instanceof String ? (String) o : null;
-      }
-    };
-    //noinspection StaticFieldReferencedViaSubclass
-    file.putUserData(ErlangParserUtil.COMPLETION_STATE_KEY, state);
-    TreeUtil.ensureParsed(file.getNode());
-    return state.items;
-  }
-
   private static class RunCompletionInsertHandler implements InsertHandler<LookupElement> {
     @Override
     public void handleInsert(@NotNull final InsertionContext context, @NotNull LookupElement item) {
@@ -558,50 +509,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
             new CodeCompletionHandlerBase(CompletionType.BASIC).invokeCompletion(context.getProject(), context.getEditor());
           }
         });
-    }
-  }
-
-  private static class ErlangKeywordInsertHandler extends ParenthesesInsertHandler<LookupElement> {
-    private final boolean myNeedQuotas;
-    private final boolean myInsertBrackets;
-
-    public ErlangKeywordInsertHandler(boolean needQuotas, boolean insertBrackets) {
-      myNeedQuotas = needQuotas;
-      myInsertBrackets = insertBrackets;
-    }
-
-    @Override
-    protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
-      return true;
-    }
-
-    @Override
-    public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
-      super.handleInsert(context, item);
-      Editor editor = context.getEditor();
-
-      Document document = editor.getDocument();
-      if (!document.getText().substring(context.getTailOffset()).startsWith(".")) {
-        document.insertString(context.getTailOffset(), ".");
-      }
-
-      if (insertQuotas()) doInsert(editor, document, "\"", "\"");
-      if (insertBrackets()) doInsert(editor, document, "[", "]");
-    }
-
-    private static void doInsert(@NotNull Editor editor, @NotNull Document document, @NotNull String open, @NotNull String closed) {
-      int offset = editor.getCaretModel().getOffset();
-      document.insertString(offset, open);
-      document.insertString(offset + 1, closed);
-      editor.getCaretModel().moveToOffset(offset + 1);
-    }
-
-    private boolean insertBrackets() {
-      return myInsertBrackets;
-    }
-
-    private boolean insertQuotas() {
-      return myNeedQuotas;
     }
   }
 }
