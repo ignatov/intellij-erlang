@@ -23,23 +23,21 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.jetbrains.annotations.NotNull;
 
-public class ModuleInsertHandler extends SingleCharInsertHandler {
+public class QuoteInsertHandler extends SingleCharInsertHandler {
   public static final String QUOTA = "'";
-  private final Project myProject;
-  private final String myModuleName;
-  private final boolean myWithColon;
+  private final String myName;
 
-  public ModuleInsertHandler(Project project, String moduleName, boolean withColon) {
+  public QuoteInsertHandler(@NotNull String name) {
     super(':');
-    myProject = project;
-    myModuleName = moduleName;
-    myWithColon = withColon;
+    myName = name;
   }
 
   @Override
-  public void handleInsert(InsertionContext context, LookupElement item) {
-    if (needQuotation()) {
+  public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
+    Project project = context.getProject();
+    if (needQuotation(project, myName)) {
       Editor editor = context.getEditor();
       Document document = editor.getDocument();
       context.commitDocument();
@@ -51,18 +49,36 @@ public class ModuleInsertHandler extends SingleCharInsertHandler {
       editor.getCaretModel().moveToOffset(tailOffset + 2);
       context.setTailOffset(tailOffset + 2);
     }
-    if (myWithColon) {
-      AutoPopupController.getInstance(context.getProject()).autoPopupMemberLookup(context.getEditor(), null);
+    if (needColon()) {
+      AutoPopupController.getInstance(project).autoPopupMemberLookup(context.getEditor(), null);
       super.handleInsert(context, item);
     }
   }
 
-  private boolean needQuotation() {
+  protected boolean needColon() {
+    return false;
+  }
+
+  private static boolean needQuotation(@NotNull Project project, @NotNull String name) {
     try {
-      ErlangElementFactory.createQAtomFromText(myProject, myModuleName);
+      ErlangElementFactory.createQAtomFromText(project, name);
       return false;
     } catch (Exception ignored) {
     }
     return true;
+  }
+  
+  public static class ModuleInsertHandler extends QuoteInsertHandler {
+    private final boolean myWithColon;
+
+    public ModuleInsertHandler(@NotNull String name, boolean withColon) {
+      super(name);
+      myWithColon = withColon;
+    }
+
+    @Override
+    protected boolean needColon() {
+      return myWithColon;
+    }
   }
 }

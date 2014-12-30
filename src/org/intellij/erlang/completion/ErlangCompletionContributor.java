@@ -494,7 +494,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         PrioritizedLookupElement.withPriority(
           LookupElementBuilder.create(name)
             .withIcon(ErlangIcons.MODULE)
-            .withInsertHandler(new ModuleInsertHandler(project, name, withColon)),
+            .withInsertHandler(new QuoteInsertHandler.ModuleInsertHandler(name, withColon)),
           MODULE_PRIORITY));
     }
   }
