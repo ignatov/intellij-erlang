@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.Function;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.navigation.ErlangNavigationUtil;
 import org.intellij.erlang.psi.ErlangCallbackSpec;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -35,7 +36,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.MouseEvent;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -59,7 +59,7 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
                                                            final Collection<ErlangCallbackSpec> callbackSpecs) {
     final String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
 
-    final List<NavigatablePsiElement> navigatables = new ArrayList<NavigatablePsiElement>();
+    final List<NavigatablePsiElement> navigatables = ContainerUtil.newArrayList();
     for (ErlangCallbackSpec callbackSpec : callbackSpecs) {
       navigatables.add(ErlangNavigationUtil.getNavigatableSpecFun(presentation, callbackSpec));
     }

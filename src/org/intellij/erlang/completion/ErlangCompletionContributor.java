@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement previousByOffset = elementAt != null ? PsiTreeUtil.prevVisibleLeaf(elementAt) : startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
     //noinspection unchecked
     ErlangCompositeElement typeParent = PsiTreeUtil.getParentOfType(elementAt, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class);
-    if (parent instanceof ErlangExport || parent instanceof ErlangExportFunctions
+    if (parent instanceof ErlangExport || PsiTreeUtil.getParentOfType(parent , ErlangExportFunctions.class, false) != null
       || parent instanceof ErlangImportDirective || parent instanceof ErlangImportFunctions
       || exportType != null || export != null || prevIsRadix(elementAt)
       || is(previousByOffset, ErlangTypes.ERL_RADIX)
