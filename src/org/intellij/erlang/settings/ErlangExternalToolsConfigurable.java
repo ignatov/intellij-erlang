@@ -27,7 +27,6 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.TitledSeparator;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.dialyzer.DialyzerSettings;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
@@ -42,7 +41,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.File;
-import java.util.List;
 
 public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
   public static final String ERLANG_RELATED_TOOLS = "Erlang External Tools";
@@ -168,13 +166,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   }
 
   private void validateEmacsPath() {
-    String version = ExtProcessUtil.restrictedTimeExec(myEmacsPathSelector.getText() + " --version", 3000);
-    List<String> split = StringUtil.split(version, "\n");
-    if (StringUtil.containsIgnoreCase(version, "emacs") && split.size() > 0) {
-      myEmacsVersionText.setText(ContainerUtil.getFirstItem(split));
-    }
-    else {
-      myEmacsVersionText.setText("N/A");
-    }
+    String rawVersion = ExtProcessUtil.execAndGetFirstLine(myEmacsPathSelector.getText() + " --version", 3000).getStdOut();
+    myEmacsVersionText.setText(StringUtil.containsIgnoreCase(rawVersion, "emacs") ? rawVersion : "N/A");
   }
 }

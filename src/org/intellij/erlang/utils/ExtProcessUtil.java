@@ -16,10 +16,12 @@
 
 package org.intellij.erlang.utils;
 
+import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.*;
 
@@ -28,21 +30,17 @@ public final class ExtProcessUtil {
   }
 
   @NotNull
-  public static String restrictedTimeExec(@NotNull String cmd, int timeout) {
+  public static ExtProcessOutput execAndGetFirstLine(@NotNull String cmd, long timeout) {
     try {
       final Process cmdRunner = Runtime.getRuntime().exec(cmd);
       ExecutorService singleTreadExecutor = Executors.newSingleThreadExecutor();
-      Future<String> cmdRunnerFuture = singleTreadExecutor.submit(new Callable<String>() {
+      Future<ExtProcessOutput> cmdRunnerFuture = singleTreadExecutor.submit(new Callable<ExtProcessOutput>() {
         @Override
-        public String call() throws Exception {
+        public ExtProcessOutput call() throws Exception {
           cmdRunner.waitFor();
-          BufferedReader outReader = new BufferedReader(new InputStreamReader(cmdRunner.getInputStream()));
-          try {
-            String firstLine = outReader.readLine();
-            return firstLine == null ? "" : firstLine;
-          } finally {
-            outReader.close();
-          }
+          String stdOut = readLine(cmdRunner.getInputStream());
+          String stdErr = readLine(cmdRunner.getErrorStream());
+          return new ExtProcessOutput(stdOut, stdErr);
         }
       });
       try {
@@ -53,6 +51,41 @@ public final class ExtProcessUtil {
       singleTreadExecutor.shutdown();
     } catch (IOException e) { // Suppress
     }
+    return new ExtProcessOutput("", "");
+  }
+
+  @NotNull
+  private static String readLine(InputStream stream) {
+    BufferedReader errReader = new BufferedReader(new InputStreamReader(stream));
+    try {
+      return StringUtil.notNullize(errReader.readLine());
+    } catch (IOException ignore) {
+    } finally {
+      try {
+        errReader.close();
+      } catch (IOException ignore) {
+      }
+    }
     return "";
+  }
+
+  public static class ExtProcessOutput {
+    private final String myStdOut;
+    private final String myStdErr;
+
+    public ExtProcessOutput(@NotNull String stdOut, @NotNull String stdErr) {
+      myStdOut = stdOut;
+      myStdErr = stdErr;
+    }
+
+    @NotNull
+    public String getStdOut() {
+      return myStdOut;
+    }
+
+    @NotNull
+    public String getStdErr() {
+      return myStdErr;
+    }
   }
 }

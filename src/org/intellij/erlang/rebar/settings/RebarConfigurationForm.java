@@ -22,6 +22,7 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.labels.ActionLink;
@@ -82,14 +83,17 @@ public class RebarConfigurationForm {
 
   private boolean validateRebarPath() {
     String rebarPath = myRebarPathSelector.getText();
-    if (new File(rebarPath).exists()) {
-      String version = ExtProcessUtil.restrictedTimeExec(myRebarPathSelector.getText() + " --version", 3000);
-      if (version.startsWith("rebar")) {
-        myRebarVersionText.setText(version);
-        return true;
-      }
+    if (!new File(rebarPath).exists()) return false;
+
+    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(myRebarPathSelector.getText() + " --version", 3000);
+    String version = output.getStdOut();
+    if (version.startsWith("rebar")) {
+      myRebarVersionText.setText(version);
+      return true;
     }
-    myRebarVersionText.setText("N/A");
+
+    String stdErr = output.getStdErr();
+    myRebarVersionText.setText("N/A" + (StringUtil.isNotEmpty(stdErr) ? ": Error: " + stdErr : ""));
     return false;
   }
 
