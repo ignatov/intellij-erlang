@@ -85,7 +85,7 @@ public class RebarConfigurationForm {
     String rebarPath = myRebarPathSelector.getText();
     if (!new File(rebarPath).exists()) return false;
 
-    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(myRebarPathSelector.getText() + " --version", 3000);
+    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(3000, myRebarPathSelector.getText(), "--version");
     String version = output.getStdOut();
     if (version.startsWith("rebar")) {
       myRebarVersionText.setText(version);

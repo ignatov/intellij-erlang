@@ -166,7 +166,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   }
 
   private void validateEmacsPath() {
-    String rawVersion = ExtProcessUtil.execAndGetFirstLine(myEmacsPathSelector.getText() + " --version", 3000).getStdOut();
+    String rawVersion = ExtProcessUtil.execAndGetFirstLine(3000, myEmacsPathSelector.getText(), "--version").getStdOut();
     myEmacsVersionText.setText(StringUtil.containsIgnoreCase(rawVersion, "emacs") ? rawVersion : "N/A");
   }
 }

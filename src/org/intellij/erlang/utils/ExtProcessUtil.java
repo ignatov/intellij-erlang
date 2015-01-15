@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.utils;
 
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,26 +32,31 @@ public final class ExtProcessUtil {
   }
 
   @NotNull
-  public static ExtProcessOutput execAndGetFirstLine(@NotNull String cmd, long timeout) {
+  public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull String... command) {
     try {
-      final Process cmdRunner = Runtime.getRuntime().exec(cmd);
+      final Process cmdRunner = new GeneralCommandLine(command).createProcess();
       ExecutorService singleTreadExecutor = Executors.newSingleThreadExecutor();
-      Future<ExtProcessOutput> cmdRunnerFuture = singleTreadExecutor.submit(new Callable<ExtProcessOutput>() {
-        @Override
-        public ExtProcessOutput call() throws Exception {
-          cmdRunner.waitFor();
-          String stdOut = readLine(cmdRunner.getInputStream());
-          String stdErr = readLine(cmdRunner.getErrorStream());
-          return new ExtProcessOutput(stdOut, stdErr);
-        }
-      });
       try {
-        return cmdRunnerFuture.get(timeout, TimeUnit.MILLISECONDS);
-      } catch (Exception e) { // Suppress
+        Future<ExtProcessOutput> cmdRunnerFuture = singleTreadExecutor.submit(new Callable<ExtProcessOutput>() {
+          @Override
+          public ExtProcessOutput call() throws Exception {
+            cmdRunner.waitFor();
+            String stdOut = readLine(cmdRunner.getInputStream());
+            String stdErr = readLine(cmdRunner.getErrorStream());
+            return new ExtProcessOutput(stdOut, stdErr);
+          }
+        });
+
+        try {
+          return cmdRunnerFuture.get(timeout, TimeUnit.MILLISECONDS);
+        } catch (Exception e) { // Suppress
+        }
+
+        cmdRunnerFuture.cancel(true);
+      } finally {
+        singleTreadExecutor.shutdown();
       }
-      cmdRunnerFuture.cancel(true);
-      singleTreadExecutor.shutdown();
-    } catch (IOException e) { // Suppress
+    } catch (ExecutionException e) { // Suppress
     }
     return new ExtProcessOutput("", "");
   }
