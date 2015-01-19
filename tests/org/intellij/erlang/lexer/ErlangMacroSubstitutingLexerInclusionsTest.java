@@ -19,7 +19,6 @@ package org.intellij.erlang.lexer;
 import com.intellij.lang.TokenWrapper;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.tree.IElementType;
@@ -28,9 +27,19 @@ import org.intellij.erlang.context.ErlangCompileContextManager;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangMacroSubstitutingLexerInclusionsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  private VirtualFile mySource;
+
   @Override
   protected String getTestDataPath() {
     return "testData/lexer/MacroSubstitutingLexerInclusions/";
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+
+    mySource = myFixture.copyFileToProject(getTestName(true) + ".erl");
+    myFixture.copyDirectoryToProject("headers", "headers");
   }
 
   public void testMacroUndefinitionFromTransitiveInclusion() throws Exception { doTest(); }
@@ -42,12 +51,9 @@ public class ErlangMacroSubstitutingLexerInclusionsTest extends ErlangLightPlatf
   public void testExpansionOccursInPlace()                   throws Exception { doTest(); }
 
   private void doTest() throws Exception {
-    VirtualFile source = LocalFileSystem.getInstance().findFileByPath(getTestDataPath() + getTestName(true) + ".erl");
-    assertNotNull(source);
-
-    ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(getProject()).getContext(getProject(), source);
-    ErlangMacroSubstitutingLexer lexer = new ErlangMacroSubstitutingLexer(compileContext, source);
-    String sourceText = VfsUtilCore.loadText(source);
+    ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(getProject()).getContext(getProject(), mySource);
+    ErlangMacroSubstitutingLexer lexer = new ErlangMacroSubstitutingLexer(compileContext, mySource);
+    String sourceText = VfsUtilCore.loadText(mySource);
     lexer.start(StringUtil.convertLineSeparators(sourceText));
     String actualTokens = printTokens(lexer);
 
