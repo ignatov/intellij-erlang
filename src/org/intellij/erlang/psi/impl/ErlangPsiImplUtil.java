@@ -394,16 +394,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inMacroCallArguments(PsiElement psiElement) {
-    PsiElement child = psiElement;
-    ErlangFunctionCallExpression functionCall;
-    while ((functionCall = PsiTreeUtil.getParentOfType(child, ErlangFunctionCallExpression.class, true)) != null) {
-      boolean isMacroCall = functionCall.getQAtom().getMacros() != null;
-      if (isMacroCall && PsiTreeUtil.isAncestor(functionCall.getArgumentList(), psiElement, true)) {
-        return true;
-      }
-      child = functionCall;
-    }
-    return false;
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangMacroCallArgumentList.class, true) != null;
   }
 
   public static boolean inCallback(PsiElement psiElement) {
