@@ -56,7 +56,7 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
               return;
             }
 
-            registerProblemForeignTokensAware(problemsHolder, o, "Unused variable " + "'" + o.getText() + "'",
+            registerProblemForeignTokensAware(problemsHolder, o, "Unused variable " + "'" + o.getName() + "'",
               ProblemHighlightType.LIKE_UNUSED_SYMBOL, getQuickFixes(o));
           }
         });

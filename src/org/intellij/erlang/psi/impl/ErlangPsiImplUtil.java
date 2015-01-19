@@ -706,7 +706,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangQVar o) {
-    return o.getText();
+    return o.getVar().getText();
   }
 
   public static int getArity(@NotNull ErlangFunction o) {
