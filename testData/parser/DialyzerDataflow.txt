@@ -4532,62 +4532,64 @@ ERL_FILE
                           PsiElement(atom_name)('true')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('debug')
-                          ERL_MACRO_CALL_ARGUMENT_LIST
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_STRING_LITERAL
-                                PsiElement(string)('"Not handling1 ~w: ~s\n"')
-                              PsiElement(,)(',')
-                              ERL_LIST_EXPRESSION
-                                PsiElement([)('[')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('debug')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_STRING_LITERAL
+                            PsiElement(string)('"Not handling1 ~w: ~s\n"')
+                          PsiElement(,)(',')
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            ERL_FUNCTION_CALL_EXPRESSION
+                              ERL_Q_ATOM
+                                ERL_ATOM
+                                  PsiElement(atom_name)('state__lookup_name')
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
                                 ERL_FUNCTION_CALL_EXPRESSION
                                   ERL_Q_ATOM
                                     ERL_ATOM
-                                      PsiElement(atom_name)('state__lookup_name')
+                                      PsiElement(atom_name)('get_label')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
-                                    ERL_FUNCTION_CALL_EXPRESSION
-                                      ERL_Q_ATOM
-                                        ERL_ATOM
-                                          PsiElement(atom_name)('get_label')
-                                      ERL_ARGUMENT_LIST
-                                        PsiElement(()('(')
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('Fun')
-                                        PsiElement())(')')
-                                    PsiElement(,)(',')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
-                                        PsiElement(var)('State')
+                                        PsiElement(var)('Fun')
                                     PsiElement())(')')
                                 PsiElement(,)(',')
+                                ERL_MAX_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('State')
+                                PsiElement())(')')
+                            PsiElement(,)(',')
+                            ERL_FUNCTION_CALL_EXPRESSION
+                              ERL_Q_ATOM
+                                ERL_ATOM
+                                  PsiElement(atom_name)('t_to_string')
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
                                 ERL_FUNCTION_CALL_EXPRESSION
                                   ERL_Q_ATOM
                                     ERL_ATOM
-                                      PsiElement(atom_name)('t_to_string')
+                                      PsiElement(atom_name)('t_product')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
-                                    ERL_FUNCTION_CALL_EXPRESSION
-                                      ERL_Q_ATOM
-                                        ERL_ATOM
-                                          PsiElement(atom_name)('t_product')
-                                      ERL_ARGUMENT_LIST
-                                        PsiElement(()('(')
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('ArgTypes')
-                                        PsiElement())(')')
+                                    ERL_MAX_EXPRESSION
+                                      ERL_Q_VAR
+                                        PsiElement(var)('ArgTypes')
                                     PsiElement())(')')
-                                PsiElement(])(']')
-                              PsiElement())(')')
+                                PsiElement())(')')
+                            PsiElement(])(']')
+                          PsiElement())(')')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_ATOM
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: ok)('ok')
                     PsiElement(,)(',')
                     ERL_FUNCTION_CALL_EXPRESSION
                       ERL_Q_ATOM
@@ -4633,62 +4635,64 @@ ERL_FILE
                                 PsiElement(atom_name)('none')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_MACROS
-                                PsiElement(?)('?')
-                                ERL_MACROS_NAME
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('debug')
-                                ERL_MACRO_CALL_ARGUMENT_LIST
-                                  ERL_ARGUMENT_LIST
-                                    PsiElement(()('(')
-                                    ERL_STRING_LITERAL
-                                      PsiElement(string)('"Not handling2 ~w: ~s\n"')
-                                    PsiElement(,)(',')
-                                    ERL_LIST_EXPRESSION
-                                      PsiElement([)('[')
+                          ERL_MACROS
+                            PsiElement(?)('?')
+                            ERL_MACROS_NAME
+                              ERL_ATOM
+                                PsiElement(atom_name)('debug')
+                            ERL_MACRO_CALL_ARGUMENT_LIST
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
+                                ERL_STRING_LITERAL
+                                  PsiElement(string)('"Not handling2 ~w: ~s\n"')
+                                PsiElement(,)(',')
+                                ERL_LIST_EXPRESSION
+                                  PsiElement([)('[')
+                                  ERL_FUNCTION_CALL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('state__lookup_name')
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
                                       ERL_FUNCTION_CALL_EXPRESSION
                                         ERL_Q_ATOM
                                           ERL_ATOM
-                                            PsiElement(atom_name)('state__lookup_name')
+                                            PsiElement(atom_name)('get_label')
                                         ERL_ARGUMENT_LIST
                                           PsiElement(()('(')
-                                          ERL_FUNCTION_CALL_EXPRESSION
-                                            ERL_Q_ATOM
-                                              ERL_ATOM
-                                                PsiElement(atom_name)('get_label')
-                                            ERL_ARGUMENT_LIST
-                                              PsiElement(()('(')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('Fun')
-                                              PsiElement())(')')
-                                          PsiElement(,)(',')
                                           ERL_MAX_EXPRESSION
                                             ERL_Q_VAR
-                                              PsiElement(var)('State')
+                                              PsiElement(var)('Fun')
                                           PsiElement())(')')
                                       PsiElement(,)(',')
+                                      ERL_MAX_EXPRESSION
+                                        ERL_Q_VAR
+                                          PsiElement(var)('State')
+                                      PsiElement())(')')
+                                  PsiElement(,)(',')
+                                  ERL_FUNCTION_CALL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('t_to_string')
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
                                       ERL_FUNCTION_CALL_EXPRESSION
                                         ERL_Q_ATOM
                                           ERL_ATOM
-                                            PsiElement(atom_name)('t_to_string')
+                                            PsiElement(atom_name)('t_product')
                                         ERL_ARGUMENT_LIST
                                           PsiElement(()('(')
-                                          ERL_FUNCTION_CALL_EXPRESSION
-                                            ERL_Q_ATOM
-                                              ERL_ATOM
-                                                PsiElement(atom_name)('t_product')
-                                            ERL_ARGUMENT_LIST
-                                              PsiElement(()('(')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('ArgTypes')
-                                              PsiElement())(')')
+                                          ERL_MAX_EXPRESSION
+                                            ERL_Q_VAR
+                                              PsiElement(var)('ArgTypes')
                                           PsiElement())(')')
-                                      PsiElement(])(']')
-                                    PsiElement())(')')
+                                      PsiElement())(')')
+                                  PsiElement(])(']')
+                                PsiElement())(')')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                ForeignLeaf(atom_name: ok)('ok')
                           PsiElement(,)(',')
                           ERL_FUNCTION_CALL_EXPRESSION
                             ERL_Q_ATOM
@@ -4708,66 +4712,68 @@ ERL_FILE
                               PsiElement(var)('Map')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_MACROS
-                                PsiElement(?)('?')
-                                ERL_MACROS_NAME
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('debug')
-                                ERL_MACRO_CALL_ARGUMENT_LIST
-                                  ERL_ARGUMENT_LIST
-                                    PsiElement(()('(')
-                                    ERL_STRING_LITERAL
-                                      PsiElement(string)('"Handling fun ~p: ~s\n"')
-                                    PsiElement(,)(',')
-                                    ERL_LIST_EXPRESSION
-                                      PsiElement([)('[')
+                          ERL_MACROS
+                            PsiElement(?)('?')
+                            ERL_MACROS_NAME
+                              ERL_ATOM
+                                PsiElement(atom_name)('debug')
+                            ERL_MACRO_CALL_ARGUMENT_LIST
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
+                                ERL_STRING_LITERAL
+                                  PsiElement(string)('"Handling fun ~p: ~s\n"')
+                                PsiElement(,)(',')
+                                ERL_LIST_EXPRESSION
+                                  PsiElement([)('[')
+                                  ERL_FUNCTION_CALL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('state__lookup_name')
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
                                       ERL_FUNCTION_CALL_EXPRESSION
                                         ERL_Q_ATOM
                                           ERL_ATOM
-                                            PsiElement(atom_name)('state__lookup_name')
+                                            PsiElement(atom_name)('get_label')
                                         ERL_ARGUMENT_LIST
                                           PsiElement(()('(')
-                                          ERL_FUNCTION_CALL_EXPRESSION
-                                            ERL_Q_ATOM
-                                              ERL_ATOM
-                                                PsiElement(atom_name)('get_label')
-                                            ERL_ARGUMENT_LIST
-                                              PsiElement(()('(')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('Fun')
-                                              PsiElement())(')')
+                                          ERL_MAX_EXPRESSION
+                                            ERL_Q_VAR
+                                              PsiElement(var)('Fun')
+                                          PsiElement())(')')
+                                      PsiElement(,)(',')
+                                      ERL_MAX_EXPRESSION
+                                        ERL_Q_VAR
+                                          PsiElement(var)('State')
+                                      PsiElement())(')')
+                                  PsiElement(,)(',')
+                                  ERL_FUNCTION_CALL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('t_to_string')
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
+                                      ERL_FUNCTION_CALL_EXPRESSION
+                                        ERL_Q_ATOM
+                                          ERL_ATOM
+                                            PsiElement(atom_name)('state__fun_type')
+                                        ERL_ARGUMENT_LIST
+                                          PsiElement(()('(')
+                                          ERL_MAX_EXPRESSION
+                                            ERL_Q_VAR
+                                              PsiElement(var)('Fun')
                                           PsiElement(,)(',')
                                           ERL_MAX_EXPRESSION
                                             ERL_Q_VAR
-                                              PsiElement(var)('State')
+                                              PsiElement(var)('NewState')
                                           PsiElement())(')')
-                                      PsiElement(,)(',')
-                                      ERL_FUNCTION_CALL_EXPRESSION
-                                        ERL_Q_ATOM
-                                          ERL_ATOM
-                                            PsiElement(atom_name)('t_to_string')
-                                        ERL_ARGUMENT_LIST
-                                          PsiElement(()('(')
-                                          ERL_FUNCTION_CALL_EXPRESSION
-                                            ERL_Q_ATOM
-                                              ERL_ATOM
-                                                PsiElement(atom_name)('state__fun_type')
-                                            ERL_ARGUMENT_LIST
-                                              PsiElement(()('(')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('Fun')
-                                              PsiElement(,)(',')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('NewState')
-                                              PsiElement())(')')
-                                          PsiElement())(')')
-                                      PsiElement(])(']')
-                                    PsiElement())(')')
+                                      PsiElement())(')')
+                                  PsiElement(])(']')
+                                PsiElement())(')')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                ForeignLeaf(atom_name: ok)('ok')
                           PsiElement(,)(',')
                           ERL_ASSIGNMENT_EXPRESSION
                             ERL_MAX_EXPRESSION
@@ -5042,66 +5048,68 @@ ERL_FILE
                                     PsiElement(var)('NewState3')
                                 PsiElement())(')')
                           PsiElement(,)(',')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_MACROS
-                                PsiElement(?)('?')
-                                ERL_MACROS_NAME
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('debug')
-                                ERL_MACRO_CALL_ARGUMENT_LIST
-                                  ERL_ARGUMENT_LIST
-                                    PsiElement(()('(')
-                                    ERL_STRING_LITERAL
-                                      PsiElement(string)('"Done analyzing: ~w:~s\n"')
-                                    PsiElement(,)(',')
-                                    ERL_LIST_EXPRESSION
-                                      PsiElement([)('[')
+                          ERL_MACROS
+                            PsiElement(?)('?')
+                            ERL_MACROS_NAME
+                              ERL_ATOM
+                                PsiElement(atom_name)('debug')
+                            ERL_MACRO_CALL_ARGUMENT_LIST
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
+                                ERL_STRING_LITERAL
+                                  PsiElement(string)('"Done analyzing: ~w:~s\n"')
+                                PsiElement(,)(',')
+                                ERL_LIST_EXPRESSION
+                                  PsiElement([)('[')
+                                  ERL_FUNCTION_CALL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('state__lookup_name')
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
                                       ERL_FUNCTION_CALL_EXPRESSION
                                         ERL_Q_ATOM
                                           ERL_ATOM
-                                            PsiElement(atom_name)('state__lookup_name')
+                                            PsiElement(atom_name)('get_label')
                                         ERL_ARGUMENT_LIST
                                           PsiElement(()('(')
-                                          ERL_FUNCTION_CALL_EXPRESSION
-                                            ERL_Q_ATOM
-                                              ERL_ATOM
-                                                PsiElement(atom_name)('get_label')
-                                            ERL_ARGUMENT_LIST
-                                              PsiElement(()('(')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('Fun')
-                                              PsiElement())(')')
+                                          ERL_MAX_EXPRESSION
+                                            ERL_Q_VAR
+                                              PsiElement(var)('Fun')
+                                          PsiElement())(')')
+                                      PsiElement(,)(',')
+                                      ERL_MAX_EXPRESSION
+                                        ERL_Q_VAR
+                                          PsiElement(var)('State')
+                                      PsiElement())(')')
+                                  PsiElement(,)(',')
+                                  ERL_FUNCTION_CALL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('t_to_string')
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
+                                      ERL_FUNCTION_CALL_EXPRESSION
+                                        ERL_Q_ATOM
+                                          ERL_ATOM
+                                            PsiElement(atom_name)('t_fun')
+                                        ERL_ARGUMENT_LIST
+                                          PsiElement(()('(')
+                                          ERL_MAX_EXPRESSION
+                                            ERL_Q_VAR
+                                              PsiElement(var)('ArgTypes')
                                           PsiElement(,)(',')
                                           ERL_MAX_EXPRESSION
                                             ERL_Q_VAR
-                                              PsiElement(var)('State')
+                                              PsiElement(var)('BodyType')
                                           PsiElement())(')')
-                                      PsiElement(,)(',')
-                                      ERL_FUNCTION_CALL_EXPRESSION
-                                        ERL_Q_ATOM
-                                          ERL_ATOM
-                                            PsiElement(atom_name)('t_to_string')
-                                        ERL_ARGUMENT_LIST
-                                          PsiElement(()('(')
-                                          ERL_FUNCTION_CALL_EXPRESSION
-                                            ERL_Q_ATOM
-                                              ERL_ATOM
-                                                PsiElement(atom_name)('t_fun')
-                                            ERL_ARGUMENT_LIST
-                                              PsiElement(()('(')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('ArgTypes')
-                                              PsiElement(,)(',')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('BodyType')
-                                              PsiElement())(')')
-                                          PsiElement())(')')
-                                      PsiElement(])(']')
-                                    PsiElement())(')')
+                                      PsiElement())(')')
+                                  PsiElement(])(']')
+                                PsiElement())(')')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                ForeignLeaf(atom_name: ok)('ok')
                           PsiElement(,)(',')
                           ERL_ASSIGNMENT_EXPRESSION
                             ERL_MAX_EXPRESSION
@@ -5320,44 +5328,46 @@ ERL_FILE
                                     PsiElement(var)('NewState5')
                                 PsiElement())(')')
                           PsiElement(,)(',')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_MACROS
-                                PsiElement(?)('?')
-                                ERL_MACROS_NAME
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('debug')
-                                ERL_MACRO_CALL_ARGUMENT_LIST
-                                  ERL_ARGUMENT_LIST
-                                    PsiElement(()('(')
-                                    ERL_STRING_LITERAL
-                                      PsiElement(string)('"done adding stuff for ~w\n"')
-                                    PsiElement(,)(',')
-                                    ERL_LIST_EXPRESSION
-                                      PsiElement([)('[')
+                          ERL_MACROS
+                            PsiElement(?)('?')
+                            ERL_MACROS_NAME
+                              ERL_ATOM
+                                PsiElement(atom_name)('debug')
+                            ERL_MACRO_CALL_ARGUMENT_LIST
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
+                                ERL_STRING_LITERAL
+                                  PsiElement(string)('"done adding stuff for ~w\n"')
+                                PsiElement(,)(',')
+                                ERL_LIST_EXPRESSION
+                                  PsiElement([)('[')
+                                  ERL_FUNCTION_CALL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('state__lookup_name')
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
                                       ERL_FUNCTION_CALL_EXPRESSION
                                         ERL_Q_ATOM
                                           ERL_ATOM
-                                            PsiElement(atom_name)('state__lookup_name')
+                                            PsiElement(atom_name)('get_label')
                                         ERL_ARGUMENT_LIST
                                           PsiElement(()('(')
-                                          ERL_FUNCTION_CALL_EXPRESSION
-                                            ERL_Q_ATOM
-                                              ERL_ATOM
-                                                PsiElement(atom_name)('get_label')
-                                            ERL_ARGUMENT_LIST
-                                              PsiElement(()('(')
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('Fun')
-                                              PsiElement())(')')
-                                          PsiElement(,)(',')
                                           ERL_MAX_EXPRESSION
                                             ERL_Q_VAR
-                                              PsiElement(var)('State')
+                                              PsiElement(var)('Fun')
                                           PsiElement())(')')
-                                      PsiElement(])(']')
-                                    PsiElement())(')')
+                                      PsiElement(,)(',')
+                                      ERL_MAX_EXPRESSION
+                                        ERL_Q_VAR
+                                          PsiElement(var)('State')
+                                      PsiElement())(')')
+                                  PsiElement(])(']')
+                                PsiElement())(')')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                ForeignLeaf(atom_name: ok)('ok')
                           PsiElement(,)(',')
                           ERL_FUNCTION_CALL_EXPRESSION
                             ERL_Q_ATOM
@@ -5397,39 +5407,41 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"Handling ~p\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('cerl')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('type')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Tree')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Handling ~p\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('cerl')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('type')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('Tree')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
         PsiElement(,)(',')
         PsiComment(function_doc_comment)('%%debug_pp_map(Map),')
         ERL_CASE_EXPRESSION
@@ -6969,26 +6981,28 @@ ERL_FILE
                     PsiElement(atom_name)('var')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  ERL_ATOM
+                    PsiElement(atom_name)('debug')
+                ERL_MACRO_CALL_ARGUMENT_LIST
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"Looking up unknown variable: ~p\n"')
+                    PsiElement(,)(',')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Tree')
+                      PsiElement(])(']')
+                    PsiElement())(')')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  ERL_MACROS
-                    PsiElement(?)('?')
-                    ERL_MACROS_NAME
-                      ERL_ATOM
-                        PsiElement(atom_name)('debug')
-                    ERL_MACRO_CALL_ARGUMENT_LIST
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_STRING_LITERAL
-                          PsiElement(string)('"Looking up unknown variable: ~p\n"')
-                        PsiElement(,)(',')
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('Tree')
-                          PsiElement(])(']')
-                        PsiElement())(')')
+                  ERL_ATOM
+                    ForeignLeaf(atom_name: ok)('ok')
               PsiElement(,)(',')
               ERL_CASE_EXPRESSION
                 PsiElement(case)('case')
@@ -9851,431 +9865,455 @@ ERL_FILE
                   PsiElement(var)('RetMode')
               PsiElement())(')')
         PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"--------------------------------------------------------\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"--------------------------------------------------------\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    PsiElement(])(']')
-                  PsiElement())(')')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
         PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"Fun: ~p\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Fun')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Fun: ~p\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Fun')
-                    PsiElement(])(']')
-                  PsiElement())(')')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
         PsiElement(,)(',')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Args: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"Args: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
                           ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_product')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('ArgTypes')
-                              PsiElement())(')')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"NewArgsSig: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_product')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('NewArgsSig')
-                              PsiElement())(')')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"NewArgsContract: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_product')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('NewArgsContract')
-                              PsiElement())(')')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"NewArgsBif: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_product')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('NewArgsBif')
-                              PsiElement())(')')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"NewArgTypes: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_product')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('NewArgTypes')
-                              PsiElement())(')')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"RetWithoutContr: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
+                            PsiElement(atom_name)('t_product')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
-                              PsiElement(var)('RetWithoutContr')
+                              PsiElement(var)('ArgTypes')
                           PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"RetWithoutLocal: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"NewArgsSig: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
                           ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
+                            PsiElement(atom_name)('t_product')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
-                              PsiElement(var)('RetWithoutLocal')
+                              PsiElement(var)('NewArgsSig')
                           PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"BifRet: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"NewArgsContract: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
                       ERL_FUNCTION_CALL_EXPRESSION
                         ERL_Q_ATOM
                           ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_GENERIC_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('BifRange')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('NewArgTypes')
-                              PsiElement())(')')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"ContrRet: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_GENERIC_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('CRange')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('TmpArgTypes')
-                              PsiElement())(')')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
-        PsiElement(,)(',')
-        ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"SigRet: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('erl_types')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('t_to_string')
+                            PsiElement(atom_name)('t_product')
                         ERL_ARGUMENT_LIST
                           PsiElement(()('(')
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
-                              PsiElement(var)('SigRange')
+                              PsiElement(var)('NewArgsContract')
                           PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"NewArgsBif: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('t_product')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('NewArgsBif')
+                          PsiElement())(')')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"NewArgTypes: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('t_product')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('NewArgTypes')
+                          PsiElement())(')')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"RetWithoutContr: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('RetWithoutContr')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"RetWithoutLocal: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('RetWithoutLocal')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"BifRet: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_GENERIC_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('BifRange')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('NewArgTypes')
+                          PsiElement())(')')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"ContrRet: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_GENERIC_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('CRange')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('TmpArgTypes')
+                          PsiElement())(')')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
+        PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"SigRet: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('erl_types')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('t_to_string')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('SigRange')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
@@ -18269,13 +18307,15 @@ ERL_FILE
                 ERL_Q_VAR
                   PsiElement(var)('Clauses')
               PsiElement(,)(',')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  ERL_ATOM
+                    PsiElement(atom_name)('no_arg')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  ERL_MACROS
-                    PsiElement(?)('?')
-                    ERL_MACROS_NAME
-                      ERL_ATOM
-                        PsiElement(atom_name)('no_arg')
+                  ERL_ATOM
+                    ForeignLeaf(atom_name: no_arg)('no_arg')
               PsiElement(,)(',')
               ERL_FUNCTION_CALL_EXPRESSION
                 ERL_Q_ATOM
@@ -21257,13 +21297,15 @@ ERL_FILE
                     ERL_Q_VAR
                       PsiElement(var)('Arg')
                   PsiElement(=:=)('=:=')
+                  ERL_MACROS
+                    PsiElement(?)('?')
+                    ERL_MACROS_NAME
+                      ERL_ATOM
+                        PsiElement(atom_name)('no_arg')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      ERL_MACROS
-                        PsiElement(?)('?')
-                        ERL_MACROS_NAME
-                          ERL_ATOM
-                            PsiElement(atom_name)('no_arg')
+                      ERL_ATOM
+                        ForeignLeaf(atom_name: no_arg)('no_arg')
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 ERL_MAX_EXPRESSION
@@ -21482,54 +21524,56 @@ ERL_FILE
                 PsiElement(})('}')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  ERL_ATOM
+                    PsiElement(atom_name)('debug')
+                ERL_MACRO_CALL_ARGUMENT_LIST
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"Failed binding pattern: ~s\nto ~s\n"')
+                    PsiElement(,)(',')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                        ERL_MODULE_REF
+                          ERL_Q_ATOM
+                            ERL_ATOM
+                              PsiElement(atom_name)('cerl_prettypr')
+                        PsiElement(:)(':')
+                        ERL_FUNCTION_CALL_EXPRESSION
+                          ERL_Q_ATOM
+                            ERL_ATOM
+                              PsiElement(atom_name)('format')
+                          ERL_ARGUMENT_LIST
+                            PsiElement(()('(')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(var)('C')
+                            PsiElement())(')')
+                      PsiElement(,)(',')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('format_type')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('ArgType0')
+                          PsiElement(,)(',')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('State1')
+                          PsiElement())(')')
+                      PsiElement(])(']')
+                    PsiElement())(')')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  ERL_MACROS
-                    PsiElement(?)('?')
-                    ERL_MACROS_NAME
-                      ERL_ATOM
-                        PsiElement(atom_name)('debug')
-                    ERL_MACRO_CALL_ARGUMENT_LIST
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_STRING_LITERAL
-                          PsiElement(string)('"Failed binding pattern: ~s\nto ~s\n"')
-                        PsiElement(,)(',')
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
-                          ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                            ERL_MODULE_REF
-                              ERL_Q_ATOM
-                                ERL_ATOM
-                                  PsiElement(atom_name)('cerl_prettypr')
-                            PsiElement(:)(':')
-                            ERL_FUNCTION_CALL_EXPRESSION
-                              ERL_Q_ATOM
-                                ERL_ATOM
-                                  PsiElement(atom_name)('format')
-                              ERL_ARGUMENT_LIST
-                                PsiElement(()('(')
-                                ERL_MAX_EXPRESSION
-                                  ERL_Q_VAR
-                                    PsiElement(var)('C')
-                                PsiElement())(')')
-                          PsiElement(,)(',')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('format_type')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('ArgType0')
-                              PsiElement(,)(',')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('State1')
-                              PsiElement())(')')
-                          PsiElement(])(']')
-                        PsiElement())(')')
+                  ERL_ATOM
+                    ForeignLeaf(atom_name: ok)('ok')
               PsiElement(,)(',')
               ERL_CASE_EXPRESSION
                 PsiElement(case)('case')
@@ -22521,13 +22565,15 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Arg')
                     PsiElement(=:=)('=:=')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('no_arg')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('no_arg')
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: no_arg)('no_arg')
                   PsiElement(of)('of')
                   ERL_CR_CLAUSE
                     ERL_ARGUMENT_DEFINITION
@@ -22656,13 +22702,15 @@ ERL_FILE
                       ERL_Q_VAR
                         PsiElement(var)('Arg')
                     PsiElement(=:=)('=:=')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('no_arg')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('no_arg')
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: no_arg)('no_arg')
                   PsiElement(of)('of')
                   ERL_CR_CLAUSE
                     ERL_ARGUMENT_DEFINITION
@@ -22776,64 +22824,66 @@ ERL_FILE
                       PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('debug')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_STRING_LITERAL
+                            PsiElement(string)('"Failed guard: ~s\n"')
+                          PsiElement(,)(',')
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                              ERL_MODULE_REF
+                                ERL_Q_ATOM
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('cerl_prettypr')
+                              PsiElement(:)(':')
+                              ERL_FUNCTION_CALL_EXPRESSION
+                                ERL_Q_ATOM
+                                  ERL_ATOM
+                                    PsiElement(atom_name)('format')
+                                ERL_ARGUMENT_LIST
+                                  PsiElement(()('(')
+                                  ERL_MAX_EXPRESSION
+                                    ERL_Q_VAR
+                                      PsiElement(var)('C')
+                                  PsiElement(,)(',')
+                                  ERL_LIST_EXPRESSION
+                                    PsiElement([)('[')
+                                    ERL_TUPLE_EXPRESSION
+                                      PsiElement({)('{')
+                                      ERL_MAX_EXPRESSION
+                                        ERL_Q_ATOM
+                                          ERL_ATOM
+                                            PsiElement(atom_name)('hook')
+                                      PsiElement(,)(',')
+                                      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                                        ERL_MODULE_REF
+                                          ERL_Q_ATOM
+                                            ERL_ATOM
+                                              PsiElement(atom_name)('cerl_typean')
+                                        PsiElement(:)(':')
+                                        ERL_FUNCTION_CALL_EXPRESSION
+                                          ERL_Q_ATOM
+                                            ERL_ATOM
+                                              PsiElement(atom_name)('pp_hook')
+                                          ERL_ARGUMENT_LIST
+                                            PsiElement(()('(')
+                                            PsiElement())(')')
+                                      PsiElement(})('}')
+                                    PsiElement(])(']')
+                                  PsiElement())(')')
+                            PsiElement(])(']')
+                          PsiElement())(')')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('debug')
-                          ERL_MACRO_CALL_ARGUMENT_LIST
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_STRING_LITERAL
-                                PsiElement(string)('"Failed guard: ~s\n"')
-                              PsiElement(,)(',')
-                              ERL_LIST_EXPRESSION
-                                PsiElement([)('[')
-                                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                                  ERL_MODULE_REF
-                                    ERL_Q_ATOM
-                                      ERL_ATOM
-                                        PsiElement(atom_name)('cerl_prettypr')
-                                  PsiElement(:)(':')
-                                  ERL_FUNCTION_CALL_EXPRESSION
-                                    ERL_Q_ATOM
-                                      ERL_ATOM
-                                        PsiElement(atom_name)('format')
-                                    ERL_ARGUMENT_LIST
-                                      PsiElement(()('(')
-                                      ERL_MAX_EXPRESSION
-                                        ERL_Q_VAR
-                                          PsiElement(var)('C')
-                                      PsiElement(,)(',')
-                                      ERL_LIST_EXPRESSION
-                                        PsiElement([)('[')
-                                        ERL_TUPLE_EXPRESSION
-                                          PsiElement({)('{')
-                                          ERL_MAX_EXPRESSION
-                                            ERL_Q_ATOM
-                                              ERL_ATOM
-                                                PsiElement(atom_name)('hook')
-                                          PsiElement(,)(',')
-                                          ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                                            ERL_MODULE_REF
-                                              ERL_Q_ATOM
-                                                ERL_ATOM
-                                                  PsiElement(atom_name)('cerl_typean')
-                                            PsiElement(:)(':')
-                                            ERL_FUNCTION_CALL_EXPRESSION
-                                              ERL_Q_ATOM
-                                                ERL_ATOM
-                                                  PsiElement(atom_name)('pp_hook')
-                                              ERL_ARGUMENT_LIST
-                                                PsiElement(()('(')
-                                                PsiElement())(')')
-                                          PsiElement(})('}')
-                                        PsiElement(])(']')
-                                      PsiElement())(')')
-                                PsiElement(])(']')
-                              PsiElement())(')')
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: ok)('ok')
                     PsiElement(,)(',')
                     ERL_ASSIGNMENT_EXPRESSION
                       ERL_MAX_EXPRESSION
@@ -23940,54 +23990,56 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"Binding pat: ~w to ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('cerl')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('type')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Pat')
+                      PsiElement())(')')
+                PsiElement(,)(',')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      PsiElement(atom_name)('format_type')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Type')
+                    PsiElement(,)(',')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('State')
+                    PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Binding pat: ~w to ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('cerl')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('type')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('Pat')
-                          PsiElement())(')')
-                    PsiElement(,)(',')
-                    ERL_FUNCTION_CALL_EXPRESSION
-                      ERL_Q_ATOM
-                        ERL_ATOM
-                          PsiElement(atom_name)('format_type')
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('Type')
-                        PsiElement(,)(',')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('State')
-                        PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_TUPLE_EXPRESSION
@@ -26241,26 +26293,28 @@ ERL_FILE
               ERL_CLAUSE_BODY
                 PsiElement(->)('->')
                 PsiComment(function_doc_comment)('%% Catch all is needed when binding args to pats')
+                ERL_MACROS
+                  PsiElement(?)('?')
+                  ERL_MACROS_NAME
+                    ERL_ATOM
+                      PsiElement(atom_name)('debug')
+                  ERL_MACRO_CALL_ARGUMENT_LIST
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_STRING_LITERAL
+                        PsiElement(string)('"Failed match for ~p\n"')
+                      PsiElement(,)(',')
+                      ERL_LIST_EXPRESSION
+                        PsiElement([)('[')
+                        ERL_MAX_EXPRESSION
+                          ERL_Q_VAR
+                            PsiElement(var)('_Other')
+                        PsiElement(])(']')
+                      PsiElement())(')')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      PsiElement(?)('?')
-                      ERL_MACROS_NAME
-                        ERL_ATOM
-                          PsiElement(atom_name)('debug')
-                      ERL_MACRO_CALL_ARGUMENT_LIST
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_STRING_LITERAL
-                            PsiElement(string)('"Failed match for ~p\n"')
-                          PsiElement(,)(',')
-                          ERL_LIST_EXPRESSION
-                            PsiElement([)('[')
-                            ERL_MAX_EXPRESSION
-                              ERL_Q_VAR
-                                PsiElement(var)('_Other')
-                            PsiElement(])(']')
-                          PsiElement())(')')
+                    ERL_ATOM
+                      ForeignLeaf(atom_name: ok)('ok')
                 PsiElement(,)(',')
                 ERL_FUNCTION_CALL_EXPRESSION
                   ERL_Q_ATOM
@@ -28140,59 +28194,61 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"Handling ~w guard: ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('Eval')
+                PsiElement(,)(',')
+                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                  ERL_MODULE_REF
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('cerl_prettypr')
+                  PsiElement(:)(':')
+                  ERL_FUNCTION_CALL_EXPRESSION
+                    ERL_Q_ATOM
+                      ERL_ATOM
+                        PsiElement(atom_name)('format')
+                    ERL_ARGUMENT_LIST
+                      PsiElement(()('(')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('Guard')
+                      PsiElement(,)(',')
+                      ERL_LIST_EXPRESSION
+                        PsiElement([)('[')
+                        ERL_TUPLE_EXPRESSION
+                          PsiElement({)('{')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                PsiElement(atom_name)('noann')
+                          PsiElement(,)(',')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                PsiElement(atom_name)('true')
+                          PsiElement(})('}')
+                        PsiElement(])(']')
+                      PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Handling ~w guard: ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_VAR
-                        PsiElement(var)('Eval')
-                    PsiElement(,)(',')
-                    ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                      ERL_MODULE_REF
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('cerl_prettypr')
-                      PsiElement(:)(':')
-                      ERL_FUNCTION_CALL_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_ATOM
-                            PsiElement(atom_name)('format')
-                        ERL_ARGUMENT_LIST
-                          PsiElement(()('(')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('Guard')
-                          PsiElement(,)(',')
-                          ERL_LIST_EXPRESSION
-                            PsiElement([)('[')
-                            ERL_TUPLE_EXPRESSION
-                              PsiElement({)('{')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_ATOM
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('noann')
-                              PsiElement(,)(',')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_ATOM
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('true')
-                              PsiElement(})('}')
-                            PsiElement(])(']')
-                          PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
         PsiElement(,)(',')
         ERL_CASE_EXPRESSION
           PsiElement(case)('case')
@@ -28992,39 +29048,41 @@ ERL_FILE
                     PsiElement(atom_name)('var')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  ERL_ATOM
+                    PsiElement(atom_name)('debug')
+                ERL_MACRO_CALL_ARGUMENT_LIST
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"Looking for var(~w)..."')
+                    PsiElement(,)(',')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                        ERL_MODULE_REF
+                          ERL_Q_ATOM
+                            ERL_ATOM
+                              PsiElement(atom_name)('cerl_trees')
+                        PsiElement(:)(':')
+                        ERL_FUNCTION_CALL_EXPRESSION
+                          ERL_Q_ATOM
+                            ERL_ATOM
+                              PsiElement(atom_name)('get_label')
+                          ERL_ARGUMENT_LIST
+                            PsiElement(()('(')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(var)('Guard')
+                            PsiElement())(')')
+                      PsiElement(])(']')
+                    PsiElement())(')')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  ERL_MACROS
-                    PsiElement(?)('?')
-                    ERL_MACROS_NAME
-                      ERL_ATOM
-                        PsiElement(atom_name)('debug')
-                    ERL_MACRO_CALL_ARGUMENT_LIST
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_STRING_LITERAL
-                          PsiElement(string)('"Looking for var(~w)..."')
-                        PsiElement(,)(',')
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
-                          ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                            ERL_MODULE_REF
-                              ERL_Q_ATOM
-                                ERL_ATOM
-                                  PsiElement(atom_name)('cerl_trees')
-                            PsiElement(:)(':')
-                            ERL_FUNCTION_CALL_EXPRESSION
-                              ERL_Q_ATOM
-                                ERL_ATOM
-                                  PsiElement(atom_name)('get_label')
-                              ERL_ARGUMENT_LIST
-                                PsiElement(()('(')
-                                ERL_MAX_EXPRESSION
-                                  ERL_Q_VAR
-                                    PsiElement(var)('Guard')
-                                PsiElement())(')')
-                          PsiElement(])(']')
-                        PsiElement())(')')
+                  ERL_ATOM
+                    ForeignLeaf(atom_name: ok)('ok')
               PsiElement(,)(',')
               ERL_CASE_EXPRESSION
                 PsiElement(case)('case')
@@ -29064,23 +29122,25 @@ ERL_FILE
                           PsiElement(atom_name)('error')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('debug')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_STRING_LITERAL
+                            PsiElement(string)('"Did not find it\n"')
+                          PsiElement(,)(',')
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            PsiElement(])(']')
+                          PsiElement())(')')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('debug')
-                          ERL_MACRO_CALL_ARGUMENT_LIST
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_STRING_LITERAL
-                                PsiElement(string)('"Did not find it\n"')
-                              PsiElement(,)(',')
-                              ERL_LIST_EXPRESSION
-                                PsiElement([)('[')
-                                PsiElement(])(']')
-                              PsiElement())(')')
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: ok)('ok')
                     PsiElement(,)(',')
                     ERL_ASSIGNMENT_EXPRESSION
                       ERL_MAX_EXPRESSION
@@ -29227,23 +29287,25 @@ ERL_FILE
                       PsiElement(})('}')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('debug')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_STRING_LITERAL
+                            PsiElement(string)('"Found it\n"')
+                          PsiElement(,)(',')
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            PsiElement(])(']')
+                          PsiElement())(')')
                     ERL_MAX_EXPRESSION
                       ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('debug')
-                          ERL_MACRO_CALL_ARGUMENT_LIST
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_STRING_LITERAL
-                                PsiElement(string)('"Found it\n"')
-                              PsiElement(,)(',')
-                              ERL_LIST_EXPRESSION
-                                PsiElement([)('[')
-                                PsiElement(])(']')
-                              PsiElement())(')')
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: ok)('ok')
                     PsiElement(,)(',')
                     ERL_ASSIGNMENT_EXPRESSION
                       ERL_TUPLE_EXPRESSION
@@ -31048,26 +31110,28 @@ ERL_FILE
                     PsiElement(atom_name)('error')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  ERL_ATOM
+                    PsiElement(atom_name)('debug')
+                ERL_MACRO_CALL_ARGUMENT_LIST
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"Type test: ~w failed\n"')
+                    PsiElement(,)(',')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('F')
+                      PsiElement(])(']')
+                    PsiElement())(')')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  ERL_MACROS
-                    PsiElement(?)('?')
-                    ERL_MACROS_NAME
-                      ERL_ATOM
-                        PsiElement(atom_name)('debug')
-                    ERL_MACRO_CALL_ARGUMENT_LIST
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_STRING_LITERAL
-                          PsiElement(string)('"Type test: ~w failed\n"')
-                        PsiElement(,)(',')
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('F')
-                          PsiElement(])(']')
-                        PsiElement())(')')
+                  ERL_ATOM
+                    ForeignLeaf(atom_name: ok)('ok')
               PsiElement(,)(',')
               ERL_FUNCTION_CALL_EXPRESSION
                 ERL_Q_ATOM
@@ -31114,48 +31178,50 @@ ERL_FILE
                 PsiElement(})('}')
             ERL_CLAUSE_BODY
               PsiElement(->)('->')
-              ERL_MAX_EXPRESSION
-                ERL_Q_ATOM
-                  ERL_MACROS
-                    PsiElement(?)('?')
-                    ERL_MACROS_NAME
-                      ERL_ATOM
-                        PsiElement(atom_name)('debug')
-                    ERL_MACRO_CALL_ARGUMENT_LIST
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_STRING_LITERAL
-                          PsiElement(string)('"Type test: ~w succeeded, NewType: ~s, Ret: ~s\n"')
-                        PsiElement(,)(',')
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  ERL_ATOM
+                    PsiElement(atom_name)('debug')
+                ERL_MACRO_CALL_ARGUMENT_LIST
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"Type test: ~w succeeded, NewType: ~s, Ret: ~s\n"')
+                    PsiElement(,)(',')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_VAR
+                          PsiElement(var)('F')
+                      PsiElement(,)(',')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('t_to_string')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
                           ERL_MAX_EXPRESSION
                             ERL_Q_VAR
-                              PsiElement(var)('F')
-                          PsiElement(,)(',')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_to_string')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('NewArgType')
-                              PsiElement())(')')
-                          PsiElement(,)(',')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_to_string')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('Ret')
-                              PsiElement())(')')
-                          PsiElement(])(']')
-                        PsiElement())(')')
+                              PsiElement(var)('NewArgType')
+                          PsiElement())(')')
+                      PsiElement(,)(',')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('t_to_string')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Ret')
+                          PsiElement())(')')
+                      PsiElement(])(']')
+                    PsiElement())(')')
+              ERL_MAX_EXPRESSION
+                ERL_Q_ATOM
+                  ERL_ATOM
+                    ForeignLeaf(atom_name: ok)('ok')
               PsiElement(,)(',')
               ERL_TUPLE_EXPRESSION
                 PsiElement({)('{')
@@ -36230,44 +36296,46 @@ ERL_FILE
                   PsiElement(var)('State')
               PsiElement())(')')
         PsiElement(,)(',')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"Types are:~s =:= ~s\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      PsiElement(atom_name)('t_to_string')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Type1')
+                    PsiElement())(')')
+                PsiElement(,)(',')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      PsiElement(atom_name)('t_to_string')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('Type2')
+                    PsiElement())(')')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Types are:~s =:= ~s\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    ERL_FUNCTION_CALL_EXPRESSION
-                      ERL_Q_ATOM
-                        ERL_ATOM
-                          PsiElement(atom_name)('t_to_string')
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('Type1')
-                        PsiElement())(')')
-                    PsiElement(,)(',')
-                    ERL_FUNCTION_CALL_EXPRESSION
-                      ERL_Q_ATOM
-                        ERL_ATOM
-                          PsiElement(atom_name)('t_to_string')
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_MAX_EXPRESSION
-                          ERL_Q_VAR
-                            PsiElement(var)('Type2')
-                        PsiElement())(')')
-                    PsiElement(])(']')
-                  PsiElement())(')')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
@@ -44172,30 +44240,32 @@ ERL_FILE
                             PsiElement(})('}')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
+                          ERL_MACROS
+                            PsiElement(?)('?')
+                            ERL_MACROS_NAME
+                              ERL_ATOM
+                                PsiElement(atom_name)('debug')
+                            ERL_MACRO_CALL_ARGUMENT_LIST
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
+                                ERL_STRING_LITERAL
+                                  PsiElement(string)('"Binding ~p to ~p\n"')
+                                PsiElement(,)(',')
+                                ERL_LIST_EXPRESSION
+                                  PsiElement([)('[')
+                                  ERL_MAX_EXPRESSION
+                                    ERL_Q_VAR
+                                      PsiElement(var)('KeyLabel')
+                                  PsiElement(,)(',')
+                                  ERL_MAX_EXPRESSION
+                                    ERL_Q_VAR
+                                      PsiElement(var)('NewKey')
+                                  PsiElement(])(']')
+                                PsiElement())(')')
                           ERL_MAX_EXPRESSION
                             ERL_Q_ATOM
-                              ERL_MACROS
-                                PsiElement(?)('?')
-                                ERL_MACROS_NAME
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('debug')
-                                ERL_MACRO_CALL_ARGUMENT_LIST
-                                  ERL_ARGUMENT_LIST
-                                    PsiElement(()('(')
-                                    ERL_STRING_LITERAL
-                                      PsiElement(string)('"Binding ~p to ~p\n"')
-                                    PsiElement(,)(',')
-                                    ERL_LIST_EXPRESSION
-                                      PsiElement([)('[')
-                                      ERL_MAX_EXPRESSION
-                                        ERL_Q_VAR
-                                          PsiElement(var)('KeyLabel')
-                                      PsiElement(,)(',')
-                                      ERL_MAX_EXPRESSION
-                                        ERL_Q_VAR
-                                          PsiElement(var)('NewKey')
-                                      PsiElement(])(']')
-                                    PsiElement())(')')
+                              ERL_ATOM
+                                ForeignLeaf(atom_name: ok)('ok')
                           PsiElement(,)(',')
                           ERL_FUNCTION_CALL_EXPRESSION
                             ERL_Q_ATOM
@@ -44224,37 +44294,39 @@ ERL_FILE
                                 PsiElement(atom_name)('error')
                         ERL_CLAUSE_BODY
                           PsiElement(->)('->')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_MACROS
-                                PsiElement(?)('?')
-                                ERL_MACROS_NAME
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('debug')
-                                ERL_MACRO_CALL_ARGUMENT_LIST
-                                  ERL_ARGUMENT_LIST
-                                    PsiElement(()('(')
-                                    ERL_STRING_LITERAL
-                                      PsiElement(string)('"Entering ~p :: ~s\n"')
-                                    PsiElement(,)(',')
-                                    ERL_LIST_EXPRESSION
-                                      PsiElement([)('[')
+                          ERL_MACROS
+                            PsiElement(?)('?')
+                            ERL_MACROS_NAME
+                              ERL_ATOM
+                                PsiElement(atom_name)('debug')
+                            ERL_MACRO_CALL_ARGUMENT_LIST
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
+                                ERL_STRING_LITERAL
+                                  PsiElement(string)('"Entering ~p :: ~s\n"')
+                                PsiElement(,)(',')
+                                ERL_LIST_EXPRESSION
+                                  PsiElement([)('[')
+                                  ERL_MAX_EXPRESSION
+                                    ERL_Q_VAR
+                                      PsiElement(var)('KeyLabel')
+                                  PsiElement(,)(',')
+                                  ERL_FUNCTION_CALL_EXPRESSION
+                                    ERL_Q_ATOM
+                                      ERL_ATOM
+                                        PsiElement(atom_name)('t_to_string')
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
                                       ERL_MAX_EXPRESSION
                                         ERL_Q_VAR
-                                          PsiElement(var)('KeyLabel')
-                                      PsiElement(,)(',')
-                                      ERL_FUNCTION_CALL_EXPRESSION
-                                        ERL_Q_ATOM
-                                          ERL_ATOM
-                                            PsiElement(atom_name)('t_to_string')
-                                        ERL_ARGUMENT_LIST
-                                          PsiElement(()('(')
-                                          ERL_MAX_EXPRESSION
-                                            ERL_Q_VAR
-                                              PsiElement(var)('Val')
-                                          PsiElement())(')')
-                                      PsiElement(])(']')
-                                    PsiElement())(')')
+                                          PsiElement(var)('Val')
+                                      PsiElement())(')')
+                                  PsiElement(])(']')
+                                PsiElement())(')')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                ForeignLeaf(atom_name: ok)('ok')
                           PsiElement(,)(',')
                           ERL_CASE_EXPRESSION
                             PsiElement(case)('case')
@@ -44670,30 +44742,32 @@ ERL_FILE
                                       PsiElement(atom_name)('true')
                               ERL_CLAUSE_BODY
                                 PsiElement(->)('->')
+                                ERL_MACROS
+                                  PsiElement(?)('?')
+                                  ERL_MACROS_NAME
+                                    ERL_ATOM
+                                      PsiElement(atom_name)('debug')
+                                  ERL_MACRO_CALL_ARGUMENT_LIST
+                                    ERL_ARGUMENT_LIST
+                                      PsiElement(()('(')
+                                      ERL_STRING_LITERAL
+                                        PsiElement(string)('"Subst: storing ~p = ~p\n"')
+                                      PsiElement(,)(',')
+                                      ERL_LIST_EXPRESSION
+                                        PsiElement([)('[')
+                                        ERL_MAX_EXPRESSION
+                                          ERL_Q_VAR
+                                            PsiElement(var)('KeyLabel')
+                                        PsiElement(,)(',')
+                                        ERL_MAX_EXPRESSION
+                                          ERL_Q_VAR
+                                            PsiElement(var)('ValLabel')
+                                        PsiElement(])(']')
+                                      PsiElement())(')')
                                 ERL_MAX_EXPRESSION
                                   ERL_Q_ATOM
-                                    ERL_MACROS
-                                      PsiElement(?)('?')
-                                      ERL_MACROS_NAME
-                                        ERL_ATOM
-                                          PsiElement(atom_name)('debug')
-                                      ERL_MACRO_CALL_ARGUMENT_LIST
-                                        ERL_ARGUMENT_LIST
-                                          PsiElement(()('(')
-                                          ERL_STRING_LITERAL
-                                            PsiElement(string)('"Subst: storing ~p = ~p\n"')
-                                          PsiElement(,)(',')
-                                          ERL_LIST_EXPRESSION
-                                            PsiElement([)('[')
-                                            ERL_MAX_EXPRESSION
-                                              ERL_Q_VAR
-                                                PsiElement(var)('KeyLabel')
-                                            PsiElement(,)(',')
-                                            ERL_MAX_EXPRESSION
-                                              ERL_Q_VAR
-                                                PsiElement(var)('ValLabel')
-                                            PsiElement(])(']')
-                                          PsiElement())(')')
+                                    ERL_ATOM
+                                      ForeignLeaf(atom_name: ok)('ok')
                                 PsiElement(,)(',')
                                 ERL_ASSIGNMENT_EXPRESSION
                                   ERL_MAX_EXPRESSION
@@ -46801,23 +46875,25 @@ ERL_FILE
         PsiElement())(')')
       ERL_CLAUSE_BODY
         PsiElement(->)('->')
+        ERL_MACROS
+          PsiElement(?)('?')
+          ERL_MACROS_NAME
+            ERL_ATOM
+              PsiElement(atom_name)('debug')
+          ERL_MACRO_CALL_ARGUMENT_LIST
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_STRING_LITERAL
+                PsiElement(string)('"Starting warning pass\n"')
+              PsiElement(,)(',')
+              ERL_LIST_EXPRESSION
+                PsiElement([)('[')
+                PsiElement(])(']')
+              PsiElement())(')')
         ERL_MAX_EXPRESSION
           ERL_Q_ATOM
-            ERL_MACROS
-              PsiElement(?)('?')
-              ERL_MACROS_NAME
-                ERL_ATOM
-                  PsiElement(atom_name)('debug')
-              ERL_MACRO_CALL_ARGUMENT_LIST
-                ERL_ARGUMENT_LIST
-                  PsiElement(()('(')
-                  ERL_STRING_LITERAL
-                    PsiElement(string)('"Starting warning pass\n"')
-                  PsiElement(,)(',')
-                  ERL_LIST_EXPRESSION
-                    PsiElement([)('[')
-                    PsiElement(])(']')
-                  PsiElement())(')')
+            ERL_ATOM
+              ForeignLeaf(atom_name: ok)('ok')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION
           ERL_MAX_EXPRESSION
@@ -51332,59 +51408,61 @@ ERL_FILE
                           PsiElement(atom_name)('true')
                   ERL_CLAUSE_BODY
                     PsiElement(->)('->')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('debug')
-                          ERL_MACRO_CALL_ARGUMENT_LIST
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_STRING_LITERAL
-                                PsiElement(string)('"Fixpoint for ~w: ~s\n"')
-                              PsiElement(,)(',')
-                              ERL_LIST_EXPRESSION
-                                PsiElement([)('[')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('debug')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_STRING_LITERAL
+                            PsiElement(string)('"Fixpoint for ~w: ~s\n"')
+                          PsiElement(,)(',')
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            ERL_FUNCTION_CALL_EXPRESSION
+                              ERL_Q_ATOM
+                                ERL_ATOM
+                                  PsiElement(atom_name)('state__lookup_name')
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
+                                ERL_MAX_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('Fun')
+                                PsiElement(,)(',')
+                                ERL_MAX_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('State')
+                                PsiElement())(')')
+                            PsiElement(,)(',')
+                            ERL_FUNCTION_CALL_EXPRESSION
+                              ERL_Q_ATOM
+                                ERL_ATOM
+                                  PsiElement(atom_name)('t_to_string')
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
                                 ERL_FUNCTION_CALL_EXPRESSION
                                   ERL_Q_ATOM
                                     ERL_ATOM
-                                      PsiElement(atom_name)('state__lookup_name')
+                                      PsiElement(atom_name)('t_fun')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
-                                        PsiElement(var)('Fun')
+                                        PsiElement(var)('ArgTypes')
                                     PsiElement(,)(',')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
-                                        PsiElement(var)('State')
+                                        PsiElement(var)('Out')
                                     PsiElement())(')')
-                                PsiElement(,)(',')
-                                ERL_FUNCTION_CALL_EXPRESSION
-                                  ERL_Q_ATOM
-                                    ERL_ATOM
-                                      PsiElement(atom_name)('t_to_string')
-                                  ERL_ARGUMENT_LIST
-                                    PsiElement(()('(')
-                                    ERL_FUNCTION_CALL_EXPRESSION
-                                      ERL_Q_ATOM
-                                        ERL_ATOM
-                                          PsiElement(atom_name)('t_fun')
-                                      ERL_ARGUMENT_LIST
-                                        PsiElement(()('(')
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('ArgTypes')
-                                        PsiElement(,)(',')
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('Out')
-                                        PsiElement())(')')
-                                    PsiElement())(')')
-                                PsiElement(])(']')
-                              PsiElement())(')')
+                                PsiElement())(')')
+                            PsiElement(])(']')
+                          PsiElement())(')')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_ATOM
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: ok)('ok')
                     PsiElement(,)(',')
                     ERL_MAX_EXPRESSION
                       ERL_Q_VAR
@@ -51414,59 +51492,61 @@ ERL_FILE
                             PsiElement(var)('Out')
                         PsiElement(})('}')
                     PsiElement(,)(',')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('debug')
-                          ERL_MACRO_CALL_ARGUMENT_LIST
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_STRING_LITERAL
-                                PsiElement(string)('"New Entry for ~w: ~s\n"')
-                              PsiElement(,)(',')
-                              ERL_LIST_EXPRESSION
-                                PsiElement([)('[')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('debug')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_STRING_LITERAL
+                            PsiElement(string)('"New Entry for ~w: ~s\n"')
+                          PsiElement(,)(',')
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            ERL_FUNCTION_CALL_EXPRESSION
+                              ERL_Q_ATOM
+                                ERL_ATOM
+                                  PsiElement(atom_name)('state__lookup_name')
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
+                                ERL_MAX_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('Fun')
+                                PsiElement(,)(',')
+                                ERL_MAX_EXPRESSION
+                                  ERL_Q_VAR
+                                    PsiElement(var)('State')
+                                PsiElement())(')')
+                            PsiElement(,)(',')
+                            ERL_FUNCTION_CALL_EXPRESSION
+                              ERL_Q_ATOM
+                                ERL_ATOM
+                                  PsiElement(atom_name)('t_to_string')
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
                                 ERL_FUNCTION_CALL_EXPRESSION
                                   ERL_Q_ATOM
                                     ERL_ATOM
-                                      PsiElement(atom_name)('state__lookup_name')
+                                      PsiElement(atom_name)('t_fun')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
-                                        PsiElement(var)('Fun')
+                                        PsiElement(var)('ArgTypes')
                                     PsiElement(,)(',')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
-                                        PsiElement(var)('State')
+                                        PsiElement(var)('Out')
                                     PsiElement())(')')
-                                PsiElement(,)(',')
-                                ERL_FUNCTION_CALL_EXPRESSION
-                                  ERL_Q_ATOM
-                                    ERL_ATOM
-                                      PsiElement(atom_name)('t_to_string')
-                                  ERL_ARGUMENT_LIST
-                                    PsiElement(()('(')
-                                    ERL_FUNCTION_CALL_EXPRESSION
-                                      ERL_Q_ATOM
-                                        ERL_ATOM
-                                          PsiElement(atom_name)('t_fun')
-                                      ERL_ARGUMENT_LIST
-                                        PsiElement(()('(')
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('ArgTypes')
-                                        PsiElement(,)(',')
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('Out')
-                                        PsiElement())(')')
-                                    PsiElement())(')')
-                                PsiElement(])(']')
-                              PsiElement())(')')
+                                PsiElement())(')')
+                            PsiElement(])(']')
+                          PsiElement())(')')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_ATOM
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: ok)('ok')
                     PsiElement(,)(',')
                     ERL_ASSIGNMENT_EXPRESSION
                       ERL_MAX_EXPRESSION
@@ -51579,59 +51659,61 @@ ERL_FILE
                       PsiElement(var)('Out')
                   PsiElement(})('}')
               PsiElement(,)(',')
-              ERL_MAX_EXPRESSION
-                ERL_Q_ATOM
-                  ERL_MACROS
-                    PsiElement(?)('?')
-                    ERL_MACROS_NAME
-                      ERL_ATOM
-                        PsiElement(atom_name)('debug')
-                    ERL_MACRO_CALL_ARGUMENT_LIST
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_STRING_LITERAL
-                          PsiElement(string)('"New Entry for ~w: ~s\n"')
-                        PsiElement(,)(',')
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  ERL_ATOM
+                    PsiElement(atom_name)('debug')
+                ERL_MACRO_CALL_ARGUMENT_LIST
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"New Entry for ~w: ~s\n"')
+                    PsiElement(,)(',')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('state__lookup_name')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Fun')
+                          PsiElement(,)(',')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('State')
+                          PsiElement())(')')
+                      PsiElement(,)(',')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('t_to_string')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
                           ERL_FUNCTION_CALL_EXPRESSION
                             ERL_Q_ATOM
                               ERL_ATOM
-                                PsiElement(atom_name)('state__lookup_name')
+                                PsiElement(atom_name)('t_fun')
                             ERL_ARGUMENT_LIST
                               PsiElement(()('(')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
-                                  PsiElement(var)('Fun')
+                                  PsiElement(var)('NewArgTypes')
                               PsiElement(,)(',')
                               ERL_MAX_EXPRESSION
                                 ERL_Q_VAR
-                                  PsiElement(var)('State')
+                                  PsiElement(var)('Out')
                               PsiElement())(')')
-                          PsiElement(,)(',')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_to_string')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_FUNCTION_CALL_EXPRESSION
-                                ERL_Q_ATOM
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('t_fun')
-                                ERL_ARGUMENT_LIST
-                                  PsiElement(()('(')
-                                  ERL_MAX_EXPRESSION
-                                    ERL_Q_VAR
-                                      PsiElement(var)('NewArgTypes')
-                                  PsiElement(,)(',')
-                                  ERL_MAX_EXPRESSION
-                                    ERL_Q_VAR
-                                      PsiElement(var)('Out')
-                                  PsiElement())(')')
-                              PsiElement())(')')
-                          PsiElement(])(']')
-                        PsiElement())(')')
+                          PsiElement())(')')
+                      PsiElement(])(']')
+                    PsiElement())(')')
+              ERL_MAX_EXPRESSION
+                ERL_Q_ATOM
+                  ERL_ATOM
+                    ForeignLeaf(atom_name: ok)('ok')
               PsiElement(,)(',')
               ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION
@@ -51974,48 +52056,50 @@ ERL_FILE
                                 PsiElement())(')')
                         PsiElement(])(']')
                     PsiElement(,)(',')
-                    ERL_MAX_EXPRESSION
-                      ERL_Q_ATOM
-                        ERL_MACROS
-                          PsiElement(?)('?')
-                          ERL_MACROS_NAME
-                            ERL_ATOM
-                              PsiElement(atom_name)('debug')
-                          ERL_MACRO_CALL_ARGUMENT_LIST
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_STRING_LITERAL
-                                PsiElement(string)('"~w: Will try to add:~w\n"')
-                              PsiElement(,)(',')
-                              ERL_LIST_EXPRESSION
-                                PsiElement([)('[')
+                    ERL_MACROS
+                      PsiElement(?)('?')
+                      ERL_MACROS_NAME
+                        ERL_ATOM
+                          PsiElement(atom_name)('debug')
+                      ERL_MACRO_CALL_ARGUMENT_LIST
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_STRING_LITERAL
+                            PsiElement(string)('"~w: Will try to add:~w\n"')
+                          PsiElement(,)(',')
+                          ERL_LIST_EXPRESSION
+                            PsiElement([)('[')
+                            ERL_FUNCTION_CALL_EXPRESSION
+                              ERL_Q_ATOM
+                                ERL_ATOM
+                                  PsiElement(atom_name)('state__lookup_name')
+                              ERL_ARGUMENT_LIST
+                                PsiElement(()('(')
                                 ERL_FUNCTION_CALL_EXPRESSION
                                   ERL_Q_ATOM
                                     ERL_ATOM
-                                      PsiElement(atom_name)('state__lookup_name')
+                                      PsiElement(atom_name)('get_label')
                                   ERL_ARGUMENT_LIST
                                     PsiElement(()('(')
-                                    ERL_FUNCTION_CALL_EXPRESSION
-                                      ERL_Q_ATOM
-                                        ERL_ATOM
-                                          PsiElement(atom_name)('get_label')
-                                      ERL_ARGUMENT_LIST
-                                        PsiElement(()('(')
-                                        ERL_MAX_EXPRESSION
-                                          ERL_Q_VAR
-                                            PsiElement(var)('Tree')
-                                        PsiElement())(')')
-                                    PsiElement(,)(',')
                                     ERL_MAX_EXPRESSION
                                       ERL_Q_VAR
-                                        PsiElement(var)('State')
+                                        PsiElement(var)('Tree')
                                     PsiElement())(')')
                                 PsiElement(,)(',')
                                 ERL_MAX_EXPRESSION
                                   ERL_Q_VAR
-                                    PsiElement(var)('MFAList')
-                                PsiElement(])(']')
-                              PsiElement())(')')
+                                    PsiElement(var)('State')
+                                PsiElement())(')')
+                            PsiElement(,)(',')
+                            ERL_MAX_EXPRESSION
+                              ERL_Q_VAR
+                                PsiElement(var)('MFAList')
+                            PsiElement(])(']')
+                          PsiElement())(')')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_ATOM
+                        ERL_ATOM
+                          ForeignLeaf(atom_name: ok)('ok')
                     PsiElement(,)(',')
                     ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
                       ERL_MODULE_REF
@@ -53342,55 +53426,57 @@ ERL_FILE
                         PsiElement(var)('Work')
                     PsiElement())(')')
               PsiElement(,)(',')
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  ERL_ATOM
+                    PsiElement(atom_name)('debug')
+                ERL_MACRO_CALL_ARGUMENT_LIST
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('"~w: forwarding args ~s\n"')
+                    PsiElement(,)(',')
+                    ERL_LIST_EXPRESSION
+                      PsiElement([)('[')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('state__lookup_name')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('Fun')
+                          PsiElement(,)(',')
+                          ERL_MAX_EXPRESSION
+                            ERL_Q_VAR
+                              PsiElement(var)('State')
+                          PsiElement())(')')
+                      PsiElement(,)(',')
+                      ERL_FUNCTION_CALL_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('t_to_string')
+                        ERL_ARGUMENT_LIST
+                          PsiElement(()('(')
+                          ERL_FUNCTION_CALL_EXPRESSION
+                            ERL_Q_ATOM
+                              ERL_ATOM
+                                PsiElement(atom_name)('t_product')
+                            ERL_ARGUMENT_LIST
+                              PsiElement(()('(')
+                              ERL_MAX_EXPRESSION
+                                ERL_Q_VAR
+                                  PsiElement(var)('NewArgTypes')
+                              PsiElement())(')')
+                          PsiElement())(')')
+                      PsiElement(])(']')
+                    PsiElement())(')')
               ERL_MAX_EXPRESSION
                 ERL_Q_ATOM
-                  ERL_MACROS
-                    PsiElement(?)('?')
-                    ERL_MACROS_NAME
-                      ERL_ATOM
-                        PsiElement(atom_name)('debug')
-                    ERL_MACRO_CALL_ARGUMENT_LIST
-                      ERL_ARGUMENT_LIST
-                        PsiElement(()('(')
-                        ERL_STRING_LITERAL
-                          PsiElement(string)('"~w: forwarding args ~s\n"')
-                        PsiElement(,)(',')
-                        ERL_LIST_EXPRESSION
-                          PsiElement([)('[')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('state__lookup_name')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('Fun')
-                              PsiElement(,)(',')
-                              ERL_MAX_EXPRESSION
-                                ERL_Q_VAR
-                                  PsiElement(var)('State')
-                              PsiElement())(')')
-                          PsiElement(,)(',')
-                          ERL_FUNCTION_CALL_EXPRESSION
-                            ERL_Q_ATOM
-                              ERL_ATOM
-                                PsiElement(atom_name)('t_to_string')
-                            ERL_ARGUMENT_LIST
-                              PsiElement(()('(')
-                              ERL_FUNCTION_CALL_EXPRESSION
-                                ERL_Q_ATOM
-                                  ERL_ATOM
-                                    PsiElement(atom_name)('t_product')
-                                ERL_ARGUMENT_LIST
-                                  PsiElement(()('(')
-                                  ERL_MAX_EXPRESSION
-                                    ERL_Q_VAR
-                                      PsiElement(var)('NewArgTypes')
-                                  PsiElement())(')')
-                              PsiElement())(')')
-                          PsiElement(])(']')
-                        PsiElement())(')')
+                  ERL_ATOM
+                    ForeignLeaf(atom_name: ok)('ok')
               PsiElement(,)(',')
               ERL_ASSIGNMENT_EXPRESSION
                 ERL_MAX_EXPRESSION

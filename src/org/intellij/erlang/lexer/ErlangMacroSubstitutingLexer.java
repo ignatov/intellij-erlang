@@ -409,7 +409,24 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
             break;
           }
           case QMARK: {
-            if (tokenType == ErlangTypes.ERL_VAR || tokenType == ErlangTypes.ERL_ATOM) {
+            String macroName = null;
+            if (tokenType == ErlangTypes.ERL_VAR || tokenType == ErlangTypes.ERL_ATOM_NAME) {
+              macroName = tokenText;
+            }
+            else if (tokenType == ErlangTypes.ERL_SINGLE_QUOTE) {
+              // we will not switch to a different lexer while parsing these 3 tokens, so it's safe to advance the lexer.
+              addMayBeForeignTokenFrom(lexer);
+              if (lexer.getTokenType() != null && lexer.getTokenType() == ErlangTypes.ERL_ATOM_NAME) {
+                String nameAfterQuote = lexer.getTokenText();
+                addMayBeForeignTokenFrom(lexer);
+                if (lexer.getTokenType() != null && lexer.getTokenType() == ErlangTypes.ERL_SINGLE_QUOTE) {
+                  macroName = nameAfterQuote;
+                  // the closing quote will be added in loop's end
+                }
+              }
+            }
+
+            if (macroName != null) {
               myMacroCallParsingState = MacroCallParsingState.MACRO_NAME;
               myMacroCallBuilder.setMacroName(tokenText);
               myMacroNameEndPosition = new MacroSubstitutionWorkerPosition();
