@@ -567,7 +567,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     }
   }
 
-  private static enum MacroCallParsingState {
+  private enum MacroCallParsingState {
     NONE, QMARK, MACRO_NAME, ARGUMENTS_LIST
   }
 
@@ -687,7 +687,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
     }
   }
 
-  private static enum ConditionalBranchType {
+  private enum ConditionalBranchType {
     ACTIVE, INACTIVE, HAS_INACTIVE_PARENT, FREE
   }
 }
