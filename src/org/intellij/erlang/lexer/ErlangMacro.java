@@ -21,9 +21,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * @author savenko
- */
 public final class ErlangMacro {
   private final String myName;
   private final int myParametersCount;

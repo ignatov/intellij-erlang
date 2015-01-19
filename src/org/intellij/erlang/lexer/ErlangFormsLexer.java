@@ -22,9 +22,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
-/**
- * @author savenko
- */
 public final class ErlangFormsLexer extends LexerBase {
   private final _ErlangFormsLexer myLexer = new _ErlangFormsLexer();
 

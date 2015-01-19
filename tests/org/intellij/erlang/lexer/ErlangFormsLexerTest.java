@@ -18,9 +18,6 @@ package org.intellij.erlang.lexer;
 
 import com.intellij.lexer.Lexer;
 
-/**
- * @author savenko
- */
 public class ErlangFormsLexerTest extends ErlangLexerTestBase {
   @Override
   protected Lexer createLexer() {

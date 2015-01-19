@@ -19,9 +19,6 @@ package org.intellij.erlang.lexer;
 import com.intellij.lang.ForeignLeafType;
 import com.intellij.psi.tree.IElementType;
 
-/**
- * @author savenko
- */
 public class ErlangForeignLeafType extends ForeignLeafType {
   private final int mySubstitutionDepth;
 

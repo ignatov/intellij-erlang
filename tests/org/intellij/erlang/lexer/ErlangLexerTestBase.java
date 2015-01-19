@@ -21,9 +21,6 @@ import com.intellij.testFramework.LexerTestCase;
 
 import java.io.File;
 
-/**
- * @author savenko
- */
 public abstract class ErlangLexerTestBase extends LexerTestCase {
   protected void doTest() throws Exception {
     doTest(loadTestFile(), loadExpectedFile());

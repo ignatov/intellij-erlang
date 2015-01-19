@@ -19,9 +19,6 @@ package org.intellij.erlang.lexer;
 import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.psi.ErlangTokenType;
 
-/**
- * @author savenko
- */
 public interface ErlangInterimTokenTypes {
   IElementType ANY = new ErlangTokenType("any");
   IElementType FORM = new ErlangTokenType("form");

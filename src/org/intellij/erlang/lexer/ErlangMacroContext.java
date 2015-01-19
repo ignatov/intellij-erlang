@@ -23,10 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
-
-/**
- * @author savenko
- */
 final class ErlangMacroContext {
   private final MultiMap<String, ErlangMacro> myDefinitions = new MultiMap<String, ErlangMacro>();
   private final Set<String> myUndefinitions = new HashSet<String>();

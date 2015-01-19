@@ -19,9 +19,6 @@ package org.intellij.erlang.lexer;
 import com.intellij.lexer.Lexer;
 import org.intellij.erlang.context.ErlangCompileContext;
 
-/**
- * @author savenko
- */
 public class ErlangMacroSubstitutingLexerTest extends ErlangLexerTestBase {
   @Override
   protected Lexer createLexer() {

@@ -40,9 +40,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * @author savenko
- */
 public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
   private static final BracePair[] BRACE_PAIRS = new ErlangBraceMatcher().getPairs();
 

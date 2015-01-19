@@ -22,9 +22,6 @@ import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * @author savenko
- */
 public class ErlangMacroSubstitutionProblemDescriptor extends ProblemDescriptorBase {
   private final PsiElement myRealProblemElement;
 

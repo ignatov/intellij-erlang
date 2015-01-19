@@ -24,9 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.ListIterator;
 
-/**
- * @author savenko
- */
 final class ErlangMacroBuilder {
   private String myName = null;
   private List<String> myParameters = null;
