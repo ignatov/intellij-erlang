@@ -1,4 +1,4 @@
--export([foo/0, fun1/1, 'CAPS'/1]).
+-export([foo/0, fun1/1, 'CAPS'/1, ping/1]).
 
 foo() -> ok;
 <error>zoo</error>() -> ok;
@@ -12,3 +12,6 @@ foo() -> ok;
 
 'CAPS'(1) -> ok;
 'CAPS'(2) -> ok.
+
+-define(with_mismatched_head, ping(1) -> ok; pong(_) -> ok).
+<error>?with_mismatched_head</error>.

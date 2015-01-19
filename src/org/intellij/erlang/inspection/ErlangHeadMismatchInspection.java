@@ -49,7 +49,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     };
   }
 
-  private void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {
+  private static void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {
     String functionName = function.getName();
     List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
     if (clauses.size() <= 1) return;
@@ -60,7 +60,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
       String functionSignature = ErlangPsiImplUtil.createFunctionPresentation(function);
 
       if (!functionSignature.equals(clauseSignature)) {
-        registerProblem(problemsHolder, clauseHead,
+        registerProblemForeignTokensAware(problemsHolder, clauseHead,
           "Head mismatch: should be '" + functionSignature + "'", getFunctionHeadMismatchQuickFixes(clauseHead, functionName));
       }
     }
