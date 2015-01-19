@@ -47,7 +47,7 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
   @NotNull
   @Override
   public ResolveResult[] multiResolve(boolean b) {
-    ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
+    ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getName(), myElement);
     ErlangListComprehension lc = PsiTreeUtil.getParentOfType(myElement, ErlangListComprehension.class);
     ErlangCompositeElement place = lc != null ? lc.getLcExprs() : myElement;
     ResolveUtil.treeWalkUp(place, processor);

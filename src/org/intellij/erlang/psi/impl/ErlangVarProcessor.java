@@ -43,7 +43,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   }
 
   @Override
-  public boolean execute(@NotNull PsiElement psiElement, ResolveState resolveState) {
+  public boolean execute(@NotNull PsiElement psiElement, @NotNull ResolveState resolveState) {
     Map<String, ErlangQVar> variableContext = psiElement.getContainingFile().getOriginalFile().getUserData(ERLANG_VARIABLE_CONTEXT);
     if (variableContext != null) {
       ContainerUtil.addIfNotNull(variableContext.get(myRequestedName), myVarList);
@@ -51,7 +51,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
     }
 
     if (!(psiElement instanceof ErlangQVar)) return true;
-    if (!psiElement.getText().equals(myRequestedName)) return true;
+    if (!((ErlangQVar) psiElement).getName().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
     if (inFunArgList(myOrigin)) return true;
     
