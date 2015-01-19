@@ -71,7 +71,10 @@ import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
-import org.intellij.erlang.stubs.*;
+import org.intellij.erlang.stubs.ErlangFunctionStub;
+import org.intellij.erlang.stubs.ErlangIncludeLibStub;
+import org.intellij.erlang.stubs.ErlangIncludeStub;
+import org.intellij.erlang.stubs.ErlangTypeDefinitionStub;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -719,15 +722,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangFunction o) {
-    ErlangFunctionStub stub = o.getStub();
-    if (stub != null) return StringUtil.notNullize(stub.getName());
-
-    ErlangAtom atom = o.getAtomName().getAtom();
-    if (atom != null) {
-      return atom.getName();
-    }
-    //noinspection ConstantConditions
-    return o.getAtomName().getMacros().getText();
+    return getNameImpl(o);
   }
 
   @NotNull
@@ -743,10 +738,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangRecordDefinition o) {
-    ErlangRecordDefinitionStub stub = o.getStub();
-    if (stub != null) return StringUtil.notNullize(stub.getName());
-    ErlangQAtom atom = o.getQAtom();
-    return atom != null ? getName(atom) : "";
+    return getNameImpl(o);
   }
 
   @NotNull
@@ -856,12 +848,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangModule o) {
-    ErlangModuleStub stub = o.getStub();
-    if (stub != null) return StringUtil.notNullize(stub.getName());
-    ErlangQAtom qAtom = o.getQAtom();
-    if (qAtom == null) return "";
-    ErlangAtom atom = qAtom.getAtom();
-    return atom == null ? qAtom.getText() : atom.getName();
+    return getNameImpl(o);
   }
 
   @NotNull
@@ -1250,9 +1237,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangMacrosDefinition o) {
-    ErlangMacrosDefinitionStub stub = o.getStub();
-    if (stub != null) return StringUtil.notNullize(stub.getName());
-    return getNameIdentifier(o).getText();
+    return getNameImpl(o);
   }
 
   @NotNull
@@ -1303,8 +1288,9 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangBehaviour o) {
-    ErlangBehaviourStub stub = o.getStub();
-    if (stub != null) return StringUtil.notNullize(stub.getName());
+    String fromStub = getNameFromStub(o);
+    if (fromStub != null) return fromStub;
+
     ErlangModuleRef moduleRef = o.getModuleRef();
     ErlangQAtom atom = moduleRef != null ? moduleRef.getQAtom() : null;
     return atom == null ? "" : getName(atom);
@@ -1508,9 +1494,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangTypeDefinition o) {
-    ErlangTypeDefinitionStub stub = o.getStub();
-    if (stub != null) return StringUtil.notNullize(stub.getName());
-    return o.getNameIdentifier().getText();
+    return getNameImpl(o);
   }
 
   @Nullable
@@ -1745,6 +1729,22 @@ public class ErlangPsiImplUtil {
   private static TextRange rangeInParent(@NotNull TextRange parent, @NotNull TextRange child) {
     int start = child.getStartOffset() - parent.getStartOffset();
     return TextRange.create(start, start + child.getLength());
+  }
+
+  @NotNull
+  private static String getNameImpl(@NotNull ErlangNamedElement namedElement) {
+    if (namedElement instanceof StubBasedPsiElement) {
+      String fromStub = getNameFromStub((StubBasedPsiElement)namedElement);
+      if (fromStub != null) return fromStub;
+    }
+    PsiElement nameIdentifier = namedElement.getNameIdentifier();
+    return nameIdentifier != null ? nameIdentifier.getText() : "";
+  }
+
+  @Nullable
+  private static String getNameFromStub(StubBasedPsiElement element) {
+    ErlangNamedStubbedPsiElementBase stub = ObjectUtils.tryCast(element.getStub(), ErlangNamedStubbedPsiElementBase.class);
+    return stub != null ? StringUtil.notNullize(stub.getName()) : null;
   }
 
   public static boolean fromTheSameCaseExpression(@NotNull PsiElement origin, @NotNull PsiElement element) {
