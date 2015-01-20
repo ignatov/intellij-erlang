@@ -1,4 +1,4 @@
--export([foo/0, ?foo/1]).
+-export([foo/0, ?foo/1, 'CAPS'/1]).
 
 foo() -> ok;
 <error>zoo</error>() -> ok;
@@ -9,3 +9,6 @@ foo() -> ok;
 
 ?foo(1) -> ok;
 ?bar(2) -> ok.
+
+'CAPS'(1) -> ok;
+'CAPS'(2) -> ok.

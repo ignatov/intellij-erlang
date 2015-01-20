@@ -1388,23 +1388,26 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String createFunctionPresentation(@NotNull ErlangAtomWithArityExpression function) {
-    return getName(function.getQAtom()) + "/" + getArity(function.getInteger());
+    return createFunctionPresentation(getName(function.getQAtom()), getArity(function.getInteger()));
   }
 
   @NotNull
-  public static String createFunctionClausePresentation(@Nullable ErlangFunctionClause clause) {
-    if (clause == null) return "";
-    return clause.getQAtom().getText() + "/" + calculateFunctionClauseArity(clause);
+  public static String createFunctionClausePresentation(@NotNull ErlangFunctionClause clause) {
+    return createFunctionPresentation(getName(clause.getQAtom()), calculateFunctionClauseArity(clause));
   }
 
   @NotNull
   public static String createFunctionPresentation(@NotNull ErlangFunction function) {
-    return function.getName() + "/" + function.getArity();
+    return createFunctionPresentation(function.getName(), function.getArity());
   }
 
   @NotNull
   public static String createFunctionPresentation(@NotNull ErlangImportFunction function) {
-    return getName(function.getQAtom()) + "/" + getArity(function.getInteger());
+    return createFunctionPresentation(getName(function.getQAtom()), getArity(function.getInteger()));
+  }
+
+  private static String createFunctionPresentation(String functionName, int arity) {
+    return toAtomName(functionName) + "/" + arity;
   }
 
   @NotNull
