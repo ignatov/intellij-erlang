@@ -26,7 +26,9 @@ import com.intellij.openapi.module.Module;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
+import java.net.InetAddress;
 
+import java.net.UnknownHostException;
 import java.util.List;
 
 public class ErlangRemoteDebugRunningState extends ErlangRunningState {
@@ -66,8 +68,30 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
 
   @Override
   protected List<String> getErlFlags() {
-    String nodeNameFlag = myConfiguration.isUseShortNames() ? "-sname" : "-name";
+    String nodeNameFlag;
     String nodeName = "debugger_node_" + System.currentTimeMillis();
+
+    if (myConfiguration.isUseShortNames()) {
+      nodeNameFlag = "-sname";
+    }
+    else {
+      nodeNameFlag = "-name";
+
+      //Find the host part of the name
+      String longNameHost = myConfiguration.getLongNameHost();
+      if (longNameHost==null || longNameHost.equals("")) {
+        try {
+          InetAddress addr = InetAddress.getLocalHost();
+          longNameHost = addr.getCanonicalHostName();
+        }
+        catch(UnknownHostException e) {
+          longNameHost = "127.0.0.1";
+        }
+      }
+
+      nodeName = nodeName + "@" + longNameHost;
+    }
+
     return ContainerUtil.list(nodeNameFlag, nodeName);
   }
 }
