@@ -25,6 +25,8 @@ import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRunConfigurationEditor<ErlangRemoteDebugRunConfiguration> {
   private JPanel myComponent;
@@ -33,6 +35,16 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   private JTextField myCookieTextField;
   private JCheckBox myUseShortNamesCheckBox;
   private HideableTitledPanel myDebugOptionsPanel;
+  private JTextField myLongNameHostTextField;
+
+  public ErlangRemoteDebugConfigurationEditorForm() {
+    myUseShortNamesCheckBox.addItemListener(new ItemListener() {
+      @Override
+      public void itemStateChanged(ItemEvent e) {
+        myLongNameHostTextField.setEnabled(!myUseShortNamesCheckBox.isSelected());
+      }
+    });
+  }
 
   @Override
   protected void doResetEditorFrom(ErlangRemoteDebugRunConfiguration configuration) {
@@ -41,6 +53,8 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
     myNodeTextField.setText(configuration.getRemoteErlangNodeName());
     myCookieTextField.setText(configuration.getCookie());
     myUseShortNamesCheckBox.setSelected(configuration.isUseShortNames());
+    myLongNameHostTextField.setEnabled(!myUseShortNamesCheckBox.isSelected());
+    myLongNameHostTextField.setText(configuration.getLongNameHost());
   }
 
   @Override
@@ -49,6 +63,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
     configuration.setRemoteErlangNodeName(myNodeTextField.getText());
     configuration.setCookie(myCookieTextField.getText());
     configuration.setUseShortNames(myUseShortNamesCheckBox.isSelected());
+    configuration.setLongNameHost(myLongNameHostTextField.getText());
   }
 
   @NotNull
