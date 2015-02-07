@@ -23,11 +23,12 @@ import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
-import java.net.InetAddress;
 
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 
@@ -68,30 +69,26 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
 
   @Override
   protected List<String> getErlFlags() {
-    String nodeNameFlag;
-    String nodeName = "debugger_node_" + System.currentTimeMillis();
-
     if (myConfiguration.isUseShortNames()) {
-      nodeNameFlag = "-sname";
-    }
-    else {
-      nodeNameFlag = "-name";
-
-      //Find the host part of the name
-      String longNameHost = myConfiguration.getLongNameHost();
-      if (longNameHost==null || longNameHost.equals("")) {
-        try {
-          InetAddress addr = InetAddress.getLocalHost();
-          longNameHost = addr.getCanonicalHostName();
-        }
-        catch(UnknownHostException e) {
-          longNameHost = "127.0.0.1";
-        }
-      }
-
-      nodeName = nodeName + "@" + longNameHost;
+      return ContainerUtil.list("-sname", getNodeName());
     }
 
-    return ContainerUtil.list(nodeNameFlag, nodeName);
+    String host = StringUtil.nullize(myConfiguration.getHost(), true);
+    String qualifiedName = getNodeName() + "@" + (host == null ? getDefaultHost() : host);
+    return ContainerUtil.list("-name", qualifiedName);
+  }
+
+  @NotNull
+  private static String getNodeName() {
+    return "debugger_node_" + System.currentTimeMillis();
+  }
+
+  @NotNull
+  private static String getDefaultHost() {
+    try {
+      return InetAddress.getLocalHost().getCanonicalHostName();
+    } catch (UnknownHostException ignore) {
+    }
+    return "127.0.0.1";
   }
 }

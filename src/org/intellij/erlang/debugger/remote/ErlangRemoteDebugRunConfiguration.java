@@ -31,7 +31,7 @@ public class ErlangRemoteDebugRunConfiguration extends ErlangRunConfigurationBas
   private String myRemoteErlangNodeName;
   private boolean myUseShortNames = true; // controls whether to use -name or -sname for specifying local node name
   private String myCookie;
-  private String myLongNameHost;
+  private String myHost;
 
   public ErlangRemoteDebugRunConfiguration(Project project, String name) {
     super(name, new ErlangModuleBasedConfiguration(project), ErlangRemoteDebugRunConfigurationType.getInstance().getConfigurationFactories()[0]);
@@ -77,12 +77,12 @@ public class ErlangRemoteDebugRunConfiguration extends ErlangRunConfigurationBas
     myCookie = cookie;
   }
 
-  public String getLongNameHost() {
-    return myLongNameHost;
+  public String getHost() {
+    return myHost;
   }
 
-  public void setLongNameHost(String longNameHost) {
-    myLongNameHost = longNameHost;
+  public void setHost(String host) {
+    myHost = host;
   }
 
 }

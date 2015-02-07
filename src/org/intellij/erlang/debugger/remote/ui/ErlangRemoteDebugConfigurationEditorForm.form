@@ -79,7 +79,7 @@
         </constraints>
         <properties/>
       </component>
-      <component id="47150" class="javax.swing.JTextField" binding="myLongNameHostTextField">
+      <component id="47150" class="javax.swing.JTextField" binding="myHostTextField">
         <constraints>
           <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="-1"/>
@@ -87,14 +87,14 @@
         </constraints>
         <properties/>
       </component>
-      <component id="cb618" class="javax.swing.JLabel">
+      <component id="cb618" class="javax.swing.JLabel" binding="myHostLabel">
         <constraints>
           <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <labelFor value="47150"/>
-          <text value="&amp;Long name host:"/>
-          <toolTipText value="The host part of the long name. Defaults to the system hostname"/>
+          <text value="&amp;Host:"/>
+          <toolTipText value="The host part of a generated host name. Defaults to the system hostname"/>
         </properties>
       </component>
     </children>

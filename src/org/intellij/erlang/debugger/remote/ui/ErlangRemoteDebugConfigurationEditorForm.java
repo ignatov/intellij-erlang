@@ -35,13 +35,14 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   private JTextField myCookieTextField;
   private JCheckBox myUseShortNamesCheckBox;
   private HideableTitledPanel myDebugOptionsPanel;
-  private JTextField myLongNameHostTextField;
+  private JTextField myHostTextField;
+  private JLabel myHostLabel;
 
   public ErlangRemoteDebugConfigurationEditorForm() {
     myUseShortNamesCheckBox.addItemListener(new ItemListener() {
       @Override
       public void itemStateChanged(ItemEvent e) {
-        myLongNameHostTextField.setEnabled(!myUseShortNamesCheckBox.isSelected());
+        setUseShortNames(myUseShortNamesCheckBox.isSelected());
       }
     });
   }
@@ -53,8 +54,8 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
     myNodeTextField.setText(configuration.getRemoteErlangNodeName());
     myCookieTextField.setText(configuration.getCookie());
     myUseShortNamesCheckBox.setSelected(configuration.isUseShortNames());
-    myLongNameHostTextField.setEnabled(!myUseShortNamesCheckBox.isSelected());
-    myLongNameHostTextField.setText(configuration.getLongNameHost());
+    myHostTextField.setText(configuration.getHost());
+    setUseShortNames(myUseShortNamesCheckBox.isSelected());
   }
 
   @Override
@@ -63,7 +64,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
     configuration.setRemoteErlangNodeName(myNodeTextField.getText());
     configuration.setCookie(myCookieTextField.getText());
     configuration.setUseShortNames(myUseShortNamesCheckBox.isSelected());
-    configuration.setLongNameHost(myLongNameHostTextField.getText());
+    configuration.setHost(myHostTextField.getText());
   }
 
   @NotNull
@@ -75,5 +76,10 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   private void createUIComponents() {
     myDebugOptionsPanel = createDebugOptionsHideablePanel();
     myDebugOptionsPanel.setOn(true);
+  }
+
+  private void setUseShortNames(boolean b) {
+    myHostLabel.setVisible(!b);
+    myHostTextField.setVisible(!b);
   }
 }
