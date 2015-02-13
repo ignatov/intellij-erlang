@@ -22,6 +22,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.index.ErlangModuleIndex;
@@ -52,8 +53,6 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   public PsiElement resolve() {
     if (suppressResolve()) return null; // for #132
 
-    PsiFile file = getElement().getContainingFile();
-
     if (myModuleAtom != null) {
       ErlangFunction explicitFunction = getExternalFunction(getModuleFileName());
       if (explicitFunction != null) {
@@ -66,37 +65,34 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
       return null;
     }
 
-    if (file instanceof ErlangFile) {
-      ErlangFile erlangFile = (ErlangFile) file;
+    ErlangFile file = ObjectUtils.tryCast(getElement().getContainingFile(), ErlangFile.class);
+    if (file == null) return null;
 
-      ErlangFunction result = erlangFile.getFunction(myReferenceName, myArity);
-      if (result != null) return result;
+    ErlangFunction declaredFunction = file.getFunction(myReferenceName, myArity);
+    if (declaredFunction != null) return declaredFunction;
 
-      ErlangFunction implicitFunction = getExternalFunction("erlang");
-      if (implicitFunction != null) return implicitFunction;
+    ErlangFunction implicitFunction = getExternalFunction("erlang");
+    if (implicitFunction != null) return implicitFunction;
 
-      ErlangSdkRelease release = ErlangSdkType.getRelease(erlangFile);
+    ErlangSdkRelease release = ErlangSdkType.getRelease(file);
+    if ((release == null || release.needBifCompletion("erlang")) &&
+      ErlangBifTable.isBif("erlang", myReferenceName, myArity) ||
+      ErlangBifTable.isBif("", myReferenceName, myArity)) return getElement();
 
-      if ((release == null || release.needBifCompletion("erlang")) && ErlangBifTable.isBif("erlang", myReferenceName, myArity)) {
-        return getElement();
-      }
+    ErlangFunction fromImport = resolveImport(file.getImportedFunction(myReferenceName, myArity));
+    if (fromImport != null) return fromImport;
 
-      if (ErlangBifTable.isBif("", myReferenceName, myArity)) {
-        return getElement();
-      }
+    List<ErlangFunction> declaredInIncludes =
+      ErlangPsiImplUtil.getErlangFunctionsFromIncludes(file, false, myReferenceName, myArity);
+    if (!declaredInIncludes.isEmpty()) return ContainerUtil.getFirstItem(declaredInIncludes);
 
-      for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
-        PsiReference reference = importFunction.getReference();
-        PsiElement resolve = reference.resolve();
-        if (resolve instanceof ErlangFunction) {
-          ErlangFunction function = (ErlangFunction) resolve;
-          if (function.getName().equals(myReferenceName) && function.getArity() == myArity) {
-            return function;
-          }
-        }
-      }
-      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangFunctionsFromIncludes((ErlangFile) file, false, myReferenceName, myArity));
+    List<ErlangImportFunction> importedInIncludes =
+      ErlangPsiImplUtil.getImportsFromIncludes(file, false, myReferenceName, myArity);
+    for (ErlangImportFunction importFromInclude : importedInIncludes) {
+      ErlangFunction importedFunction = resolveImport(importFromInclude);
+      if (importedFunction != null) return importedFunction;
     }
+
     return null;
   }
 
@@ -119,10 +115,8 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
         result = new ArrayList<ErlangFunction>();
 
         for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
-          PsiReference reference = importFunction.getReference();
-          PsiElement resolve = reference.resolve();
-          if (resolve instanceof ErlangFunction && ((ErlangFunction) resolve).getName().equals(myReferenceName)) {
-            result.add((ErlangFunction) resolve);
+          if (myReferenceName.equals(ErlangPsiImplUtil.getName(importFunction))) {
+            ContainerUtil.addIfNotNull(result, resolveImport(importFunction));
           }
         }
 
@@ -196,5 +190,12 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
   @Override
   public int getArity() {
     return myArity;
+  }
+
+  @Nullable
+  private static ErlangFunction resolveImport(@Nullable ErlangImportFunction importFunction) {
+    PsiReference reference = importFunction != null ? importFunction.getReference() : null;
+    PsiElement resolve = reference != null ? reference.resolve() : null;
+    return ObjectUtils.tryCast(resolve, ErlangFunction.class);
   }
 }

@@ -367,8 +367,8 @@ public class ErlangPsiImplUtil {
     ErlangImportDirective importDirective = PsiTreeUtil.getParentOfType(o, ErlangImportDirective.class);
     ErlangModuleRef moduleRef = importDirective != null ? importDirective.getModuleRef() : null;
     ErlangQAtom moduleRefQAtom = moduleRef != null ? moduleRef.getQAtom() : null;
-    PsiElement arity = o.getInteger();
-    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), moduleRefQAtom, getArity(arity));
+    int arity = getArity(o);
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), moduleRefQAtom, arity);
   }
 
   public static int getArity(@Nullable PsiElement arity) {
@@ -498,8 +498,11 @@ public class ErlangPsiImplUtil {
         functions.addAll(erlangFile.getFunctions());
         functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"));
 
-        for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
-          lookupElements.add(createFunctionLookupElement(importFunction.getQAtom().getText(), getArity(importFunction.getInteger()), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
+        List<ErlangImportFunction> directlyImported = erlangFile.getImportedFunctions();
+        List<ErlangImportFunction> importsFromIncludes = getImportsFromIncludes(erlangFile, true, "", 0);
+        for (ErlangImportFunction importFunction : ContainerUtil.concat(directlyImported, importsFromIncludes)) {
+          LookupElement element = createFunctionLookupElement(getName(importFunction), getArity(importFunction), withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY);
+          lookupElements.add(element);
         }
 
         if (!withArity && (release == null || release.needBifCompletion("erlang"))) {
@@ -727,6 +730,11 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  public static String getName(@NotNull ErlangImportFunction o) {
+    return getName(o.getQAtom());
+  }
+
+  @NotNull
   public static String getName(@NotNull ErlangQVar o) {
     return o.getText();
   }
@@ -735,6 +743,10 @@ public class ErlangPsiImplUtil {
     ErlangFunctionStub stub = o.getStub();
     if (stub != null) return stub.getArity();
     return o.getFirstClause().getArgumentDefinitionList().getArgumentDefinitionList().size();
+  }
+
+  public static int getArity(@NotNull ErlangImportFunction o) {
+    return getArity(o.getInteger());
   }
 
   @NotNull
@@ -1140,6 +1152,20 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  static List<ErlangImportFunction> getImportsFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name, int arity) {
+    List<ErlangImportFunction> fromIncludes = ContainerUtil.newArrayList();
+    for (ErlangFile file : getIncludedFiles(containingFile)) {
+      if (!forCompletion) {
+        ContainerUtil.addIfNotNull(fromIncludes, file.getImportedFunction(name, arity));
+      }
+      else {
+        fromIncludes.addAll(file.getImportedFunctions());
+      }
+    }
+    return fromIncludes;
+  }
+
+  @NotNull
   static List<ErlangMacrosDefinition> getErlangMacrosFromIncludes(@NotNull ErlangFile containingFile,
                                                                   boolean forCompletion,
                                                                   @NotNull String name) {
@@ -1404,7 +1430,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String createFunctionPresentation(@NotNull ErlangImportFunction function) {
-    return createFunctionPresentation(getName(function.getQAtom()), getArity(function.getInteger()));
+    return createFunctionPresentation(getName(function), getArity(function));
   }
 
   private static String createFunctionPresentation(String functionName, int arity) {

@@ -407,4 +407,15 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testMacroArguments() throws Throwable {
     doTestInclude("-define(M(Arg), <caret>", "Arg");
   }
+
+  public void testFunctionImportsFromIncludes() throws Throwable {
+    myFixture.configureByFiles("imports/test.erl", "imports/funs.erl", "imports/importFuns.hrl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "fun_a");
+  }
+
+  public void testFunctionImportsFromTransitiveIncludes() throws Throwable {
+    myFixture.configureByFiles("imports/testTransitive.erl", "imports/funs.erl",
+      "imports/importFuns.hrl", "imports/transitiveImportFuns.hrl");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "fun_a");
+  }
 }

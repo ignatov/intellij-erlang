@@ -109,6 +109,13 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         return Result.create(calcFunctions(), ErlangFileImpl.this);
       }
     }, false);
+  private CachedValue<List<ErlangImportFunction>> myImportValue =
+    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangImportFunction>>() {
+      @Override
+      public Result<List<ErlangImportFunction>> compute() {
+        return Result.create(calcImports(), ErlangFileImpl.this);
+      }
+    }, false);
   private CachedValue<Set<ErlangFunction>> myExportedFunctionValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<ErlangFunction>>() {
       @Override
@@ -151,6 +158,17 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         MultiMap<String, ErlangFunction> map = new MultiMap<String, ErlangFunction>();
         for (ErlangFunction function : getFunctions()) {
           map.putValue(function.getName(), function);
+        }
+        return Result.create(map, ErlangFileImpl.this);
+      }
+    }, false);
+  private CachedValue<MultiMap<String, ErlangImportFunction>> myImportsMap =
+    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<MultiMap<String, ErlangImportFunction>>() {
+      @Override
+      public Result<MultiMap<String, ErlangImportFunction>> compute() {
+        MultiMap<String, ErlangImportFunction> map = new MultiMap<String, ErlangImportFunction>();
+        for (ErlangImportFunction importFunction : getImportedFunctions()) {
+          map.putValue(ErlangPsiImplUtil.getName(importFunction), importFunction);
         }
         return Result.create(map, ErlangFileImpl.this);
       }
@@ -696,21 +714,31 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return myRecordsMap.getValue().get(name);
   }
 
+  @Nullable
+  public ErlangImportFunction getImportedFunction(String name, final int arity) {
+    MultiMap<String, ErlangImportFunction> importsMap = myImportsMap.getValue();
+    Collection<ErlangImportFunction> importFunctions = importsMap.get(name);
+    return ContainerUtil.find(importFunctions, new Condition<ErlangImportFunction>() {
+      @Override
+      public boolean value(ErlangImportFunction importFunction) {
+        return arity == ErlangPsiImplUtil.getArity(importFunction);
+      }
+    });
+  }
+
   @NotNull
   @Override
-  public ArrayList<ErlangImportFunction> getImportedFunctions() {
+  public List<ErlangImportFunction> getImportedFunctions() {
+    return myImportValue.getValue();
+  }
+
+  private List<ErlangImportFunction> calcImports() {
     ArrayList<ErlangImportFunction> result = new ArrayList<ErlangImportFunction>();
     for (ErlangAttribute attribute : getAttributes()) {
       ErlangImportDirective importDirective = attribute.getImportDirective();
-      if (importDirective != null) {
-        ErlangImportFunctions importFunctions = importDirective.getImportFunctions();
-        if (importFunctions != null) {
-          List<ErlangImportFunction> importFunctionList = importFunctions.getImportFunctionList();
-          for (ErlangImportFunction importFunction : importFunctionList) {
-            result.add(importFunction);
-          }
-        }
-      }
+      ErlangImportFunctions importFunctions = importDirective != null ? importDirective.getImportFunctions() : null;
+      List<ErlangImportFunction> functions = importFunctions != null ? importFunctions.getImportFunctionList() : null;
+      ContainerUtil.addAll(result, ContainerUtil.notNullize(functions));
     }
     return result;
   }

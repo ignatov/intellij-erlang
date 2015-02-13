@@ -122,4 +122,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testRecursiveIncludeResolve()    { enableUnresolvedMacroInspection(); doTestWithApp(); }
   public void testRecursiveIncludeLibResolve() { enableUnresolvedMacroInspection(); doTestWithApp(); }
   public void testRelativePathInclude()        { doTestWithApp(); }
+
+  public void testFunctionImportFromTransitiveInclusion() { doTestWithApp(); }
+  public void testFunctionImportFromInclusion()           { doTestWithApp(); }
 }

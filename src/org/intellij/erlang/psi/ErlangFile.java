@@ -86,7 +86,10 @@ public interface ErlangFile extends PsiFile {
   boolean isNoAutoImportAll();
 
   @NotNull
-  ArrayList<ErlangImportFunction> getImportedFunctions();
+  List<ErlangImportFunction> getImportedFunctions();
+
+  @Nullable
+  ErlangImportFunction getImportedFunction(String name, int arity);
 
   @NotNull
   Map<String, ErlangCallbackSpec> getCallbackMap();
