@@ -33,12 +33,13 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitMacros(@NotNull ErlangMacros o) {
-        ErlangMacrosName macrosName = o.getMacrosName();
-        if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
+        ErlangMacrosName macroNameElement = o.getMacrosName();
+        String macroName = macroNameElement != null ? ErlangPsiImplUtil.getMacroName(macroNameElement) : null;
+        if (macroName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macroName)) return;
 
         PsiReference reference = o.getReference();
         if (reference != null && reference.resolve() == null) {
-          String description = "Unresolved macro " + "'" + ErlangPsiImplUtil.getMacroName(macrosName) + "'";
+          String description = "Unresolved macro " + "'" + macroName + "'";
           registerProblemForeignTokensAware(holder, o, description, new ErlangIntroduceMacroQuickFix());
         }
       }
