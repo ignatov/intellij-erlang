@@ -92,7 +92,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
-  public void testImportAutoimported()    {doTestWithInclude(); }
+  public void testImportAutoimported()    { doTestWithInclude(); }
 
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
@@ -104,8 +104,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
-  public void testAlreadyImported1()      {doTestWithInclude(); }
-  public void testAlreadyImported2()      {doTestWithInclude(); }
+  public void testAlreadyImported1()      { doTestWithInclude(); }
+  public void testAlreadyImported2()      { doTestWithInclude(); }
   public void test176() {                    
     myFixture.configureByText("aaa.hrl", "foo() -> ok.");
     doTest();
