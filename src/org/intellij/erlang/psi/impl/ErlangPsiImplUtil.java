@@ -50,6 +50,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.stubs.NamedStubBase;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
@@ -1746,7 +1747,7 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   private static String getNameFromStub(StubBasedPsiElement element) {
-    ErlangNamedStubbedPsiElementBase stub = ObjectUtils.tryCast(element.getStub(), ErlangNamedStubbedPsiElementBase.class);
+    NamedStubBase<?> stub = ObjectUtils.tryCast(element.getStub(), NamedStubBase.class);
     return stub != null ? StringUtil.notNullize(stub.getName()) : null;
   }
 
