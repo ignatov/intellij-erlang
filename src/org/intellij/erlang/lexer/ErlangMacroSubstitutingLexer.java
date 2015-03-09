@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
+  private static final int MAX_INCLUSION_STACK_DEPTH = 100;
   private static final BracePair[] BRACE_PAIRS = new ErlangBraceMatcher().getPairs();
 
   private final ErlangMacroContext myMacroContext;
@@ -265,12 +266,16 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       myIncludeOwnersStack.push(inclusion);
 
       try {
-        //TODO handle recursive inclusion
-        String text = VfsUtilCore.loadText(inclusion);
-        ErlangMacroSubstitutingLexer inclusionLexer = new ErlangMacroSubstitutingLexer(new ErlangFormsLexer(), myMacroContext, myCompileContext, myIncludeOwnersStack);
-        inclusionLexer.start(text);
-        while (inclusionLexer.getTokenType() != null) {
-          inclusionLexer.advance();
+        if (myIncludeOwnersStack.size() < MAX_INCLUSION_STACK_DEPTH) {
+          String text = VfsUtilCore.loadText(inclusion);
+          ErlangMacroSubstitutingLexer inclusionLexer = new ErlangMacroSubstitutingLexer(new ErlangFormsLexer(), myMacroContext, myCompileContext, myIncludeOwnersStack);
+          inclusionLexer.start(text);
+          while (inclusionLexer.getTokenType() != null) {
+            inclusionLexer.advance();
+          }
+        }
+        else {
+          System.err.println("Max inclusion stack depth reached. Skipping.");
         }
       } catch (IOException e) {
         //TODO report error
