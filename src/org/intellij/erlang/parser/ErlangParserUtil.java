@@ -182,7 +182,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     if (!GeneratedParserUtilBase.recursion_guard_(builder_, level_, funcName_)) {
       return false;
     }
-    if (funcName_.equals("macros") || funcName_.startsWith("macros_call") || funcName_.contains("recover")) {
+    if (funcName_.startsWith("macro") || funcName_.contains("recover")) {
       return true;
     }
 
