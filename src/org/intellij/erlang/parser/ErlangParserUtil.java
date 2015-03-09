@@ -22,7 +22,6 @@ import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.TokenType;
@@ -38,6 +37,10 @@ import org.intellij.erlang.lexer.ErlangInterimTokenTypes;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static org.intellij.erlang.ErlangTypes.ERL_ARGUMENT_LIST;
+import static org.intellij.erlang.ErlangTypes.ERL_PAR_LEFT;
+import static org.intellij.erlang.ErlangTypes.ERL_PAR_RIGHT;
 
 public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static boolean isApplicationLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
@@ -148,12 +151,30 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return true;
   }
 
-  public static boolean macroCallArgumentsList(PsiBuilder builder, int level) {
+  public static boolean macroCallArgumentsList(PsiBuilder builder, int l) {
     Builder b = (Builder) builder;
+    int depth = b.getLastMacroNameTokenSubstitutionDepth();
+
     b.increaseMacroCallArgumentsLevel();
-    boolean argumentListParsed = ErlangParser.argument_list(builder, level + 1);
-    b.decreaseMacroCallArgumentsLevel();
-    return argumentListParsed;
+    try {
+      //see org.intellij.erlang.parser.ErlangParser.argument_list()
+      boolean r, p;
+      PsiBuilder.Marker m = enter_section_(b, l, _NONE_, null);
+      r = p = consumeTokenAtSubstitutionDepth(b, ERL_PAR_LEFT, depth);
+      r = r && report_error_(b, ErlangParser.call_exprs(b, l + 1));
+      r = p && consumeTokenAtSubstitutionDepth(b, ERL_PAR_RIGHT, depth);
+      exit_section_(b, l, m, ERL_ARGUMENT_LIST, r, p, null);
+      return r || p;
+    }
+    finally {
+      b.decreaseMacroCallArgumentsLevel();
+    }
+  }
+
+  public static boolean recordMacroNameTokenSubstitutionDepth(PsiBuilder builder, int level) {
+    Builder b = (Builder) builder;
+    b.setLastMacroNameTokenSubstitutionDepth(b.getNextTokenSubstitutionDepth());
+    return true;
   }
 
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
@@ -167,6 +188,10 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       consumeSubstitutedMacroCall(b, level_);
     }
     return true;
+  }
+
+  private static boolean consumeTokenAtSubstitutionDepth(Builder b, IElementType token, int substitutionDepth) {
+    return b.getNextTokenSubstitutionDepth() == substitutionDepth && consumeToken(b, token);
   }
 
   private static void consumeSubstitutedMacroCall(Builder builder, int level) {
@@ -185,6 +210,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   @SuppressWarnings("ClassNameSameAsAncestorName")
   public static class Builder extends GeneratedParserUtilBase.Builder {
+    private int myLastMacroNameTokenSubstitutionDepth;
     private int myMacroCallArgumentsLevel;
 
     public Builder(PsiBuilder builder, GeneratedParserUtilBase.ErrorState state, PsiParser parser) {
@@ -220,6 +246,14 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
     public void decreaseMacroCallArgumentsLevel() {
       myMacroCallArgumentsLevel--;
+    }
+
+    public int getLastMacroNameTokenSubstitutionDepth() {
+      return myLastMacroNameTokenSubstitutionDepth;
+    }
+
+    public void setLastMacroNameTokenSubstitutionDepth(int lastMacroNameTokenDepth) {
+      myLastMacroNameTokenSubstitutionDepth = lastMacroNameTokenDepth;
     }
 
     private void skipForeignLeafWhitespace() {

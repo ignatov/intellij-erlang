@@ -118,7 +118,7 @@ q_var ::= var {
   methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
 }
 macros_arg ::= '?''?' q_var
-macros ::= '?' macros_name macro_call_argument_list? {
+macros ::= '?' &<<recordMacroNameTokenSubstitutionDepth>> macros_name macro_call_argument_list? {
   pin=1
   methods = [getReference]
 }

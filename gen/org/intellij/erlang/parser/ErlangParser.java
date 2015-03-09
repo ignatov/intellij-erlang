@@ -3135,7 +3135,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '?' macros_name macro_call_argument_list?
+  // '?' &<<recordMacroNameTokenSubstitutionDepth>> macros_name macro_call_argument_list?
   public static boolean macros(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros")) return false;
     if (!nextTokenIs(b, ERL_QMARK)) return false;
@@ -3143,15 +3143,26 @@ public class ErlangParser implements PsiParser {
     Marker m = enter_section_(b, l, _NONE_, null);
     r = consumeToken(b, ERL_QMARK);
     p = r; // pin = 1
-    r = r && report_error_(b, macros_name(b, l + 1));
-    r = p && macros_2(b, l + 1) && r;
+    r = r && macros_1(b, l + 1);
+    r = r && macros_name(b, l + 1);
+    r = r && macros_3(b, l + 1);
     exit_section_(b, l, m, ERL_MACROS, r, p, null);
     return r || p;
   }
 
+  // &<<recordMacroNameTokenSubstitutionDepth>>
+  private static boolean macros_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_, null);
+    r = recordMacroNameTokenSubstitutionDepth(b, l + 1);
+    exit_section_(b, l, m, null, r, false, null);
+    return r;
+  }
+
   // macro_call_argument_list?
-  private static boolean macros_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_2")) return false;
+  private static boolean macros_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_3")) return false;
     macro_call_argument_list(b, l + 1);
     return true;
   }
