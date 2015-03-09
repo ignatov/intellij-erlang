@@ -92,4 +92,6 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBinaryMacroSubst()  { doTest(true, false); }
   public void testUnresolvedMacroIsNotSkipped() { doTest(true, false); }
   public void testUnresolvedMacroInMacroBody()  { doTest(true, false); }
+  public void testWeirdFunctionDefinition()     { doTest(true, false); }
+  public void testIdMacroSelfApplication()      { doTest(true, false); }
 }
