@@ -534,7 +534,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       }
 
       if (substitution != null) {
-        ErlangLexer substitutionLexer = new ErlangLexer(); //TODO use a macro substituting lexer here. (beware of recursive macros!)
+        ErlangLexer substitutionLexer = new ErlangLexer();
         substitutionLexer.start(substitution);
         myLexersStack.push(substitutionLexer);
       }
