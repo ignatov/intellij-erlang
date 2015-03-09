@@ -147,7 +147,7 @@ ERL_FILE
     ERL_MACROS_NAME
       ERL_ATOM
         PsiElement(atom_name)('a')
-  PsiErrorElement:'(', '-', <function clause> or '?' expected, got '1'
+  PsiErrorElement:'-', <function clause> or '?' expected, got '1'
     ForeignLeaf(integer: 1)('1')
   PsiElement(DUMMY_BLOCK)
     PsiElement(()('(')
@@ -158,7 +158,7 @@ ERL_FILE
     ERL_MACROS_NAME
       ERL_ATOM
         PsiElement(atom_name)('a')
-  PsiErrorElement:'(', '-', <function clause> or '?' expected, got '1'
+  PsiErrorElement:'-', <function clause> or '?' expected, got '1'
     ForeignLeaf(integer: 1)('1')
   PsiElement(DUMMY_BLOCK)
     PsiElement(()('(')
