@@ -182,11 +182,15 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     if (!GeneratedParserUtilBase.recursion_guard_(builder_, level_, funcName_)) {
       return false;
     }
-    Builder b = (Builder) builder_;
-    if (b.getMacroCallArgumentsLevel() == 0 &&
-      !funcName_.equals("macros") && !funcName_.startsWith("macros_call") && !funcName_.contains("recover")) {
-      consumeSubstitutedMacroCall(b, level_);
+    if (funcName_.equals("macros") || funcName_.startsWith("macros_call") || funcName_.contains("recover")) {
+      return true;
     }
+
+    Builder b = (Builder) builder_;
+    while (b.getMacroCallArgumentsLevel() == 0) {
+      if (!consumeSubstitutedMacroCall(b, level_)) break;
+    }
+
     return true;
   }
 
@@ -194,17 +198,20 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return b.getNextTokenSubstitutionDepth() == substitutionDepth && consumeToken(b, token);
   }
 
-  private static void consumeSubstitutedMacroCall(Builder builder, int level) {
-    if (!nextTokenIsFast(builder, ErlangTypes.ERL_QMARK)) return;
+  private static boolean consumeSubstitutedMacroCall(Builder builder, int level) {
+    if (!nextTokenIsFast(builder, ErlangTypes.ERL_QMARK)) return false;
+
     int macroCallSubstitutionDepth = builder.getNextTokenSubstitutionDepth();
     PsiBuilder.Marker beforeMacroCallParsed = builder.mark();
     boolean macroCallParsed = ErlangParser.macros(builder, level);
     boolean macroWasSubstituted = macroCallSubstitutionDepth + 1 == builder.getNextTokenSubstitutionDepth();
     if (!macroCallParsed || !macroWasSubstituted) {
       beforeMacroCallParsed.rollbackTo();
+      return false;
     }
     else {
       beforeMacroCallParsed.drop();
+      return true;
     }
   }
 
