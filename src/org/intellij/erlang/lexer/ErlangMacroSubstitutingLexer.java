@@ -387,6 +387,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
 
     public void doWork() {
       while (!myLexersStack.isEmpty()) {
+        int substitutionDepth = myLexersStack.size();
         Lexer lexer = myLexersStack.peek();
         // macro call arguments should contain all whitespace symbols so that ?MACRO(X = <<0:8>>) works fine
         if (myMacroCallParsingState != MacroCallParsingState.ARGUMENTS_LIST) {
@@ -420,10 +421,10 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
             }
             else if (tokenType == ErlangTypes.ERL_SINGLE_QUOTE) {
               // we will not switch to a different lexer while parsing these 3 tokens, so it's safe to advance the lexer.
-              addMayBeForeignTokenFrom(lexer);
+              addMayBeForeignTokenFrom(lexer, substitutionDepth);
               if (lexer.getTokenType() != null && lexer.getTokenType() == ErlangTypes.ERL_ATOM_NAME) {
                 String nameAfterQuote = lexer.getTokenText();
-                addMayBeForeignTokenFrom(lexer);
+                addMayBeForeignTokenFrom(lexer, substitutionDepth);
                 if (lexer.getTokenType() != null && lexer.getTokenType() == ErlangTypes.ERL_SINGLE_QUOTE) {
                   macroName = nameAfterQuote;
                   // the closing quote will be added in loop's end
@@ -481,7 +482,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
             break;
           }
         }
-        addMayBeForeignTokenFrom(lexer);
+        addMayBeForeignTokenFrom(lexer, substitutionDepth);
       }
     }
 
@@ -560,13 +561,13 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       addWhitespaceAndCommentsFrom(lexer);
     }
 
-    private void addMayBeForeignTokenFrom(Lexer lexer) {
+    private void addMayBeForeignTokenFrom(Lexer lexer, int substitutionDepth) {
       IElementType tokenType = lexer.getTokenType();
       int tokenEndOffset = myBaseLexer.getTokenEnd();
       assert tokenType != null;
       if (myBaseLexer != lexer) {
         tokenEndOffset = myBaseLexer.getTokenStart();
-        tokenType = new ErlangForeignLeafType(tokenType, lexer.getTokenText(), myLexersStack.size());
+        tokenType = new ErlangForeignLeafType(tokenType, lexer.getTokenText(), substitutionDepth);
       }
       addToken(tokenEndOffset, tokenType);
       lexer.advance();
