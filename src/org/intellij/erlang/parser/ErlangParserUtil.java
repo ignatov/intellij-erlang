@@ -160,8 +160,8 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       //see org.intellij.erlang.parser.ErlangParser.argument_list()
       boolean r, p;
       PsiBuilder.Marker m = enter_section_(b, l, _NONE_, null);
-      r = p = consumeTokenAtSubstitutionDepth(b, ERL_PAR_LEFT, depth);
-      r = r && report_error_(b, ErlangParser.call_exprs(b, l + 1));
+      p = consumeTokenAtSubstitutionDepth(b, ERL_PAR_LEFT, depth);
+      ErlangParser.call_exprs(b, l + 1);
       r = p && consumeTokenAtSubstitutionDepth(b, ERL_PAR_RIGHT, depth);
       exit_section_(b, l, m, ERL_ARGUMENT_LIST, r, p, null);
       return r || p;
