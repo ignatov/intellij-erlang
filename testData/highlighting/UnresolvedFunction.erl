@@ -11,13 +11,13 @@ call_bar() ->
   ?CALL0(bar).
 
 call_unresolved() ->
-  <warning>?CALL0(unresolved)</warning>.
+  <warning>?CALL0</warning>(unresolved).
 
 call_qualified_bar() ->
   ?CALL0('UnresolvedFunction':bar).
 
 call_qualified_unresolved() ->
-  <warning>?CALL0('UnresolvedFunction':unresolved)</warning>.
+  <warning>?CALL0</warning>('UnresolvedFunction':unresolved).
 
 %% no unresolved function warning should be issued
 %% for references with unknown arity.

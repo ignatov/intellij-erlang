@@ -9,6 +9,6 @@ foo() ->
 
 bar() ->
   <error>?NULLARY_MACRO</error>,
-  <error>?NULLARY_MACRO(1)</error>,
+  <error>?NULLARY_MACRO</error>(1),
   <error>?UNARY_MACRO</error>,
-  <error>?UNARY_MACRO(1, 2)</error>.
+  <error>?UNARY_MACRO</error>(1, 2).

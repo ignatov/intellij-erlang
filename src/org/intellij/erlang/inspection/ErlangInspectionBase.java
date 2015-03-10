@@ -201,8 +201,8 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     }
     PsiElement targetElement = rightmostNonForeignElementBefore(psiElement);
     if (targetElement == null) return;
-    ProblemDescriptor problemDescriptor = targetElement != psiElement ?
-      new ErlangMacroSubstitutionProblemDescriptor(psiElement, targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType) :
+    ProblemDescriptor problemDescriptor = targetElement instanceof ErlangMacros ?
+      new ErlangMacroSubstitutionProblemDescriptor(psiElement, (ErlangMacros)targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType) :
       problemsHolder.getManager().createProblemDescriptor(targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType);
     problemsHolder.registerProblem(problemDescriptor);
   }

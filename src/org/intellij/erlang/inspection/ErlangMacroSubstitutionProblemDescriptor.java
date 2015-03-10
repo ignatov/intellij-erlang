@@ -20,19 +20,21 @@ import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptorBase;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.psi.ErlangMacros;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangMacroSubstitutionProblemDescriptor extends ProblemDescriptorBase {
   private final PsiElement myRealProblemElement;
 
   public ErlangMacroSubstitutionProblemDescriptor(@NotNull PsiElement realProblemElement,
-                                                  @NotNull PsiElement macroElement,
+                                                  @NotNull ErlangMacros macroCall,
                                                   @NotNull String descriptionTemplate,
                                                   boolean onTheFly,
                                                   LocalQuickFix[] fixes,
                                                   @NotNull ProblemHighlightType highlightType) {
-    super(macroElement, macroElement, "Problem after macro substitution. " + descriptionTemplate,
-      fixes, highlightType, false, null, true, onTheFly);
+    super(macroCall.getQmark(), ObjectUtils.chooseNotNull(macroCall.getMacrosName(), macroCall.getQmark()),
+      "Problem after macro substitution. " + descriptionTemplate, fixes, highlightType, false, null, true, onTheFly);
     myRealProblemElement = realProblemElement;
   }
 

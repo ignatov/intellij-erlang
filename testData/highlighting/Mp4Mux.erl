@@ -45,7 +45,7 @@ run(Writer, Inputs) when is_function(Writer) ->
     TT1 = erlang:now(),
     Track = append_track(F, #track{track_id = TrackId, track_number = 1, reader = F}),
     TT2 = erlang:now(),
-    <warning>?D({append_track, TrackId, timer:no_diff(TT2,TT1)})</warning>,
+    <warning>?D</warning>({append_track, TrackId, timer:no_diff(TT2,TT1)}),
     State_#state{tracks = Tracks_ ++ [Track]}
   end, State, InputFiles),
   Mp4 = fun([#track{duration = Duration}|_] = Tracks_) ->
@@ -58,7 +58,7 @@ run(Writer, Inputs) when is_function(Writer) ->
   Buffer1 = mp4_serialize(Mp4(Tracks)),
   DataOffset = iolist_size(Buffer1) + 8,
   T2 = erlang:now(),
-  <warning>?D({flush_header, timer:no_diff(T2, T1)})</warning>,
+  <warning>?D</warning>({flush_header, timer:no_diff(T2, T1)}),
   put(read_time,0),
   put(write_time,0),
   Tracks1 = rewrite_track_offsets(Tracks, DataOffset, []),
@@ -67,11 +67,11 @@ run(Writer, Inputs) when is_function(Writer) ->
   Writer(mp4_serialize(Mp4(Tracks1))),
   Writer(<<MdatSize:32, "mdat">>),
   T3 = erlang:now(),
-  <warning>?D({flush_moov, {prepare_tracks, timer:no_diff(T2,T1)}, {write_moov, timer:no_diff(T3, T2)}})</warning>,
+  <warning>?D</warning>({flush_moov, {prepare_tracks, timer:no_diff(T2,T1)}, {write_moov, timer:no_diff(T3, T2)}}),
   [write_track(Writer, Track) || Track <- Tracks1],
   T4 = erlang:now(),
   IO = get(read_time) + get(write_time),
-  <warning>?D({finish,
+  <warning>?D</warning>({finish,
     {preparation,timer:no_diff(T3,T1)},
     {tracks, timer:no_diff(T4,T3)},
     {total, timer:no_diff(T4,T1)},
@@ -79,7 +79,7 @@ run(Writer, Inputs) when is_function(Writer) ->
     {io, IO},
     {difference, timer:no_diff(T4,T3) - IO},
     ok
-  })</warning>,
+  }),
   timer:<warning>sleep</warning>(50),
   ok.
 
@@ -135,7 +135,7 @@ write_track(Writer, #track{reader = Reader, stsc = <<_:32, _EntryCount:32, STSC/
   T2 = erlang:now(),
   write_track(Writer, Reader, Chunks),
   T3 = erlang:now(),
-  <warning>?D({written_track, timer:no_diff(T2,T0), timer:no_diff(T3,T0)})</warning>,
+  <warning>?D</warning>({written_track, timer:no_diff(T2,T0), timer:no_diff(T3,T0)}),
   ok.
 
 write_track(Writer, Reader, Chunks) ->
@@ -190,7 +190,7 @@ mp4_foldl({Module,Device} = Input, Pos, State) ->
       T1 = erlang:now(),
       {ok, Bin} = Module:pread(Device, NewPos, Size),
       T2 = erlang:now(),
-      <warning>?D({pread_moov, timer:no_diff(T2,T1)})</warning>,
+      <warning>?D</warning>({pread_moov, timer:no_diff(T2,T1)}),
       State1 = mp4_foldl(Bin, State),
       mp4_foldl(Input, NewPos+Size, State1);
     {atom, _Atom, NewPos, Size} ->
