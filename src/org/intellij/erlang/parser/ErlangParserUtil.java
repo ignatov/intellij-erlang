@@ -154,20 +154,20 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static boolean macroCallArgumentsList(PsiBuilder builder, int l) {
     Builder b = (Builder) builder;
     int depth = b.getLastMacroNameTokenSubstitutionDepth();
-
     b.increaseMacroCallArgumentsLevel();
     try {
       //see org.intellij.erlang.parser.ErlangParser.argument_list()
       boolean r, p;
       PsiBuilder.Marker m = enter_section_(b, l, _NONE_, null);
       p = consumeTokenAtSubstitutionDepth(b, ERL_PAR_LEFT, depth);
-      ErlangParser.call_exprs(b, l + 1);
+      if (p) ErlangParser.call_exprs(b, l + 1);
       r = p && consumeTokenAtSubstitutionDepth(b, ERL_PAR_RIGHT, depth);
       exit_section_(b, l, m, ERL_ARGUMENT_LIST, r, p, null);
       return r || p;
     }
     finally {
       b.decreaseMacroCallArgumentsLevel();
+      b.setLastMacroNameTokenSubstitutionDepth(depth);
     }
   }
 
@@ -201,9 +201,9 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   private static boolean consumeSubstitutedMacroCall(Builder builder, int level) {
     if (!nextTokenIsFast(builder, ErlangTypes.ERL_QMARK)) return false;
 
-    int macroCallSubstitutionDepth = builder.getNextTokenSubstitutionDepth();
     PsiBuilder.Marker beforeMacroCallParsed = builder.mark();
     boolean macroCallParsed = ErlangParser.macros(builder, level);
+    int macroCallSubstitutionDepth = builder.getLastMacroNameTokenSubstitutionDepth();
     boolean macroWasSubstituted = macroCallSubstitutionDepth + 1 == builder.getNextTokenSubstitutionDepth();
     if (!macroCallParsed || !macroWasSubstituted) {
       beforeMacroCallParsed.rollbackTo();

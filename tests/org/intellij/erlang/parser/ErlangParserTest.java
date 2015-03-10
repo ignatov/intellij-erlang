@@ -95,4 +95,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testWeirdFunctionDefinition()     { doTest(true, false); }
   public void testIdMacroSelfApplication()      { doTest(true, false); }
   public void testMacroCallSequence()           { doTest(true, false); }
+  public void testComplexMacroCall()            { doTest(true, false); }
 }
