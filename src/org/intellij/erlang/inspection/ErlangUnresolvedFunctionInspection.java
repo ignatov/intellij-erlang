@@ -53,7 +53,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
           if (parent instanceof ErlangGlobalFunctionCallExpression) {
             ErlangModuleRef moduleRef = ((ErlangGlobalFunctionCallExpression) parent).getModuleRef();
             if (moduleRef.getQAtom().getMacros() != null) return;
-            String moduleName = moduleRef.getText();
+            String moduleName = moduleRef.getName();
             if (ErlangBifTable.isBif(moduleName, name, arity)) return;
             signature = moduleName + ":" + signature;
           }

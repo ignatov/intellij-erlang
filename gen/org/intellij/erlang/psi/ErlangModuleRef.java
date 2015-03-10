@@ -14,4 +14,6 @@ public interface ErlangModuleRef extends ErlangCompositeElement {
   @Nullable
   PsiReference getReference();
 
+  String getName();
+
 }

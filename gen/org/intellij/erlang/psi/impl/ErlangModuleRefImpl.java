@@ -33,4 +33,8 @@ public class ErlangModuleRefImpl extends ErlangCompositeElementImpl implements E
     return ErlangPsiImplUtil.getReference(this);
   }
 
+  public String getName() {
+    return ErlangPsiImplUtil.getName(this);
+  }
+
 }

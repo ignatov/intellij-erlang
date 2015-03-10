@@ -742,6 +742,10 @@ public class ErlangPsiImplUtil {
     return getNameIdentifier(o).getText();
   }
 
+  public static String getName(@NotNull ErlangModuleRef moduleRef) {
+    return getName(moduleRef.getQAtom());
+  }
+
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangMacrosName o) {
     ErlangAtom atom = o.getAtom();

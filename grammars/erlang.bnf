@@ -450,7 +450,7 @@ record_field ::= (q_atom | '_') '=' (qualified_atom_expression | expression) {
 }
 private qualified_atom_expression ::= q_atom '.' q_atom {pin=0}
 module_ref ::= q_atom {
-  methods = [getReference]
+  methods = [getReference getName]
 }
 
 map_comprehension ::= '#' '{' map_assoc '||' lc_exprs '}' {
