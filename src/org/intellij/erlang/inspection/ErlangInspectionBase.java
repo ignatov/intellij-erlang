@@ -18,6 +18,7 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInsight.daemon.impl.actions.AbstractSuppressByNoInspectionCommentFix;
 import com.intellij.codeInspection.*;
+import com.intellij.codeInspection.ui.SingleCheckboxOptionsPanel;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.Commenter;
 import com.intellij.lang.LanguageCommenters;
@@ -34,12 +35,21 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 abstract public class ErlangInspectionBase extends LocalInspectionTool implements CustomSuppressableInspectionTool {
   private static final PsiElementVisitor DUMMY_VISITOR = new PsiElementVisitor() { };
   private static final Pattern SUPPRESS_PATTERN = Pattern.compile(SuppressionUtil.COMMON_SUPPRESS_REGEXP);
+
+  public boolean reportAtMacroExpansions = true;
+
+  @Nullable
+  @Override
+  public JComponent createOptionsPanel() {
+    return new SingleCheckboxOptionsPanel("Report at macro expansions", this, "reportAtMacroExpansions");
+  }
 
   @NotNull
   @Override
@@ -186,23 +196,26 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     }
   }
 
-  protected static void registerProblemForeignTokensAware(ProblemsHolder problemsHolder, @NotNull PsiElement psiElement,
-                                                          @NotNull String descriptionTemplate, LocalQuickFix... fixes) {
+  protected void registerProblemForeignTokensAware(ProblemsHolder problemsHolder, @NotNull PsiElement psiElement,
+                                                   @NotNull String descriptionTemplate, LocalQuickFix... fixes) {
     registerProblemForeignTokensAware(problemsHolder, psiElement, descriptionTemplate, ProblemHighlightType.GENERIC_ERROR_OR_WARNING, fixes);
   }
 
-  protected static void registerProblemForeignTokensAware(ProblemsHolder problemsHolder,
-                                                          @NotNull PsiElement psiElement,
-                                                          @NotNull String descriptionTemplate,
-                                                          ProblemHighlightType highlightType,
-                                                          LocalQuickFix... fixes) {
+  protected void registerProblemForeignTokensAware(ProblemsHolder problemsHolder,
+                                                   @NotNull PsiElement psiElement,
+                                                   @NotNull String descriptionTemplate,
+                                                   ProblemHighlightType highlightType,
+                                                   LocalQuickFix... fixes) {
+    // macro call arguments can contain arbitrary text
     if (PsiTreeUtil.getParentOfType(psiElement, ErlangMacroCallArgumentList.class) != null) {
       return;
     }
+
     PsiElement targetElement = rightmostNonForeignElementBefore(psiElement);
-    if (targetElement == null) return;
+    if (targetElement == null || targetElement instanceof ErlangMacros && !reportAtMacroExpansions) return;
+
     ProblemDescriptor problemDescriptor = targetElement instanceof ErlangMacros ?
-      new ErlangMacroSubstitutionProblemDescriptor(psiElement, (ErlangMacros)targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType) :
+      new ErlangMacroSubstitutionProblemDescriptor(psiElement, (ErlangMacros) targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType) :
       problemsHolder.getManager().createProblemDescriptor(targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType);
     problemsHolder.registerProblem(problemDescriptor);
   }
