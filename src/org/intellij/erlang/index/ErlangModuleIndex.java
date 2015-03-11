@@ -114,7 +114,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
       @Override
       public T fun(@NotNull VirtualFile virtualFile) {
         PsiFile psiFile = psiManager.findFile(virtualFile);
-        return psiFile instanceof ErlangFile ? psiMapper.fun((ErlangFile)psiFile) : null;
+        return psiFile instanceof ErlangFile ? psiMapper.fun((ErlangFile) psiFile) : null;
       }
     });
   }
@@ -122,10 +122,18 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   @NotNull
   public static List<VirtualFile> getVirtualFilesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
     ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();
-    Collection<VirtualFile> files = FileBasedIndex.getInstance().getContainingFiles(ERLANG_MODULE_INDEX, name, searchScope);
-    List<VirtualFile> filesList = ContainerUtil.newArrayList(files);
+    List<VirtualFile> filesList = ContainerUtil.newArrayList(FileBasedIndex.getInstance().getContainingFiles(ERLANG_MODULE_INDEX, name, searchScope));
     Collections.sort(filesList, new MyProjectFilesComparator(projectFileIndex, searchScope));
     return filesList;
+  }
+
+  public static List<VirtualFile> getVirtualFiles(@NotNull Project project, @NotNull GlobalSearchScope searchScope) {
+    List<VirtualFile> allModuleFiles = ContainerUtil.newArrayList();
+    FileBasedIndex index = FileBasedIndex.getInstance();
+    for (String moduleName : index.getAllKeys(ERLANG_MODULE_INDEX, project)) {
+      allModuleFiles.addAll(index.getContainingFiles(ERLANG_MODULE_INDEX, moduleName, searchScope));
+    }
+    return allModuleFiles;
   }
 
   private static final class MyProjectFilesComparator implements Comparator<VirtualFile> {

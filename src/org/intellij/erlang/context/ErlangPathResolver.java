@@ -87,7 +87,7 @@ public final class ErlangPathResolver {
 
     //let's search in compile context
     List<String> includePaths = project == null ? ContainerUtil.<String>emptyList() :
-      ErlangCompileContextManager.getInstance(project).getContext(owner).getIncludePaths();
+      ErlangCompileContextManager.getInstance(project).getContext(owner).includePaths;
     for (String includePath : includePaths) {
       VirtualFile includeDirectory = LocalFileSystem.getInstance().findFileByPath(includePath);
       VirtualFile includedFile = VfsUtilCore.findRelativeFile(includeString, includeDirectory);

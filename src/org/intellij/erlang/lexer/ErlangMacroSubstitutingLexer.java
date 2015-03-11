@@ -126,7 +126,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       if (macroName == null || lexer.getTokenType() != ErlangTypes.ERL_PAR_RIGHT) return currentBranchType();
 
       ErlangMacroDefinitionState macroDefinitionState = myMacroContext.getMacroDefinitionState(macroName);
-      if (macroDefinitionState == ErlangMacroDefinitionState.FREE && myCompileContext.getMacroDefinitions().containsKey(macroName)) {
+      if (macroDefinitionState == ErlangMacroDefinitionState.FREE && myCompileContext.macroDefinitions.containsKey(macroName)) {
         macroDefinitionState =  ErlangMacroDefinitionState.DEFINED;
       }
 
@@ -260,8 +260,8 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
 
     String includeString = StringUtil.unquoteString(lexer.getTokenText());
     VirtualFile inclusion = isIncludeLib ?
-      ErlangPathResolver.resolveIncludeLib(myCompileContext.getProject(), myIncludeOwnersStack, includeString) :
-      ErlangPathResolver.resolveInclude(myCompileContext.getProject(), myIncludeOwnersStack, includeString);
+      ErlangPathResolver.resolveIncludeLib(myCompileContext.project, myIncludeOwnersStack, includeString) :
+      ErlangPathResolver.resolveInclude(myCompileContext.project, myIncludeOwnersStack, includeString);
     if (inclusion != null && inclusion.isValid() && !inclusion.isDirectory()) {
       myIncludeOwnersStack.push(inclusion);
 
@@ -527,7 +527,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       // If no substitution was produced at this point, it's either a free macro or there was no macro definition with appropriate arity.
       // We can now try too look a definition up in compile context.
       if (substitution == null && (ErlangMacroDefinitionState.DEFINED == macroDefinitionState || ErlangMacroDefinitionState.FREE == macroDefinitionState)) {
-        String macroBody = myCompileContext.getMacroDefinitions().get(macroCall.getName());
+        String macroBody = myCompileContext.macroDefinitions.get(macroCall.getName());
         if (macroBody != null) {
           myMacroNameEndPosition.restore();
           substitution = macroBody;

@@ -74,8 +74,6 @@
         <!-- dialyzer -->
         <projectService serviceImplementation="org.intellij.erlang.dialyzer.DialyzerSettings"/>
 
-        <projectService serviceImplementation="org.intellij.erlang.context.ErlangCompileContextManager"/>
-
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder"/>
         <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
@@ -303,4 +301,10 @@
         <implementation-class>org.intellij.erlang.copyright.CopyrightExtensionDeferredLoader</implementation-class>
       </component>
     </application-components>
+    <project-components>
+      <component>
+        <loadForDefaultProject/>
+        <implementation-class>org.intellij.erlang.context.ErlangCompileContextManager</implementation-class>
+      </component>
+    </project-components>
 </idea-plugin>

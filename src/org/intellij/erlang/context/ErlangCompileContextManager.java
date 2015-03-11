@@ -18,34 +18,57 @@ package org.intellij.erlang.context;
 
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.StatusBar;
+import com.intellij.openapi.wm.WindowManager;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.scope.ProjectFilesScope;
+import com.intellij.util.FileContentUtil;
+import com.intellij.util.FileContentUtilCore;
+import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Tag;
+import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
-@State(
+@com.intellij.openapi.components.State(
   name = "ErlangCompileContexts",
   storages = {
     @Storage(file = StoragePathMacros.PROJECT_FILE),
     @Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/erlangCompileContexts.xml", scheme = StorageScheme.DIRECTORY_BASED)
   }
 )
-public class ErlangCompileContextManager implements PersistentStateComponent<ErlangCompileContextManager> {
-  @Tag("compileContexts")
-  @AbstractCollection(surroundWithTag = false)
-  public List<ErlangCompileContext> myProjectCompileContexts = createDefaultContexts();
+public class ErlangCompileContextManager extends AbstractProjectComponent implements PersistentStateComponent<ErlangCompileContextManager.State> {
 
-  private final Project myProject;
+  public static class State implements Serializable {
+    @Tag("activeContext")
+    public String myActiveContextName;
+
+    @Tag("contexts")
+    @AbstractCollection(surroundWithTag = false, elementTypes = ErlangCompileContext.class)
+    public List<ErlangCompileContext> myProjectCompileContexts = createDefaultContexts();
+
+    public State() {
+      ErlangCompileContext defaultContext = ContainerUtil.getFirstItem(myProjectCompileContexts);
+      myActiveContextName = defaultContext != null ? defaultContext.name : null;
+    }
+  }
+
+  private State myState = new State();
 
   ErlangCompileContextManager(@NotNull Project project) {
-    myProject = project;
+    super(project);
   }
 
   @NotNull
@@ -56,28 +79,94 @@ public class ErlangCompileContextManager implements PersistentStateComponent<Erl
   @NotNull
   public ErlangCompileContext getContext(@Nullable VirtualFile file) {
     //TODO build context for a file: merge compiler contexts from file, module and project. Also check if it's under tests source root.
-    ErlangCompileContext defaultCompileContext = ContainerUtil.getFirstItem(myProjectCompileContexts);
-    ErlangCompileContext context = defaultCompileContext != null ? defaultCompileContext : createDefaultContext();
-    context.setProject(myProject);
-    return context;
+    return getProjectCompileContext();
+  }
+
+  @NotNull
+  public String getActiveContextName() {
+    return myState.myActiveContextName;
+  }
+
+  public void setActiveContext(@NotNull String contextName) {
+    ErlangCompileContext oldActiveContext = null;
+    ErlangCompileContext newCompileContext = null;
+    for (ErlangCompileContext context : myState.myProjectCompileContexts) {
+      if (Comparing.equal(context.name, contextName)) {
+        newCompileContext = context;
+      }
+      else if (Comparing.equal(context.name, getActiveContextName())){
+        oldActiveContext = context;
+      }
+    }
+    if (newCompileContext != null && oldActiveContext != newCompileContext) {
+      myState.myActiveContextName = newCompileContext.name;
+      projectCompileContextChanged(oldActiveContext, newCompileContext);
+    }
+  }
+
+  @NotNull
+  public List<String> getAvailableContextNames() {
+    return ContainerUtil.map(myState.myProjectCompileContexts, new Function<ErlangCompileContext, String>() {
+      @Override
+      public String fun(ErlangCompileContext erlangCompileContext) {
+        return erlangCompileContext.name;
+      }
+    });
+  }
+
+
+  @Override
+  public void projectOpened() {
+    StatusBar statusBar = WindowManager.getInstance().getStatusBar(myProject);
+    if (statusBar != null) {
+      statusBar.addWidget(new ErlangCompileContextWidget(myProject));
+    }
   }
 
   @Nullable
   @Override
-  public ErlangCompileContextManager getState() {
-    return this;
+  public State getState() {
+    return XmlSerializerUtil.createCopy(myState);
   }
 
   @Override
-  public void loadState(ErlangCompileContextManager erlangCompileContextManager) {
-    XmlSerializerUtil.copyBean(erlangCompileContextManager, this);
+  public void loadState(State state) {
+    myState = XmlSerializerUtil.createCopy(state);
   }
 
+
+  @NotNull
+  private ErlangCompileContext getProjectCompileContext() {
+    ErlangCompileContext context = null;
+    for (ErlangCompileContext c : myState.myProjectCompileContexts) {
+      if (Comparing.equal(c.name, getActiveContextName())) {
+        context = c;
+        break;
+      }
+    }
+    if (context == null) {
+      context = getDefaultCompileContext();
+    }
+    return XmlSerializerUtil.createCopy(context);
+  }
+
+  @NotNull
+  private ErlangCompileContext getDefaultCompileContext() {
+    ErlangCompileContext defaultCompileContext = ContainerUtil.getFirstItem(myState.myProjectCompileContexts);
+    ErlangCompileContext context = defaultCompileContext != null ? defaultCompileContext : createDefaultContext();
+    context.project = myProject;
+    return context;
+  }
+
+  private void projectCompileContextChanged(@Nullable ErlangCompileContext from, @NotNull ErlangCompileContext to) {
+    //TODO do something smarter here
+    List<VirtualFile> allModules = ErlangModuleIndex.getVirtualFiles(myProject, GlobalSearchScope.projectScope(myProject));
+    FileContentUtilCore.reparseFiles(allModules);
+  }
+
+
   private static List<ErlangCompileContext> createDefaultContexts() {
-    return Arrays.asList(
-      createDefaultContext(),
-      createDefaultTestContext()
-    );
+    return ContainerUtil.newArrayList(createDefaultContext(), createDefaultTestContext());
   }
 
   private static ErlangCompileContext createDefaultContext() {

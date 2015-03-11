@@ -18,72 +18,57 @@ package org.intellij.erlang.context;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.xmlb.annotations.Tag;
+import com.intellij.util.xmlb.annotations.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Tag("context")
 public class ErlangCompileContext implements Serializable {
-  @Tag("name")
-  private String myName;
-  @Tag("macroDefinitions")
-  private Map<String, String> myMacroDefinitions;
-  @Tag("includePath")
-  private List<String> myIncludePaths;
+  @Attribute("name")
+  public String name;
+
+  @Tag("definitions")
+  @MapAnnotation(
+    surroundWithTag = false,
+    keyAttributeName = "name",
+    valueAttributeName = "definition",
+    entryTagName = "macro",
+    surroundKeyWithTag = false,
+    surroundValueWithTag = false
+  )
+  public Map<String, String> macroDefinitions;
+
+  @Tag("includePaths")
+  @AbstractCollection(
+    surroundWithTag = false,
+    elementTag = "includePath",
+    elementValueAttribute = "path",
+    elementTypes = String.class
+  )
+  public List<String> includePaths;
   //TODO add code path specification here (-pa and -pz compiler options)
   //TODO add other compiler options
 
-  private transient Project myProject;
+  @Transient
+  public transient Project project;
 
   // serialization
   @SuppressWarnings("UnusedDeclaration")
   public ErlangCompileContext() {
+    this(null, "", ContainerUtil.<String, String>newHashMap(), ContainerUtil.<String>newArrayList());
   }
 
   public ErlangCompileContext(String name) {
-    this(null, name, Collections.<String, String>emptyMap(), ContainerUtil.<String>emptyList());
+    this(null, name, ContainerUtil.<String, String>newHashMap(), ContainerUtil.<String>newArrayList());
   }
 
   public ErlangCompileContext(@Nullable Project project, String name, Map<String, String> macroDefinitions, List<String> includePaths) {
-    myProject = project;
-    myName = name;
-    myMacroDefinitions = macroDefinitions;
-    myIncludePaths = includePaths;
-  }
-
-  public String getName() {
-    return myName;
-  }
-
-  public void setName(String name) {
-    myName = name;
-  }
-
-  public Map<String, String> getMacroDefinitions() {
-    return myMacroDefinitions;
-  }
-
-  public void setMacroDefinitions(Map<String, String> macroDefinitions) {
-    myMacroDefinitions = macroDefinitions;
-  }
-
-  public List<String> getIncludePaths() {
-    return myIncludePaths;
-  }
-
-  public void setIncludePaths(List<String> includePaths) {
-    myIncludePaths = includePaths;
-  }
-
-  @Nullable
-  public Project getProject() {
-    return myProject;
-  }
-
-  public void setProject(@Nullable Project project) {
-    myProject = project;
+    this.project = project;
+    this.name = name;
+    this.macroDefinitions = macroDefinitions;
+    this.includePaths = includePaths;
   }
 }
