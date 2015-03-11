@@ -212,9 +212,10 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     }
 
     PsiElement targetElement = rightmostNonForeignElementBefore(psiElement);
-    if (targetElement == null || targetElement instanceof ErlangMacros && !reportAtMacroExpansions) return;
+    boolean problemIsAtMacroExpansion = targetElement != psiElement && targetElement instanceof ErlangMacros;
+    if (targetElement == null || problemIsAtMacroExpansion && !reportAtMacroExpansions) return;
 
-    ProblemDescriptor problemDescriptor = targetElement instanceof ErlangMacros ?
+    ProblemDescriptor problemDescriptor = problemIsAtMacroExpansion ?
       new ErlangMacroSubstitutionProblemDescriptor(psiElement, (ErlangMacros) targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType) :
       problemsHolder.getManager().createProblemDescriptor(targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType);
     problemsHolder.registerProblem(problemDescriptor);
