@@ -51,7 +51,7 @@ public class ErlangMacroSubstitutingLexerInclusionsTest extends ErlangLightPlatf
   public void testExpansionOccursInPlace()                   throws Exception { doTest(); }
 
   private void doTest() throws Exception {
-    ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(getProject()).getContext(getProject(), mySource);
+    ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(getProject()).getContext(mySource);
     ErlangMacroSubstitutingLexer lexer = new ErlangMacroSubstitutingLexer(compileContext, mySource);
     String sourceText = VfsUtilCore.loadText(mySource);
     lexer.start(StringUtil.convertLineSeparators(sourceText));

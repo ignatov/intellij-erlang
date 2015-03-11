@@ -82,7 +82,7 @@ public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> 
     PsiFile psiFile = psi.getContainingFile();
     psiFile = psiFile != null ? psiFile.getOriginalFile() : null;
     VirtualFile virtualFile = psiFile != null ? psiFile.getVirtualFile() : null;
-    ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(psi.getProject()).getContext(psi.getProject(), virtualFile);
+    ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(psi.getProject()).getContext(virtualFile);
     ErlangMacroSubstitutingLexer lexer = new ErlangMacroSubstitutingLexer(compileContext, virtualFile);
     PsiBuilder builder = PsiBuilderFactory.getInstance().createBuilder(psi.getProject(), chameleon, lexer, ErlangLanguage.INSTANCE, chameleon.getChars());
     return new ErlangParser().parse(chameleon.getElementType(), builder).getFirstChildNode();

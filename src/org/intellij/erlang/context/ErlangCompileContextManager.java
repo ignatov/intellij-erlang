@@ -42,18 +42,23 @@ public class ErlangCompileContextManager implements PersistentStateComponent<Erl
   @AbstractCollection(surroundWithTag = false)
   public List<ErlangCompileContext> myProjectCompileContexts = createDefaultContexts();
 
-  @NotNull
-  public static ErlangCompileContextManager getInstance(@Nullable Project project) {
-    ErlangCompileContextManager persisted = ServiceManager.getService(ErlangCompileContextManager.class);
-    return persisted == null ? new ErlangCompileContextManager() : persisted;
+  private final Project myProject;
+
+  ErlangCompileContextManager(@NotNull Project project) {
+    myProject = project;
   }
 
   @NotNull
-  public ErlangCompileContext getContext(@Nullable Project project, @Nullable VirtualFile file) {
+  public static ErlangCompileContextManager getInstance(@NotNull Project project) {
+    return ServiceManager.getService(project, ErlangCompileContextManager.class);
+  }
+
+  @NotNull
+  public ErlangCompileContext getContext(@Nullable VirtualFile file) {
     //TODO build context for a file: merge compiler contexts from file, module and project. Also check if it's under tests source root.
     ErlangCompileContext defaultCompileContext = ContainerUtil.getFirstItem(myProjectCompileContexts);
     ErlangCompileContext context = defaultCompileContext != null ? defaultCompileContext : createDefaultContext();
-    context.setProject(project);
+    context.setProject(myProject);
     return context;
   }
 
