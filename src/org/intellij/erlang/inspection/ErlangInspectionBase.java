@@ -215,9 +215,22 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     boolean problemIsAtMacroExpansion = targetElement != psiElement && targetElement instanceof ErlangMacros;
     if (targetElement == null || problemIsAtMacroExpansion && !reportAtMacroExpansions) return;
 
-    ProblemDescriptor problemDescriptor = problemIsAtMacroExpansion ?
-      new ErlangMacroSubstitutionProblemDescriptor(psiElement, (ErlangMacros) targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType) :
-      problemsHolder.getManager().createProblemDescriptor(targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType);
+    ProblemDescriptor problemDescriptor;
+    if (problemIsAtMacroExpansion) {
+      problemDescriptor = new ErlangMacroSubstitutionProblemDescriptor(psiElement, (ErlangMacros) targetElement,
+        descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType);
+    }
+    else if (targetElement instanceof ErlangMacros) {
+      ErlangMacros macroCall = (ErlangMacros) targetElement;
+      PsiElement start = macroCall.getQmark();
+      PsiElement end = ObjectUtils.chooseNotNull(macroCall.getMacrosName(), start);
+      problemDescriptor = problemsHolder.getManager()
+        .createProblemDescriptor(start, end, descriptionTemplate, highlightType, problemsHolder.isOnTheFly(), fixes);
+    }
+    else {
+      problemDescriptor = problemsHolder.getManager()
+        .createProblemDescriptor(targetElement, descriptionTemplate, problemsHolder.isOnTheFly(), fixes, highlightType);
+    }
     problemsHolder.registerProblem(problemDescriptor);
   }
 
