@@ -268,6 +268,8 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
 
       try {
         if (myIncludeOwnersStack.size() < MAX_INCLUSION_STACK_DEPTH) {
+          //TODO it's not enough to only have macro context altered by inclusion. We'll have to track definitions introduced in inclusion as well.
+          //TODO This means we'll have to paste tokens from inclusions here and add tons of hacks for navigation, or build a symbol table for included file.
           String text = VfsUtilCore.loadText(inclusion);
           ErlangMacroSubstitutingLexer inclusionLexer = new ErlangMacroSubstitutingLexer(new ErlangFormsLexer(), myMacroContext, myCompileContext, myIncludeOwnersStack);
           inclusionLexer.start(text);
