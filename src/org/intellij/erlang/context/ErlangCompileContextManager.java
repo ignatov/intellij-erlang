@@ -58,9 +58,20 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
       ErlangCompileContext defaultContext = ContainerUtil.getFirstItem(myProjectCompileContexts);
       myActiveContextName = defaultContext != null ? defaultContext.name : null;
     }
+
+    public State(Project project) {
+      this();
+      setProject(project);
+    }
+
+    public void setProject(Project project) {
+      for (ErlangCompileContext context : myProjectCompileContexts) {
+        context.project = project;
+      }
+    }
   }
 
-  private State myState = new State();
+  private State myState = new State(myProject);
 
   ErlangCompileContextManager(@NotNull Project project) {
     super(project);
@@ -127,6 +138,7 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
   @Override
   public void loadState(State state) {
     myState = XmlSerializerUtil.createCopy(state);
+    myState.setProject(myProject);
   }
 
 
@@ -142,7 +154,9 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
     if (context == null) {
       context = getDefaultCompileContext();
     }
-    return XmlSerializerUtil.createCopy(context);
+    ErlangCompileContext copy = XmlSerializerUtil.createCopy(context);
+    copy.project = myProject;
+    return copy;
   }
 
   @NotNull
