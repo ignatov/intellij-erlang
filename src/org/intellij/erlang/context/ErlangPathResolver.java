@@ -69,7 +69,7 @@ public final class ErlangPathResolver {
 
   @Nullable
   public static VirtualFile resolveInclude(@Nullable Project project, @Nullable VirtualFile owner, @Nullable String includeString) {
-    if (owner == null || includeString == null) return null;
+    if (owner == null || includeString == null || !owner.isInLocalFileSystem()) return null;
 
     //try to find a file relatively to owner's direct parent
     VirtualFile parent = owner.getParent();

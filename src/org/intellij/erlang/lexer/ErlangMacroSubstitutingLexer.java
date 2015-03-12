@@ -284,7 +284,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       finally {
         myIncludeOwnersStack.pop();
       }
-    } else if (!myIncludeOwnersStack.isEmpty()) {
+    } else if (!myIncludeOwnersStack.isEmpty() && myIncludeOwnersStack.peek().isInLocalFileSystem()) {
       //TODO report error
       System.err.println("Unresolved inclusion: " + includeString + " in " + myIncludeOwnersStack.peek());
     }
