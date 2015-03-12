@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.PsiReference;
 
 public class ErlangMacrosNameImpl extends ErlangCompositeElementImpl implements ErlangMacrosName {
 
@@ -31,6 +32,11 @@ public class ErlangMacrosNameImpl extends ErlangCompositeElementImpl implements 
   @Nullable
   public PsiElement getVar() {
     return findChildByType(ERL_VAR);
+  }
+
+  @Nullable
+  public PsiReference getReference() {
+    return ErlangPsiImplUtil.getReference(this);
   }
 
 }

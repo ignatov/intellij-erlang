@@ -19,8 +19,10 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
@@ -43,6 +45,9 @@ public class ErlangMacrosReferenceImpl<T extends ErlangMacrosName> extends PsiRe
 
   @Override
   public PsiElement resolve() {
+    ErlangMacrosDefinition definition = PsiTreeUtil.getParentOfType(myElement, ErlangMacrosDefinition.class);
+    if (definition != null && definition.getMacrosName() == myElement) return null;
+
     PsiFile containingFile = myElement.getContainingFile();
     if (containingFile instanceof ErlangFile) {
       ErlangMacrosDefinition macros = ((ErlangFile) containingFile).getMacros(myReferenceName);
@@ -58,5 +63,12 @@ public class ErlangMacrosReferenceImpl<T extends ErlangMacrosName> extends PsiRe
   @Override
   public Object[] getVariants() {
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getMacrosLookupElements(myElement.getContainingFile()));
+  }
+
+  @Override
+  public boolean isReferenceTo(PsiElement element) {
+    ErlangMacrosDefinition definition = ObjectUtils.tryCast(element, ErlangMacrosDefinition.class);
+    String macroName = definition != null ? definition.getName() : null;
+    return macroName != null && macroName.equals(myReferenceName) && definition.getMacrosName() != myElement;
   }
 }

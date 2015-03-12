@@ -377,9 +377,12 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@NotNull ErlangMacros o) {
-    ErlangMacrosName macrosName = o.getMacrosName();
-    if (macrosName == null) return null;
-    return new ErlangMacrosReferenceImpl<ErlangMacrosName>(macrosName);
+    return getReference(o.getMacrosName());
+  }
+
+  @Nullable
+  public static PsiReference getReference(@Nullable ErlangMacrosName o) {
+    return o != null ? new ErlangMacrosReferenceImpl<ErlangMacrosName>(o) : null;
   }
 
   @Nullable
