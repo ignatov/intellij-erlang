@@ -24,9 +24,10 @@ public class ErlangMacroParameterResolutionTest extends ErlangLightPlatformCodeI
     return "testData/resolve/macroParameters/";
   }
 
-  public void testSimple()      { doTest(); }
-  public void testSecondUsage() { doTest(); }
-  public void testAssignment()  { doTest(); }
+  public void testSimple()          { doTest(); }
+  public void testSecondUsage()     { doTest(); }
+  public void testAssignment()      { doTest(); }
+  public void testStringification() { doTest(); }
 
   private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");

@@ -23,8 +23,8 @@ public class ErlangMacrosArgImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @NotNull
-  public ErlangMacrosName getMacrosName() {
-    return findNotNullChildByClass(ErlangMacrosName.class);
+  public ErlangQVar getQVar() {
+    return findNotNullChildByClass(ErlangQVar.class);
   }
 
 }

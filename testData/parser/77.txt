@@ -31,7 +31,7 @@ ERL_FILE
                 ERL_MACROS_ARG
                   PsiElement(?)('?')
                   PsiElement(?)('?')
-                  ERL_MACROS_NAME
+                  ERL_Q_VAR
                     PsiElement(var)('A')
             PsiElement())(')')
     PsiElement())(')')

@@ -3038,7 +3038,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '?''?' macros_name
+  // '?''?' q_var
   public static boolean macros_arg(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_arg")) return false;
     if (!nextTokenIs(b, ERL_QMARK)) return false;
@@ -3046,7 +3046,7 @@ public class ErlangParser implements PsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, ERL_QMARK);
     r = r && consumeToken(b, ERL_QMARK);
-    r = r && macros_name(b, l + 1);
+    r = r && q_var(b, l + 1);
     exit_section_(b, m, ERL_MACROS_ARG, r);
     return r;
   }

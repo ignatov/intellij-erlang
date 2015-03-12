@@ -8,6 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ErlangMacrosArg extends ErlangCompositeElement {
 
   @NotNull
-  ErlangMacrosName getMacrosName();
+  ErlangQVar getQVar();
 
 }

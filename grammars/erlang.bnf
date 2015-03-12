@@ -115,7 +115,7 @@ q_atom ::= atom | macros_arg | macros {methods=[getReference]}
 q_var ::= var {
   methods = [getReference processDeclarations getName setName getNameIdentifier getUseScope]
 }
-macros_arg ::= '?''?' macros_name
+macros_arg ::= '?''?' q_var
 macros ::= '?' macros_name {
   pin=1
   methods = [getReference]
