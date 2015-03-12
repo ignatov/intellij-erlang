@@ -36,22 +36,23 @@ public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
       @Override
       public void visitRecordRef(@NotNull ErlangRecordRef o) {
         if (o.getQAtom().getMacros() != null) return;
-        process(o, holder);
+        process(holder, o, ErlangPsiImplUtil.getName(o.getQAtom()));
       }
 
       @Override
       public void visitQAtom(@NotNull ErlangQAtom o) {
         if (ErlangPsiImplUtil.secondAtomInIsRecord().accepts(o, new ProcessingContext())) {
-          process(o, holder);
+          process(holder, o, ErlangPsiImplUtil.getName(o));
         }
       }
     };
   }
 
-  private void process(@NotNull PsiElement o, @NotNull ProblemsHolder problemsHolder) {
-    PsiReference ref = o.getReference();
+  private void process(@NotNull ProblemsHolder problemsHolder, @NotNull PsiElement refHolder, String recordName) {
+    PsiReference ref = refHolder.getReference();
     if (ref == null || ref.resolve() == null) {
-      registerProblem(problemsHolder, o, "Unresolved record " + "'" + o.getText() + "'", new ErlangIntroduceRecordFix());
+      String descriptionTemplate = "Unresolved record " + "'" + recordName + "'";
+      registerProblemForeignTokensAware(problemsHolder, refHolder, descriptionTemplate, new ErlangIntroduceRecordFix());
     }
   }
 }
