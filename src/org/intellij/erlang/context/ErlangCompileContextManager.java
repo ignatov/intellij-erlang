@@ -22,18 +22,13 @@ import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
-import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.scope.ProjectFilesScope;
-import com.intellij.util.FileContentUtil;
 import com.intellij.util.FileContentUtilCore;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Tag;
-import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -174,6 +169,6 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
   }
 
   private static ErlangCompileContext createDefaultTestContext() {
-    return new ErlangCompileContext(null, "Test", Collections.singletonMap("TEST", ""), ContainerUtil.<String>emptyList());
+    return new ErlangCompileContext(null, "Test", Collections.singletonMap("TEST", "true"), ContainerUtil.<String>emptyList());
   }
 }
