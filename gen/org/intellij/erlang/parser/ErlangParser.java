@@ -703,6 +703,7 @@ public class ErlangParser implements PsiParser {
   //   | callback_spec
   //   | behaviour
   //   | on_load
+  //   | ifdef_ifndef_undef_attribute
   //   | else_atom_attribute <<enterMode "ELSE">>
   //   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   //   )
@@ -726,6 +727,7 @@ public class ErlangParser implements PsiParser {
   //   | callback_spec
   //   | behaviour
   //   | on_load
+  //   | ifdef_ifndef_undef_attribute
   //   | else_atom_attribute <<enterMode "ELSE">>
   //   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   private static boolean attribute_1(PsiBuilder b, int l) {
@@ -740,15 +742,16 @@ public class ErlangParser implements PsiParser {
     if (!r) r = callback_spec(b, l + 1);
     if (!r) r = behaviour(b, l + 1);
     if (!r) r = on_load(b, l + 1);
-    if (!r) r = attribute_1_8(b, l + 1);
+    if (!r) r = ifdef_ifndef_undef_attribute(b, l + 1);
+    if (!r) r = attribute_1_9(b, l + 1);
     if (!r) r = withOn(b, l + 1, "ATOM_ATTRIBUTE", atom_attribute_parser_);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // else_atom_attribute <<enterMode "ELSE">>
-  private static boolean attribute_1_8(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "attribute_1_8")) return false;
+  private static boolean attribute_1_9(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "attribute_1_9")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = else_atom_attribute(b, l + 1);
@@ -2631,6 +2634,44 @@ public class ErlangParser implements PsiParser {
     r = p && consumeToken(b, ERL_END) && r;
     exit_section_(b, l, m, ERL_IF_EXPRESSION, r, p, null);
     return r || p;
+  }
+
+  /* ********************************************************** */
+  // &('ifdef'|'ifndef'|'undef') q_atom '(' macros_name ')'
+  public static boolean ifdef_ifndef_undef_attribute(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "ifdef_ifndef_undef_attribute")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, "<attribute>");
+    r = ifdef_ifndef_undef_attribute_0(b, l + 1);
+    r = r && q_atom(b, l + 1);
+    p = r; // pin = 2
+    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
+    r = p && report_error_(b, macros_name(b, l + 1)) && r;
+    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    exit_section_(b, l, m, ERL_ATOM_ATTRIBUTE, r, p, null);
+    return r || p;
+  }
+
+  // &('ifdef'|'ifndef'|'undef')
+  private static boolean ifdef_ifndef_undef_attribute_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "ifdef_ifndef_undef_attribute_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_, null);
+    r = ifdef_ifndef_undef_attribute_0_0(b, l + 1);
+    exit_section_(b, l, m, null, r, false, null);
+    return r;
+  }
+
+  // 'ifdef'|'ifndef'|'undef'
+  private static boolean ifdef_ifndef_undef_attribute_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "ifdef_ifndef_undef_attribute_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, "ifdef");
+    if (!r) r = consumeToken(b, "ifndef");
+    if (!r) r = consumeToken(b, "undef");
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   /* ********************************************************** */

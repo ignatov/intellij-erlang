@@ -160,6 +160,7 @@ attribute ::= '-' (
   | callback_spec
   | behaviour
   | on_load
+  | ifdef_ifndef_undef_attribute
   | else_atom_attribute <<enterMode "ELSE">>
   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   ) {pin=1}
@@ -204,6 +205,7 @@ type_ref ::= q_atom {
   methods = [getReference]
 }
 
+ifdef_ifndef_undef_attribute ::= &('ifdef'|'ifndef'|'undef') q_atom '(' macros_name ')' {pin=2 elementType=atom_attribute}
 else_atom_attribute ::= &'else' q_atom {elementType=atom_attribute}
 on_load ::= &'on_load' q_atom '(' function_with_arity ')'{pin=2 elementType=atom_attribute}
 atom_attribute ::= q_atom ['(' typed_attr_val ')' | typed_attr_val | attr_val]

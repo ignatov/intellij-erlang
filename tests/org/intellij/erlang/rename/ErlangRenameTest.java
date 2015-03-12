@@ -32,6 +32,7 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testUnquotedMacro()     { doTest("bar"); }
   public void testQuotedMacro()       { doTest("bar"); }
   public void testUnderscoreMacro()   { doTest("Foo"); }
+  public void testMacrosInAttrs()     { doTest("BAR"); }
   
   public void testMultiTarget()       { doTest("Bar"); }
   public void testMultiTargetMacro()  { doTest("BAR"); }

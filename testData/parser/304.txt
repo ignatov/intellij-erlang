@@ -29,12 +29,10 @@ ERL_FILE
       ERL_Q_ATOM
         ERL_ATOM
           PsiElement(atom_name)('ifdef')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          ERL_Q_VAR
-            PsiElement(var)('DM')
-        PsiElement())(')')
+      PsiElement(()('(')
+      ERL_MACROS_NAME
+        PsiElement(var)('DM')
+      PsiElement())(')')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')

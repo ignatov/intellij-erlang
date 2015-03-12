@@ -707,12 +707,10 @@ ERL_FILE
       ERL_Q_ATOM
         ERL_ATOM
           PsiElement(atom_name)('ifdef')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          ERL_Q_VAR
-            PsiElement(var)('DEBUG')
-        PsiElement())(')')
+      PsiElement(()('(')
+      ERL_MACROS_NAME
+        PsiElement(var)('DEBUG')
+      PsiElement())(')')
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
@@ -45435,12 +45433,10 @@ ERL_FILE
       ERL_Q_ATOM
         ERL_ATOM
           PsiElement(atom_name)('ifdef')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          ERL_Q_VAR
-            PsiElement(var)('DEBUG')
-        PsiElement())(')')
+      PsiElement(()('(')
+      ERL_MACROS_NAME
+        PsiElement(var)('DEBUG')
+      PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -58557,12 +58553,10 @@ ERL_FILE
       ERL_Q_ATOM
         ERL_ATOM
           PsiElement(atom_name)('ifdef')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          ERL_Q_VAR
-            PsiElement(var)('DEBUG_PP')
-        PsiElement())(')')
+      PsiElement(()('(')
+      ERL_MACROS_NAME
+        PsiElement(var)('DEBUG_PP')
+      PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -59024,12 +59018,10 @@ ERL_FILE
       ERL_Q_ATOM
         ERL_ATOM
           PsiElement(atom_name)('ifdef')
-      ERL_ATTR_VAL
-        PsiElement(()('(')
-        ERL_MAX_EXPRESSION
-          ERL_Q_VAR
-            PsiElement(var)('DOT')
-        PsiElement())(')')
+      PsiElement(()('(')
+      ERL_MACROS_NAME
+        PsiElement(var)('DOT')
+      PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
