@@ -2402,19 +2402,23 @@ ERL_FILE
                           ForeignLeaf(var: HERE)('HERE')
                       ERL_TUPLE_EXPRESSION
                         ForeignLeaf({: {)('{')
+                        ERL_MACROS
+                          ForeignLeaf(?: ?)('?')
+                          ERL_MACROS_NAME
+                            ForeignLeaf(var: MODULE)('MODULE')
                         ERL_MAX_EXPRESSION
                           ERL_Q_ATOM
-                            ERL_MACROS
-                              ForeignLeaf(?: ?)('?')
-                              ERL_MACROS_NAME
-                                ForeignLeaf(var: MODULE)('MODULE')
+                            ERL_ATOM
+                              ForeignLeaf(single_quote: ')(''')
+                              ForeignLeaf(atom_name: 51)('51')
+                              ForeignLeaf(single_quote: ')(''')
                         ForeignLeaf(,: ,)(',')
+                        ERL_MACROS
+                          ForeignLeaf(?: ?)('?')
+                          ERL_MACROS_NAME
+                            ForeignLeaf(var: LINE)('LINE')
                         ERL_MAX_EXPRESSION
-                          ERL_Q_ATOM
-                            ERL_MACROS
-                              ForeignLeaf(?: ?)('?')
-                              ERL_MACROS_NAME
-                                ForeignLeaf(var: LINE)('LINE')
+                          ForeignLeaf(integer: 476)('476')
                         ForeignLeaf(}: })('}')
                       ForeignLeaf(,: ,)(',')
                       ERL_MAX_EXPRESSION

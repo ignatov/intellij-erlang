@@ -34,6 +34,7 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.context.ErlangCompileContext;
 import org.intellij.erlang.context.ErlangPathResolver;
 import org.intellij.erlang.parser.ErlangLexer;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -528,6 +529,7 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       // We can now try too look a definition up in compile context.
       if (substitution == null && (ErlangMacroDefinitionState.DEFINED == macroDefinitionState || ErlangMacroDefinitionState.FREE == macroDefinitionState)) {
         String macroBody = myCompileContext.macroDefinitions.get(macroCall.getName());
+        macroBody = macroBody == null ? getPredefinedMacroExpansion(macroCall.getName()) : macroBody;
         if (macroBody != null) {
           myMacroNameEndPosition.restore();
           substitution = macroBody;
@@ -548,6 +550,34 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
       myMacroCallBuilder.reset();
       myBracePairsStack.clear();
       myMacroCallParsingState = MacroCallParsingState.NONE;
+    }
+
+    @Nullable
+    private String getPredefinedMacroExpansion(String macroName) {
+      if ("MODULE".equals(macroName)) {
+        return getModuleName();
+      }
+      else if ("MODULE_STRING".equals(macroName)) {
+        return StringUtil.wrapWithDoubleQuote(getModuleName());
+      }
+      else if ("FILE".equals(macroName)) {
+        VirtualFile currentFile = !myIncludeOwnersStack.isEmpty() ? myIncludeOwnersStack.peek() : null;
+        return StringUtil.wrapWithDoubleQuote(currentFile != null ? currentFile.getName() : "no_file");
+      }
+      else if ("LINE".equals(macroName)) {
+        return String.valueOf(1 + StringUtil.offsetToLineNumber(myBaseLexer.getBufferSequence(), myBaseLexer.getTokenEnd()));
+      }
+      else if ("MACHINE".equals(macroName)) {
+        return "\'BEAM\'";
+      }
+      return null;
+    }
+
+    @NotNull
+    private String getModuleName() {
+      VirtualFile moduleFile = ContainerUtil.getLastItem(myIncludeOwnersStack);
+      String name = moduleFile == null ? null : ErlangPsiImplUtil.toAtomName(StringUtil.trimEnd(moduleFile.getName(), ".erl"));
+      return StringUtil.notNullize(name, "no_module");
     }
 
     private void addNotForeignWhitespaceAndCommentsFrom(Lexer lexer) {

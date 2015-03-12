@@ -3145,12 +3145,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3232,12 +3236,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3309,12 +3317,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3375,12 +3387,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3446,12 +3462,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3508,12 +3528,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3595,12 +3619,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3672,12 +3700,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3738,12 +3770,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -3809,12 +3845,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -4384,12 +4424,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -4475,12 +4519,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -4566,12 +4614,16 @@ ERL_FILE
               PsiElement(?)('?')
               ERL_MACROS_NAME
                 PsiElement(var)('DEFAULT_ACCESS')
+            ERL_MACROS
+              ForeignLeaf(?: ?)('?')
+              ERL_MACROS_NAME
+                ForeignLeaf(var: MODULE)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  ForeignLeaf(?: ?)('?')
-                  ERL_MACROS_NAME
-                    ForeignLeaf(var: MODULE)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION
@@ -5253,12 +5305,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -6775,12 +6831,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -7757,12 +7817,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -8527,12 +8591,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -9624,12 +9692,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -10166,12 +10238,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -10558,12 +10634,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -10955,12 +11035,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -11384,12 +11468,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -13832,12 +13920,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -15153,12 +15245,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -17614,12 +17710,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -21356,12 +21456,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -22309,12 +22413,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -23323,12 +23431,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -24292,12 +24404,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -24835,12 +24951,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -25445,12 +25565,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -27855,12 +27979,16 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Tab')
             PsiElement(,)(',')
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  PsiElement(?)('?')
-                  ERL_MACROS_NAME
-                    PsiElement(var)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -28348,12 +28476,16 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Tab')
             PsiElement(,)(',')
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  PsiElement(?)('?')
-                  ERL_MACROS_NAME
-                    PsiElement(var)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -31358,12 +31490,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -38642,12 +38778,16 @@ ERL_FILE
                     PsiElement(?)('?')
                     ERL_MACROS_NAME
                       PsiElement(var)('DEFAULT_ACCESS')
+                  ERL_MACROS
+                    ForeignLeaf(?: ?)('?')
+                    ERL_MACROS_NAME
+                      ForeignLeaf(var: MODULE)('MODULE')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
-                      ERL_MACROS
-                        ForeignLeaf(?: ?)('?')
-                        ERL_MACROS_NAME
-                          ForeignLeaf(var: MODULE)('MODULE')
+                      ERL_ATOM
+                        ForeignLeaf(single_quote: ')(''')
+                        ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                        ForeignLeaf(single_quote: ')(''')
                   PsiElement(,)(',')
                   ERL_MAX_EXPRESSION
                     ERL_Q_ATOM
@@ -38726,12 +38866,16 @@ ERL_FILE
                   PsiElement(?)('?')
                   ERL_MACROS_NAME
                     PsiElement(var)('DEFAULT_ACCESS')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: MODULE)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: MODULE)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -44782,12 +44926,16 @@ ERL_FILE
               ERL_Q_VAR
                 PsiElement(var)('Tab')
             PsiElement(,)(',')
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('MODULE')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
-                ERL_MACROS
-                  PsiElement(?)('?')
-                  ERL_MACROS_NAME
-                    PsiElement(var)('MODULE')
+                ERL_ATOM
+                  ForeignLeaf(single_quote: ')(''')
+                  ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                  ForeignLeaf(single_quote: ')(''')
             PsiElement(,)(',')
             ERL_MAX_EXPRESSION
               ERL_Q_ATOM
@@ -45152,12 +45300,16 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_TUPLE_EXPRESSION
           PsiElement({)('{')
+          ERL_MACROS
+            PsiElement(?)('?')
+            ERL_MACROS_NAME
+              PsiElement(var)('MODULE')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
-              ERL_MACROS
-                PsiElement(?)('?')
-                ERL_MACROS_NAME
-                  PsiElement(var)('MODULE')
+              ERL_ATOM
+                ForeignLeaf(single_quote: ')(''')
+                ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                ForeignLeaf(single_quote: ')(''')
           PsiElement(,)(',')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
@@ -45246,12 +45398,16 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_TUPLE_EXPRESSION
           PsiElement({)('{')
+          ERL_MACROS
+            PsiElement(?)('?')
+            ERL_MACROS_NAME
+              PsiElement(var)('MODULE')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
-              ERL_MACROS
-                PsiElement(?)('?')
-                ERL_MACROS_NAME
-                  PsiElement(var)('MODULE')
+              ERL_ATOM
+                ForeignLeaf(single_quote: ')(''')
+                ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                ForeignLeaf(single_quote: ')(''')
           PsiElement(,)(',')
           ERL_MAX_EXPRESSION
             ERL_Q_ATOM
@@ -45381,12 +45537,16 @@ ERL_FILE
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
                 PsiElement([)('[')
+                ERL_MACROS
+                  PsiElement(?)('?')
+                  ERL_MACROS_NAME
+                    PsiElement(var)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      PsiElement(?)('?')
-                      ERL_MACROS_NAME
-                        PsiElement(var)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR
@@ -45467,12 +45627,16 @@ ERL_FILE
               PsiElement(,)(',')
               ERL_LIST_EXPRESSION
                 PsiElement([)('[')
+                ERL_MACROS
+                  PsiElement(?)('?')
+                  ERL_MACROS_NAME
+                    PsiElement(var)('MODULE')
                 ERL_MAX_EXPRESSION
                   ERL_Q_ATOM
-                    ERL_MACROS
-                      PsiElement(?)('?')
-                      ERL_MACROS_NAME
-                        PsiElement(var)('MODULE')
+                    ERL_ATOM
+                      ForeignLeaf(single_quote: ')(''')
+                      ForeignLeaf(atom_name: Mnesia)('Mnesia')
+                      ForeignLeaf(single_quote: ')(''')
                 PsiElement(,)(',')
                 ERL_MAX_EXPRESSION
                   ERL_Q_VAR

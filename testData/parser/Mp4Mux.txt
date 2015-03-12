@@ -747,12 +747,12 @@ ERL_FILE
                                 ForeignLeaf(,: ,)(',')
                                 ERL_LIST_EXPRESSION
                                   ForeignLeaf([: [)('[')
+                                  ERL_MACROS
+                                    ForeignLeaf(?: ?)('?')
+                                    ERL_MACROS_NAME
+                                      ForeignLeaf(var: LINE)('LINE')
                                   ERL_MAX_EXPRESSION
-                                    ERL_Q_ATOM
-                                      ERL_MACROS
-                                        ForeignLeaf(?: ?)('?')
-                                        ERL_MACROS_NAME
-                                          ForeignLeaf(var: LINE)('LINE')
+                                    ForeignLeaf(integer: 48)('48')
                                   ForeignLeaf(,: ,)(',')
                                   ERL_TUPLE_EXPRESSION
                                     ForeignLeaf({: {)('{')
@@ -1131,12 +1131,12 @@ ERL_FILE
               ForeignLeaf(,: ,)(',')
               ERL_LIST_EXPRESSION
                 ForeignLeaf([: [)('[')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: LINE)('LINE')
                 ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: LINE)('LINE')
+                  ForeignLeaf(integer: 61)('61')
                 ForeignLeaf(,: ,)(',')
                 ERL_TUPLE_EXPRESSION
                   ForeignLeaf({: {)('{')
@@ -1431,12 +1431,12 @@ ERL_FILE
               ForeignLeaf(,: ,)(',')
               ERL_LIST_EXPRESSION
                 ForeignLeaf([: [)('[')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: LINE)('LINE')
                 ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: LINE)('LINE')
+                  ForeignLeaf(integer: 70)('70')
                 ForeignLeaf(,: ,)(',')
                 ERL_TUPLE_EXPRESSION
                   ForeignLeaf({: {)('{')
@@ -1794,12 +1794,12 @@ ERL_FILE
               ForeignLeaf(,: ,)(',')
               ERL_LIST_EXPRESSION
                 ForeignLeaf([: [)('[')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: LINE)('LINE')
                 ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: LINE)('LINE')
+                  ForeignLeaf(integer: 82)('82')
                 ForeignLeaf(,: ,)(',')
                 ERL_TUPLE_EXPRESSION
                   ForeignLeaf({: {)('{')
@@ -3473,12 +3473,12 @@ ERL_FILE
               ForeignLeaf(,: ,)(',')
               ERL_LIST_EXPRESSION
                 ForeignLeaf([: [)('[')
+                ERL_MACROS
+                  ForeignLeaf(?: ?)('?')
+                  ERL_MACROS_NAME
+                    ForeignLeaf(var: LINE)('LINE')
                 ERL_MAX_EXPRESSION
-                  ERL_Q_ATOM
-                    ERL_MACROS
-                      ForeignLeaf(?: ?)('?')
-                      ERL_MACROS_NAME
-                        ForeignLeaf(var: LINE)('LINE')
+                  ForeignLeaf(integer: 138)('138')
                 ForeignLeaf(,: ,)(',')
                 ERL_TUPLE_EXPRESSION
                   ForeignLeaf({: {)('{')
@@ -4196,12 +4196,12 @@ ERL_FILE
                     ForeignLeaf(,: ,)(',')
                     ERL_LIST_EXPRESSION
                       ForeignLeaf([: [)('[')
+                      ERL_MACROS
+                        ForeignLeaf(?: ?)('?')
+                        ERL_MACROS_NAME
+                          ForeignLeaf(var: LINE)('LINE')
                       ERL_MAX_EXPRESSION
-                        ERL_Q_ATOM
-                          ERL_MACROS
-                            ForeignLeaf(?: ?)('?')
-                            ERL_MACROS_NAME
-                              ForeignLeaf(var: LINE)('LINE')
+                        ForeignLeaf(integer: 193)('193')
                       ForeignLeaf(,: ,)(',')
                       ERL_TUPLE_EXPRESSION
                         ForeignLeaf({: {)('{')
@@ -5018,12 +5018,12 @@ ERL_FILE
                           ForeignLeaf(,: ,)(',')
                           ERL_LIST_EXPRESSION
                             ForeignLeaf([: [)('[')
+                            ERL_MACROS
+                              ForeignLeaf(?: ?)('?')
+                              ERL_MACROS_NAME
+                                ForeignLeaf(var: LINE)('LINE')
                             ERL_MAX_EXPRESSION
-                              ERL_Q_ATOM
-                                ERL_MACROS
-                                  ForeignLeaf(?: ?)('?')
-                                  ERL_MACROS_NAME
-                                    ForeignLeaf(var: LINE)('LINE')
+                              ForeignLeaf(integer: 233)('233')
                             ForeignLeaf(,: ,)(',')
                             ERL_TUPLE_EXPRESSION
                               ForeignLeaf({: {)('{')

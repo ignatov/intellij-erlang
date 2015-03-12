@@ -40,12 +40,12 @@ ERL_FILE
               ERL_MAX_EXPRESSION
                 PsiElement(integer)('1')
               PsiElement())(')')
+        ERL_MACROS
+          ForeignLeaf(?: ?)('?')
+          ERL_MACROS_NAME
+            ForeignLeaf(var: LINE)('LINE')
         ERL_MAX_EXPRESSION
-          ERL_Q_ATOM
-            ERL_MACROS
-              ForeignLeaf(?: ?)('?')
-              ERL_MACROS_NAME
-                ForeignLeaf(var: LINE)('LINE')
+          ForeignLeaf(integer: 4)('4')
         ForeignLeaf(,: ,)(',')
         ERL_MAX_EXPRESSION
           ForeignLeaf(integer: 1)('1')

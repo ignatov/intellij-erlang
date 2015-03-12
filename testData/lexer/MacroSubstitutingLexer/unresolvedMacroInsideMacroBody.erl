@@ -1,6 +1,6 @@
 -module(unresolvedMacroInsideMacroBody).
 
--define(MACRO, ?LINE, ok).
+-define(MACRO, ?UNRESOLVED, ok).
 
 f() ->
   ?MACRO, ok.

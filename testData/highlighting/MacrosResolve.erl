@@ -4,4 +4,4 @@ set(_, _) -> ok.
 
 construct(Values) ->
   S = ?MODULE_STRING,
-  set(#?MODULE{}, Values ++ S).
+  set(#?UNKNOWN_MACRO{}, Values ++ S).

@@ -49,6 +49,8 @@ public class ErlangMacroSubstitutingLexerInclusionsTest extends ErlangLightPlatf
   public void testConditionallyDisabledInclusions()          throws Exception { doTest(); }
   public void testMacroDefinitionsSpanAcrossInclusions()     throws Exception { doTest(); }
   public void testExpansionOccursInPlace()                   throws Exception { doTest(); }
+  public void testPredefinedMacrosInDirectInclusion()        throws Exception { doTest(); }
+  public void testPredefinedMacrosInTransitiveInclusion()    throws Exception { doTest(); }
 
   private void doTest() throws Exception {
     ErlangCompileContext compileContext = ErlangCompileContextManager.getInstance(getProject()).getContext(mySource);
