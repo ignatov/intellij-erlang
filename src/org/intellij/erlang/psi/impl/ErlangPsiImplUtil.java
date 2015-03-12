@@ -1208,7 +1208,7 @@ public class ErlangPsiImplUtil {
   public static ErlangAtom setName(@NotNull ErlangAtom atom, @NotNull String newName) {
     String text = toAtomName(newName);
     assert text != null;
-    PsiElement newAtom = ErlangElementFactory.createQAtomFromText(atom.getProject(), text);
+    ErlangAtom newAtom = ErlangElementFactory.createAtomFromText(atom.getProject(), text);
     return (ErlangAtom) atom.replace(newAtom);
   }
 
@@ -1355,6 +1355,11 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiElement getNameIdentifier(@NotNull ErlangTypedExpr o) {
     return getNameIdentifier(o.getQAtom());
+  }
+
+  @NotNull
+  public static String getName(@NotNull ErlangAtomAttribute o) {
+    return o.getAtomName().getText();
   }
 
   public static int getTextOffset(@NotNull ErlangTypedExpr o) {

@@ -86,7 +86,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
       AccessToken token = WriteAction.start();
       String name;
       try {
-        ErlangElementFactory.createQAtomFromText(project, myShouldBeName);
+        ErlangElementFactory.createAtomFromText(project, myShouldBeName);
         name = myShouldBeName;
       } catch (Exception e) {
         name = "'" + myShouldBeName + "'";

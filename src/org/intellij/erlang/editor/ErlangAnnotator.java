@@ -50,7 +50,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     psiElement.accept(new ErlangVisitor() {
       @Override
       public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
-        setHighlighting(o.getQAtom(), annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
+        setHighlighting(o.getAtomName(), annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
       }
 
       @Override

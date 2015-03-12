@@ -61,7 +61,7 @@ public class ErlangRenameInputValidator implements RenameInputValidator {
       else if (o instanceof ErlangQAtom || o instanceof ErlangFunction || o instanceof ErlangRecordDefinition || o instanceof ErlangModule) {
         String atomName = ErlangPsiImplUtil.toAtomName(s);
         if (atomName != null) {
-          ErlangElementFactory.createQAtomFromText(o.getProject(), atomName);
+          ErlangElementFactory.createAtomFromText(o.getProject(), atomName);
           if (o instanceof ErlangModule) {
             String unquoted = StringUtil.unquoteString(atomName, '\'');
             return unquoted.equals(FileUtil.sanitizeFileName(unquoted));

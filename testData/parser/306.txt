@@ -12,9 +12,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('on_load')
+      PsiElement(atom_name)('on_load')
       PsiElement(()('(')
       ERL_FUNCTION_WITH_ARITY
         ERL_Q_ATOM

@@ -28,12 +28,6 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
   }
 
   @Override
-  @NotNull
-  public ErlangQAtom getQAtom() {
-    return findNotNullChildByClass(ErlangQAtom.class);
-  }
-
-  @Override
   @Nullable
   public ErlangTypedAttrVal getTypedAttrVal() {
     return findChildByClass(ErlangTypedAttrVal.class);
@@ -49,6 +43,17 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
   @Nullable
   public PsiElement getParRight() {
     return findChildByType(ERL_PAR_RIGHT);
+  }
+
+  @Override
+  @NotNull
+  public PsiElement getAtomName() {
+    return findNotNullChildByType(ERL_ATOM_NAME);
+  }
+
+  @NotNull
+  public String getName() {
+    return ErlangPsiImplUtil.getName(this);
   }
 
 }

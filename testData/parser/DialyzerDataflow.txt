@@ -704,9 +704,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('ifdef')
+      PsiElement(atom_name)('ifdef')
       PsiElement(()('(')
       ERL_MACROS_NAME
         PsiElement(var)('DEBUG')
@@ -779,9 +777,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('else')
+      PsiElement(atom_name)('else')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
@@ -813,9 +809,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('endif')
+      PsiElement(atom_name)('endif')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%-define(debug1(S_, L_), io:format(S_, L_)).')
   PsiComment(function_doc_comment)('%%-define(debug1(S_, L_), ok).')
@@ -45430,9 +45424,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('ifdef')
+      PsiElement(atom_name)('ifdef')
       PsiElement(()('(')
       ERL_MACROS_NAME
         PsiElement(var)('DEBUG')
@@ -45590,9 +45582,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('else')
+      PsiElement(atom_name)('else')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -45616,9 +45606,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('endif')
+      PsiElement(atom_name)('endif')
     PsiElement(.)('.')
   PsiComment(module_doc_comment)('%%% ===========================================================================')
   PsiComment(module_doc_comment)('%%%')
@@ -58550,9 +58538,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('ifdef')
+      PsiElement(atom_name)('ifdef')
       PsiElement(()('(')
       ERL_MACROS_NAME
         PsiElement(var)('DEBUG_PP')
@@ -58940,9 +58926,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('else')
+      PsiElement(atom_name)('else')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -58971,9 +58955,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('endif')
+      PsiElement(atom_name)('endif')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%----------------------------------------------------------------------------')
   ERL_ATTRIBUTE
@@ -59015,9 +58997,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('ifdef')
+      PsiElement(atom_name)('ifdef')
       PsiElement(()('(')
       ERL_MACROS_NAME
         PsiElement(var)('DOT')
@@ -59057,9 +59037,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('else')
+      PsiElement(atom_name)('else')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -59083,8 +59061,6 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('endif')
+      PsiElement(atom_name)('endif')
     PsiElement(.)('.')
   PsiComment(function_doc_comment)('%%----------------------------------------------------------------------------')

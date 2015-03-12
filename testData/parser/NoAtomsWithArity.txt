@@ -12,9 +12,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('compile')
+      PsiElement(atom_name)('compile')
       ERL_ATTR_VAL
         PsiElement(()('(')
         ERL_TUPLE_EXPRESSION
@@ -39,9 +37,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('compile')
+      PsiElement(atom_name)('compile')
       ERL_ATTR_VAL
         PsiElement(()('(')
         ERL_LIST_EXPRESSION

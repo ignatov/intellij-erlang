@@ -575,14 +575,15 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom ['(' typed_attr_val ')' | typed_attr_val | attr_val]
+  // atom_name ['(' typed_attr_val ')' | typed_attr_val | attr_val]
   public static boolean atom_attribute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atom_attribute")) return false;
+    if (!nextTokenIs(b, ERL_ATOM_NAME)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<attribute>");
-    r = q_atom(b, l + 1);
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_ATOM_NAME);
     r = r && atom_attribute_1(b, l + 1);
-    exit_section_(b, l, m, ERL_ATOM_ATTRIBUTE, r, false, null);
+    exit_section_(b, m, ERL_ATOM_ATTRIBUTE, r);
     return r;
   }
 
@@ -1574,13 +1575,13 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // &'else' q_atom
+  // &'else' atom_name
   public static boolean else_atom_attribute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "else_atom_attribute")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, "<attribute>");
     r = else_atom_attribute_0(b, l + 1);
-    r = r && q_atom(b, l + 1);
+    r = r && consumeToken(b, ERL_ATOM_NAME);
     exit_section_(b, l, m, ERL_ATOM_ATTRIBUTE, r, false, null);
     return r;
   }
@@ -2637,13 +2638,13 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // &('ifdef'|'ifndef'|'undef') q_atom '(' macros_name ')'
+  // &('ifdef'|'ifndef'|'undef') atom_name '(' macros_name ')'
   public static boolean ifdef_ifndef_undef_attribute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "ifdef_ifndef_undef_attribute")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, "<attribute>");
     r = ifdef_ifndef_undef_attribute_0(b, l + 1);
-    r = r && q_atom(b, l + 1);
+    r = r && consumeToken(b, ERL_ATOM_NAME);
     p = r; // pin = 2
     r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
     r = p && report_error_(b, macros_name(b, l + 1)) && r;
@@ -3668,13 +3669,13 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // &'on_load' q_atom '(' function_with_arity ')'
+  // &'on_load' atom_name '(' function_with_arity ')'
   public static boolean on_load(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "on_load")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, "<on load>");
     r = on_load_0(b, l + 1);
-    r = r && q_atom(b, l + 1);
+    r = r && consumeToken(b, ERL_ATOM_NAME);
     p = r; // pin = 2
     r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
     r = p && report_error_(b, function_with_arity(b, l + 1)) && r;

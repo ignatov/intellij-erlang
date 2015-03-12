@@ -10,9 +10,6 @@ public interface ErlangAtomAttribute extends ErlangCompositeElement {
   @Nullable
   ErlangAttrVal getAttrVal();
 
-  @NotNull
-  ErlangQAtom getQAtom();
-
   @Nullable
   ErlangTypedAttrVal getTypedAttrVal();
 
@@ -21,5 +18,11 @@ public interface ErlangAtomAttribute extends ErlangCompositeElement {
 
   @Nullable
   PsiElement getParRight();
+
+  @NotNull
+  PsiElement getAtomName();
+
+  @NotNull
+  String getName();
 
 }

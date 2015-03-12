@@ -3,9 +3,7 @@ ERL_FILE
   ERL_ATTRIBUTE
     PsiElement(-)('-')
     ERL_ATOM_ATTRIBUTE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(atom_name)('author')
+      PsiElement(atom_name)('author')
       ERL_ATTR_VAL
         PsiElement(()('(')
         ERL_STRING_LITERAL

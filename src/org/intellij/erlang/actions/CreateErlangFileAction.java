@@ -26,6 +26,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDirectory;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.jetbrains.annotations.Nullable;
 
 public class CreateErlangFileAction extends CreateFileFromTemplateAction implements DumbAware {
   private static final String NEW_ERLANG_FILE = "New Erlang File";
@@ -58,12 +59,13 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
           return !StringUtil.isEmptyOrSpaces(inputString) && getErrorText(inputString) == null;
         }
 
+        @Nullable
         @Override
         public String getErrorText(String inputString) {
           String error = " is not a valid Erlang module name";
           if (StringUtil.isEmpty(inputString)) return null;
           try {
-            ErlangElementFactory.createQAtomFromText(project, inputString);
+            ErlangElementFactory.createAtomFromText(project, inputString);
             if (FileUtil.sanitizeFileName(inputString).equals(inputString)) {
               return null;
             }

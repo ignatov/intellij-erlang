@@ -30,9 +30,9 @@ public class ErlangElementFactory {
   }
 
   @NotNull
-  public static PsiElement createQAtomFromText(@NotNull Project project, @NotNull String text) {
-    ErlangFile fileFromText = createFileFromText(project, "-" + text + ".");
-    return fileFromText.getAttributes().get(0).getAtomAttribute().getQAtom().getAtom();
+  public static ErlangAtom createAtomFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile fileFromText = createFileFromText(project, text + "() -> ok.");
+    return fileFromText.getFunctions().get(0).getFirstClause().getQAtom().getAtom();
   }
 
   @NotNull

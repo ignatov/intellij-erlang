@@ -79,7 +79,7 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
   private static boolean needQuotation(@NotNull Project project, @Nullable String name) {
     if (name == null) return false;
     try {
-      return !Comparing.equal(ErlangElementFactory.createQAtomFromText(project, name).getText(), name);
+      return !Comparing.equal(ErlangElementFactory.createAtomFromText(project, name).getText(), name);
     } catch (Exception ignored) {
     }
     return true;
