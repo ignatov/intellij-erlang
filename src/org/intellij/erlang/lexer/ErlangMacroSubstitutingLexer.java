@@ -20,9 +20,10 @@ import com.intellij.lang.BracePair;
 import com.intellij.lexer.Lexer;
 import com.intellij.lexer.LexerPosition;
 import com.intellij.lexer.LookAheadLexer;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.util.Function;
@@ -270,7 +271,12 @@ public class ErlangMacroSubstitutingLexer extends LookAheadLexer {
         if (myIncludeOwnersStack.size() < MAX_INCLUSION_STACK_DEPTH) {
           //TODO it's not enough to only have macro context altered by inclusion. We'll have to track definitions introduced in inclusion as well.
           //TODO This means we'll have to paste tokens from inclusions here and add tons of hacks for navigation, or build a symbol table for included file.
-          String text = VfsUtilCore.loadText(inclusion);
+          Document document = FileDocumentManager.getInstance().getDocument(inclusion);
+          CharSequence text = document != null ? document.getImmutableCharSequence() : null;
+          if (text == null) {
+            throw new IOException("Failed to parse header: " + inclusion.getPath());
+          }
+
           ErlangMacroSubstitutingLexer inclusionLexer = new ErlangMacroSubstitutingLexer(new ErlangFormsLexer(), myMacroContext, myCompileContext, myIncludeOwnersStack);
           inclusionLexer.start(text);
           while (inclusionLexer.getTokenType() != null) {
