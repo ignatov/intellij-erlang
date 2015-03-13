@@ -9,3 +9,6 @@
 
 log_2_plus_2() ->
   ?LOG_EXPR(2 + 2).
+
+log_string_literal() ->
+  ?LOG_EXPR("?? should escape \"quotes\"").

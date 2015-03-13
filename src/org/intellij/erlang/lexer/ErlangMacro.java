@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.lexer;
 
+import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -100,7 +101,10 @@ public final class ErlangMacro {
 
     @Override
     public String getText(@Nullable List<String> macroArguments) {
-      return '"' + super.getText(macroArguments) + '"';
+      String rawArgument = super.getText(macroArguments);
+      String unescaped = StringUtil.replace(rawArgument, "\\\"", "\"");
+      String escaped = StringUtil.escapeQuotes(unescaped);
+      return StringUtil.wrapWithDoubleQuote(escaped);
     }
   }
 }
