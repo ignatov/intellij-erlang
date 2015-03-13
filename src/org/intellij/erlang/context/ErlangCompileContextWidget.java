@@ -18,6 +18,7 @@ package org.intellij.erlang.context;
 
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.*;
+import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
@@ -33,14 +34,16 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class ErlangCompileContextWidget extends EditorBasedWidget implements StatusBarWidget.MultipleTextValuesPresentation {
-  protected ErlangCompileContextWidget(@NotNull Project project) {
+  public static final String ID = ErlangCompileContext.class.getName();
+
+  ErlangCompileContextWidget(@NotNull Project project) {
     super(project);
   }
 
   @NotNull
   @Override
   public String ID() {
-    return getClass().getName();
+    return ID;
   }
 
   @Nullable
@@ -53,10 +56,10 @@ public class ErlangCompileContextWidget extends EditorBasedWidget implements Sta
   @Nullable
   @Override
   public ListPopup getPopupStep() {
-    ActionGroup actions = getChangeContextActions();
+    ActionGroup actions = getActions();
     Component component = (Component) myStatusBar;
     DataContext dataContext = DataManager.getInstance().getDataContext(component);
-    return JBPopupFactory.getInstance().createActionGroupPopup("Compile Contexts", actions, dataContext, JBPopupFactory.ActionSelectionAid.NUMBERING, false);
+    return JBPopupFactory.getInstance().createActionGroupPopup("Compile Contexts", actions, dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, false);
   }
 
   @Nullable
@@ -84,13 +87,19 @@ public class ErlangCompileContextWidget extends EditorBasedWidget implements Sta
     return null;
   }
 
-  private ActionGroup getChangeContextActions() {
+  private ActionGroup getActions() {
     DefaultActionGroup group = new DefaultActionGroup();
     Project project = getProject();
+
+    group.add(new EditContextsAction());
+
+    group.addSeparator();
+
     List<String> availableContextNames = project == null ? ContainerUtil.<String>emptyList() : ErlangCompileContextManager.getInstance(project).getAvailableContextNames();
     for (String contextName : availableContextNames) {
       group.add(new ChangeContextAction(contextName));
     }
+
     return group;
   }
 
@@ -107,8 +116,18 @@ public class ErlangCompileContextWidget extends EditorBasedWidget implements Sta
       Project project = getProject();
       if (project != null) {
         ErlangCompileContextManager.getInstance(project).setActiveContext(myContextName);
-        myStatusBar.updateWidget(ID());
       }
+    }
+  }
+
+  private class EditContextsAction extends AnAction {
+    private EditContextsAction() {
+      super("Edit Contexts...");
+    }
+
+    @Override
+    public void actionPerformed(@NotNull AnActionEvent e) {
+      ShowSettingsUtil.getInstance().showSettingsDialog(myProject, ErlangCompileContextListConfigurable.ID);
     }
   }
 }

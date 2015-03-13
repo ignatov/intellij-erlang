@@ -120,6 +120,38 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
     });
   }
 
+  List<ErlangCompileContext> getProjectCompileContexts() {
+    return myState.myProjectCompileContexts;
+  }
+
+  void setProjectCompileContexts(List<ErlangCompileContext> newContexts) {
+    if (newContexts.isEmpty()) {
+      newContexts.add(createDefaultContext());
+    }
+
+    ErlangCompileContext activeContext = getProjectCompileContext();
+    ErlangCompileContext updatedActiveContext = null;
+    for (ErlangCompileContext context : newContexts) {
+      if (Comparing.equal(context.name, activeContext.name)) {
+        updatedActiveContext = context;
+        break;
+      }
+    }
+
+    myState.myProjectCompileContexts = newContexts;
+    if (!Comparing.equal(activeContext, updatedActiveContext)) {
+      if (updatedActiveContext == null) {
+        updatedActiveContext = getDefaultCompileContext();
+      }
+      myState.myActiveContextName = updatedActiveContext.name;
+      projectCompileContextChanged(activeContext, updatedActiveContext);
+    }
+  }
+
+  @NotNull
+  Project getProject() {
+    return myProject;
+  }
 
   @Override
   public void projectOpened() {
@@ -154,9 +186,7 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
     if (context == null) {
       context = getDefaultCompileContext();
     }
-    ErlangCompileContext copy = XmlSerializerUtil.createCopy(context);
-    copy.project = myProject;
-    return copy;
+    return context.clone();
   }
 
   @NotNull
@@ -169,6 +199,10 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
 
   private void projectCompileContextChanged(@Nullable ErlangCompileContext from, @NotNull ErlangCompileContext to) {
     //TODO do something smarter here
+    StatusBar statusBar = WindowManager.getInstance().getStatusBar(myProject);
+    if (statusBar != null) {
+      statusBar.updateWidget(ErlangCompileContextWidget.ID);
+    }
     List<VirtualFile> allModules = ErlangModuleIndex.getVirtualFiles(myProject, GlobalSearchScope.projectScope(myProject));
     FileContentUtilCore.reparseFiles(allModules);
   }

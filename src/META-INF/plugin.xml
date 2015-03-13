@@ -45,6 +45,7 @@
     <!--Rebar related extensions -->
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable"/>
+        <projectConfigurable instance="org.intellij.erlang.context.ErlangCompileContextListConfigurable"/>
         <projectService serviceImplementation="org.intellij.erlang.rebar.settings.RebarSettings"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationType"/>

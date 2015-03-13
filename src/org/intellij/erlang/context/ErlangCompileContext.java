@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 @Tag("context")
-public class ErlangCompileContext implements Serializable {
+public class ErlangCompileContext implements Serializable, Cloneable {
   @Attribute("name")
   public String name;
 
@@ -58,11 +58,15 @@ public class ErlangCompileContext implements Serializable {
   // serialization
   @SuppressWarnings("UnusedDeclaration")
   public ErlangCompileContext() {
-    this(null, "", ContainerUtil.<String, String>newHashMap(), ContainerUtil.<String>newArrayList());
+    this("");
   }
 
   public ErlangCompileContext(String name) {
-    this(null, name, ContainerUtil.<String, String>newHashMap(), ContainerUtil.<String>newArrayList());
+    this(null, name);
+  }
+
+  public ErlangCompileContext(@Nullable Project project, String name) {
+    this(project, name, ContainerUtil.<String, String>newHashMap(), ContainerUtil.<String>newArrayList());
   }
 
   public ErlangCompileContext(@Nullable Project project, String name, Map<String, String> macroDefinitions, List<String> includePaths) {
@@ -70,5 +74,34 @@ public class ErlangCompileContext implements Serializable {
     this.name = name;
     this.macroDefinitions = macroDefinitions;
     this.includePaths = includePaths;
+  }
+
+  @Override
+  public final ErlangCompileContext clone() {
+    return new ErlangCompileContext(project, name, ContainerUtil.newHashMap(macroDefinitions), ContainerUtil.newArrayList(includePaths));
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    ErlangCompileContext that = (ErlangCompileContext) o;
+
+    if (!name.equals(that.name)) return false;
+    if (!macroDefinitions.equals(that.macroDefinitions)) return false;
+    if (!includePaths.equals(that.includePaths)) return false;
+    if (project != null ? !project.equals(that.project) : that.project != null) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = name.hashCode();
+    result = 31 * result + macroDefinitions.hashCode();
+    result = 31 * result + includePaths.hashCode();
+    result = 31 * result + (project != null ? project.hashCode() : 0);
+    return result;
   }
 }
