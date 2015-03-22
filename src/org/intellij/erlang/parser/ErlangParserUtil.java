@@ -171,6 +171,10 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     }
   }
 
+  private static boolean consumeTokenAtSubstitutionDepth(Builder b, IElementType token, int substitutionDepth) {
+    return b.getNextTokenSubstitutionDepth() == substitutionDepth && consumeToken(b, token);
+  }
+
   public static boolean recordMacroNameTokenSubstitutionDepth(PsiBuilder builder, int level) {
     Builder b = (Builder) builder;
     b.setLastMacroNameTokenSubstitutionDepth(b.getNextTokenSubstitutionDepth());
@@ -186,16 +190,24 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       return true;
     }
 
-    Builder b = (Builder) builder_;
-    while (b.getMacroCallArgumentsLevel() == 0) {
-      if (!consumeSubstitutedMacroCall(b, level_)) break;
-    }
+    consumeMacroCalls(builder_, level_);
 
     return true;
   }
 
-  private static boolean consumeTokenAtSubstitutionDepth(Builder b, IElementType token, int substitutionDepth) {
-    return b.getNextTokenSubstitutionDepth() == substitutionDepth && consumeToken(b, token);
+  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
+  public static boolean consumeToken(PsiBuilder builder, IElementType token) {
+    if (token != ErlangTypes.ERL_QMARK) {
+      consumeMacroCalls(builder, 0);
+    }
+    return GeneratedParserUtilBase.consumeToken(builder, token);
+  }
+
+  private static void consumeMacroCalls(PsiBuilder builder_, int level_) {
+    Builder b = (Builder) builder_;
+    while (b.getMacroCallArgumentsLevel() == 0) {
+      if (!consumeSubstitutedMacroCall(b, level_)) break;
+    }
   }
 
   private static boolean consumeSubstitutedMacroCall(Builder builder, int level) {
