@@ -33,7 +33,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-public class ErlangCompileContextWidget extends EditorBasedWidget implements StatusBarWidget.MultipleTextValuesPresentation {
+public class ErlangCompileContextWidget extends EditorBasedWidget implements StatusBarWidget.MultipleTextValuesPresentation, StatusBarWidget.Multiframe {
   public static final String ID = ErlangCompileContext.class.getName();
 
   ErlangCompileContextWidget(@NotNull Project project) {
@@ -101,6 +101,11 @@ public class ErlangCompileContextWidget extends EditorBasedWidget implements Sta
     }
 
     return group;
+  }
+
+  @Override
+  public StatusBarWidget copy() {
+    return new ErlangCompileContextWidget(myProject);
   }
 
   private class ChangeContextAction extends AnAction {

@@ -20,8 +20,10 @@ import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.IdeFrame;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.openapi.wm.WindowManagerListener;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.FileContentUtilCore;
 import com.intellij.util.Function;
@@ -155,9 +157,28 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
 
   @Override
   public void projectOpened() {
-    StatusBar statusBar = WindowManager.getInstance().getStatusBar(myProject);
-    if (statusBar != null) {
-      statusBar.addWidget(new ErlangCompileContextWidget(myProject));
+    WindowManagerListener listener = new WindowManagerListener() {
+      @Override
+      public void frameCreated(IdeFrame frame) {
+        Project project = frame.getProject();
+        StatusBar statusBar = frame.getStatusBar();
+        if (project != myProject || statusBar == null) return;
+
+        if (statusBar.getWidget(ErlangCompileContextWidget.ID) == null) {
+          statusBar.addWidget(new ErlangCompileContextWidget(myProject));
+        }
+        statusBar.updateWidget(ErlangCompileContextWidget.ID);
+      }
+
+      @Override
+      public void beforeFrameReleased(IdeFrame frame) {
+      }
+    };
+    WindowManager.getInstance().addListener(listener);
+
+    IdeFrame frame = WindowManager.getInstance().getIdeFrame(myProject);
+    if (frame != null) {
+      listener.frameCreated(frame);
     }
   }
 
