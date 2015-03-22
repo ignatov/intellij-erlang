@@ -339,8 +339,8 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getMacroName(ErlangMacrosName macroNameElement) {
-    PsiElement atom = macroNameElement.getAtom();
-    if (atom != null) return atom.getText();
+    ErlangAtom atom = macroNameElement.getAtom();
+    if (atom != null) return atom.getName();
     PsiElement var = macroNameElement.getVar();
     if (var != null) return var.getText();
     return macroNameElement.getText();
