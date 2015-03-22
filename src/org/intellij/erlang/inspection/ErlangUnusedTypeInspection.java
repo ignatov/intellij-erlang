@@ -35,7 +35,7 @@ public class ErlangUnusedTypeInspection extends ErlangInspectionBase {
       Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(o.getContainingFile()));
       if (search.findFirst() == null) {
         problemsHolder.registerProblem(o.getNameIdentifier(),
-          "Unused function " + "'" + o.getName() + "'",
+          "Unused type " + "'" + o.getName() + "'",
           ProblemHighlightType.LIKE_UNUSED_SYMBOL,
           new ErlangRemoveTypeFix(),
           new ErlangExportTypeFix());
