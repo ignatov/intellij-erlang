@@ -14,10 +14,7 @@ Note for **Mac OS X** users: you need to download the entire zip file, not a sev
 We are going to release a standalone Erlang IDE. If you are interested on it, please [contact](mailto:ignatovs@gmail.com) to me.
 
 ## Recent changes
-### Version 0.5.9
-* Bugfixes
-
-### Work in progress
+### Version 0.5.10
 * New inspection: multiple function exports
 * Fixed false-positive error highlighting (<a href="https://github.com/ignatov/intellij-erlang/issues/499">#499</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/505">#505</a>)
 * Reworked Erlang/OTP version detection (<a href="https://github.com/ignatov/intellij-erlang/issues/514">#514</a>)
@@ -25,6 +22,9 @@ We are going to release a standalone Erlang IDE. If you are interested on it, pl
 * Improved debugger (<a href="https://github.com/ignatov/intellij-erlang/issues/501">#501</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/546">#546</a>)
 * New completion variant: e.g. ```ilfo``` completes to ```io_lib:format()```
 * Improved specification resolution
+* Bugfixes
+
+### Work in progress
 * Preprocessing support
 
 ## Grammar-Kit version

@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2012-2014 Sergey Ignatov
+  ~ Copyright 2012-2015 Sergey Ignatov
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2" use-idea-classloader="true">
     <id>org.jetbrains.erlang</id>
-    <version>0.5.9</version>
+    <version>0.5.10</version>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
     <idea-version since-build="139.222" until-build="139.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -27,6 +27,13 @@
         <![CDATA[
             <p>0.5.9</p>
             <ul>
+              <li>New inspection: multiple function exports</li>
+              <li>Fixed false-positive error highlighting (<a href="https://github.com/ignatov/intellij-erlang/issues/499">#499</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/505">#505</a>)</li>
+              <li>Reworked Erlang/OTP version detection (<a href="https://github.com/ignatov/intellij-erlang/issues/514">#514</a>)</li>
+              <li>Improved "Export Function" intention action (<a href="https://github.com/ignatov/intellij-erlang/issues/440">#440</a>)</li>
+              <li>Improved debugger (<a href="https://github.com/ignatov/intellij-erlang/issues/501">#501</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/546">#546</a>)</li>
+              <li>New completion variant: e.g. ```ilfo``` completes to ```io_lib:format()```</li>
+              <li>Improved specification resolution</li>
               <li>Bugfixes</li>
             </ul>
         ]]>
