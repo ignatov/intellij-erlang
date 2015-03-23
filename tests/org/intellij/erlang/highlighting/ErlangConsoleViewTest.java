@@ -45,7 +45,7 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
   }
 
   public void testConsoleResolve() throws Exception {
-    PsiFile file = myView.getConsole().getFile();
+    PsiFile file = myView.getFile();
 
     PsiDocumentManager instance = PsiDocumentManager.getInstance(getProject());
     final Document document = instance.getDocument(file);

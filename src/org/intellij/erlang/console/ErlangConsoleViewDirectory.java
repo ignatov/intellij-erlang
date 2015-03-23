@@ -47,7 +47,7 @@ final class ErlangConsoleViewDirectory {
   @Nullable
   public synchronized ErlangConsoleView getConsole(@NotNull Editor editor) {
     for (ErlangConsoleView consoleView : consoleViews) {
-      if (editor == consoleView.getConsole().getConsoleEditor()) {
+      if (editor == consoleView.getConsoleEditor()) {
         return consoleView;
       }
     }

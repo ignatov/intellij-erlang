@@ -28,6 +28,7 @@ import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.testframework.TestFrameworkRunningModel;
 import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
+import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
@@ -49,7 +50,6 @@ import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.console.FileReferenceFilter;
 import org.intellij.erlang.eunit.ErlangEunitReporterModule;
 import org.intellij.erlang.eunit.ErlangTestLocationProvider;
-import org.intellij.erlang.eunit.ErlangUnitConsoleProperties;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangListExpression;
@@ -95,13 +95,13 @@ public class RebarEunitRunningState extends CommandLineState {
     });
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
-    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction(getEnvironment()));
+    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());
     return executionResult;
   }
 
   @NotNull
   private ConsoleView createConsoleView(Executor executor) {
-    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties(myConfiguration, executor);
+    SMTRunnerConsoleProperties consoleProperties = new SMTRunnerConsoleProperties(myConfiguration, "Erlang", executor);
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_FAILURE_PATH));

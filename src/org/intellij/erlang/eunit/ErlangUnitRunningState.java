@@ -26,6 +26,7 @@ import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.testframework.TestFrameworkRunningModel;
 import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
+import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
@@ -109,14 +110,14 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       }
     });
 
-    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction(getEnvironment()));
+    executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());
     return executionResult;
   }
 
   @Override
   @NotNull
   public ConsoleView createConsoleView(Executor executor) {
-    ErlangUnitConsoleProperties consoleProperties = new ErlangUnitConsoleProperties(myConfiguration, executor);
+    SMTRunnerConsoleProperties consoleProperties = new SMTRunnerConsoleProperties(myConfiguration, "Erlang", executor);
     return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator("Erlang", consoleProperties, getEnvironment(), new ErlangTestLocationProvider());
   }
 

@@ -18,8 +18,6 @@ package org.intellij.erlang.console;
 
 import com.intellij.execution.console.ConsoleHistoryController;
 import com.intellij.execution.console.LanguageConsoleImpl;
-import com.intellij.execution.console.LanguageConsoleViewImpl;
-import com.intellij.execution.process.ConsoleHistoryModel;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
@@ -42,21 +40,21 @@ import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ErlangConsoleView extends LanguageConsoleViewImpl {
-  @Nullable private ConsoleHistoryModel myConsoleHistoryModel;
+public final class ErlangConsoleView extends LanguageConsoleImpl {
+  @Nullable private ConsoleHistoryController myHistoryController;
   @Nullable private OutputStreamWriter myProcessInputWriter;
 
   public ErlangConsoleView(@NotNull Project project) {
-    super(new LanguageConsoleImpl(project, "Erlang Console", ErlangLanguage.INSTANCE) {
-      @Override
-      protected void doAddPromptToHistory() {
-      }
-    });
-    LanguageConsoleImpl console = getConsole();
-    console.setPrompt(">");
-    PsiFile originalFile = console.getFile().getOriginalFile();
-    originalFile.putUserData(ErlangPsiImplUtil.ERLANG_CONSOLE, console);
+    super(project, "Erlang Console", ErlangLanguage.INSTANCE);
+
+    setPrompt(">");
+    PsiFile originalFile = getFile().getOriginalFile();
+    originalFile.putUserData(ErlangPsiImplUtil.ERLANG_CONSOLE, this);
     originalFile.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, new HashMap<String, ErlangQVar>());
+  }
+
+  @Override
+  protected void doAddPromptToHistory() {
   }
 
   @Override
@@ -66,8 +64,8 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
     assert processInput != null;
     //noinspection IOResourceOpenedButNotSafelyClosed
     myProcessInputWriter = new OutputStreamWriter(processInput);
-    myConsoleHistoryModel = new ConsoleHistoryModel();
-    new ConsoleHistoryController("Erlang", null, getConsole(), myConsoleHistoryModel).install();
+    myHistoryController = new ConsoleHistoryController("Erlang", null, this);
+    myHistoryController.install();
     ErlangConsoleViewDirectory.getInstance().addConsole(this);
   }
 
@@ -80,25 +78,24 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
   public void append(@NotNull final String text) {
     WriteCommandAction.runWriteCommandAction(getProject(), new Runnable() {
       public void run() {
-        Document document = getConsole().getCurrentEditor().getDocument();
+        Document document = getCurrentEditor().getDocument();
         document.insertString(document.getTextLength(), text);
       }
     });
   }
 
   public void execute() {
-    if (myProcessInputWriter == null || myConsoleHistoryModel == null) {
+    if (myProcessInputWriter == null || myHistoryController == null) {
       return;
     }
-    LanguageConsoleImpl console = getConsole();
-    EditorEx consoleEditor = console.getConsoleEditor();
+
+    EditorEx consoleEditor = getConsoleEditor();
     Document editorDocument = consoleEditor.getDocument();
     String text = editorDocument.getText();
 
-    PsiFile file = console.getFile();
-    final Map<String, ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
+    final Map<String, ErlangQVar> context = getFile().getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
     if (context != null) { // todo: process only successful statements
-      file.accept(new ErlangRecursiveVisitor() {
+      getFile().accept(new ErlangRecursiveVisitor() {
         @Override
         public void visitQVar(@NotNull ErlangQVar o) {
           String name = o.getName();
@@ -114,8 +111,8 @@ public final class ErlangConsoleView extends LanguageConsoleViewImpl {
       });
     }
 
-    console.addCurrentToHistory(new TextRange(0, text.length()), true, true);
-    myConsoleHistoryModel.addToHistory(text);
+    addToHistoryInner(new TextRange(0, text.length()), consoleEditor, true, true);
+    myHistoryController.addToHistory(text);
     for (String line : text.split("\n")) {
       try {
         myProcessInputWriter.write(line + "\n");
