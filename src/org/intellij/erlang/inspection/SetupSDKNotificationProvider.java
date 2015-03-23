@@ -21,12 +21,12 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectBundle;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootAdapter;
 import com.intellij.openapi.roots.ModuleRootEvent;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService;
 import com.intellij.openapi.util.Key;
@@ -37,6 +37,10 @@ import com.intellij.ui.EditorNotificationPanel;
 import com.intellij.ui.EditorNotifications;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
+import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.jetbrains.annotations.NotNull;
 
 // todo: extract the common one
@@ -66,15 +70,10 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
     if (!(file.getFileType() instanceof ErlangFileType)) return null;
 
     PsiFile psiFile = PsiManager.getInstance(myProject).findFile(file);
-    if (psiFile == null) return null;
+    if (psiFile == null || psiFile.getLanguage() != ErlangLanguage.INSTANCE) return null;
 
-    if (psiFile.getLanguage() != ErlangLanguage.INSTANCE) return null;
-
-    Module module = ModuleUtilCore.findModuleForPsiElement(psiFile);
-    if (module == null) return null;
-
-    Sdk sdk = ModuleRootManager.getInstance(module).getSdk();
-    if (sdk != null) return null;
+    ErlangSdkRelease sdkRelease = ErlangSdkType.getRelease(psiFile);
+    if (sdkRelease != null) return null;
 
     return createPanel(myProject, psiFile);
   }
@@ -86,6 +85,11 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
     panel.createActionLabel(ProjectBundle.message("project.sdk.setup"), new Runnable() {
       @Override
       public void run() {
+        if (ErlangSystemUtil.isSmallIde()) {
+          ShowSettingsUtil.getInstance().showSettingsDialog(project, ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
+          return;
+        }
+
         Sdk projectSdk = ProjectSettingsService.getInstance(project).chooseAndSetSdk();
         if (projectSdk == null) return;
         ApplicationManager.getApplication().runWriteAction(new Runnable() {
