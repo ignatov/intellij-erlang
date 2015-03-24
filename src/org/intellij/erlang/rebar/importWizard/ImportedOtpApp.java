@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.rebar.importWizard;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -41,12 +42,18 @@ final class ImportedOtpApp {
   private VirtualFile myIdeaModuleFile;
   private Module myModule;
 
-  public ImportedOtpApp(@NotNull VirtualFile root, @NotNull VirtualFile appConfig) {
+  public ImportedOtpApp(@NotNull VirtualFile root, @NotNull final VirtualFile appConfig) {
     myName = StringUtil.trimEnd(StringUtil.trimEnd(appConfig.getName(), ".src"), ".app");
     myRoot = root;
-    addDependenciesFromAppFile(appConfig);
-    addInfoFromRebarConfig();
-    addIncludePath("include");
+
+    ApplicationManager.getApplication().runReadAction(new Runnable() {
+      @Override
+      public void run() {
+        addDependenciesFromAppFile(appConfig);
+        addInfoFromRebarConfig();
+        addIncludePath("include");
+      }
+    });
   }
 
   @NotNull

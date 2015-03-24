@@ -41,6 +41,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.List;
 
+
+//TODO use traversers - no need to build PSI here
 public final class ErlangTermFileUtil {
   private ErlangTermFileUtil() {
   }
