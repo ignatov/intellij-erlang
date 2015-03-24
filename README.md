@@ -14,7 +14,7 @@ Note for **Mac OS X** users: you need to download the entire zip file, not a sev
 We are going to release a standalone Erlang IDE. If you are interested on it, please [contact](mailto:ignatovs@gmail.com) to me.
 
 ## Recent changes
-### Version 0.5.10
+### Version 0.5.11
 * New inspection: multiple function exports
 * Fixed false-positive error highlighting (<a href="https://github.com/ignatov/intellij-erlang/issues/499">#499</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/505">#505</a>)
 * Reworked Erlang/OTP version detection (<a href="https://github.com/ignatov/intellij-erlang/issues/514">#514</a>)
