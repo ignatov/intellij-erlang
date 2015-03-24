@@ -165,7 +165,7 @@ public class ErlangCompileContextManager extends AbstractProjectComponent implem
         if (project != myProject || statusBar == null) return;
 
         if (statusBar.getWidget(ErlangCompileContextWidget.ID) == null) {
-          statusBar.addWidget(new ErlangCompileContextWidget(myProject));
+          statusBar.addWidget(new ErlangCompileContextWidget(myProject), myProject);
         }
         statusBar.updateWidget(ErlangCompileContextWidget.ID);
       }
