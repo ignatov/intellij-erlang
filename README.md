@@ -8,10 +8,7 @@ and other IntelliJ-based products
 ## Pre-release builds
 You can manually set up the latest plugin version from the [releases page](https://github.com/ignatov/intellij-erlang/releases) or from the [intellij-erlang-builds](https://www.dropbox.com/sh/4sbgxzjto5fa21b/1cpM3Nb-yF) folder.
 
-Note for **Mac OS X** users: you need to download the entire zip file, not a several jars (see [Apple discussion forum](https://discussions.apple.com/thread/1483114)). 
-
-## Standalone Erlang IDE
-We are going to release a standalone Erlang IDE. If you are interested on it, please [contact](mailto:ignatovs@gmail.com) to me.
+Note for **Mac OS X** users: you need to download the entire zip file, not a several jars (see [Apple discussion forum](https://discussions.apple.com/thread/1483114)).
 
 ## Recent changes
 ### Version 0.5.11
