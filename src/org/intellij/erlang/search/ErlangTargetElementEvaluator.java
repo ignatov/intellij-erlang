@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public class ErlangTargetElementEvaluator implements TargetElementEvaluatorEx {
 
   @Nullable
   @Override
-  public PsiElement getElementByReference(PsiReference ref, int flags) {
+  public PsiElement getElementByReference(@NotNull PsiReference ref, int flags) {
     if ((flags & TargetElementUtilBase.ELEMENT_NAME_ACCEPTED) == 0) return null;
     PsiElement element = ref.getElement();
     return element instanceof ErlangQAtom && ref.resolve() == null ? element : null;
