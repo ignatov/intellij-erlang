@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.psi.ErlangBehaviour;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,8 +33,18 @@ import javax.swing.*;
 
 public class ErlangIconProvider extends IconProvider implements DumbAware {
   @Override
-  public Icon getIcon(@NotNull PsiElement element, @Iconable.IconFlags int flags) {
-    return element instanceof ErlangFile ? getIcon((ErlangFile) element) : null;
+  public Icon getIcon(@NotNull PsiElement o, @Iconable.IconFlags int flags) {
+    if (o instanceof ErlangModule) return ErlangIcons.MODULE;
+    else if (o instanceof ErlangFunction) return ErlangIcons.FUNCTION;
+    else if (o instanceof ErlangRecordDefinition) return ErlangIcons.RECORD;
+    else if (o instanceof ErlangQVar) return ErlangIcons.VARIABLE;
+    else if (o instanceof ErlangMacrosDefinition) return ErlangIcons.MACROS;
+    else if (o instanceof ErlangTypedExpr) return ErlangIcons.FIELD;
+    else if (o instanceof ErlangTypeDefinition) return ErlangIcons.TYPE;
+    else if (o instanceof ErlangAttribute) return ErlangIcons.ATTRIBUTE;
+    else if (o instanceof ErlangQAtom) return ErlangIcons.ATOM;
+    else if (o instanceof ErlangFile) return getIcon((ErlangFile) o);
+    return null;
   }
 
   @Nullable

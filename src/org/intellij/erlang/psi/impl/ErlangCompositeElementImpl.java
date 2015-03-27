@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,16 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
+import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.usageView.UsageViewUtil;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
 
 public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements ErlangCompositeElement {
   public ErlangCompositeElementImpl(ASTNode node) {
@@ -41,5 +46,32 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
 
   static boolean processDeclarations(@NotNull PsiElement element, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return processor.execute(element, state) && ResolveUtil.processChildren(element, processor, state, lastParent, place);
+  }
+
+  @Override
+  public ItemPresentation getPresentation() {
+    final String text = UsageViewUtil.createNodeText(this);
+    if (text != null) {
+      return new ItemPresentation() {
+        @Nullable
+        @Override
+        public String getPresentableText() {
+          return text;
+        }
+
+        @Nullable
+        @Override
+        public String getLocationString() {
+          return getContainingFile().getName();
+        }
+
+        @Nullable
+        @Override
+        public Icon getIcon(boolean b) {
+          return ErlangCompositeElementImpl.this.getIcon(0);
+        }
+      };
+    }
+    return super.getPresentation();
   }
 }

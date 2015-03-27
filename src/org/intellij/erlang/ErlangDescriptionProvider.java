@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionProvider;
 import com.intellij.psi.PsiElement;
@@ -33,32 +32,26 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
     if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom)) {
-      return getDescription(o, false);
+      return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
     }
     if (location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) {
       if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
       if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
     }
     if (location == HighlightUsagesDescriptionLocation.INSTANCE) {
-      return getDescription(o, true);
+      return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
     }
     if (location == UsageViewTypeLocation.INSTANCE) {
-      if (o instanceof ErlangModule) return "Module";
-      if (o instanceof ErlangFunction) return "Function";
-      if (o instanceof ErlangRecordDefinition) return "Record";
-      if (o instanceof ErlangQVar) return "Variable";
-      if (o instanceof ErlangMacrosDefinition) return "Macros";
-      if (o instanceof ErlangTypedExpr) return "Record field";
-      if (o instanceof ErlangTypeDefinition) return "Type";
-      if (o instanceof ErlangAttribute) return "Attribute";
-      if (o instanceof ErlangQAtom) return "Atom";
+      if (o instanceof ErlangModule) return "module";
+      else if (o instanceof ErlangFunction) return "function";
+      else if (o instanceof ErlangRecordDefinition) return "record";
+      else if (o instanceof ErlangQVar) return "variable";
+      else if (o instanceof ErlangMacrosDefinition) return "macro";
+      else if (o instanceof ErlangTypedExpr) return "record field";
+      else if (o instanceof ErlangTypeDefinition) return "type";
+      else if (o instanceof ErlangAttribute) return "attribute";
+      else if (o instanceof ErlangQAtom) return "atom";
     }
     return null;
-  }
-
-  @NotNull
-  private String getDescription(@NotNull PsiElement o, boolean lowercase) {
-    String type = getElementDescription(o, UsageViewTypeLocation.INSTANCE);
-    return (lowercase ? StringUtil.toLowerCase(type) : type) + " '" + getElementDescription(o, UsageViewShortNameLocation.INSTANCE) + "'";
   }
 }
