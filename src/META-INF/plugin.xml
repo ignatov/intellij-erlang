@@ -91,8 +91,8 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactoring.ErlangRefactoringSupportProvider"/>
         <lang.namesValidator language="Erlang" implementationClass="org.intellij.erlang.ErlangNamesValidator"/>
         <refactoring.safeDeleteProcessor implementation="org.intellij.erlang.refactoring.ErlangSafeDeleteProcessor" />
-        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangCompletionContributor"/>
-        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangKeywordsCompletionContributor"/>
+        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangCompletionContributor" id="ErlangCompletion"/>
+        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangKeywordsCompletionContributor" order="after ErlangCompletion"/>
       
         <renameInputValidator implementation="org.intellij.erlang.rename.ErlangRenameInputValidator"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameVariableProcessor"/>
