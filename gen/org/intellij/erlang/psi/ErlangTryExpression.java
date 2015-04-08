@@ -11,10 +11,16 @@ public interface ErlangTryExpression extends ErlangExpression, ErlangClauseOwner
   List<ErlangCrClause> getCrClauseList();
 
   @Nullable
-  ErlangTryCatch getTryCatch();
+  ErlangTryClauses getTryClauses();
+
+  @NotNull
+  List<ErlangTryExpressionsClause> getTryExpressionsClauseList();
 
   @Nullable
-  ErlangTryExpressionsClause getTryExpressionsClause();
+  PsiElement getAfter();
+
+  @Nullable
+  PsiElement getCatch();
 
   @Nullable
   PsiElement getEnd();

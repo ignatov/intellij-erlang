@@ -352,9 +352,6 @@ public class ErlangParser implements PsiParser {
     else if (t == ERL_TOP_TYPE_CLAUSE) {
       r = top_type_clause(b, 0);
     }
-    else if (t == ERL_TRY_CATCH) {
-      r = try_catch(b, 0);
-    }
     else if (t == ERL_TRY_CLAUSE) {
       r = try_clause(b, 0);
     }
@@ -4512,14 +4509,14 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // catch try_clauses [after try_expressions_clause] | after try_expressions_clause
-  public static boolean try_catch(PsiBuilder b, int l) {
+  static boolean try_catch(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "try_catch")) return false;
-    if (!nextTokenIs(b, "<try catch>", ERL_AFTER, ERL_CATCH)) return false;
+    if (!nextTokenIs(b, "", ERL_AFTER, ERL_CATCH)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<try catch>");
+    Marker m = enter_section_(b);
     r = try_catch_0(b, l + 1);
     if (!r) r = try_catch_1(b, l + 1);
-    exit_section_(b, l, m, ERL_TRY_CATCH, r, false, null);
+    exit_section_(b, m, null, r);
     return r;
   }
 

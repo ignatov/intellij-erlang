@@ -505,7 +505,7 @@ fun_name ::= fun_name_var {elementType=argument_definition}
 fun_name_var ::= q_var {elementType=max_expression}
 
 try_expression ::= try try_expressions_clause [of cr_clauses] try_catch end {pin(".*")=1}
-try_catch ::= catch try_clauses [after try_expressions_clause] | after try_expressions_clause {pin(".*")="catch|after"}
+private try_catch ::= catch try_clauses [after try_expressions_clause] | after try_expressions_clause {pin(".*")="catch|after"}
 try_expressions_clause ::= exprs
 try_clauses ::= try_clause (';' try_clause)*
 try_clause ::= <<guarded try_argument_definition>> clause_guard? clause_body {pin=1}

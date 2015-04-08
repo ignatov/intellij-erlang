@@ -75,8 +75,8 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   }
 
   private static boolean completeTry(@NotNull PsiFile file, @NotNull Editor editor) {
-    return completeExpression(file, editor, ErlangTypes.ERL_CATCH, ErlangTryCatch.class) ||
-           completeExpression(file, editor, ErlangTypes.ERL_AFTER, ErlangTryCatch.class) ||
+    return completeExpression(file, editor, ErlangTypes.ERL_CATCH, ErlangTryExpression.class) ||
+           completeExpression(file, editor, ErlangTypes.ERL_AFTER, ErlangTryExpression.class) ||
            completeExpression(file, editor, ErlangTypes.ERL_OF, ErlangTryExpression.class);
   }
 
@@ -136,7 +136,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     if (expression == null) return false;
     if (expression instanceof ErlangCatchExpression) {
       ErlangTryExpression tryExpression = PsiTreeUtil.getParentOfType(beginEndExpr, ErlangTryExpression.class);
-      return tryExpression == null || tryExpression.getTryCatch() != null;
+      return tryExpression == null || tryExpression.getCatch() != null || tryExpression.getAfter() != null;
     }
     return true;
   }

@@ -30812,25 +30812,24 @@ ERL_FILE
                             ERL_ATOM
                               PsiElement(atom_name)('mnesia_monitor')
                         PsiElement())(')')
-                ERL_TRY_CATCH
-                  PsiElement(catch)('catch')
-                  ERL_TRY_CLAUSES
-                    ERL_TRY_CLAUSE
-                      ERL_ARGUMENT_DEFINITION
-                        ERL_COLON_QUALIFIED_EXPRESSION
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('_')
-                          PsiElement(:)(':')
-                          ERL_MAX_EXPRESSION
-                            ERL_Q_VAR
-                              PsiElement(var)('_')
-                      ERL_CLAUSE_BODY
-                        PsiElement(->)('->')
+                PsiElement(catch)('catch')
+                ERL_TRY_CLAUSES
+                  ERL_TRY_CLAUSE
+                    ERL_ARGUMENT_DEFINITION
+                      ERL_COLON_QUALIFIED_EXPRESSION
                         ERL_MAX_EXPRESSION
-                          ERL_Q_ATOM
-                            ERL_ATOM
-                              PsiElement(atom_name)('ok')
+                          ERL_Q_VAR
+                            PsiElement(var)('_')
+                        PsiElement(:)(':')
+                        ERL_MAX_EXPRESSION
+                          ERL_Q_VAR
+                            PsiElement(var)('_')
+                    ERL_CLAUSE_BODY
+                      PsiElement(->)('->')
+                      ERL_MAX_EXPRESSION
+                        ERL_Q_ATOM
+                          ERL_ATOM
+                            PsiElement(atom_name)('ok')
                 PsiElement(end)('end')
               PsiElement(,)(',')
               ERL_CASE_EXPRESSION

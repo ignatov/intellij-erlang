@@ -454,10 +454,6 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
-  public void visitTryCatch(@NotNull ErlangTryCatch o) {
-    visitCompositeElement(o);
-  }
-
   public void visitTryClause(@NotNull ErlangTryClause o) {
     visitCompositeElement(o);
   }

@@ -64,10 +64,6 @@ public class ErlangIndentProcessor {
       return Indent.getNoneIndent();
     }
 
-    if (elementType == ERL_CATCH || elementType == ERL_AFTER) {
-      return Indent.getNoneIndent();
-    }
-
     if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_DEFINITION_LIST
       || parentType == ERL_FUN_TYPE || parentType == ERL_FUN_TYPE_ARGUMENTS) {
       if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) return Indent.getNoneIndent();
@@ -104,17 +100,25 @@ public class ErlangIndentProcessor {
     if (parentType == ERL_BEGIN_END_BODY || parentType == ERL_TRY_EXPRESSIONS_CLAUSE) {
       return Indent.getNoneIndent();
     }
+    if (parentType == ERL_TRY_CLAUSES) {
+      return Indent.getNormalIndent();
+    }
     if (parentType == ERL_CASE_EXPRESSION || parentType == ERL_RECEIVE_EXPRESSION || parentType == ERL_TRY_EXPRESSION ||
-        parentType == ERL_BEGIN_END_EXPRESSION || parentType == ERL_IF_EXPRESSION || parentType == ERL_TRY_CATCH) {
-      if (elementType == ERL_CR_CLAUSE || elementType == ERL_IF_CLAUSE || elementType == ERL_BEGIN_END_BODY || elementType == ERL_TRY_EXPRESSIONS_CLAUSE) {
+        parentType == ERL_BEGIN_END_EXPRESSION || parentType == ERL_IF_EXPRESSION) {
+      if (elementType == ERL_CR_CLAUSE || elementType == ERL_IF_CLAUSE || elementType == ERL_BEGIN_END_BODY ||
+        elementType == ERL_TRY_EXPRESSIONS_CLAUSE) {
         return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
       }
-      if (elementType == ERL_END || elementType == ERL_TRY_CATCH || elementType == ERL_AFTER_CLAUSE) {
+      if (elementType == ERL_CATCH || elementType == ERL_AFTER || elementType == ERL_END ||
+        elementType == ERL_AFTER_CLAUSE || elementType == ERL_TRY_CLAUSES) {
         return myErlangSettings.INDENT_RELATIVE ? Indent.getSpaceIndent(0, true) : Indent.getNoneIndent();
       }
     }
-    if (ErlangParserDefinition.COMMENTS.contains(elementType) && (parentType == ERL_TRY_CATCH || parentType == ERL_TRY_EXPRESSION)) {
+    if (ErlangParserDefinition.COMMENTS.contains(elementType) && parentType == ERL_TRY_EXPRESSION) {
       return Indent.getNormalIndent();
+    }
+    if (parentType == ERL_AFTER_CLAUSE && elementType == ERL_AFTER) {
+      return Indent.getNoneIndent();
     }
     if (needIndent(parentType)) {
       return Indent.getNormalIndent();

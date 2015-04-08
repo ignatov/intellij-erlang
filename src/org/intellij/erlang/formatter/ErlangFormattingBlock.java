@@ -353,8 +353,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_AFTER_CLAUSE ||
       type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
       type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||
-      type == ERL_TRY_CATCH && newChildIndex == 1 ||
-      type == ERL_TRY_EXPRESSION && newChildIndex == 1 ||
+      type == ERL_TRY_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5) ||
       type == ERL_OF && newChildIndex == 3 ||
       type == ERL_SEMI) {
       return Indent.getNormalIndent(true);
@@ -364,9 +363,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 
-    if (BLOCKS_TOKEN_SET.contains(type) ||
-      type == ERL_TYPED_RECORD_FIELDS
-      ) return Indent.getNormalIndent(false);
+    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) return Indent.getNormalIndent(false);
 
     return null;
   }
