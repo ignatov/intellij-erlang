@@ -17,19 +17,20 @@
 package org.intellij.erlang.formatting;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.LogicalPosition;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
-import junit.framework.Assert;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.File;
-import java.io.IOException;
 
 public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public static final boolean OVERRIDE_TEST_DATA = false;
@@ -39,27 +40,13 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void doEnterTest() throws Exception { doTest(false); }
 
   public void doTest(boolean format) throws Exception {
-    String testName = getTestName(true);
-    myFixture.configureByFile(testName + ".erl");
-    String after = doTest(format, testName);
-    myFixture.checkResultByFile(after);
-  }
+    boolean parasite = isParasite();
+    String appendix = parasite ? "\nfoo() -> ok." : "";
 
-  public void doEnterParasiteTest() throws Exception {
-    doParasiteTest(false);
-  }
+    String inputFile = getInputFileName();
+    String inputText = FileUtil.loadFile(new File(getTestDataPath() + inputFile)) + appendix;
+    myFixture.configureByText(inputFile, inputText);
 
-  public void doParasiteTest(boolean format) throws Exception {
-    String appendix = "\nfoo() -> ok.";
-    String testName = getTestName(true).replace("Parasite", "");
-    String text = FileUtil.loadFile(new File(getTestDataPath() + testName + ".erl")) + appendix;
-    myFixture.configureByText(testName + ".erl", text);
-    String after = doTest(format, testName);
-    String afterText = FileUtil.loadFile(new File(getTestDataPath() + after), true) + appendix;
-    myFixture.checkResult(afterText);
-  }
-
-  private String doTest(boolean format, String testName) throws IOException {
     if (format) {
       ApplicationManager.getApplication().runWriteAction(new Runnable() {
         @Override
@@ -72,11 +59,35 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
       myFixture.type('\n');
     }
 
-    String after = String.format("%s-after.erl", testName);
-    if (OVERRIDE_TEST_DATA) {
-      FileUtil.writeToFile(new File(myFixture.getTestDataPath() + "/" + after), myFixture.getFile().getText());
+    File outputFile = new File(myFixture.getTestDataPath() + "/" + getExpectedOutputFileName());
+    String expectedResultText = FileUtil.loadFile(outputFile, true) + appendix;
+
+    //noinspection PointlessBooleanExpression,ConstantConditions
+    if (OVERRIDE_TEST_DATA && !parasite) {
+      String resultText = myFixture.getFile().getText();
+      if (expectedResultText.contains("<caret>")) {
+        LogicalPosition caretPosition = myFixture.getEditor().getCaretModel().getPrimaryCaret().getLogicalPosition();
+        int offset = StringUtil.lineColToOffset(resultText, caretPosition.line, caretPosition.column);
+        assertTrue(offset >= 0);
+        resultText = TextRange.from(offset, 0).replace(resultText, "<caret>");
+      }
+      FileUtil.writeToFile(outputFile, resultText);
     }
-    return after;
+    else {
+      myFixture.checkResult(expectedResultText);
+    }
+  }
+
+  private String getInputFileName() {
+    return getTestName(true).replace("Parasite", "") + ".erl";
+  }
+
+  private String getExpectedOutputFileName() {
+    return getTestName(true).replace("Parasite", "") + "-after.erl";
+  }
+
+  private boolean isParasite() {
+    return StringUtil.contains(getTestName(true), "Parasite");
   }
 
   public void test48()     throws Exception { doTest(); }
@@ -194,37 +205,37 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testFunExpression3() throws Exception { doEnterTest(); }
   public void testFunExpression4() throws Exception { doEnterTest(); }
 
-  public void testIfParasite1() throws Exception { doEnterParasiteTest(); }
-  public void testIfParasite2() throws Exception { doEnterParasiteTest(); }
-  public void testIfParasite3() throws Exception { doEnterParasiteTest(); }
+  public void testIfParasite1() throws Exception { doEnterTest(); }
+  public void testIfParasite2() throws Exception { doEnterTest(); }
+  public void testIfParasite3() throws Exception { doEnterTest(); }
 
-  public void testTryParasite1() throws Exception { doEnterParasiteTest(); }
-  public void testTryParasite2() throws Exception { doEnterParasiteTest(); }
-  public void testTryParasite3() throws Exception { doEnterParasiteTest(); }
-  public void testTryParasite4() throws Exception { doEnterParasiteTest(); }
-  public void testTryParasite5() throws Exception { doEnterParasiteTest(); }
+  public void testTryParasite1() throws Exception { doEnterTest(); }
+  public void testTryParasite2() throws Exception { doEnterTest(); }
+  public void testTryParasite3() throws Exception { doEnterTest(); }
+  public void testTryParasite4() throws Exception { doEnterTest(); }
+  public void testTryParasite5() throws Exception { doEnterTest(); }
 
-  public void testCaseParasite1() throws Exception { doEnterParasiteTest(); }
-  public void testCaseParasite2() throws Exception { doEnterParasiteTest(); }
-  public void testCaseParasite3() throws Exception { doEnterParasiteTest(); }
-  public void testCaseParasite4() throws Exception { doEnterParasiteTest(); }
+  public void testCaseParasite1() throws Exception { doEnterTest(); }
+  public void testCaseParasite2() throws Exception { doEnterTest(); }
+  public void testCaseParasite3() throws Exception { doEnterTest(); }
+  public void testCaseParasite4() throws Exception { doEnterTest(); }
 
-  public void testReceiveParasite1() throws Exception { doEnterParasiteTest(); }
-  public void testReceiveParasite2() throws Exception { doEnterParasiteTest(); }
-  public void testReceiveParasite3() throws Exception { doEnterParasiteTest(); }
-  public void testReceiveParasite4() throws Exception { doEnterParasiteTest(); }
-  public void testReceiveParasite5() throws Exception { doEnterParasiteTest(); }
-  public void testReceiveParasite6() throws Exception { doEnterParasiteTest(); }
-  public void testReceiveParasite7() throws Exception { doEnterParasiteTest(); }
+  public void testReceiveParasite1() throws Exception { doEnterTest(); }
+  public void testReceiveParasite2() throws Exception { doEnterTest(); }
+  public void testReceiveParasite3() throws Exception { doEnterTest(); }
+  public void testReceiveParasite4() throws Exception { doEnterTest(); }
+  public void testReceiveParasite5() throws Exception { doEnterTest(); }
+  public void testReceiveParasite6() throws Exception { doEnterTest(); }
+  public void testReceiveParasite7() throws Exception { doEnterTest(); }
 
-  public void testBeginParasite1() throws Exception { doEnterParasiteTest(); }
-  public void testBeginParasite2() throws Exception { doEnterParasiteTest(); }
-  public void testBeginParasite3() throws Exception { doEnterParasiteTest(); }
+  public void testBeginParasite1() throws Exception { doEnterTest(); }
+  public void testBeginParasite2() throws Exception { doEnterTest(); }
+  public void testBeginParasite3() throws Exception { doEnterTest(); }
 
-  public void testFunExpressionParasite1() throws Exception { doEnterParasiteTest(); }
-  public void testFunExpressionParasite2() throws Exception { doEnterParasiteTest(); }
-  public void testFunExpressionParasite3() throws Exception { doEnterParasiteTest(); }
-  public void testFunExpressionParasite4() throws Exception { doEnterParasiteTest(); }
+  public void testFunExpressionParasite1() throws Exception { doEnterTest(); }
+  public void testFunExpressionParasite2() throws Exception { doEnterTest(); }
+  public void testFunExpressionParasite3() throws Exception { doEnterTest(); }
+  public void testFunExpressionParasite4() throws Exception { doEnterTest(); }
 
   public void testCommaFirstEnterRecords() throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter()        throws Exception { setUpCommaFirst(); doEnterTest(); }
@@ -267,10 +278,10 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   private void setTestStyleSettings() {
     CodeStyleSettingsManager settingsManager = CodeStyleSettingsManager.getInstance(getProject());
     CodeStyleSettings currSettings = settingsManager.getCurrentSettings();
-    Assert.assertNotNull(currSettings);
+    assertNotNull(currSettings);
     myTemporarySettings = currSettings.clone();
     CodeStyleSettings.IndentOptions indentOptions = myTemporarySettings.getIndentOptions(ErlangFileType.MODULE);
-    Assert.assertNotNull(indentOptions);
+    assertNotNull(indentOptions);
     settingsManager.setTemporarySettings(myTemporarySettings);
   }
 
