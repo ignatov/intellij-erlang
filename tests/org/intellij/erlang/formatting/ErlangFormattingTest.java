@@ -184,7 +184,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testCase4() throws Exception { doEnterTest(); }
 
   public void testReceive() throws Exception { doTest(); }
-//  public void testReceive1() throws Exception { doEnterTest(); }
+  public void testReceive1() throws Exception { doEnterTest(); }
   public void testReceive2() throws Exception { doEnterTest(); }
   public void testReceive3() throws Exception { doEnterTest(); }
   public void testReceive4() throws Exception { doEnterTest(); }
@@ -200,7 +200,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testRecordFields2() throws Exception { doEnterTest(); }
 
   public void testFunExpression() throws Exception { doTest(); }
-//  public void testFunExpression1() throws Exception { doEnterTest(); }
+  public void testFunExpression1() throws Exception { doEnterTest(); }
   public void testFunExpression2() throws Exception { doEnterTest(); }
   public void testFunExpression3() throws Exception { doEnterTest(); }
   public void testFunExpression4() throws Exception { doEnterTest(); }
