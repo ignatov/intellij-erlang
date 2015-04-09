@@ -1,0 +1,3 @@
+test() ->
+  X = try
+        <caret>

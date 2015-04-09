@@ -33,7 +33,11 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import java.io.File;
 
 public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  public static final boolean OVERRIDE_TEST_DATA = false;
+  private static final boolean OVERRIDE_TEST_DATA = false;
+
+  private static final String PARASITE_INFIX = "Parasite";
+  private static final String INDENT_RELATIVE_OFF_SUFFIX = "__IR_OFF";
+
   private CodeStyleSettings myTemporarySettings;
 
   public void doTest()      throws Exception { doTest(true);  }
@@ -60,6 +64,11 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     }
 
     File outputFile = new File(myFixture.getTestDataPath() + "/" + getExpectedOutputFileName());
+    if (!outputFile.exists()) {
+      FileUtil.writeToFile(outputFile, "");
+      //noinspection UseOfSystemOutOrSystemErr
+      System.err.println("Output file " + outputFile.getPath() + " doesn't exist. It was created.");
+    }
     String expectedResultText = FileUtil.loadFile(outputFile, true) + appendix;
 
     //noinspection PointlessBooleanExpression,ConstantConditions
@@ -79,15 +88,15 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   }
 
   private String getInputFileName() {
-    return getTestName(true).replace("Parasite", "") + ".erl";
+    return StringUtil.trimEnd(getTestName(true).replace(PARASITE_INFIX, ""), INDENT_RELATIVE_OFF_SUFFIX) + ".erl";
   }
 
   private String getExpectedOutputFileName() {
-    return getTestName(true).replace("Parasite", "") + "-after.erl";
+    return getTestName(true).replace(PARASITE_INFIX, "") + "-after.erl";
   }
 
   private boolean isParasite() {
-    return StringUtil.contains(getTestName(true), "Parasite");
+    return StringUtil.contains(getTestName(true), PARASITE_INFIX);
   }
 
   public void test48()     throws Exception { doTest(); }
@@ -112,9 +121,9 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test299()    throws Exception { doTest(); }
   public void test305()    throws Exception { doTest(); }
   public void test350()    throws Exception { doTest(); }
-  public void test351()    throws Exception { getErlangSettings().INDENT_RELATIVE = true; doTest(); }
-  public void test222_1()  throws Exception { getErlangSettings().INDENT_RELATIVE = true; doTest(); }
-  public void test222_2()  throws Exception { getErlangSettings().INDENT_RELATIVE = false; doTest(); }
+  public void test351()    throws Exception { doTest(); }
+  public void test222()          throws Exception { doTest(); }
+  public void test222__IR_OFF()  throws Exception { doTest(); }
   public void test273()    throws Exception { getErlangSettings().ALIGN_GUARDS = true; doTest(); }
   public void test379()    throws Exception { setUpCommaFirst(); doTest(); }
   public void test433()    throws Exception { getErlangSettings().ALIGN_FUN_CLAUSES = true; doTest(); }
@@ -168,9 +177,31 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void testFunctionClause() throws Exception { doEnterTest(); }
 
+
   public void testIf1() throws Exception { doEnterTest(); }
   public void testIf2() throws Exception { doEnterTest(); }
   public void testIf3() throws Exception { doEnterTest(); }
+
+  public void testIfParasite1() throws Exception { doEnterTest(); }
+  public void testIfParasite2() throws Exception { doEnterTest(); }
+  public void testIfParasite3() throws Exception { doEnterTest(); }
+
+  public void testBindIf()                    throws Exception { doEnterTest(); }
+  public void testBindIfFirstClause()         throws Exception { doEnterTest(); }
+  public void testBindIfLastClause()          throws Exception { doEnterTest(); }
+
+  public void testBindIf__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindIfFirstClause__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindIfLastClause__IR_OFF()  throws Exception { doEnterTest(); }
+
+  public void testBindIfParasite()            throws Exception { doEnterTest(); }
+  public void testBindIfFirstClauseParasite() throws Exception { doEnterTest(); }
+  public void testBindIfLastClauseParasite()  throws Exception { doEnterTest(); }
+
+  public void testBindIfParasite__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindIfFirstClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindIfLastClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
+
 
   public void testTry1() throws Exception { doEnterTest(); }
   public void testTry2() throws Exception { doEnterTest(); }
@@ -178,10 +209,71 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testTry4() throws Exception { doEnterTest(); }
   public void testTry5() throws Exception { doEnterTest(); }
 
+  public void testTryParasite1() throws Exception { doEnterTest(); }
+  public void testTryParasite2() throws Exception { doEnterTest(); }
+  public void testTryParasite3() throws Exception { doEnterTest(); }
+  public void testTryParasite4() throws Exception { doEnterTest(); }
+  public void testTryParasite5() throws Exception { doEnterTest(); }
+
+  public void testBindTry()                 throws Exception { doEnterTest(); }
+  public void testBindTryExpr()             throws Exception { doEnterTest(); }
+  public void testBindTryCatch()            throws Exception { doEnterTest(); }
+  public void testBindTryFirstCatchClause() throws Exception { doEnterTest(); }
+  public void testBindTryLastCatchClause()  throws Exception { doEnterTest(); }
+
+  public void testBindTry__IR_OFF()                 throws Exception { doEnterTest(); }
+  public void testBindTryExpr__IR_OFF()             throws Exception { doEnterTest(); }
+  public void testBindTryCatch__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindTryFirstCatchClause__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindTryLastCatchClause__IR_OFF()  throws Exception { doEnterTest(); }
+
+  public void testBindTryParasite()                 throws Exception { doEnterTest(); }
+  public void testBindTryExprParasite()             throws Exception { doEnterTest(); }
+  public void testBindTryCatchParasite()            throws Exception { doEnterTest(); }
+  public void testBindTryFirstCatchClauseParasite() throws Exception { doEnterTest(); }
+  public void testBindTryLastCatchClauseParasite()  throws Exception { doEnterTest(); }
+
+  public void testBindTryParasite__IR_OFF()                 throws Exception { doEnterTest(); }
+  public void testBindTryExprParasite__IR_OFF()             throws Exception { doEnterTest(); }
+  public void testBindTryCatchParasite__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindTryFirstCatchClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindTryLastCatchClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
+
+
   public void testCase1() throws Exception { doEnterTest(); }
   public void testCase2() throws Exception { doEnterTest(); }
   public void testCase3() throws Exception { doEnterTest(); }
   public void testCase4() throws Exception { doEnterTest(); }
+
+  public void testCaseParasite1() throws Exception { doEnterTest(); }
+  public void testCaseParasite2() throws Exception { doEnterTest(); }
+  public void testCaseParasite3() throws Exception { doEnterTest(); }
+  public void testCaseParasite4() throws Exception { doEnterTest(); }
+
+  public void testBindCase()              throws Exception { doEnterTest(); }
+  public void testBindCaseExpr()          throws Exception { doEnterTest(); }
+  public void testBindCaseOf()            throws Exception { doEnterTest(); }
+  public void testBindCaseOfFirstClause() throws Exception { doEnterTest(); }
+  public void testBindCaseOfLastClause()  throws Exception { doEnterTest(); }
+
+  public void testBindCase__IR_OFF()              throws Exception { doEnterTest(); }
+  public void testBindCaseExpr__IR_OFF()          throws Exception { doEnterTest(); }
+  public void testBindCaseOf__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindCaseOfFirstClause__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindCaseOfLastClause__IR_OFF()  throws Exception { doEnterTest(); }
+
+  public void testBindCaseParasite()              throws Exception { doEnterTest(); }
+  public void testBindCaseExprParasite()          throws Exception { doEnterTest(); }
+  public void testBindCaseOfParasite()            throws Exception { doEnterTest(); }
+  public void testBindCaseOfFirstClauseParasite() throws Exception { doEnterTest(); }
+  public void testBindCaseOfLastClauseParasite()  throws Exception { doEnterTest(); }
+
+  public void testBindCaseParasite__IR_OFF()              throws Exception { doEnterTest(); }
+  public void testBindCaseExprParasite__IR_OFF()          throws Exception { doEnterTest(); }
+  public void testBindCaseOfParasite__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindCaseOfFirstClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindCaseOfLastClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
+
 
   public void testReceive() throws Exception { doTest(); }
   public void testReceive1() throws Exception { doEnterTest(); }
@@ -192,34 +284,6 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testReceive6() throws Exception { doEnterTest(); }
   public void testReceive7() throws Exception { doEnterTest(); }
 
-  public void testBegin1() throws Exception { doEnterTest(); }
-  public void testBegin2() throws Exception { doEnterTest(); }
-  public void testBegin3() throws Exception { doEnterTest(); }
-
-  public void testRecordFields1() throws Exception { doEnterTest(); }
-  public void testRecordFields2() throws Exception { doEnterTest(); }
-
-  public void testFunExpression() throws Exception { doTest(); }
-  public void testFunExpression1() throws Exception { doEnterTest(); }
-  public void testFunExpression2() throws Exception { doEnterTest(); }
-  public void testFunExpression3() throws Exception { doEnterTest(); }
-  public void testFunExpression4() throws Exception { doEnterTest(); }
-
-  public void testIfParasite1() throws Exception { doEnterTest(); }
-  public void testIfParasite2() throws Exception { doEnterTest(); }
-  public void testIfParasite3() throws Exception { doEnterTest(); }
-
-  public void testTryParasite1() throws Exception { doEnterTest(); }
-  public void testTryParasite2() throws Exception { doEnterTest(); }
-  public void testTryParasite3() throws Exception { doEnterTest(); }
-  public void testTryParasite4() throws Exception { doEnterTest(); }
-  public void testTryParasite5() throws Exception { doEnterTest(); }
-
-  public void testCaseParasite1() throws Exception { doEnterTest(); }
-  public void testCaseParasite2() throws Exception { doEnterTest(); }
-  public void testCaseParasite3() throws Exception { doEnterTest(); }
-  public void testCaseParasite4() throws Exception { doEnterTest(); }
-
   public void testReceiveParasite1() throws Exception { doEnterTest(); }
   public void testReceiveParasite2() throws Exception { doEnterTest(); }
   public void testReceiveParasite3() throws Exception { doEnterTest(); }
@@ -228,14 +292,82 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testReceiveParasite6() throws Exception { doEnterTest(); }
   public void testReceiveParasite7() throws Exception { doEnterTest(); }
 
+  public void testBindReceive()            throws Exception { doEnterTest(); }
+  public void testBindReceiveFirstClause() throws Exception { doEnterTest(); }
+  public void testBindReceiveLastClause()  throws Exception { doEnterTest(); }
+  public void testBindReceiveAfter()       throws Exception { doEnterTest(); }
+  public void testBindReceiveAfterClause() throws Exception { doEnterTest(); }
+
+  public void testBindReceive__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindReceiveFirstClause__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindReceiveLastClause__IR_OFF()  throws Exception { doEnterTest(); }
+  public void testBindReceiveAfter__IR_OFF()       throws Exception { doEnterTest(); }
+  public void testBindReceiveAfterClause__IR_OFF() throws Exception { doEnterTest(); }
+
+  public void testBindReceiveParasite()            throws Exception { doEnterTest(); }
+  public void testBindReceiveFirstClauseParasite() throws Exception { doEnterTest(); }
+  public void testBindReceiveLastClauseParasite()  throws Exception { doEnterTest(); }
+  public void testBindReceiveAfterParasite()       throws Exception { doEnterTest(); }
+  public void testBindReceiveAfterClauseParasite() throws Exception { doEnterTest(); }
+
+  public void testBindReceiveParasite__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindReceiveFirstClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindReceiveLastClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
+  public void testBindReceiveAfterParasite__IR_OFF()       throws Exception { doEnterTest(); }
+  public void testBindReceiveAfterClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
+
+
+  public void testBegin1() throws Exception { doEnterTest(); }
+  public void testBegin2() throws Exception { doEnterTest(); }
+  public void testBegin3() throws Exception { doEnterTest(); }
+
   public void testBeginParasite1() throws Exception { doEnterTest(); }
   public void testBeginParasite2() throws Exception { doEnterTest(); }
   public void testBeginParasite3() throws Exception { doEnterTest(); }
+
+  public void testBindBegin()     throws Exception { doEnterTest(); }
+  public void testBindBeginExpr() throws Exception { doEnterTest(); }
+
+  public void testBindBegin__IR_OFF()     throws Exception { doEnterTest(); }
+  public void testBindBeginExpr__IR_OFF() throws Exception { doEnterTest(); }
+
+  public void testBindBeginParasite()     throws Exception { doEnterTest(); }
+  public void testBindBeginExprParasite() throws Exception { doEnterTest(); }
+
+  public void testBindBeginParasite__IR_OFF()     throws Exception { doEnterTest(); }
+  public void testBindBeginExprParasite__IR_OFF() throws Exception { doEnterTest(); }
+
+  public void testRecordFields1() throws Exception { doEnterTest(); }
+  public void testRecordFields2() throws Exception { doEnterTest(); }
+
+
+  public void testFunExpression() throws Exception { doTest(); }
+  public void testFunExpression1() throws Exception { doEnterTest(); }
+  public void testFunExpression2() throws Exception { doEnterTest(); }
+  public void testFunExpression3() throws Exception { doEnterTest(); }
+  public void testFunExpression4() throws Exception { doEnterTest(); }
 
   public void testFunExpressionParasite1() throws Exception { doEnterTest(); }
   public void testFunExpressionParasite2() throws Exception { doEnterTest(); }
   public void testFunExpressionParasite3() throws Exception { doEnterTest(); }
   public void testFunExpressionParasite4() throws Exception { doEnterTest(); }
+
+  public void testBindFunExpression()            throws Exception { doEnterTest(); }
+  public void testBindFunExpressionFirstClause() throws Exception { doEnterTest(); }
+  public void testBindFunExpressionLastClause()  throws Exception { doEnterTest(); }
+
+  public void testBindFunExpression__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindFunExpressionFirstClause__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindFunExpressionLastClause__IR_OFF()  throws Exception { doEnterTest(); }
+
+  public void testBindFunExpressionParasite()            throws Exception { doEnterTest(); }
+  public void testBindFunExpressionFirstClauseParasite() throws Exception { doEnterTest(); }
+  public void testBindFunExpressionLastClauseParasite()  throws Exception { doEnterTest(); }
+
+  public void testBindFunExpressionParasite__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindFunExpressionFirstClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindFunExpressionLastClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
+
 
   public void testCommaFirstEnterRecords() throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter()        throws Exception { setUpCommaFirst(); doEnterTest(); }
@@ -267,6 +399,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     setTestStyleSettings();
+    getErlangSettings().INDENT_RELATIVE = !getTestName(true).endsWith(INDENT_RELATIVE_OFF_SUFFIX);
   }
 
   @Override

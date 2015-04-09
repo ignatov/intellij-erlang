@@ -1,0 +1,2 @@
+test() ->
+  X = fun<caret>

@@ -305,7 +305,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
     Indent childIndent = getChildIndent(myNode.getElementType(), newChildIndex);
-    IElementType type = newChildIndex > 0 ? getIElementType(newChildIndex) : null;
+    IElementType type = getPreviousElementType(newChildIndex);
     Alignment alignment = getChildAlignment(type);
     if (childIndent != null) return new ChildAttributes(childIndent, alignment);
     if (type != null) childIndent = getChildIndent(type, newChildIndex);
@@ -324,7 +324,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
   }
 
   @Nullable
-  private IElementType getIElementType(int newChildIndex) {
+  private IElementType getPreviousElementType(int newChildIndex) {
+    if (newChildIndex <= 0) return null;
     Block block = getSubBlocks().get(newChildIndex - 1);
     while (block instanceof ErlangFormattingBlock && !block.getSubBlocks().isEmpty()) {
       List<Block> subBlocks = block.getSubBlocks();
@@ -350,11 +351,20 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_CASE_EXPRESSION && newChildIndex == 1 ||
       type == ERL_BEGIN_END_EXPRESSION && newChildIndex == 1 ||
       type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
-      type == ERL_RECEIVE_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3) ||
+      type == ERL_RECEIVE_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5) ||
       type == ERL_TRY_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5) ||
       type == ERL_OF && newChildIndex == 3 ||
       type == ERL_SEMI) {
-      return Indent.getNormalIndent(true);
+      return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
+    }
+
+    if (type == ERL_IF_EXPRESSION || type == ERL_CASE_EXPRESSION ||
+      type == ERL_RECEIVE_EXPRESSION || type == ERL_BEGIN_END_EXPRESSION || type == ERL_FUN_EXPRESSION) {
+      IElementType previousElement = getPreviousElementType(newChildIndex);
+      if (previousElement != null &&
+        previousElement != ERL_OF && previousElement != ERL_AFTER && previousElement != ERL_SEMI) {
+        return Indent.getSpaceIndent(0, myErlangSettings.INDENT_RELATIVE);
+      }
     }
 
     if (type == ERL_BEGIN_END_BODY) return Indent.getNoneIndent();

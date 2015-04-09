@@ -1,0 +1,3 @@
+test() ->
+  X = fun
+        <caret>

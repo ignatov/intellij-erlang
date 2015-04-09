@@ -1,0 +1,3 @@
+test() ->
+  X = case
+    <caret>

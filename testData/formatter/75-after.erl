@@ -2,9 +2,9 @@
 
 f() ->
   fuuuuuuuuuuuun(fun
-    (X) -> X;
-    (Y) -> Y
-  end).
+                   (X) -> X;
+                   (Y) -> Y
+                 end).
 
 -record(x, {
   a = b :: atom()
