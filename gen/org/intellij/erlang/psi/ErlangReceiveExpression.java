@@ -8,10 +8,13 @@ import com.intellij.psi.PsiElement;
 public interface ErlangReceiveExpression extends ErlangExpression, ErlangClauseOwner {
 
   @Nullable
-  ErlangAfterClause getAfterClause();
+  ErlangAfterClauseBody getAfterClauseBody();
 
   @NotNull
   List<ErlangCrClause> getCrClauseList();
+
+  @Nullable
+  PsiElement getAfter();
 
   @Nullable
   PsiElement getEnd();

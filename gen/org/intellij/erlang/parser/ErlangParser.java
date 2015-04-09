@@ -25,9 +25,6 @@ public class ErlangParser implements PsiParser {
     if (t == ERL_ADDITIVE_EXPRESSION) {
       r = expression(b, 0, 6);
     }
-    else if (t == ERL_AFTER_CLAUSE) {
-      r = after_clause(b, 0);
-    }
     else if (t == ERL_AFTER_CLAUSE_BODY) {
       r = after_clause_body(b, 0);
     }
@@ -442,7 +439,7 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // after after_clause_body
-  public static boolean after_clause(PsiBuilder b, int l) {
+  static boolean after_clause(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "after_clause")) return false;
     if (!nextTokenIs(b, ERL_AFTER)) return false;
     boolean r, p;
@@ -450,7 +447,7 @@ public class ErlangParser implements PsiParser {
     r = consumeToken(b, ERL_AFTER);
     p = r; // pin = 1
     r = r && after_clause_body(b, l + 1);
-    exit_section_(b, l, m, ERL_AFTER_CLAUSE, r, p, null);
+    exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
 

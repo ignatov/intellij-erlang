@@ -11,10 +11,6 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitFakeBinaryExpression(o);
   }
 
-  public void visitAfterClause(@NotNull ErlangAfterClause o) {
-    visitCompositeElement(o);
-  }
-
   public void visitAfterClauseBody(@NotNull ErlangAfterClauseBody o) {
     visitCompositeElement(o);
   }

@@ -11,7 +11,6 @@ import org.intellij.erlang.psi.impl.*;
 public interface ErlangTypes {
 
   IElementType ERL_ADDITIVE_EXPRESSION = new ErlangCompositeElementType("ERL_ADDITIVE_EXPRESSION");
-  IElementType ERL_AFTER_CLAUSE = new ErlangCompositeElementType("ERL_AFTER_CLAUSE");
   IElementType ERL_AFTER_CLAUSE_BODY = new ErlangCompositeElementType("ERL_AFTER_CLAUSE_BODY");
   IElementType ERL_ANDALSO_EXPRESSION = new ErlangCompositeElementType("ERL_ANDALSO_EXPRESSION");
   IElementType ERL_ANONYMOUS_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_ANONYMOUS_CALL_EXPRESSION");
@@ -213,9 +212,6 @@ public interface ErlangTypes {
       IElementType type = node.getElementType();
        if (type == ERL_ADDITIVE_EXPRESSION) {
         return new ErlangAdditiveExpressionImpl(node);
-      }
-      else if (type == ERL_AFTER_CLAUSE) {
-        return new ErlangAfterClauseImpl(node);
       }
       else if (type == ERL_AFTER_CLAUSE_BODY) {
         return new ErlangAfterClauseBodyImpl(node);

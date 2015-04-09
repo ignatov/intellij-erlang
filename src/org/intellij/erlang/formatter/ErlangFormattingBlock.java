@@ -56,7 +56,6 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_FUN_CLAUSES,
     ERL_TRY_EXPRESSIONS_CLAUSE,
     ERL_TYPE_SIG_GUARD,
-    ERL_AFTER_CLAUSE,
     ERL_TOP_TYPE_CLAUSE
   );
   public static final TokenSet CURLY_CONTAINERS = TokenSet.create(
@@ -350,9 +349,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_IF_EXPRESSION && newChildIndex == 1 ||
       type == ERL_CASE_EXPRESSION && newChildIndex == 1 ||
       type == ERL_BEGIN_END_EXPRESSION && newChildIndex == 1 ||
-      type == ERL_AFTER_CLAUSE ||
       type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
-      type == ERL_RECEIVE_EXPRESSION && newChildIndex == 1 ||
+      type == ERL_RECEIVE_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3) ||
       type == ERL_TRY_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5) ||
       type == ERL_OF && newChildIndex == 3 ||
       type == ERL_SEMI) {

@@ -23,14 +23,20 @@ public class ErlangReceiveExpressionImpl extends ErlangExpressionImpl implements
 
   @Override
   @Nullable
-  public ErlangAfterClause getAfterClause() {
-    return findChildByClass(ErlangAfterClause.class);
+  public ErlangAfterClauseBody getAfterClauseBody() {
+    return findChildByClass(ErlangAfterClauseBody.class);
   }
 
   @Override
   @NotNull
   public List<ErlangCrClause> getCrClauseList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangCrClause.class);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getAfter() {
+    return findChildByType(ERL_AFTER);
   }
 
   @Override
