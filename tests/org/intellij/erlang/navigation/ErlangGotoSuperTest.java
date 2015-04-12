@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,19 +34,19 @@ public class ErlangGotoSuperTest extends LightPlatformCodeInsightFixtureTestCase
     return "testData/navigation/goto_super/";
   }
 
-  public void testSingleFunction() throws Throwable {
+  public void testSingleFunction() {
     doTest(1, getTestName(true) + ".erl", "test_behaviour.erl");
   }
 
-  public void testNotSpecifiedBehavioursAreNotSuggested() throws Throwable {
+  public void testNotSpecifiedBehavioursAreNotSuggested() {
     doTest(1, "singleFunction.erl", "test_behaviour.erl", "test_behaviour2.erl");
   }
 
-  public void testTwoFunctions() throws Throwable {
+  public void testTwoFunctions() {
     doTest(2, getTestName(true) + ".erl", "test_behaviour.erl", "test_behaviour2.erl");
   }
 
-  private void doTest(int expectedCallbacksCount, String... filesToLoad) throws Throwable {
+  private void doTest(int expectedCallbacksCount, String... filesToLoad) {
     myFixture.configureByFiles(filesToLoad);
 
     LanguageCodeInsightActionHandler handler = CodeInsightActions.GOTO_SUPER.forLanguage(ErlangLanguage.INSTANCE);

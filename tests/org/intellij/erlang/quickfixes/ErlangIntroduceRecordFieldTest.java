@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,8 @@ public class ErlangIntroduceRecordFieldTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/introduce_record_field";
   }
 
-  public void testSimple() throws Throwable           { doIntroduceRecordFieldTest(); }
-  public void testWithOtherFields() throws Throwable  { doIntroduceRecordFieldTest(); }
+  public void testSimple()           { doIntroduceRecordFieldTest(); }
+  public void testWithOtherFields()  { doIntroduceRecordFieldTest(); }
 
   private void doIntroduceRecordFieldTest() { doTest("Introduce record field"); }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ public class ErlangExportTypeFixTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/export_type/";
   }
 
-  public void testEmpty()   throws Throwable  { doTest("Export type"); }
-  public void testWithout() throws Throwable  { doTest("Export type"); }
-  public void testCommon()  throws Throwable  { doTest("Export type"); }
-  public void testDelete()  throws Throwable  { doTest("Remove type"); }
+  public void testEmpty()    { doTest("Export type"); }
+  public void testWithout()  { doTest("Export type"); }
+  public void testCommon()   { doTest("Export type"); }
+  public void testDelete()   { doTest("Remove type"); }
 }

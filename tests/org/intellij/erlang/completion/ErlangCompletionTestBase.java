@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,20 +67,20 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
     myFixture.checkResult(after);
   }
 
-  protected void doTestInclude(String txt, String... variants) throws Throwable {
+  protected void doTestInclude(String txt, String... variants) {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
   }
 
-  protected void doTestEquals(String txt, String... variants) throws Throwable {
+  protected void doTestEquals(String txt, String... variants) {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.EQUALS, variants);
   }
 
-  protected void doTestVariants(String txt, CompletionType type, int count, CheckType checkType, String... variants) throws Throwable {
+  protected void doTestVariants(String txt, CompletionType type, int count, CheckType checkType, String... variants) {
     myFixture.configureByText("a.erl", txt);
     doTestVariantsInner(type, count, checkType, variants);
   }
 
-  protected void doTestVariantsInner(CompletionType type, int count, CheckType checkType, String... variants) throws Throwable {
+  protected void doTestVariantsInner(CompletionType type, int count, CheckType checkType, String... variants) {
     myFixture.complete(type, count);
     List<String> stringList = myFixture.getLookupElementStrings();
 
@@ -103,7 +103,7 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
     }
   }
 
-  protected void doSmartTest(String text, CheckType type, String... variants) throws Throwable { doTestVariants(text, CompletionType.SMART, 1, type, variants); }
+  protected void doSmartTest(String text, CheckType type, String... variants) { doTestVariants(text, CompletionType.SMART, 1, type, variants); }
 
   protected enum CheckType { EQUALS, INCLUDES, EXCLUDES }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,9 @@ public class ErlangIntroduceRecordFixTest extends ErlangQuickFixTestBase {
 
   private void doIntroduceRecordTest()                        { doTest("Introduce new record"); }
 
-  public void testSimple() throws Throwable                   { doIntroduceRecordTest(); }
-  public void testWithPrecedingFunctions() throws Throwable   { doIntroduceRecordTest(); }
-  public void testWithPrecedingRecords() throws Throwable     { doIntroduceRecordTest(); }
-  public void testSurroundedByDeclarations() throws Throwable { doIntroduceRecordTest(); }
-  public void testWithFields() throws Throwable               { doIntroduceRecordTest(); }
+  public void testSimple()                   { doIntroduceRecordTest(); }
+  public void testWithPrecedingFunctions()   { doIntroduceRecordTest(); }
+  public void testWithPrecedingRecords()     { doIntroduceRecordTest(); }
+  public void testSurroundedByDeclarations() { doIntroduceRecordTest(); }
+  public void testWithFields()               { doIntroduceRecordTest(); }
 }

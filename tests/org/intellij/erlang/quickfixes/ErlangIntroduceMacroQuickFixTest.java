@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@ public class ErlangIntroduceMacroQuickFixTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/introduce_macro/";
   }
 
-  public void testSimple() throws Throwable                   { doIntroduceMacroTest(); }
-  public void testWithMacro() throws Throwable                { doIntroduceMacroTest(); }
-  public void testWithMacroSucceedingUsage() throws Throwable { doIntroduceMacroTest(); }
+  public void testSimple()                   { doIntroduceMacroTest(); }
+  public void testWithMacro()                { doIntroduceMacroTest(); }
+  public void testWithMacroSucceedingUsage() { doIntroduceMacroTest(); }
 
   private void doIntroduceMacroTest() { doTest("Introduce macro"); }
 }

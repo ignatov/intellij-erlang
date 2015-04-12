@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@ public class ErlangExtractFunctionTest extends ErlangLightPlatformCodeInsightFix
     return "testData/refactoring/extract_function";
   }
 
-  public void testSimple() throws Throwable { doTest(); }
-  public void testAtom()   throws Throwable { doTest(); }
-  public void testQuotedAtom() throws Throwable { doTest(); }
+  public void testSimple() { doTest(); }
+  public void testAtom()   { doTest(); }
+  public void testQuotedAtom() { doTest(); }
 
-  private void doTest() throws Throwable {
+  private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");
     new ErlangExtractFunctionHandler().invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");

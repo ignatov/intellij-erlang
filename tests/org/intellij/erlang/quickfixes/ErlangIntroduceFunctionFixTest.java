@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,8 @@ public class ErlangIntroduceFunctionFixTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/introduce_function/";
   }
 
-  public void testFunctionCall()        throws Throwable { doTest("Create Function 'lll/6'"); }
-  public void testFunctionExpression()  throws Throwable { doTest("Create Function 'lll/6'"); }
-  public void testFunctionSpec()        throws Throwable { doTest("Create Function 'lll/6'"); }
-  public void testFunctionExport()      throws Throwable { doTest("Create Function 'lll/6'"); }
+  public void testFunctionCall()        { doTest("Create Function 'lll/6'"); }
+  public void testFunctionExpression()  { doTest("Create Function 'lll/6'"); }
+  public void testFunctionSpec()        { doTest("Create Function 'lll/6'"); }
+  public void testFunctionExport()      { doTest("Create Function 'lll/6'"); }
 }

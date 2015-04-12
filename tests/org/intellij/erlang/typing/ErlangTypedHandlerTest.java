@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package org.intellij.erlang.typing;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangTypedHandlerTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  public void testNotPaired() throws Throwable { doTest('(', "foo() -> <caret>a", "foo() -> (<caret>a"); }
-  public void testPaired()    throws Throwable { doTest('(', "foo<caret>", "foo(<caret>)"); }
+  public void testNotPaired() { doTest('(', "foo() -> <caret>a", "foo() -> (<caret>a"); }
+  public void testPaired()    { doTest('(', "foo<caret>", "foo(<caret>)"); }
 
   private void doTest(char c, String before, String after) {
     myFixture.configureByText("a.erl", before);

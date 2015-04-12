@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -79,7 +80,7 @@ public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCode
     final List<SmartEnterProcessor> processors = SmartEnterProcessors.INSTANCE.forKey(ErlangLanguage.INSTANCE);
     new WriteCommandAction(myFixture.getProject()) {
       @Override
-      protected void run(Result result) throws Throwable {
+      protected void run(@NotNull Result result) {
         Editor editor = myFixture.getEditor();
         for (SmartEnterProcessor processor : processors) {
           processor.process(myFixture.getProject(), editor, myFixture.getFile());

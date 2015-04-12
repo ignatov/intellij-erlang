@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,28 +25,28 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
     return "testData/autotemplates/";
   }
 
-  public void testBeginEndSimple() throws Throwable                       { doTest(); }
-  public void testBeginEndNested() throws Throwable                       { doTest(); }
-  public void testBeginEndWithSucceedingExpressions() throws Throwable    { doTest(); }
-  public void testBeginEndWithSucceedingTryCatchBlock() throws Throwable  { doTest(); }
-  public void testBeginEndWithSucceedingAfterClause() throws Throwable    { doTest(); }
+  public void testBeginEndSimple()                       { doTest(); }
+  public void testBeginEndNested()                       { doTest(); }
+  public void testBeginEndWithSucceedingExpressions()    { doTest(); }
+  public void testBeginEndWithSucceedingTryCatchBlock()  { doTest(); }
+  public void testBeginEndWithSucceedingAfterClause()    { doTest(); }
 
-  public void testCaseOfSimple() throws Throwable                         { doTest(); }
-  public void testCaseOfWithSucceedingFunctions() throws Throwable        { doTest(); }
+  public void testCaseOfSimple()                         { doTest(); }
+  public void testCaseOfWithSucceedingFunctions()        { doTest(); }
 
-  public void testReceiveSimple() throws Throwable                        { doTest(); }
-  public void testReceiveWithSucceedingFunctions() throws Throwable       { doTest(); }
+  public void testReceiveSimple()                        { doTest(); }
+  public void testReceiveWithSucceedingFunctions()       { doTest(); }
 
-  public void testIfSimple() throws Throwable                             { doTest(); }
-  public void testIfWithSucceedingFunctions() throws Throwable            { doTest(); }
+  public void testIfSimple()                             { doTest(); }
+  public void testIfWithSucceedingFunctions()            { doTest(); }
 
-  public void testTryCatchSimple() throws Throwable                       { doTest(); }
-  public void testTryOfSimple() throws Throwable                          { doTest(); }
-  public void testTryOfCatchSimple() throws Throwable                     { doTest(); }
+  public void testTryCatchSimple()                       { doTest(); }
+  public void testTryOfSimple()                          { doTest(); }
+  public void testTryOfCatchSimple()                     { doTest(); }
 
-  public void testUnmatchedCurlyBrace() throws Throwable                  { doTest(); }
+  public void testUnmatchedCurlyBrace()                  { doTest(); }
 
-  private void doTest() throws Throwable {
+  private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.type('\n');
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");

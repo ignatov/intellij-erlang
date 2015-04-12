@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,15 +33,15 @@ public class ErlangCompletionWithSdkTest extends ErlangCompletionTestBase {
     };
   }  
 
-  public void testNoBifDuplicates() throws Throwable {
+  public void testNoBifDuplicates() {
     doCheckResult("bar() ->ecrc<caret>", "bar() ->erlang:crc32(<caret>)");
   }
 
-  public void test353() throws Throwable {
+  public void test353() {
     doTestInclude("-record(aaa, {}). -record(bbb, {}). foo() -> is_record(1, <caret>)", "aaa", "bbb");
   }
 
-  public void test353_2() throws Throwable {
+  public void test353_2() {
     doTestInclude("-record(aaa, {}). -record(bbb, {}). foo() -> is_record(1,<caret>", "aaa", "bbb");
   }
 }
