@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,17 +26,17 @@ public class ErlangEunitDetectionTest extends ErlangLightPlatformCodeInsightFixt
     return "testData/eunit/detection/";
   }
 
-  public void testDirectInclusion() throws Exception {
+  public void testDirectInclusion() {
     myFixture.configureByFile("direct-inclusion.erl");
     doEunitDetectionTest();
   }
 
-  public void testIndirectInclusion() throws Exception {
+  public void testIndirectInclusion() {
     myFixture.configureByFiles("indirect-inclusion.erl", "include-eunit.hrl");
     doEunitDetectionTest();
   }
 
-  private void doEunitDetectionTest() throws Exception {
+  private void doEunitDetectionTest() {
     assertTrue(ErlangPsiImplUtil.isEunitImported((ErlangFile) myFixture.getFile()));
   }
 }

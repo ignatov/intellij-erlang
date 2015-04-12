@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,24 +21,24 @@ public class ErlangSmallIdeIncludeResolveTest extends ErlangIncludeResolveTestBa
     super(true);
   }
 
-  public void testRelativeToIncludeDirectory() throws Exception {
+  public void testRelativeToIncludeDirectory() {
     doTest("src/testmodule.erl", "include/testinclude.hrl", "src/test.app.src");
   }
 
-  public void testRelativeToIncludeDirectoryNested() throws Exception {
+  public void testRelativeToIncludeDirectoryNested() {
     doTest("src/directory/testmodule.erl", "include/testinclude.hrl", "src/test.app.src");
   }
 
-  public void testRelativeToIncludeDirectoryFromTest() throws Exception {
+  public void testRelativeToIncludeDirectoryFromTest() {
     doTest("test/testmodule.erl", "src/dummy.erl", "include/testinclude.hrl", "src/test.app.src");
   }
 
   // 'include' folders, which are not in otp app root are not considered as include paths by rebar, we should do the same
-  public void testRelativeToIncludeDirectoryNotInOtpAppRoot() throws Exception {
+  public void testRelativeToIncludeDirectoryNotInOtpAppRoot() {
     doTestWithExpectedResolveFailure("src/directory/testmodule.erl", "src/include/testinclude.hrl", "src/test.app.src");
   }
 
-  public void testIncludePathsInRebarConfig() throws Exception {
+  public void testIncludePathsInRebarConfig() {
     doTest("src/testmodule.erl", "include/forTestModule/testinclude.hrl", "rebar.config", "src/test.app.src");
   }
 }

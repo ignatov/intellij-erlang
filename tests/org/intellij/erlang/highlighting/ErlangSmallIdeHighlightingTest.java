@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,14 @@ public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
     super(true);
   }
 
-  public void testIncludeFromOtpIncludeDirResolve() throws Exception {
+  public void testIncludeFromOtpIncludeDirResolve() {
     enableUnresolvedMacroInspection();
     doTest("smallIdeOtpInclude/src/IncludeResolve.erl",
       "smallIdeOtpInclude/include/testapp.hrl",
       "smallIdeOtpInclude/src/test.app.src");
   }
 
-  public void testIncludeFromRebarConfigIncludeDirResolve() throws Exception {
+  public void testIncludeFromRebarConfigIncludeDirResolve() {
     enableUnresolvedMacroInspection();
     doTest("smallIdeRebarConfigInclude/src/IncludeResolve.erl",
       "smallIdeRebarConfigInclude/include/custom/testapp.hrl",

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
     return "testData/debugger/";
   }
 
-  public void testFunctionSourcePositionConstructor() throws Exception {
+  public void testFunctionSourcePositionConstructor() {
     ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(createResolver(), MODULE_NAME, "function", 0);
     ErlangFunction function = myErlangFile.getFunction("function", 0);
 
@@ -55,7 +55,7 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
     assertEquals(-1, sourcePosition.getFunExpressionArity());
   }
 
-  public void testFunExpressionSourcePositionConstructor() throws Exception {
+  public void testFunExpressionSourcePositionConstructor() {
     ErlangSourcePosition sourcePosition =
       ErlangSourcePosition.create(createResolver(), MODULE_NAME, "-function_with_fun_expression/0-fun-0-", 0);
     ErlangFunction function = myErlangFile.getFunction("function_with_fun_expression", 0);

@@ -28,19 +28,19 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  public void testFunctionClause() throws Exception {
+  public void testFunctionClause() {
     doTest("foo(A, B, C) -> ok;<caret>",
       "foo(A, B, C) -> ok;\n" +
         "foo(A, B, C) ->");
   }
 
-  public void testEmptyFunctionClause() throws Exception {
+  public void testEmptyFunctionClause() {
     doTest("foo() -> ok;<caret>",
       "foo() -> ok;\n" +
         "foo() -><caret>");
   }
   
-  public void testNotLastFunctionClause() throws Exception {
+  public void testNotLastFunctionClause() {
     doTest(
       "foo() -> ok;<caret>\n" +
         "foo() -> ok;",
@@ -49,7 +49,7 @@ public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCode
         "foo() -> ok;");
   }
 
-  public void testNotLastCaseClause() throws Exception {
+  public void testNotLastCaseClause() {
     doTest(
       "foo() ->\n" +
         "  case 1 of\n" +
@@ -64,7 +64,7 @@ public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCode
         "  end");
   }
 
-  public void testCaseClause() throws Exception {
+  public void testCaseClause() {
     doTest(
       "main(A) ->\n" +
         "  case A of\n" +
@@ -75,7 +75,7 @@ public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCode
         "    _ -><caret>");
   }
 
-  private void doTest(String before, String after) {
+  private void doTest(@NotNull String before, @NotNull String after) {
     myFixture.configureByText("a.erl", before);
     final List<SmartEnterProcessor> processors = SmartEnterProcessors.INSTANCE.forKey(ErlangLanguage.INSTANCE);
     new WriteCommandAction(myFixture.getProject()) {

@@ -159,7 +159,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "my_local_function");
   }
 
-  public void testNoVariableDuplicates() throws Exception {
+  public void testNoVariableDuplicates() {
     myFixture.configureByText("a.erl", 
       "foo() ->\n" +
       "    case {1, 1} of\n" +
@@ -177,13 +177,13 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     assertSize(1, vars);
   }
 
-  public void testIncludeLib()  throws Exception { doCheckResult("-include_<caret>", "-include_lib(\"<caret>\")."); }
-  public void testInclude()     throws Exception { doCheckResult("-inclu<caret>", "-include(\"<caret>\").", '('); }
-  public void testExport()      throws Exception { doCheckResult("-exp<caret>", "-export([<caret>]).", '('); }
-  public void testExportType()  throws Exception { doCheckResult("-export_t<caret>", "-export_type([<caret>])."); }
-  public void testBehaviour()   throws Exception { doCheckResult("-beha<caret>", "-behaviour(<caret>)."); }
+  public void testIncludeLib()  { doCheckResult("-include_<caret>", "-include_lib(\"<caret>\")."); }
+  public void testInclude()     { doCheckResult("-inclu<caret>", "-include(\"<caret>\").", '('); }
+  public void testExport()      { doCheckResult("-exp<caret>", "-export([<caret>]).", '('); }
+  public void testExportType()  { doCheckResult("-export_t<caret>", "-export_type([<caret>])."); }
+  public void testBehaviour()   { doCheckResult("-beha<caret>", "-behaviour(<caret>)."); }
 
-  public void testExportFunction() throws Exception {
+  public void testExportFunction() {
     doCheckResult("-export([<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.", Lookup.COMPLETE_STATEMENT_SELECT_CHAR);
   }
 
@@ -393,7 +393,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestInclude("bar() -> 'CamelCase':<caret>", "foo");
   }
 
-  public void testOverrideInsideRecord() throws Exception {
+  public void testOverrideInsideRecord() {
     myFixture.configureByText("a.erl", "bar(Record, Record2) -> Rec<caret>#data{}.");
     myFixture.completeBasic();
     myFixture.type('\t');

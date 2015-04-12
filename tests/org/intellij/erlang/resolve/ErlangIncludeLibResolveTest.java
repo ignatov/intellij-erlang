@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class ErlangIncludeLibResolveTest extends ErlangLightPlatformCodeInsightF
     return "testData/resolve/includeLib/";
   }
 
-  public void testLatestVersionIsUsed() throws Exception {
+  public void testLatestVersionIsUsed() {
     myFixture.configureByFiles("testappuser.erl",
       "testapp-1.0/ebin/testapp.app", "testapp-1.0/include/testapp.hrl",
       "testapp-2.0/ebin/testapp.app", "testapp-2.0/include/testapp.hrl");
@@ -45,7 +45,7 @@ public class ErlangIncludeLibResolveTest extends ErlangLightPlatformCodeInsightF
     doTestAppResolveTest("testapp-2.0");
   }
 
-  public void testNoVersionIsUsed() throws Exception {
+  public void testNoVersionIsUsed() {
     myFixture.configureByFiles("testappuser.erl",
       "testapp-1.0/ebin/testapp.app", "testapp-1.0/include/testapp.hrl",
       "testapp-2.0/ebin/testapp.app", "testapp-2.0/include/testapp.hrl",
@@ -54,14 +54,14 @@ public class ErlangIncludeLibResolveTest extends ErlangLightPlatformCodeInsightF
     doTestAppResolveTest("testapp");
   }
 
-  public void test375() throws Exception {
+  public void test375() {
     myFixture.configureByFiles("testappuser.erl",
       "testapp-1.0/ebin/testapp.app", "testapp-1.0/include/testapp.hrl",
       "patches/testapp/testapp.app", "patches/include/testapp.hrl");
     doTestAppResolveTest("testapp-1.0");
   }
 
-  private void doTestAppResolveTest(String expectedAppDirName) throws Exception {
+  private void doTestAppResolveTest(String expectedAppDirName) {
     PsiFile testappuserErl = myFixture.getFile();
     assertTrue(testappuserErl instanceof ErlangFile);
     List<ErlangFile> directlyIncludedFiles = ErlangPsiImplUtil.getDirectlyIncludedFiles((ErlangFile) testappuserErl);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 package org.intellij.erlang.resolve;
 
 public class ErlangIncludeResolveTest extends ErlangIncludeResolveTestBase {
-  public void testRelativeToDirectParent() throws Exception {
+  public void testRelativeToDirectParent() {
     doTest("testmodule.erl", "testinclude.hrl");
   }
 
-  public void testRelativeToDirectParentWithDots() throws Exception {
+  public void testRelativeToDirectParentWithDots() {
     doTest("src/testmodule.erl", "include/testinclude.hrl");
   }
 }

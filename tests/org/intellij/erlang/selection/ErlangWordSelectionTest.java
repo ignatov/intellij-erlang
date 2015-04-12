@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.intellij.erlang.selection;
 
 import com.intellij.testFramework.fixtures.CodeInsightTestUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangWordSelectionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -26,9 +25,9 @@ public class ErlangWordSelectionTest extends ErlangLightPlatformCodeInsightFixtu
     return "testData/select-word/";
   }
 
-  private void doTest() throws Exception {
+  private void doTest() {
     CodeInsightTestUtil.doWordSelectionTestOnDirectory(myFixture, getTestName(true), "erl");
   }
 
-  public void testClauseBody() throws Exception { doTest(); }
+  public void testClauseBody() { doTest(); }
 }

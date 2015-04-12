@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,6 @@ public class ErlangSafeDeleteTest extends LightCodeInsightFixtureTestCase {
     myFixture.checkResultByFile(testName + "-after.erl");
   }
 
-  public void testFunction()          throws Exception { doTest(); }
-  public void testWithExports()       throws Exception { doTest(); }
+  public void testFunction()    { doTest(); }
+  public void testWithExports() { doTest(); }
 }

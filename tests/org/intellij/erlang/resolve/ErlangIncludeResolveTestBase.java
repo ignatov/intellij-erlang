@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,15 +36,15 @@ public abstract class ErlangIncludeResolveTestBase extends ErlangLightPlatformCo
     return "testData/resolve/include/" + getTestName(true) + "/";
   }
 
-  protected void doTest(String... files) throws Exception {
+  protected void doTest(String... files) {
     doTest(1, files);
   }
 
-  protected void doTestWithExpectedResolveFailure(String... files) throws Exception {
+  protected void doTestWithExpectedResolveFailure(String... files) {
     doTest(0, files);
   }
 
-  private void doTest(int expectedIncludedFiles, String... files) throws Exception {
+  private void doTest(int expectedIncludedFiles, String... files) {
     myFixture.configureByFiles(files);
     ErlangFile file = (ErlangFile) myFixture.getFile();
     List<ErlangFile> directlyIncludedFiles = ErlangPsiImplUtil.getDirectlyIncludedFiles(file);

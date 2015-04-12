@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsigh
     return "testData/eunit/config/";
   }
 
-  public void testFunctionSelection() throws Exception {
+  public void testFunctionSelection() {
     myFixture.configureByFiles("tests1.erl", "tests2.erl");
     Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(myFixture.getElementAtCaret());
 
@@ -49,7 +49,7 @@ public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsigh
     assertEquals(myFixture.getElementAtCaret(), functions.iterator().next());
   }
 
-  public void testSingleFileSelection() throws Exception {
+  public void testSingleFileSelection() {
     myFixture.configureByFiles("tests1.erl", "tests2.erl");
     MyMockDataContext dataContext = new MyMockDataContext(myFixture.getFile().getVirtualFile());
     Collection<ErlangFile> files = ErlangUnitTestElementUtil.findFileTestElements(myFixture.getProject(), dataContext);
@@ -59,7 +59,7 @@ public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsigh
     assertEquals(myFixture.getFile(), files.iterator().next());
   }
 
-  public void testMultipleFilesSelection() throws Exception {
+  public void testMultipleFilesSelection() {
     PsiFile[] psiFiles = myFixture.configureByFiles("tests1.erl", "tests2.erl");
     MyMockDataContext dataContext = new MyMockDataContext(getVirtualFiles(psiFiles));
     Collection<ErlangFile> files = ErlangUnitTestElementUtil.findFileTestElements(myFixture.getProject(), dataContext);
@@ -69,7 +69,7 @@ public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsigh
     assertContainsElements(files, psiFiles);
   }
 
-  public void testDirectorySelection() throws Exception {
+  public void testDirectorySelection() {
     PsiFile[] psiFiles = myFixture.configureByFiles("tests1.erl", "tests2.erl");
     @SuppressWarnings("ConstantConditions") MyMockDataContext dataContext =
       new MyMockDataContext(psiFiles[0].getParent().getVirtualFile());

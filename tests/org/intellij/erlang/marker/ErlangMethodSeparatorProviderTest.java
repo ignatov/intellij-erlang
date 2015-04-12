@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,12 +67,12 @@ public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeIn
     return markedLineNumbers;
   }
 
-  public void testFunction()              throws Exception { doTest(0); }
-  public void testTwoFunctions()          throws Exception { doTest(0, 3); }
-  public void testSpec()                  throws Exception { doTest(0); }
-  public void testComment()               throws Exception { doTest(0); }
-  public void testSpecAndComment()        throws Exception { doTest(0); }
-  public void testCommentAndSpec()        throws Exception { doTest(0); }
-  public void testCommentSpecAndComment() throws Exception { doTest(0); }
-  public void testSpecOfOtherFunction()   throws Exception { doTest(1); }
+  public void testFunction()              { doTest(0); }
+  public void testTwoFunctions()          { doTest(0, 3); }
+  public void testSpec()                  { doTest(0); }
+  public void testComment()               { doTest(0); }
+  public void testSpecAndComment()        { doTest(0); }
+  public void testCommentAndSpec()        { doTest(0); }
+  public void testCommentSpecAndComment() { doTest(0); }
+  public void testSpecOfOtherFunction()   { doTest(1); }
 }

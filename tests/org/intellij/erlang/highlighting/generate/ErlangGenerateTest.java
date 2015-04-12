@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ public class ErlangGenerateTest extends ErlangLightPlatformCodeInsightFixtureTes
     myFixture.checkResult(after);
   }
 
-  public void testEunitFail() throws Exception {
+  public void testEunitFail() {
     Throwable ee = null;
     try {
       doTest("EUnitGenerateTestMethod",
@@ -39,7 +39,7 @@ public class ErlangGenerateTest extends ErlangLightPlatformCodeInsightFixtureTes
 
   }
 
-  public void testEunitFunctionWithoutName() throws Exception {
+  public void testEunitFunctionWithoutName() {
     doTest("EUnitGenerateTestMethod",
       "-include_lib(\"eunit/include/eunit.hrl\").\n" +
         "<caret>",
@@ -50,7 +50,7 @@ public class ErlangGenerateTest extends ErlangLightPlatformCodeInsightFixtureTes
 
   }
 
-  public void testEunitFunctionNewLines() throws Exception {
+  public void testEunitFunctionNewLines() {
     doTest("EUnitGenerateTestMethod",
       "-include_lib(\"eunit/include/eunit.hrl\").\n" +
         "\n<caret>",
@@ -62,7 +62,7 @@ public class ErlangGenerateTest extends ErlangLightPlatformCodeInsightFixtureTes
 
   }
 
-  public void testEunitWithName() throws Exception {
+  public void testEunitWithName() {
     doTest("EUnitGenerateTestMethod",
       "-include_lib(\"eunit/include/eunit.hrl\").\n" +
         "foo() -> ok<caret>.",

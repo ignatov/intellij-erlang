@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import com.intellij.testFramework.ModuleTestCase;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
+import org.intellij.erlang.module.ErlangModuleType;
 
 import java.io.File;
 import java.io.IOException;
@@ -94,7 +94,7 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
     return dir.exists() && dir.isDirectory();
   }
 
-  public void testCyclicDependency() throws Exception {
+  public void testCyclicDependency() {
     try {
       ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
       fail("Expected a cyclic dependency exception to be thrown.");

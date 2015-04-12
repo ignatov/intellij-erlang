@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ public class ErlangAppParserTest extends ErlangParserTestBase {
     super("parser", "app", OVERRIDE_TEST_DATA, new ErlangParserDefinition());
   }
 
-  public void testRtbCoordinator()  throws Exception { doTest(true, false); }
-  public void testRebar()           throws Exception { doTest(true, false); }
-  public void test254()             throws Exception { doTest(true, true);  }
-  public void testErlang17Maps()    throws Exception { doTest(true, false); }
+  public void testRtbCoordinator()  { doTest(true, false); }
+  public void testRebar()           { doTest(true, false); }
+  public void test254()             { doTest(true, true);  }
+  public void testErlang17Maps()    { doTest(true, false); }
 }
