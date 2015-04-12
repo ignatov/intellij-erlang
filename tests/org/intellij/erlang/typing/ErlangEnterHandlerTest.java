@@ -44,6 +44,8 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
   public void testTryOfSimple() throws Throwable                          { doTest(); }
   public void testTryOfCatchSimple() throws Throwable                     { doTest(); }
 
+  public void testUnmatchedCurlyBrace() throws Throwable                  { doTest(); }
+
   private void doTest() throws Throwable {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.type('\n');
