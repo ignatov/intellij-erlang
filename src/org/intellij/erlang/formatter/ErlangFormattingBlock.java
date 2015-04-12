@@ -308,7 +308,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     IElementType type = getPreviousElementType(newChildIndex);
     Alignment alignment = getChildAlignment(type);
     if (childIndent != null) return new ChildAttributes(childIndent, alignment);
-    if (type != null) childIndent = getChildIndent(type, newChildIndex);
+    if (type != null) childIndent = getChildIndentByPreviousChild(type, newChildIndex);
     return new ChildAttributes(childIndent == null ? Indent.getNoneIndent() : childIndent, alignment);
   }
 
@@ -345,16 +345,13 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
   @Nullable
   private Indent getChildIndent(@Nullable IElementType type, int newChildIndex) {
-    if (getNode().getPsi() instanceof ErlangFunction && type == ERL_SEMI) return Indent.getNoneIndent();
     if (
       type == ERL_IF_EXPRESSION && newChildIndex == 1 ||
       type == ERL_CASE_EXPRESSION && newChildIndex == 1 ||
       type == ERL_BEGIN_END_EXPRESSION && newChildIndex == 1 ||
       type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
       type == ERL_RECEIVE_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5) ||
-      type == ERL_TRY_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5) ||
-      type == ERL_OF && newChildIndex == 3 ||
-      type == ERL_SEMI) {
+      type == ERL_TRY_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5)) {
       return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
     }
 
@@ -372,6 +369,17 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 
     if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) return Indent.getNormalIndent(false);
+
+    return null;
+  }
+
+  @Nullable
+  private Indent getChildIndentByPreviousChild(@Nullable IElementType type, int newChildIndex) {
+    if (getNode().getPsi() instanceof ErlangFunction && type == ERL_SEMI) return Indent.getNoneIndent();
+
+    if (type == ERL_SEMI || type == ERL_OF && newChildIndex == 3)  {
+      return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
+    }
 
     return null;
   }
