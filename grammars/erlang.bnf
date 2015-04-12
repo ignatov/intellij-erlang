@@ -89,7 +89,7 @@ private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
 private form_with_period ::= form period {recoverWhile=form_recover pin=1}
 private left period ::= '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
-private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.')
+private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '#'| '.')
 private form ::=
     is_app_config config_expression
   | function
@@ -315,6 +315,7 @@ config_expression ::=
   | config_list_expression
   | config_bin_list_expression
   | config_qualified_or_call_expression
+  | config_map_construct_expression
   | (prefix_op? atomic)
   | q_var
 private config_qualified_or_call_expression ::= q_atom left_accessors?
@@ -324,6 +325,11 @@ config_argument_list ::= '(' config_exprs? ')' {elementType=argument_list}
 config_list_expression ::= '[' config_exprs? ']' {elementType=list_expression}
 config_bin_list_expression ::= '<<' config_exprs? '>>' {elementType=binary_expression}
 config_tuple_expression ::= '{' config_exprs? '}' {elementType=tuple_expression}
+
+config_map_construct_expression ::= config_map_tuple {elementType=map_expression}
+config_map_tuple ::= '#' '{' config_map_assoc_list? '}' {pin=1 elementType=map_tuple}
+private config_map_assoc_list ::= config_map_assoc (',' config_map_assoc)* {recoverWhile=tuple_recoverer}
+private config_map_assoc ::= config_expression '=>' config_expression {pin=1 elementType=map_entry}
 private config_exprs ::= config_expression (',' config_expression)* {recoverWhile=config_expr_recover}
 private config_expr_recover ::= !(')' | '>>' | ']' | '}')
 

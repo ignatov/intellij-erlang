@@ -1331,6 +1331,7 @@ public class ErlangParser implements PsiParser {
   //   | config_list_expression
   //   | config_bin_list_expression
   //   | config_qualified_or_call_expression
+  //   | config_map_construct_expression
   //   | (prefix_op? atomic)
   //   | q_var
   public static boolean config_expression(PsiBuilder b, int l) {
@@ -1341,26 +1342,27 @@ public class ErlangParser implements PsiParser {
     if (!r) r = config_list_expression(b, l + 1);
     if (!r) r = config_bin_list_expression(b, l + 1);
     if (!r) r = config_qualified_or_call_expression(b, l + 1);
-    if (!r) r = config_expression_4(b, l + 1);
+    if (!r) r = config_map_construct_expression(b, l + 1);
+    if (!r) r = config_expression_5(b, l + 1);
     if (!r) r = q_var(b, l + 1);
     exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, false, null);
     return r;
   }
 
   // prefix_op? atomic
-  private static boolean config_expression_4(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "config_expression_4")) return false;
+  private static boolean config_expression_5(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_expression_5")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = config_expression_4_0(b, l + 1);
+    r = config_expression_5_0(b, l + 1);
     r = r && atomic(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // prefix_op?
-  private static boolean config_expression_4_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "config_expression_4_0")) return false;
+  private static boolean config_expression_5_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_expression_5_0")) return false;
     prefix_op(b, l + 1);
     return true;
   }
@@ -1421,6 +1423,92 @@ public class ErlangParser implements PsiParser {
   private static boolean config_list_expression_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_list_expression_1")) return false;
     config_exprs(b, l + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
+  // config_expression '=>' config_expression
+  static boolean config_map_assoc(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_map_assoc")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = config_expression(b, l + 1);
+    p = r; // pin = 1
+    r = r && report_error_(b, consumeToken(b, ERL_ASSOC));
+    r = p && config_expression(b, l + 1) && r;
+    exit_section_(b, l, m, null, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // config_map_assoc (',' config_map_assoc)*
+  static boolean config_map_assoc_list(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_map_assoc_list")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = config_map_assoc(b, l + 1);
+    p = r; // pin = 1
+    r = r && config_map_assoc_list_1(b, l + 1);
+    exit_section_(b, l, m, null, r, p, tuple_recoverer_parser_);
+    return r || p;
+  }
+
+  // (',' config_map_assoc)*
+  private static boolean config_map_assoc_list_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_map_assoc_list_1")) return false;
+    int c = current_position_(b);
+    while (true) {
+      if (!config_map_assoc_list_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "config_map_assoc_list_1", c)) break;
+      c = current_position_(b);
+    }
+    return true;
+  }
+
+  // ',' config_map_assoc
+  private static boolean config_map_assoc_list_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_map_assoc_list_1_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = consumeToken(b, ERL_COMMA);
+    p = r; // pin = 1
+    r = r && config_map_assoc(b, l + 1);
+    exit_section_(b, l, m, null, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // config_map_tuple
+  public static boolean config_map_construct_expression(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_map_construct_expression")) return false;
+    if (!nextTokenIs(b, ERL_RADIX)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = config_map_tuple(b, l + 1);
+    exit_section_(b, m, ERL_MAP_EXPRESSION, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // '#' '{' config_map_assoc_list? '}'
+  public static boolean config_map_tuple(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_map_tuple")) return false;
+    if (!nextTokenIs(b, ERL_RADIX)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = consumeToken(b, ERL_RADIX);
+    p = r; // pin = 1
+    r = r && report_error_(b, consumeToken(b, ERL_CURLY_LEFT));
+    r = p && report_error_(b, config_map_tuple_2(b, l + 1)) && r;
+    r = p && consumeToken(b, ERL_CURLY_RIGHT) && r;
+    exit_section_(b, l, m, ERL_MAP_TUPLE, r, p, null);
+    return r || p;
+  }
+
+  // config_map_assoc_list?
+  private static boolean config_map_tuple_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_map_tuple_2")) return false;
+    config_map_assoc_list(b, l + 1);
     return true;
   }
 
@@ -1982,7 +2070,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.')
+  // !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '#'| '.')
   static boolean form_recover(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "form_recover")) return false;
     boolean r;
@@ -1992,7 +2080,7 @@ public class ErlangParser implements PsiParser {
     return r;
   }
 
-  // '+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '.'
+  // '+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '#'| '.'
   private static boolean form_recover_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "form_recover_0")) return false;
     boolean r;
@@ -2012,6 +2100,7 @@ public class ErlangParser implements PsiParser {
     if (!r) r = consumeToken(b, ERL_NOT);
     if (!r) r = consumeToken(b, ERL_STRING);
     if (!r) r = consumeToken(b, ERL_VAR);
+    if (!r) r = consumeToken(b, ERL_RADIX);
     if (!r) r = consumeToken(b, ERL_DOT);
     exit_section_(b, m, null, r);
     return r;
