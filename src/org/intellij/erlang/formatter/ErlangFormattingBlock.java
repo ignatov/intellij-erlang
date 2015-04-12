@@ -368,7 +368,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 
-    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) return Indent.getNormalIndent(false);
+    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS || type == ERL_ARGUMENT_LIST) {
+      return Indent.getNormalIndent(false);
+    }
 
     return null;
   }

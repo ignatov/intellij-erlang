@@ -369,6 +369,11 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBindFunExpressionLastClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
 
 
+  public void testFunCallNoArgs()         throws Exception{ doEnterTest(); }
+  public void testFunCallBeforeFirstArg() throws Exception{ doEnterTest(); }
+  public void testFunCallAfterComma()     throws Exception{ doEnterTest(); }
+
+
   public void testCommaFirstEnterRecords() throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter()        throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter2()       throws Exception { setUpCommaFirst(); doEnterTest(); }

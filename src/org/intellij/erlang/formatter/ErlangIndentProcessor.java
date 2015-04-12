@@ -18,6 +18,7 @@ package org.intellij.erlang.formatter;
 
 import com.intellij.formatting.Indent;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.TokenType;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -70,7 +71,10 @@ public class ErlangIndentProcessor {
       return Indent.getContinuationIndent();
     }
     if (parentType == ERL_ARGUMENT_LIST) {
-      if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) return Indent.getNoneIndent();
+      if (elementType == ERL_PAR_LEFT ||
+        elementType == ERL_PAR_RIGHT && !FormatterUtil.isPrecededBy(node, ERL_COMMA, TokenType.ERROR_ELEMENT)) {
+        return Indent.getNoneIndent();
+      }
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS ||

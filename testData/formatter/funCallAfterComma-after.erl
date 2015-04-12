@@ -1,0 +1,3 @@
+test() ->
+  test(arg,
+    <caret>).
