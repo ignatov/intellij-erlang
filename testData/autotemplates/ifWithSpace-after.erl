@@ -1,0 +1,4 @@
+foo() ->
+  if
+    <caret>
+  end

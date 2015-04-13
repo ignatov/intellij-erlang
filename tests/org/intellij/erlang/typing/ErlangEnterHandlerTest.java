@@ -30,25 +30,30 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
   public void testBeginEndWithSucceedingExpressions()    { doTest(); }
   public void testBeginEndWithSucceedingTryCatchBlock()  { doTest(); }
   public void testBeginEndWithSucceedingAfterClause()    { doTest(); }
+  public void testBeginEndWithSpace()                    { doTest(); }
 
   public void testCaseOfSimple()                         { doTest(); }
   public void testCaseOfWithSucceedingFunctions()        { doTest(); }
+  public void testCaseOfWithSpace()                      { doTest(); }
 
   public void testReceiveSimple()                        { doTest(); }
   public void testReceiveWithSucceedingFunctions()       { doTest(); }
+  public void testReceiveWithSpace()                     { doTest(); }
 
   public void testIfSimple()                             { doTest(); }
   public void testIfWithSucceedingFunctions()            { doTest(); }
+  public void testIfWithSpace()                          { doTest(); }
 
   public void testTryCatchSimple()                       { doTest(); }
   public void testTryOfSimple()                          { doTest(); }
   public void testTryOfCatchSimple()                     { doTest(); }
+  public void testTryOfWithSpace()                       { doTest(); }
 
   public void testUnmatchedCurlyBrace()                  { doTest(); }
 
   private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.type('\n');
-    myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+    myFixture.checkResultByFile(getTestName(true) + "-after.erl", true);
   }
 }

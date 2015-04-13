@@ -18,6 +18,7 @@ package org.intellij.erlang.editor;
 
 import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.editorActions.enter.EnterHandlerDelegateAdapter;
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.CaretModel;
@@ -26,13 +27,13 @@ import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
+import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -80,17 +81,33 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
            completeExpression(file, editor, ErlangTypes.ERL_OF, ErlangTryExpression.class);
   }
 
-  private static boolean completeExpression(@NotNull PsiFile file, @NotNull Editor editor, @NotNull IElementType lastElementType, @NotNull Class expectedParentClass) {
-     PsiElement lastElement = file.findElementAt(editor.getCaretModel().getOffset() - 1);
-     PsiElement parent = lastElement != null ? lastElement.getParent() : null;
+  private static boolean completeExpression(@NotNull PsiFile file, @NotNull Editor editor,
+                                            @NotNull IElementType lastElementType, @NotNull Class expectedParentClass) {
+    PsiElement lastElement = getPrecedingLeafOnSameLineOfType(file, editor, lastElementType);
+    PsiElement parent = lastElement != null ? lastElement.getParent() : null;
+    parent = parent != null && expectedParentClass.isInstance(parent) && !hasEnd(parent) ? parent : null;
 
-    if (!(lastElement instanceof LeafPsiElement && ((LeafPsiElement) lastElement).getElementType().equals(lastElementType))) return false;
-    if (!expectedParentClass.isInstance(parent)) return false;
-    if (hasEnd(parent)) return false;
+    if (parent != null) {
+      appendEndAndMoveCaret(file, editor, lastElement.getTextRange().getEndOffset(), needCommaAfter(parent));
+      return  true;
+    }
 
-    appendEndAndMoveCaret(file, editor, lastElement.getTextRange().getEndOffset(), needCommaAfter(parent));
+    return false;
+  }
 
-    return true;
+  @Nullable
+  private static LeafPsiElement getPrecedingLeafOnSameLineOfType(@NotNull PsiFile file, @NotNull Editor editor,
+                                                                 @NotNull IElementType type) {
+    CaretModel caretModel = editor.getCaretModel();
+    PsiElement element = file.findElementAt(caretModel.getOffset() - 1);
+    if (element instanceof PsiWhiteSpace) {
+      ASTNode node = element.getNode();
+      ASTNode previousLeaf = FormatterUtil.getPreviousLeaf(node, TokenType.WHITE_SPACE, TokenType.ERROR_ELEMENT);
+      element = previousLeaf != null ? previousLeaf.getPsi() : null;
+    }
+    LeafPsiElement leaf = ObjectUtils.tryCast(element, LeafPsiElement.class);
+    return leaf != null && leaf.getElementType() == type &&
+      editor.offsetToLogicalPosition(leaf.getTextOffset()).line == caretModel.getLogicalPosition().line ? leaf : null;
   }
 
   private static void appendEndAndMoveCaret(@NotNull final PsiFile file, @NotNull final Editor editor, final int offset, final boolean addComma) {
@@ -99,12 +116,15 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     ApplicationManager.getApplication().runWriteAction(new Runnable() {
       @Override
       public void run() {
+        CaretModel caretModel = editor.getCaretModel();
+        caretModel.moveToOffset(offset);
+
         String endText = "\n\nend" + (addComma ? "," : "");
         editor.getDocument().insertString(offset, endText);
 
         PsiDocumentManager.getInstance(project).commitDocument(editor.getDocument());
         CodeStyleManager.getInstance(project).adjustLineIndent(file, TextRange.from(offset, endText.length()));
-        CaretModel caretModel = editor.getCaretModel();
+
         caretModel.moveCaretRelatively(0, 1, false, false, true);
         CodeStyleManager.getInstance(project).adjustLineIndent(file, caretModel.getOffset());
       }

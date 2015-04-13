@@ -1,0 +1,4 @@
+foo() ->
+  receive
+    <caret>
+  end
