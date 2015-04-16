@@ -368,14 +368,17 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 
-    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS || type == ERL_ARGUMENT_LIST) {
+    if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) {
       return Indent.getNormalIndent(false);
     }
 
-    if (CURLY_CONTAINERS.contains(type)) {
+    boolean containerNormal = type == ERL_ARGUMENT_LIST || CURLY_CONTAINERS.contains(type);
+    boolean containerContinuation = !containerNormal && PARENTHESIS_CONTAINERS.contains(type);
+
+    if (containerNormal || containerContinuation) {
       IElementType previousElement = newChildIndex != 1 ? getPreviousElementType(newChildIndex) : null;
       if (newChildIndex == 1 || previousElement != null && previousElement == ERL_COMMA) {
-        return Indent.getNormalIndent(false);
+        return containerContinuation ? Indent.getContinuationIndent() : Indent.getNormalIndent();
       }
     }
 

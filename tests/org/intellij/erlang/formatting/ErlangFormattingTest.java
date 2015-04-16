@@ -379,6 +379,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testFunCallAfterComma()     throws Exception{ doEnterTest(); }
 
 
+  public void testFunArgsEmpty()       throws Exception { doEnterTest(); }
+  public void testFunArgsBeforeFirst() throws Exception { doEnterTest(); }
+  public void testFunArgsAfterFirst()  throws Exception { doEnterTest(); }
+  public void testFunArgsAfterLast()   throws Exception { doEnterTest(); }
+
+
   public void testListComprehensionBeforeExpression() throws Exception { doEnterTest(); }
   public void testListComprehensionAfterExpression()  throws Exception { doEnterTest(); }
   public void testListComprehensionAfterOrOr()        throws Exception { doEnterTest(); }

@@ -1,0 +1,4 @@
+test(
+    <caret>
+) ->
+  ok.
