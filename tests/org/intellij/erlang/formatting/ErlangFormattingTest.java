@@ -374,6 +374,25 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testFunCallAfterComma()     throws Exception{ doEnterTest(); }
 
 
+  public void testListComprehensionBeforeExpression() throws Exception { doEnterTest(); }
+  public void testListComprehensionAfterExpression()  throws Exception { doEnterTest(); }
+  public void testListComprehensionAfterOrOr()        throws Exception { doEnterTest(); }
+  public void testListComprehensionAfterFirstExpr()   throws Exception { doEnterTest(); }
+  public void testListComprehensionAfterLastExpr()    throws Exception { doEnterTest(); }
+
+  public void testBinaryComprehensionBeforeExpression() throws Exception { doEnterTest(); }
+  public void testBinaryComprehensionAfterExpression()  throws Exception { doEnterTest(); }
+  public void testBinaryComprehensionAfterOrOr()        throws Exception { doEnterTest(); }
+  public void testBinaryComprehensionAfterFirstExpr()   throws Exception { doEnterTest(); }
+  public void testBinaryComprehensionAfterLastExpr()    throws Exception { doEnterTest(); }
+
+  public void testMapComprehensionBeforeExpression() throws Exception { doEnterTest(); }
+  public void testMapComprehensionAfterExpression()  throws Exception { doEnterTest(); }
+  public void testMapComprehensionAfterOrOr()        throws Exception { doEnterTest(); }
+  public void testMapComprehensionAfterFirstExpr()   throws Exception { doEnterTest(); }
+  public void testMapComprehensionAfterLastExpr()    throws Exception { doEnterTest(); }
+
+
   public void testCommaFirstEnterRecords() throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter()        throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter2()       throws Exception { setUpCommaFirst(); doEnterTest(); }
