@@ -1,5 +1,5 @@
 test() ->
   {,
   #rec{
-  <caret>
+    <caret>
   }.
