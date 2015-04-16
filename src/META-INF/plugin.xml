@@ -105,6 +105,7 @@
         <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler"/>
         <typedHandler implementation="org.intellij.erlang.editor.ErlangTypedHandler" id="ErlangBinary"/>
         <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterHandler" id="ErlangEnter"/>
+        <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterBetweenBracesHandler" id="ErlangEnterBetweenBraces"/>
 
         <extendWordSelectionHandler implementation="org.intellij.erlang.editor.ErlangWordSelectioner" order="last"/>
         <lang.smartEnterProcessor language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangClausesSmartEnterProcessor" id="ErlangClause"/>
