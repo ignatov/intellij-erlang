@@ -65,16 +65,8 @@ public class ErlangIndentProcessor {
       return Indent.getNoneIndent();
     }
 
-    boolean containerNormal =
-      parentType == ERL_ARGUMENT_LIST ||
-      ErlangFormattingBlock.CURLY_CONTAINERS.contains(parentType) ||
-      ErlangFormattingBlock.BRACKETS_CONTAINERS.contains(parentType) ||
-      parentType == ERL_LIST_COMPREHENSION;
-
-    boolean containerContinuation =
-      !containerNormal &&
-      ErlangFormattingBlock.PARENTHESIS_CONTAINERS.contains(parentType);
-
+    boolean containerNormal = ErlangFormattingBlock.isContainerNormal(parentType);
+    boolean containerContinuation = ErlangFormattingBlock.isContainerContinuation(parentType, containerNormal);
     if (containerNormal || containerContinuation) {
       boolean initial = elementType == ERL_RADIX;
 

@@ -372,8 +372,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
       return Indent.getNormalIndent(false);
     }
 
-    boolean containerNormal = type == ERL_ARGUMENT_LIST || CURLY_CONTAINERS.contains(type);
-    boolean containerContinuation = !containerNormal && PARENTHESIS_CONTAINERS.contains(type);
+    boolean containerNormal = isContainerNormal(type);
+    boolean containerContinuation = isContainerContinuation(type, containerNormal);
 
     if (containerNormal || containerContinuation) {
       IElementType previousElement = newChildIndex != 1 ? getPreviousElementType(newChildIndex) : null;
@@ -399,5 +399,14 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Override
   public boolean isLeaf() {
     return myNode.getFirstChildNode() == null;
+  }
+
+  public static boolean isContainerNormal(@Nullable IElementType type) {
+    return type == ERL_ARGUMENT_LIST || type == ERL_LIST_COMPREHENSION ||
+      CURLY_CONTAINERS.contains(type) || BRACKETS_CONTAINERS.contains(type);
+  }
+
+  public static boolean isContainerContinuation(@Nullable IElementType type, boolean containerNormal) {
+    return !containerNormal && PARENTHESIS_CONTAINERS.contains(type);
   }
 }
