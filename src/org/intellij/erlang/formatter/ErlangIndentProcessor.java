@@ -123,7 +123,7 @@ public class ErlangIndentProcessor {
       return Indent.getNoneIndent();
     }
     if (parent.getPsi() instanceof ErlangListOpExpression && (grandfather == null || grandfather.getPsi() instanceof ErlangExpression)) {
-      return node.getPsi() instanceof ErlangListOpExpression ? Indent.getNoneIndent() : Indent.getNormalIndent();
+      return Indent.getNormalIndent();
     }
     if (parentType == ERL_PREFIX_EXPRESSION) {
       return Indent.getNoneIndent();
