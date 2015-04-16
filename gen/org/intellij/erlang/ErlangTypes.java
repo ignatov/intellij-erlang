@@ -76,7 +76,6 @@ public interface ErlangTypes {
   IElementType ERL_INCLUDE_STRING = new ErlangCompositeElementType("ERL_INCLUDE_STRING");
   IElementType ERL_INT_TYPE = new ErlangCompositeElementType("ERL_INT_TYPE");
   IElementType ERL_LC_EXPRESSION = new ErlangCompositeElementType("ERL_LC_EXPRESSION");
-  IElementType ERL_LC_EXPRS = new ErlangCompositeElementType("ERL_LC_EXPRS");
   IElementType ERL_LIST_COMPREHENSION = new ErlangCompositeElementType("ERL_LIST_COMPREHENSION");
   IElementType ERL_LIST_EXPRESSION = new ErlangCompositeElementType("ERL_LIST_EXPRESSION");
   IElementType ERL_LIST_OP_EXPRESSION = new ErlangCompositeElementType("ERL_LIST_OP_EXPRESSION");
@@ -407,9 +406,6 @@ public interface ErlangTypes {
       }
       else if (type == ERL_LC_EXPRESSION) {
         return new ErlangLcExpressionImpl(node);
-      }
-      else if (type == ERL_LC_EXPRS) {
-        return new ErlangLcExprsImpl(node);
       }
       else if (type == ERL_LIST_COMPREHENSION) {
         return new ErlangListComprehensionImpl(node);

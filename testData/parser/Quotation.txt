@@ -292,32 +292,31 @@ ERL_FILE
                       PsiElement(var)('S')
                   PsiElement())(')')
             PsiElement(||)('||')
-            ERL_LC_EXPRS
-              ERL_LC_EXPRESSION
-                ERL_ARGUMENT_DEFINITION
-                  ERL_MAX_EXPRESSION
-                    ERL_Q_VAR
-                      PsiElement(var)('S')
-                PsiElement(<-)('<-')
-                ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
-                  ERL_MODULE_REF
-                    ERL_Q_ATOM
-                      ERL_ATOM
-                        PsiElement(atom_name)('string')
-                  PsiElement(:)(':')
-                  ERL_FUNCTION_CALL_EXPRESSION
-                    ERL_Q_ATOM
-                      ERL_ATOM
-                        PsiElement(atom_name)('tokens')
-                    ERL_ARGUMENT_LIST
-                      PsiElement(()('(')
-                      ERL_MAX_EXPRESSION
-                        ERL_Q_VAR
-                          PsiElement(var)('String')
-                      PsiElement(,)(',')
-                      ERL_STRING_LITERAL
-                        PsiElement(string)('";"')
-                      PsiElement())(')')
+            ERL_LC_EXPRESSION
+              ERL_ARGUMENT_DEFINITION
+                ERL_MAX_EXPRESSION
+                  ERL_Q_VAR
+                    PsiElement(var)('S')
+              PsiElement(<-)('<-')
+              ERL_GLOBAL_FUNCTION_CALL_EXPRESSION
+                ERL_MODULE_REF
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      PsiElement(atom_name)('string')
+                PsiElement(:)(':')
+                ERL_FUNCTION_CALL_EXPRESSION
+                  ERL_Q_ATOM
+                    ERL_ATOM
+                      PsiElement(atom_name)('tokens')
+                  ERL_ARGUMENT_LIST
+                    PsiElement(()('(')
+                    ERL_MAX_EXPRESSION
+                      ERL_Q_VAR
+                        PsiElement(var)('String')
+                    PsiElement(,)(',')
+                    ERL_STRING_LITERAL
+                      PsiElement(string)('";"')
+                    PsiElement())(')')
             PsiElement(])(']')
         PsiElement(,)(',')
         ERL_ASSIGNMENT_EXPRESSION

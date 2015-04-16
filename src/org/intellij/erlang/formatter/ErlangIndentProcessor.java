@@ -84,15 +84,12 @@ public class ErlangIndentProcessor {
     }
     if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS || parentType == ERL_EXPORT_TYPES) {
       if (elementType == ERL_BRACKET_LEFT || elementType == ERL_BRACKET_RIGHT || elementType == ERL_BIN_START || elementType == ERL_BIN_END ||
-        elementType == ERL_LC_EXPRS || elementType == ERL_RADIX || elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT) {
+        elementType == ERL_RADIX || elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT) {
         return Indent.getNoneIndent();
       }
       return Indent.getNormalIndent();
     }
     if ((parentType == ERL_GUARD || parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN) && grandfatherType != ERL_IF_CLAUSE) {
-      return Indent.getNormalIndent();
-    }
-    if (parentType == ERL_LC_EXPRS) {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_RECORD_TUPLE) {

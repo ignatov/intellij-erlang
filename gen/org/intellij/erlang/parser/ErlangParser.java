@@ -220,9 +220,6 @@ public class ErlangParser implements PsiParser {
     else if (t == ERL_LC_EXPRESSION) {
       r = lc_expression(b, 0);
     }
-    else if (t == ERL_LC_EXPRS) {
-      r = lc_exprs(b, 0);
-    }
     else if (t == ERL_LIST_COMPREHENSION) {
       r = list_comprehension(b, 0);
     }
@@ -3046,14 +3043,14 @@ public class ErlangParser implements PsiParser {
 
   /* ********************************************************** */
   // lc_expression (',' lc_expression)*
-  public static boolean lc_exprs(PsiBuilder b, int l) {
+  static boolean lc_exprs(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_exprs")) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<lc exprs>");
+    Marker m = enter_section_(b, l, _NONE_, null);
     r = lc_expression(b, l + 1);
     p = r; // pin = 1
     r = r && lc_exprs_1(b, l + 1);
-    exit_section_(b, l, m, ERL_LC_EXPRS, r, p, null);
+    exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
 

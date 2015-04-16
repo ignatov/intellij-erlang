@@ -419,7 +419,7 @@ list_comprehension ::= '[' <<comprehension_element expression>> '||' lc_exprs ']
   methods=[processDeclarations]
 }
 private meta comprehension_element ::= (&('||'))? <<p1>> {pin=1}
-lc_exprs ::= lc_expression (',' lc_expression)*
+private lc_exprs ::= lc_expression (',' lc_expression)*
 lc_expression ::= [ lc_generator_definition ('<-' | '<=')] expression {pin(".*")=2}
 lc_generator_definition ::= (map_match | expression) {elementType="argument_definition"}
 private map_match ::= expression ':=' expression {pin=2}

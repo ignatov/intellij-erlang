@@ -9,11 +9,8 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 
 public interface ErlangListComprehension extends ErlangExpression {
 
-  @Nullable
-  ErlangExpression getExpression();
-
-  @Nullable
-  ErlangLcExprs getLcExprs();
+  @NotNull
+  List<ErlangExpression> getExpressionList();
 
   @NotNull
   PsiElement getBracketLeft();

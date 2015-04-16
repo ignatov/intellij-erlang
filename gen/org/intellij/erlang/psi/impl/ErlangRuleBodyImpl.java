@@ -22,9 +22,9 @@ public class ErlangRuleBodyImpl extends ErlangCompositeElementImpl implements Er
   }
 
   @Override
-  @Nullable
-  public ErlangLcExprs getLcExprs() {
-    return findChildByClass(ErlangLcExprs.class);
+  @NotNull
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
 }

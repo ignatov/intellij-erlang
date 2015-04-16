@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangRuleBody extends ErlangCompositeElement {
 
-  @Nullable
-  ErlangLcExprs getLcExprs();
+  @NotNull
+  List<ErlangExpression> getExpressionList();
 
 }

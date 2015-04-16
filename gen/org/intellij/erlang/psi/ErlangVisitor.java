@@ -276,10 +276,6 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
-  public void visitLcExprs(@NotNull ErlangLcExprs o) {
-    visitCompositeElement(o);
-  }
-
   public void visitListComprehension(@NotNull ErlangListComprehension o) {
     visitExpression(o);
   }

@@ -222,7 +222,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       if (parentType == ERL_LIST_COMPREHENSION) {
         boolean bracketsCurliesOrComma = childType == ERL_BRACKET_LEFT || childType == ERL_BRACKET_RIGHT || childType == ERL_COMMA ||
           childType == ERL_CURLY_LEFT || childType == ERL_CURLY_RIGHT || childType == ERL_RADIX;
-        if (!bracketsCurliesOrComma && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRS) return baseAlignment;
+        if (!bracketsCurliesOrComma && childType != ERL_BIN_START && childType != ERL_BIN_END && childType != ERL_LC_EXPRESSION) return baseAlignment;
       }
       if (parentType == ERL_FUN_TYPE_SIGS && childType == ERL_TYPE_SIG) {
         return baseAlignment;

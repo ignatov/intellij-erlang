@@ -24,6 +24,7 @@ import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
 import gnu.trove.THashSet;
@@ -48,8 +49,8 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
   @Override
   public ResolveResult[] multiResolve(boolean b) {
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
-    ErlangListComprehension lc = PsiTreeUtil.getParentOfType(myElement, ErlangListComprehension.class);
-    ErlangCompositeElement place = lc != null ? lc.getLcExprs() : myElement;
+    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);
+    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);
     ResolveUtil.treeWalkUp(place, processor);
     List<ErlangQVar> result = processor.getAllResults();
     if (!result.isEmpty()) return PsiElementResolveResult.createResults(result);

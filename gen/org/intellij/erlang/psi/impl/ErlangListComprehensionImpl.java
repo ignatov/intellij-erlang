@@ -24,15 +24,9 @@ public class ErlangListComprehensionImpl extends ErlangExpressionImpl implements
   }
 
   @Override
-  @Nullable
-  public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangLcExprs getLcExprs() {
-    return findChildByClass(ErlangLcExprs.class);
+  @NotNull
+  public List<ErlangExpression> getExpressionList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
   @Override
