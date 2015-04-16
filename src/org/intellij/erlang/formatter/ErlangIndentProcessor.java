@@ -65,30 +65,33 @@ public class ErlangIndentProcessor {
       return Indent.getNoneIndent();
     }
 
-    if (parentType == ERL_PARENTHESIZED_EXPRESSION || parentType == ERL_ARGUMENT_DEFINITION_LIST
-      || parentType == ERL_FUN_TYPE || parentType == ERL_FUN_TYPE_ARGUMENTS) {
-      if (elementType == ERL_PAR_LEFT || elementType == ERL_PAR_RIGHT) return Indent.getNoneIndent();
-      return Indent.getContinuationIndent();
-    }
-    if (parentType == ERL_ARGUMENT_LIST) {
-      if (elementType == ERL_PAR_LEFT ||
-        elementType == ERL_PAR_RIGHT && !FormatterUtil.isPrecededBy(node, ERL_COMMA, TokenType.ERROR_ELEMENT)) {
+    boolean containerNormal =
+      parentType == ERL_ARGUMENT_LIST ||
+      ErlangFormattingBlock.CURLY_CONTAINERS.contains(parentType) ||
+      ErlangFormattingBlock.BRACKETS_CONTAINERS.contains(parentType) ||
+      parentType == ERL_LIST_COMPREHENSION;
+
+    boolean containerContinuation =
+      !containerNormal &&
+      ErlangFormattingBlock.PARENTHESIS_CONTAINERS.contains(parentType);
+
+    if (containerNormal || containerContinuation) {
+      boolean initial = elementType == ERL_RADIX;
+
+      boolean left = elementType == ERL_PAR_LEFT || elementType == ERL_CURLY_LEFT ||
+        elementType == ERL_BRACKET_LEFT || elementType == ERL_BIN_START || elementType == ERL_RADIX;
+
+      boolean right = elementType == ERL_PAR_RIGHT || elementType == ERL_CURLY_RIGHT ||
+        elementType == ERL_BRACKET_RIGHT || elementType == ERL_BIN_END;
+
+      if (initial || left || right &&
+        !FormatterUtil.isPrecededBy(node, ERL_COMMA, TokenType.ERROR_ELEMENT) &&
+        !FormatterUtil.isPrecededBy(node, ERL_OR_OR, TokenType.ERROR_ELEMENT)) {
         return Indent.getNoneIndent();
       }
-      return Indent.getNormalIndent();
+      return containerContinuation ? Indent.getContinuationIndent() : Indent.getNormalIndent();
     }
-    if (parentType == ERL_TUPLE_EXPRESSION || parentType == ERL_RECORD_TUPLE || parentType == ERL_TYPED_RECORD_FIELDS ||
-      parentType == ERL_RECORD_LIKE_TYPE || parentType == ERL_MAP_TUPLE) {
-      if (elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT || elementType == ERL_RADIX) return Indent.getNoneIndent();
-      return Indent.getNormalIndent();
-    }
-    if (parentType == ERL_LIST_EXPRESSION || parentType == ERL_LIST_COMPREHENSION || parentType == ERL_EXPORT_FUNCTIONS || parentType == ERL_EXPORT_TYPES) {
-      if (elementType == ERL_BRACKET_LEFT || elementType == ERL_BRACKET_RIGHT || elementType == ERL_BIN_START || elementType == ERL_BIN_END ||
-        elementType == ERL_RADIX || elementType == ERL_CURLY_LEFT || elementType == ERL_CURLY_RIGHT) {
-        return Indent.getNoneIndent();
-      }
-      return Indent.getNormalIndent();
-    }
+
     if ((parentType == ERL_GUARD || parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN) && grandfatherType != ERL_IF_CLAUSE) {
       return Indent.getNormalIndent();
     }
