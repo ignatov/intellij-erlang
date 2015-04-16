@@ -21,6 +21,8 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 public class ErlangTypedHandlerTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testNotPaired() { doTest('(', "foo() -> <caret>a", "foo() -> (<caret>a"); }
   public void testPaired()    { doTest('(', "foo<caret>", "foo(<caret>)"); }
+  public void testBeforeDot() { doTest('{', "foo() -> #rec<caret>.", "foo() -> #rec{<caret>}."); }
+  public void testBeforeRpar(){ doTest('{', "foo(#rec<caret>) -> ok.", "foo(#rec{<caret>}) -> ok."); }
 
   private void doTest(char c, String before, String after) {
     myFixture.configureByText("a.erl", before);

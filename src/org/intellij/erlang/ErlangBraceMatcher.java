@@ -49,6 +49,7 @@ public class ErlangBraceMatcher implements PairedBraceMatcher {
       || ErlangParserDefinition.COMMENTS.contains(type)
       || type == ErlangTypes.ERL_SEMI
       || type == ErlangTypes.ERL_COMMA
+      || type == ErlangTypes.ERL_DOT
       || type == ErlangTypes.ERL_PAR_RIGHT
       || type == ErlangTypes.ERL_BRACKET_RIGHT
       || type == ErlangTypes.ERL_CURLY_RIGHT
