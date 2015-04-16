@@ -337,8 +337,13 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBindBeginParasite__IR_OFF()     throws Exception { doEnterTest(); }
   public void testBindBeginExprParasite__IR_OFF() throws Exception { doEnterTest(); }
 
-  public void testRecordFields1() throws Exception { doEnterTest(); }
-  public void testRecordFields2() throws Exception { doEnterTest(); }
+
+  public void testRecordFields1()                             throws Exception { doEnterTest(); }
+  public void testRecordFields2()                             throws Exception { doEnterTest(); }
+  public void testRecordExpressionEmpty()                     throws Exception { doEnterTest(); }
+  public void testRecordExpressionBeforeFieldAssignment()     throws Exception { doEnterTest(); }
+  public void testRecordExpressionAfterFirstFieldAssignment() throws Exception { doEnterTest(); }
+  public void testRecordExpressionAfterLastFieldAssignment()  throws Exception { doEnterTest(); }
 
 
   public void testFunExpression() throws Exception { doTest(); }

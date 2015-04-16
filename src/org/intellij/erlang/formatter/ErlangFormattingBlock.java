@@ -372,6 +372,13 @@ public class ErlangFormattingBlock extends AbstractBlock {
       return Indent.getNormalIndent(false);
     }
 
+    if (CURLY_CONTAINERS.contains(type)) {
+      IElementType previousElement = newChildIndex != 1 ? getPreviousElementType(newChildIndex) : null;
+      if (newChildIndex == 1 || previousElement != null && previousElement == ERL_COMMA) {
+        return Indent.getNormalIndent(false);
+      }
+    }
+
     return null;
   }
 
