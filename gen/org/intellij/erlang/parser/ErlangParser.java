@@ -994,14 +994,14 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '<<' binary_expression '||' lc_exprs '>>'
+  // '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>'
   public static boolean binary_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_comprehension")) return false;
     if (!nextTokenIs(b, ERL_BIN_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
     r = consumeToken(b, ERL_BIN_START);
-    r = r && binary_expression(b, l + 1);
+    r = r && comprehension_element(b, l + 1, binary_expression_parser_);
     r = r && consumeToken(b, ERL_OR_OR);
     p = r; // pin = 3
     r = r && report_error_(b, lc_exprs(b, l + 1));
@@ -1242,6 +1242,46 @@ public class ErlangParser implements PsiParser {
     if (!r) r = consumeToken(b, ERL_OP_GT);
     if (!r) r = consumeToken(b, ERL_OP_EQ_COL_EQ);
     if (!r) r = consumeToken(b, ERL_OP_EQ_DIV_EQ);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (&('||'))? <<p1>>
+  static boolean comprehension_element(PsiBuilder b, int l, final Parser _p1) {
+    if (!recursion_guard_(b, l, "comprehension_element")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = comprehension_element_0(b, l + 1);
+    p = r; // pin = 1
+    r = r && _p1.parse(b, l);
+    exit_section_(b, l, m, null, r, p, null);
+    return r || p;
+  }
+
+  // (&('||'))?
+  private static boolean comprehension_element_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "comprehension_element_0")) return false;
+    comprehension_element_0_0(b, l + 1);
+    return true;
+  }
+
+  // &('||')
+  private static boolean comprehension_element_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "comprehension_element_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_, null);
+    r = comprehension_element_0_0_0(b, l + 1);
+    exit_section_(b, l, m, null, r, false, null);
+    return r;
+  }
+
+  // ('||')
+  private static boolean comprehension_element_0_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "comprehension_element_0_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_OR_OR);
     exit_section_(b, m, null, r);
     return r;
   }
@@ -3082,14 +3122,14 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '[' expression '||' lc_exprs ']'
+  // '[' <<comprehension_element expression>> '||' lc_exprs ']'
   public static boolean list_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_comprehension")) return false;
     if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
     r = consumeToken(b, ERL_BRACKET_LEFT);
-    r = r && expression(b, l + 1, -1);
+    r = r && comprehension_element(b, l + 1, expression_parser_);
     r = r && consumeToken(b, ERL_OR_OR);
     p = r; // pin = 3
     r = r && report_error_(b, lc_exprs(b, l + 1));
@@ -3323,7 +3363,7 @@ public class ErlangParser implements PsiParser {
   }
 
   /* ********************************************************** */
-  // '#' '{' map_assoc '||' lc_exprs '}'
+  // '#' '{' <<comprehension_element map_assoc>> '||' lc_exprs '}'
   public static boolean map_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_comprehension")) return false;
     if (!nextTokenIs(b, ERL_RADIX)) return false;
@@ -3331,7 +3371,7 @@ public class ErlangParser implements PsiParser {
     Marker m = enter_section_(b, l, _NONE_, null);
     r = consumeToken(b, ERL_RADIX);
     r = r && consumeToken(b, ERL_CURLY_LEFT);
-    r = r && map_assoc(b, l + 1);
+    r = r && comprehension_element(b, l + 1, map_assoc_parser_);
     r = r && consumeToken(b, ERL_OR_OR);
     p = r; // pin = 4
     r = r && report_error_(b, lc_exprs(b, l + 1));
@@ -5885,6 +5925,11 @@ public class ErlangParser implements PsiParser {
       return atom_attribute(b, l + 1);
     }
   };
+  final static Parser binary_expression_parser_ = new Parser() {
+    public boolean parse(PsiBuilder b, int l) {
+      return binary_expression(b, l + 1);
+    }
+  };
   final static Parser config_expr_recover_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return config_expr_recover(b, l + 1);
@@ -5928,6 +5973,11 @@ public class ErlangParser implements PsiParser {
   final static Parser macros_call_recover_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return macros_call_recover(b, l + 1);
+    }
+  };
+  final static Parser map_assoc_parser_ = new Parser() {
+    public boolean parse(PsiBuilder b, int l) {
+      return map_assoc(b, l + 1);
     }
   };
   final static Parser try_argument_definition_parser_ = new Parser() {

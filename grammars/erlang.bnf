@@ -414,16 +414,17 @@ opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
 
-list_comprehension ::= '[' expression '||' lc_exprs ']' {
+list_comprehension ::= '[' <<comprehension_element expression>> '||' lc_exprs ']' {
   pin=3
   methods=[processDeclarations]
 }
+private meta comprehension_element ::= (&('||'))? <<p1>> {pin=1}
 lc_exprs ::= lc_expression (',' lc_expression)*
 lc_expression ::= [ lc_generator_definition ('<-' | '<=')] expression {pin(".*")=2}
 lc_generator_definition ::= (map_match | expression) {elementType="argument_definition"}
 private map_match ::= expression ':=' expression {pin=2}
 
-binary_comprehension ::= '<<' binary_expression '||' lc_exprs '>>' {
+binary_comprehension ::= '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>' {
   pin=3
   elementType="list_comprehension"
 }
@@ -456,7 +457,7 @@ module_ref ::= q_atom {
   methods = [getReference]
 }
 
-map_comprehension ::= '#' '{' map_assoc '||' lc_exprs '}' {
+map_comprehension ::= '#' '{' <<comprehension_element map_assoc>> '||' lc_exprs '}' {
   pin=4
   methods=[processDeclarations]
   elementType="list_comprehension"

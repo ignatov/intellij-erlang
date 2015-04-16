@@ -9,7 +9,7 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 
 public interface ErlangListComprehension extends ErlangExpression {
 
-  @NotNull
+  @Nullable
   ErlangExpression getExpression();
 
   @Nullable

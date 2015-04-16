@@ -24,9 +24,9 @@ public class ErlangListComprehensionImpl extends ErlangExpressionImpl implements
   }
 
   @Override
-  @NotNull
+  @Nullable
   public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+    return findChildByClass(ErlangExpression.class);
   }
 
   @Override
