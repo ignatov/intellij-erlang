@@ -19,7 +19,6 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
-import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,10 +45,7 @@ public abstract class ResolveUtil {
                                         @NotNull PsiElement place) {
     PsiElement run = lastParent == null ? element.getLastChild() : lastParent.getPrevSibling();
     while (run != null) {
-      if (run instanceof ErlangCompositeElement && PsiTreeUtil.findCommonParent(place, run) != run && 
-        !run.processDeclarations(processor, substitutor, null, place)) {
-        return false;
-      }
+      if (run instanceof ErlangCompositeElement && !run.processDeclarations(processor, substitutor, null, place)) return false;
       run = run.getPrevSibling();
     }
     return true;
