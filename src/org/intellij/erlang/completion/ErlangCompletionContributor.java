@@ -51,6 +51,7 @@ import org.intellij.erlang.index.ErlangAtomIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
@@ -226,6 +227,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
           if (moduleScope) {
             result.addLookupAdvertisement("Press " + shortcut + " to activate atom completion from project scope");
           }
+        }
+
+        // fun foo/n
+        if (!(parent instanceof ErlangRecordExpression) && grandPa instanceof ErlangFunctionWithArityVariables) {
+          result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, true, null));
         }
       }
 
