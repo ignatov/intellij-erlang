@@ -60,10 +60,15 @@ public class ErlangUnitTestElementUtil {
     List<ErlangFile> testFiles = new ArrayList<ErlangFile>(selectedFiles.length);
     PsiManager psiManager = PsiManager.getInstance(project);
     for (VirtualFile file : selectedFiles) {
-      ContainerUtil.addIfNotNull(testFiles, getFileTestElement(psiManager.findFile(file)));
+      if (!file.isDirectory()) {
+        ContainerUtil.addIfNotNull(testFiles, getFileTestElement(psiManager.findFile(file)));
+        continue;
+      }
+
       PsiDirectory directory = psiManager.findDirectory(file);
-      if (directory != null) {
-        addTestFilesFromDirectory(testFiles, directory);
+      PsiFile[] children = directory == null ? new PsiFile[0] : directory.getFiles();
+      for (PsiFile psiFile : children) {
+        ContainerUtil.addIfNotNull(testFiles, getFileTestElement(psiFile));
       }
     }
     return testFiles;
@@ -74,15 +79,6 @@ public class ErlangUnitTestElementUtil {
     ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction)psiElement : PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
     int arity = function == null ? -1 : function.getArity();
     return 0 == arity ? function : null;
-  }
-
-  private static void addTestFilesFromDirectory(List<ErlangFile> files, PsiDirectory directory) {
-    for (PsiFile psiFile : directory.getFiles()) {
-      ContainerUtil.addIfNotNull(files, getFileTestElement(psiFile));
-    }
-    for (PsiDirectory psiDirectory : directory.getSubdirectories()) {
-      addTestFilesFromDirectory(files, psiDirectory);
-    }
   }
 
   @Nullable
