@@ -346,6 +346,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testRecordExpressionAfterLastFieldAssignment()  throws Exception { doEnterTest(); }
 
 
+  public void testMapTupleEmpty()            throws Exception { doEnterTest(); }
+  public void testMapTupleBeforeFirstEntry() throws Exception { doEnterTest(); }
+  public void testMapTupleAfterFirstEntry()  throws Exception { doEnterTest(); }
+  public void testMapTupleAfterLastEntry()   throws Exception { doEnterTest(); }
+
+
   public void testFunExpression() throws Exception { doTest(); }
   public void testFunExpression1() throws Exception { doEnterTest(); }
   public void testFunExpression2() throws Exception { doEnterTest(); }

@@ -377,7 +377,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (containerNormal || containerContinuation) {
       IElementType previousElement = newChildIndex != 1 ? getPreviousElementType(newChildIndex) : null;
-      if (newChildIndex == 1 || previousElement != null && previousElement == ERL_COMMA) {
+      if (newChildIndex == 1 ||
+        newChildIndex == 2 && type == ERL_MAP_TUPLE ||
+        previousElement != null && previousElement == ERL_COMMA) {
         return containerContinuation ? Indent.getContinuationIndent() : Indent.getNormalIndent();
       }
     }
