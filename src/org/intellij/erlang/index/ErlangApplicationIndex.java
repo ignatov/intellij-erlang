@@ -190,7 +190,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   private static class ErlangApplicationDataIndexer implements DataIndexer<String, Void, FileContent> {
     @NotNull
     @Override
-    public Map<String, Void> map(FileContent inputData) {
+    public Map<String, Void> map(@NotNull FileContent inputData) {
       return Collections.singletonMap(getApplicationName(inputData.getFile()), null);
     }
   }
