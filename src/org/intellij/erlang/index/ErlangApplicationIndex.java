@@ -177,7 +177,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     }
 
     private static boolean isApplicationFile(VirtualFile file) {
-      return file != null && file.getFileType() == ErlangFileType.APP;
+      return file != null && ErlangFileType.APP.getDefaultExtension().equals(file.getExtension());
     }
     
     private static boolean isInsideEbinOrSrcDirectory(VirtualFile file) {
