@@ -29,7 +29,6 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.*;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
-import org.intellij.erlang.ErlangFileType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +44,8 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   private static final int INDEX_VERSION = 1;
   private static final KeyDescriptor<String> KEY_DESCRIPTOR = new EnumeratorStringDescriptor();
   private static final DataIndexer<String, Void, FileContent> DATA_INDEXER = new ErlangApplicationDataIndexer();
-  private static final String APP_SRC = ".app.src";
+  private static final String DOT_APP_SRC = ".app.src";
+  private static final String DOT_APP = ".app";
 
   @NotNull
   @Override
@@ -177,7 +177,8 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     }
 
     private static boolean isApplicationFile(VirtualFile file) {
-      return file != null && ErlangFileType.APP.getDefaultExtension().equals(file.getExtension());
+      String name = file != null ? file.getName() : "";
+      return name.endsWith(DOT_APP) || name.endsWith(DOT_APP_SRC);
     }
     
     private static boolean isInsideEbinOrSrcDirectory(VirtualFile file) {
@@ -198,6 +199,6 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   @NotNull
   private static String getApplicationName(VirtualFile appFile) {
     String filename = appFile.getName();
-    return filename.endsWith(APP_SRC) ? StringUtil.trimEnd(filename, APP_SRC) : appFile.getNameWithoutExtension();
+    return filename.endsWith(DOT_APP_SRC) ? StringUtil.trimEnd(filename, DOT_APP_SRC) : appFile.getNameWithoutExtension();
   }
 }
