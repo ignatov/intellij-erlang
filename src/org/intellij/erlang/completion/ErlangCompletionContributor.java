@@ -31,7 +31,9 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
@@ -39,9 +41,9 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Function;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
-import gnu.trove.THashSet;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
@@ -52,7 +54,6 @@ import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
@@ -244,95 +245,17 @@ public class ErlangCompletionContributor extends CompletionContributor {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
-        ErlangQVar var = PsiTreeUtil.getParentOfType(position, ErlangQVar.class);
-        PsiReference reference = var == null ? null : var.getReference();
-        ErlangExpression expression = PsiTreeUtil.getParentOfType(position, ErlangExpression.class);
-        if (expression == null || !(reference instanceof ErlangVariableReferenceImpl)) return;
-        PsiElement argList = expression.getParent();
-        if (argList == null || !(argList instanceof ErlangArgumentList)) return;
-
-        int pos = 0;
-        for (PsiElement ch : argList.getChildren()) {
-          if (ch.equals(expression)) break;
-          pos++;
-        }
-
-        Set<ErlangExpressionType> expectedTypes = getExpectedTypes(argList, pos);
+        Set<ErlangExpressionType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
         if (expectedTypes.isEmpty()) return;
 
-        Collection<ErlangQVar> vars = new THashSet<ErlangQVar>();
-        ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
-        ((ErlangVariableReferenceImpl) reference).populateVariables(clause, vars);
-
-        for (ErlangQVar v : vars) {
-          if (inLeftPartOfAssignment(v, true)) {
-            ErlangAssignmentExpression assign = PsiTreeUtil.getParentOfType(v, ErlangAssignmentExpression.class);
-            ErlangExpression right = assign != null ? assign.getRight() : null;
-            ErlangExpressionType varType = ErlangExpressionType.create(right);
-
-            if (contains(expectedTypes, varType)) {
-              result.addElement(LookupElementBuilder.create(v).withIcon(ErlangIcons.VARIABLE));
-            }
-          }
-        }
-
-        if (clause == null) return;
-        List<LookupElement> functionLookupElements = getFunctionLookupElements(clause.getContainingFile(), false, null);
+        List<LookupElement> functionLookupElements = getFunctionLookupElements(position.getContainingFile(), false, null);
         for (LookupElement lookupElement : functionLookupElements) {
-          PsiElement psiElement = lookupElement.getPsiElement();
-          if (psiElement instanceof ErlangFunction) {
-            ErlangExpressionType erlangExpressionType = ErlangExpressionType.calculateFunctionType((ErlangFunction) psiElement);
-            if (contains(expectedTypes, erlangExpressionType)) result.addElement(lookupElement);
+          ErlangFunction function = ObjectUtils.tryCast(lookupElement.getPsiElement(), ErlangFunction.class);
+          ErlangExpressionType type = function != null ? ErlangExpressionType.calculateFunctionType(function) : null;
+          if (type != null && ErlangCompletionUtil.containsType(expectedTypes, type)) {
+            result.addElement(lookupElement);
           }
         }
-      }
-
-      private boolean contains(@NotNull Set<ErlangExpressionType> expectedTypes, ErlangExpressionType varType) {
-        for (ErlangExpressionType type : expectedTypes) {
-          if (type.accept(varType)) return true;
-        }
-        return false;
-      }
-
-      @NotNull
-      private Set<ErlangExpressionType> getExpectedTypes(@NotNull PsiElement argList, int pos) {
-        Set<ErlangExpressionType> expectedTypes = ContainerUtil.newHashSet();
-
-        PsiElement call = argList.getParent();
-        if (!(call instanceof ErlangFunctionCallExpression)) return expectedTypes;
-        try {
-          PsiReference callReference = call.getReference();
-          //noinspection ConstantConditions
-          ResolveResult[] resolveResults = ((PsiPolyVariantReference) callReference).multiResolve(true);
-
-          for (ResolveResult r : resolveResults) {
-            PsiElement element = r.getElement();
-            if (element instanceof ErlangFunction) {
-              ErlangSpecification spec = ((ErlangFunction) element).findSpecification();
-              if (spec == null) return expectedTypes;
-              ErlangFunTypeSigs signature = getSignature(spec);
-              List<ErlangTypeSig> typeSigList = signature != null ? signature.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
-              for (ErlangTypeSig sig : typeSigList) {
-                ErlangFunTypeArguments arguments = sig.getFunType().getFunTypeArguments();
-                ErlangType type = arguments.getTypeList().get(pos);
-                if (type == null) continue;
-                processType(type, expectedTypes);
-              }
-            }
-          }
-        } catch (Exception ignored) {
-        }
-        return expectedTypes;
-      }
-
-      private void processType(@NotNull ErlangType type, @NotNull Set<ErlangExpressionType> expectedTypes) {
-        for (ErlangType childType : PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class)) {
-          processType(childType, expectedTypes);
-        }
-        ErlangTypeRef typeRef = type.getTypeRef();
-        String key = typeRef != null ? typeRef.getText() : type.getFirstChild().getText();
-        ErlangExpressionType et = ErlangExpressionType.TYPE_MAP.get(key);
-        ContainerUtil.addIfNotNull(expectedTypes, et);
       }
     });
   }

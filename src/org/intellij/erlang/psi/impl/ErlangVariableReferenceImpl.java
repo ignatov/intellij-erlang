@@ -16,29 +16,19 @@
 
 package org.intellij.erlang.psi.impl;
 
-import com.intellij.codeInsight.lookup.LookupElement;
-import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
-import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
-import gnu.trove.THashSet;
-import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.fromTheSameCaseExpression;
 
 public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<ErlangQVar> {
   public ErlangVariableReferenceImpl(@NotNull ErlangQVar element, TextRange range) {
@@ -91,75 +81,12 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
   @NotNull
   @Override
   public Object[] getVariants() {
-    if (PsiTreeUtil.getParentOfType(myElement, ErlangArgumentDefinition.class) != null) return new Object[]{};
-
-    List<LookupElement> result = new ArrayList<LookupElement>();
-    Collection<String> vars = new THashSet<String>(CaseInsensitiveStringHashingStrategy.INSTANCE);
-    PsiFile file = myElement.getContainingFile();
-    if (!(myElement.getParent() instanceof ErlangRecordExpression)) {
-      //noinspection unchecked
-      PsiElement scopeOwner = PsiTreeUtil.getParentOfType(myElement,
-        ErlangFunctionClause.class, ErlangMacrosDefinition.class, ErlangTypeDefinition.class, ErlangSpecification.class);
-      ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(scopeOwner, false, vars));
-
-      ErlangModule module = getErlangModule();
-      if (module != null) {
-        module.processDeclarations(new MyBaseScopeProcessor(scopeOwner, true, vars), ResolveState.initial(), module, module);
-      }
-
-      for (String var : vars) {
-        result.add(LookupElementBuilder.create(var).withIcon(ErlangIcons.VARIABLE));
-      }
-    }
-
-    Map<String, ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
-    if (context != null && PsiTreeUtil.getParentOfType(myElement, ErlangColonQualifiedExpression.class) == null) {
-      for (String var : context.keySet()) {
-        result.add(LookupElementBuilder.create(var).withIcon(ErlangIcons.VARIABLE));
-      }
-    }
-
-    return ArrayUtil.toObjectArray(result);
+    return ArrayUtil.EMPTY_OBJECT_ARRAY;
   }
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
     myElement.replace(ErlangElementFactory.createQVarFromText(myElement.getProject(), newElementName));
     return myElement;
-  }
-
-  private class MyBaseScopeProcessor extends BaseScopeProcessor {
-    private final PsiElement myScopeOwner;
-    private final boolean myForce;
-    private final Collection<String> myResult;
-    @Nullable private Collection<ErlangQVar> myVars;
-
-    public MyBaseScopeProcessor(@Nullable PsiElement scopeOwner, boolean force, Collection<String> result) {
-      myScopeOwner = scopeOwner;
-      myForce = force;
-      myResult = result;
-    }
-
-    @SuppressWarnings("NullableProblems")
-    private MyBaseScopeProcessor(@Nullable PsiElement scopeOwner, @NotNull Collection<ErlangQVar> result) {
-      this(scopeOwner, true, ContainerUtil.<String>newArrayList());
-      myVars = result;
-    }
-
-    @Override
-    public boolean execute(@NotNull PsiElement psiElement, @NotNull ResolveState resolveState) {
-      if (!psiElement.equals(myElement) && psiElement instanceof ErlangQVar && !psiElement.getText().equals("_") && !inColonQualified(myElement)) {
-        boolean ancestor = PsiTreeUtil.isAncestor(myScopeOwner, psiElement, false);
-        if ((ancestor || myForce) && (inArgumentDefinition(psiElement) || inLeftPartOfAssignment(psiElement) || inFunctionTypeArgument(psiElement))) {
-          myResult.add(((ErlangQVar) psiElement).getName());
-          if (myVars != null) myVars.add((ErlangQVar) psiElement);
-        }
-      }
-      return true;
-    }
-  }
-
-  public void populateVariables(@Nullable PsiElement scopeOwner, @NotNull Collection<ErlangQVar> result) {
-    ResolveUtil.treeWalkUp(myElement, new MyBaseScopeProcessor(scopeOwner, result));
   }
 }
