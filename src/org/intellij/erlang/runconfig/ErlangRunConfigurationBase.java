@@ -64,7 +64,6 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   @Override
   public void writeExternal(Element element) throws WriteExternalException {
     super.writeExternal(element);
-    writeModule(element);
     XmlSerializer.serializeInto(this, element);
   }
 
@@ -82,7 +81,6 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   @Override
   public void readExternal(Element element) throws InvalidDataException {
     super.readExternal(element);
-    readModule(element);
     XmlSerializer.deserializeInto(this, element);
   }
 

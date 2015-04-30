@@ -68,13 +68,11 @@ public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration
 
   public void writeExternal(@NotNull Element element) throws WriteExternalException {
     super.writeExternal(element);
-    writeModule(element);
     XmlSerializer.serializeInto(this, element);
   }
 
   public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
-    readModule(element);
     XmlSerializer.deserializeInto(this, element);
   }
 

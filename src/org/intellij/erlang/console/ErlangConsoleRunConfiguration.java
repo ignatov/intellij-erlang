@@ -29,6 +29,7 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jdom.Element;
@@ -43,7 +44,7 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
 
   public ErlangConsoleRunConfiguration(@NotNull String name, @NotNull Project project) {
     super(name, new RunConfigurationModule(project), ErlangConsoleRunConfigurationFactory.getInstance());
-    myWorkingDirPath = project.getBasePath();
+    myWorkingDirPath = ObjectUtils.assertNotNull(project.getBasePath());
     myConsoleArgs = "";
   }
 
@@ -72,7 +73,6 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
   @Override
   public void writeExternal(@NotNull Element element) throws WriteExternalException {
     super.writeExternal(element);
-    writeModule(element);
     XmlSerializer.serializeInto(this, element);
   }
 
@@ -96,7 +96,6 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
   @Override
   public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
-    readModule(element);
     XmlSerializer.deserializeInto(this, element);
   }
 
