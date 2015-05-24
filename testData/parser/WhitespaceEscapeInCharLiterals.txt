@@ -1,0 +1,27 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('space')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          PsiElement(char)('$\ ')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('newline')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          PsiElement(char)('$\\n')
+    PsiElement(.)('.')

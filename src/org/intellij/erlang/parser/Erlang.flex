@@ -33,7 +33,8 @@ CommentLine = "%"[^\r\n]*
 ModuleDocComment = {ModuleDocCommentLine} {ModuleDocCommentLine}*
 FunctionDocComment = {FunctionDocCommentLine} {FunctionDocCommentLine}*
 Comment = {CommentLine} {CommentLine}*
-Whitespace = ([ \t\n] | {ControlCharacter})+
+WhitespaceChar = [ \t\n] | {ControlCharacter}
+Whitespace = {WhitespaceChar}+
 ErlangUppercase = [A-Z]
 ErlangLowercase = [a-z]
 ErlangLetter = {ErlangUppercase} | {ErlangLowercase}
@@ -54,7 +55,7 @@ ControlName = [@A-Z\[\\\]\^_] /* this is the octal range \100 - \137 */
 ControlEscape = \\ \^ {ControlName}
 EscapeSequence = \\\" | "\\b" | "\\d" | "\\e" | "\\f" | "\\n" | "\\r" | "\\s" | "\\t" | "\\v" | "\\'" | "\\\\" | "\\[" | "\\{" | "\\]" | "\\}" | "\\`" | "\\$" | "\\=" | "\\%" | "\\," | "\\." | "\\_" | {ControlEscape} | {OctalEscape}
 
-CharLiteralChar = {InputCharacter} | {EscapeSequence}
+CharLiteralChar = {InputCharacter} | {EscapeSequence} | (\\ {WhitespaceChar})
 CharLiteral = \$ {CharLiteralChar} | \$
 
 /* Without the \\\" at the start the lexer won't find it, for unknown reasons */
