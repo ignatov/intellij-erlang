@@ -66,7 +66,7 @@ public class RebarEunitRunningState extends CommandLineState {
   private static final String CONFIG_FILE_NAME = "rebar.config";
   private static final String EUNIT_NO_TTY_OPTION = "{no_tty, true}";
   private static final String EUNIT_TEAMCITY_REPORTER = "{report,{" + ErlangEunitReporterModule.MODULE_NAME + ", []}}";
-  private static final String EUNIT_OPTS = "\n{eunit_opts,[" + EUNIT_TEAMCITY_REPORTER + "," + EUNIT_NO_TTY_OPTION + "]}.";
+  private static final String EUNIT_OPTS = "{eunit_opts,[" + EUNIT_TEAMCITY_REPORTER + "," + EUNIT_NO_TTY_OPTION + "]}.";
 
   private final RebarEunitRunConfiguration myConfiguration;
 
@@ -161,14 +161,14 @@ public class RebarEunitRunningState extends CommandLineState {
   }
 
   private PsiFile createModifiedConfigPsi(File oldConfig) throws IOException {
+    Project project = myConfiguration.getProject();
     String oldConfigText = oldConfig.exists() ? new String(FileUtil.loadFileText(oldConfig)) : "";
-    ErlangFile configPsi = (ErlangFile) PsiFileFactory.getInstance(myConfiguration.getProject())
+    ErlangFile configPsi = (ErlangFile) PsiFileFactory.getInstance(project)
       .createFileFromText(CONFIG_FILE_NAME, ErlangFileType.TERMS, oldConfigText);
     List<ErlangTupleExpression> eunitOptsSections = ErlangTermFileUtil.getConfigSections(configPsi, "eunit_opts");
     if (eunitOptsSections.isEmpty()) {
-      ErlangExpression form = ErlangTermFileUtil.createForm(EUNIT_OPTS);
-      assert form != null;
-      configPsi.add(form);
+      configPsi.add(ErlangElementFactory.createWhitespaceFromText(project, "\n"));
+      configPsi.add(ErlangTermFileUtil.createForm(EUNIT_OPTS));
     } else {
       removeReportOptions(eunitOptsSections);
       addEunitTeamcityReportOptions(eunitOptsSections.get(0));

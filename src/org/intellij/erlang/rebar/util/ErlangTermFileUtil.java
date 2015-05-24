@@ -29,6 +29,7 @@ import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Consumer;
 import com.intellij.util.Function;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
@@ -107,11 +108,12 @@ public final class ErlangTermFileUtil {
     return findNamedTuples(PsiTreeUtil.getChildrenOfTypeAsList(termsFile, ErlangExpression.class), sectionName);
   }
 
-  @Nullable
+  @NotNull
   public static ErlangExpression createForm(String formText) {
     Project defaultProject = ProjectManager.getInstance().getDefaultProject();
     PsiFile file = PsiFileFactory.getInstance(defaultProject).createFileFromText("a.config", ErlangFileType.TERMS, formText);
-    return ContainerUtil.getFirstItem(PsiTreeUtil.getChildrenOfTypeAsList(file, ErlangExpression.class));
+    ErlangExpression form = ContainerUtil.getFirstItem(PsiTreeUtil.getChildrenOfTypeAsList(file, ErlangExpression.class));
+    return ObjectUtils.assertNotNull(form);
   }
 
   public static void addListExpressionItem(@NotNull ErlangListExpression list, @NotNull ErlangExpression what) {

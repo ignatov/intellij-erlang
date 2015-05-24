@@ -112,9 +112,16 @@ public class ErlangElementFactory {
   public static PsiElement createLeafFromText(@NotNull Project project, @NotNull String text) {
     return createFileFromText(project, text).getFirstChild();
   }
+
   @NotNull
   public static PsiElement createSpecFromText(@NotNull Project project, @NotNull String text) {
     return createAttributeFromText(project, "-spec " + text);
+  }
+
+  @NotNull
+  public static PsiElement createWhitespaceFromText(@NotNull Project project, @NotNull String text) {
+    ErlangFile file = createFileFromText(project, text);
+    return file.getFirstChild();
   }
 
   @NotNull
