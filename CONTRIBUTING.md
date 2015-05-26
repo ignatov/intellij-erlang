@@ -9,6 +9,7 @@ Before sending a pull request please check that the **ErlangTestCase** is succes
 select the IDEA installation directory as SDK root (should be named ```IDEA IC-13```)
 1. **Manually add ```$IDEA_SDK_PATH$/plugins/copyright/lib/copyright.jar``` to IDEA SDK classpath**
 1. Setup the latest version of [Grammar-Kit](https://github.com/JetBrains/Grammar-Kit) plugin
+1. Setup **UI Designer** plugin
 1. Run the **Erlang** run configuration
 
 Please don't use class comments with information about author or date and time creation.
