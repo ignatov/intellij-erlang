@@ -12,3 +12,4 @@ The following people have made contributions (in no particular order):
 * Matt Campbell (github @xenolinguist)
 * Alexander Zolotov (github @zolotov)
 * Ivan Arbuzov (github @smolcoder)
+* Igor Istocniks (github @istocniks)
