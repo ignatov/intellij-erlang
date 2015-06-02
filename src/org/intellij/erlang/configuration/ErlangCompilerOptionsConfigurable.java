@@ -18,11 +18,13 @@ package org.intellij.erlang.configuration;
 
 import com.intellij.compiler.options.CompilerConfigurable;
 import com.intellij.ide.DataManager;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.options.SearchableConfigurable;
-import com.intellij.openapi.options.newEditor.OptionsEditor;
+import com.intellij.openapi.options.ex.Settings;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.intellij.erlang.utils.AncestorAdapter;
@@ -53,10 +55,12 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
     myConfigureRebarButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        OptionsEditor optionsEditor = OptionsEditor.KEY.getData(DataManager.getInstance().getDataContext(myConfigureRebarButton));
-        assert optionsEditor != null;
-        SearchableConfigurable erlangExternalToolsConfigurable = optionsEditor.findConfigurableById(ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
-        optionsEditor.select(erlangExternalToolsConfigurable);
+        DataContext context = DataManager.getInstance().getDataContext(myConfigureRebarButton);
+        Settings settings = ObjectUtils.assertNotNull(Settings.KEY.getData(context));
+        Configurable configurable = settings.find(ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
+        if (configurable != null) {
+          settings.select(configurable);
+        }
       }
     });
     myRootPanel.addAncestorListener(new AncestorAdapter() {
