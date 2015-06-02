@@ -100,12 +100,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
 
   @Override
   public boolean isModified() {
-    if(myUseRebarCompilerCheckBox.isSelected() != mySettings.isUseRebarCompilerEnabled()) {
-      return true;
-    }
-    if(myAddDebugInfoCheckBox.isSelected() != mySettings.isAddDebugInfoEnabled()) {
-      return true;
-    }
-    return false;
+    return myUseRebarCompilerCheckBox.isSelected() != mySettings.isUseRebarCompilerEnabled() ||
+      myAddDebugInfoCheckBox.isSelected() != mySettings.isAddDebugInfoEnabled();
   }
 }
