@@ -39,7 +39,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -111,23 +110,20 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       return myElement instanceof ErlangNamedElement ? ((ErlangNamedElement) myElement).getName() : null;
     }
 
+    @NotNull
     @Override
     public ItemPresentation getPresentation() {
       return this;
     }
 
+    @NotNull
     @Override
     public TreeElement[] getChildren() {
-      if (myElement instanceof ErlangFunctionClause) {
-        return EMPTY_ARRAY;
-      }
-      ArrayList<TreeElement> result = new ArrayList<TreeElement>();
       if (myElement instanceof ErlangFunction) {
         List<ErlangFunctionClause> clauses = ((ErlangFunction) myElement).getFunctionClauseList();
         if (clauses.size() != 1) {
-          for (ErlangFunctionClause o : clauses) {
-            result.add(new Element(o));
-          }
+          //noinspection unchecked
+          return elementsArray(clauses);
         }
       }
       else if (myElement instanceof ErlangFile) {
@@ -139,20 +135,16 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
             return name.compareToIgnoreCase(o2.getName());
           }
         };
-        List<ErlangMacrosDefinition> macroses = ((ErlangFile) myElement).getMacroses();
-        List<ErlangRecordDefinition> records = ((ErlangFile) myElement).getRecords();
-        List<ErlangTypeDefinition> types = ((ErlangFile) myElement).getTypes();
-        List<ErlangFunction> functions = ((ErlangFile) myElement).getFunctions();
-        Collections.sort(macroses, comparator);
-        Collections.sort(records, comparator);
-        Collections.sort(functions, comparator);
-        for (ErlangMacrosDefinition o : macroses) result.add(new Element(o));
-        for (ErlangRecordDefinition o : records) result.add(new Element(o));
-        for (ErlangTypeDefinition o : types) result.add(new Element(o));
-        for (ErlangFunction o : functions) result.add(new Element(o));
+        ErlangFile file = (ErlangFile) myElement;
+        //noinspection unchecked
+        return elementsArray(
+          sorted(file.getMacroses(), comparator),
+          sorted(file.getRecords(), comparator),
+          sorted(file.getTypes(), comparator),
+          sorted(file.getFunctions(), comparator)
+        );
       }
-
-      return result.toArray(new TreeElement[result.size()]);
+      return EMPTY_ARRAY;
     }
 
     @Override
@@ -213,5 +205,22 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     rowIcon.setIcon(first, 0);
     rowIcon.setIcon(second, 1);
     return rowIcon;
+  }
+
+  //TODO replace with ContainerUtil.sorted() when it supports contravariant comparator argument
+  private static <T> List<T> sorted(List<T> list, Comparator<? super T> comparator) {
+    List<T> sorted = ContainerUtil.newArrayList(list);
+    Collections.sort(sorted, comparator);
+    return sorted;
+  }
+
+  private static TreeElement[] elementsArray(List<? extends PsiElement>... psiLists) {
+    List<TreeElement> elements = ContainerUtil.newArrayList();
+    for (List<? extends PsiElement> psis : psiLists) {
+      for (PsiElement psi : psis) {
+        elements.add(new Element(psi));
+      }
+    }
+    return elements.toArray(new TreeElement[elements.size()]);
   }
 }

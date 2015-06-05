@@ -49,6 +49,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static java.util.Collections.*;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getAtomName;
 
 public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
@@ -99,56 +100,56 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangRule>>() {
       @Override
       public Result<List<ErlangRule>> compute() {
-        return Result.create(calcRules(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcRules()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangFunction>> myFunctionValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangFunction>>() {
       @Override
       public Result<List<ErlangFunction>> compute() {
-        return Result.create(calcFunctions(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcFunctions()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangImportFunction>> myImportValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangImportFunction>>() {
       @Override
       public Result<List<ErlangImportFunction>> compute() {
-        return Result.create(calcImports(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcImports()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<Set<ErlangFunction>> myExportedFunctionValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<ErlangFunction>>() {
       @Override
       public Result<Set<ErlangFunction>> compute() {
-        return Result.create(calcExportedFunctions(), ErlangFileImpl.this);
+        return Result.create(unmodifiableSet(calcExportedFunctions()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangAttribute>> myAttributeValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangAttribute>>() {
       @Override
       public Result<List<ErlangAttribute>> compute() {
-        return Result.create(calcAttributes(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcAttributes()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangRecordDefinition>> myRecordValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangRecordDefinition>>() {
       @Override
       public Result<List<ErlangRecordDefinition>> compute() {
-        return Result.create(calcRecords(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcRecords()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangInclude>> myIncludeValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangInclude>>() {
       @Override
       public Result<List<ErlangInclude>> compute() {
-        return Result.create(calcIncludes(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcIncludes()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangIncludeLib>> myIncludeLibValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangIncludeLib>>() {
       @Override
       public Result<List<ErlangIncludeLib>> compute() {
-        return Result.create(calcIncludeLibs(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcIncludeLibs()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<MultiMap<String, ErlangFunction>> myFunctionsMap =
@@ -191,7 +192,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangMacrosDefinition>>() {
       @Override
       public Result<List<ErlangMacrosDefinition>> compute() {
-        return Result.create(calcMacroses(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcMacroses()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap =
@@ -212,7 +213,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangTypeDefinition>>() {
       @Override
       public Result<List<ErlangTypeDefinition>> compute() {
-        return Result.create(calcTypes(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcTypes()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<Map<String, ErlangTypeDefinition>> myTypeMap =
@@ -234,21 +235,21 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       @Nullable
       @Override
       public Result<Map<String, ErlangCallbackSpec>> compute() {
-        return Result.create(calcCallbacks(), ErlangFileImpl.this);
+        return Result.create(unmodifiableMap(calcCallbacks()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangBehaviour>> myBehavioursValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangBehaviour>>() {
       @Override
       public Result<List<ErlangBehaviour>> compute() {
-        return Result.create(calcBehaviours(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcBehaviours()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<List<ErlangSpecification>> mySpecificationsValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangSpecification>>() {
       @Override
       public Result<List<ErlangSpecification>> compute() {
-        return Result.create(calcSpecifications(), ErlangFileImpl.this);
+        return Result.create(unmodifiableList(calcSpecifications()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<Boolean> myExportAll =
@@ -269,14 +270,14 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<String>>() {
       @Override
       public Result<Set<String>> compute() {
-        return Result.create(calcExportedSignatures(), ErlangFileImpl.this);
+        return Result.create(unmodifiableSet(calcExportedSignatures()), ErlangFileImpl.this);
       }
     }, false);
   private CachedValue<Set<String>> myNoAutoImportFunctionsSignatures =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<String>>() {
       @Override
       public Result<Set<String>> compute() {
-        return Result.create(calcNoAutoImportSignatures(), ErlangFileImpl.this);
+        return Result.create(unmodifiableSet(calcNoAutoImportSignatures()), ErlangFileImpl.this);
       }
     }, false);
 
