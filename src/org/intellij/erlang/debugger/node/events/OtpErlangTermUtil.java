@@ -64,6 +64,20 @@ final class OtpErlangTermUtil {
   }
 
   @Nullable
+  public static String getStringText(@Nullable OtpErlangObject stringObject) {
+    if (stringObject instanceof OtpErlangString) {
+      return ((OtpErlangString) stringObject).stringValue();
+    }
+    else if (stringObject instanceof OtpErlangList) {
+      try {
+        return ((OtpErlangList) stringObject).stringValue();
+      } catch (OtpErlangException ignore) {
+      }
+    }
+    return null;
+  }
+
+  @Nullable
   public static OtpErlangObject elementAt(@Nullable OtpErlangTuple tuple, int idx) {
     return tuple != null ? tuple.elementAt(idx) : null;
   }

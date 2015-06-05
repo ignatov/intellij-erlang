@@ -18,9 +18,6 @@ package org.intellij.erlang.debugger.node.commands;
 
 import com.ericsson.otp.erlang.*;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.ArrayUtil;
-import com.intellij.util.Function;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,8 +43,8 @@ public final class ErlangDebuggerCommandsProducer {
   }
 
   @NotNull
-  public static ErlangDebuggerCommand getInterpretModulesCommand(@NotNull List<String> moduleNames) {
-    return new InterpretModulesCommand(moduleNames);
+  public static ErlangDebuggerCommand getInterpretModulesCommand(@NotNull List<String> moduleSourcePaths) {
+    return new InterpretModulesCommand(moduleSourcePaths);
   }
 
   @NotNull
@@ -159,25 +156,22 @@ public final class ErlangDebuggerCommandsProducer {
   }
 
   private static class InterpretModulesCommand implements ErlangDebuggerCommand {
-    private final List<String> myModuleNames;
+    private final List<String> myModuleSourcePaths;
 
-    public InterpretModulesCommand(@NotNull List<String> moduleNames) {
-      myModuleNames = moduleNames;
+    public InterpretModulesCommand(@NotNull List<String> moduleSourcePaths) {
+      myModuleSourcePaths = moduleSourcePaths;
     }
 
     @NotNull
     @Override
     public OtpErlangTuple toMessage() {
-      List<OtpErlangObject> moduleNameAtoms = ContainerUtil.map(myModuleNames, new Function<String, OtpErlangObject>() {
-        @NotNull
-        @Override
-        public OtpErlangObject fun(String moduleName) {
-          return new OtpErlangAtom(moduleName);
-        }
-      });
+      OtpErlangObject[] moduleSourcePaths = new OtpErlangObject[myModuleSourcePaths.size()];
+      for (int i = 0; i < myModuleSourcePaths.size(); i++) {
+        moduleSourcePaths[i] = new OtpErlangString(myModuleSourcePaths.get(i));
+      }
       return new OtpErlangTuple(new OtpErlangObject[] {
         new OtpErlangAtom("interpret_modules"),
-        new OtpErlangList(ArrayUtil.toObjectArray(moduleNameAtoms, OtpErlangObject.class))
+        new OtpErlangList(moduleSourcePaths)
       });
     }
   }

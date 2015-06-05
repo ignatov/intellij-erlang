@@ -19,6 +19,8 @@ package org.intellij.erlang.debugger.node.events;
 import com.ericsson.otp.erlang.OtpErlangList;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangTuple;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 
@@ -36,7 +38,14 @@ class InterpretModulesResponseEvent extends ErlangDebuggerEvent {
     if (interpretModuleStatuses == null || myNodeName == null) throw new DebuggerEventFormatException();
     for (OtpErlangObject status : interpretModuleStatuses) {
       OtpErlangTuple statusTuple = OtpErlangTermUtil.getTupleValue(status);
-      String module = OtpErlangTermUtil.getAtomText(OtpErlangTermUtil.elementAt(statusTuple, 0));
+
+      OtpErlangObject moduleTerm = OtpErlangTermUtil.elementAt(statusTuple, 0);
+      String module = OtpErlangTermUtil.getAtomText(moduleTerm);
+      if (module == null) {
+        String modulePath = OtpErlangTermUtil.getStringText(moduleTerm);
+        VirtualFile erlFile = modulePath != null ? LocalFileSystem.getInstance().findFileByPath(modulePath) : null;
+        module = erlFile != null ? erlFile.getNameWithoutExtension() : null;
+      }
       if (module == null) throw new DebuggerEventFormatException();
 
       OtpErlangObject moduleStatusObject = OtpErlangTermUtil.elementAt(statusTuple, 1);

@@ -86,8 +86,8 @@ public class ErlangDebuggerNode {
     addCommand(ErlangDebuggerCommandsProducer.getRemoveBreakpointCommand(module, line));
   }
 
-  public void interpretModules(List<String> moduleNames) {
-    addCommand(ErlangDebuggerCommandsProducer.getInterpretModulesCommand(moduleNames));
+  public void interpretModules(List<String> moduleSourcePaths) {
+    addCommand(ErlangDebuggerCommandsProducer.getInterpretModulesCommand(moduleSourcePaths));
   }
 
   public void runDebugger(String module, String function, List<String> args) {

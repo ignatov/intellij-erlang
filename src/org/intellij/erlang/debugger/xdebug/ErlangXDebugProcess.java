@@ -36,7 +36,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
-import com.intellij.util.Function;
+import com.intellij.util.PathUtil;
 import com.intellij.util.ResourceUtil;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.io.URLUtil;
@@ -66,6 +66,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
@@ -194,16 +195,15 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       erlangTestModules.addAll(erlangModules);
       erlangModules = erlangTestModules;
     }
-    List<String> modulesToInterpret = ContainerUtil.map(erlangModules, new Function<ErlangFile, String>() {
-      @Override
-      public String fun(ErlangFile erlangFile) {
-        VirtualFile virtualFile = erlangFile.getVirtualFile();
-        assert virtualFile != null;
-        return virtualFile.getNameWithoutExtension();
+    Set<String> notToInterpret = runConfiguration.getDebugOptions().getModulesNotToInterpret();
+    List<String> moduleSourcePaths = ContainerUtil.newArrayListWithCapacity(erlangModules.size());
+    for (ErlangFile erlangModule : erlangModules) {
+      VirtualFile file = erlangModule.getVirtualFile();
+      if (file != null && !notToInterpret.contains(file.getNameWithoutExtension())) {
+        moduleSourcePaths.add(PathUtil.getLocalPath(file));
       }
-    });
-    modulesToInterpret.removeAll(runConfiguration.getDebugOptions().getModulesNotToInterpret());
-    myDebuggerNode.interpretModules(modulesToInterpret);
+    }
+    myDebuggerNode.interpretModules(moduleSourcePaths);
   }
 
   @NotNull
