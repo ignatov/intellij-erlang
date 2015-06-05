@@ -188,7 +188,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     commandLine.setExePath(executable.getAbsolutePath());
     addCodePath(commandLine, module, target, context);
     addParseTransforms(commandLine, module);
-    addDebugInfo(commandLine, erlangModulePaths, outputDirectory, compilerOptions.myAddDebugInfoEnabled);
+    addDebugInfo(commandLine, compilerOptions.myAddDebugInfoEnabled);
     addIncludePaths(commandLine, module);
     addMacroDefinitions(commandLine, target);
     commandLine.addParameters(erlangModulePaths);
@@ -202,20 +202,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void addDebugInfo(@NotNull GeneralCommandLine commandLine,
-                                   @NotNull List<String> modulePaths,
-                                   File outputDirectory,
-                                   boolean addDebugInfoEnabled) throws ProjectBuildException {
-    if (!addDebugInfoEnabled) return;
-    commandLine.addParameter("+debug_info");
-    try {
-      for (String modulePath : modulePaths) {
-        File srcFile = new File(modulePath);
-        File dstFile = new File(outputDirectory, srcFile.getName());
-        FileUtil.copy(srcFile, dstFile);
-      }
-    } catch (IOException e) {
-      throw new ProjectBuildException("Failed to copy sources to output directory.", e);
+  private static void addDebugInfo(@NotNull GeneralCommandLine commandLine, boolean addDebugInfoEnabled) {
+    if (addDebugInfoEnabled) {
+      commandLine.addParameter("+debug_info");
     }
   }
 
