@@ -87,7 +87,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     FileBasedIndex.getInstance().processValues(ERLANG_APPLICATION_INDEX, appName, null, processor, searchScope);
     Project project = searchScope.getProject();
     if (project != null) {
-      processAppFiles(getAppFilesFromEbinDirectories(project), appName, processor);
+      processAppFiles(getAppFilesFromEbinDirectories(project, appName), appName, processor);
     }
 
     return processor.getApplicationPath();
@@ -96,7 +96,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   public static List<VirtualFile> getAllApplicationDirectories(@NotNull Project project, @NotNull final GlobalSearchScope searchScope) {
     final ArrayList<VirtualFile> result = new ArrayList<VirtualFile>();
     final FileBasedIndex index = FileBasedIndex.getInstance();
-    final List<VirtualFile> appFilesFromEbinDirectories = getAppFilesFromEbinDirectories(project);
+    final List<VirtualFile> appFilesFromEbinDirectories = getAppFilesFromEbinDirectories(project, null);
 
     index.processAllKeys(ERLANG_APPLICATION_INDEX, new Processor<String>() {
       @Override
@@ -124,15 +124,22 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     }
   }
 
-  public static List<VirtualFile> getAppFilesFromEbinDirectories(Project project) {
+  public static List<VirtualFile> getAppFilesFromEbinDirectories(@NotNull Project project, @Nullable String appName) {
     List<VirtualFile> appFiles = new ArrayList<VirtualFile>();
     for (Module m : ModuleManager.getInstance(project).getModules()) {
       CompilerModuleExtension moduleExtension = ModuleRootManager.getInstance(m).getModuleExtension(CompilerModuleExtension.class);
-      VirtualFile compilerOutputPath = moduleExtension != null ? moduleExtension.getCompilerOutputPath() : null;
+      VirtualFile outputDir = moduleExtension != null ? moduleExtension.getCompilerOutputPath() : null;
+      if (outputDir == null || !outputDir.isDirectory() || !"ebin".equals(outputDir.getName())) continue;
 
-      if (compilerOutputPath == null || !compilerOutputPath.isDirectory()) continue;
+      if (appName != null) {
+        VirtualFile appFile = outputDir.findChild(appName + DOT_APP);
+        if (appFile != null && !appFile.isDirectory()) {
+          appFiles.add(appFile);
+        }
+        continue;
+      }
 
-      for (VirtualFile file : compilerOutputPath.getChildren()) {
+      for (VirtualFile file : outputDir.getChildren()) {
         if (ErlangApplicationInputFilter.isApplicationFile(file)) {
           appFiles.add(file);
         }
@@ -176,9 +183,9 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
       return isApplicationFile(file) && isInsideEbinOrSrcDirectory(file);
     }
 
-    private static boolean isApplicationFile(VirtualFile file) {
-      String name = file != null ? file.getName() : "";
-      return name.endsWith(DOT_APP) || name.endsWith(DOT_APP_SRC);
+    private static boolean isApplicationFile(@NotNull VirtualFile file) {
+      String fileName = file.isDirectory() ? "" : file.getName();
+      return fileName.endsWith(DOT_APP) || fileName.endsWith(DOT_APP_SRC);
     }
     
     private static boolean isInsideEbinOrSrcDirectory(VirtualFile file) {
