@@ -38,7 +38,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.Processor;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.WeakHashMap;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.jps.model.JpsErlangModelSerializerExtension;
@@ -53,9 +52,19 @@ import javax.swing.*;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 public class ErlangSdkType extends SdkType {
+  private static final String OTP_RELEASE_PREFIX_LINE = "ErlangSdkType_OTP_RELEASE:";
+  private static final String ERTS_VERSION_PREFIX_LINE = "ErlangSdkType_ERTS_VERSION:";
+  private static final String PRINT_VERSION_INFO_EXPRESSION =
+    "io:format(\"~n~s~n~s~n~s~n~s~n\",[" +
+      "\"" + OTP_RELEASE_PREFIX_LINE + "\"," +
+      "erlang:system_info(otp_release)," +
+      "\"" + ERTS_VERSION_PREFIX_LINE + "\"," +
+      "erlang:system_info(version)" +
+      "]),erlang:halt().";
   private static final Logger LOG = Logger.getInstance(ErlangSdkType.class);
 
   private final Map<String, ErlangSdkRelease> mySdkHomeToReleaseCache = ApplicationManager.getApplication().isUnitTestMode() ?
@@ -228,22 +237,42 @@ public class ErlangSdkType extends SdkType {
 
     try {
       ProcessOutput output = ErlangSystemUtil.getProcessOutput(sdkHome, erl.getAbsolutePath(), "-noshell",
-        "-eval", "io:format(\"~s~n~s\",[erlang:system_info(otp_release),erlang:system_info(version)]),erlang:halt().");
-      List<String> lines = output.getExitCode() != 0 || output.isTimeout() || output.isCancelled() ?
-        ContainerUtil.<String>emptyList() : output.getStdoutLines();
-      if (lines.size() == 2) {
-        ErlangSdkRelease release = new ErlangSdkRelease(lines.get(0), lines.get(1));
+        "-eval", PRINT_VERSION_INFO_EXPRESSION);
+      ErlangSdkRelease release = output.getExitCode() != 0 || output.isCancelled() || output.isTimeout() ? null :
+        parseSdkVersion(output.getStdoutLines());
+      if (release != null) {
         mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), release);
-        return release;
       }
       else {
-        LOG.warn("Failed to detect Erlang version.\n" + output.getStderr());
+        LOG.warn("Failed to detect Erlang version.\n" +
+          "StdOut: " + output.getStdout() + "\n" +
+          "StdErr: " + output.getStderr());
       }
+      return release;
     } catch (ExecutionException e) {
       LOG.warn(e);
     }
 
     return null;
+  }
+
+  @Nullable
+  private static ErlangSdkRelease parseSdkVersion(@NotNull List<String> printVersionInfoOutput) {
+    String otpRelease = null;
+    String ertsVersion = null;
+
+    ListIterator<String> iterator = printVersionInfoOutput.listIterator();
+    while (iterator.hasNext()) {
+      String line = iterator.next();
+      if (OTP_RELEASE_PREFIX_LINE.equals(line) && iterator.hasNext()) {
+        otpRelease = iterator.next();
+      }
+      else if (ERTS_VERSION_PREFIX_LINE.equals(line) && iterator.hasNext()) {
+        ertsVersion = iterator.next();
+      }
+    }
+
+    return otpRelease != null && ertsVersion != null ? new ErlangSdkRelease(otpRelease, ertsVersion) : null;
   }
 
   private static void configureSdkPaths(@NotNull Sdk sdk) {
