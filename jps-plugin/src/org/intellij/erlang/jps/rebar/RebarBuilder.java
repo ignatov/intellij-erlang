@@ -19,14 +19,12 @@ package org.intellij.erlang.jps.rebar;
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.text.StringUtil;
-import org.intellij.erlang.jps.builder.ErlangCompilerProcessAdapter;
-import org.intellij.erlang.jps.builder.ErlangSourceRootDescriptor;
-import org.intellij.erlang.jps.builder.ErlangTarget;
-import org.intellij.erlang.jps.builder.ErlangTargetType;
+import org.intellij.erlang.jps.builder.*;
 import org.intellij.erlang.jps.execution.ExecutionException;
 import org.intellij.erlang.jps.execution.GeneralCommandLine;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
 import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsExtension;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
@@ -36,7 +34,9 @@ import org.jetbrains.jps.incremental.ProjectBuildException;
 import org.jetbrains.jps.incremental.TargetBuilder;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
+import org.jetbrains.jps.model.JpsDummyElement;
 import org.jetbrains.jps.model.JpsProject;
+import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.JpsModule;
 
 import java.io.File;
@@ -64,19 +64,22 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     ErlangCompilerOptions compilerOptions = JpsErlangCompilerOptionsExtension.getOrCreateExtension(project).getOptions();
     if (!compilerOptions.myUseRebarCompiler) return;
 
-    String rebarExecutablePath = getRebarExecutablePath(project);
-    if (rebarExecutablePath == null) {
+    String rebarPath = getRebarExecutablePath(project);
+    if (rebarPath == null) {
       String errorMessage = "Rebar path is not set";
       context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, errorMessage));
       throw new ProjectBuildException(errorMessage);
     }
+
+    JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
+    String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
 
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
       String contentRootPath = new URL(contentRootUrl).getPath();
       File contentRootDir = new File(contentRootPath);
       File rebarConfigFile = new File(contentRootDir, REBAR_CONFIG_FILE_NAME);
       if (!rebarConfigFile.exists()) continue;
-      runRebar(contentRootPath, rebarExecutablePath, compilerOptions.myAddDebugInfoEnabled, context);
+      runRebar(escriptPath, rebarPath, contentRootPath, compilerOptions.myAddDebugInfoEnabled, context);
     }
   }
 
@@ -86,13 +89,15 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     return NAME;
   }
 
-  private static void runRebar(@Nullable String contentRootPath,
+  private static void runRebar(@NotNull String escriptPath,
                                @NotNull String rebarPath,
+                               @Nullable String contentRootPath,
                                boolean addDebugInfo,
                                @NotNull CompileContext context) throws ProjectBuildException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setWorkDirectory(contentRootPath);
-    commandLine.setExePath(rebarPath);
+    commandLine.setExePath(escriptPath);
+    commandLine.addParameter(rebarPath);
     commandLine.addParameter("compile");
 
     if (addDebugInfo) {

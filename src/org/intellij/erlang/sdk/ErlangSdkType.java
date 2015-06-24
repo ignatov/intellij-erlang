@@ -121,14 +121,9 @@ public class ErlangSdkType extends SdkType {
 
   @Override
   public boolean isValidSdkHome(@NotNull String path) {
-    File erl = getTopLevelExecutable(path);
+    File erl = JpsErlangSdkType.getByteCodeInterpreterExecutable(path);
     File erlc = JpsErlangSdkType.getByteCodeCompilerExecutable(path);
     return erl.canExecute() && erlc.canExecute();
-  }
-
-  @NotNull
-  public static File getTopLevelExecutable(@NotNull String sdkHome) {
-    return JpsErlangSdkType.getExecutable(new File(sdkHome, "bin").getAbsolutePath(), "erl");
   }
 
   @NotNull
@@ -221,7 +216,7 @@ public class ErlangSdkType extends SdkType {
 
     assert !ApplicationManager.getApplication().isUnitTestMode() : "Unit tests should have their SDK versions pre-cached!";
 
-    File erl = sdkHome != null ? getTopLevelExecutable(sdkHome) : null;
+    File erl = sdkHome != null ? JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkHome) : null;
     if (erl == null || !erl.canExecute()) return null;
 
     try {

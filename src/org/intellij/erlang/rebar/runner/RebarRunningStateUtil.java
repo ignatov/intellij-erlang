@@ -26,8 +26,11 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,13 +40,19 @@ public class RebarRunningStateUtil {
   private RebarRunningStateUtil() {
   }
 
-  public static GeneralCommandLine getRebarCommandLine(@NotNull RebarRunConfigurationBase configuration) {
+  @NotNull
+  public static GeneralCommandLine getRebarCommandLine(@NotNull RebarRunConfigurationBase configuration) throws ExecutionException {
     Project project = configuration.getProject();
     RebarSettings rebarSettings = RebarSettings.getInstance(project);
+    String sdkPath = ErlangSdkType.getSdkPath(project);
+    String escriptPath = sdkPath != null ?
+      JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
+      JpsErlangSdkType.getExecutableFileName(JpsErlangSdkType.SCRIPT_INTERPRETER);
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
-    commandLine.setWorkDirectory(getWorkingDirectory(configuration));
-    commandLine.setExePath(rebarSettings.getRebarPath());
+    commandLine.withWorkDirectory(getWorkingDirectory(configuration));
+    commandLine.setExePath(escriptPath);
+    commandLine.addParameter(rebarSettings.getRebarPath());
 
     List<String> split = ContainerUtil.list(configuration.getCommand().split("\\s+"));
     if (configuration.isSkipDependencies() && !split.contains("skip_deps=true")) {
@@ -54,6 +63,7 @@ public class RebarRunningStateUtil {
     return commandLine;
   }
 
+  @NotNull
   public static OSProcessHandler runRebar(Project project, GeneralCommandLine commandLine) throws ExecutionException {
     try {
       return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
@@ -72,6 +82,7 @@ public class RebarRunningStateUtil {
     }
   }
 
+  @NotNull
   public static String getWorkingDirectory(@NotNull RebarRunConfigurationBase configuration) {
     Module module = configuration.getConfigurationModule().getModule();
     if (module != null) {
@@ -80,6 +91,6 @@ public class RebarRunningStateUtil {
         return contentRoots[0].getPath();
       }
     }
-    return configuration.getProject().getBasePath();
+    return ObjectUtils.assertNotNull(configuration.getProject().getBasePath());
   }
 }

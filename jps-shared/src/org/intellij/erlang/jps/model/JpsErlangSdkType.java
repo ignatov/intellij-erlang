@@ -28,19 +28,38 @@ import java.io.File;
 public class JpsErlangSdkType extends JpsSdkType<JpsDummyElement> implements JpsElementTypeWithDefaultProperties<JpsDummyElement> {
   public static final JpsErlangSdkType INSTANCE = new JpsErlangSdkType();
 
+  public static final String BYTECODE_INTERPRETER = "erl";
+  public static final String BYTECODE_COMPILER = "erlc";
+  public static final String SCRIPT_INTERPRETER = "escript";
+
   @NotNull
-  public static File getExecutable(@NotNull String path, @NotNull String command) {
-    return new File(path, SystemInfo.isWindows ? command + ".exe" : command);
+  public static File getByteCodeInterpreterExecutable(@NotNull String sdkHome) {
+    return getSdkExecutable(sdkHome, BYTECODE_INTERPRETER);
   }
 
   @NotNull
   public static File getByteCodeCompilerExecutable(@NotNull String sdkHome) {
-    return getExecutable(new File(sdkHome, "bin").getAbsolutePath(), "erlc");
+    return getSdkExecutable(sdkHome, BYTECODE_COMPILER);
+  }
+
+  @NotNull
+  public static File getScriptInterpreterExecutable(@NotNull String sdkHome) {
+    return getSdkExecutable(sdkHome, SCRIPT_INTERPRETER);
   }
 
   @NotNull
   @Override
   public JpsDummyElement createDefaultProperties() {
     return JpsElementFactory.getInstance().createDummyElement();
+  }
+
+  @NotNull
+  public static String getExecutableFileName(@NotNull String executableName) {
+    return SystemInfo.isWindows ? executableName + ".exe" : executableName;
+  }
+
+  @NotNull
+  private static File getSdkExecutable(@NotNull String sdkHome, @NotNull String command) {
+    return new File(new File(sdkHome, "bin"), getExecutableFileName(command));
   }
 }

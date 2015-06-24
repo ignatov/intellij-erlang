@@ -119,18 +119,6 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return outputDirectory;
   }
 
-  @NotNull
-  private static JpsSdk<JpsDummyElement> getSdk(@NotNull CompileContext context,
-                                                @NotNull JpsModule module) throws ProjectBuildException {
-    JpsSdk<JpsDummyElement> sdk = module.getSdk(JpsErlangSdkType.INSTANCE);
-    if (sdk == null) {
-      String errorMessage = "No SDK for module " + module.getName();
-      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, errorMessage));
-      throw new ProjectBuildException(errorMessage);
-    }
-    return sdk;
-  }
-
   private static void processAppConfigFiles(JpsModule module, File outputDirectory) throws IOException {
     FileFilter appConfigFileFilter = new FileFilter() {
       @Override
@@ -180,7 +168,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
     JpsModule module = target.getModule();
-    JpsSdk<JpsDummyElement> sdk = getSdk(context, module);
+    JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
     File executable = JpsErlangSdkType.getByteCodeCompilerExecutable(sdk.getHomePath());
     List<String> erlangModulePaths = getErlangModulePaths(module, target, context);
 

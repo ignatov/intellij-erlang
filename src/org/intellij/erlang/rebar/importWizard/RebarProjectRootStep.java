@@ -28,6 +28,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.SystemInfo;
@@ -36,7 +37,9 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.projectImport.ProjectImportWizardStep;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,7 +64,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
 
     myGetDepsCheckbox.setVisible(ourEnabled);
-    myRebarConfigurationForm.setPath(getRebarExecutable(projectFileDirectory));
+    myRebarConfigurationForm.setPath(getRebarPath(projectFileDirectory));
   }
 
   @Override
@@ -115,16 +118,16 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
   }
 
   @NotNull
-  private static String getRebarExecutable(@Nullable String directory) {
-    boolean isPosix = SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix;
-    if (!isPosix) return "";
-
+  private static String getRebarPath(@Nullable String directory) {
     if (directory != null) {
       File rebar = new File(directory, "rebar");
       if (rebar.exists() && rebar.canExecute()) {
         return rebar.getPath();
       }
     }
+
+    boolean isPosix = SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix;
+    if (!isPosix) return "";
 
     String output = "";
     try {
@@ -137,12 +140,19 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
   }
 
   private static void fetchDependencies(@NotNull final VirtualFile projectRoot, @NotNull final String rebarPath) {
-    ProgressManager.getInstance().run(new Task.Modal(ProjectImportBuilder.getCurrentProject(), "Fetching dependencies", true) {
+    Project project = ProjectImportBuilder.getCurrentProject();
+    String sdkPath = project != null ? ErlangSdkType.getSdkPath(project) : null;
+    final String escriptPath = sdkPath != null ?
+      JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
+      JpsErlangSdkType.getExecutableFileName(JpsErlangSdkType.SCRIPT_INTERPRETER);
+
+    ProgressManager.getInstance().run(new Task.Modal(project, "Fetching dependencies", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
         indicator.setIndeterminate(true);
         GeneralCommandLine commandLine = new GeneralCommandLine();
-        commandLine.setExePath(rebarPath);
-        commandLine.setWorkDirectory(projectRoot.getCanonicalPath());
+        commandLine.withWorkDirectory(projectRoot.getCanonicalPath());
+        commandLine.setExePath(escriptPath);
+        commandLine.addParameter(rebarPath);
         commandLine.addParameter("get-deps");
         try {
           OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getPreparedCommandLine(Platform.current()));

@@ -29,11 +29,10 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
-import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -102,12 +101,11 @@ public abstract class ErlangRunningState extends CommandLineState {
     if (homePath == null) {
       throw new ExecutionException("Invalid module SDK.");
     }
-    String erl = FileUtil.toSystemDependentName(ErlangSdkType.getTopLevelExecutable(homePath).getAbsolutePath());
-    commandLine.setExePath(erl);
+    commandLine.setExePath(JpsErlangSdkType.getByteCodeInterpreterExecutable(homePath).getAbsolutePath());
   }
 
   public final void setWorkDirectory(GeneralCommandLine commandLine) {
-    commandLine.setWorkDirectory(myModule.getProject().getBasePath());
+    commandLine.withWorkDirectory(myModule.getProject().getBasePath());
   }
 
   public final void setStopErlang(GeneralCommandLine commandLine) {

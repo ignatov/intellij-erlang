@@ -30,6 +30,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.download.DownloadableFileDescription;
 import com.intellij.util.download.DownloadableFileService;
 import com.intellij.util.download.FileDownloader;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -85,7 +86,8 @@ public class RebarConfigurationForm {
     String rebarPath = myRebarPathSelector.getText();
     if (!new File(rebarPath).exists()) return false;
 
-    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(3000, myRebarPathSelector.getText(), "--version");
+    String escript = JpsErlangSdkType.getExecutableFileName(JpsErlangSdkType.SCRIPT_INTERPRETER);
+    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(3000, escript, rebarPath, "--version");
     String version = output.getStdOut();
     if (version.startsWith("rebar")) {
       myRebarVersionText.setText(version);
