@@ -22,6 +22,7 @@ import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
@@ -32,6 +33,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.SkipDefaultValuesSerializationFilters;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
+import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.jps.builder.ErlangBuilder;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
@@ -51,7 +53,13 @@ import java.util.*;
 public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   @Override
   public boolean execute(final CompileContext context) {
-    File projectSystemDirectory = BuildManager.getInstance().getProjectSystemDirectory(context.getProject());
+    Project project = context.getProject();
+    if (ErlangCompilerSettings.getInstance(project).isUseRebarCompilerEnabled()) {
+      // delegate dependencies resolution to rebar
+      return true;
+    }
+
+    File projectSystemDirectory = BuildManager.getInstance().getProjectSystemDirectory(project);
     if (projectSystemDirectory == null) {
       addPrepareDependenciesFailedMessage(context);
       return true;
