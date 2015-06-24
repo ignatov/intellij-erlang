@@ -25,7 +25,6 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDirectory;
 import org.intellij.erlang.icons.ErlangIcons;
-import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.Nullable;
 
 public class CreateErlangFileAction extends CreateFileFromTemplateAction implements DumbAware {
@@ -51,28 +50,19 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
       setValidator(new InputValidatorEx() {
         @Override
         public boolean checkInput(String inputString) {
-          return true;
+          return getErrorText(inputString) == null;
         }
 
         @Override
         public boolean canClose(String inputString) {
-          return !StringUtil.isEmptyOrSpaces(inputString) && getErrorText(inputString) == null;
+          return getErrorText(inputString) == null;
         }
 
         @Nullable
         @Override
         public String getErrorText(String inputString) {
-          String error = " is not a valid Erlang module name";
-          if (StringUtil.isEmpty(inputString)) return null;
-          try {
-            ErlangElementFactory.createAtomFromText(project, inputString);
-            if (FileUtil.sanitizeFileName(inputString).equals(inputString)) {
-              return null;
-            }
-            return "'" + inputString + "'" + error;
-          } catch (Exception ignored) {
-          }
-          return "'" + inputString + "'" + error;
+          return !StringUtil.isEmpty(inputString) && FileUtil.sanitizeName(inputString).equals(inputString) ? null :
+            "'" + inputString + "'" + " is not a valid Erlang module name";
         }
       })
     ;

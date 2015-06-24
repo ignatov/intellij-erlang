@@ -1,5 +1,5 @@
 #parse("Erlang File Header.erl")
--module(${NAME}).
+-module(${NAME_ATOM}).
 #parse("Erlang File Module.erl")
 
 -behaviour(gen_fsm).

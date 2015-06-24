@@ -53,6 +53,7 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <createFromTemplateHandler implementation="org.intellij.erlang.template.ErlangCreateFromTemplateHandler"/>
         <internalFileTemplate name="Erlang Module"/>
         <internalFileTemplate name="Erlang Header"/>
         <internalFileTemplate name="Erlang EUnit Tests"/>
