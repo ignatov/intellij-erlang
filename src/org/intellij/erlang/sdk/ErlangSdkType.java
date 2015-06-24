@@ -19,6 +19,7 @@ package org.intellij.erlang.sdk;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
@@ -55,6 +56,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ErlangSdkType extends SdkType {
+  private static final Logger LOG = Logger.getInstance(ErlangSdkType.class);
+
   private final Map<String, ErlangSdkRelease> mySdkHomeToReleaseCache = ApplicationManager.getApplication().isUnitTestMode() ?
     new HashMap<String, ErlangSdkRelease>() : new WeakHashMap<String, ErlangSdkRelease>();
 
@@ -208,7 +211,7 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Nullable
-  private ErlangSdkRelease detectSdkVersion(@Nullable String sdkHome) {
+  private ErlangSdkRelease detectSdkVersion(@NotNull String sdkHome) {
     ErlangSdkRelease cachedRelease = mySdkHomeToReleaseCache.get(getVersionCacheKey(sdkHome));
     if (cachedRelease != null) {
       return cachedRelease;
@@ -216,8 +219,12 @@ public class ErlangSdkType extends SdkType {
 
     assert !ApplicationManager.getApplication().isUnitTestMode() : "Unit tests should have their SDK versions pre-cached!";
 
-    File erl = sdkHome != null ? JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkHome) : null;
-    if (erl == null || !erl.canExecute()) return null;
+    File erl = JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkHome);
+    if (!erl.canExecute()) {
+      String reason = erl.getPath() + (erl.exists() ? " is not executable." : " is missing.");
+      LOG.warn("Can't detect Erlang version: " + reason);
+      return null;
+    }
 
     try {
       ProcessOutput output = ErlangSystemUtil.getProcessOutput(sdkHome, erl.getAbsolutePath(), "-noshell",
@@ -229,7 +236,11 @@ public class ErlangSdkType extends SdkType {
         mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), release);
         return release;
       }
-    } catch (ExecutionException ignore) {
+      else {
+        LOG.warn("Failed to detect Erlang version.\n" + output.getStderr());
+      }
+    } catch (ExecutionException e) {
+      LOG.warn(e);
     }
 
     return null;
@@ -314,7 +325,8 @@ public class ErlangSdkType extends SdkType {
   private static ErlangSdkRelease getRelease(@Nullable Sdk sdk) {
     if (sdk != null && sdk.getSdkType() == getInstance()) {
       ErlangSdkRelease fromVersionString = ErlangSdkRelease.fromString(sdk.getVersionString());
-      return fromVersionString != null ? fromVersionString : getInstance().detectSdkVersion(sdk.getHomePath());
+      return fromVersionString != null ? fromVersionString :
+        getInstance().detectSdkVersion(StringUtil.notNullize(sdk.getHomePath()));
     }
     return null;
   }
