@@ -16,12 +16,12 @@
 
 package org.intellij.erlang.jps.rebar;
 
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.jps.builder.*;
-import org.intellij.erlang.jps.execution.ExecutionException;
-import org.intellij.erlang.jps.execution.GeneralCommandLine;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
 import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsExtension;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
@@ -95,7 +95,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
                                boolean addDebugInfo,
                                @NotNull CompileContext context) throws ProjectBuildException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
-    commandLine.setWorkDirectory(contentRootPath);
+    commandLine.withWorkDirectory(contentRootPath);
     commandLine.setExePath(escriptPath);
     commandLine.addParameter(rebarPath);
     commandLine.addParameter("compile");
