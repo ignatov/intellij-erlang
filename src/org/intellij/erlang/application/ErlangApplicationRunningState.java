@@ -67,6 +67,11 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
     }
     return entryPoint;
   }
+  @Nullable
+  @Override
+  public String getWorkDirectory() {
+    return myConfiguration.getWorkDirectory();
+  }
 
   @NotNull
   @Override

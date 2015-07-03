@@ -16,8 +16,10 @@
 
 package org.intellij.erlang.application.ui;
 
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
+import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.module.ErlangModuleType;
@@ -35,6 +37,12 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   private JCheckBox myStopErlangInterpreterCheckBox;
   @SuppressWarnings("unused")
   private HideableTitledPanel myDebugOptionsHideablePanel;
+  private TextFieldWithBrowseButton myWorkingDirectoryComponent;
+
+  public ErlangRunConfigurationEditorForm(){
+    myWorkingDirectoryComponent.addBrowseFolderListener("Choose working directory", "", null,
+      FileChooserDescriptorFactory.createSingleFolderDescriptor());
+  }
 
   @Override
   protected void doResetEditorFrom(ErlangApplicationConfiguration configuration) {
@@ -44,6 +52,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
     myStopErlangInterpreterCheckBox.setSelected(configuration.stopErlang());
     myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
     myErlFlagsTextField.setText(configuration.getErlFlags());
+    myWorkingDirectoryComponent.setText(configuration.getWorkDirectory());
   }
 
   @Override
@@ -53,6 +62,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
     configuration.setModuleAndFunction(myModuleAndFunctionField.getText());
     configuration.setErlFlags(myErlFlagsTextField.getText());
     configuration.setStopErlang(myStopErlangInterpreterCheckBox.isSelected());
+    configuration.setWorkDirectory(myWorkingDirectoryComponent.getText());
   }
 
   @NotNull
