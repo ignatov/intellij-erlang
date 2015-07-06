@@ -16,9 +16,9 @@
 
 package org.intellij.erlang.application.ui;
 
+import com.intellij.application.options.ModulesComboBox;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
@@ -30,7 +30,7 @@ import javax.swing.*;
 
 public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigurationEditor<ErlangApplicationConfiguration> {
   private JPanel component;
-  private ModulesCombobox myComboModules;
+  private ModulesComboBox myComboModules;
   private JTextField myParamsField;
   private JTextField myModuleAndFunctionField;
   private JTextField myErlFlagsTextField;

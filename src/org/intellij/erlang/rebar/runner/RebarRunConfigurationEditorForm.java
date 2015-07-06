@@ -16,10 +16,10 @@
 
 package org.intellij.erlang.rebar.runner;
 
+import com.intellij.application.options.ModulesComboBox;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
-import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +32,7 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   private JPanel myComponent;
   private JTextField myCommandText;
   private JCheckBox myRunInModuleCheckBox;
-  private ModulesCombobox myModulesComboBox;
+  private ModulesComboBox myModulesComboBox;
   private JCheckBox mySkipDependenciesCheckBox;
 
   RebarRunConfigurationEditorForm() {

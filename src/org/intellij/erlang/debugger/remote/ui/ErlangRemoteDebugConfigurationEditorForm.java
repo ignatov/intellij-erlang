@@ -16,8 +16,8 @@
 
 package org.intellij.erlang.debugger.remote.ui;
 
+import com.intellij.application.options.ModulesComboBox;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
 import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.intellij.erlang.module.ErlangModuleType;
@@ -30,7 +30,7 @@ import java.awt.event.ItemListener;
 
 public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRunConfigurationEditor<ErlangRemoteDebugRunConfiguration> {
   private JPanel myComponent;
-  private ModulesCombobox myModuleComboBox;
+  private ModulesComboBox myModuleComboBox;
   private JTextField myNodeTextField;
   private JTextField myCookieTextField;
   private JCheckBox myUseShortNamesCheckBox;
