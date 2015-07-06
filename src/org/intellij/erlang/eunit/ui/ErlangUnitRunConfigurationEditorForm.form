@@ -86,7 +86,7 @@
             </constraints>
             <properties>
               <labelFor value="e094c"/>
-              <text value="Working directory"/>
+              <text value="&amp;Working directory:"/>
             </properties>
           </component>
           <component id="e094c" class="com.intellij.openapi.ui.TextFieldWithBrowseButton" binding="myWorkingDirectoryComponent">
