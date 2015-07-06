@@ -67,6 +67,7 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
     }
     return entryPoint;
   }
+
   @Nullable
   @Override
   public String getWorkDirectory() {
