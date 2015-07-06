@@ -16,8 +16,10 @@
 
 package org.intellij.erlang.eunit.ui;
 
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.roots.ui.configuration.ModulesCombobox;
+import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.HideableTitledPanel;
 import com.intellij.ui.ListCellRendererWrapper;
@@ -43,6 +45,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   private JLabel myErlangFunctionsLabel;
   private JComboBox myTestKindComboBox;
   private HideableTitledPanel myDebugOptionsHideablePanel;
+  private TextFieldWithBrowseButton myWorkingDirectoryComponent;
 
   public ErlangUnitRunConfigurationEditorForm() {
     myTestKindComboBox.addActionListener(new ActionListener() {
@@ -51,6 +54,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
         onTestKindSwitch();
       }
     });
+    myWorkingDirectoryComponent.addBrowseFolderListener("Choose working directory", "", null, FileChooserDescriptorFactory.createSingleFolderDescriptor());
   }
 
   @Override

@@ -27,6 +27,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -57,6 +58,12 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
 
   @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getWorkDirectory() {
     return null;
   }
 

@@ -40,6 +40,7 @@ import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,6 +83,12 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {
     return getEntryPointInternal(false);
+  }
+
+  @Nullable
+  @Override
+  public String getWorkDirectory() {
+    return myConfiguration.getWorkDirectory();
   }
 
   @Override
