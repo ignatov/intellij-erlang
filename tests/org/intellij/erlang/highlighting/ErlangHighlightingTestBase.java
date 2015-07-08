@@ -79,6 +79,7 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
       ErlangUnusedFunctionInspection.class,
       ErlangDuplicateFunctionInspection.class,
       ErlangIncorrectModuleNameInspection.class,
+      ErlangIllegalPatternInspection.class,
       ErlangIoFormatInspection.class,
       ErlangDuplicateFunctionExportInspection.class,
       ErlangDefiningImportedFunctionInspection.class,
