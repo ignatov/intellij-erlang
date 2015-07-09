@@ -335,8 +335,8 @@ private config_expr_recover ::= !(')' | '>>' | ']' | '}')
 
 expression ::=
     catch_expression
-  | assignment_expression
   | send_expression
+  | assignment_expression
   | orelse_expression
   | andalso_expression
   | comp_op_expression

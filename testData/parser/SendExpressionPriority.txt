@@ -1,0 +1,26 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        PsiComment(ERL_LINE_COMMENT)('% this should be parsed as pid ! (X = 11)')
+        ERL_SEND_EXPRESSION
+          ERL_MAX_EXPRESSION
+            ERL_Q_ATOM
+              ERL_ATOM
+                PsiElement(atom_name)('pid')
+          PsiElement(!)('!')
+          ERL_ASSIGNMENT_EXPRESSION
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('X')
+            PsiElement(=)('=')
+            ERL_MAX_EXPRESSION
+              PsiElement(integer)('11')
+    PsiElement(.)('.')

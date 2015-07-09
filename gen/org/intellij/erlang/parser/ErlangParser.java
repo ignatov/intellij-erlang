@@ -45,7 +45,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
       r = argument_list(b, 0);
     }
     else if (t == ERL_ASSIGNMENT_EXPRESSION) {
-      r = expression(b, 0, 0);
+      r = expression(b, 0, 1);
     }
     else if (t == ERL_ATOM) {
       r = atom(b, 0);
@@ -330,7 +330,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
       r = rule_clause(b, 0);
     }
     else if (t == ERL_SEND_EXPRESSION) {
-      r = expression(b, 0, 1);
+      r = expression(b, 0, 0);
     }
     else if (t == ERL_SPEC_FUN) {
       r = spec_fun(b, 0);
@@ -5525,8 +5525,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // Expression root: expression
   // Operator priority table:
   // 0: ATOM(catch_expression)
-  // 1: BINARY(assignment_expression)
-  // 2: BINARY(send_expression)
+  // 1: BINARY(send_expression)
+  // 2: BINARY(assignment_expression)
   // 3: BINARY(orelse_expression)
   // 4: BINARY(andalso_expression)
   // 5: BINARY(comp_op_expression)
@@ -5565,13 +5565,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     boolean r = true;
     while (true) {
       Marker m = enter_section_(b, l, _LEFT_, null);
-      if (g < 1 && consumeTokenSmart(b, ERL_OP_EQ)) {
+      if (g < 1 && consumeTokenSmart(b, ERL_OP_EXL)) {
         r = expression(b, l, 0);
-        exit_section_(b, l, m, ERL_ASSIGNMENT_EXPRESSION, r, true, null);
-      }
-      else if (g < 2 && consumeTokenSmart(b, ERL_OP_EXL)) {
-        r = expression(b, l, 1);
         exit_section_(b, l, m, ERL_SEND_EXPRESSION, r, true, null);
+      }
+      else if (g < 2 && consumeTokenSmart(b, ERL_OP_EQ)) {
+        r = expression(b, l, 1);
+        exit_section_(b, l, m, ERL_ASSIGNMENT_EXPRESSION, r, true, null);
       }
       else if (g < 3 && consumeTokenSmart(b, ERL_ORELSE)) {
         r = expression(b, l, 3);
