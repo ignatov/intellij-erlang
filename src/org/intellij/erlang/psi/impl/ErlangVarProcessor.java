@@ -88,8 +88,12 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   }
 
   private boolean hasNarrowerParentScope(PsiElement psiElement) {
-    @SuppressWarnings("unchecked") ErlangCompositeElement narrowestParentScopeOwner =
-      PsiTreeUtil.getParentOfType(psiElement, ErlangCrClause.class, ErlangFunClause.class, ErlangFunctionClause.class);
+    @SuppressWarnings("unchecked")
+    ErlangCompositeElement narrowestParentScopeOwner = PsiTreeUtil.getParentOfType(psiElement,
+                                                                                   ErlangCrClause.class,
+                                                                                   ErlangFunClause.class,
+                                                                                   ErlangFunctionClause.class,
+                                                                                   ErlangListComprehension.class);
     if (narrowestParentScopeOwner instanceof ErlangFunClause) {
       ErlangArgumentDefinition funName = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
       if (((ErlangFunClause) narrowestParentScopeOwner).getArgumentDefinition() == funName) {
@@ -100,7 +104,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
       ErlangCaseExpression caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
       if (Comparing.equal(
         PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class),
-        PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false; 
+        PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false;
     }
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
   }

@@ -68,7 +68,7 @@ do_receive(DeviceToken, ChannelPID, DeviceID, ChangeID, ChannelRef, WithAttachme
     erlang:error(receive_timeout, 70000)
   end.
 
--export([find_in_binary/0, unbound_test/0, issue413/0]).
+-export([find_in_binary/0, unbound_test/0, issue413/0, comprehensions_scope/0]).
 
 find_in_binary() ->
   case 1 of
@@ -93,3 +93,7 @@ foo2() -> [{1,2} = <warning>Rec</warning>] = [{1,2}].
 issue413() ->
   {<warning>A</warning>, <warning>B</warning>} = fun(<warning>C</warning>, <warning>D</warning>) -> {1, 2} end(),
   <error>C</error>, <error>D</error>.
+
+comprehensions_scope() ->
+  _X = [A || A <- []],
+  _Y = <error>A</error>.
