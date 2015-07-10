@@ -29,13 +29,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ErlangTargetType extends ModuleBasedBuildTargetType<ErlangTarget> {
-  public static final ErlangTargetType PRODUCTION = new ErlangTargetType("erlang-production", false);
-  public static final ErlangTargetType TESTS = new ErlangTargetType("erlang-tests", true);
-  private final boolean myTests;
+  public static final ErlangTargetType INSTANCE = new ErlangTargetType();
+  public static final String TYPE_ID = "erlang";
 
-  private ErlangTargetType(String erlang, boolean tests) {
-    super(erlang);
-    myTests = tests;
+  private ErlangTargetType() {
+    super(TYPE_ID);
   }
 
   @NotNull
@@ -63,9 +61,5 @@ public class ErlangTargetType extends ModuleBasedBuildTargetType<ErlangTarget> {
         return null;
       }
     };
-  }
-
-  public boolean isTests() {
-    return myTests;
   }
 }

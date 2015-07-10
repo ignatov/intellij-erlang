@@ -23,13 +23,14 @@ import org.jetbrains.jps.incremental.TargetBuilder;
 import org.intellij.erlang.jps.rebar.RebarBuilder;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class ErlangBuilderService extends BuilderService {
   @NotNull
   @Override
   public List<? extends BuildTargetType<?>> getTargetTypes() {
-    return Arrays.asList(ErlangTargetType.PRODUCTION, ErlangTargetType.TESTS);
+    return Collections.singletonList(ErlangTargetType.INSTANCE);
   }
 
   @NotNull
