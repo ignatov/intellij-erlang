@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,9 @@ public class ErlangDebuggerNode {
 
   private final Queue<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand> myCommandsQueue = new LinkedList<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand>();
   private int myLocalDebuggerPort = -1;
+  @NotNull
   private final ErlangDebuggerEventListener myEventListener;
+  @NotNull
   private AtomicBoolean myStopped = new AtomicBoolean(false);
 
   public ErlangDebuggerNode(@NotNull ErlangDebuggerEventListener eventListener) throws ErlangDebuggerNodeException {
@@ -57,7 +59,8 @@ public class ErlangDebuggerNode {
     LOG.debug("Starting debugger server.");
     try {
       myLocalDebuggerPort = runDebuggerServer().get();
-    } catch (Throwable e) {
+    }
+    catch (Throwable e) {
       throw new ErlangDebuggerNodeException("Failed to start debugger server", e);
     }
   }
@@ -78,23 +81,23 @@ public class ErlangDebuggerNode {
     myLastSuspendedPid = pid;
   }
 
-  public void setBreakpoint(String module, int line) {
+  public void setBreakpoint(@NotNull String module, int line) {
     addCommand(ErlangDebuggerCommandsProducer.getSetBreakpointCommand(module, line));
   }
 
-  public void removeBreakpoint(String module, int line) {
+  public void removeBreakpoint(@NotNull String module, int line) {
     addCommand(ErlangDebuggerCommandsProducer.getRemoveBreakpointCommand(module, line));
   }
 
-  public void interpretModules(List<String> moduleSourcePaths) {
+  public void interpretModules(@NotNull List<String> moduleSourcePaths) {
     addCommand(ErlangDebuggerCommandsProducer.getInterpretModulesCommand(moduleSourcePaths));
   }
 
-  public void runDebugger(String module, String function, List<String> args) {
+  public void runDebugger(@NotNull String module, @NotNull String function, @NotNull List<String> args) {
     addCommand(ErlangDebuggerCommandsProducer.getRunDebuggerCommand(module, function, args));
   }
 
-  public void debugRemoteNode(String nodeName, String cookie) {
+  public void debugRemoteNode(@NotNull String nodeName, String cookie) {
     addCommand(ErlangDebuggerCommandsProducer.getDebugRemoteNodeCommand(nodeName, cookie));
   }
 
@@ -120,6 +123,7 @@ public class ErlangDebuggerNode {
     }
   }
 
+  @NotNull
   private Future<Integer> runDebuggerServer() {
     final AsyncFutureResult<Integer> portFuture = AsyncFutureFactory.getInstance().createAsyncFutureResult();
     ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
@@ -131,7 +135,7 @@ public class ErlangDebuggerNode {
     return portFuture;
   }
 
-  private void runDebuggerServerImpl(AsyncFutureResult<Integer> portFuture) {
+  private void runDebuggerServerImpl(@NotNull AsyncFutureResult<Integer> portFuture) {
     try {
       Exception cachedException = null;
       LOG.debug("Opening a server socket.");
@@ -148,15 +152,18 @@ public class ErlangDebuggerNode {
           myEventListener.debuggerStarted();
           LOG.debug("Starting send/receive loop.");
           serverLoop(debuggerSocket);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
           cachedException = e;
           throw e;
-        } finally {
+        }
+        finally {
           myStopped.set(true);
           myEventListener.debuggerStopped();
           debuggerSocket.close();
         }
-      } catch (Exception e) {
+      }
+      catch (Exception e) {
         if (cachedException != null && cachedException != e) {
           if (e.getCause() == null) {
             e.initCause(cachedException);
@@ -166,10 +173,12 @@ public class ErlangDebuggerNode {
           }
         }
         throw e;
-      } finally {
+      }
+      finally {
         serverSocket.close();
       }
-    } catch (Exception th) {
+    }
+    catch (Exception th) {
       if (!portFuture.isDone()) {
         portFuture.setException(th);
       }
@@ -227,9 +236,11 @@ public class ErlangDebuggerNode {
       out.write(sizeBytes);
       out.write(OtpExternal.versionTag);
       out.write(bytes);
-    } catch (SocketException e) {
+    }
+    catch (SocketException e) {
       throw e;
-    } catch(IOException e) {
+    }
+    catch (IOException e) {
       LOG.debug(e);
     }
   }
@@ -246,15 +257,17 @@ public class ErlangDebuggerNode {
 
       byte[] objectBytes = readBytes(in, objectSize, true);
       return objectBytes == null ? null : decode(objectBytes);
-    } catch (SocketException e) {
+    }
+    catch (SocketException e) {
       throw e;
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       LOG.debug(e);
     }
     return null;
   }
 
-  private static int readObjectSize(InputStream in) throws SocketException {
+  private static int readObjectSize(@NotNull InputStream in) throws SocketException {
     byte[] bytes = readBytes(in, 4, false);
     return bytes != null ? ByteBuffer.wrap(bytes).getInt() : -1;
   }
@@ -272,7 +285,7 @@ public class ErlangDebuggerNode {
    *                         retry attempts was exceeded.
    */
   @Nullable
-  private static byte[] readBytes(InputStream in, int size, boolean force) throws SocketException {
+  private static byte[] readBytes(@NotNull InputStream in, int size, boolean force) throws SocketException {
     try {
       int bytesReadTotal = 0;
       byte[] buffer = new byte[size];
@@ -284,9 +297,9 @@ public class ErlangDebuggerNode {
           if (bytesRead < 0) {
             throw new SocketException("A socket was closed.");
           }
-
           bytesReadTotal += bytesRead;
-        } catch (SocketTimeoutException e) {
+        }
+        catch (SocketTimeoutException e) {
           // if we're not forced to read, but we touched the stream, we're forced
           if (bytesReadTotal == 0 && !force) {
             return null;
@@ -296,21 +309,23 @@ public class ErlangDebuggerNode {
           }
         }
       }
-
       return buffer;
-    } catch (SocketException e) {
+    }
+    catch (SocketException e) {
       throw e;
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       LOG.debug(e);
       return null;
     }
   }
 
   @Nullable
-  private static OtpErlangObject decode(byte[] bytes) {
+  private static OtpErlangObject decode(@NotNull byte[] bytes) {
     try {
       return new OtpInputStream(bytes).read_any();
-    } catch (OtpErlangDecodeException e) {
+    }
+    catch (OtpErlangDecodeException e) {
       LOG.debug("Failed to decode an erlang term.", e);
       return null;
     }
