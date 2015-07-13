@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,7 +97,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     try {
       //TODO add the debugger node to disposable hierarchy (we may fail to initialize session so the session will not be stopped!)
       myDebuggerNode = new ErlangDebuggerNode(this);
-    } catch (ErlangDebuggerNodeException e) {
+    }
+    catch (ErlangDebuggerNodeException e) {
       throw new ExecutionException(e);
     }
 
@@ -108,7 +109,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
     ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
     myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
-      runConfig.getConfigurationModule().getModule(), runConfig.isTestRunConfiguration());
+                                                         runConfig.getConfigurationModule().getModule(), runConfig.isTestRunConfiguration());
   }
 
   @Override
@@ -233,7 +234,10 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
       @NotNull
       @Override
-      public Document createDocument(@NotNull Project project, @NotNull String text, @Nullable XSourcePosition sourcePosition, @NotNull EvaluationMode mode) {
+      public Document createDocument(@NotNull Project project,
+                                     @NotNull String text,
+                                     @Nullable XSourcePosition sourcePosition,
+                                     @NotNull EvaluationMode mode) {
         LightVirtualFile file = new LightVirtualFile("plain-text-erlang-debugger.txt", text);
         //noinspection ConstantConditions
         return FileDocumentManager.getInstance().getDocument(file);
@@ -284,7 +288,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     myDebuggerNode.setBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
   }
 
-  void removeBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint, @SuppressWarnings("UnusedParameters") boolean temporary) {
+  void removeBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint,
+                        @SuppressWarnings("UnusedParameters") boolean temporary) {
     ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
     if (breakpointPosition == null) return;
     myPositionToLineBreakpointMap.remove(breakpointPosition);
@@ -340,10 +345,11 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
         LOG.debug("Initializing local debugging.");
         ErlangRunningState.ErlangEntryPoint entryPoint = myRunningState.getDebugEntryPoint();
         LOG.debug("Entry point: " + entryPoint.getModuleName() + ":" + entryPoint.getFunctionName() +
-          "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ")");
+                  "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ")");
         myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
       }
-    } catch (ExecutionException e) {
+    }
+    catch (ExecutionException e) {
       LOG.debug("Failed to run debug target.", e);
       throw e;
     }
@@ -362,7 +368,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       }
       LOG.debug("Debugger beams were copied successfully.");
       commandLine.addParameters("-pa", tempDirectory.getPath());
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       throw new ExecutionException("Failed to setup debugger environment", e);
     }
   }
@@ -377,10 +384,12 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(directory, beamName)));
       try {
         FileUtil.copy(inputStream, outputStream);
-      } finally {
+      }
+      finally {
         outputStream.close();
       }
-    } finally {
+    }
+    finally {
       inputStream.close();
     }
   }
