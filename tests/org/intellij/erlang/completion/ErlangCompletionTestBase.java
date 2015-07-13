@@ -17,8 +17,11 @@
 package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageManagerImpl;
 import com.intellij.testFramework.UsefulTestCase;
+import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
 import com.intellij.testFramework.fixtures.TestFixtureBuilder;
@@ -46,6 +49,19 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
   }
 
   protected void localFileSystemSetUp() throws Exception {
+    final CodeInsightTestFixture oldFixture = myFixture;
+    Disposer.register(getTestRootDisposable(), new Disposable() {
+      @Override
+      public void dispose() {
+        try {
+          oldFixture.tearDown();
+        }
+        catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+
     IdeaTestFixtureFactory factory = IdeaTestFixtureFactory.getFixtureFactory();
     TestFixtureBuilder<IdeaProjectTestFixture> fixtureBuilder = factory.createLightFixtureBuilder(getProjectDescriptor());
 
