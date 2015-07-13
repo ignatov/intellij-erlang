@@ -13,4 +13,10 @@ public interface ErlangListExpression extends ErlangExpression {
   @NotNull
   PsiElement getBracketLeft();
 
+  @Nullable
+  PsiElement getBracketRight();
+
+  @Nullable
+  PsiElement getOpOr();
+
 }
