@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,21 @@
 
 package org.intellij.erlang.jps.builder;
 
+
 import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Tag;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class ErlangModuleBuildOrderDescriptor {
-  @Tag("module")
-  public String myModuleName = "";
+public class ErlangModuleDescriptor {
+  public boolean isDirty = false;
 
-  @Tag("erlangModules")
-  @AbstractCollection(surroundWithTag = false, elementTag = "path")
-  public List<ErlangModuleDescriptor> myOrderedErlangModulePaths = new ArrayList<ErlangModuleDescriptor>();
+  @Tag("name")
+  public String erlangModuleName;
 
-  @Tag("testErlangModules")
-  @AbstractCollection(surroundWithTag = false, elementTag = "path")
-  public List<ErlangModuleDescriptor> myOrderedErlangTestModulePaths = new ArrayList<ErlangModuleDescriptor>();
+  @Tag("dependencies")
+  @AbstractCollection(surroundWithTag = false, elementTag = "dependency")
+  public List<String> dependencies = new ArrayList<String>();
 }

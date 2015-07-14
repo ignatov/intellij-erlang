@@ -46,6 +46,8 @@ public class ErlangCompilerProcessAdapter extends ProcessAdapter {
       CompilerMessage msg = new CompilerMessage(myBuilderName, kind, error.getErrorMessage(),
         VirtualFileManager.extractPath(error.getUrl()), -1, -1, -1, error.getLine(), -1);
       myContext.processMessage(msg);
+    }else{
+      myContext.processMessage(new CompilerMessage(myBuilderName, BuildMessage.Kind.INFO,event.getText()));
     }
   }
 }

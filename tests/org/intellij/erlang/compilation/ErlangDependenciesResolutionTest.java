@@ -26,8 +26,10 @@ import com.intellij.testFramework.ModuleTestCase;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.builder.ErlangModuleDescriptor;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
 import org.intellij.erlang.module.ErlangModuleType;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,19 +100,19 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
     try {
       ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
       fail("Expected a cyclic dependency exception to be thrown.");
-    } catch (ErlangPrepareDependenciesCompileTask.CyclicDependencyFoundException ignored) {
+    } catch (CyclicDependencyFoundException ignored) {
     }
   }
 
   public void testDependenciesAreCompiledFirst() throws Exception {
     ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
-    assertSameErlangModules(moduleBuildOrder.myOrderedErlangModulePaths, "parse_transform1", "parse_transform2", "behaviour1", "module1");
+    assertSameErlangModules(getModuleNames(moduleBuildOrder.myOrderedErlangModulePaths), "parse_transform1", "parse_transform2", "behaviour1", "module1");
   }
 
   public void testTestsDependency() throws Exception {
     ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
-    assertSameErlangModules(moduleBuildOrder.myOrderedErlangModulePaths, "src_parse_transform");
-    assertSameErlangModules(moduleBuildOrder.myOrderedErlangTestModulePaths, "test_parse_transform", "test");
+    assertSameErlangModules(getModuleNames(moduleBuildOrder.myOrderedErlangModulePaths), "src_parse_transform");
+    assertSameErlangModules(getModuleNames(moduleBuildOrder.myOrderedErlangTestModulePaths), "test_parse_transform", "test");
   }
 
   private static void assertSameErlangModules(List<String> modulePaths, String... expectedModules) {
@@ -121,5 +123,14 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
       }
     });
     assertOrderedEquals(actualModules, expectedModules);
+  }
+  @NotNull
+  private static List<String> getModuleNames(List<ErlangModuleDescriptor> buildOrder) {
+    return ContainerUtil.mapNotNull(buildOrder, new Function<ErlangModuleDescriptor, String>() {
+      @Override
+      public String fun(ErlangModuleDescriptor erlangModuleDescriptor) {
+        return erlangModuleDescriptor.erlangModuleName;
+      }
+    });
   }
 }
