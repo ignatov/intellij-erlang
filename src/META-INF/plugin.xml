@@ -186,6 +186,9 @@
         <localInspection language="Erlang" shortName="ErlangIllegalPattern" displayName="Illegal Pattern"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangIllegalPatternInspection"/>
+        <localInspection language="Erlang" shortName="ErlangIllegalGuard" displayName="Illegal guard"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangIllegalGuardInspection"/>
         <localInspection language="Erlang" shortName="ErlangUnresolvedMacros" displayName="Unresolved macros"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection"/>
