@@ -18,12 +18,11 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiReference;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangImportFunction;
-import org.intellij.erlang.psi.impl.ErlangFunctionReferenceImpl;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFromImportFixBase;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -38,15 +37,18 @@ public class ErlangImportDirectiveOverridesAutoImportedBifInspection extends Erl
 
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
     for (ErlangImportFunction importFunction : file.getImportedFunctions()) {
-      PsiReference reference = importFunction.getReference();
-      if (!(reference instanceof ErlangFunctionReferenceImpl) || reference.resolve() == null) continue;
-      ErlangFunctionReferenceImpl r = (ErlangFunctionReferenceImpl) reference;
-      ErlangBifDescriptor bifDescriptor = ErlangBifTable.getBif("erlang", r.getName(), r.getArity());
-      if (bifDescriptor == null || !bifDescriptor.isAutoImported())  continue;
+      String name = ErlangPsiImplUtil.getName(importFunction);
+      int arity = ErlangPsiImplUtil.getArity(importFunction);
+
+      ErlangBifDescriptor bifDescriptor = ErlangBifTable.getBif("erlang", name, arity);
+      if (bifDescriptor == null || !bifDescriptor.isAutoImported() || file.isNoAutoImport(name, arity)) continue;
+
+      String errorMessage = "Import directive overrides pre R14 auto-imported BIF '" +
+                            ErlangPsiImplUtil.createFunctionPresentation(importFunction) + "'";
       problemsHolder.registerProblem(importFunction,
-        "Import directive overrides pre R14 auto-imported BIF '" + r.getSignature() + "'",
-        ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
-        new ErlangRemoveFunctionFromImportFixBase.ErlangRemoveFunctionFromImportFix());
+                                     errorMessage,
+                                     ProblemHighlightType.GENERIC_ERROR_OR_WARNING,
+                                     new ErlangRemoveFunctionFromImportFixBase.ErlangRemoveFunctionFromImportFix());
     }
   }
 

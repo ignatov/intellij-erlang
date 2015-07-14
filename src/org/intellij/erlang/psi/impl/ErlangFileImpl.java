@@ -50,7 +50,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 import static java.util.Collections.*;
-import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getAtomName;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
   public ErlangFileImpl(@NotNull FileViewProvider viewProvider) {
@@ -365,14 +365,22 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       || !"no_auto_import".equals(getAtomName((ErlangMaxExpression) first))) {
       return result;
     }
-    second.accept(new PsiRecursiveElementWalkingVisitor() {
+    second.accept(new ErlangRecursiveVisitor() {
       @Override
-      public void visitElement(PsiElement element) {
-        if (element instanceof ErlangAtomWithArityExpression) {
-          result.add(ErlangPsiImplUtil.createFunctionPresentation((ErlangAtomWithArityExpression) element));
-          return;
-        }
-        super.visitElement(element);
+      public void visitAtomWithArityExpression(@NotNull ErlangAtomWithArityExpression o) {
+        result.add(createFunctionPresentation(o));
+      }
+
+      @Override
+      public void visitTupleExpression(@NotNull ErlangTupleExpression o) {
+        List<ErlangExpression> exprs = o.getExpressionList();
+        if (exprs.size() != 2) return;
+
+        String functionName = getAtomName(ObjectUtils.tryCast(exprs.get(0), ErlangMaxExpression.class));
+        int functionArity = getArity(ObjectUtils.tryCast(exprs.get(1), ErlangMaxExpression.class));
+        if (functionName == null || functionArity == -1) return;
+
+        result.add(createFunctionPresentation(functionName, functionArity));
       }
     });
     return result;
