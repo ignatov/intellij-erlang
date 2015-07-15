@@ -1,5 +1,5 @@
 -export([foo/1, bar/0, assignment/0, case_test/1, receive_test/0, try_catch/1, list_comprehension/0,
-                send/1, plusplus/1, comprehension/0, begin_end/0, random_test/1, generic_foo/0]).
+                send/1, plusplus/1, comprehension/0, begin_end/0, random_test/1, generic_foo/0, rec/2]).
 
 bar() -> ok.
 foo(<error>A + 2</error>) -> A;
@@ -81,6 +81,10 @@ begin_end() ->
 generic_foo() ->
   X = fun(A) -> A end,
   {<error>X(A)</error>} = {1, 2}, X.
+
+-record(data, {}).
+rec(Record, #data{}=A) ->
+  <error>Record#data{}</error> = {}, A.
 
 random_test(A) ->
   (A + 1):abs(1 + A);

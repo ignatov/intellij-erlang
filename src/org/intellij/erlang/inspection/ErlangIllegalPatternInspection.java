@@ -188,6 +188,13 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
         public void visitGenericFunctionCallExpression(@NotNull ErlangGenericFunctionCallExpression o) {
           registerProblem(problemsHolder, o, ERROR);
         }
+
+        @Override
+        public void visitRecordExpression(@NotNull ErlangRecordExpression o) {
+          if (o.getFirstChild() != o.getRadix()) {
+            registerProblem(problemsHolder, o, ERROR);
+          }
+        }
       });
     }
   }
