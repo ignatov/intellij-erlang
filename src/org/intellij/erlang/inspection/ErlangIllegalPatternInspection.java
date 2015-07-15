@@ -158,6 +158,36 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
         public void visitSendExpression(@NotNull ErlangSendExpression o) {
           registerProblem(problemsHolder, o, ERROR);
         }
+
+        @Override
+        public void visitCatchExpression(@NotNull ErlangCatchExpression o) {
+          registerProblem(problemsHolder, o, ERROR);
+        }
+
+        @Override
+        public void visitFunExpression(@NotNull ErlangFunExpression o) {
+          registerProblem(problemsHolder, o, ERROR);
+        }
+
+        @Override
+        public void visitAnonymousCallExpression(@NotNull ErlangAnonymousCallExpression o) {
+          registerProblem(problemsHolder, o, ERROR);
+        }
+
+        @Override
+        public void visitIfExpression(@NotNull ErlangIfExpression o) {
+          registerProblem(problemsHolder, o, ERROR);
+        }
+
+        @Override
+        public void visitPrefixExpression(@NotNull ErlangPrefixExpression o) {
+          registerProblemIfContainsNonConstant(o);
+        }
+
+        @Override
+        public void visitGenericFunctionCallExpression(@NotNull ErlangGenericFunctionCallExpression o) {
+          registerProblem(problemsHolder, o, ERROR);
+        }
       });
     }
   }
@@ -168,6 +198,13 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
     @Override
     public void visitQVar(@NotNull ErlangQVar o) {
       myIsNonConstant = true;
+    }
+
+    @Override
+    public void visitQAtom(@NotNull ErlangQAtom o) {
+      if (o.getMacros() == null) {
+        myIsNonConstant = true;
+      }
     }
 
     @Override
