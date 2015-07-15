@@ -1,5 +1,5 @@
 -export([foo/1, bar/0, assignment/0, case_test/1, receive_test/0, try_catch/1, list_comprehension/0,
-                send/1, plusplus/1, comprehension/0, begin_end/0, random_test/1]).
+                send/1, plusplus/1, comprehension/0, begin_end/0, random_test/1, generic_foo/0]).
 
 bar() -> ok.
 foo(<error>A + 2</error>) -> A;
@@ -14,7 +14,13 @@ foo(A = <error>B + 1</error>) -> {A, B};
 foo(?MODULE_STRING) -> ok;
 foo(?MODULE_STRING + 1) -> ok;
 foo(<error>?MODULE_STRING + A</error>) -> A;
-foo(<error>case A of {C} -> C end</error>) -> ok.
+foo(<error>case A of {C} -> C end</error>) -> ok;
+foo(<error>catch 1</error>) -> ok;
+foo(<error>fun (X) -> ok end</error>) -> ok;
+foo(<error>(fun(A) -> A = 2 end)(2)</error>) -> ok;
+foo(<error>if ok -> ok end</error>)  -> ok;
+foo(<error>-X</error>) -> ok;
+foo(-(5 + 3)) -> ok.
 
 assignment() ->
   <error>A + 1</error> = 5, A;
@@ -71,6 +77,10 @@ comprehension() ->
 begin_end() ->
   <error>begin A = 10 end</error> = 5,
   A = begin C = 10 end, C.
+
+generic_foo() ->
+  X = fun(A) -> A end,
+  {<error>X(A)</error>} = {1, 2}, X.
 
 random_test(A) ->
   (A + 1):abs(1 + A);
