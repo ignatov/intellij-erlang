@@ -18,7 +18,6 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
@@ -48,8 +47,7 @@ public class ErlangTypeReferenceImpl<T extends ErlangQAtom> extends ErlangQAtomB
 
   @NotNull
   private PsiFile getPsiFile() {
-    PsiReference reference = myModuleRef != null ? myModuleRef.getReference() : null;
-    PsiElement resolve = reference != null ? reference.resolve() : null;
+    PsiElement resolve = myModuleRef != null ? myModuleRef.getReference().resolve() : null;
     PsiFile moduleRefContainingFile = resolve != null ? resolve.getContainingFile() : null;
     return moduleRefContainingFile != null ? moduleRefContainingFile : myElement.getContainingFile();
   }

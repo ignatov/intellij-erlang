@@ -20,7 +20,6 @@ import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
@@ -48,8 +47,7 @@ public class ErlangNavigationUtil {
       List<ErlangBehaviour> behaviours = ((ErlangFile) file).getBehaviours();
       for (ErlangBehaviour behaviour : behaviours) {
         ErlangModuleRef moduleRef = behaviour.getModuleRef();
-        PsiReference reference = moduleRef != null ? moduleRef.getReference() : null;
-        PsiElement resolve = reference != null ? reference.resolve() : null;
+        PsiElement resolve = moduleRef != null ? moduleRef.getReference().resolve() : null;
         PsiFile containingFile = resolve != null ? resolve.getContainingFile() : null;
 
         ErlangCallbackSpec callbackSpec = containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getCallbackByName(fullName) : null;

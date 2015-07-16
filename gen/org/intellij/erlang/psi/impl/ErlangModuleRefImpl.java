@@ -28,7 +28,7 @@ public class ErlangModuleRefImpl extends ErlangCompositeElementImpl implements E
     return findNotNullChildByClass(ErlangQAtom.class);
   }
 
-  @Nullable
+  @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }

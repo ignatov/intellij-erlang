@@ -23,7 +23,6 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.Set;
 
 public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
@@ -163,16 +162,14 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
       }
       if (o.getParent() instanceof ErlangGlobalFunctionCallExpression) {
         PsiReference reference = ((ErlangGlobalFunctionCallExpression) o.getParent()).getModuleRef().getReference();
-        if (reference != null) {
-          if (!reference.getCanonicalText().equals("erlang")) {
-            registerProblem(myHolder, o.getParent(), ERROR);
-          }
-          else if (!BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation)) {
-            registerProblem(myHolder, o, ERROR);
-          }
-          else {
-            needToCheckRecursively = true;
-          }
+        if (!reference.getCanonicalText().equals("erlang")) {
+          registerProblem(myHolder, o.getParent(), ERROR);
+        }
+        else if (!BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation)) {
+          registerProblem(myHolder, o, ERROR);
+        }
+        else {
+          needToCheckRecursively = true;
         }
       }
       else if (((ErlangFile) o.getContainingFile()).getFunction(functionName, functionArity) != null) {

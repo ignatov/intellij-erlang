@@ -814,7 +814,7 @@ public class ErlangPsiImplUtil {
     return new ErlangRecordReferenceImpl<ErlangQAtom>(atom);
   }
 
-  @Nullable
+  @NotNull
   public static PsiReference getReference(@NotNull ErlangModuleRef o) {
     return createModuleReference(o.getQAtom());
   }

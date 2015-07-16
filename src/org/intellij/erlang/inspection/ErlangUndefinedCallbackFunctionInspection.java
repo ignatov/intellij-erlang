@@ -26,7 +26,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiReference;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
@@ -51,8 +50,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
 
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       ErlangModuleRef moduleRef = behaviour.getModuleRef();
-      PsiReference reference = moduleRef != null ? moduleRef.getReference() : null;
-      PsiElement resolve = reference != null ? reference.resolve() : null;
+      PsiElement resolve = moduleRef != null ? moduleRef.getReference().resolve() : null;
 
       if (resolve instanceof ErlangModule) {
         PsiFile containingFile = resolve.getContainingFile();

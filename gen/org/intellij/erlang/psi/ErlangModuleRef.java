@@ -11,7 +11,7 @@ public interface ErlangModuleRef extends ErlangCompositeElement {
   @NotNull
   ErlangQAtom getQAtom();
 
-  @Nullable
+  @NotNull
   PsiReference getReference();
 
 }
