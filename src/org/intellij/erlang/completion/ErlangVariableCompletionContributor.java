@@ -25,7 +25,6 @@ import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
-import gnu.trove.THashSet;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.*;
@@ -50,9 +49,9 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
         PsiElement position = parameters.getPosition();
         ErlangFile file = (ErlangFile)position.getContainingFile();
 
-        Collection<String> vars = new THashSet<String>();
-
         if (!(position.getParent() instanceof ErlangRecordExpression)) {
+          Collection<String> vars = ContainerUtil.newHashSet();
+
           //noinspection unchecked
           PsiElement scopeOwner = PsiTreeUtil.getParentOfType(position,
             ErlangFunctionClause.class, ErlangMacrosDefinition.class, ErlangTypeDefinition.class, ErlangSpecification.class);
@@ -63,16 +62,12 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
             module.processDeclarations(new MyBaseScopeProcessor(vars, position, scopeOwner, true), ResolveState.initial(), module, module);
           }
 
-          for (String var : vars) {
-            result.addElement(LookupElementBuilder.create(var).withIcon(ErlangIcons.VARIABLE));
-          }
+          addVariables(result, vars);
         }
 
         Map<String, ErlangQVar> erlangVarContext = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
         if (erlangVarContext != null && PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class) == null) {
-          for (String var : erlangVarContext.keySet()) {
-            result.addElement(LookupElementBuilder.create(var).withIcon(ErlangIcons.VARIABLE));
-          }
+          addVariables(result, erlangVarContext.keySet());
         }
       }
     });
@@ -97,11 +92,21 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
           ErlangExpressionType varType = ErlangExpressionType.create(right);
 
           if (ErlangCompletionUtil.containsType(expectedTypes, varType)) {
-            result.addElement(LookupElementBuilder.create(v).withIcon(ErlangIcons.VARIABLE));
+            addVariable(result, v.getName());
           }
         }
       }
     });
+  }
+
+  private static void addVariables(@NotNull CompletionResultSet result, @NotNull Iterable<String> variables) {
+    for (String variable : variables) {
+      addVariable(result, variable);
+    }
+  }
+
+  private static void addVariable(@NotNull CompletionResultSet result, @NotNull String variable) {
+    result.addElement(LookupElementBuilder.create(variable).withIcon(ErlangIcons.VARIABLE));
   }
 
   private static class MyBaseScopeProcessor extends BaseScopeProcessor {
