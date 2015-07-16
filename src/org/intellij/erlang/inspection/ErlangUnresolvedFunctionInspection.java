@@ -23,6 +23,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
+import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +55,8 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
             ErlangModuleRef moduleRef = ((ErlangGlobalFunctionCallExpression) parent).getModuleRef();
             if (moduleRef.getQAtom().getMacros() != null) return;
             String moduleName = moduleRef.getText();
-            if (ErlangBifTable.isBif(moduleName, name, arity)) return;
+            if (ErlangBifTable.isBif(moduleName, name, arity) ||
+                ErlangOperatorTable.isOperator(moduleName, name, arity)) return;
             signature = moduleName + ":" + signature;
           }
 

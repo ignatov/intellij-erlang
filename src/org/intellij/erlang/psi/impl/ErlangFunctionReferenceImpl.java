@@ -25,6 +25,7 @@ import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
+import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -54,11 +55,13 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     if (suppressResolve()) return null; // for #132
 
     if (myModuleAtom != null) {
+      String moduleName = myModuleAtom.getText();
       ErlangFunction explicitFunction = getExternalFunction(getModuleFileName());
       if (explicitFunction != null) {
         return explicitFunction;
       }
-      else if (ErlangBifTable.isBif(myModuleAtom.getText(), myReferenceName, myArity) || 
+      else if (ErlangBifTable.isBif(moduleName, myReferenceName, myArity) ||
+               ErlangOperatorTable.isOperator(moduleName, myReferenceName, myArity) ||
         myReferenceName.equals(ErlangBifTable.MODULE_INFO) && (myArity == 1 || myArity == 0)) {
         return getElement();
       }
