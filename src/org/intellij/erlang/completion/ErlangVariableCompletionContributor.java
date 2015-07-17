@@ -20,6 +20,7 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.BaseScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -48,6 +49,16 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
       protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
         ErlangFile file = (ErlangFile)position.getContainingFile();
+
+        ErlangQVar originalVar = PsiTreeUtil.getParentOfType(parameters.getOriginalPosition(), ErlangQVar.class);
+        if (originalVar != null) {
+          boolean isDeclaration = inArgumentDefinition(originalVar) || inLeftPartOfAssignment(originalVar);
+          PsiReference reference = !isDeclaration ? originalVar.getReference() : null;
+          PsiElement resolved = reference != null ? reference.resolve() : null;
+          if (isDeclaration || resolved != null && resolved != originalVar) {
+            addVariable(result, originalVar.getName());
+          }
+        }
 
         if (!(position.getParent() instanceof ErlangRecordExpression)) {
           Collection<String> vars = ContainerUtil.newHashSet();

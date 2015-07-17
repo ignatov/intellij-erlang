@@ -281,7 +281,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.configureByText("OTP-PUB-KEY.erl", "-module('OTP-PUB-KEY'). -export(['dec_D-1'/2]). 'dec_D-1'(Tlv, TagIn) -> 1.");
     doCheckResult("foo() -> Odec<caret>", "foo() -> 'OTP-PUB-KEY':'dec_D-1'(<caret>)");
   }
-  
+
   public void testModuleFunctionCompletionQuoted2() {
     myFixture.configureByText("OTP-PUB-KEY.erl", "-module('OTP-PUB-KEY'). -export([dec_D1/2]). dec_D1(Tlv, TagIn) -> 1.");
     doCheckResult("foo() -> Odec<caret>", "foo() -> 'OTP-PUB-KEY':dec_D1(<caret>)");
@@ -417,5 +417,25 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.configureByFiles("imports/testTransitive.erl", "imports/funs.erl",
       "imports/importFuns.hrl", "imports/transitiveImportFuns.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "fun_a");
+  }
+
+  public void testVariableDeclarationInFunctionArguments() {
+    myFixture.configureByText("a.erl", "foo(FirstVar, First<caret>) -> ok.");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "FirstVar", "First");
+  }
+
+  public void testVariableDeclarationInLeftPartOfAssignment() {
+    myFixture.configureByText("a.erl", "foo(FirstVar) -> First<caret> = FirstVar.");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "First", "FirstVar");
+  }
+
+  public void testVariableDeclarationInPatternInLeftPartOfAssignment() {
+    myFixture.configureByText("a.erl", "foo(FirstVar) -> {ok, First<caret>} = {ok, FirstVar}.");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "First", "FirstVar");
+  }
+
+  public void testNoVariableDeclarationInRightPartOfAssignment() {
+    myFixture.configureByText("a.erl", "foo(FirstVar, FirstVar1) -> {ok, FirstVar} = {ok, First<caret>}.");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EXCLUDES, "First");
   }
 }
