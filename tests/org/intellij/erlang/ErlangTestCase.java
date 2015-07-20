@@ -111,6 +111,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangModuleResolutionTest.class);
     suite.addTestSuite(ErlangMethodSeparatorProviderTest.class);
     suite.addTestSuite(ErlangMacroParameterResolutionTest.class);
+    suite.addTestSuite(ErlangFunctionResolutionTest.class);
     suite.addTestSuite(ErlangAmbiguousCallTest.class);
     suite.addTestSuite(ErlangDebuggableRunConfigurationProducerTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);

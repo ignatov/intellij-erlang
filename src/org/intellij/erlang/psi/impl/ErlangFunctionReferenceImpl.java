@@ -71,13 +71,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     ErlangFunction declaredFunction = file.getFunction(myReferenceName, myArity);
     if (declaredFunction != null) return declaredFunction;
 
-    ErlangFunction implicitFunction = getExternalFunction("erlang");
-    if (implicitFunction != null) return implicitFunction;
 
-    ErlangSdkRelease release = ErlangSdkType.getRelease(file);
-    if ((release == null || release.needBifCompletion("erlang")) &&
-        ErlangBifTable.isBif("erlang", myReferenceName, myArity) ||
-        ErlangBifTable.isBif("", myReferenceName, myArity)) return getElement();
 
     ErlangFunction fromImport = resolveImport(file.getImportedFunction(myReferenceName, myArity));
     if (fromImport != null) return fromImport;
@@ -91,6 +85,16 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     for (ErlangImportFunction importFromInclude : importedInIncludes) {
       ErlangFunction importedFunction = resolveImport(importFromInclude);
       if (importedFunction != null) return importedFunction;
+    }
+
+    if (!file.isNoAutoImport(myReferenceName, myArity)) {
+      ErlangFunction implicitFunction = getExternalFunction("erlang");
+      if (implicitFunction != null) return implicitFunction;
+
+      ErlangSdkRelease release = ErlangSdkType.getRelease(file);
+      if ((release == null || release.needBifCompletion("erlang")) &&
+          ErlangBifTable.isBif("erlang", myReferenceName, myArity) ||
+          ErlangBifTable.isBif("", myReferenceName, myArity)) return getElement();
     }
 
     return null;
