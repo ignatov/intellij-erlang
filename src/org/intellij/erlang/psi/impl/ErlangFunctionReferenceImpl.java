@@ -25,6 +25,7 @@ import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
+import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -54,15 +55,14 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     if (suppressResolve()) return null; // for #132
 
     if (myModuleAtom != null) {
-      ErlangFunction explicitFunction = getExternalFunction(getModuleFileName());
-      if (explicitFunction != null) {
-        return explicitFunction;
-      }
-      else if (ErlangBifTable.isBif(myModuleAtom.getText(), myReferenceName, myArity) || 
-        myReferenceName.equals(ErlangBifTable.MODULE_INFO) && (myArity == 1 || myArity == 0)) {
-        return getElement();
-      }
-      return null;
+      String moduleName = ErlangPsiImplUtil.getName(myModuleAtom);
+      ErlangFunction explicitFunction = getExternalFunction(moduleName);
+      boolean resolveToCallSite = explicitFunction == null && (
+        ErlangBifTable.isBif(moduleName, myReferenceName, myArity) ||
+        ErlangOperatorTable.canBeInvokedAsFunction(moduleName, myReferenceName, myArity) ||
+        myReferenceName.equals(ErlangBifTable.MODULE_INFO) && (myArity == 1 || myArity == 0)
+      );
+      return resolveToCallSite ? getElement() : explicitFunction;
     }
 
     ErlangFile file = ObjectUtils.tryCast(getElement().getContainingFile(), ErlangFile.class);
@@ -76,8 +76,8 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
     ErlangSdkRelease release = ErlangSdkType.getRelease(file);
     if ((release == null || release.needBifCompletion("erlang")) &&
-      ErlangBifTable.isBif("erlang", myReferenceName, myArity) ||
-      ErlangBifTable.isBif("", myReferenceName, myArity)) return getElement();
+        ErlangBifTable.isBif("erlang", myReferenceName, myArity) ||
+        ErlangBifTable.isBif("", myReferenceName, myArity)) return getElement();
 
     ErlangFunction fromImport = resolveImport(file.getImportedFunction(myReferenceName, myArity));
     if (fromImport != null) return fromImport;
@@ -106,7 +106,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
     Collection<ErlangFunction> result;
     if (myModuleAtom != null) {
-      result = getErlangFunctionsFromModule(getModuleFileName());
+      result = getErlangFunctionsFromModule(ErlangPsiImplUtil.getName(myModuleAtom));
     }
     else {
       PsiFile containingFile = getElement().getContainingFile();
@@ -143,11 +143,6 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
     return PsiTreeUtil.getParentOfType(myElement, ErlangCallbackSpec.class) != null;
   }
 
-  @NotNull
-  private String getModuleFileName() {
-    return myModuleAtom != null ? ErlangPsiImplUtil.getName(myModuleAtom) : "";
-  }
-
   @Override
   public boolean isReferenceTo(PsiElement element) {
     return getElement().getManager().areElementsEquivalent(resolve(), element);
@@ -179,7 +174,7 @@ public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyV
 
   @Override
   public String getSignature() {
-    return myReferenceName + "/" + myArity;
+    return ErlangPsiImplUtil.createFunctionPresentation(myReferenceName, myArity);
   }
 
   @Override

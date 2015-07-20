@@ -1,4 +1,4 @@
--export([zoo/1, abs/1, foo/1, doo/1, roo/1]).
+-export([zoo/1, abs/1, foo/1, doo/1, roo/1, op/0]).
 
 zoo(A) -> A.
 abs(A) -> A.
@@ -49,3 +49,7 @@ roo(A) ->
   catch A when <error>A = 10</error> -> ok end;
 roo(A) ->
   B = fun (X) when <error>A = 10</error> -> X end, B.
+
+op() when erlang:'+'(1, 2) -> ok;
+op() when erlang:'div'(1, 2) -> ok;
+op() when 'erlang':'div'(1, 2) -> ok.
