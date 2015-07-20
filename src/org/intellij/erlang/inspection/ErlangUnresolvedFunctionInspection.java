@@ -45,7 +45,6 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
           int arity = r.getArity();
 
           if (arity < 0) return;
-          if (ErlangBifTable.isBif("erlang", name, arity)) return;
 
           String signature = r.getSignature();
 
@@ -53,9 +52,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
           if (parent instanceof ErlangGlobalFunctionCallExpression) {
             ErlangModuleRef moduleRef = ((ErlangGlobalFunctionCallExpression) parent).getModuleRef();
             if (moduleRef.getQAtom().getMacros() != null) return;
-            String moduleName = moduleRef.getText();
-            if (ErlangBifTable.isBif(moduleName, name, arity)) return;
-            signature = moduleName + ":" + signature;
+            signature = moduleRef.getText() + ":" + signature;
           }
 
           LocalQuickFix[] qfs = parent instanceof ErlangGenericFunctionCallExpression || parent instanceof ErlangGlobalFunctionCallExpression ?

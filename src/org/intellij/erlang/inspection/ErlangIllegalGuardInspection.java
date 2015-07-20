@@ -17,8 +17,8 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiReference;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -151,38 +151,41 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     }
 
     @Override
-    public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-      String functionName = o.getName();
-      int functionArity = o.getArgumentList().getExpressionList().size();
+    public void visitGlobalFunctionCallExpression(@NotNull ErlangGlobalFunctionCallExpression o) {
+      String moduleName = ErlangPsiImplUtil.getName(o.getModuleRef().getQAtom());
+      ErlangFunctionCallExpression function = o.getFunctionCallExpression();
+      String functionName = function.getName();
+      int functionArity = function.getArgumentList().getExpressionList().size();
       String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(functionName, functionArity);
-      boolean needToCheckRecursively = false;
 
+      if (!"erlang".equals(moduleName)) {
+        registerProblem(myHolder, o, ERROR);
+      }
+      else if (!BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation) &&
+               !ErlangOperatorTable.canBeInvokedAsFunction(moduleName, functionPresentation)) {
+        registerProblem(myHolder, function, ERROR);
+      }
+      else {
+        function.getArgumentList().accept(this);
+      }
+    }
+
+    @Override
+    public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
       if (o.getQAtom().getMacros() != null) {
         return;
       }
-      if (o.getParent() instanceof ErlangGlobalFunctionCallExpression) {
-        PsiReference reference = ((ErlangGlobalFunctionCallExpression) o.getParent()).getModuleRef().getReference();
-        if (!reference.getCanonicalText().equals("erlang")) {
-          registerProblem(myHolder, o.getParent(), ERROR);
-        }
-        else if (!BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation)) {
-          registerProblem(myHolder, o, ERROR);
-        }
-        else {
-          needToCheckRecursively = true;
-        }
-      }
-      else if (((ErlangFile) o.getContainingFile()).getFunction(functionName, functionArity) != null) {
+      String functionName = o.getName();
+      int functionArity = o.getArgumentList().getExpressionList().size();
+      String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(functionName, functionArity);
+
+      if (((ErlangFile) o.getContainingFile()).getFunction(functionName, functionArity) != null) {
         registerProblem(myHolder, o, "Call to local/imported function " + functionPresentation + " is illegal in guard");
       }
       else if (!BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation)) {
         registerProblem(myHolder, o, ERROR);
       }
       else {
-        needToCheckRecursively = true;
-      }
-
-      if (needToCheckRecursively) {
         o.getArgumentList().accept(this);
       }
     }
