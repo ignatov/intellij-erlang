@@ -1441,7 +1441,8 @@ public class ErlangPsiImplUtil {
     return createFunctionPresentation(getName(function), getArity(function));
   }
 
-  public static String createFunctionPresentation(String functionName, int arity) {
+  @NotNull
+  public static String createFunctionPresentation(@NotNull String functionName, int arity) {
     return toAtomName(functionName) + "/" + arity;
   }
 
