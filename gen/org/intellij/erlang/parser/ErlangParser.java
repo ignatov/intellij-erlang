@@ -825,18 +825,29 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // 'behaviour' '(' module_ref ')'
+  // ('behaviour'|'behavior') '(' module_ref ')'
   public static boolean behaviour(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "behaviour")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, "<behaviour>");
-    r = consumeToken(b, "behaviour");
+    r = behaviour_0(b, l + 1);
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
     r = p && report_error_(b, module_ref(b, l + 1)) && r;
     r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
     exit_section_(b, l, m, ERL_BEHAVIOUR, r, p, null);
     return r || p;
+  }
+
+  // 'behaviour'|'behavior'
+  private static boolean behaviour_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "behaviour_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, "behaviour");
+    if (!r) r = consumeToken(b, "behavior");
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   /* ********************************************************** */
