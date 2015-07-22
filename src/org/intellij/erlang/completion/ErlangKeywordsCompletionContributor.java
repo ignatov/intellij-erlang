@@ -51,7 +51,7 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
 
 public class ErlangKeywordsCompletionContributor extends CompletionContributor implements DumbAware {
   public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
-    "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour"
+    "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour", "behavior"
   );
 
   public ErlangKeywordsCompletionContributor() {

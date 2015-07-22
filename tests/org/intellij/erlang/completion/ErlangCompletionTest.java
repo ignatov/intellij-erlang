@@ -181,7 +181,8 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testInclude()     { doCheckResult("-inclu<caret>", "-include(\"<caret>\").", '('); }
   public void testExport()      { doCheckResult("-exp<caret>", "-export([<caret>]).", '('); }
   public void testExportType()  { doCheckResult("-export_t<caret>", "-export_type([<caret>])."); }
-  public void testBehaviour()   { doCheckResult("-beha<caret>", "-behaviour(<caret>)."); }
+  public void testBehaviour()   { doCheckResult("-behaviou<caret>", "-behaviour(<caret>)."); }
+  public void testBehavior()    { doCheckResult("-behavior<caret>", "-behavior(<caret>)."); }
 
   public void testExportFunction() {
     doCheckResult("-export([<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.", Lookup.COMPLETE_STATEMENT_SELECT_CHAR);

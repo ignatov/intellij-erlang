@@ -186,7 +186,7 @@ module ::= 'module' '(' q_atom [',' module_tail] ')' {
 private module_tail ::= model_field_list | argument_definition
 model_field_list ::= '[' model_field (',' model_field)* ']'
 model_field ::= q_var ['::' top_type] {pin=1 elementType=argument_definition}
-behaviour ::= 'behaviour' '(' module_ref ')' {
+behaviour ::= ('behaviour'|'behavior') '(' module_ref ')' {
   pin=1
   methods = [getName]
   stubClass="org.intellij.erlang.stubs.ErlangBehaviourStub"
