@@ -1585,6 +1585,13 @@ public class ErlangPsiImplUtil {
     return atom != null ? atom.getText() : null;
   }
 
+  public static int getCallbackSpecArity(@NotNull ErlangCallbackSpec spec) {
+    ErlangFunTypeSigs sigs = spec.getFunTypeSigs();
+    ErlangSpecFun fun = sigs != null ? sigs.getSpecFun() : null;
+    Integer arity = fun != null ? getArity(fun) : null;
+    return arity != null ? arity : -1;
+  }
+
   @NotNull
   public static String getExportFunctionName(@NotNull ErlangExportFunction exportFunction) {
     return getNameIdentifier(exportFunction.getQAtom()).getText();

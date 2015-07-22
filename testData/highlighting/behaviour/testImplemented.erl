@@ -1,8 +1,6 @@
--module(testExported).
+-module(testImplemented).
 
--behaviour(b1).
-
--export([init1/1, init2/1]).
+-behaviour(b1<caret>).
 
 init1(_) ->
   erlang:error(not_implemented).
