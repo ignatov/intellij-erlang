@@ -17,6 +17,7 @@
 package org.intellij.erlang.highlighting;
 
 import com.intellij.openapi.util.io.FileUtil;
+import org.intellij.erlang.inspection.ErlangNonExportedCallbackFunctionInspection;
 import org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -25,7 +26,8 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
   protected void setUp() throws Exception {
     super.setUp();
     //noinspection unchecked
-    myFixture.enableInspections(ErlangUndefinedCallbackFunctionInspection.class);
+    myFixture.enableInspections(ErlangUndefinedCallbackFunctionInspection.class,
+                                ErlangNonExportedCallbackFunctionInspection.class);
   }
 
   @Override
@@ -38,17 +40,26 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     myFixture.checkHighlighting(true, false, false);
   }
 
-  public void testCallbackImplementationsAreExportedOnce() { doImplementCallbacksFixTest("testExported.erl", "b1.erl", "b2.erl"); }
-  public void testTest()                                   { doImplementCallbacksFixTest("test-qf.erl", "b1.erl", "b2.erl"); }
+  public void testCallbackImplementationsAreExported() {
+    doCallbacksFixTest("Export all callbacks", "testImplemented.erl", "b1.erl", "b2.erl");
+  }
+
+  public void testCallbackImplementationsAreExportedOnce() {
+    doCallbacksFixTest("Implement all callbacks", "testExported.erl", "b1.erl", "b2.erl");
+  }
+
+  public void testTest() {
+    doCallbacksFixTest("Implement all callbacks", "test-qf.erl", "b1.erl", "b2.erl");
+  }
 
   @Override
   protected boolean isWriteActionRequired() {
     return false;
   }
 
-  private void doImplementCallbacksFixTest(String ... files) {
+  private void doCallbacksFixTest(String launchIntention, String... files) {
     myFixture.configureByFiles(files);
-    launchIntention("Implement all callbacks");
+    launchIntention(launchIntention);
     String expectedResultFile = FileUtil.getNameWithoutExtension(files[0]) + "-after.erl";
     myFixture.checkResultByFile(expectedResultFile);
   }
