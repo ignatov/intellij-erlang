@@ -240,7 +240,7 @@ get_test_failed_details(Data) ->
         <<>> ->
             undefined;
         Output ->
-            binary_to_list(Output)
+            binary_to_list(iolist_to_binary(Output))
     end.
 
 get_test_failed_message(Data) ->
