@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.parser;
 
+import com.intellij.lang.LighterASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
@@ -122,5 +123,29 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       return true;
     }
     return false;
+  }
+
+  private static Key<Boolean> IS_COMPREHENSION_KEY = Key.create("Erlang.IS_COMPREHENSION");
+
+  public static boolean markComprehension(PsiBuilder builder, @SuppressWarnings("UnusedParameters") int level) {
+    IS_COMPREHENSION_KEY.set(builder, Boolean.TRUE);
+    return true;
+  }
+
+  public static boolean maybeComprehension(PsiBuilder builder, int level, Parser parser) {
+    Boolean previousIsComprehensionValue = IS_COMPREHENSION_KEY.get(builder);
+    IS_COMPREHENSION_KEY.set(builder, null);
+    boolean result = parser.parse(builder, level + 1);
+    if (result && Boolean.TRUE.equals(IS_COMPREHENSION_KEY.get(builder))) {
+      LighterASTNode latestDoneNode = builder.getLatestDoneMarker();
+      if (latestDoneNode != null && latestDoneNode.getTokenType() == ErlangTypes.ERL_LIST_EXPRESSION) {
+        PsiBuilder.Marker latestDoneMarker = (PsiBuilder.Marker) latestDoneNode;
+        PsiBuilder.Marker newDoneMarker = latestDoneMarker.precede();
+        latestDoneMarker.drop();
+        newDoneMarker.done(ErlangTypes.ERL_LIST_COMPREHENSION);
+      }
+    }
+    IS_COMPREHENSION_KEY.set(builder, previousIsComprehensionValue);
+    return result;
   }
 }

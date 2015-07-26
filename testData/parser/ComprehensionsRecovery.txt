@@ -11,7 +11,7 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_LIST_COMPREHENSION
           PsiElement([)('[')
-          PsiErrorElement:<expression>, ']' or '||' expected, got '||'
+          PsiErrorElement:<expression> or '||' expected, got '||'
             <empty list>
           PsiElement(||)('||')
           ERL_LC_EXPRESSION

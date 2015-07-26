@@ -15,7 +15,7 @@ public interface ErlangListComprehension extends ErlangExpression {
   @NotNull
   PsiElement getBracketLeft();
 
-  @Nullable
+  @NotNull
   PsiElement getBracketRight();
 
   @NotNull

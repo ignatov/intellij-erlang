@@ -34,9 +34,9 @@ public class ErlangListExpressionImpl extends ErlangExpressionImpl implements Er
   }
 
   @Override
-  @Nullable
+  @NotNull
   public PsiElement getBracketRight() {
-    return findChildByType(ERL_BRACKET_RIGHT);
+    return findNotNullChildByType(ERL_BRACKET_RIGHT);
   }
 
   @Override

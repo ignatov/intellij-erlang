@@ -380,11 +380,10 @@ max_expression ::=
     atomic
   | q_var
   | tuple_expression
-  | list_expression
+  | expr_with_brackets
   | case_expression
   | if_expression
   | binary_comprehension
-  | list_comprehension
   | map_comprehension
   | map_construct_expression
   | receive_expression
@@ -398,11 +397,23 @@ atom_with_arity_expression ::= <<isModeOn "ATOM_ATTRIBUTE">> q_atom '/' integer
 begin_end_expression ::= begin begin_end_body end {pin=1}
 begin_end_body ::= exprs {name="expression"}
 
-list_expression ::= '[' ']' | '[' expression not_comprehension tail? ']' {pin(".*")="not_comprehension"}
-private not_comprehension ::= !'||'
-private tail ::= list_items? list_concat?
+private expr_with_brackets ::= <<maybeComprehension list_expr_or_comprehension>>
+list_expr_or_comprehension ::= '[' list_expr_or_comprehension_body? ']' { pin=1 elementType="list_expression" }
+private list_expr_or_comprehension_body ::= expression_parse_error? marked_lc_tail | expression (marked_lc_tail | list_expression_tail)
+private marked_lc_tail ::= '||' <<markComprehension>> lc_exprs {pin=1}
+private expression_parse_error ::= &('||') expression {pin=1}
+
+list_expression ::= '[' expression list_expression_tail? ']'
+private list_expression_tail ::= list_items? list_concat?
 private list_items ::= (',' expression)+ {pin(".*")=1}
 private list_concat ::= '|' expression {pin(".*")=1}
+
+list_comprehension ::= '[' expression '||' lc_exprs ']' { methods=[processDeclarations] }
+private meta comprehension_element ::= (&('||'))? <<p1>> {pin=1}
+private lc_exprs ::= lc_expression (',' lc_expression)*
+lc_expression ::= [ lc_generator_definition ('<-' | '<=')] expression {pin(".*")=2}
+lc_generator_definition ::= (map_match | expression) {elementType="argument_definition"}
+private map_match ::= expression ':=' expression {pin=2}
 
 binary_expression ::= '<<' bin_element_list? '>>' {pin=1}
 private bin_element_list ::= bin_element (',' bin_element)*
@@ -415,16 +426,6 @@ bin_element ::= (
 opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
-
-list_comprehension ::= '[' <<comprehension_element expression>> '||' lc_exprs ']' {
-  pin=3
-  methods=[processDeclarations]
-}
-private meta comprehension_element ::= (&('||'))? <<p1>> {pin=1}
-private lc_exprs ::= lc_expression (',' lc_expression)*
-lc_expression ::= [ lc_generator_definition ('<-' | '<=')] expression {pin(".*")=2}
-lc_generator_definition ::= (map_match | expression) {elementType="argument_definition"}
-private map_match ::= expression ':=' expression {pin=2}
 
 binary_comprehension ::= '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>' {
   pin=3
