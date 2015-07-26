@@ -48,7 +48,7 @@ public abstract class ErlangParserTestBase extends ParsingTestCase {
     if (myOverrideTestData) {
       doOverrideTestData();
     }
-    doTest(true);
+    doTest(checkResult);
     if (!suppressErrors) {
       assertFalse(
         "PsiFile contains error elements",

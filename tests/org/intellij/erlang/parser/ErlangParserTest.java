@@ -92,5 +92,6 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testMacrosUnderscore()  { doTest(true, false); }
   public void testComprehensionsRecovery() { doTest(true, true); }
   public void testSendExpressionPriority() { doTest(true, false); }
+  public void testLongListExpression632()  { doTest(false, false); }
   public void testWhitespaceEscapeInCharLiterals() { doTest(true, false); }
 }

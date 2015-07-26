@@ -398,9 +398,11 @@ atom_with_arity_expression ::= <<isModeOn "ATOM_ATTRIBUTE">> q_atom '/' integer
 begin_end_expression ::= begin begin_end_body end {pin=1}
 begin_end_body ::= exprs {name="expression"}
 
-list_expression ::= '[' (']' | expression not_comprehension tail) {pin(".*")="not_comprehension"}
+list_expression ::= '[' ']' | '[' expression not_comprehension tail? ']' {pin(".*")="not_comprehension"}
 private not_comprehension ::= !'||'
-private tail ::= ']' | '|' expression ']' | ',' expression tail {pin(".*")=1}
+private tail ::= list_items? list_concat?
+private list_items ::= (',' expression)+ {pin(".*")=1}
+private list_concat ::= '|' expression {pin(".*")=1}
 
 binary_expression ::= '<<' bin_element_list? '>>' {pin=1}
 private bin_element_list ::= bin_element (',' bin_element)*

@@ -3148,38 +3148,91 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '[' (']' | expression not_comprehension tail)
+  // '|' expression
+  static boolean list_concat(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_concat")) return false;
+    if (!nextTokenIs(b, ERL_OP_OR)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = consumeToken(b, ERL_OP_OR);
+    p = r; // pin = 1
+    r = r && expression(b, l + 1, -1);
+    exit_section_(b, l, m, null, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // '[' ']' | '[' expression not_comprehension tail? ']'
   public static boolean list_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expression")) return false;
     if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_BRACKET_LEFT);
-    r = r && list_expression_1(b, l + 1);
+    r = list_expression_0(b, l + 1);
+    if (!r) r = list_expression_1(b, l + 1);
     exit_section_(b, m, ERL_LIST_EXPRESSION, r);
     return r;
   }
 
-  // ']' | expression not_comprehension tail
-  private static boolean list_expression_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "list_expression_1")) return false;
+  // '[' ']'
+  private static boolean list_expression_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_expression_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_BRACKET_RIGHT);
-    if (!r) r = list_expression_1_1(b, l + 1);
+    r = consumeToken(b, ERL_BRACKET_LEFT);
+    r = r && consumeToken(b, ERL_BRACKET_RIGHT);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // expression not_comprehension tail
-  private static boolean list_expression_1_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "list_expression_1_1")) return false;
+  // '[' expression not_comprehension tail? ']'
+  private static boolean list_expression_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_expression_1")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = expression(b, l + 1, -1);
+    r = consumeToken(b, ERL_BRACKET_LEFT);
+    r = r && expression(b, l + 1, -1);
     r = r && not_comprehension(b, l + 1);
     p = r; // pin = not_comprehension
-    r = r && tail(b, l + 1);
+    r = r && report_error_(b, list_expression_1_3(b, l + 1));
+    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
+    exit_section_(b, l, m, null, r, p, null);
+    return r || p;
+  }
+
+  // tail?
+  private static boolean list_expression_1_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_expression_1_3")) return false;
+    tail(b, l + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
+  // (',' expression)+
+  static boolean list_items(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_items")) return false;
+    if (!nextTokenIs(b, ERL_COMMA)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = list_items_0(b, l + 1);
+    int c = current_position_(b);
+    while (r) {
+      if (!list_items_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "list_items", c)) break;
+      c = current_position_(b);
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // ',' expression
+  private static boolean list_items_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_items_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = consumeToken(b, ERL_COMMA);
+    p = r; // pin = 1
+    r = r && expression(b, l + 1, -1);
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
@@ -4493,42 +4546,29 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // ']' | '|' expression ']' | ',' expression tail
+  // list_items? list_concat?
   static boolean tail(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "tail")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_BRACKET_RIGHT);
-    if (!r) r = tail_1(b, l + 1);
-    if (!r) r = tail_2(b, l + 1);
+    r = tail_0(b, l + 1);
+    r = r && tail_1(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // '|' expression ']'
-  private static boolean tail_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "tail_1")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, null);
-    r = consumeToken(b, ERL_OP_OR);
-    p = r; // pin = 1
-    r = r && report_error_(b, expression(b, l + 1, -1));
-    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
-    exit_section_(b, l, m, null, r, p, null);
-    return r || p;
+  // list_items?
+  private static boolean tail_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tail_0")) return false;
+    list_items(b, l + 1);
+    return true;
   }
 
-  // ',' expression tail
-  private static boolean tail_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "tail_2")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, null);
-    r = consumeToken(b, ERL_COMMA);
-    p = r; // pin = 1
-    r = r && report_error_(b, expression(b, l + 1, -1));
-    r = p && tail(b, l + 1) && r;
-    exit_section_(b, l, m, null, r, p, null);
-    return r || p;
+  // list_concat?
+  private static boolean tail_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "tail_1")) return false;
+    list_concat(b, l + 1);
+    return true;
   }
 
   /* ********************************************************** */
