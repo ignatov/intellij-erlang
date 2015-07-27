@@ -1,4 +1,4 @@
--module(testExported).
+-module(testBoth).
 
 -behaviour(b1).
 

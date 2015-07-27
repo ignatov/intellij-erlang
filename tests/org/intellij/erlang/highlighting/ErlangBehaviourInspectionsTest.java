@@ -33,22 +33,28 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     return "testData/highlighting/behaviour/";
   }
 
-  public void testSimple() {
-    myFixture.configureByFiles("b1.erl", "b2.erl", "test.erl");
+  public void testHighlighting() {
+    myFixture.configureByFiles("test1.erl", "b1.erl");
     myFixture.checkHighlighting(true, false, false);
   }
 
-  public void testCallbackImplementationsAreExportedOnce() { doImplementCallbacksFixTest("testExported.erl", "b1.erl", "b2.erl"); }
-  public void testTest()                                   { doImplementCallbacksFixTest("test-qf.erl", "b1.erl", "b2.erl"); }
+  public void testHighlightingSeveralBehaviours() {
+    myFixture.configureByFiles("test2.erl", "b1.erl", "b2.erl");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testCallbackImplementationsAreExported()     { doCallbacksFixTest("testImplemented.erl", "b1.erl"); }
+  public void testCallbackImplementationsAreExportedOnce() { doCallbacksFixTest("testExported.erl", "b1.erl"); }
+  public void testTest()                                   { doCallbacksFixTest("testBoth.erl", "b1.erl"); }
 
   @Override
   protected boolean isWriteActionRequired() {
     return false;
   }
 
-  private void doImplementCallbacksFixTest(String ... files) {
+  private void doCallbacksFixTest(String... files) {
     myFixture.configureByFiles(files);
-    launchIntention("Implement all callbacks");
+    launchIntention(ErlangUndefinedCallbackFunctionInspection.FIX_MESSAGE);
     String expectedResultFile = FileUtil.getNameWithoutExtension(files[0]) + "-after.erl";
     myFixture.checkResultByFile(expectedResultFile);
   }

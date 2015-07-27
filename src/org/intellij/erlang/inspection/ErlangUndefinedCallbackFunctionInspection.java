@@ -21,69 +21,52 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
-import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionBase {
+  public static final String FIX_MESSAGE = "Implement and export all callbacks";
+
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
-    //noinspection unchecked
-    ErlangCompositeElement warningHolder = PsiTreeUtil.getChildOfAnyType(file, ErlangAttribute.class, ErlangModule.class);
-    if (warningHolder == null) return;
-
-    List<ErlangCallbackSpec> toOverwrite = new LinkedList<ErlangCallbackSpec>();
-    List<Pair<String, String >> namesAndNames = new LinkedList<Pair<String, String>>();
-
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       ErlangModuleRef moduleRef = behaviour.getModuleRef();
-      PsiElement resolve = moduleRef != null ? moduleRef.getReference().resolve() : null;
+      PsiElement module = moduleRef != null ? moduleRef.getReference().resolve() : null;
+      ErlangFile behaviourFile = module instanceof ErlangModule ? (ErlangFile) module.getContainingFile() : null;
+      PsiElement toHighlight = behaviour.getParLeft() != null ? behaviour.getParLeft().getNextSibling() : null;
+      if (behaviourFile == null || toHighlight == null) continue;
 
-      if (resolve instanceof ErlangModule) {
-        PsiFile containingFile = resolve.getContainingFile();
-        if (containingFile instanceof ErlangFile) {
-          Map<String, ErlangCallbackSpec> callbackMap = ((ErlangFile) containingFile).getCallbackMap();
-          for (Map.Entry<String, ErlangCallbackSpec> entry : callbackMap.entrySet()) {
-            String fullName = entry.getKey();
-            List<String> split = StringUtil.split(fullName, "/");
-            if (split.size() != 2) continue;
-            ErlangFunction function = file.getFunction(split.get(0), StringUtil.parseInt(split.get(1), -1));
-            if (function == null) {
-              ErlangCallbackSpec spec = entry.getValue();
-              toOverwrite.add(spec);
-              String fileName = spec.getContainingFile().getName();
-              namesAndNames.add(Pair.create(fullName, fileName));
-            }
-          }
+      List<ErlangCallbackSpec> undefinedCallbacks = ContainerUtil.newArrayList();
+      Map<String, ErlangCallbackSpec> callbackMap = behaviourFile.getCallbackMap();
+      for (ErlangCallbackSpec spec : callbackMap.values()) {
+        String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
+        int arity = ErlangPsiImplUtil.getCallbackSpecArity(spec);
+        ErlangFunction function = name != null ? file.getFunction(name, arity) : null;
+        if (function == null || !function.isExported()) {
+          undefinedCallbacks.add(spec);
         }
       }
-    }
-
-    if (!toOverwrite.isEmpty()) {
-      boolean multiple = toOverwrite.size() != 1;
-      String message = "Undefined callback function" + (multiple ? "s" : "") + ": ";
-      boolean first = true;
-      for (Pair<String, String> pair : namesAndNames) {
-        if (first) first = false;
-        else message += ", ";
-        message += "'" + pair.first + "'";
-        message += " (behaviour " + pair.second + ")";
+      if (!undefinedCallbacks.isEmpty()) {
+        boolean multiple = undefinedCallbacks.size() != 1;
+        StringBuilder builder = new StringBuilder();
+        builder.append("Undefined or non-exported callback function").append(multiple ? "s" : "").append(": ");
+        for (ErlangCallbackSpec spec : undefinedCallbacks) {
+          builder.append("'").append(ErlangPsiImplUtil.createFunctionPresentationFromCallbackSpec(spec)).append("', ");
+        }
+        String message = builder.substring(0, builder.length() - 2);
+        registerProblem(problemsHolder, toHighlight, message, new MyLocalQuickFixBase(undefinedCallbacks));
       }
-
-      problemsHolder.registerProblem(warningHolder, message, new MyLocalQuickFixBase(toOverwrite));
     }
   }
 
@@ -92,7 +75,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     private final Collection<ErlangCallbackSpec> myCallbackSpecs;
 
     protected MyLocalQuickFixBase(@NotNull Collection<ErlangCallbackSpec> callbackSpecs) {
-      super("Implement all callbacks");
+      super(FIX_MESSAGE);
       myCallbackSpecs = callbackSpecs;
     }
 
@@ -107,24 +90,18 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     }
 
     private void addCallbackImplementations(@NotNull Project project, @NotNull ErlangFile file) {
+      PsiDocumentManager manager = PsiDocumentManager.getInstance(project);
+      Document document = manager.getDocument(file);
+      if (document == null) return;
+
       for (ErlangCallbackSpec spec : myCallbackSpecs) {
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
-        List<ErlangType> topTypeList = ErlangPsiImplUtil.getCallBackSpecArguments(spec);
+        int arity = ErlangPsiImplUtil.getCallbackSpecArity(spec);
+        if (name == null || file.getFunction(name, arity) != null) continue;
 
-        List<String> vars = new LinkedList<String>();
-        for (ErlangType type : topTypeList) {
-          ErlangQVar qVar = type.getQVar();
-          vars.add(qVar != null ? qVar.getName() : "_");
-        }
-
-        PsiDocumentManager manager = PsiDocumentManager.getInstance(project);
-        Document document = manager.getDocument(file);
         PsiElement lastChild = file.getLastChild();
         int textOffset = lastChild == null ? 0 : lastChild.getTextRange().getEndOffset();
-
-        if (document == null) return;
-        String join = StringUtil.join(vars, ", ");
-        String newFunction = "\n" + name + "(" + join + ") ->\n erlang:error(not_implemented).\n";
+        String newFunction = "\n" + name + "(" + createVariableList(spec) + ") ->\n erlang:error(not_implemented).\n";
         document.insertString(textOffset, newFunction);
         manager.commitDocument(document);
         CodeStyleManager.getInstance(project).reformatText(file, textOffset, textOffset + newFunction.length());
@@ -134,12 +111,23 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     private void exportAddedCallbackImplementations(@NotNull Project project, @NotNull ErlangFile file) {
       for (ErlangCallbackSpec spec : myCallbackSpecs) {
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
-        int arity = ErlangPsiImplUtil.getCallBackSpecArguments(spec).size();
-        ErlangFunction function = name != null && arity >= 0 ? file.getFunction(name, arity) : null;
-        if (function != null && ErlangUnusedFunctionInspection.isUnusedFunction(file, function)) {
+        int arity = ErlangPsiImplUtil.getCallbackSpecArity(spec);
+        ErlangFunction function = name != null ? file.getFunction(name, arity) : null;
+        if (function != null && !function.isExported()) {
           new ErlangExportFunctionFix(function).invoke(project, file, null, function, null);
         }
       }
+    }
+
+    @NotNull
+    private static String createVariableList(@NotNull ErlangCallbackSpec spec) {
+      List<ErlangType> arguments = ErlangPsiImplUtil.getCallBackSpecArguments(spec);
+      StringBuilder variables = new StringBuilder();
+      for (ErlangType type : arguments) {
+        ErlangQVar qVar = type.getQVar();
+        variables.append(qVar != null ? qVar.getName() : "_").append(", ");
+      }
+      return variables.substring(0, variables.length() - 2);
     }
   }
 }

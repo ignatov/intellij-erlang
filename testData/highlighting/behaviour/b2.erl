@@ -1,2 +1,3 @@
 -module(b2).
--callback init2(ok) -> ok.
+-callback init3(ok) -> ok.
+-callback init4(ok) -> ok.
