@@ -26,10 +26,12 @@ import java.io.FileFilter;
 public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
   private File myRoot;
   private final ErlangTarget myErlangTarget;
+  private boolean myTests;
 
-  public ErlangSourceRootDescriptor(File root, ErlangTarget erlangTarget) {
+  public ErlangSourceRootDescriptor(File root, ErlangTarget erlangTarget, boolean isTests) {
     myRoot = root;
     myErlangTarget = erlangTarget;
+    myTests = isTests;
   }
 
   @Override
@@ -59,5 +61,9 @@ public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
           name.endsWith(".app.src");
       }
     };
+  }
+
+  public boolean isTests() {
+    return myTests;
   }
 }

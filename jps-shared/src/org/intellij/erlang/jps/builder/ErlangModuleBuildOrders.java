@@ -16,23 +16,23 @@
 
 package org.intellij.erlang.jps.builder;
 
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Tag;
 
-import java.util.ArrayList;
 import java.util.List;
-
+@Tag("compilationOrder")
 public class ErlangModuleBuildOrders {
-  //reflection
+  @SuppressWarnings("unused") // reflection
   public ErlangModuleBuildOrders() {
-    myModuleBuildOrderDescriptors = new ArrayList<ErlangModuleBuildOrderDescriptor>();
+    myModuleBuildOrderDescriptors = ContainerUtil.newArrayList();
   }
 
   public ErlangModuleBuildOrders(int descriptorsCount) {
-    myModuleBuildOrderDescriptors = new ArrayList<ErlangModuleBuildOrderDescriptor>(descriptorsCount);
+    myModuleBuildOrderDescriptors = ContainerUtil.newArrayListWithCapacity(descriptorsCount);
   }
 
-  @Tag("modules")
+  @Tag("intellijModules")
   @AbstractCollection(surroundWithTag = false)
   public List<ErlangModuleBuildOrderDescriptor> myModuleBuildOrderDescriptors;
 }

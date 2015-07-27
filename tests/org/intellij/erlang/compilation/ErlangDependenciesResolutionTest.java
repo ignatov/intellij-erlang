@@ -26,8 +26,10 @@ import com.intellij.testFramework.ModuleTestCase;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
 import org.intellij.erlang.module.ErlangModuleType;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -113,13 +115,22 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
     assertSameErlangModules(moduleBuildOrder.myOrderedErlangTestModulePaths, "test_parse_transform", "test");
   }
 
-  private static void assertSameErlangModules(List<String> modulePaths, String... expectedModules) {
-    List<String> actualModules = ContainerUtil.map(modulePaths, new Function<String, String>() {
+  private static void assertSameErlangModules(List<ErlangFileDescriptor> moduleDescriptors, String... expectedModules) {
+    List<String> actualModules = ContainerUtil.map(getModulePaths(moduleDescriptors), new Function<String, String>() {
       @Override
       public String fun(String path) {
         return FileUtil.getNameWithoutExtension(new File(path));
       }
     });
     assertOrderedEquals(actualModules, expectedModules);
+  }
+  @NotNull
+  private static List<String> getModulePaths(List<ErlangFileDescriptor> buildOrder) {
+    return ContainerUtil.mapNotNull(buildOrder, new Function<ErlangFileDescriptor, String>() {
+      @Override
+      public String fun(ErlangFileDescriptor erlangFileDescriptor) {
+        return erlangFileDescriptor.myErlangModulePath;
+      }
+    });
   }
 }
