@@ -159,6 +159,7 @@
         <fileBasedIndex implementation="org.intellij.erlang.index.ErlangAtomIndex"/>
 
         <stubIndex implementation="org.intellij.erlang.stubs.index.ErlangAllNameIndex"/>
+        <stubIndex implementation="org.intellij.erlang.stubs.index.ErlangBehaviourModuleIndex"/>
 
         <gotoSymbolContributor implementation="org.intellij.erlang.go.ErlangSymbolContributor"/>
         <gotoClassContributor implementation="org.intellij.erlang.go.ErlangModuleContributor"/>

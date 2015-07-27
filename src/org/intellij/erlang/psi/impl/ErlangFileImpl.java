@@ -22,7 +22,10 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.*;
+import com.intellij.psi.FileViewProvider;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.stubs.StubElement;
@@ -419,7 +422,10 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @Override
   public boolean isBehaviour() {
-    return !getCallbackMap().isEmpty() || getFunction("behaviour_info", 1) != null;
+    ErlangFileStub stub = getStub();
+    if (stub != null) return stub.isBehaviour();
+    ErlangFunction function = getFunction("behaviour_info", 1);
+    return  !getCallbackMap().isEmpty() || function != null && function.isExported();
   }
 
   private boolean calcNoAutoImportAll() {

@@ -16,13 +16,16 @@
 
 package org.intellij.erlang.stubs.types;
 
+import com.intellij.psi.stubs.IndexSink;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
 import com.intellij.util.ArrayFactory;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.impl.ErlangModuleImpl;
+import org.intellij.erlang.stubs.ErlangFileStub;
 import org.intellij.erlang.stubs.ErlangModuleStub;
+import org.intellij.erlang.stubs.index.ErlangBehaviourModuleIndex;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -61,5 +64,13 @@ public class ErlangModuleStubElementType extends ErlangNamedStubElementType<Erla
   @Override
   public ErlangModuleStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
     return new ErlangModuleStub(parentStub, this, dataStream.readName());
+  }
+
+  @Override
+  public void indexStub(@NotNull ErlangModuleStub stub, @NotNull IndexSink sink) {
+    ErlangFileStub fileStub = (ErlangFileStub) stub.getParentStub();
+    if (fileStub.isBehaviour()) {
+      ErlangBehaviourModuleIndex.indicateOccurence(sink);
+    }
   }
 }
