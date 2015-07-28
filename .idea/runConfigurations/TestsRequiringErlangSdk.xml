@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TestsRequiringErlangSdk" type="CompoundRunConfigurationType" factoryName="Compound Run Configuration">
+    <toRun type="JUnit" name="ErlangBuilderTest" />
+    <toRun type="JUnit" name="ErlangModuleCompilationTest" />
+    <method />
+  </configuration>
+</component>
