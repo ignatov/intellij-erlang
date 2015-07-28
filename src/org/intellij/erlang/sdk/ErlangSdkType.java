@@ -223,16 +223,14 @@ public class ErlangSdkType extends SdkType {
   private ErlangSdkRelease detectSdkVersion(@NotNull String sdkHome) {
     ErlangSdkRelease cachedRelease = mySdkHomeToReleaseCache.get(getVersionCacheKey(sdkHome));
     if (cachedRelease != null) {
-      return cachedRelease;
+      return ensureReleaseDetected(cachedRelease);
     }
-
-    assert !ApplicationManager.getApplication().isUnitTestMode() : "Unit tests should have their SDK versions pre-cached!";
 
     File erl = JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkHome);
     if (!erl.canExecute()) {
       String reason = erl.getPath() + (erl.exists() ? " is not executable." : " is missing.");
       LOG.warn("Can't detect Erlang version: " + reason);
-      return null;
+      return ensureReleaseDetected(null);
     }
 
     try {
@@ -248,12 +246,20 @@ public class ErlangSdkType extends SdkType {
           "StdOut: " + output.getStdout() + "\n" +
           "StdErr: " + output.getStderr());
       }
-      return release;
+      return ensureReleaseDetected(release);
     } catch (ExecutionException e) {
       LOG.warn(e);
     }
 
-    return null;
+    return ensureReleaseDetected(null);
+  }
+
+  @Nullable
+  private ErlangSdkRelease ensureReleaseDetected(@Nullable ErlangSdkRelease release) {
+    if (ApplicationManager.getApplication().isUnitTestMode() && release == null) {
+      throw new AssertionError("SDK version detection failed. If you're using a mock SDK, make sure you have your SDK version pre-cached");
+    }
+    return release;
   }
 
   @Nullable

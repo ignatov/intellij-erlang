@@ -28,6 +28,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.CommonProcessors;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.graph.GraphGenerator;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.jps.model.*;
@@ -37,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
+import org.jetbrains.jps.builders.FileProcessor;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.ProjectBuildException;
 import org.jetbrains.jps.incremental.TargetBuilder;
@@ -52,7 +54,6 @@ import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.*;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -62,10 +63,10 @@ import java.util.*;
 public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   public static final String DEPENDENCIES_CONFIG_FILE_PATH = "erlang-builder/deps-config.xml";
   public static final String NAME = "erlc";
-  private final static Logger LOG = Logger.getInstance(ErlangBuilder.class);
+  private static final Logger LOG = Logger.getInstance(ErlangBuilder.class);
 
   public ErlangBuilder() {
-    super(Arrays.asList(ErlangTargetType.PRODUCTION, ErlangTargetType.TESTS));
+    super(Collections.singletonList(ErlangTargetType.INSTANCE));
 
     //TODO provide a way to copy erlang resources
     //disables java resource builder for erlang modules
@@ -90,16 +91,50 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     ErlangCompilerOptions compilerOptions = JpsErlangCompilerOptionsExtension.getOrCreateExtension(project).getOptions();
     if (compilerOptions.myUseRebarCompiler) return;
 
-    File outputDirectory = getBuildOutputDirectory(module, target.isTests(), context);
+    File sourceOutput = getBuildOutputDirectory(module, false, context);
+    File testOutput = getBuildOutputDirectory(module, true, context);
 
-    runErlc(target, context, compilerOptions, outputDirectory);
-    processAppConfigFiles(module, outputDirectory);
+    buildSources(target, context, compilerOptions, holder, outputConsumer, sourceOutput, false);
+    buildSources(target, context, compilerOptions, holder, outputConsumer, testOutput, true);
+
+    processAppConfigFiles(holder, outputConsumer, context, sourceOutput, testOutput);
   }
 
   @NotNull
   @Override
   public String getPresentableName() {
     return NAME;
+  }
+
+  private static void reportProgress(@NotNull CompileContext context, String message) {
+    context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.PROGRESS, message));
+  }
+
+  private static void buildSources(ErlangTarget target,
+                                   CompileContext context,
+                                   ErlangCompilerOptions compilerOptions,
+                                   DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder,
+                                   BuildOutputConsumer outputConsumer,
+                                   File outputDir,
+                                   final boolean isTests) throws IOException, ProjectBuildException {
+    List<String> dirtyErlangModulePaths = new DirtyFileProcessor<String>() {
+      @Nullable
+      @Override
+      protected String getDirtyElement(@NotNull ErlangTarget target,
+                                       @NotNull File file,
+                                       @NotNull ErlangSourceRootDescriptor root) throws IOException {
+        return (isTests || !root.isTests()) && file.getName().endsWith(".erl") ? file.getAbsolutePath() : null;
+      }
+    }.collectDirtyElements(holder);
+
+    List<String> erlangModulePathsToCompile = getErlangModulePaths(target, context, dirtyErlangModulePaths, isTests);
+    if (erlangModulePathsToCompile.isEmpty()) {
+      reportProgress(context, "Source is up to date");
+      return;
+    }
+    String message = isTests ? "Compile tests for module " : "Compile source code for module ";
+    reportProgress(context, message + target.getModule().getName());
+    runErlc(target, context, compilerOptions, erlangModulePathsToCompile, outputConsumer, outputDir, isTests);
   }
 
   @NotNull
@@ -119,39 +154,51 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return outputDirectory;
   }
 
-  private static void processAppConfigFiles(JpsModule module, File outputDirectory) throws IOException {
-    FileFilter appConfigFileFilter = new FileFilter() {
+  private static void processAppConfigFiles(DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder,
+                                            BuildOutputConsumer outputConsumer,
+                                            CompileContext context,
+                                            File... outputDirectories) throws IOException {
+    List<File> appConfigFiles = new DirtyFileProcessor<File>() {
+      @Nullable
       @Override
-      public boolean accept(File pathname) {
-        String fileName = pathname.getName();
-        return !pathname.isDirectory() &&
-          (fileName.endsWith(".app") || fileName.endsWith(".app.src"));
+      protected File getDirtyElement(@NotNull ErlangTarget target,
+                                     @NotNull File file,
+                                     @NotNull ErlangSourceRootDescriptor root) throws IOException {
+        return isAppConfigFileName(file.getName()) ? file : null;
       }
-    };
-    for (JpsModuleSourceRoot sourceRoot : module.getSourceRoots()) {
-      File sourceRootFile = sourceRoot.getFile();
-      for (File appConfigSrc : sourceRootFile.listFiles(appConfigFileFilter)) {
-        File appConfigDst = new File(outputDirectory, getAppConfigDestinationFileName(appConfigSrc.getName()));
+    }.collectDirtyElements(holder);
+
+    for (File appConfigSrc : appConfigFiles) {
+      for (File outputDir : outputDirectories) {
+        File appConfigDst = new File(outputDir, getAppConfigDestinationFileName(appConfigSrc.getName()));
         FileUtil.copy(appConfigSrc, appConfigDst);
+        reportProgress(context, String.format("Copy %s to %s",appConfigDst.getAbsolutePath(),outputDir.getAbsolutePath()));
+        outputConsumer.registerOutputFile(appConfigDst, Collections.singletonList(appConfigSrc.getAbsolutePath()));
       }
     }
   }
 
+  private static boolean isAppConfigFileName(String fileName) {
+    return fileName.endsWith(".app") || fileName.endsWith(".app.src");
+  }
+
   private static String getAppConfigDestinationFileName(String sourceFileName) {
-    return sourceFileName.endsWith(".app.src") ?
-      StringUtil.trimEnd(sourceFileName, ".app.src") + ".app" :
-      sourceFileName;
+    return StringUtil.trimEnd(sourceFileName, ".src");
   }
 
   private static void runErlc(ErlangTarget target,
                               CompileContext context,
                               ErlangCompilerOptions compilerOptions,
-                              File outputDirectory) throws ProjectBuildException {
-    GeneralCommandLine commandLine = getErlcCommandLine(target, context, compilerOptions, outputDirectory);
+                              List<String> erlangModulePathsToCompile,
+                              BuildOutputConsumer outputConsumer,
+                              File outputDirectory,
+                              boolean isTest) throws ProjectBuildException, IOException {
+    GeneralCommandLine commandLine = getErlcCommandLine(target, context, compilerOptions, outputDirectory, erlangModulePathsToCompile, isTest);
     Process process;
     try {
       process = commandLine.createProcess();
-    } catch (ExecutionException e) {
+    }
+    catch (ExecutionException e) {
       throw new ProjectBuildException("Failed to launch erlang compiler", e);
     }
     BaseOSProcessHandler handler = new BaseOSProcessHandler(process, commandLine.getCommandLineString(), Charset.defaultCharset());
@@ -159,33 +206,32 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();
+    consumeFiles(outputConsumer, getOutputErlangModuleFiles(erlangModulePathsToCompile, outputDirectory));
   }
 
   private static GeneralCommandLine getErlcCommandLine(ErlangTarget target,
                                                        CompileContext context,
                                                        ErlangCompilerOptions compilerOptions,
-                                                       File outputDirectory) throws ProjectBuildException {
+                                                       File outputDirectory,
+                                                       List<String> erlangModulePaths,
+                                                       boolean isTest) throws ProjectBuildException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
-
     JpsModule module = target.getModule();
     JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
     File executable = JpsErlangSdkType.getByteCodeCompilerExecutable(sdk.getHomePath());
-    List<String> erlangModulePaths = getErlangModulePaths(module, target, context);
-
     commandLine.withWorkDirectory(outputDirectory);
     commandLine.setExePath(executable.getAbsolutePath());
     addCodePath(commandLine, module, target, context);
     addParseTransforms(commandLine, module);
     addDebugInfo(commandLine, compilerOptions.myAddDebugInfoEnabled);
     addIncludePaths(commandLine, module);
-    addMacroDefinitions(commandLine, target);
+    addMacroDefinitions(commandLine, isTest);
     commandLine.addParameters(erlangModulePaths);
-
     return commandLine;
   }
 
-  private static void addMacroDefinitions(GeneralCommandLine commandLine, ErlangTarget target) {
-    if (target.isTests()) {
+  private static void addMacroDefinitions(GeneralCommandLine commandLine, boolean isTests) {
+    if (isTests) {
       commandLine.addParameters("-DTEST");
     }
   }
@@ -204,24 +250,42 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   }
 
   @NotNull
-  private static List<String> getErlangModulePaths(@NotNull JpsModule module,
-                                                   @NotNull ErlangTarget target,
-                                                   @NotNull CompileContext context) {
-    List<String> moduleFiles = getErlangModulePathsFromConfig(module, target, context);
-    return moduleFiles != null ? moduleFiles : getErlangModulePathsDefault(module, target);
+  private static List<String> getErlangModulePaths(@NotNull ErlangTarget target,
+                                                   @NotNull CompileContext context,
+                                                   @NotNull List<String> dirtyFilePaths,
+                                                   boolean isTest) {
+    List<ErlangFileDescriptor> moduleDescriptors = getErlangModuleDescriptorFromConfig(target, context, isTest);
+    return moduleDescriptors != null ?
+           getSortedErlangModulePathsToCompile(moduleDescriptors, dirtyFilePaths) :
+           getErlangModulePathsDefault(target, isTest);
+  }
+
+  private static List<String> getSortedErlangModulePathsToCompile(@NotNull List<ErlangFileDescriptor> sortedModuleDescriptors,
+                                                                  @NotNull List<String> dirtyModules) {
+    SortedModuleDependencyGraph semiGraph = new SortedModuleDependencyGraph(sortedModuleDescriptors);
+    GraphGenerator<Node> graph = GraphGenerator.create(semiGraph);
+    markDirtyNodes(semiGraph.getNodesByName(dirtyModules), graph);
+    return ContainerUtil.mapNotNull(semiGraph.getNodes(), new Function<Node, String>() {
+      @Nullable
+      @Override
+      public String fun(Node node) {
+        return node.myDirty ? node.myErlangModulePath : null;
+      }
+    });
   }
 
   @NotNull
-  private static List<String> getErlangModulePathsDefault(@NotNull JpsModule module, @NotNull ErlangTarget target) {
+  private static List<String> getErlangModulePathsDefault(@NotNull ErlangTarget target, boolean isTests) {
     CommonProcessors.CollectProcessor<File> erlFilesCollector = new CommonProcessors.CollectProcessor<File>() {
       @Override
       protected boolean accept(@NotNull File file) {
         return !file.isDirectory() && FileUtilRt.extensionEquals(file.getName(), "erl");
       }
     };
-    List<JpsModuleSourceRoot> sourceRoots = new ArrayList<JpsModuleSourceRoot>();
+    List<JpsModuleSourceRoot> sourceRoots = ContainerUtil.newArrayList();
+    JpsModule module = target.getModule();
     ContainerUtil.addAll(sourceRoots, module.getSourceRoots(JavaSourceRootType.SOURCE));
-    if (target.isTests()) {
+    if (isTests) {
       ContainerUtil.addAll(sourceRoots, module.getSourceRoots(JavaSourceRootType.TEST_SOURCE));
     }
     for (JpsModuleSourceRoot root : sourceRoots) {
@@ -237,9 +301,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   }
 
   @Nullable
-  private static List<String> getErlangModulePathsFromConfig(@NotNull JpsModule module,
-                                                             @NotNull ErlangTarget target,
-                                                             @NotNull CompileContext context) {
+  private static List<ErlangFileDescriptor> getErlangModuleDescriptorFromConfig(@NotNull ErlangTarget target,
+                                                                                @NotNull CompileContext context,
+                                                                                boolean isTests) {
     File dataStorageRoot = context.getProjectDescriptor().dataManager.getDataPaths().getDataStorageRoot();
     File depsConfigFile = new File(dataStorageRoot, DEPENDENCIES_CONFIG_FILE_PATH);
     if (!depsConfigFile.exists()) return null;
@@ -247,18 +311,21 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     try {
       Document document = JDOMUtil.loadDocument(depsConfigFile);
       buildOrders = XmlSerializer.deserialize(document, ErlangModuleBuildOrders.class);
-    } catch (XmlSerializationException e) {
+    }
+    catch (XmlSerializationException e) {
       return null;
-    } catch (JDOMException e) {
+    }
+    catch (JDOMException e) {
       return null;
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       return null;
     }
     if (buildOrders == null) return null;
     for (ErlangModuleBuildOrderDescriptor buildOrder : buildOrders.myModuleBuildOrderDescriptors) {
-      if (StringUtil.equals(buildOrder.myModuleName, module.getName())) {
-        List<String> modules = buildOrder.myOrderedErlangModulePaths;
-        if (target.isTests()) {
+      if (StringUtil.equals(buildOrder.myModuleName, target.getModule().getName())) {
+        List<ErlangFileDescriptor> modules = buildOrder.myOrderedErlangModulePaths;
+        if (isTests) {
           modules = ContainerUtil.concat(modules, buildOrder.myOrderedErlangTestModulePaths);
         }
         return modules;
@@ -281,9 +348,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
                                   @NotNull JpsModule module,
                                   @NotNull ErlangTarget target,
                                   @NotNull CompileContext context) throws ProjectBuildException {
-    ArrayList<JpsModule> codePathModules = new ArrayList<JpsModule>();
-    collectDependentModules(module, codePathModules, new HashSet<String>());
-
+    List<JpsModule> codePathModules = ContainerUtil.newArrayList();
+    collectDependentModules(module, codePathModules, ContainerUtil.<String>newHashSet());
     addModuleToCodePath(commandLine, module, target.isTests(), context);
     for (JpsModule codePathModule : codePathModules) {
       if (codePathModule != module) {
@@ -319,9 +385,129 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       try {
         String path = new URL(rootUrl).getPath();
         commandLine.addParameters("-pa", path);
-      } catch (MalformedURLException e) {
+      }
+      catch (MalformedURLException e) {
         context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "Failed to find content root for module: " + module.getName()));
       }
+    }
+  }
+
+  private static void markDirtyNodes(@NotNull List<Node> dirtyModules,
+                                     @NotNull GraphGenerator<Node> graph) {
+    for (Node node : dirtyModules) {
+      if (node != null) {
+        markDirtyNodes(node, graph);
+      }
+    }
+  }
+
+  private static void markDirtyNodes(@NotNull Node node, @NotNull GraphGenerator<Node> graph) {
+    if (node.myDirty) return;
+    node.myDirty = true;
+    Iterator<Node> childIterator = graph.getOut(node);
+    while (childIterator.hasNext()) {
+      markDirtyNodes(childIterator.next(), graph);
+    }
+  }
+
+  private static List<File> getOutputErlangModuleFiles(@NotNull List<String> erlangModulePathsToCompile,
+                                                       @NotNull final File outputDirectory) {
+    return ContainerUtil.map(erlangModulePathsToCompile, new Function<String, File>() {
+      @Override
+      public File fun(String filePath) {
+        String name = FileUtil.getNameWithoutExtension(filePath);
+        return new File(outputDirectory.getAbsolutePath() + name + ".beam");
+      }
+    });
+  }
+
+  private static void consumeFiles(@NotNull BuildOutputConsumer outputConsumer,
+                                   @NotNull List<File> dirtyFilePaths) throws IOException {
+    for (File outputFile : dirtyFilePaths) {
+      if (outputFile.exists()) {
+        outputConsumer.registerOutputFile(outputFile, Collections.singletonList(outputFile.getAbsolutePath()));
+      }
+    }
+  }
+
+  private static abstract class DirtyFileProcessor<T> implements FileProcessor<ErlangSourceRootDescriptor, ErlangTarget> {
+    private final List<T> myDirtyElements = ContainerUtil.newArrayList();
+
+    public List<T> collectDirtyElements(@NotNull DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder) throws IOException {
+      holder.processDirtyFiles(this);
+      return myDirtyElements;
+    }
+
+    @Override
+    public boolean apply(ErlangTarget erlangTarget,
+                         File file,
+                         ErlangSourceRootDescriptor erlangSourceRootDescriptor) throws IOException {
+      ContainerUtil.addIfNotNull(myDirtyElements, getDirtyElement(erlangTarget, file, erlangSourceRootDescriptor));
+      return true;
+    }
+
+    @Nullable
+    protected abstract T getDirtyElement(@NotNull ErlangTarget target,
+                                         @NotNull File file,
+                                         @NotNull ErlangSourceRootDescriptor root) throws IOException;
+  }
+
+  private static class Node {
+    final String myErlangModulePath;
+    final List<Node> myDependencies = ContainerUtil.newArrayList();
+    public boolean myDirty = false;
+
+    Node(String nodeName) {
+      myErlangModulePath = nodeName;
+    }
+  }
+
+  private static class SortedModuleDependencyGraph implements GraphGenerator.SemiGraph<Node> {
+    private final LinkedHashMap<String, Node> myNodePathsMap;
+
+    public SortedModuleDependencyGraph(List<ErlangFileDescriptor> moduleDescriptors) {
+      myNodePathsMap = getPathsMap(moduleDescriptors);
+      addDependencies(moduleDescriptors);
+    }
+
+    @Override
+    public Collection<Node> getNodes() {
+      return myNodePathsMap.values();
+    }
+
+    @Override
+    public Iterator<Node> getIn(Node node) {
+      return node.myDependencies.iterator();
+    }
+
+    @Nullable
+    public Node getNode(@NotNull String moduleName) {
+      return myNodePathsMap.get(moduleName);
+    }
+
+    private void addDependencies(List<ErlangFileDescriptor> moduleDescriptors) {
+      for (ErlangFileDescriptor descriptor : moduleDescriptors) {
+        Node node = myNodePathsMap.get(descriptor.myErlangModulePath);
+        node.myDependencies.addAll(getNodesByName(descriptor.myDependencies));
+      }
+    }
+
+    @NotNull
+    private List<Node> getNodesByName(List<String> nodes) {
+      return ContainerUtil.mapNotNull(nodes, new Function<String, Node>() {
+        @Override
+        public Node fun(String dependencyName) {
+          return myNodePathsMap.get(dependencyName);
+        }
+      });
+    }
+
+    private static LinkedHashMap<String, Node> getPathsMap(List<ErlangFileDescriptor> moduleDescriptors) {
+      LinkedHashMap<String, Node> nodePathsMap = ContainerUtil.newLinkedHashMap();
+      for (ErlangFileDescriptor descriptor : moduleDescriptors) {
+        nodePathsMap.put(descriptor.myErlangModulePath, new Node(descriptor.myErlangModulePath));
+      }
+      return nodePathsMap;
     }
   }
 }

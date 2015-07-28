@@ -59,9 +59,6 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
         dependencies.add(new ErlangTarget(module, getErlangTargetType()));
       }
     }
-    if (isTests()) {
-      dependencies.add(new ErlangTarget(myModule, ErlangTargetType.PRODUCTION));
-    }
     return dependencies;
   }
 
@@ -69,9 +66,11 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   @Override
   public List<ErlangSourceRootDescriptor> computeRootDescriptors(JpsModel model, ModuleExcludeIndex index, IgnoredFileIndex ignoredFileIndex, BuildDataPaths dataPaths) {
     List<ErlangSourceRootDescriptor> result = new ArrayList<ErlangSourceRootDescriptor>();
-    JavaSourceRootType type = isTests() ? JavaSourceRootType.TEST_SOURCE : JavaSourceRootType.SOURCE;
-    for (JpsTypedModuleSourceRoot<JavaSourceRootProperties> root : myModule.getSourceRoots(type)) {
-      result.add(new ErlangSourceRootDescriptor(root.getFile(), this));
+    for (JpsTypedModuleSourceRoot<JavaSourceRootProperties> root : myModule.getSourceRoots(JavaSourceRootType.SOURCE)) {
+      result.add(new ErlangSourceRootDescriptor(root.getFile(), this, false));
+    }
+    for (JpsTypedModuleSourceRoot<JavaSourceRootProperties> root : myModule.getSourceRoots(JavaSourceRootType.TEST_SOURCE)) {
+      result.add(new ErlangSourceRootDescriptor(root.getFile(), this, true));
     }
     return result;
   }
@@ -85,18 +84,19 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   @NotNull
   @Override
   public String getPresentableName() {
-    return "Erlang '" + myModule.getName() + "' " + (isTests() ? "tests" : "production");
+    return "Erlang '" + myModule.getName() + "'";
   }
 
   @NotNull
   @Override
   public Collection<File> getOutputRoots(CompileContext context) {
-    return ContainerUtil.createMaybeSingletonList(JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, isTests()));
+    return ContainerUtil.newArrayList(JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, false),
+                                      JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, true));
   }
-  
+
   @Override
   public boolean isTests() {
-    return getErlangTargetType().isTests();
+    return false;
   }
 
   public ErlangTargetType getErlangTargetType() {

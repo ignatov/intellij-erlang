@@ -49,7 +49,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
   private static final String NAME = "rebar";
   private static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
   public RebarBuilder() {
-    super(Collections.singleton(ErlangTargetType.PRODUCTION));
+    super(Collections.singleton(ErlangTargetType.INSTANCE));
   }
 
   @Override
