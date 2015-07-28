@@ -2,4 +2,4 @@
 
 -behaviour(<caret>b1).
 
--export([init1/1, init2/1]).
+-export([init0/0, init1/1]).

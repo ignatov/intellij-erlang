@@ -2,10 +2,10 @@
 
 -behaviour(b1).
 
--export([init1/1, init2/1]).
+-export([init0/0, init1/1]).
 
-init1(_) ->
+init0() ->
   erlang:error(not_implemented).
 
-init2(_) ->
+init1(_) ->
   erlang:error(not_implemented).
