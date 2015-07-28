@@ -258,6 +258,9 @@
         <localInspection language="Erlang" shortName="ErlangDuplicateFunctionExport" displayName="Duplicate export"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection"/>
+        <localInspection language="Erlang" shortName="ErlangConflictingBehaviours" displayName="Conflicting behaviours"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangConflictingBehavioursInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
 
