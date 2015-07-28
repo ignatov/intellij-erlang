@@ -122,12 +122,15 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     @NotNull
     private static String createVariableList(@NotNull ErlangCallbackSpec spec) {
       List<ErlangType> arguments = ErlangPsiImplUtil.getCallBackSpecArguments(spec);
+      if (arguments.isEmpty()) return "";
+
       StringBuilder variables = new StringBuilder();
+      String separator = ", ";
       for (ErlangType type : arguments) {
         ErlangQVar qVar = type.getQVar();
-        variables.append(qVar != null ? qVar.getName() : "_").append(", ");
+        variables.append(qVar != null ? qVar.getName() : "_").append(separator);
       }
-      return variables.substring(0, variables.length() - 2);
+      return variables.substring(0, variables.length() - separator.length());
     }
   }
 }

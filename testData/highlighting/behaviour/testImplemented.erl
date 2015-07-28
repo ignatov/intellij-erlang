@@ -2,8 +2,8 @@
 
 -behaviour(b1<caret>).
 
-init1(_) ->
+init0() ->
   erlang:error(not_implemented).
 
-init2(_) ->
+init1(_) ->
   erlang:error(not_implemented).
