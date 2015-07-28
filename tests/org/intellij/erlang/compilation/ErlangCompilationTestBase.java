@@ -28,7 +28,6 @@ import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil;
 import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
@@ -54,11 +53,11 @@ import java.io.IOException;
 import java.util.*;
 
 
-public abstract class ErlangCompilationTestCase extends PlatformTestCase {
+public abstract class ErlangCompilationTestBase extends PlatformTestCase {
   public static final String SDK_PATH = "/usr/lib/erlang/";
   protected CompilationRunner myCompilationRunner;
 
-  public ErlangCompilationTestCase() {
+  public ErlangCompilationTestBase() {
     assertTrue("Unsupported OS.", SystemInfo.isLinux);
   }
 
@@ -143,7 +142,7 @@ public abstract class ErlangCompilationTestCase extends PlatformTestCase {
         List<VirtualFile> sourceRoots = ModuleRootManager.getInstance(module).getSourceRoots(rootType);
         VirtualFile sourceDir = ContainerUtil.getFirstItem(sourceRoots);
         assertNotNull(sourceDir);
-        VirtualFile sourceFile = sourceDir.createChildData(ErlangCompilationTestCase.class, relativePath);
+        VirtualFile sourceFile = sourceDir.createChildData(ErlangCompilationTestBase.class, relativePath);
         VfsUtil.saveText(sourceFile, content);
         return sourceFile;
       }
@@ -201,7 +200,7 @@ public abstract class ErlangCompilationTestCase extends PlatformTestCase {
     VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
     assertSize(1, contentRoots);
 
-    VirtualFile sourceDir = contentRoots[0].createChildDirectory(ErlangCompilationTestCase.class, sourceRootName);
+    VirtualFile sourceDir = contentRoots[0].createChildDirectory(ErlangCompilationTestBase.class, sourceRootName);
     PsiTestUtil.addSourceRoot(module, sourceDir, isTestSourceRoot);
     return sourceDir;
   }
@@ -250,162 +249,6 @@ public abstract class ErlangCompilationTestCase extends PlatformTestCase {
         return virtualFile.getName();
       }
     });
-  }
-
-  public static class ErlangModuleTextBuilder {
-    private final List<Pair<String, Integer>> myExports = ContainerUtil.newArrayList();
-    private final String myModuleName;
-    private final List<BehaviourBuilder> myBehaviours = ContainerUtil.newArrayList();
-    private final List<String> myParse_transforms = ContainerUtil.newArrayList();
-
-    public ErlangModuleTextBuilder(@NotNull String moduleName) {
-      myModuleName = moduleName;
-    }
-
-    public String getModuleName() {
-      return myModuleName;
-    }
-
-    public ErlangModuleTextBuilder addParseTransform(@NotNull String moduleName) {
-      myParse_transforms.add(moduleName);
-      return this;
-    }
-
-    public ErlangModuleTextBuilder addBehavior(@NotNull BehaviourBuilder behaviour) {
-      myBehaviours.add(behaviour);
-      myExports.addAll(behaviour.myFunctions);
-      return this;
-    }
-
-    @NotNull
-    public String build() {
-      StringBuilder builder = new StringBuilder();
-      appendModule(builder);
-      appendBehaviour(builder);
-      if (!myParse_transforms.isEmpty()) {
-        appendParseTransforms(builder);
-      }
-      appendExports(builder);
-      build(builder);
-
-      return builder.toString();
-    }
-
-    public static ErlangModuleTextBuilder createErlangModule(@NotNull String moduleName) {
-      return new ErlangModuleTextBuilder(moduleName);
-    }
-
-    public static ParseTransformBuilder createErlangParseTransformModule(@NotNull String moduleName) {
-      return new ParseTransformBuilder(moduleName);
-    }
-
-    public static BehaviourBuilder createErlangBehaviour(@NotNull String moduleName) {
-      return new BehaviourBuilder(moduleName);
-    }
-
-    protected void build(@NotNull StringBuilder builder) {
-      appendFunctions(builder);
-    }
-
-    private void appendFunctions(@NotNull StringBuilder builder) {
-      for (Pair<String, Integer> functionEntry : myExports) {
-        appendFunction(builder, functionEntry.first, functionEntry.second);
-      }
-    }
-
-    private void appendExports(@NotNull StringBuilder builder) {
-      if (myExports.isEmpty()) {
-        return;
-      }
-      builder.append("-export([");
-      appendFunctionsInfo(builder, "%s/%d", myExports);
-      builder.append("]).\n");
-    }
-
-    private void appendModule(@NotNull StringBuilder builder) {
-      builder.append(String.format("-module(%s).\n", myModuleName));
-    }
-
-    private void appendBehaviour(@NotNull StringBuilder builder) {
-      for (BehaviourBuilder behaviour : myBehaviours) {
-        builder.append(String.format("-behaviour(%s).\n", behaviour.getModuleName()));
-      }
-    }
-
-    private static void appendFunction(@NotNull StringBuilder builder, @NotNull String functionName, int arity) {
-      builder.append(functionName).append("(");
-      for (int i = 0; i < arity; i++) {
-        builder.append("Arg").append(String.valueOf(i));
-        if (i < arity - 1) {
-          builder.append(", ");
-        }
-      }
-      builder.append(") -> ok.\n");
-    }
-
-    private void appendParseTransforms(@NotNull StringBuilder builder) {
-      builder.append("-compile([");
-      for (String parseTransform : myParse_transforms) {
-        builder.append(String.format("{parse_transform, %s}", parseTransform));
-      }
-      builder.append("]).\n");
-    }
-
-    private static void appendFunctionsInfo(@NotNull StringBuilder builder,
-                                            @NotNull String format,
-                                            @NotNull List<Pair<String, Integer>> functionsInfo) {
-      Iterator<Pair<String, Integer>> iterator = functionsInfo.iterator();
-      while (iterator.hasNext()) {
-        Pair<String, Integer> functionEntry = iterator.next();
-        builder.append(String.format(format, functionEntry.first, functionEntry.second));
-        if (iterator.hasNext()) {
-          builder.append(", ");
-        }
-      }
-    }
-
-    public static class ParseTransformBuilder extends ErlangModuleTextBuilder {
-
-      public ParseTransformBuilder(@NotNull String moduleName) {
-        super(moduleName);
-      }
-
-      @Override
-      protected void build(@NotNull StringBuilder builder) {
-        createTransform(builder);
-        super.build(builder);
-      }
-
-      private static void createTransform(@NotNull StringBuilder builder) {
-        builder.append("-export([parse_transform/2]).\n");
-        builder.append("parse_transform(Forms, _Options) -> Forms.\n");
-      }
-    }
-
-    public static class BehaviourBuilder extends ErlangModuleTextBuilder {
-
-      private final List<Pair<String, Integer>> myFunctions = ContainerUtil.newArrayList();
-
-      public BehaviourBuilder(@NotNull String moduleName) {
-        super(moduleName);
-      }
-
-      public BehaviourBuilder addFunctionToBehaviourInfo(@NotNull String name, int arity) {
-        myFunctions.add(Pair.createNonNull(name, arity));
-        return this;
-      }
-
-      @Override
-      protected void build(@NotNull StringBuilder builder) {
-        builder.append("-export([behaviour_info/1]).\n");
-        if (!myFunctions.isEmpty()) {
-          builder.append("behaviour_info(callbacks) ->[");
-          appendFunctionsInfo(builder, "{%s,%d}", myFunctions);
-          builder.append("].\n");
-        }
-        super.build(builder);
-      }
-    }
   }
 
   protected class CompilationRunner {

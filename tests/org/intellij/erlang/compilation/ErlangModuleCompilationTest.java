@@ -23,20 +23,19 @@ import com.intellij.openapi.vfs.VirtualFile;
 import java.io.File;
 import java.util.Collections;
 
-import static org.intellij.erlang.compilation.ErlangCompilationTestCase.ErlangModuleTextBuilder.*;
+import static org.intellij.erlang.compilation.ErlangModuleTextGenerator.*;
 
-public class ErlangModuleCompilationTest extends ErlangCompilationTestCase {
-
+public class ErlangModuleCompilationTest extends ErlangCompilationTestBase {
   public void testBuildSingleFile() throws Exception {
-    addSourceFile(myModule, "module1.erl", createErlangModule("module1").build());
+    addSourceFile(myModule, "module1.erl", module("module1").build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
   }
 
   public void testBuildWithBehaviourInSingleModule() throws Exception {
-    BehaviourBuilder erlangBehaviour = createErlangBehaviour("behaviour1").addFunctionToBehaviourInfo("foo", 0);
-    addSourceFile(myModule, "behaviour1.erl", erlangBehaviour.build());
-    addSourceFile(myModule, "module1.erl", createErlangModule("module1").addBehavior(erlangBehaviour).build());
+    BehaviourBuilder behaviour = behaviour("behaviour1").callback("foo", 0);
+    addSourceFile(myModule, "behaviour1.erl", behaviour.build());
+    addSourceFile(myModule, "module1.erl", module("module1").behaviour(behaviour).build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
   }
@@ -44,32 +43,32 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestCase {
   public void testBuildWithParseTransformInDifferentModule() throws Exception {
     Module otherModule = createModuleInOwnDirectoryWithSourceAndTestRoot("other");
     ModuleRootModificationUtil.addDependency(myModule, otherModule);
-    addSourceFile(otherModule, "parse_transform1.erl", createErlangParseTransformModule("parse_transform1").build());
-    addSourceFile(myModule, "module1.erl", createErlangModule("module1").addParseTransform("parse_transform1").build());
+    addSourceFile(otherModule, "parse_transform1.erl", pt("parse_transform1").build());
+    addSourceFile(myModule, "module1.erl", module("module1").pt("parse_transform1").build());
     compileAndAssertOutput(myModule, otherModule);
   }
 
   public void testBuildWithParseTransformInSingleModule() throws Exception {
-    addSourceFile(myModule, "parse_transform1.erl", createErlangParseTransformModule("parse_transform1").build());
-    addSourceFile(myModule, "module1.erl", createErlangModule("module1").addParseTransform("parse_transform1").build());
+    addSourceFile(myModule, "parse_transform1.erl", pt("parse_transform1").build());
+    addSourceFile(myModule, "module1.erl", module("module1").pt("parse_transform1").build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
   }
 
   public void testRebuildWithNewFile() throws Exception {
-    final VirtualFile sourceFile = addSourceFile(myModule, "module1.erl", createErlangModule("module1").build());
+    final VirtualFile sourceFile = addSourceFile(myModule, "module1.erl", module("module1").build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     final File outputFile = getOutputFile(myModule, sourceFile, false);
     long modificationTime = outputFile.lastModified();
-    addSourceFile(myModule, "module2.erl", createErlangModule("module2").build());
+    addSourceFile(myModule, "module2.erl", module("module2").build());
     myCompilationRunner.compile();
     assertEquals(modificationTime, outputFile.lastModified());
   }
 
   public void testRebuildWithModificationWithoutDependencies() throws Exception {
-    final VirtualFile sourceFile1 = addSourceFile(myModule, "module1.erl", createErlangModule("module1").build());
-    VirtualFile sourceFile2 = addSourceFile(myModule, "module2.erl", createErlangModule("module2").build());
+    final VirtualFile sourceFile1 = addSourceFile(myModule, "module1.erl", module("module1").build());
+    VirtualFile sourceFile2 = addSourceFile(myModule, "module2.erl", module("module2").build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     long lastModificationTime1 = lastOutputModificationTime(myModule, sourceFile1);
@@ -81,8 +80,8 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestCase {
   }
 
   public void testRebuildWithModificationParseTransform() throws Exception {
-    VirtualFile parseTransformSourceFile = addSourceFile(myModule, "parse_transform1.erl", createErlangParseTransformModule("parse_transform1").build());
-    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", createErlangModule("module1").addParseTransform("parse_transform1").build());
+    VirtualFile parseTransformSourceFile = addSourceFile(myModule, "parse_transform1.erl", pt("parse_transform1").build());
+    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", module("module1").pt("parse_transform1").build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     long parseTransformModificationTime = lastOutputModificationTime(myModule, parseTransformSourceFile);
@@ -94,9 +93,9 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestCase {
   }
 
   public void testRebuildWithModificationBehaviour() throws Exception {
-    BehaviourBuilder erlangBehaviour = createErlangBehaviour("behaviour1").addFunctionToBehaviourInfo("foo", 0);
-    VirtualFile behaviourSourceFile = addSourceFile(myModule, "behaviour1.erl", erlangBehaviour.build());
-    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", createErlangModule("module1").addBehavior(erlangBehaviour).build());
+    BehaviourBuilder behaviour = behaviour("behaviour1").callback("foo", 0);
+    VirtualFile behaviourSourceFile = addSourceFile(myModule, "behaviour1.erl", behaviour.build());
+    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", module("module1").behaviour(behaviour).build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     long behaviourModificationTime = lastOutputModificationTime(myModule, behaviourSourceFile);
@@ -108,10 +107,10 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestCase {
   }
 
   public void testRebuildWithModificationBehaviourAndUnchangeableParseTransform() throws Exception {
-    BehaviourBuilder erlangBehaviour = createErlangBehaviour("behaviour1").addFunctionToBehaviourInfo("foo", 0);
-    VirtualFile behaviourSourceFile = addSourceFile(myModule, "behaviour1.erl", erlangBehaviour.build());
-    VirtualFile parseTransformSourceFile = addSourceFile(myModule, "parse_transform1.erl", createErlangParseTransformModule("parse_transform1").build());
-    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", createErlangModule("module1").addBehavior(erlangBehaviour).addParseTransform("parse_transform1").build());
+    BehaviourBuilder behaviour = behaviour("behaviour1").callback("foo", 0);
+    VirtualFile behaviourSourceFile = addSourceFile(myModule, "behaviour1.erl", behaviour.build());
+    VirtualFile parseTransformSourceFile = addSourceFile(myModule, "parse_transform1.erl", pt("parse_transform1").build());
+    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", module("module1").behaviour(behaviour).pt("parse_transform1").build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     long behaviourModificationTime = lastOutputModificationTime(myModule, behaviourSourceFile);
@@ -125,17 +124,17 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestCase {
   }
 
   public void testBuildWithTestSource() throws Exception {
-    addSourceFile(myModule, "module1.erl", createErlangModule("module1").build());
-    addTestFile(myModule, "test1.erl", createErlangModule("test1").build());
+    addSourceFile(myModule, "module1.erl", module("module1").build());
+    addTestFile(myModule, "test1.erl", module("test1").build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, true);
     assertSourcesCompiled(myModule, false);
   }
 
   public void testBuildWithGlobalParseTransform() throws Exception {
-    addSourceFile(myModule, "module1.erl", createErlangModule("module1").build());
+    addSourceFile(myModule, "module1.erl", module("module1").build());
     Module otherModule = createModuleInOwnDirectoryWithSourceAndTestRoot("other");
-    addSourceFile(otherModule, "parse_transform1.erl", createErlangParseTransformModule("parse_transform1").build());
+    addSourceFile(otherModule, "parse_transform1.erl", pt("parse_transform1").build());
     addGlobalParseTransform(myModule, Collections.singleton("parse_transform1"));
     ModuleRootModificationUtil.addDependency(myModule, otherModule);
     compileAndAssertOutput(myModule, otherModule);
