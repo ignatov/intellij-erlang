@@ -240,6 +240,9 @@
         <localInspection language="Erlang" shortName="ErlangDuplicateFunction" displayName="Duplicate function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangDuplicateFunctionInspection"/>
+        <localInspection language="Erlang" shortName="ErlangDuplicateBehaviour" displayName="Duplicate behaviour"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangDuplicateBehaviourInspection"/>
         <localInspection language="Erlang" shortName="ErlangIoFormat" displayName="io:format"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangIoFormatInspection"/>

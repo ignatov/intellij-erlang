@@ -17,6 +17,7 @@
 package org.intellij.erlang.highlighting;
 
 import com.intellij.openapi.util.io.FileUtil;
+import org.intellij.erlang.inspection.ErlangDuplicateBehaviourInspection;
 import org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -25,7 +26,8 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
   protected void setUp() throws Exception {
     super.setUp();
     //noinspection unchecked
-    myFixture.enableInspections(ErlangUndefinedCallbackFunctionInspection.class);
+    myFixture.enableInspections(ErlangUndefinedCallbackFunctionInspection.class,
+                                ErlangDuplicateBehaviourInspection.class);
   }
 
   @Override
@@ -35,14 +37,26 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
 
   public void testHighlighting()                  { doHighlightingTest("testUndefined.erl", "b1.erl"); }
   public void testHighlightingSeveralBehaviours() { doHighlightingTest("testTwoUndefined.erl", "b1.erl", "b2.erl"); }
+  public void testHighlightingDuplicate()         { doHighlightingTest("testDuplicate.erl", "b1.erl"); }
 
   public void testCallbackImplementationsAreExported()     { doCallbacksFixTest("testImplemented.erl", "b1.erl"); }
   public void testCallbackImplementationsAreExportedOnce() { doCallbacksFixTest("testExported.erl", "b1.erl"); }
   public void testTest()                                   { doCallbacksFixTest("testBoth.erl", "b1.erl"); }
 
+  public void testRemoveDuplicate() {
+    myFixture.configureByFiles("testRemoveDuplicate.erl", "b1.erl", "b2.erl");
+    launchIntention(ErlangDuplicateBehaviourInspection.FIX_MESSAGE);
+    myFixture.checkResultByFile("testRemoveDuplicate-after.erl");
+  }
+
   @Override
   protected boolean isWriteActionRequired() {
     return false;
+  }
+
+  private void doHighlightingTest(String... files) {
+    myFixture.configureByFiles(files);
+    myFixture.checkHighlighting(true, false, false);
   }
 
   private void doCallbacksFixTest(String... files) {
@@ -50,10 +64,5 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     launchIntention(ErlangUndefinedCallbackFunctionInspection.FIX_MESSAGE);
     String expectedResultFile = FileUtil.getNameWithoutExtension(files[0]) + "-after.erl";
     myFixture.checkResultByFile(expectedResultFile);
-  }
-
-  private void doHighlightingTest(String... files) {
-    myFixture.configureByFiles(files);
-    myFixture.checkHighlighting(true, false, false);
   }
 }
