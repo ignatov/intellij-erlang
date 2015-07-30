@@ -28,24 +28,42 @@ import org.jetbrains.jps.incremental.messages.CompilerMessage;
 
 public class ErlangCompilerProcessAdapter extends ProcessAdapter {
   private final CompileContext myContext;
-  private final String myBuilderName;
+  protected final String myBuilderName;
   private final String myCompileTargetRootPath;
 
-  public ErlangCompilerProcessAdapter(@NotNull CompileContext context, @NotNull String builderName, @NotNull String compileTargetRootPath) {
+  public ErlangCompilerProcessAdapter(@NotNull CompileContext context,
+                                      @NotNull String builderName,
+                                      @NotNull String compileTargetRootPath) {
     myContext = context;
     myBuilderName = builderName;
     myCompileTargetRootPath = compileTargetRootPath;
   }
 
   @Override
-  public void onTextAvailable(@NotNull ProcessEvent event, Key outputType) {
-    ErlangCompilerError error = ErlangCompilerError.create(myCompileTargetRootPath, event.getText());
+  public void onTextAvailable(ProcessEvent event, Key outputType) {
+    showMessage(createCompilerMessage(event.getText()));
+  }
+
+  protected void showMessage(@NotNull CompilerMessage message) {
+    myContext.processMessage(message);
+  }
+
+  @NotNull
+  protected CompilerMessage createCompilerMessage(String text) {
+    BuildMessage.Kind kind = BuildMessage.Kind.INFO;
+    String messageText = text;
+    String sourcePath = null;
+    long line = -1L;
+
+    ErlangCompilerError error = ErlangCompilerError.create(myCompileTargetRootPath, text);
     if (error != null) {
       boolean isError = error.getCategory() == CompilerMessageCategory.ERROR;
-      BuildMessage.Kind kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
-      CompilerMessage msg = new CompilerMessage(myBuilderName, kind, error.getErrorMessage(),
-        VirtualFileManager.extractPath(error.getUrl()), -1, -1, -1, error.getLine(), -1);
-      myContext.processMessage(msg);
+      kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
+      messageText = error.getErrorMessage();
+      sourcePath = VirtualFileManager.extractPath(error.getUrl());
+      line = error.getLine();
     }
+
+    return new CompilerMessage(myBuilderName, kind, messageText, sourcePath, -1L, -1L, -1L, line, -1L);
   }
 }
