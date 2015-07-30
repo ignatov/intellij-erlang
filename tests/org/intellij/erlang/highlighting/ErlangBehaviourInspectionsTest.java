@@ -33,15 +33,8 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     return "testData/highlighting/behaviour/";
   }
 
-  public void testHighlighting() {
-    myFixture.configureByFiles("test1.erl", "b1.erl");
-    myFixture.checkHighlighting(true, false, false);
-  }
-
-  public void testHighlightingSeveralBehaviours() {
-    myFixture.configureByFiles("test2.erl", "b1.erl", "b2.erl");
-    myFixture.checkHighlighting(true, false, false);
-  }
+  public void testHighlighting()                  { doHighlightingTest("testUndefined.erl", "b1.erl"); }
+  public void testHighlightingSeveralBehaviours() { doHighlightingTest("testTwoUndefined.erl", "b1.erl", "b2.erl"); }
 
   public void testCallbackImplementationsAreExported()     { doCallbacksFixTest("testImplemented.erl", "b1.erl"); }
   public void testCallbackImplementationsAreExportedOnce() { doCallbacksFixTest("testExported.erl", "b1.erl"); }
@@ -57,5 +50,10 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     launchIntention(ErlangUndefinedCallbackFunctionInspection.FIX_MESSAGE);
     String expectedResultFile = FileUtil.getNameWithoutExtension(files[0]) + "-after.erl";
     myFixture.checkResultByFile(expectedResultFile);
+  }
+
+  private void doHighlightingTest(String... files) {
+    myFixture.configureByFiles(files);
+    myFixture.checkHighlighting(true, false, false);
   }
 }

@@ -1,3 +1,3 @@
--module(test1).
+-module(testUndefined).
 
 -behaviour(<warning>b1</warning>).
