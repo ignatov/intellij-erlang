@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <component name="ArtifactManager">
   <artifact build-on-make="true" name="erlang.zip">
     <output-path>$PROJECT_DIR$/bin</output-path>
@@ -10,9 +11,6 @@
             <element id="archive" name="jps-plugin.jar">
               <element id="module-output" name="jps-plugin" />
             </element>
-          </element>
-          <element id="archive" name="jps-shared.jar">
-            <element id="module-output" name="jps-shared" />
           </element>
         </element>
       </element>

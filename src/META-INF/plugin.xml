@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2" use-idea-classloader="true">
+<idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
     <version>0.5.11</version>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
@@ -41,6 +41,7 @@
     </change-notes>
 
     <depends optional="true" config-file="java-deps.xml">com.intellij.modules.java</depends>
+    <depends optional="true">com.intellij.copyright</depends>
 
     <!--Rebar related extensions -->
     <extensions defaultExtensionNs="com.intellij">
@@ -167,6 +168,8 @@
         <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.search.ErlangTargetElementEvaluator"/>
 
         <editorNotificationProvider implementation="org.intellij.erlang.inspection.SetupSDKNotificationProvider"/>
+
+        <copyright.updater filetype="Erlang" implementationClass="org.intellij.erlang.copyright.UpdateErlangCopyrightsProvider"/>
 
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariable" displayName="Unbound variable"
@@ -304,10 +307,4 @@
         </group>
 
     </actions>
-    <application-components>
-      <component>
-        <headless-implementation-class/>
-        <implementation-class>org.intellij.erlang.copyright.CopyrightExtensionDeferredLoader</implementation-class>
-      </component>
-    </application-components>
 </idea-plugin>
