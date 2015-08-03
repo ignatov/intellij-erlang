@@ -252,6 +252,9 @@
         <localInspection language="Erlang" shortName="ErlangUndefinedCallbackFunction" displayName="Undefined callback function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection"/>
+        <localInspection language="Erlang" shortName="ErlangUndefinedBehaviour" displayName="Undefined behaviour"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUndefinedBehaviourInspection"/>
         <localInspection language="Erlang" shortName="ErlangDialyzerInspection" displayName="Dialyzer based inspections"
                          groupName="Erlang" enabledByDefault="false" level="WARNING"
                          implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerInspection"/>
