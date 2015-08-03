@@ -39,6 +39,9 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
   public void testHighlightingSeveralBehaviours() { doHighlightingTest("testTwoUndefined.erl", "b1.erl", "b2.erl"); }
   public void testHighlightingDuplicate()         { doHighlightingTest("testDuplicate.erl", "b1.erl"); }
 
+  public void testTwoConflicting()    { doHighlightingTest("testTwoConflicting.erl", "b1.erl", "b3.erl"); }
+  public void testThreeConflicting()  { doHighlightingTest("testThreeConflicting.erl", "b1.erl", "b2.erl", "b3.erl"); }
+
   public void testCallbackImplementationsAreExported()     { doCallbacksFixTest("testImplemented.erl", "b1.erl"); }
   public void testCallbackImplementationsAreExportedOnce() { doCallbacksFixTest("testExported.erl", "b1.erl"); }
   public void testTest()                                   { doCallbacksFixTest("testBoth.erl", "b1.erl"); }
