@@ -115,6 +115,9 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();
+    if (process.exitValue() != 0) {
++      throw new ProjectBuildException("Rebar process finished with exit code " + process.exitValue());
++   }
   }
 
   @Nullable
