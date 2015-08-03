@@ -19,17 +19,17 @@ package org.intellij.erlang.navigation;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangCompositeElementImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.LinkedList;
 import java.util.List;
 
 public class ErlangNavigationUtil {
@@ -37,24 +37,17 @@ public class ErlangNavigationUtil {
   private ErlangNavigationUtil() {
   }
 
-  public static List<ErlangCallbackSpec> getCallbackSpecs(ErlangFunction function) {
-    PsiFile file = function.getContainingFile();
-
-    List<ErlangCallbackSpec> callbackSpecs = new LinkedList<ErlangCallbackSpec>();
-
-    String fullName = ErlangPsiImplUtil.createFunctionPresentation(function);
-    if (file instanceof ErlangFile) {
-      List<ErlangBehaviour> behaviours = ((ErlangFile) file).getBehaviours();
-      for (ErlangBehaviour behaviour : behaviours) {
-        ErlangModuleRef moduleRef = behaviour.getModuleRef();
-        PsiElement resolve = moduleRef != null ? moduleRef.getReference().resolve() : null;
-        PsiFile containingFile = resolve != null ? resolve.getContainingFile() : null;
-
-        ErlangCallbackSpec callbackSpec = containingFile instanceof ErlangFile ? ((ErlangFile) containingFile).getCallbackByName(fullName) : null;
-        ContainerUtil.addIfNotNull(callbackSpecs, callbackSpec);
+  @NotNull
+  public static List<ErlangCallbackSpec> getCallbackSpecs(@NotNull ErlangFunction function) {
+    final String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(function);
+    return ContainerUtil.mapNotNull(((ErlangFile)function.getContainingFile()).getBehaviours(), new Function<ErlangBehaviour, ErlangCallbackSpec>() {
+      @Override
+      public ErlangCallbackSpec fun(ErlangBehaviour behaviour) {
+        ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviour.getModuleRef());
+        //noinspection ConstantConditions
+        return behaviourModule != null ? behaviourModule.getCallbackByName(functionPresentation) : null;
       }
-    }
-    return callbackSpecs;
+    });
   }
 
   @Nullable

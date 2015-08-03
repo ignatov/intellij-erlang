@@ -18,15 +18,13 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Pair;
-import com.intellij.psi.PsiElement;
 import com.intellij.util.Function;
-import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
 import org.intellij.erlang.psi.ErlangBehaviour;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
-import org.intellij.erlang.psi.ErlangModuleRef;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -81,9 +79,7 @@ public class ErlangConflictingBehavioursInspection extends ErlangInspectionBase 
       String behaviourName = behaviour.getName();
       if (!distinctBehaviours.add(behaviourName)) continue;
 
-      ErlangModuleRef moduleRef = behaviour.getModuleRef();
-      PsiElement m = moduleRef != null ? moduleRef.getReference().resolve() : null;
-      ErlangFile behaviourModule = ObjectUtils.tryCast(m != null ? m.getContainingFile() : null, ErlangFile.class);
+      ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviour.getModuleRef());
       if (behaviourModule == null) continue;
 
       for (String callback : behaviourModule.getCallbackMap().keySet()) {

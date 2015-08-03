@@ -76,6 +76,7 @@ import org.intellij.erlang.stubs.ErlangFunctionStub;
 import org.intellij.erlang.stubs.ErlangIncludeLibStub;
 import org.intellij.erlang.stubs.ErlangIncludeStub;
 import org.intellij.erlang.stubs.ErlangTypeDefinitionStub;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -822,6 +823,14 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static PsiReference createModuleReference(@NotNull ErlangQAtom atom) {
     return new ErlangModuleReferenceImpl<ErlangQAtom>(atom);
+  }
+
+  @Nullable
+  @Contract("null->null")
+  public static ErlangFile resolveToFile(@Nullable ErlangModuleRef ref) {
+    PsiReference reference = ref != null ? ref.getReference() : null;
+    PsiElement resolved = reference != null ? reference.resolve() : null;
+    return ObjectUtils.tryCast(resolved != null ? resolved.getContainingFile() : null, ErlangFile.class);
   }
 
   public static boolean renameQAtom(@Nullable ErlangQAtom qAtom, String newName) {

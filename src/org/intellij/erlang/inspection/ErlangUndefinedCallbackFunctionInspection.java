@@ -41,14 +41,12 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
-      ErlangModuleRef moduleRef = behaviour.getModuleRef();
-      PsiElement module = moduleRef != null ? moduleRef.getReference().resolve() : null;
-      ErlangFile behaviourFile = module instanceof ErlangModule ? (ErlangFile) module.getContainingFile() : null;
-      PsiElement toHighlight = behaviour.getParLeft() != null ? behaviour.getParLeft().getNextSibling() : null;
-      if (behaviourFile == null || toHighlight == null) continue;
+      ErlangModuleRef behaviourRef = behaviour.getModuleRef();
+      ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviourRef);
+      if (behaviourModule == null) continue;
 
       List<ErlangCallbackSpec> undefinedCallbacks = ContainerUtil.newArrayList();
-      Map<String, ErlangCallbackSpec> callbackMap = behaviourFile.getCallbackMap();
+      Map<String, ErlangCallbackSpec> callbackMap = behaviourModule.getCallbackMap();
       for (ErlangCallbackSpec spec : callbackMap.values()) {
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
         int arity = ErlangPsiImplUtil.getCallbackSpecArity(spec);
@@ -57,16 +55,16 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
           undefinedCallbacks.add(spec);
         }
       }
-      if (!undefinedCallbacks.isEmpty()) {
-        boolean multiple = undefinedCallbacks.size() != 1;
-        StringBuilder builder = new StringBuilder();
-        builder.append("Undefined or non-exported callback function").append(multiple ? "s" : "").append(": ");
-        for (ErlangCallbackSpec spec : undefinedCallbacks) {
-          builder.append("'").append(ErlangPsiImplUtil.createFunctionPresentationFromCallbackSpec(spec)).append("', ");
-        }
-        String message = builder.substring(0, builder.length() - 2);
-        registerProblem(problemsHolder, toHighlight, message, new MyLocalQuickFixBase(undefinedCallbacks));
+      if (undefinedCallbacks.isEmpty()) return;
+
+      boolean multiple = undefinedCallbacks.size() != 1;
+      StringBuilder builder = new StringBuilder();
+      builder.append("Undefined or non-exported callback function").append(multiple ? "s" : "").append(": ");
+      for (ErlangCallbackSpec spec : undefinedCallbacks) {
+        builder.append("'").append(ErlangPsiImplUtil.createFunctionPresentationFromCallbackSpec(spec)).append("', ");
       }
+      String message = builder.substring(0, builder.length() - 2);
+      registerProblem(problemsHolder, behaviourRef, message, new MyLocalQuickFixBase(undefinedCallbacks));
     }
   }
 
