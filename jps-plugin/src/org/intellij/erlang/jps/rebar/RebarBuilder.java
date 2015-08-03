@@ -48,6 +48,7 @@ import java.util.Collections;
 public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   private static final String NAME = "rebar";
   private static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
+
   public RebarBuilder() {
     super(Collections.singleton(ErlangTargetType.INSTANCE));
   }
@@ -107,17 +108,18 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     Process process;
     try {
       process = commandLine.createProcess();
-    } catch (ExecutionException e) {
+    }
+    catch (ExecutionException e) {
       throw new ProjectBuildException("Failed to run rebar", e);
     }
     BaseOSProcessHandler handler = new BaseOSProcessHandler(process, commandLine.getCommandLineString(), Charset.defaultCharset());
-    ProcessAdapter adapter = new ErlangCompilerProcessAdapter(context, NAME, commandLine.getWorkDirectory().getPath()); //TODO provide rebar messages handling
+    ProcessAdapter adapter = new RebarProcessAdapter(context, NAME, commandLine.getWorkDirectory().getPath());
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();
     if (process.exitValue() != 0) {
-+      throw new ProjectBuildException("Rebar process finished with exit code " + process.exitValue());
-+   }
+      throw new ProjectBuildException("Rebar process finished with exit code " + process.exitValue());
+    }
   }
 
   @Nullable

@@ -58,32 +58,33 @@ public class ErlangCompilerError {
     return myLine;
   }
 
-  @Nullable
-  public static ErlangCompilerError create(String rootPath, @NotNull String erlcMessage) {
-    Matcher matcher = COMPILER_MESSAGE_PATTERN.matcher(StringUtil.trimTrailing(erlcMessage));
-    if (!matcher.matches()) return null;
-
-    String relativeFilePath = FileUtil.toSystemIndependentName(matcher.group(1));
-    String line = matcher.group(2);
-    String warning = matcher.group(3);
-    String details = matcher.group(4);
-    return createCompilerError(rootPath, relativeFilePath, line, warning, details);
-  }
-
   @NotNull
   public CompilerMessageCategory getCategory() {
     return myCategory;
   }
 
+  @Nullable
+  public static ErlangCompilerError create(@NotNull String rootPath, @NotNull String erlcMessage) {
+    Matcher matcher = COMPILER_MESSAGE_PATTERN.matcher(StringUtil.trimTrailing(erlcMessage));
+    if (!matcher.matches()) return null;
+
+    String relativeFilePath = FileUtil.toSystemIndependentName(matcher.group(1));
+    File path = StringUtil.isEmpty(rootPath) ? new File(relativeFilePath) : new File(FileUtil.toSystemIndependentName(rootPath), relativeFilePath);
+    if(!path.exists()) return null;
+
+    String line = matcher.group(2);
+    String warning = matcher.group(3);
+    String details = matcher.group(4);
+    return createCompilerError(path.getPath(), line, warning, details);
+  }
+
   @NotNull
-  private static ErlangCompilerError createCompilerError(@Nullable String rootPath,
-                                                         @NotNull String relativeFilePath,
+  private static ErlangCompilerError createCompilerError(@NotNull String filePath,
                                                          @Nullable String line,
                                                          @Nullable String warning,
                                                          @NotNull String details) {
-    String path = StringUtil.isEmpty(rootPath) ? relativeFilePath : new File(FileUtil.toSystemIndependentName(rootPath), relativeFilePath).getPath();
     int lineNumber = StringUtil.parseInt(line, -1);
     CompilerMessageCategory category = warning != null ? CompilerMessageCategory.WARNING : CompilerMessageCategory.ERROR;
-    return new ErlangCompilerError(details, VfsUtilCore.pathToUrl(path), lineNumber, category);
+    return new ErlangCompilerError(details, VfsUtilCore.pathToUrl(filePath), lineNumber, category);
   }
 }
