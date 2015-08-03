@@ -106,16 +106,21 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
 
   public void testDependenciesAreCompiledFirst() throws Exception {
     ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
-    assertSameErlangModules(moduleBuildOrder.myOrderedErlangModulePaths, "parse_transform1", "parse_transform2", "behaviour1", "module1");
+    assertSameErlangFiles(moduleBuildOrder.myOrderedErlangFilePaths, "parse_transform1", "parse_transform2", "behaviour1", "module1");
+  }
+
+  public void testDependenciesWithIncludes() throws Exception {
+    ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
+    assertSameErlangFiles(moduleBuildOrder.myOrderedErlangFilePaths, "parse_transform1", "header1", "behaviour1", "header2", "module1");
   }
 
   public void testTestsDependency() throws Exception {
     ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
-    assertSameErlangModules(moduleBuildOrder.myOrderedErlangModulePaths, "src_parse_transform");
-    assertSameErlangModules(moduleBuildOrder.myOrderedErlangTestModulePaths, "test_parse_transform", "test");
+    assertSameErlangFiles(moduleBuildOrder.myOrderedErlangFilePaths, "src_parse_transform");
+    assertSameErlangFiles(moduleBuildOrder.myOrderedErlangTestFilePaths, "test_parse_transform", "test");
   }
 
-  private static void assertSameErlangModules(List<ErlangFileDescriptor> moduleDescriptors, String... expectedModules) {
+  private static void assertSameErlangFiles(List<ErlangFileDescriptor> moduleDescriptors, String... expectedModules) {
     List<String> actualModules = ContainerUtil.map(getModulePaths(moduleDescriptors), new Function<String, String>() {
       @Override
       public String fun(String path) {

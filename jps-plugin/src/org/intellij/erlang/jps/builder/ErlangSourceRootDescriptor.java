@@ -57,8 +57,9 @@ public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
       public boolean accept(@NotNull File file) {
         String name = file.getName();
         return name.endsWith(".erl") ||
-          name.endsWith(".app") ||
-          name.endsWith(".app.src");
+               name.endsWith(".app") ||
+               name.endsWith(".app.src") ||
+               name.endsWith(".hrl");
       }
     };
   }

@@ -59,11 +59,10 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestBase {
     final VirtualFile sourceFile = addSourceFile(myModule, "module1.erl", module("module1").build());
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
-    final File outputFile = getOutputFile(myModule, sourceFile, false);
-    long modificationTime = outputFile.lastModified();
+    long modificationTime = lastOutputModificationTime(myModule, sourceFile);
     addSourceFile(myModule, "module2.erl", module("module2").build());
     myCompilationRunner.compile();
-    assertEquals(modificationTime, outputFile.lastModified());
+    assertEquals(modificationTime, lastOutputModificationTime(myModule, sourceFile));
   }
 
   public void testRebuildWithModificationWithoutDependencies() throws Exception {
@@ -123,6 +122,48 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestBase {
     assertTrue(sourceModificationTime != lastOutputModificationTime(myModule, sourceFileWithDependency));
   }
 
+  public void testBuildWithIncludes() throws Exception {
+    addSourceFile(myModule, "header.hrl", "");
+    addSourceFile(myModule, "module2.erl", module("module2").include("header.hrl").build());
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+  }
+
+  public void testRebuildWithInclude() throws Exception {
+    VirtualFile headerFile = addSourceFile(myModule, "header.hrl", "");
+    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", module("module1").include("header.hrl").build());
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+    long sourceModificationTime = lastOutputModificationTime(myModule, sourceFileWithDependency);
+    myCompilationRunner.touch(headerFile);
+    myCompilationRunner.compile();
+    assertTrue(sourceModificationTime != lastOutputModificationTime(myModule, sourceFileWithDependency));
+  }
+
+  public void testRebuildWithIncludesDirectory() throws Exception {
+    VirtualFile includeSourceRoot = addIncludeRoot(myModule, "include");
+    VirtualFile headerFile = addFileToDirectory(includeSourceRoot, "header.hrl", "");
+    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", module("module1").include("header.hrl").build());
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+    long sourceModificationTime = lastOutputModificationTime(myModule, sourceFileWithDependency);
+    myCompilationRunner.touch(headerFile);
+    myCompilationRunner.compile();
+    assertTrue(sourceModificationTime != lastOutputModificationTime(myModule, sourceFileWithDependency));
+  }
+  public void testRebuildWithTransitiveDependencies() throws Exception {
+    VirtualFile headerFile = addSourceFile(myModule, "header.hrl", "");
+    BehaviourBuilder behaviour = behaviour("behaviour1").callback("foo", 0);
+    addSourceFile(myModule, "behaviour1.erl", behaviour.include("header.hrl").build());
+    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", module("module1").behaviour(behaviour).build());
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+    long sourceModificationTime = lastOutputModificationTime(myModule, sourceFileWithDependency);
+    myCompilationRunner.touch(headerFile);
+    myCompilationRunner.compile();
+    assertTrue(sourceModificationTime != lastOutputModificationTime(myModule, sourceFileWithDependency));
+  }
+
   public void testBuildWithTestSource() throws Exception {
     addSourceFile(myModule, "module1.erl", module("module1").build());
     addTestFile(myModule, "test1.erl", module("test1").build());
@@ -154,6 +195,8 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestBase {
   }
 
   private static long lastOutputModificationTime(Module module, VirtualFile sourceFile) {
-    return getOutputFile(module, sourceFile, false).lastModified();
+    File outputFile = getOutputFile(module, sourceFile, false);
+    assertNotNull(outputFile);
+    return outputFile.lastModified();
   }
 }

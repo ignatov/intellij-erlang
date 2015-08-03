@@ -25,9 +25,11 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.JDOMUtil;
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.util.Function;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.SystemProperties;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.graph.DFSTBuilder;
@@ -38,9 +40,9 @@ import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.jps.builder.ErlangBuilder;
+import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
 import org.intellij.erlang.jps.builder.ErlangModuleBuildOrders;
-import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.utils.ErlangModulesUtil;
@@ -125,164 +127,152 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
   private static ErlangModuleBuildOrderDescriptor getModuleBuildOrderInner(Module module) throws CyclicDependencyFoundException {
     ErlangModuleBuildOrderDescriptor buildOrder = new ErlangModuleBuildOrderDescriptor();
-    ErlangFacet erlangFacet = ErlangFacet.getFacet(module);
-    List<String> globalParseTransforms = erlangFacet != null ? erlangFacet.getConfiguration().getParseTransforms() : ContainerUtil.<String>emptyList();
     buildOrder.myModuleName = module.getName();
-    buildOrder.myOrderedErlangModulePaths = getTopologicallySortedErlangModulePaths(ErlangModulesUtil.getErlangModules(module, false), globalParseTransforms);
-    buildOrder.myOrderedErlangTestModulePaths = getTopologicallySortedErlangModulePaths(ErlangModulesUtil.getErlangModules(module, true), ContainerUtil.<String>emptyList());
+    buildOrder.myOrderedErlangFilePaths = getTopologicallySortedErlangFilesPaths(module, false);
+    buildOrder.myOrderedErlangTestFilePaths = getTopologicallySortedErlangFilesPaths(module, true);
     return buildOrder;
   }
 
-  private static List<ErlangFileDescriptor> getTopologicallySortedErlangModulePaths(Collection<ErlangFile> erlangModules,
-                                                                                    List<String> globalParseTransforms) throws CyclicDependencyFoundException {
-    return ErlangModulesSorter.sort(erlangModules, globalParseTransforms);
+  @NotNull
+  private static List<String> getGlobalParseTransform(@NotNull Module module) {
+    ErlangFacet erlangFacet = ErlangFacet.getFacet(module);
+    return erlangFacet != null ? erlangFacet.getConfiguration().getParseTransforms() : ContainerUtil.<String>emptyList();
   }
 
-  private static class ErlangModulesSorter {
-    private final Collection<ErlangFile> myModules;
-    private final List<String> myGlobalParseTransforms;
-
-    private ErlangModulesSorter(Collection<ErlangFile> modules, List<String> globalParseTransforms) {
-      myModules = modules;
-      myGlobalParseTransforms = globalParseTransforms;
+  @NotNull
+  private static List<ErlangFileDescriptor> getTopologicallySortedErlangFilesPaths(@NotNull Module module,
+                                                                                   boolean onlyTestModules) throws CyclicDependencyFoundException {
+    final ErlangFilesDependencyGraph semiGraph = ErlangFilesDependencyGraph.createSemiGraph(module, onlyTestModules);
+    DFSTBuilder<String> builder = new DFSTBuilder<String>(GraphGenerator.create(semiGraph));
+    builder.buildDFST();
+    if (!builder.isAcyclic()) {
+      throw new CyclicDependencyFoundException();
     }
-
-    public static List<ErlangFileDescriptor> sort(Collection<ErlangFile> erlangModules,
-                                                  List<String> globalParseTransforms) throws CyclicDependencyFoundException {
-      ErlangModulesSorter sorter = new ErlangModulesSorter(erlangModules, globalParseTransforms);
-      return sorter.getSortedModules();
-    }
-
-    private GraphGenerator<Node> createModulesGraph() {
-      return GraphGenerator.create(new ErlangModulesDependencyGraph(myModules, myGlobalParseTransforms));
-    }
-
-    private List<ErlangFileDescriptor> getSortedModules() throws CyclicDependencyFoundException {
-      GraphGenerator<Node> graph = createModulesGraph();
-      DFSTBuilder<Node> builder = new DFSTBuilder<Node>(graph);
-      builder.buildDFST();
-      if (!builder.isAcyclic()) {
-        throw new CyclicDependencyFoundException();
+    return ContainerUtil.map(builder.getSortedNodes(), new Function<String, ErlangFileDescriptor>() {
+      @Override
+      public ErlangFileDescriptor fun(String filePath) {
+        List<String> dependencies = semiGraph.getDependencies(filePath);
+        return new ErlangFileDescriptor(filePath, dependencies);
       }
-      return ContainerUtil.map(builder.getSortedNodes(), new Function<Node, ErlangFileDescriptor>() {
+    });
+  }
+
+  private static class ErlangFilesDependencyGraph implements GraphGenerator.SemiGraph<String> {
+
+    private final Map<String, String> myNamesToPathsMap = ContainerUtil.newHashMap();
+    private final Map<String, List<String>> myPathsToDependenciesMap = ContainerUtil.newHashMap();
+    private final PsiManager myPsiManager;
+
+    private ErlangFilesDependencyGraph(@NotNull Collection<VirtualFile> erlangModules,
+                                       @NotNull Collection<VirtualFile> erlangHeaders,
+                                       @NotNull List<String> globalParseTransforms,
+                                       @NotNull PsiManager psiManager) {
+      myPsiManager = psiManager;
+      buildNamesMap(erlangModules);
+      buildForHeaders(erlangHeaders);
+      buildForModules(erlangModules, globalParseTransforms);
+    }
+
+    @NotNull
+    public static ErlangFilesDependencyGraph createSemiGraph(@NotNull Module module,
+                                                             boolean onlyTestModules) {
+      Collection<VirtualFile> erlangModules = ErlangModulesUtil.getErlangModuleFiles(module, onlyTestModules);
+      Collection<VirtualFile> erlangHeaders = ErlangModulesUtil.getErlangHeaderFiles(module, onlyTestModules);
+
+      return new ErlangFilesDependencyGraph(erlangModules, erlangHeaders, getGlobalParseTransform(module), PsiManager.getInstance(module.getProject()));
+    }
+
+    private void buildForModules(@NotNull Collection<VirtualFile> erlangModules,
+                                 @NotNull List<String> globalParseTransforms) {
+      for (VirtualFile erlangModule : erlangModules) {
+        Set<String> dependencies = ContainerUtil.newHashSet();
+        ErlangFile erlangFile = getErlangFile(erlangModule);
+        addDeclaredDependencies(erlangFile, dependencies);
+        dependencies.addAll(getPathsFromNames(globalParseTransforms));
+        myPathsToDependenciesMap.put(erlangModule.getPath(), ContainerUtil.newArrayList(dependencies));
+      }
+    }
+
+    @NotNull
+    private ErlangFile getErlangFile(@NotNull VirtualFile virtualFile) {
+      PsiFile psiFile = myPsiManager.findFile(virtualFile);
+      ErlangFile erlangFile = ObjectUtils.tryCast(psiFile, ErlangFile.class);
+      assert erlangFile != null;
+      return erlangFile;
+    }
+
+    private void buildForHeaders(@NotNull Collection<VirtualFile> erlangHeaders) {
+      for (VirtualFile header : erlangHeaders) {
+        Set<String> dependencies = ContainerUtil.newHashSet();
+        ErlangFile erlangFile = getErlangFile(header);
+        addDeclaredDependencies(erlangFile, dependencies);
+        myPathsToDependenciesMap.put(header.getPath(), ContainerUtil.newArrayList(dependencies));
+      }
+    }
+
+    private void addDeclaredDependencies(@NotNull ErlangFile erlangModule, @NotNull Set<String> dependencies) {
+      dependencies.addAll(getDeclaredParseTransformPaths(erlangModule));
+      dependencies.addAll(getDeclaredBehaviourPaths(erlangModule));
+      dependencies.addAll(getDeclaredIncludePaths(erlangModule));
+    }
+
+    @NotNull
+    private static List<String> getDeclaredIncludePaths(@NotNull ErlangFile file) {
+      return ContainerUtil.mapNotNull(ErlangPsiImplUtil.getDirectlyIncludedFiles(file), new Function<ErlangFile, String>() {
+        @Nullable
         @Override
-        public ErlangFileDescriptor fun(Node node) {
-          return getModuleDescriptor(node);
+        public String fun(ErlangFile erlangFile) {
+          VirtualFile virtualFile = erlangFile.getVirtualFile();
+          return virtualFile != null ? virtualFile.getPath() : null;
         }
       });
     }
 
     @NotNull
-    private static ErlangFileDescriptor getModuleDescriptor(Node node) {
-      ErlangFileDescriptor result = new ErlangFileDescriptor();
-      result.myErlangModulePath = getErlangFilePath(node);
-      result.myDependencies = ContainerUtil.map(node.getDependencies(), new Function<Node, String>() {
-        @Nullable
+    private List<String> getDeclaredBehaviourPaths(@NotNull ErlangFile erlangModule) {
+      Set<String> behaviours = ContainerUtil.newHashSet();
+      ErlangPsiImplUtil.addDeclaredBehaviourModuleNames(erlangModule, behaviours);
+      return getPathsFromNames(behaviours);
+    }
+
+    @NotNull
+    private List<String> getDeclaredParseTransformPaths(@NotNull ErlangFile erlangModule) {
+      Set<String> pt = ContainerUtil.newHashSet();
+      erlangModule.addDeclaredParseTransforms(pt);
+      return getPathsFromNames(pt);
+    }
+
+    private void buildNamesMap(@NotNull Collection<VirtualFile> erlangModules) {
+      for (VirtualFile erlangModule : erlangModules) {
+        myNamesToPathsMap.put(erlangModule.getNameWithoutExtension(), erlangModule.getPath());
+      }
+    }
+
+    @NotNull
+    private List<String> getPathsFromNames(@NotNull Collection<String> erlangModuleNames) {
+      return ContainerUtil.mapNotNull(erlangModuleNames, new Function<String, String>() {
         @Override
-        public String fun(Node node) {
-          return getErlangFilePath(node);
+        public String fun(String name) {
+          return myNamesToPathsMap.get(name);
         }
       });
-      return result;
     }
 
-    @Nullable
-    private static String getErlangFilePath(Node node) {
-      VirtualFile virtualFile = node.getModuleFile().getVirtualFile();
-      return virtualFile != null ? virtualFile.getPath() : null;
+    @Override
+    public Collection<String> getNodes() {
+      return myPathsToDependenciesMap.keySet();
     }
 
-    private static class ErlangModulesDependencyGraph implements GraphGenerator.SemiGraph<Node> {
-      private final HashMap<String, Node> myNamesToNodesMap;
-
-      public ErlangModulesDependencyGraph(Collection<ErlangFile> modules, List<String> globalParseTransforms) {
-        myNamesToNodesMap = ContainerUtil.newHashMap();
-        for (ErlangFile moduleFile : modules) {
-          Node node = new Node(moduleFile);
-          myNamesToNodesMap.put(node.getModuleName(), node);
-        }
-        buildDependencies(globalParseTransforms);
-      }
-
-      @Override
-      public Collection<Node> getNodes() {
-        return myNamesToNodesMap.values();
-      }
-
-      @Override
-      public Iterator<Node> getIn(Node node) {
-        return node.getDependencies().iterator();
-      }
-
-      private void buildDependencies(List<String> globalParseTransforms) {
-        List<Node> globalPtNodes = getModuleNodes(globalParseTransforms);
-        for (Node module : myNamesToNodesMap.values()) {
-          Set<String> moduleNames = ContainerUtil.newHashSet();
-          moduleNames.addAll(ErlangPsiImplUtil.getAppliedParseTransformModuleNames(module.getModuleFile()));
-          moduleNames.addAll(ErlangPsiImplUtil.getImplementedBehaviourModuleNames(module.getModuleFile()));
-          List<Node> dependencies = getModuleNodes(moduleNames);
-          module.addDependencies(dependencies);
-          module.addDependencies(globalPtNodes);
-        }
-      }
-
-      private List<Node> getModuleNodes(Collection<String> nodesName) {
-        return ContainerUtil.mapNotNull(nodesName, new Function<String, Node>() {
-          @Override
-          public Node fun(String pt) {
-            return myNamesToNodesMap.get(pt);
-          }
-        });
-      }
+    @Override
+    public Iterator<String> getIn(String filePath) {
+      return myPathsToDependenciesMap.get(filePath).iterator();
     }
 
-    private static class Node {
-      private final ErlangFile myModuleFile;
-      private final List<Node> myDependencies = ContainerUtil.newArrayList();
-
-      Node(ErlangFile moduleFile) {
-        myModuleFile = moduleFile;
-      }
-
-      @Override
-      public int hashCode() {
-        return myModuleFile.getName().hashCode();
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Node node = (Node) o;
-
-        return myModuleFile.getName().equals(node.myModuleFile.getName());
-      }
-
-      public void addDependencies(@NotNull Collection<Node> deps) {
-        for (Node dep : deps) {
-          addDependency(dep);
-        }
-      }
-
-      ErlangFile getModuleFile() {
-        return myModuleFile;
-      }
-
-      String getModuleName() {
-        return FileUtil.getNameWithoutExtension(myModuleFile.getName());
-      }
-
-      void addDependency(@Nullable Node dep) {
-        if (dep != null && dep != this) {
-          myDependencies.add(dep);
-        }
-      }
-
-      @NotNull
-      List<Node> getDependencies() {
-        return myDependencies;
-      }
+    @NotNull
+    public List<String> getDependencies(@NotNull String filePath) {
+      List<String> dependencies = myPathsToDependenciesMap.get(filePath);
+      assert dependencies != null;
+      return dependencies;
     }
   }
 

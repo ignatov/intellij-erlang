@@ -42,15 +42,19 @@ import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ErlangFacet;
+import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
+import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 
 public abstract class ErlangCompilationTestBase extends PlatformTestCase {
@@ -131,9 +135,9 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     return addFile(module, relativePath, content, false);
   }
 
-  protected static VirtualFile addFile(final Module module,
-                                       final String relativePath,
-                                       final String content,
+  protected static VirtualFile addFile(final @NotNull Module module,
+                                       final @NotNull String relativePath,
+                                       final @NotNull String content,
                                        final boolean toTests) throws IOException {
     return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
       @Override
@@ -142,11 +146,29 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
         List<VirtualFile> sourceRoots = ModuleRootManager.getInstance(module).getSourceRoots(rootType);
         VirtualFile sourceDir = ContainerUtil.getFirstItem(sourceRoots);
         assertNotNull(sourceDir);
-        VirtualFile sourceFile = sourceDir.createChildData(ErlangCompilationTestBase.class, relativePath);
-        VfsUtil.saveText(sourceFile, content);
-        return sourceFile;
+        return addFile(sourceDir, relativePath, content);
       }
     });
+  }
+  protected static VirtualFile addFileToDirectory(final @NotNull VirtualFile sourceDir,
+                                                  final @NotNull String relativePath,
+                                                  final @NotNull String content) throws IOException {
+    return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
+      @Override
+      public VirtualFile compute() throws IOException {
+        return addFile(sourceDir, relativePath, content);
+      }
+    });
+  }
+  protected static VirtualFile addIncludeRoot(@NotNull final Module module,
+                                              @NotNull final String sourceRootName) throws IOException {
+    return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
+      @Override
+      public VirtualFile compute() throws IOException {
+        return addSourceRoot(module, sourceRootName, ErlangIncludeSourceRootType.INSTANCE);
+      }
+    });
+
   }
 
   protected static void addGlobalParseTransform(final Module module, final Collection<String> parseTransform) {
@@ -162,7 +184,8 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
   protected static void assertSourcesCompiled(@NotNull Module module, boolean tests) {
     String[] sources = getSourceFiles(module, tests);
-    assertContains(getOutputDirectory(module, tests), ContainerUtil.map2Array(sources, String.class, new Function<String, String>() {
+    assertContains(getOutputDirectory(module, tests), ContainerUtil.mapNotNull(sources, new Function<String, String>() {
+      @Nullable
       @Override
       public String fun(String source) {
         return getExpectedOutputFileName(source);
@@ -170,30 +193,35 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     }));
   }
 
-  protected static void assertContains(@Nullable VirtualFile parentPath, String... fileNames) {
+  protected static void assertContains(@Nullable VirtualFile parentPath, List<String> fileNames) {
     assertNotNull(parentPath);
     List<String> actual = getChildrenNames(parentPath);
     assertUnorderedElementsAreEqual(actual, fileNames);
-  }
-
-  protected static <T> void assertUnorderedElementsAreEqual(Collection<T> actual, T... expected) {
-    assertUnorderedElementsAreEqual(actual, Arrays.asList(expected));
   }
 
   protected static <T> void assertUnorderedElementsAreEqual(Collection<T> actual, Collection<T> expected) {
     assertEquals(ContainerUtil.newHashSet(expected), ContainerUtil.newHashSet(actual));
   }
 
+  @Nullable
   protected static File getOutputFile(Module module, VirtualFile sourceFile, boolean isTest) {
     VirtualFile outputDirectory = getOutputDirectory(module, isTest);
     assertNotNull(outputDirectory);
-    return new File(outputDirectory.getCanonicalPath(), getExpectedOutputFileName(sourceFile.getName()));
+    String expectedOutputFileName = getExpectedOutputFileName(sourceFile.getName());
+    return expectedOutputFileName == null ? null : new File(outputDirectory.getCanonicalPath(), expectedOutputFileName);
+  }
+
+  @NotNull
+  private static VirtualFile addFile(VirtualFile sourceDir, String relativePath, String content) throws IOException {
+    VirtualFile sourceFile = sourceDir.createChildData(ErlangCompilationTestBase.class, relativePath);
+    VfsUtil.saveText(sourceFile, content);
+    return sourceFile;
   }
 
   @NotNull
   private static VirtualFile addSourceRoot(@NotNull Module module,
                                            @NotNull String sourceRootName,
-                                           boolean isTestSourceRoot) throws IOException {
+                                           @NotNull JpsModuleSourceRootType<?> rootType) throws IOException {
     VirtualFile moduleFile = module.getModuleFile();
     assertNotNull(moduleFile);
     PsiTestUtil.addContentRoot(module, moduleFile.getParent());
@@ -201,8 +229,16 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     assertSize(1, contentRoots);
 
     VirtualFile sourceDir = contentRoots[0].createChildDirectory(ErlangCompilationTestBase.class, sourceRootName);
-    PsiTestUtil.addSourceRoot(module, sourceDir, isTestSourceRoot);
+    PsiTestUtil.addSourceRoot(module, sourceDir, rootType);
     return sourceDir;
+  }
+
+  @NotNull
+  private static VirtualFile addSourceRoot(@NotNull Module module,
+                                           @NotNull String sourceRootName,
+                                           boolean isTestSourceRoot) throws IOException {
+    JavaSourceRootType rootType = isTestSourceRoot? JavaSourceRootType.TEST_SOURCE:JavaSourceRootType.SOURCE;
+    return addSourceRoot(module, sourceRootName,rootType);
   }
 
   @NotNull
@@ -228,9 +264,10 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     return isTest ? instance.getCompilerOutputPathForTests() : instance.getCompilerOutputPath();
   }
 
-  @NotNull
+  @Nullable
   private static String getExpectedOutputFileName(@NotNull String relativePath) {
-    String name = FileUtil.getNameWithoutExtension(new File(relativePath));
+    File file = new File(relativePath);
+    String name = FileUtil.getNameWithoutExtension(file);
     CharSequence extension = FileUtilRt.getExtension(relativePath);
     if ("erl".equals(extension)) {
       return name + ".beam";
@@ -238,7 +275,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     if ("app".equals(extension) || "app.src".equals(extension)) {
       return name + ".app";
     }
-    return relativePath;
+    return null;
   }
 
   @NotNull

@@ -93,30 +93,66 @@ public final class ErlangModulesUtil {
   public static Collection<ErlangFile> getErlangModules(@NotNull Project project) {
     HashSet<ErlangFile> erlangModules = new HashSet<ErlangFile>();
     for (Module module : ModuleManager.getInstance(project).getModules()) {
-      addErlangModules(module, false, erlangModules);
+      addErlangFiles(module, false, erlangModules, ErlangFileType.MODULE);
     }
     return erlangModules;
   }
 
   @NotNull
   public static Collection<ErlangFile> getErlangModules(@NotNull Module module, boolean onlyTestModules) {
-    return addErlangModules(module, onlyTestModules, new HashSet<ErlangFile>());
+    return addErlangFiles(module, onlyTestModules, new HashSet<ErlangFile>(), ErlangFileType.MODULE);
   }
 
   @NotNull
-  private static Collection<ErlangFile> addErlangModules(@NotNull Module module, boolean onlyTestModules, @NotNull Collection<ErlangFile> erlangModules) {
-    ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
-    ModuleFileIndex moduleFileIndex = rootManager.getFileIndex();
-    Processor<VirtualFile> modulesCollector = getErlangModulesCollector(PsiManager.getInstance(module.getProject()), erlangModules);
-    Convertor<VirtualFile, Boolean> sourceDirectoriesFilter = onlyTestModules ? getTestDirectoriesFilter(moduleFileIndex) : getSourceDirectoriesFilter(moduleFileIndex);
+  public static Collection<VirtualFile> getErlangHeaderFiles(@NotNull Module module, boolean onlyTestModules) {
+    return addFiles(module, onlyTestModules, ContainerUtil.<VirtualFile>newHashSet(), ErlangFileType.HEADER);
+  }
 
-    for (VirtualFile sourceRoot : rootManager.getSourceRoots(onlyTestModules)) {
-      VfsUtilCore.processFilesRecursively(sourceRoot, modulesCollector, sourceDirectoriesFilter);
-    }
+  @NotNull
+  public static Collection<VirtualFile> getErlangModuleFiles(@NotNull Module module, boolean onlyTestModules) {
+    return addFiles(module, onlyTestModules, ContainerUtil.<VirtualFile>newHashSet(), ErlangFileType.MODULE);
+  }
 
+  @NotNull
+  private static Collection<ErlangFile> addErlangFiles(@NotNull Module module,
+                                                       boolean onlyTestModules,
+                                                       @NotNull Collection<ErlangFile> erlangModules,
+                                                       @NotNull ErlangFileType type) {
+    Processor<VirtualFile> filesCollector = getErlangModulesCollector(PsiManager.getInstance(module.getProject()), erlangModules, type);
+    collectFiles(module, onlyTestModules, filesCollector);
     return erlangModules;
   }
 
+  @NotNull
+  private static Collection<VirtualFile> addFiles(@NotNull Module module,
+                                                  boolean onlyTest,
+                                                  @NotNull final Collection<VirtualFile> files,
+                                                  @NotNull final ErlangFileType type) {
+    Processor<VirtualFile> modulesCollector = new Processor<VirtualFile>() {
+      @Override
+      public boolean process(VirtualFile virtualFile) {
+        if (virtualFile.getFileType() == type) {
+          files.add(virtualFile);
+        }
+        return true;
+      }
+    };
+    collectFiles(module, onlyTest, modulesCollector);
+    return files;
+  }
+
+  private static void collectFiles(@NotNull Module module,
+                                   boolean onlyTestModules,
+                                   @NotNull Processor<VirtualFile> filesCollector) {
+    ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
+    ModuleFileIndex moduleFileIndex = rootManager.getFileIndex();
+    Convertor<VirtualFile, Boolean> sourceDirectoriesFilter = onlyTestModules ? getTestDirectoriesFilter(moduleFileIndex)
+                                                                              : getSourceDirectoriesFilter(moduleFileIndex);
+
+    for (VirtualFile sourceRoot : rootManager.getSourceRoots(onlyTestModules)) {
+      VfsUtilCore.processFilesRecursively(sourceRoot, filesCollector, sourceDirectoriesFilter);
+    }
+  }
   @NotNull
   private static Convertor<VirtualFile, Boolean> getSourceDirectoriesFilter(@NotNull final ModuleFileIndex moduleFileIndex) {
     return new Convertor<VirtualFile, Boolean>() {
@@ -138,11 +174,13 @@ public final class ErlangModulesUtil {
   }
 
   @Nullable
-  private static Processor<VirtualFile> getErlangModulesCollector(@NotNull final PsiManager psiManager, @NotNull final Collection<ErlangFile> erlangFiles) {
+  private static Processor<VirtualFile> getErlangModulesCollector(@NotNull final PsiManager psiManager,
+                                                                  @NotNull final Collection<ErlangFile> erlangFiles,
+                                                                  @NotNull final ErlangFileType type) {
     return new Processor<VirtualFile>() {
       @Override
       public boolean process(@NotNull VirtualFile virtualFile) {
-        if (virtualFile.getFileType() == ErlangFileType.MODULE) {
+        if (virtualFile.getFileType() == type) {
           PsiFile psiFile = psiManager.findFile(virtualFile);
           if (psiFile instanceof ErlangFile) {
             erlangFiles.add((ErlangFile) psiFile);

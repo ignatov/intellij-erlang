@@ -17,6 +17,7 @@
 package org.intellij.erlang.jps.builder;
 
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.intellij.erlang.jps.model.JpsErlangModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +26,7 @@ import org.jetbrains.jps.builders.storage.BuildDataPaths;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.indices.IgnoredFileIndex;
 import org.jetbrains.jps.indices.ModuleExcludeIndex;
+import org.jetbrains.jps.model.JpsDummyElement;
 import org.jetbrains.jps.model.JpsModel;
 import org.jetbrains.jps.model.java.JavaSourceRootProperties;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
@@ -71,6 +73,9 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
     }
     for (JpsTypedModuleSourceRoot<JavaSourceRootProperties> root : myModule.getSourceRoots(JavaSourceRootType.TEST_SOURCE)) {
       result.add(new ErlangSourceRootDescriptor(root.getFile(), this, true));
+    }
+    for (JpsTypedModuleSourceRoot<JpsDummyElement> root : myModule.getSourceRoots(ErlangIncludeSourceRootType.INSTANCE)) {
+      result.add(new ErlangSourceRootDescriptor(root.getFile(), this, false));
     }
     return result;
   }

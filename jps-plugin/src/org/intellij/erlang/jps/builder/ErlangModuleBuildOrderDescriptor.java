@@ -30,9 +30,9 @@ public class ErlangModuleBuildOrderDescriptor {
 
   @Tag("erlangModules")
   @AbstractCollection(surroundWithTag = false)
-  public List<ErlangFileDescriptor> myOrderedErlangModulePaths = ContainerUtil.newArrayList();
+  public List<ErlangFileDescriptor> myOrderedErlangFilePaths = ContainerUtil.newArrayList();
 
   @Tag("testErlangModules")
   @AbstractCollection(surroundWithTag = false)
-  public List<ErlangFileDescriptor> myOrderedErlangTestModulePaths = ContainerUtil.newArrayList();
+  public List<ErlangFileDescriptor> myOrderedErlangTestFilePaths = ContainerUtil.newArrayList();
 }
