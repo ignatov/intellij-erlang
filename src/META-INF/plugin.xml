@@ -231,6 +231,9 @@
         <localInspection language="Erlang" shortName="ErlangUnresolvedFunction" displayName="Unresolved function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection"/>
+        <localInspection language="Erlang" shortName="ErlangUnresolvedBehaviour" displayName="Unresolved behaviour"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedBehaviourInspection"/>
         <localInspection language="Erlang" shortName="ErlangUnusedVariable" displayName="Unused variable"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnusedVariableInspection"/>

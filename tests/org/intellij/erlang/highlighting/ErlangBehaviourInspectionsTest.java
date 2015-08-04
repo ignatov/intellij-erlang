@@ -19,6 +19,7 @@ package org.intellij.erlang.highlighting;
 import com.intellij.openapi.util.io.FileUtil;
 import org.intellij.erlang.inspection.ErlangDuplicateBehaviourInspection;
 import org.intellij.erlang.inspection.ErlangUndefinedCallbackFunctionInspection;
+import org.intellij.erlang.inspection.ErlangUnresolvedBehaviourInspection;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -27,7 +28,8 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     super.setUp();
     //noinspection unchecked
     myFixture.enableInspections(ErlangUndefinedCallbackFunctionInspection.class,
-                                ErlangDuplicateBehaviourInspection.class);
+                                ErlangDuplicateBehaviourInspection.class,
+                                ErlangUnresolvedBehaviourInspection.class);
   }
 
   @Override
@@ -38,6 +40,7 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
   public void testHighlighting()                  { doHighlightingTest("testUndefined.erl", "b1.erl"); }
   public void testHighlightingSeveralBehaviours() { doHighlightingTest("testTwoUndefined.erl", "b1.erl", "b2.erl"); }
   public void testHighlightingDuplicate()         { doHighlightingTest("testDuplicate.erl", "b1.erl"); }
+  public void testHighlightingUnresolved()        { doHighlightingTest("testUnresolved.erl", "b1.erl"); }
 
   public void testTwoConflicting()    { doHighlightingTest("testTwoConflicting.erl", "b1.erl", "b3.erl"); }
   public void testThreeConflicting()  { doHighlightingTest("testThreeConflicting.erl", "b1.erl", "b2.erl", "b3.erl"); }
