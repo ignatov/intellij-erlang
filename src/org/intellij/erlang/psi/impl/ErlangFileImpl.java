@@ -417,6 +417,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return myNoAutoImportAll.getValue();
   }
 
+  @Override
+  public boolean isBehaviour() {
+    return !getCallbackMap().isEmpty() || getFunction("behaviour_info", 1) != null;
+  }
+
   private boolean calcNoAutoImportAll() {
     return containsCompileDirectiveWithOption("no_auto_import");
   }
