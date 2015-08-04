@@ -55,7 +55,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
           undefinedCallbacks.add(spec);
         }
       }
-      if (undefinedCallbacks.isEmpty()) return;
+      if (undefinedCallbacks.isEmpty()) continue;
 
       boolean multiple = undefinedCallbacks.size() != 1;
       StringBuilder builder = new StringBuilder();
