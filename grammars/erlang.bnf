@@ -158,6 +158,7 @@ attribute ::= '-' (
   | import_directive
   | specification
   | callback_spec
+  | optional_callbacks
   | behaviour
   | on_load
   | ifdef_ifndef_undef_attribute
@@ -171,6 +172,7 @@ callback_spec ::= 'callback' type_spec {
   pin=1
   stubClass="org.intellij.erlang.stubs.ErlangCallbackSpecStub"
 }
+optional_callbacks ::= 'optional_callbacks' <<attribute_tail optional_callback_functions>> {pin=1}
 specification ::= 'spec' type_spec {
   pin=1
   methods = [getSignature]
@@ -225,6 +227,13 @@ export_type ::= q_atom '/' integer {
 import_functions ::= '[' import_function_list? ']'
 private import_function_list ::= import_function (',' import_function)*
 import_function ::= q_atom '/' integer {
+  pin = 1
+  methods = [getReference]
+}
+
+optional_callback_functions ::= '[' callback_function_list? ']' {pin=1}
+private callback_function_list ::= callback_function (',' callback_function)*
+callback_function ::= q_atom '/' integer {
   pin = 1
   methods = [getReference]
 }

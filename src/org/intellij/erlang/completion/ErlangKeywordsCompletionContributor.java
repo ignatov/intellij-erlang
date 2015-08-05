@@ -51,7 +51,8 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
 
 public class ErlangKeywordsCompletionContributor extends CompletionContributor implements DumbAware {
   public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
-    "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour", "behavior"
+    "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour", "behavior",
+    "optional_callbacks"
   );
 
   public ErlangKeywordsCompletionContributor() {
@@ -98,7 +99,8 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
   static LookupElement createKeywordLookupElement(@NotNull String keyword) {
     boolean needHandler = KEYWORDS_WITH_PARENTHESIS.contains(keyword);
     boolean needQuotas = "include".equalsIgnoreCase(keyword) || "include_lib".equalsIgnoreCase(keyword);
-    boolean needBrackets = "export".equalsIgnoreCase(keyword) || "export_type".equalsIgnoreCase(keyword);
+    boolean needBrackets = "export".equalsIgnoreCase(keyword) || "export_type".equalsIgnoreCase(keyword) ||
+                           "optional_callbacks".equalsIgnoreCase(keyword);
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword)
       .withInsertHandler(needHandler ? new ErlangKeywordInsertHandler(needQuotas, needBrackets) : null)
       .withTailText(needHandler ? "()" : null)

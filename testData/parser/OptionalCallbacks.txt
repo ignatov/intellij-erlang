@@ -1,0 +1,17 @@
+ERL_FILE
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_OPTIONAL_CALLBACKS
+      PsiElement(atom_name)('optional_callbacks')
+      PsiElement(()('(')
+      ERL_OPTIONAL_CALLBACK_FUNCTIONS
+        PsiElement([)('[')
+        ERL_CALLBACK_FUNCTION
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('foo')
+          PsiElement(/)('/')
+          PsiElement(integer)('1')
+        PsiElement(])(']')
+      PsiElement())(')')
+    PsiElement(.)('.')

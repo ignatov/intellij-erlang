@@ -90,8 +90,10 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testComprehensions()    { doTest(true, false); }
   public void testMacrosHacks()       { doTest(true, false); }
   public void testMacrosUnderscore()  { doTest(true, false); }
+  public void testOptionalCallbacks() { doTest(true, false); }
   public void testComprehensionsRecovery() { doTest(true, true); }
   public void testSendExpressionPriority() { doTest(true, false); }
   public void testLongListExpression632()  { doTest(false, false); }
+  public void testOptionalCallbacksRecovery() { doTest(true, true); }
   public void testWhitespaceEscapeInCharLiterals() { doTest(true, false); }
 }

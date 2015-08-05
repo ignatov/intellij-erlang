@@ -32,6 +32,7 @@ public interface ErlangTypes {
   IElementType ERL_BIN_ELEMENT = new ErlangCompositeElementType("ERL_BIN_ELEMENT");
   IElementType ERL_BIN_UNIT_TYPE = new ErlangCompositeElementType("ERL_BIN_UNIT_TYPE");
   IElementType ERL_BIT_TYPE = new ErlangCompositeElementType("ERL_BIT_TYPE");
+  IElementType ERL_CALLBACK_FUNCTION = new ErlangCompositeElementType("ERL_CALLBACK_FUNCTION");
   IElementType ERL_CALLBACK_SPEC = ErlangElementTypeFactory.factory("ERL_CALLBACK_SPEC");
   IElementType ERL_CASE_EXPRESSION = new ErlangCompositeElementType("ERL_CASE_EXPRESSION");
   IElementType ERL_CATCH_EXPRESSION = new ErlangCompositeElementType("ERL_CATCH_EXPRESSION");
@@ -95,6 +96,8 @@ public interface ErlangTypes {
   IElementType ERL_MODULE = ErlangElementTypeFactory.factory("ERL_MODULE");
   IElementType ERL_MODULE_REF = new ErlangCompositeElementType("ERL_MODULE_REF");
   IElementType ERL_MULTIPLICATIVE_EXPRESSION = new ErlangCompositeElementType("ERL_MULTIPLICATIVE_EXPRESSION");
+  IElementType ERL_OPTIONAL_CALLBACKS = new ErlangCompositeElementType("ERL_OPTIONAL_CALLBACKS");
+  IElementType ERL_OPTIONAL_CALLBACK_FUNCTIONS = new ErlangCompositeElementType("ERL_OPTIONAL_CALLBACK_FUNCTIONS");
   IElementType ERL_OPT_BIT_TYPE_LIST = new ErlangCompositeElementType("ERL_OPT_BIT_TYPE_LIST");
   IElementType ERL_ORELSE_EXPRESSION = new ErlangCompositeElementType("ERL_ORELSE_EXPRESSION");
   IElementType ERL_PARENTHESIZED_EXPRESSION = new ErlangCompositeElementType("ERL_PARENTHESIZED_EXPRESSION");
@@ -274,6 +277,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_BIT_TYPE) {
         return new ErlangBitTypeImpl(node);
+      }
+      else if (type == ERL_CALLBACK_FUNCTION) {
+        return new ErlangCallbackFunctionImpl(node);
       }
       else if (type == ERL_CALLBACK_SPEC) {
         return new ErlangCallbackSpecImpl(node);
@@ -463,6 +469,12 @@ public interface ErlangTypes {
       }
       else if (type == ERL_MULTIPLICATIVE_EXPRESSION) {
         return new ErlangMultiplicativeExpressionImpl(node);
+      }
+      else if (type == ERL_OPTIONAL_CALLBACKS) {
+        return new ErlangOptionalCallbacksImpl(node);
+      }
+      else if (type == ERL_OPTIONAL_CALLBACK_FUNCTIONS) {
+        return new ErlangOptionalCallbackFunctionsImpl(node);
       }
       else if (type == ERL_OPT_BIT_TYPE_LIST) {
         return new ErlangOptBitTypeListImpl(node);

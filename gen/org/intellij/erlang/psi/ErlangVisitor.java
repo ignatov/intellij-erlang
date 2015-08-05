@@ -95,6 +95,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitType(o);
   }
 
+  public void visitCallbackFunction(@NotNull ErlangCallbackFunction o) {
+    visitCompositeElement(o);
+  }
+
   public void visitCallbackSpec(@NotNull ErlangCallbackSpec o) {
     visitCompositeElement(o);
   }
@@ -353,6 +357,14 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitOptBitTypeList(@NotNull ErlangOptBitTypeList o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitOptionalCallbackFunctions(@NotNull ErlangOptionalCallbackFunctions o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitOptionalCallbacks(@NotNull ErlangOptionalCallbacks o) {
     visitCompositeElement(o);
   }
 

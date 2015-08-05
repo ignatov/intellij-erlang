@@ -1,0 +1,42 @@
+ERL_FILE
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_OPTIONAL_CALLBACKS
+      PsiElement(atom_name)('optional_callbacks')
+      PsiElement(()('(')
+      ERL_OPTIONAL_CALLBACK_FUNCTIONS
+        PsiElement([)('[')
+        ERL_CALLBACK_FUNCTION
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('qwerty')
+          PsiErrorElement:'/' expected, got ']'
+            <empty list>
+        PsiElement(])(']')
+      PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_OPTIONAL_CALLBACKS
+      PsiElement(atom_name)('optional_callbacks')
+      PsiElement(()('(')
+      ERL_OPTIONAL_CALLBACK_FUNCTIONS
+        PsiElement([)('[')
+        PsiErrorElement:<q atom> or ']' expected, got ')'
+          <empty list>
+      PsiElement())(')')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
+    PsiElement(.)('.')

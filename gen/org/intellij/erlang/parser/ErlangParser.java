@@ -89,6 +89,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     else if (t == ERL_BIT_TYPE) {
       r = bit_type(b, 0);
     }
+    else if (t == ERL_CALLBACK_FUNCTION) {
+      r = callback_function(b, 0);
+    }
     else if (t == ERL_CALLBACK_SPEC) {
       r = callback_spec(b, 0);
     }
@@ -280,6 +283,12 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     }
     else if (t == ERL_OPT_BIT_TYPE_LIST) {
       r = opt_bit_type_list(b, 0);
+    }
+    else if (t == ERL_OPTIONAL_CALLBACK_FUNCTIONS) {
+      r = optional_callback_functions(b, 0);
+    }
+    else if (t == ERL_OPTIONAL_CALLBACKS) {
+      r = optional_callbacks(b, 0);
     }
     else if (t == ERL_ORELSE_EXPRESSION) {
       r = expression(b, 0, 2);
@@ -694,6 +703,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | import_directive
   //   | specification
   //   | callback_spec
+  //   | optional_callbacks
   //   | behaviour
   //   | on_load
   //   | ifdef_ifndef_undef_attribute
@@ -718,6 +728,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | import_directive
   //   | specification
   //   | callback_spec
+  //   | optional_callbacks
   //   | behaviour
   //   | on_load
   //   | ifdef_ifndef_undef_attribute
@@ -733,18 +744,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!r) r = import_directive(b, l + 1);
     if (!r) r = specification(b, l + 1);
     if (!r) r = callback_spec(b, l + 1);
+    if (!r) r = optional_callbacks(b, l + 1);
     if (!r) r = behaviour(b, l + 1);
     if (!r) r = on_load(b, l + 1);
     if (!r) r = ifdef_ifndef_undef_attribute(b, l + 1);
-    if (!r) r = attribute_1_9(b, l + 1);
+    if (!r) r = attribute_1_10(b, l + 1);
     if (!r) r = withOn(b, l + 1, "ATOM_ATTRIBUTE", atom_attribute_parser_);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // else_atom_attribute <<enterMode "ELSE">>
-  private static boolean attribute_1_9(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "attribute_1_9")) return false;
+  private static boolean attribute_1_10(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "attribute_1_10")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = else_atom_attribute(b, l + 1);
@@ -1175,6 +1187,57 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, ERL_COMMA);
     p = r; // pin = 1
     r = r && expr_with_guard(b, l + 1);
+    exit_section_(b, l, m, null, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // q_atom '/' integer
+  public static boolean callback_function(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "callback_function")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, "<callback function>");
+    r = q_atom(b, l + 1);
+    p = r; // pin = 1
+    r = r && report_error_(b, consumeToken(b, ERL_OP_AR_DIV));
+    r = p && consumeToken(b, ERL_INTEGER) && r;
+    exit_section_(b, l, m, ERL_CALLBACK_FUNCTION, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // callback_function (',' callback_function)*
+  static boolean callback_function_list(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "callback_function_list")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = callback_function(b, l + 1);
+    p = r; // pin = 1
+    r = r && callback_function_list_1(b, l + 1);
+    exit_section_(b, l, m, null, r, p, null);
+    return r || p;
+  }
+
+  // (',' callback_function)*
+  private static boolean callback_function_list_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "callback_function_list_1")) return false;
+    int c = current_position_(b);
+    while (true) {
+      if (!callback_function_list_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "callback_function_list_1", c)) break;
+      c = current_position_(b);
+    }
+    return true;
+  }
+
+  // ',' callback_function
+  private static boolean callback_function_list_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "callback_function_list_1_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = consumeToken(b, ERL_COMMA);
+    p = r; // pin = 1
+    r = r && callback_function(b, l + 1);
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
@@ -4012,6 +4075,41 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // '[' callback_function_list? ']'
+  public static boolean optional_callback_functions(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "optional_callback_functions")) return false;
+    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = consumeToken(b, ERL_BRACKET_LEFT);
+    p = r; // pin = 1
+    r = r && report_error_(b, optional_callback_functions_1(b, l + 1));
+    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
+    exit_section_(b, l, m, ERL_OPTIONAL_CALLBACK_FUNCTIONS, r, p, null);
+    return r || p;
+  }
+
+  // callback_function_list?
+  private static boolean optional_callback_functions_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "optional_callback_functions_1")) return false;
+    callback_function_list(b, l + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
+  // 'optional_callbacks' <<attribute_tail optional_callback_functions>>
+  public static boolean optional_callbacks(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "optional_callbacks")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, "<optional callbacks>");
+    r = consumeToken(b, "optional_callbacks");
+    p = r; // pin = 1
+    r = r && attribute_tail(b, l + 1, optional_callback_functions_parser_);
+    exit_section_(b, l, m, ERL_OPTIONAL_CALLBACKS, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
   static boolean period(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "period")) return false;
@@ -6122,6 +6220,11 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   final static Parser map_assoc_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return map_assoc(b, l + 1);
+    }
+  };
+  final static Parser optional_callback_functions_parser_ = new Parser() {
+    public boolean parse(PsiBuilder b, int l) {
+      return optional_callback_functions(b, l + 1);
     }
   };
   final static Parser try_argument_definition_parser_ = new Parser() {
