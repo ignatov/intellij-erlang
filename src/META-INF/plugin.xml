@@ -88,6 +88,7 @@
         <annotator language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangAnnotator"/>
         <lang.syntaxHighlighterFactory key="Erlang" implementationClass="org.intellij.erlang.editor.ErlangSyntaxHighlighterFactory"/>
         <lang.braceMatcher language="Erlang" implementationClass="org.intellij.erlang.ErlangBraceMatcher"/>
+        <spellchecker.support language="Erlang" implementationClass="org.intellij.erlang.ErlangSpellcheckingStrategy"/>
         <lang.commenter language="Erlang" implementationClass="org.intellij.erlang.ErlangCommenter"/>
         <lang.psiStructureViewFactory language="Erlang" implementationClass="org.intellij.erlang.ErlangStructureViewFactory"/>
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactoring.ErlangRefactoringSupportProvider"/>

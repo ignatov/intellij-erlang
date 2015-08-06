@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.intellij.erlang.formatting.ErlangFormattingTest;
 import org.intellij.erlang.highlighting.*;
 import org.intellij.erlang.highlighting.generate.ErlangGenerateTest;
 import org.intellij.erlang.info.ErlangParameterInfoHandlerTest;
+import org.intellij.erlang.inspection.ErlangSpellcheckingTest;
 import org.intellij.erlang.marker.ErlangMethodSeparatorProviderTest;
 import org.intellij.erlang.navigation.ErlangGotoSuperTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
@@ -64,6 +65,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(Erlang17HighlightingTest.class);
     suite.addTestSuite(Erlang17SmallIdeHighlightingTest.class);
     suite.addTestSuite(ErlangSmallIdeHighlightingTest.class);
+    suite.addTestSuite(ErlangSpellcheckingTest.class);
     suite.addTestSuite(ErlangFormattingTest.class);
     suite.addTestSuite(ErlangAutoIndentTest.class);
     suite.addTestSuite(ErlangCompletionTest.class);
