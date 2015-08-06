@@ -91,7 +91,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         String fixMessage = "Create Function " + functionPresentation;
 
         LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(what, ErlangModuleRef.class) != null ?
-          new LocalQuickFix[]{} : new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(name, arity, fixMessage)};
+          new LocalQuickFix[]{} : new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(fixMessage, name, arity)};
 
         registerProblem(holder, target, "Unresolved function " + functionPresentation, qfs);
       }

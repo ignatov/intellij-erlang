@@ -35,7 +35,7 @@ import java.util.List;
 public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements IntentionAction {
   private final FunctionTextProvider myFunctionText;
 
-  public ErlangCreateFunctionQuickFix(@NotNull String name, int arity, @NotNull String fixMessage) {
+  public ErlangCreateFunctionQuickFix(@NotNull String fixMessage, @NotNull String name, int arity) {
     this(fixMessage, new DefaultFunctionTextProvider(name, arity));
   }
 

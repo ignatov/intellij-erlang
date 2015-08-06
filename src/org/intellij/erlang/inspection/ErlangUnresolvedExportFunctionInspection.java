@@ -46,7 +46,7 @@ public class ErlangUnresolvedExportFunctionInspection extends ErlangInspectionBa
         String fixMessage = "Create Function " + functionPresentation;
 
         registerProblem(holder, o, "Unresolved function " + functionPresentation,
-                        new ErlangCreateFunctionQuickFix(name, arity, fixMessage));
+                        new ErlangCreateFunctionQuickFix(fixMessage, name, arity));
       }
     };
   }
