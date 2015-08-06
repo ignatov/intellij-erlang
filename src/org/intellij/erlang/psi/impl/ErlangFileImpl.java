@@ -816,7 +816,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     ErlangFileStub stub = getStub();
     if (stub != null) {
       String fromStub = stub.getParseTransforms();
-      List<String> split = StringUtil.split(fromStub, ",");
+      List<String> split = fromStub != null ? StringUtil.split(fromStub, ",") : ContainerUtil.<String>emptyList();
       parseTransforms.addAll(split);
       return;
     }
