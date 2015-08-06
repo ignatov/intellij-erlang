@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   RebarRunConfigurationEditorForm() {
     myRunInModuleCheckBox.addActionListener(new ActionListener() {
       @Override
-      public void actionPerformed(ActionEvent e) {
+      public void actionPerformed(@NotNull ActionEvent e) {
         myModulesComboBox.setEnabled(myRunInModuleCheckBox.isSelected());
       }
     });

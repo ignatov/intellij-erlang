@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import java.util.TreeSet;
 
 public final class ErlangBifTable {
   private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {
+    @NotNull
     @Override
     protected Collection<ErlangBifDescriptor> createCollection() {
       return new TreeSet<ErlangBifDescriptor>();

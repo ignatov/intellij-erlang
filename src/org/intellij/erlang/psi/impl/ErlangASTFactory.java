@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,11 @@ import com.intellij.lang.DefaultASTFactoryImpl;
 import com.intellij.psi.impl.source.tree.LeafElement;
 import com.intellij.psi.impl.source.tree.PsiCommentImpl;
 import com.intellij.psi.tree.IElementType;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangASTFactory extends DefaultASTFactoryImpl {
   @Override
-  public LeafElement createComment(IElementType type, CharSequence text) {
+  public LeafElement createComment(@NotNull IElementType type, CharSequence text) {
     return new ErlangCommentImpl(type, text);
   }
 

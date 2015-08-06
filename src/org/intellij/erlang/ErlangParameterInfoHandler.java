@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,7 +94,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       if (clauses.size() > 0) {
         Collections.sort(clauses, new Comparator<ErlangFunctionClause>() {
           @Override
-          public int compare(ErlangFunctionClause lhs, ErlangFunctionClause rhs) {
+          public int compare(@NotNull ErlangFunctionClause lhs, @NotNull ErlangFunctionClause rhs) {
             int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
             int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
             return Integer.signum(lhsSize - rhsSize);

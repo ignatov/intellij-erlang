@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,7 +165,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
     Collections.sort(myFoundOtpApps, new Comparator<ImportedOtpApp>() {
       @Override
-      public int compare(ImportedOtpApp o1, ImportedOtpApp o2) {
+      public int compare(@NotNull ImportedOtpApp o1, @NotNull ImportedOtpApp o2) {
         int nameCompareResult = String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
         if (nameCompareResult == 0) {
           return String.CASE_INSENSITIVE_ORDER.compare(o1.getRoot().getPath(), o2.getRoot().getPath());

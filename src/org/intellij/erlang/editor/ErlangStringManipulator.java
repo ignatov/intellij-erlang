@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,19 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.AbstractElementManipulator;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangStringLiteral;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangStringManipulator extends AbstractElementManipulator<ErlangStringLiteral> {
   @Override
-  public ErlangStringLiteral handleContentChange(ErlangStringLiteral psi, TextRange range, String newContent) throws IncorrectOperationException {
+  public ErlangStringLiteral handleContentChange(@NotNull ErlangStringLiteral psi, @NotNull TextRange range, String newContent) throws IncorrectOperationException {
     String oldText = psi.getText();
     String newText = oldText.substring(0, range.getStartOffset()) + newContent + oldText.substring(range.getEndOffset());
     return psi.updateText(newText);
   }
 
+  @NotNull
   @Override
-  public TextRange getRangeInElement(ErlangStringLiteral element) {
+  public TextRange getRangeInElement(@NotNull ErlangStringLiteral element) {
     return getStringTokenRange(element);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   public ErlangRemoteDebugConfigurationEditorForm() {
     myUseShortNamesCheckBox.addItemListener(new ItemListener() {
       @Override
-      public void itemStateChanged(ItemEvent e) {
+      public void itemStateChanged(@NotNull ItemEvent e) {
         setUseShortNames(myUseShortNamesCheckBox.isSelected());
       }
     });

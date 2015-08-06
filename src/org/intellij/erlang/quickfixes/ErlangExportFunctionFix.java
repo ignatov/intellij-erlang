@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,6 +214,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     }
     final JBList exportPopupList = new JBList(model);
     exportPopupList.setCellRenderer(new DefaultListCellRenderer() {
+      @NotNull
       @Override
       public Component getListCellRendererComponent(@NotNull JList list,
                                                     Object value,
@@ -238,7 +239,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     });
     exportPopupList.addListSelectionListener(new ListSelectionListener() {
       @Override
-      public void valueChanged(ListSelectionEvent e) {
+      public void valueChanged(@NotNull ListSelectionEvent e) {
         ErlangExport export = (ErlangExport) exportPopupList.getSelectedValue();
         if (export == null) return;
         dropHighlighters();

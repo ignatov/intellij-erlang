@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.utils;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
@@ -29,6 +31,6 @@ public class AncestorAdapter implements AncestorListener {
   }
 
   @Override
-  public void ancestorMoved(AncestorEvent event) {
+  public void ancestorMoved(@NotNull AncestorEvent event) {
   }
 }

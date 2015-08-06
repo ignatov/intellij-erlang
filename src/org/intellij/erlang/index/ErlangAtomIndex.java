@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
     return new DataIndexer<String, Void, FileContent>() {
       @Override
       @NotNull
-      public Map<String, Void> map(final FileContent inputData) {
+      public Map<String, Void> map(@NotNull final FileContent inputData) {
         final Map<String, Void> result = new THashMap<String, Void>();
         PsiFile file = inputData.getPsiFile();
         if (file instanceof ErlangFile) {

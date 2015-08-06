@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@ package org.intellij.erlang.editor;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.impl.source.resolve.reference.impl.manipulators.PsiCommentManipulator;
+import org.jetbrains.annotations.NotNull;
 
 public class ExtendedPsiCommentManipulator extends PsiCommentManipulator {
+  @NotNull
   @Override
-  public TextRange getRangeInElement(PsiComment element) {
+  public TextRange getRangeInElement(@NotNull PsiComment element) {
     String text = element.getText();
     if (text.startsWith("%%%")) return new TextRange(3, element.getTextLength());
     if (text.startsWith("%%")) return new TextRange(2, element.getTextLength());

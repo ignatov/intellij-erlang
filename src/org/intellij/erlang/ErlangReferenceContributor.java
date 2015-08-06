@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ public class ErlangReferenceContributor extends PsiReferenceContributor {
   private enum Kind {FUNCTION, MODULE, RECORD}
 
   @Override
-  public void registerReferenceProviders(PsiReferenceRegistrar registrar) {
+  public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
     register(registrar, Kind.RECORD,   "erlang", "is_record",  2, 1);
     register(registrar, Kind.RECORD,   "erlang", "is_record",  3, 1);
     register(registrar, Kind.MODULE,   "erlang", "spawn",      3, 0);

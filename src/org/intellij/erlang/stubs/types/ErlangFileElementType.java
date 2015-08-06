@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> 
   @Override
   public StubBuilder getBuilder() {
     return new DefaultStubBuilder() {
+      @NotNull
       @Override
       protected StubElement createStubForFile(@NotNull PsiFile file) {
         if (file instanceof ErlangFile) {
