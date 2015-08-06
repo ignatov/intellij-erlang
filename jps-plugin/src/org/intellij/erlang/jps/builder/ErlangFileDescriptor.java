@@ -21,6 +21,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Attribute;
 import com.intellij.util.xmlb.annotations.Tag;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -28,7 +29,18 @@ import java.util.List;
 public class ErlangFileDescriptor {
   @Attribute("path")
   public String myErlangModulePath;
+
   @Tag("dependencies")
   @AbstractCollection(surroundWithTag = false, elementTag = "dependency")
-  public List<String> myDependencies = ContainerUtil.newArrayList();
+  public List<String> myDependencies;
+
+  @SuppressWarnings("unused") //reflection
+  public ErlangFileDescriptor() {
+    myDependencies = ContainerUtil.newArrayList();
+  }
+
+  public ErlangFileDescriptor(@NotNull String erlangModulePath, @NotNull List<String> dependencies) {
+    myErlangModulePath = erlangModulePath;
+    myDependencies = dependencies;
+  }
 }

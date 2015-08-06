@@ -1,0 +1,1 @@
+-behaviour(behaviour1).
