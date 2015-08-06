@@ -57,6 +57,7 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
+import org.intellij.erlang.stubs.index.ErlangBehaviourModuleIndex;
 import org.intellij.erlang.types.ErlangExpressionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -88,6 +89,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     ErlangExportTypeAttribute exportType = PsiTreeUtil.getParentOfType(elementAt, ErlangExportTypeAttribute.class);
     ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
     PsiElement previousByOffset = elementAt != null ? PsiTreeUtil.prevVisibleLeaf(elementAt) : startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
+    ErlangBehaviour behaviour = PsiTreeUtil.getParentOfType(elementAt, ErlangBehaviour.class);
     //noinspection unchecked
     ErlangCompositeElement typeParent = PsiTreeUtil.getParentOfType(elementAt, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class);
     if (parent instanceof ErlangExport || PsiTreeUtil.getParentOfType(parent , ErlangExportFunctions.class, false) != null
@@ -96,7 +98,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       || is(previousByOffset, ErlangTypes.ERL_RADIX)
       || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField
       || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) && !is(previousByOffset, ErlangTypes.ERL_OP_EQ)
-      || typeParent != null || isRecordFunctionCallCompletion(previousByOffset)) {
+      || typeParent != null || isRecordFunctionCallCompletion(previousByOffset) || behaviour != null) {
       context.setDummyIdentifier("a");
     }
   }
@@ -192,9 +194,13 @@ public class ErlangCompletionContributor extends CompletionContributor {
             boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
             //noinspection unchecked
             boolean insideImport = PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective;
+            boolean insideBehaviour = PsiTreeUtil.getParentOfType(position, ErlangBehaviour.class) != null;
             if (inside || inConsole && !isDot(position) || insideImport) {
               boolean withColon = !insideImport && null == PsiTreeUtil.getParentOfType(position, ErlangFunctionCallExpression.class, false);
               suggestModules(result, position, withColon);
+            }
+            else if (insideBehaviour) {
+              suggestBehaviours(result, position);
             }
           }
           if (colonQualified == null
@@ -424,6 +430,22 @@ public class ErlangCompletionContributor extends CompletionContributor {
           LookupElementBuilder.create(name)
             .withIcon(ErlangIcons.MODULE)
             .withInsertHandler(new QuoteInsertHandler.ModuleInsertHandler(name, withColon)),
+          MODULE_PRIORITY));
+    }
+  }
+
+  private static void suggestBehaviours(@NotNull CompletionResultSet result, @NotNull PsiElement position) {
+    Project project = position.getProject();
+    Collection<ErlangModule> modules = ErlangBehaviourModuleIndex.getModules(project,
+                                                                             GlobalSearchScope.allScope(project));
+    for (ErlangModule module : modules) {
+      QuoteInsertHandler.ModuleInsertHandler handler =
+        new QuoteInsertHandler.ModuleInsertHandler(module.getName(), false);
+      result.addElement(
+        PrioritizedLookupElement.withPriority(
+          LookupElementBuilder.create(module)
+                              .withIcon(ErlangIcons.MODULE)
+                              .withInsertHandler(handler),
           MODULE_PRIORITY));
     }
   }

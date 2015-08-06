@@ -19,37 +19,47 @@ package org.intellij.erlang.stubs;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.stubs.PsiFileStubImpl;
 import com.intellij.psi.tree.IStubFileElementType;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.stubs.types.ErlangFileElementType;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
+import java.util.Set;
 
 public class ErlangFileStub extends PsiFileStubImpl<ErlangFile> {
   private final boolean myExportAll;
   private final StringRef myParseTransformsRef;
+  private final boolean myIsBehaviour;
 
   public ErlangFileStub(ErlangFile file) {
     super(file);
     myExportAll = file.isExportedAll();
-    HashSet<String> transforms = new HashSet<String>();
+    Set<String> transforms = ContainerUtil.newHashSet();
     file.addDeclaredParseTransforms(transforms);
     String join = StringUtil.join(transforms, ",");
     myParseTransformsRef = StringRef.fromString(join);
+    myIsBehaviour = file.isBehaviour();
   }
 
-  public ErlangFileStub(ErlangFile file, boolean exportAll, StringRef parseTransformsRef) {
+  public ErlangFileStub(ErlangFile file, boolean exportAll, StringRef parseTransformsRef, boolean isBehaviour) {
     super(file);
     myExportAll = exportAll;
     myParseTransformsRef = parseTransformsRef;
+    myIsBehaviour = isBehaviour;
   }
 
   public boolean isExportAll() {
     return myExportAll;
   }
 
+  @Nullable
   public String getParseTransforms() {
     return StringRef.toString(myParseTransformsRef);
+  }
+
+  public boolean isBehaviour() {
+    return myIsBehaviour;
   }
 
   @Override

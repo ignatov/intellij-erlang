@@ -18,10 +18,7 @@ package org.intellij.erlang.stubs.types;
 
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.StubBuilder;
-import com.intellij.psi.stubs.DefaultStubBuilder;
-import com.intellij.psi.stubs.StubElement;
-import com.intellij.psi.stubs.StubInputStream;
-import com.intellij.psi.stubs.StubOutputStream;
+import com.intellij.psi.stubs.*;
 import com.intellij.psi.tree.IStubFileElementType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangFile;
@@ -31,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> {
-  public static final int VERSION = 1;
+  public static final int VERSION = 2;
   public static final IStubFileElementType INSTANCE = new ErlangFileElementType();
 
   public ErlangFileElementType() {
@@ -61,12 +58,13 @@ public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> 
   public void serialize(@NotNull ErlangFileStub stub, @NotNull StubOutputStream dataStream) throws IOException {
     dataStream.writeBoolean(stub.isExportAll());
     dataStream.writeName(stub.getParseTransforms());
+    dataStream.writeBoolean(stub.isBehaviour());
   }
 
   @NotNull
   @Override
   public ErlangFileStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
-    return new ErlangFileStub(null, dataStream.readBoolean(), dataStream.readName());
+    return new ErlangFileStub(null, dataStream.readBoolean(), dataStream.readName(), dataStream.readBoolean());
   }
 
   @NotNull

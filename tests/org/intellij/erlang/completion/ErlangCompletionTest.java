@@ -308,6 +308,21 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("foo() -> bar(test_modul<caret>", "foo() -> bar(test_module");
   }
 
+  public void testBehaviourCompletion() {
+    myFixture.configureByFiles("module-completion/behaviour_module.erl");
+    doCheckResult("-behaviour(behaviour_mo<caret>).", "-behaviour(behaviour_module).");
+  }
+
+  public void testBehaviourInfoCompletion() {
+    myFixture.configureByFiles("module-completion/behaviour_info_module.erl");
+    doCheckResult("-behaviour(behaviour_in<caret>).", "-behaviour(behaviour_info_module).");
+  }
+
+  public void testQuotedBehaviourCompletion() {
+    myFixture.configureByFiles("module-completion/quoted-behaviour.erl");
+    doCheckResult("-behaviour(quo<caret>).", "-behaviour('quoted-behaviour').");
+  }
+
   public void test176() {
     myFixture.configureByFiles("headers/a.erl", "headers/header.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "foo");
