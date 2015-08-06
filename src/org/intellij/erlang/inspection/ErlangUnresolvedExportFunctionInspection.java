@@ -19,6 +19,7 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiReference;
+import org.intellij.erlang.psi.ErlangAtom;
 import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -28,19 +29,24 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangUnresolvedExportFunctionInspection extends ErlangInspectionBase {
   @NotNull
   @Override
-  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+  protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder,
+                                             @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
       @Override
       public void visitExportFunction(@NotNull ErlangExportFunction o) {
         PsiReference reference = o.getReference();
-        if (reference.resolve() == null) {
-          String name = o.getQAtom().getText();
-          int arity = ErlangPsiImplUtil.getArity(o.getInteger());
-          if (arity >= 0) {
-            holder.registerProblem(o, "Unresolved function " + "'" + o.getText() + "'",
-              new ErlangCreateFunctionQuickFix(name, arity));
-          }
-        }
+        if (reference.resolve() != null) return;
+
+        int arity = ErlangPsiImplUtil.getArity(o.getInteger());
+        ErlangAtom atom = o.getQAtom().getAtom();
+        if (arity < 0 || atom == null) return;
+
+        String name = atom.getName();
+        String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
+        String fixMessage = "Create Function " + functionPresentation;
+
+        registerProblem(holder, o, "Unresolved function " + functionPresentation,
+                        new ErlangCreateFunctionQuickFix(name, arity, fixMessage));
       }
     };
   }

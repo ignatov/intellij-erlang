@@ -33,8 +33,8 @@ public class ErlangIntroduceFunctionFixTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/introduce_function/";
   }
 
-  public void testFunctionCall()        { doTest("Create Function 'lll/6'"); }
-  public void testFunctionExpression()  { doTest("Create Function 'lll/6'"); }
-  public void testFunctionSpec()        { doTest("Create Function 'lll/6'"); }
-  public void testFunctionExport()      { doTest("Create Function 'lll/6'"); }
+  public void testFunctionCall()        { doTest("Create Function lll/6"); }
+  public void testFunctionExpression()  { doTest("Create Function lll/6"); }
+  public void testFunctionSpec()        { doTest("Create Function lll/6"); }
+  public void testFunctionExport()      { doTest("Create Function lll/6"); }
 }

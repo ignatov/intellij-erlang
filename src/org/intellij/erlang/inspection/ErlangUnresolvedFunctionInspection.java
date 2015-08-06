@@ -21,12 +21,20 @@ import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.intellij.erlang.bif.ErlangBifTable;
+import com.intellij.util.Function;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
+import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix.FunctionTextProvider;
+import org.intellij.erlang.refactoring.ErlangRefactoringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
   @NotNull
@@ -39,27 +47,24 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         PsiReference reference = o.getReference();
         if (reference instanceof ErlangFunctionReference && reference.resolve() == null) {
           if (o.getQAtom().getMacros() != null) return;
-          ErlangFunctionReference r = (ErlangFunctionReference) reference;
 
-          String name = r.getName();
-          int arity = r.getArity();
-
-          if (arity < 0) return;
-
-          String signature = r.getSignature();
+          int arity = o.getArgumentList().getExpressionList().size();
+          String name = o.getName();
+          String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
 
           PsiElement parent = o.getParent();
           if (parent instanceof ErlangGlobalFunctionCallExpression) {
             ErlangModuleRef moduleRef = ((ErlangGlobalFunctionCallExpression) parent).getModuleRef();
             if (moduleRef.getQAtom().getMacros() != null) return;
-            signature = moduleRef.getText() + ":" + signature;
+            functionPresentation = moduleRef.getText() + ":" + functionPresentation;
           }
+          String fixMessage = "Create Function " + functionPresentation;
 
-          LocalQuickFix[] qfs = parent instanceof ErlangGenericFunctionCallExpression || parent instanceof ErlangGlobalFunctionCallExpression ?
-            new LocalQuickFix[]{} :
-            new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(name, arity)};
+          LocalQuickFix[] fixes = parent instanceof ErlangGenericFunctionCallExpression ||
+                                  parent instanceof ErlangGlobalFunctionCallExpression ? new LocalQuickFix[0] :
+                                  new LocalQuickFix[]{createFix(o, fixMessage)};
 
-          registerProblem(holder, o.getNameIdentifier(), "Unresolved function " + "'" + signature + "'", qfs);
+          registerProblem(holder, o.getNameIdentifier(), "Unresolved function " + functionPresentation, fixes);
         }
       }
 
@@ -80,11 +85,47 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         }
 
         ErlangFunctionReference r = (ErlangFunctionReference) reference;
-        if (r.getArity() < 0) return; //there is no need to inspect incomplete/erroneous code
+        int arity = r.getArity();
+        String name = r.getName();
+        if (arity < 0 || name == null) return;
+
+        String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
+        String fixMessage = "Create Function " + functionPresentation;
+
         LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(what, ErlangModuleRef.class) != null ?
-          new LocalQuickFix[]{} : new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(r.getName(), r.getArity())};
-        registerProblem(holder, target, "Unresolved function " + "'" + r.getSignature() + "'", qfs);
+          new LocalQuickFix[]{} : new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(name, arity, fixMessage)};
+
+        registerProblem(holder, target, "Unresolved function " + functionPresentation, qfs);
       }
     };
+  }
+
+  private static ErlangCreateFunctionQuickFix createFix(@NotNull ErlangFunctionCallExpression o,
+                                                        @NotNull String fixMessage) {
+    final SmartPsiElementPointer<ErlangFunctionCallExpression> myPointer =
+      SmartPointerManager.getInstance(o.getProject()).createSmartPsiElementPointer(o);
+    return new ErlangCreateFunctionQuickFix(new FunctionTextProvider() {
+      @NotNull
+      @Override
+      public String getName() {
+        ErlangFunctionCallExpression call = myPointer.getElement();
+        assert call != null;
+        return call.getName();
+      }
+
+      @NotNull
+      @Override
+      public List<String> getArguments() {
+        ErlangFunctionCallExpression call = myPointer.getElement();
+        assert call != null;
+        List<ErlangExpression> expressions = call.getArgumentList().getExpressionList();
+        return ContainerUtil.map(expressions, new Function<ErlangExpression, String>() {
+          @Override
+          public String fun(@NotNull ErlangExpression expression) {
+            return ErlangRefactoringUtil.shorten(expression);
+          }
+        });
+      }
+    }, fixMessage);
   }
 }
