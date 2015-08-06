@@ -36,11 +36,10 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements I
   private final FunctionTextProvider myFunctionText;
 
   public ErlangCreateFunctionQuickFix(@NotNull String name, int arity, @NotNull String fixMessage) {
-    super(fixMessage, "Erlang");
-    myFunctionText = new DefaultFunctionTextProvider(name, arity);
+    this(fixMessage, new DefaultFunctionTextProvider(name, arity));
   }
 
-  public ErlangCreateFunctionQuickFix(@NotNull FunctionTextProvider provider, @NotNull String fixMessage) {
+  public ErlangCreateFunctionQuickFix(@NotNull String fixMessage, @NotNull FunctionTextProvider provider) {
     super(fixMessage, "Erlang");
     myFunctionText = provider;
   }

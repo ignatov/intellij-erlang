@@ -43,29 +43,27 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
                                              @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
       @Override
-      public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-        PsiReference reference = o.getReference();
-        if (reference instanceof ErlangFunctionReference && reference.resolve() == null) {
-          if (o.getQAtom().getMacros() != null) return;
-
-          int arity = o.getArgumentList().getExpressionList().size();
-          String name = o.getName();
-          String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
-
-          PsiElement parent = o.getParent();
-          if (parent instanceof ErlangGlobalFunctionCallExpression) {
-            ErlangModuleRef moduleRef = ((ErlangGlobalFunctionCallExpression) parent).getModuleRef();
-            if (moduleRef.getQAtom().getMacros() != null) return;
-            functionPresentation = moduleRef.getText() + ":" + functionPresentation;
-          }
-          String fixMessage = "Create Function " + functionPresentation;
-
-          LocalQuickFix[] fixes = parent instanceof ErlangGenericFunctionCallExpression ||
-                                  parent instanceof ErlangGlobalFunctionCallExpression ? new LocalQuickFix[0] :
-                                  new LocalQuickFix[]{createFix(o, fixMessage)};
-
-          registerProblem(holder, o.getNameIdentifier(), "Unresolved function " + functionPresentation, fixes);
+      public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression call) {
+        PsiReference reference = call.getReference();
+        PsiElement parent = call.getParent();
+        ErlangModuleRef moduleRef = parent instanceof ErlangGlobalFunctionCallExpression ?
+                                    ((ErlangGlobalFunctionCallExpression) parent).getModuleRef() : null;
+        if (call.getQAtom().getMacros() != null ||
+            moduleRef != null && moduleRef.getQAtom().getMacros() != null ||
+            !(reference instanceof ErlangFunctionReference) || reference.resolve() != null) {
+          return;
         }
+
+        String name = call.getName();
+        int arity = call.getArgumentList().getExpressionList().size();
+        String presentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
+        String fixMessage = "Create Function " + (moduleRef != null ? moduleRef.getText() + ":" : "") + presentation;
+
+        LocalQuickFix[] fixes = parent instanceof ErlangGenericFunctionCallExpression ||
+                                parent instanceof ErlangGlobalFunctionCallExpression ? new LocalQuickFix[0] :
+                                new LocalQuickFix[]{createFix(call, fixMessage)};
+
+        registerProblem(holder, call.getNameIdentifier(), "Unresolved function " + presentation, fixes);
       }
 
       @Override
@@ -100,11 +98,11 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
     };
   }
 
-  private static ErlangCreateFunctionQuickFix createFix(@NotNull ErlangFunctionCallExpression o,
+  private static ErlangCreateFunctionQuickFix createFix(@NotNull ErlangFunctionCallExpression call,
                                                         @NotNull String fixMessage) {
     final SmartPsiElementPointer<ErlangFunctionCallExpression> myPointer =
-      SmartPointerManager.getInstance(o.getProject()).createSmartPsiElementPointer(o);
-    return new ErlangCreateFunctionQuickFix(new FunctionTextProvider() {
+      SmartPointerManager.getInstance(call.getProject()).createSmartPsiElementPointer(call);
+    return new ErlangCreateFunctionQuickFix(fixMessage, new FunctionTextProvider() {
       @NotNull
       @Override
       public String getName() {
@@ -126,6 +124,6 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
           }
         });
       }
-    }, fixMessage);
+    });
   }
 }
