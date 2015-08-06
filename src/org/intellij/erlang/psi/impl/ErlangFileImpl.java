@@ -424,8 +424,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   public boolean isBehaviour() {
     ErlangFileStub stub = getStub();
     if (stub != null) return stub.isBehaviour();
-    ErlangFunction function = getFunction("behaviour_info", 1);
-    return  !getCallbackMap().isEmpty() || function != null && function.isExported();
+
+    ErlangFunction behaviourInfo = getFunction("behaviour_info", 1);
+    return behaviourInfo != null && behaviourInfo.isExported() || !getCallbackMap().isEmpty();
   }
 
   private boolean calcNoAutoImportAll() {
