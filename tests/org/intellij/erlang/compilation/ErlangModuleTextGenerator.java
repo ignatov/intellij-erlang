@@ -47,6 +47,7 @@ class ErlangModuleTextGenerator {
     private final List<BehaviourBuilder> myBehaviours = ContainerUtil.newArrayList();
     private final List<String> myParseTransforms = ContainerUtil.newArrayList();
     private final List<String> myIncludes = ContainerUtil.newArrayList();
+    private final List<String> myIncludeLibs = ContainerUtil.newArrayList();
 
     public ErlangModuleTextBuilder(@NotNull String moduleName) {
       myModuleName = moduleName;
@@ -72,16 +73,28 @@ class ErlangModuleTextGenerator {
       return this;
     }
 
+    public ErlangModuleTextBuilder includeLib(@NotNull String modulePath) {
+      myIncludeLibs.add(modulePath);
+      return this;
+    }
+
     @NotNull
     public String build() {
       StringBuilder builder = new StringBuilder();
       appendModule(builder);
       appendIncludes(builder);
+      appendIncludeLibs(builder);
       appendBehaviour(builder);
       appendParseTransforms(builder);
       appendExports(builder);
       build(builder);
       return builder.toString();
+    }
+
+    private void appendIncludeLibs(StringBuilder builder) {
+      for (String includeLib : myIncludeLibs) {
+        builder.append("-includeLib(\"").append(includeLib).append("\").\n");
+      }
     }
 
     private void appendIncludes(StringBuilder builder) {

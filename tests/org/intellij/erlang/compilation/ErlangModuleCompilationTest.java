@@ -54,7 +54,6 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestBase {
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
   }
-
   public void testRebuildWithNewFile() throws Exception {
     final VirtualFile sourceFile = addSourceFile(myModule, "module1.erl", module("module1").build());
     myCompilationRunner.compile();
@@ -150,6 +149,21 @@ public class ErlangModuleCompilationTest extends ErlangCompilationTestBase {
     myCompilationRunner.touch(headerFile);
     myCompilationRunner.compile();
     assertTrue(sourceModificationTime != lastOutputModificationTime(myModule, sourceFileWithDependency));
+  }
+
+  public void testBuildWithIncludesFormDifferentModule() throws Exception {
+    Module otherModule = createModuleInOwnDirectoryWithSourceAndTestRoot("other");
+    ModuleRootModificationUtil.addDependency(myModule, otherModule);
+    VirtualFile includeSourceRoot = addIncludeRoot(otherModule, "include");
+    addFileToDirectory(includeSourceRoot, "header.hrl", "");
+    addSourceFile(myModule, "module1.erl", module("module1").include("../other/include/header.hrl").build());
+    compileAndAssertOutput(myModule, otherModule);
+  }
+
+  public void testWithStandardLibraryInclude() throws Exception {
+    addSourceFile(myModule, "module2.erl", module("module2").includeLib("eunit/include/eunit.hrl").build());
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
   }
   public void testRebuildWithTransitiveDependencies() throws Exception {
     VirtualFile headerFile = addSourceFile(myModule, "header.hrl", "");
