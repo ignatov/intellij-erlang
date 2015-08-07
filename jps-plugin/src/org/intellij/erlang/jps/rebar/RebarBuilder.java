@@ -74,13 +74,18 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
 
     JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
     String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
-
+    boolean isRebarRun = false;
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
       String contentRootPath = new URL(contentRootUrl).getPath();
       File contentRootDir = new File(contentRootPath);
       File rebarConfigFile = new File(contentRootDir, REBAR_CONFIG_FILE_NAME);
       if (!rebarConfigFile.exists()) continue;
       runRebar(escriptPath, rebarPath, contentRootPath, compilerOptions.myAddDebugInfoEnabled, context);
+      isRebarRun = true;
+    }
+    if (!isRebarRun) {
+      String messageText = "Skipped module \'" + module.getName() + "\' because rebar.config is not found.";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, messageText));
     }
   }
 
