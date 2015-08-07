@@ -203,10 +203,13 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     private void buildForHeaders(@NotNull Collection<VirtualFile> erlangHeaders) {
       for (VirtualFile header : erlangHeaders) {
+        myPathsToDependenciesMap.put(header.getPath(), ContainerUtil.<String>newArrayList());
+      }
+      for (VirtualFile header : erlangHeaders) {
         Set<String> dependencies = ContainerUtil.newHashSet();
         ErlangFile erlangFile = getErlangFile(header);
         addDeclaredDependencies(erlangFile, dependencies);
-        myPathsToDependenciesMap.put(header.getPath(), ContainerUtil.newArrayList(dependencies));
+        myPathsToDependenciesMap.get(header.getPath()).addAll(dependencies);
       }
     }
 
@@ -217,13 +220,13 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     }
 
     @NotNull
-    private static List<String> getDeclaredIncludePaths(@NotNull ErlangFile file) {
+    private List<String> getDeclaredIncludePaths(@NotNull ErlangFile file) {
       return ContainerUtil.mapNotNull(ErlangPsiImplUtil.getDirectlyIncludedFiles(file), new Function<ErlangFile, String>() {
         @Nullable
         @Override
         public String fun(ErlangFile erlangFile) {
           VirtualFile virtualFile = erlangFile.getVirtualFile();
-          return virtualFile != null ? virtualFile.getPath() : null;
+          return virtualFile != null && myPathsToDependenciesMap.containsKey(virtualFile.getPath()) ? virtualFile.getPath() : null;
         }
       });
     }
