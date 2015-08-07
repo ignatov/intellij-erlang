@@ -23,15 +23,18 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.intellij.util.Function;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -64,26 +67,31 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
         builder.append("'").append(ErlangPsiImplUtil.createFunctionPresentationFromCallbackSpec(spec)).append("', ");
       }
       String message = builder.substring(0, builder.length() - 2);
-      registerProblem(problemsHolder, behaviourRef, message, new MyLocalQuickFixBase(undefinedCallbacks));
+      registerProblem(problemsHolder, behaviourRef, message,
+                      new CreateAndExportFunctionsFix(undefinedCallbacks, file.getProject()));
     }
   }
 
-  private static class MyLocalQuickFixBase extends LocalQuickFixBase {
-    @NotNull
-    private final Collection<ErlangCallbackSpec> myCallbackSpecs;
+  private static class CreateAndExportFunctionsFix extends LocalQuickFixBase {
+    private final List<SmartPsiElementPointer<ErlangCallbackSpec>> myCallbackSpecs;
 
-    protected MyLocalQuickFixBase(@NotNull Collection<ErlangCallbackSpec> callbackSpecs) {
+    public CreateAndExportFunctionsFix(@NotNull List<ErlangCallbackSpec> callbackSpecs, @NotNull Project project) {
       super(FIX_MESSAGE);
-      myCallbackSpecs = callbackSpecs;
+      final SmartPointerManager manager = SmartPointerManager.getInstance(project);
+      myCallbackSpecs = ContainerUtil.map(callbackSpecs, new Function<ErlangCallbackSpec, SmartPsiElementPointer<ErlangCallbackSpec>>() {
+        @Override
+        public SmartPsiElementPointer<ErlangCallbackSpec> fun(ErlangCallbackSpec callbackSpec) {
+          return manager.createSmartPsiElementPointer(callbackSpec);
+        }
+      });
     }
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-      PsiFile file = problemDescriptor.getPsiElement().getContainingFile();
-      ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
-      if (erlangFile != null) {
-        addCallbackImplementations(project, erlangFile);
-        exportAddedCallbackImplementations(project, erlangFile);
+      ErlangFile file = ObjectUtils.tryCast(problemDescriptor.getPsiElement().getContainingFile(), ErlangFile.class);
+      if (file != null) {
+        addCallbackImplementations(project, file);
+        exportAddedCallbackImplementations(project, file);
       }
     }
 
@@ -92,14 +100,17 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
       Document document = manager.getDocument(file);
       if (document == null) return;
 
-      for (ErlangCallbackSpec spec : myCallbackSpecs) {
+      for (SmartPsiElementPointer<ErlangCallbackSpec> pointer : myCallbackSpecs) {
+        ErlangCallbackSpec spec = pointer.getElement();
+        assert spec != null;
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
         int arity = ErlangPsiImplUtil.getCallbackSpecArity(spec);
         if (name == null || file.getFunction(name, arity) != null) continue;
 
         PsiElement lastChild = file.getLastChild();
         int textOffset = lastChild == null ? 0 : lastChild.getTextRange().getEndOffset();
-        String newFunction = "\n" + name + "(" + createVariableList(spec) + ") ->\n erlang:error(not_implemented).\n";
+        String newFunction = "\n\n" + name + "(" + createVariableList(spec) + ") ->\n" +
+                             ErlangCreateFunctionQuickFix.FUNCTION_BODY_DEFAULT_TEXT;
         document.insertString(textOffset, newFunction);
         manager.commitDocument(document);
         CodeStyleManager.getInstance(project).reformatText(file, textOffset, textOffset + newFunction.length());
@@ -107,7 +118,9 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     }
 
     private void exportAddedCallbackImplementations(@NotNull Project project, @NotNull ErlangFile file) {
-      for (ErlangCallbackSpec spec : myCallbackSpecs) {
+      for (SmartPsiElementPointer<ErlangCallbackSpec> pointer : myCallbackSpecs) {
+        ErlangCallbackSpec spec = pointer.getElement();
+        assert spec != null;
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
         int arity = ErlangPsiImplUtil.getCallbackSpecArity(spec);
         ErlangFunction function = name != null ? file.getFunction(name, arity) : null;

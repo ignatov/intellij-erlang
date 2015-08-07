@@ -33,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements IntentionAction {
+  public static final String FUNCTION_BODY_DEFAULT_TEXT = "erlang:error(not_implemented).";
   private final FunctionTextProvider myFunctionText;
 
   public ErlangCreateFunctionQuickFix(@NotNull String fixMessage, @NotNull String name, int arity) {
@@ -78,7 +79,7 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements I
     }
     template.addTextSegment(") ->\n");
     template.addEndVariable();
-    template.addTextSegment("erlang:error(not_implemented).");
+    template.addTextSegment(FUNCTION_BODY_DEFAULT_TEXT);
 
     editor.getCaretModel().moveToOffset(textOffset);
     templateManager.startTemplate(editor, template);
