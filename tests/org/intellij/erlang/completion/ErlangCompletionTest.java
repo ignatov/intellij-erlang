@@ -177,12 +177,13 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     assertSize(1, vars);
   }
 
-  public void testIncludeLib()  { doCheckResult("-include_<caret>", "-include_lib(\"<caret>\")."); }
-  public void testInclude()     { doCheckResult("-inclu<caret>", "-include(\"<caret>\").", '('); }
-  public void testExport()      { doCheckResult("-exp<caret>", "-export([<caret>]).", '('); }
-  public void testExportType()  { doCheckResult("-export_t<caret>", "-export_type([<caret>])."); }
-  public void testBehaviour()   { doCheckResult("-behaviou<caret>", "-behaviour(<caret>)."); }
-  public void testBehavior()    { doCheckResult("-behavior<caret>", "-behavior(<caret>)."); }
+  public void testIncludeLib()        { doCheckResult("-include_<caret>", "-include_lib(\"<caret>\")."); }
+  public void testInclude()           { doCheckResult("-inclu<caret>", "-include(\"<caret>\").", '('); }
+  public void testExport()            { doCheckResult("-exp<caret>", "-export([<caret>]).", '('); }
+  public void testExportType()        { doCheckResult("-export_t<caret>", "-export_type([<caret>])."); }
+  public void testOptionalCallbacks() { doCheckResult("-optional_c<caret>", "-optional_callbacks([<caret>])."); }
+  public void testBehaviour()         { doCheckResult("-behaviou<caret>", "-behaviour(<caret>)."); }
+  public void testBehavior()          { doCheckResult("-behavior<caret>", "-behavior(<caret>)."); }
 
   public void testExportFunction() {
     doCheckResult("-export([<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.", Lookup.COMPLETE_STATEMENT_SELECT_CHAR);

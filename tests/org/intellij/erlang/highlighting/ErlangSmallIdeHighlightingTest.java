@@ -40,4 +40,9 @@ public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
     enableErlang17SyntaxInspection();
     doTest();
   }
+
+  public void testErlang18SyntaxError() {
+    enableErlang18SyntaxInspection();
+    doTest();
+  }
 }

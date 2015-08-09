@@ -79,6 +79,11 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       }
 
       @Override
+      public void visitOptionalCallbacks(@NotNull ErlangOptionalCallbacks o) {
+        markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
+      }
+
+      @Override
       public void visitImportDirective(@NotNull ErlangImportDirective o) {
         markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
       }

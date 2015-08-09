@@ -372,6 +372,12 @@ public class ErlangPsiImplUtil {
     return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), moduleRefQAtom, arity);
   }
 
+  @NotNull
+  public  static PsiReference getReference(@NotNull ErlangCallbackFunction o) {
+    PsiElement arity = o.getInteger();
+    return new ErlangFunctionReferenceImpl<ErlangQAtom>(o.getQAtom(), null, getArity(arity));
+  }
+
   public static int getArity(@Nullable PsiElement arity) {
     return StringUtil.parseInt(arity == null ? "" : arity.getText(), -1);
   }

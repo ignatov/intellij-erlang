@@ -230,6 +230,9 @@
                          implementationClass="org.intellij.erlang.inspection.ErlangFunctionAlreadyImportedInspection"/>
 
         <!--warnings-->
+        <localInspection language="Erlang" shortName="Erlang18Syntax" displayName="Erlang 18.0 syntax"
+                         groupName="Erlang" enabledByDefault="true" level="WARNING"
+                         implementationClass="org.intellij.erlang.inspection.Erlang18SyntaxInspection"/>
         <localInspection language="Erlang" shortName="ErlangUnresolvedFunction" displayName="Unresolved function"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection"/>

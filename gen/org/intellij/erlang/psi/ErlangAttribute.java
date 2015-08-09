@@ -29,6 +29,9 @@ public interface ErlangAttribute extends ErlangCompositeElement {
   ErlangModule getModule();
 
   @Nullable
+  ErlangOptionalCallbacks getOptionalCallbacks();
+
+  @Nullable
   ErlangSpecification getSpecification();
 
   @NotNull
