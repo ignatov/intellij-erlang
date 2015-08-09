@@ -65,14 +65,11 @@ public class RebarProcessAdapter extends BuilderProcessAdapter {
   }
 
   private void addToProcessing(@NotNull String messagePart) {
-    if (isMessageContinue(messagePart) || myMessageBuilder.length() == 0) {
-      myMessageBuilder.append(messagePart.trim());
-    }
-    else {
+    if (!isMessageContinue(messagePart) && myMessageBuilder.length() != 0) {
       processMessage(myMessageBuilder.toString());
       myMessageBuilder.setLength(0);
-      myMessageBuilder.append(messagePart.trim());
     }
+    myMessageBuilder.append(messagePart.trim());
   }
 
   @NotNull
