@@ -21,10 +21,7 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.SmartPointerManager;
-import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.Function;
 import com.intellij.util.ObjectUtils;
@@ -88,11 +85,13 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-      ErlangFile file = ObjectUtils.tryCast(problemDescriptor.getPsiElement().getContainingFile(), ErlangFile.class);
-      if (file != null) {
-        addCallbackImplementations(project, file);
-        exportAddedCallbackImplementations(project, file);
-      }
+      PsiElement problemElement = problemDescriptor.getPsiElement();
+      PsiFile containingFile = problemElement != null ? problemElement.getContainingFile() : null;
+      ErlangFile file = ObjectUtils.tryCast(containingFile, ErlangFile.class);
+      if (file == null) return;
+
+      addCallbackImplementations(project, file);
+      exportAddedCallbackImplementations(project, file);
     }
 
     private void addCallbackImplementations(@NotNull Project project, @NotNull ErlangFile file) {
