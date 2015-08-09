@@ -106,10 +106,6 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return NAME;
   }
 
-  private static void reportProgress(@NotNull CompileContext context, String message) {
-    context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.PROGRESS, message));
-  }
-
   private static void buildSources(ErlangTarget target,
                                    CompileContext context,
                                    ErlangCompilerOptions compilerOptions,
@@ -129,12 +125,25 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
     List<String> erlangModulePathsToCompile = getErlangModulePaths(target, context, dirtyErlangFilePaths, isTests);
     if (erlangModulePathsToCompile.isEmpty()) {
-      reportProgress(context, "Source is up to date");
+      String message = isTests ? "Test sources is up to date for module" : "Sources is up to date for module";
+      reportMessageForModule(context, message, target.getModule().getName());
       return;
     }
-    String message = isTests ? "Compile tests for module " : "Compile source code for module ";
-    reportProgress(context, message + target.getModule().getName());
+    String message = isTests ? "Compile tests for module" : "Compile source code for module";
+    reportMessageForModule(context, message, target.getModule().getName());
     runErlc(target, context, compilerOptions, erlangModulePathsToCompile, outputConsumer, outputDir, isTests);
+  }
+
+  private static void reportMessageForModule(@NotNull CompileContext context,
+                                             @NotNull String messagePrefix,
+                                             @NotNull String moduleName) {
+    String message = messagePrefix + " \"" + moduleName + "\".";
+    reportMessage(context, message);
+  }
+
+  private static void reportMessage(@NotNull CompileContext context, @NotNull String message) {
+    context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.PROGRESS, message));
+    context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, message));
   }
 
   private static boolean isSourceOrHeader(@NotNull File file) {
@@ -176,7 +185,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       for (File outputDir : outputDirectories) {
         File appConfigDst = new File(outputDir, getAppConfigDestinationFileName(appConfigSrc.getName()));
         FileUtil.copy(appConfigSrc, appConfigDst);
-        reportProgress(context, String.format("Copy %s to %s",appConfigDst.getAbsolutePath(),outputDir.getAbsolutePath()));
+        reportMessage(context, String.format("Copy %s to %s", appConfigDst.getAbsolutePath(), outputDir.getAbsolutePath()));
         outputConsumer.registerOutputFile(appConfigDst, Collections.singletonList(appConfigSrc.getAbsolutePath()));
       }
     }

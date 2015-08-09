@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.util.Key;
@@ -26,26 +25,35 @@ import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
 
-public class ErlangCompilerProcessAdapter extends ProcessAdapter {
-  private final CompileContext myContext;
-  private final String myBuilderName;
-  private final String myCompileTargetRootPath;
-
-  public ErlangCompilerProcessAdapter(@NotNull CompileContext context, @NotNull String builderName, @NotNull String compileTargetRootPath) {
-    myContext = context;
-    myBuilderName = builderName;
-    myCompileTargetRootPath = compileTargetRootPath;
+public class ErlangCompilerProcessAdapter extends BuilderProcessAdapter {
+  public ErlangCompilerProcessAdapter(@NotNull CompileContext context,
+                                      @NotNull String builderName,
+                                      @NotNull String compileTargetRootPath) {
+    super(context, builderName, compileTargetRootPath);
   }
 
   @Override
   public void onTextAvailable(@NotNull ProcessEvent event, Key outputType) {
-    ErlangCompilerError error = ErlangCompilerError.create(myCompileTargetRootPath, event.getText());
+    showMessage(createCompilerMessage(myBuilderName, myCompileTargetRootPath, event.getText()));
+  }
+
+  @NotNull
+  public static CompilerMessage createCompilerMessage(@NotNull String builderName,
+                                                      @NotNull String compileTargetRootPath,
+                                                      @NotNull String text) {
+    BuildMessage.Kind kind = BuildMessage.Kind.INFO;
+    String messageText = text;
+    String sourcePath = null;
+    long line = -1L;
+
+    ErlangCompilerError error = ErlangCompilerError.create(compileTargetRootPath, text);
     if (error != null) {
       boolean isError = error.getCategory() == CompilerMessageCategory.ERROR;
-      BuildMessage.Kind kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
-      CompilerMessage msg = new CompilerMessage(myBuilderName, kind, error.getErrorMessage(),
-        VirtualFileManager.extractPath(error.getUrl()), -1, -1, -1, error.getLine(), -1);
-      myContext.processMessage(msg);
+      kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
+      messageText = error.getErrorMessage();
+      sourcePath = VirtualFileManager.extractPath(error.getUrl());
+      line = error.getLine();
     }
+    return new CompilerMessage(builderName, kind, messageText, sourcePath, -1L, -1L, -1L, line, -1L);
   }
 }

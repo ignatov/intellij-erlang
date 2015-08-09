@@ -48,6 +48,7 @@ import java.util.Collections;
 public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   private static final String NAME = "rebar";
   private static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
+
   public RebarBuilder() {
     super(Collections.singleton(ErlangTargetType.INSTANCE));
   }
@@ -73,13 +74,18 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
 
     JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
     String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
-
+    boolean isRebarRun = false;
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
       String contentRootPath = new URL(contentRootUrl).getPath();
       File contentRootDir = new File(contentRootPath);
       File rebarConfigFile = new File(contentRootDir, REBAR_CONFIG_FILE_NAME);
       if (!rebarConfigFile.exists()) continue;
       runRebar(escriptPath, rebarPath, contentRootPath, compilerOptions.myAddDebugInfoEnabled, context);
+      isRebarRun = true;
+    }
+    if (!isRebarRun) {
+      String messageText = "Skipped module \'" + module.getName() + "\' because rebar.config is not found.";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, messageText));
     }
   }
 
@@ -107,14 +113,18 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     Process process;
     try {
       process = commandLine.createProcess();
-    } catch (ExecutionException e) {
+    }
+    catch (ExecutionException e) {
       throw new ProjectBuildException("Failed to run rebar", e);
     }
     BaseOSProcessHandler handler = new BaseOSProcessHandler(process, commandLine.getCommandLineString(), Charset.defaultCharset());
-    ProcessAdapter adapter = new ErlangCompilerProcessAdapter(context, NAME, commandLine.getWorkDirectory().getPath()); //TODO provide rebar messages handling
+    ProcessAdapter adapter = new RebarProcessAdapter(context, NAME, commandLine.getWorkDirectory().getPath());
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();
+    if (process.exitValue() != 0) {
+      throw new ProjectBuildException("Rebar process finished with exit code " + process.exitValue());
+    }
   }
 
   @Nullable
