@@ -72,6 +72,9 @@ public interface ErlangFile extends PsiFile {
   List<ErlangBehaviour> getBehaviours();
 
   @NotNull
+  Collection<ErlangCallbackFunction> getOptionalCallbacks();
+
+  @NotNull
   List<ErlangSpecification> getSpecifications();
 
   @NotNull

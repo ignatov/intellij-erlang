@@ -15,4 +15,6 @@ public interface ErlangCallbackSpec extends ErlangCompositeElement, StubBasedPsi
   @Nullable
   ErlangFunTypeSigsBraces getFunTypeSigsBraces();
 
+  boolean isOptional();
+
 }

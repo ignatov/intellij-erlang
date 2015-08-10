@@ -72,10 +72,7 @@ import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
-import org.intellij.erlang.stubs.ErlangFunctionStub;
-import org.intellij.erlang.stubs.ErlangIncludeLibStub;
-import org.intellij.erlang.stubs.ErlangIncludeStub;
-import org.intellij.erlang.stubs.ErlangTypeDefinitionStub;
+import org.intellij.erlang.stubs.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -1716,6 +1713,25 @@ public class ErlangPsiImplUtil {
     PsiFile file = o.getContainingFile();
     String signature = o.getName() + "/" + o.getArity();
     return file instanceof ErlangFile && ((ErlangFile) file).isExported(signature);
+  }
+
+  public static boolean isOptional(@NotNull ErlangCallbackSpec spec) {
+    ErlangCallbackSpecStub stub = spec.getStub();
+    if (stub != null) return stub.isOptional();
+
+    ErlangFile file = ObjectUtils.tryCast(spec.getContainingFile(), ErlangFile.class);
+    String specName = getCallbackSpecName(spec);
+    int specArity = getCallBackSpecArguments(spec).size();
+    assert file != null && specName != null;
+
+    for (ErlangCallbackFunction callback : file.getOptionalCallbacks()) {
+      ErlangAtom functionNameAtom = callback.getQAtom().getAtom();
+      String functionName = functionNameAtom != null ? getName(functionNameAtom) : null;
+      if (specName.equals(functionName) && specArity == getArity(callback.getInteger())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Nullable

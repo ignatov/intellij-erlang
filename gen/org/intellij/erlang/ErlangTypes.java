@@ -32,7 +32,7 @@ public interface ErlangTypes {
   IElementType ERL_BIN_ELEMENT = new ErlangCompositeElementType("ERL_BIN_ELEMENT");
   IElementType ERL_BIN_UNIT_TYPE = new ErlangCompositeElementType("ERL_BIN_UNIT_TYPE");
   IElementType ERL_BIT_TYPE = new ErlangCompositeElementType("ERL_BIT_TYPE");
-  IElementType ERL_CALLBACK_FUNCTION = new ErlangCompositeElementType("ERL_CALLBACK_FUNCTION");
+  IElementType ERL_CALLBACK_FUNCTION = ErlangElementTypeFactory.factory("ERL_CALLBACK_FUNCTION");
   IElementType ERL_CALLBACK_SPEC = ErlangElementTypeFactory.factory("ERL_CALLBACK_SPEC");
   IElementType ERL_CASE_EXPRESSION = new ErlangCompositeElementType("ERL_CASE_EXPRESSION");
   IElementType ERL_CATCH_EXPRESSION = new ErlangCompositeElementType("ERL_CATCH_EXPRESSION");

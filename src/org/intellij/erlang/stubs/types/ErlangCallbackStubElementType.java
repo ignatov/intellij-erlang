@@ -39,7 +39,7 @@ public class ErlangCallbackStubElementType extends ErlangStubElementType<ErlangC
     }
   };
 
-  public ErlangCallbackStubElementType(String name) {
+  public ErlangCallbackStubElementType(@NotNull String name) {
     super(name);
   }
 
@@ -49,21 +49,23 @@ public class ErlangCallbackStubElementType extends ErlangStubElementType<ErlangC
   }
 
   @Override
-  public ErlangCallbackSpecStub createStub(@NotNull ErlangCallbackSpec psi, StubElement parentStub) {
-    String name = ErlangPsiImplUtil.getCallbackSpecName(psi);
-    int arity = ErlangPsiImplUtil.getCallBackSpecArguments(psi).size();
-    return new ErlangCallbackSpecStub(parentStub, this, name, arity);
+  public ErlangCallbackSpecStub createStub(@NotNull ErlangCallbackSpec spec, StubElement parentStub) {
+    String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
+    int arity = ErlangPsiImplUtil.getCallBackSpecArguments(spec).size();
+    boolean isOptional = ErlangPsiImplUtil.isOptional(spec);
+    return new ErlangCallbackSpecStub(parentStub, this, name, arity, isOptional);
   }
 
   @Override
   public void serialize(@NotNull ErlangCallbackSpecStub stub, @NotNull StubOutputStream dataStream) throws IOException {
     dataStream.writeName(stub.getName());
     dataStream.writeInt(stub.getArity());
+    dataStream.writeBoolean(stub.isOptional());
   }
 
   @NotNull
   @Override
   public ErlangCallbackSpecStub deserialize(@NotNull StubInputStream dataStream, StubElement parentStub) throws IOException {
-    return new ErlangCallbackSpecStub(parentStub, this, dataStream.readName(), dataStream.readInt());
+    return new ErlangCallbackSpecStub(parentStub, this, dataStream.readName(), dataStream.readInt(), dataStream.readBoolean());
   }
 }
