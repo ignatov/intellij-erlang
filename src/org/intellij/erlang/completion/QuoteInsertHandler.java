@@ -20,10 +20,7 @@ import com.intellij.codeInsight.AutoPopupController;
 import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Comparing;
-import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,53 +35,55 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
 
   @Override
   public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
-    Project project = context.getProject();
-    process(project, myName, context);
+    process(myName, null, context);
     if (needColon()) {
-      AutoPopupController.getInstance(project).autoPopupMemberLookup(context.getEditor(), null);
+      AutoPopupController.getInstance(context.getProject()).autoPopupMemberLookup(context.getEditor(), null);
       super.handleInsert(context, item);
     }
   }
 
-  public static void process(@NotNull Project project, @NotNull String name, @NotNull InsertionContext context) {
-    process(project, name, null, context);
-  }
-
-  public static void process(@NotNull Project project, @NotNull String name, @Nullable String moduleName, @NotNull InsertionContext context) {
-    if (needQuotation(project, moduleName)) {
-      Editor editor = context.getEditor();
-      Document document = editor.getDocument();
-      context.commitDocument();
+  public static void process(@NotNull String name, @Nullable String moduleName, @NotNull InsertionContext context) {
+    if (moduleName != null && ErlangPsiImplUtil.needQuotation(moduleName)) {
       int startOffset = context.getStartOffset();
-      document.insertString(startOffset, QUOTA);
-      document.insertString(startOffset + moduleName.length() + 1, QUOTA);
+      insertQuotesIfAbsent(context, startOffset, startOffset + moduleName.length());
     }
-    if (needQuotation(project, name)) {
-      Editor editor = context.getEditor();
-      Document document = editor.getDocument();
-      context.commitDocument();
+    if (ErlangPsiImplUtil.needQuotation(name)) {
       int tailOffset = context.getTailOffset();
       int startOffset = moduleName == null ? context.getStartOffset() : tailOffset - name.length();
-      document.insertString(startOffset, QUOTA);
-      document.insertString(tailOffset + 1, QUOTA);
-      editor.getCaretModel().moveToOffset(tailOffset + 2);
-      context.setTailOffset(tailOffset + 2);
+      tailOffset += insertQuotesIfAbsent(context, startOffset, tailOffset);
+      context.getEditor().getCaretModel().moveToOffset(tailOffset);
+      context.setTailOffset(tailOffset);
     }
+  }
+
+  private static int insertQuotesIfAbsent(@NotNull InsertionContext context, int startOffset, int tailOffset) {
+    int insertedQuotesCount = 0;
+    Document document = context.getEditor().getDocument();
+    CharSequence fileText = document.getCharsSequence();
+
+    if (!alreadyHasQuote(fileText, startOffset - 1)) {
+      context.commitDocument();
+      document.insertString(startOffset, QUOTA);
+      insertedQuotesCount++;
+      tailOffset++;
+    }
+    if (!alreadyHasQuote(fileText, tailOffset)) {
+      context.commitDocument();
+      document.insertString(tailOffset, QUOTA);
+      insertedQuotesCount++;
+    }
+    return insertedQuotesCount;
+  }
+
+  private static boolean alreadyHasQuote(@NotNull CharSequence sequence, int position) {
+    if (sequence.length() <= position) return false;
+    return QUOTA.equals(String.valueOf(sequence.charAt(position)));
   }
 
   protected boolean needColon() {
     return false;
   }
 
-  private static boolean needQuotation(@NotNull Project project, @Nullable String name) {
-    if (name == null) return false;
-    try {
-      return !Comparing.equal(ErlangElementFactory.createAtomFromText(project, name).getText(), name);
-    } catch (Exception ignored) {
-    }
-    return true;
-  }
-  
   public static class ModuleInsertHandler extends QuoteInsertHandler {
     private final boolean myWithColon;
 
