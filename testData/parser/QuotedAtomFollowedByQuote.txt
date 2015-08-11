@@ -1,0 +1,20 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('foo')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(single_quote)(''')
+              PsiElement(atom_name)('Quoted')
+              PsiElement(single_quote)(''')
+          PsiErrorElement:''' unexpected
+            PsiElement(single_quote)(''')
+          PsiElement(atom_name)('.')

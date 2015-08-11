@@ -69,7 +69,8 @@ NameChars = {NameChar}*
 
 QuotedCharacter = \\' | {EscapeSequence}  | [^'\\] /* [a-zA-Z0-9#_.@,;:!?/&%$+*~\^-] */
 QuotedAtomName = {QuotedCharacter}+
-AtomName = ({ErlangLowercase} {NameChar}*) | ''
+AtomName = ({ErlangLowercase} {NameChar}*)
+EmptyAtom = ''
 
 Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
@@ -138,9 +139,9 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }
 
-<YYINITIAL> {AtomName}                    { return ERL_ATOM_NAME; }
+<YYINITIAL> {AtomName} | {EmptyAtom}      { return ERL_ATOM_NAME; }
 <YYINITIAL> '                             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE; }
-<IN_QUOTES> {AtomName} | {QuotedAtomName} { return ERL_ATOM_NAME; }
+<IN_QUOTES> {QuotedAtomName}              { return ERL_ATOM_NAME; }
 <IN_QUOTES> '                             { yybegin(YYINITIAL); return ERL_SINGLE_QUOTE; }
 
 <YYINITIAL> {Variable}                    { return ERL_VAR; }
