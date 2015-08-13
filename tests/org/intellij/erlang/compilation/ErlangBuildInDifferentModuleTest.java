@@ -1,0 +1,78 @@
+/*
+ * Copyright 2012-2015 Sergey Ignatov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.intellij.erlang.compilation;
+
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.roots.ModuleRootModificationUtil;
+import com.intellij.openapi.vfs.VirtualFile;
+
+import java.util.Collections;
+
+import static org.intellij.erlang.compilation.ErlangModuleTextGenerator.*;
+
+public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase {
+
+  private Module myOtherModule;
+  private CompilationRunner myCompilationRunner;
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    myOtherModule = createModuleInOwnDirectoryWithSourceAndTestRoot("other");
+    ModuleRootModificationUtil.addDependency(myModule, myOtherModule);
+    myCompilationRunner = new CompilationRunner(myModule, myOtherModule);
+  }
+
+  @Override
+  protected void tearDown() throws Exception {
+    myCompilationRunner.tearDown();
+    super.tearDown();
+  }
+
+  public void testBuildWithGlobalParseTransform() throws Exception {
+    addSourceFile(myModule, "module1.erl", module("module1").build());
+    addSourceFile(myOtherModule, "parse_transform1.erl", pt("parse_transform1").build());
+    addGlobalParseTransform(myModule, Collections.singleton("parse_transform1"));
+    compileAndAssertOutput();
+  }
+
+  public void testBuildWithParseTransformInDifferentModule() throws Exception {
+    addSourceFile(myOtherModule, "parse_transform1.erl", pt("parse_transform1").build());
+    addSourceFile(myModule, "module1.erl", module("module1").pt("parse_transform1").build());
+    compileAndAssertOutput();
+  }
+
+  public void testBuildWithBehaviourInDifferentModule() throws Exception {
+    ErlangModuleTextGenerator.BehaviourBuilder behaviour = behaviour("behaviour1").callback("foo", 0);
+    addSourceFile(myOtherModule, "behaviour1.erl", behaviour.build());
+    addSourceFile(myModule, "module1.erl", module("module1").behaviour(behaviour).build());
+    compileAndAssertOutput();
+  }
+
+  public void testBuildWithIncludesFormDifferentModule() throws Exception {
+    VirtualFile includeSourceRoot = addIncludeRoot(myOtherModule, "include");
+    addFileToDirectory(includeSourceRoot, "header.hrl", "");
+    addSourceFile(myModule, "module1.erl", module("module1").include("../other/include/header.hrl").build());
+    compileAndAssertOutput();
+  }
+
+  protected void compileAndAssertOutput() throws Exception {
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+    assertSourcesCompiled(myOtherModule, false);
+  }
+}

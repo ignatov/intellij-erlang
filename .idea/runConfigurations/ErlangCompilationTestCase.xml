@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ErlangModuleCompilationTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+  <configuration default="false" name="ErlangCompilationTestCase" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
       <pattern>
         <option name="PATTERN" value="org.intellij.erlang.compilation.*" />
@@ -11,7 +10,7 @@
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
     <option name="ALTERNATIVE_JRE_PATH" value="" />
     <option name="PACKAGE_NAME" value="org.intellij.erlang.compilation" />
-    <option name="MAIN_CLASS_NAME" value="org.intellij.erlang.compilation.ErlangModuleCompilationTest" />
+    <option name="MAIN_CLASS_NAME" value="org.intellij.erlang.compilation.ErlangCompilationTestCase" />
     <option name="METHOD_NAME" value="" />
     <option name="TEST_OBJECT" value="class" />
     <option name="VM_PARAMETERS" value="-ea -Didea.system.path=system-test -Didea.config.path=config-test -XX:MaxPermSize=350m" />
@@ -26,4 +25,5 @@
     <patterns />
     <method />
   </configuration>
+
 </component>
