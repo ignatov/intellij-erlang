@@ -16,15 +16,28 @@
 
 package org.intellij.erlang.jps.builder;
 
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.jps.builders.BuildRootIndex;
+import org.jetbrains.jps.builders.BuildTarget;
+import org.jetbrains.jps.builders.BuildTargetType;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.ProjectBuildException;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
 import org.jetbrains.jps.model.JpsDummyElement;
+import org.jetbrains.jps.model.java.JavaSourceRootProperties;
+import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.JpsModule;
+import org.jetbrains.jps.model.module.JpsTypedModuleSourceRoot;
+
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
 
 public class ErlangTargetBuilderUtil {
   private ErlangTargetBuilderUtil() {
@@ -40,5 +53,26 @@ public class ErlangTargetBuilderUtil {
       throw new ProjectBuildException(errorMessage);
     }
     return sdk;
+  }
+
+  public static void addRootDescriptors(BuildTarget<ErlangSourceRootDescriptor> target,
+                                        JpsModule jpsModule,
+                                        List<ErlangSourceRootDescriptor> result) {
+    for (JpsTypedModuleSourceRoot<JavaSourceRootProperties> root : jpsModule.getSourceRoots(JavaSourceRootType.SOURCE)) {
+      result.add(new ErlangSourceRootDescriptor(root.getFile(), target, jpsModule.getName(), false));
+    }
+    for (JpsTypedModuleSourceRoot<JavaSourceRootProperties> root : jpsModule.getSourceRoots(JavaSourceRootType.TEST_SOURCE)) {
+      result.add(new ErlangSourceRootDescriptor(root.getFile(), target, jpsModule.getName(), true));
+    }
+    for (JpsTypedModuleSourceRoot<JpsDummyElement> root : jpsModule.getSourceRoots(ErlangIncludeSourceRootType.INSTANCE)) {
+      result.add(new ErlangSourceRootDescriptor(root.getFile(), target, jpsModule.getName(), false));
+    }
+  }
+
+  @Nullable
+  public static ErlangSourceRootDescriptor findRootDescriptor(String rootId,
+                                                              BuildRootIndex rootIndex,
+                                                              BuildTargetType<? extends BuildTarget<ErlangSourceRootDescriptor>> targetType) {
+    return ContainerUtil.getFirstItem(rootIndex.getRootDescriptors(new File(rootId), Collections.singletonList(targetType), null));
   }
 }

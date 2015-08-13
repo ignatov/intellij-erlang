@@ -27,7 +27,6 @@ import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
-import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.jetbrains.annotations.NotNull;
 
@@ -98,30 +97,31 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
 
   public void testCyclicDependency() {
     try {
-      ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
+      ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
       fail("Expected a cyclic dependency exception to be thrown.");
-    } catch (ErlangPrepareDependenciesCompileTask.CyclicDependencyFoundException ignored) {
+    }
+    catch (ErlangPrepareDependenciesCompileTask.CyclicDependencyFoundException ignored) {
     }
   }
 
   public void testDependenciesAreCompiledFirst() throws Exception {
-    ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
-    assertSameErlangFiles(moduleBuildOrder.myOrderedErlangFilePaths, "parse_transform1", "parse_transform2", "behaviour1", "module1");
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    assertSameErlangFiles(moduleBuildOrder, "parse_transform1", "parse_transform2", "behaviour1", "module1");
   }
 
   public void testDependenciesWithIncludes() throws Exception {
-    ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
-    assertSameErlangFiles(moduleBuildOrder.myOrderedErlangFilePaths, "parse_transform1", "header1", "behaviour1", "header2", "module1");
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    assertSameErlangFiles(moduleBuildOrder, "parse_transform1", "header1", "behaviour1", "header2", "module1");
   }
 
   public void testTestsDependency() throws Exception {
-    ErlangModuleBuildOrderDescriptor moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getModuleBuildOrder(myModule);
-    assertSameErlangFiles(moduleBuildOrder.myOrderedErlangFilePaths, "src_parse_transform");
-    assertSameErlangFiles(moduleBuildOrder.myOrderedErlangTestFilePaths, "test_parse_transform", "test");
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    assertSameErlangFiles(moduleBuildOrder, "src_parse_transform", "test_parse_transform", "test");
   }
 
-  private static void assertSameErlangFiles(List<ErlangFileDescriptor> moduleDescriptors, String... expectedModules) {
-    List<String> actualModules = ContainerUtil.map(getModulePaths(moduleDescriptors), new Function<String, String>() {
+  private static void assertSameErlangFiles(List<ErlangFileDescriptor> moduleBuildOrder,
+                                            String... expectedModules) {
+    List<String> actualModules = ContainerUtil.map(getModulePaths(moduleBuildOrder), new Function<String, String>() {
       @Override
       public String fun(String path) {
         return FileUtil.getNameWithoutExtension(new File(path));
@@ -129,12 +129,13 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
     });
     assertOrderedEquals(actualModules, expectedModules);
   }
+
   @NotNull
   private static List<String> getModulePaths(List<ErlangFileDescriptor> buildOrder) {
     return ContainerUtil.mapNotNull(buildOrder, new Function<ErlangFileDescriptor, String>() {
       @Override
       public String fun(ErlangFileDescriptor erlangFileDescriptor) {
-        return erlangFileDescriptor.myErlangModulePath;
+        return erlangFileDescriptor.myPath;
       }
     });
   }

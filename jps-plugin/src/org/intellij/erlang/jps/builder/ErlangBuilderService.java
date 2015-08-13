@@ -16,26 +16,26 @@
 
 package org.intellij.erlang.jps.builder;
 
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.builders.BuildTargetType;
 import org.jetbrains.jps.incremental.BuilderService;
 import org.jetbrains.jps.incremental.TargetBuilder;
-import org.intellij.erlang.jps.rebar.RebarBuilder;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class ErlangBuilderService extends BuilderService {
+
   @NotNull
   @Override
   public List<? extends BuildTargetType<?>> getTargetTypes() {
-    return Collections.singletonList(ErlangTargetType.INSTANCE);
+    return ContainerUtil.newArrayList(ErlangModuleBuildOrderTargetType.INSTANCE, ErlangTargetType.INSTANCE);
   }
 
   @NotNull
   @Override
   public List<? extends TargetBuilder<?, ?>> createBuilders() {
-    return Arrays.asList(new ErlangBuilder(), new RebarBuilder());
+    return ContainerUtil.newArrayList(new ErlangModuleBuildOrderBuilder(), new ErlangBuilder(), new RebarBuilder());
   }
 }

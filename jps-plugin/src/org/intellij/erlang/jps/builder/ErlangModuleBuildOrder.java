@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 Sergey Ignatov
+ * Copyright 2012-2014 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,11 @@
 package org.intellij.erlang.jps.builder;
 
 import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.xmlb.annotations.AbstractCollection;
-import com.intellij.util.xmlb.annotations.Tag;
 
 import java.util.List;
 
-@Tag("compilationOrder")
-public class ErlangModuleBuildOrders {
-  @SuppressWarnings("unused") // reflection
-  public ErlangModuleBuildOrders() {
-    myModuleBuildOrderDescriptors = ContainerUtil.newArrayList();
-  }
+public class ErlangModuleBuildOrder {
+  public List<String> myOrderedErlangFilePaths = ContainerUtil.newArrayList();
 
-  public ErlangModuleBuildOrders(int descriptorsCount) {
-    myModuleBuildOrderDescriptors = ContainerUtil.newArrayListWithCapacity(descriptorsCount);
-  }
-
-  @Tag("intellijModules")
-  @AbstractCollection(surroundWithTag = false)
-  public List<ErlangModuleBuildOrderDescriptor> myModuleBuildOrderDescriptors;
+  public List<String> myOrderedErlangTestFilePaths = ContainerUtil.newArrayList();
 }
