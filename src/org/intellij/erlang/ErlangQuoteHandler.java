@@ -17,17 +17,26 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.editorActions.SimpleTokenSetQuoteHandler;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.psi.TokenType;
 
 public class ErlangQuoteHandler extends SimpleTokenSetQuoteHandler {
   public ErlangQuoteHandler() {
-    super(ErlangTypes.ERL_STRING, TokenType.BAD_CHARACTER);
+    super(ErlangTypes.ERL_STRING, ErlangTypes.ERL_SINGLE_QUOTE, TokenType.BAD_CHARACTER);
   }
 
   @Override
-  public boolean hasNonClosedLiteral(Editor editor, HighlighterIterator iterator, int offset) {
-    return true;
+  public boolean isOpeningQuote(HighlighterIterator iterator, int offset) {
+    if(iterator.getTokenType() == ErlangTypes.ERL_SINGLE_QUOTE) {
+      iterator.retreat();
+      boolean isAtomBefore = !iterator.atEnd() && iterator.getTokenType() == ErlangTypes.ERL_ATOM_NAME;
+      iterator.retreat();
+      boolean atomStartsFromQuote = !iterator.atEnd() && iterator.getTokenType() == ErlangTypes.ERL_SINGLE_QUOTE;
+      iterator.advance();
+      iterator.advance();
+      return !isAtomBefore || !atomStartsFromQuote;
+    }
+
+    return super.isOpeningQuote(iterator, offset);
   }
 }
