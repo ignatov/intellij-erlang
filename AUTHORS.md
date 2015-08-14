@@ -13,3 +13,5 @@ The following people have made contributions (in no particular order):
 * Alexander Zolotov (github @zolotov)
 * Ivan Arbuzov (github @smolcoder)
 * Igor Istocniks (github @istocniks)
+* Olga Telezhnaya (github @telezhnaya)
+* Alexandra Vesloguzova (github @avesloguzova)
