@@ -39,4 +39,8 @@ public class ErlangCallbackSpecImpl extends ErlangStubbedPsiElementBase<ErlangCa
     return findChildByClass(ErlangFunTypeSigsBraces.class);
   }
 
+  public boolean isOptional() {
+    return ErlangPsiImplUtil.isOptional(this);
+  }
+
 }

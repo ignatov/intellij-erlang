@@ -24,6 +24,7 @@ public class ErlangElementTypeFactory {
   private ErlangElementTypeFactory() {
   }
 
+  @NotNull
   public static IElementType factory(@NotNull String name) {
     if (name.equals("ERL_FUNCTION"))                return new ErlangFunctionStubElementType(name);
     else if (name.equals("ERL_BEHAVIOUR"))          return new ErlangBehaviourStubElementType(name);
@@ -34,6 +35,7 @@ public class ErlangElementTypeFactory {
     else if (name.equals("ERL_INCLUDE"))            return new ErlangIncludeElementType(name);
     else if (name.equals("ERL_INCLUDE_LIB"))        return new ErlangIncludeLibElementType(name);
     else if (name.equals("ERL_CALLBACK_SPEC"))      return new ErlangCallbackStubElementType(name);
+    else if (name.equals("ERL_CALLBACK_FUNCTION"))  return new ErlangCallbackFunctionStubElementType(name);
 
     throw new RuntimeException("Unknown element type: " + name);
   }

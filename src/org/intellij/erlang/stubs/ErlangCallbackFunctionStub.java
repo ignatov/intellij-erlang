@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,38 +20,26 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubBase;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
-import org.intellij.erlang.psi.ErlangCallbackSpec;
+import org.intellij.erlang.psi.ErlangCallbackFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ErlangCallbackSpecStub extends StubBase<ErlangCallbackSpec> {
+public class ErlangCallbackFunctionStub extends StubBase<ErlangCallbackFunction> {
   private final StringRef myNameRef;
-  private final int myArity;
-  private final boolean myIsOptional;
 
-  public ErlangCallbackSpecStub(@NotNull StubElement parent, @NotNull IStubElementType elementType,
-                                @Nullable String name, int arity, boolean isOptional) {
-    this(parent, elementType, StringRef.fromString(name), arity, isOptional);
+  public ErlangCallbackFunctionStub(@NotNull StubElement parent, @NotNull IStubElementType elementType,
+                                    @Nullable String name) {
+    this(parent, elementType, StringRef.fromString(name));
   }
 
-  public ErlangCallbackSpecStub(@NotNull StubElement parent, @NotNull IStubElementType elementType,
-                                @Nullable StringRef nameRef, int arity, boolean isOptional) {
+  public ErlangCallbackFunctionStub(@NotNull StubElement parent, @NotNull IStubElementType elementType,
+                                    @Nullable StringRef nameRef) {
     super(parent, elementType);
     myNameRef = nameRef;
-    myArity = arity;
-    myIsOptional = isOptional;
   }
 
   @NotNull
   public String getName() {
     return myNameRef != null ? myNameRef.getString() : "";
-  }
-
-  public int getArity() {
-    return myArity;
-  }
-
-  public boolean isOptional() {
-    return myIsOptional;
   }
 }

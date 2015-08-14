@@ -248,6 +248,13 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         return Result.create(unmodifiableList(calcBehaviours()), ErlangFileImpl.this);
       }
     }, false);
+  private CachedValue<Collection<ErlangCallbackFunction>> myOptionalCallbacks =
+    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Collection<ErlangCallbackFunction>>() {
+      @Override
+      public Result<Collection<ErlangCallbackFunction>> compute() {
+        return Result.create(unmodifiableCollection(calcOptionalCallbacks()), ErlangFileImpl.this);
+      }
+    }, false);
   private CachedValue<List<ErlangSpecification>> mySpecificationsValue =
     CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangSpecification>>() {
       @Override
@@ -708,6 +715,23 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
     return result;
+  }
+
+  @NotNull
+  @Override
+  public Collection<ErlangCallbackFunction> getOptionalCallbacks() {
+    return myOptionalCallbacks.getValue();
+  }
+
+  @NotNull
+  private Collection<ErlangCallbackFunction> calcOptionalCallbacks() {
+    ErlangFileStub stub = getStub();
+    if (stub != null) {
+      return getChildrenByType(stub, ErlangTypes.ERL_CALLBACK_FUNCTION,
+                               ErlangCallbackFunctionStubElementType.ARRAY_FACTORY);
+    }
+
+    return PsiTreeUtil.findChildrenOfType(this, ErlangCallbackFunction.class);
   }
 
   @NotNull

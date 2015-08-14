@@ -30,6 +30,8 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -40,6 +42,9 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
+    ErlangSdkRelease release = ErlangSdkType.getRelease(file);
+    boolean supportOptionalCallbacks = release == null || !ErlangSdkRelease.V_18_0.isNewerThan(release);
+
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       ErlangModuleRef behaviourRef = behaviour.getModuleRef();
       ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviourRef);
@@ -48,6 +53,8 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
       List<ErlangCallbackSpec> undefinedCallbacks = ContainerUtil.newArrayList();
       Map<String, ErlangCallbackSpec> callbackMap = behaviourModule.getCallbackMap();
       for (ErlangCallbackSpec spec : callbackMap.values()) {
+        if (supportOptionalCallbacks && spec.isOptional()) continue;
+
         String name = ErlangPsiImplUtil.getCallbackSpecName(spec);
         int arity = ErlangPsiImplUtil.getCallbackSpecArity(spec);
         ErlangFunction function = name != null ? file.getFunction(name, arity) : null;
