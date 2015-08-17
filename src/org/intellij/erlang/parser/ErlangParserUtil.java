@@ -37,7 +37,13 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static boolean isApplicationLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
     PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
     assert file != null;
-    return isApplicationConfigFileType(file);
+    return file.getFileType() == ErlangFileType.APP;
+  }
+
+  public static boolean isConfigLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
+    PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
+    assert file != null;
+    return file.getFileType() == ErlangFileType.TERMS;
   }
 
   public static boolean isConsole(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {

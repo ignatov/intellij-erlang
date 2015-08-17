@@ -18,15 +18,13 @@ package org.intellij.erlang.parser;
 
 import org.intellij.erlang.ErlangParserDefinition;
 
-public class ErlangAppParserTest extends ErlangParserTestBase {
+public class ErlangConfigParserTest extends ErlangParserTestBase {
   private static final boolean OVERRIDE_TEST_DATA = false;
 
-  public ErlangAppParserTest() {
-    super("parser", "app", OVERRIDE_TEST_DATA, new ErlangParserDefinition());
+  public ErlangConfigParserTest() {
+    super("parser", "config", OVERRIDE_TEST_DATA, new ErlangParserDefinition());
   }
 
-  public void testAllParameters()         { doTest(true, false); }
-  public void testRtbCoordinator()        { doTest(true, false); }
-  public void testNonExistentParameters() { doTest(true, false); }
-  public void test254()                   { doTest(true, true); }
+  public void testRebar()        { doTest(true, false); }
+  public void testErlang17Maps() { doTest(true, false); }
 }

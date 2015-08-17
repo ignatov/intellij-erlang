@@ -38,6 +38,7 @@ import org.intellij.erlang.inspection.ErlangSpellcheckingTest;
 import org.intellij.erlang.marker.ErlangMethodSeparatorProviderTest;
 import org.intellij.erlang.navigation.ErlangGotoSuperTest;
 import org.intellij.erlang.parser.ErlangAppParserTest;
+import org.intellij.erlang.parser.ErlangConfigParserTest;
 import org.intellij.erlang.parser.ErlangParserTest;
 import org.intellij.erlang.performance.ErlangPerformanceTest;
 import org.intellij.erlang.quickfixes.*;
@@ -61,6 +62,7 @@ public class ErlangTestCase extends TestCase {
     TestSuite suite = new TestSuite();
     suite.addTestSuite(ErlangParserTest.class);
     suite.addTestSuite(ErlangAppParserTest.class);
+    suite.addTestSuite(ErlangConfigParserTest.class);
     suite.addTestSuite(ErlangHighlightingTest.class);
     suite.addTestSuite(Erlang17HighlightingTest.class);
     suite.addTestSuite(Erlang17SmallIdeHighlightingTest.class);
@@ -114,6 +116,7 @@ public class ErlangTestCase extends TestCase {
     suite.addTestSuite(ErlangMethodSeparatorProviderTest.class);
     suite.addTestSuite(ErlangMacroParameterResolutionTest.class);
     suite.addTestSuite(ErlangFunctionResolutionTest.class);
+    suite.addTestSuite(ErlangApplicationFileResolveTest.class);
     suite.addTestSuite(ErlangAmbiguousCallTest.class);
     suite.addTestSuite(ErlangDebuggableRunConfigurationProducerTest.class);
     suite.addTestSuite(ErlangPerformanceTest.class);
