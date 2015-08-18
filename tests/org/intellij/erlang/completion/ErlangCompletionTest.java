@@ -337,6 +337,16 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("-behaviour(quo<caret>).", "-behaviour('quoted-behaviour').");
   }
 
+  public void testBehaviourCompletionWithEndQuote() {
+    myFixture.configureByFiles("module-completion/quoted-behaviour.erl");
+    doCheckResult("-behaviour(quo<caret>').", "-behaviour('quoted-behaviour').");
+  }
+
+  public void testBehaviourCompletionWithBothQuotes() {
+    myFixture.configureByFiles("module-completion/quoted-behaviour.erl");
+    doCheckResult("-behaviour('quo<caret>').", "-behaviour('quoted-behaviour').");
+  }
+
   public void test176() {
     myFixture.configureByFiles("headers/a.erl", "headers/header.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "foo");

@@ -598,7 +598,7 @@ public class ErlangPsiImplUtil {
       new BasicInsertHandler<LookupElement>() {
         @Override
         public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
-          QuoteInsertHandler.process(context.getProject(), name, moduleName, context);
+          QuoteInsertHandler.process(name, moduleName, context);
           Editor editor = context.getEditor();
           Document document = editor.getDocument();
           context.commitDocument();
@@ -629,7 +629,7 @@ public class ErlangPsiImplUtil {
       new ParenthesesInsertHandler<LookupElement>() {
         @Override
         public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
-          QuoteInsertHandler.process(context.getProject(), name, moduleName, context);
+          QuoteInsertHandler.process(name, moduleName, context);
           super.handleInsert(context, item);
         }
 
@@ -1208,6 +1208,10 @@ public class ErlangPsiImplUtil {
   public static String toAtomName(@NotNull String maybeUnquotedAtomName) {
     ThreeState t = atomNameRequiresQuotes(maybeUnquotedAtomName);
     return t == ThreeState.YES ? '\'' + maybeUnquotedAtomName + '\'' : t == ThreeState.NO ? maybeUnquotedAtomName : null;
+  }
+
+  public static boolean needQuotation(@NotNull String atomName) {
+    return atomNameRequiresQuotes(atomName) == ThreeState.YES;
   }
 
   @NotNull
