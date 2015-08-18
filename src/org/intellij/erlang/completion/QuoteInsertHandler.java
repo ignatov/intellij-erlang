@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class QuoteInsertHandler extends SingleCharInsertHandler {
-  public static final String QUOTA = "'";
+  private static final char QUOTE = '\'';
   private final String myName;
 
   public QuoteInsertHandler(@NotNull String name) {
@@ -61,23 +61,20 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
     Document document = context.getEditor().getDocument();
     CharSequence fileText = document.getCharsSequence();
 
-    if (!alreadyHasQuote(fileText, startOffset - 1)) {
-      context.commitDocument();
-      document.insertString(startOffset, QUOTA);
+    if (!isQuoteAt(fileText, startOffset - 1)) {
+      document.insertString(startOffset, String.valueOf(QUOTE));
       insertedQuotesCount++;
       tailOffset++;
     }
-    if (!alreadyHasQuote(fileText, tailOffset)) {
-      context.commitDocument();
-      document.insertString(tailOffset, QUOTA);
+    if (!isQuoteAt(fileText, tailOffset)) {
+      document.insertString(tailOffset, String.valueOf(QUOTE));
       insertedQuotesCount++;
     }
     return insertedQuotesCount;
   }
 
-  private static boolean alreadyHasQuote(@NotNull CharSequence sequence, int position) {
-    if (sequence.length() <= position) return false;
-    return QUOTA.equals(String.valueOf(sequence.charAt(position)));
+  private static boolean isQuoteAt(@NotNull CharSequence sequence, int position) {
+    return position >= 0 && position < sequence.length() && sequence.charAt(position) == QUOTE;
   }
 
   protected boolean needColon() {
