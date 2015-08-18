@@ -202,6 +202,10 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("-export([<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.", Lookup.COMPLETE_STATEMENT_SELECT_CHAR);
   }
 
+  public void testExportFunctionStartedTyping() {
+    doCheckResult("-export([f<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.");
+  }
+
   public void testLager() {
     doTestInclude("foo() -> lager:<caret>", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency");
   }

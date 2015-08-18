@@ -148,7 +148,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (originalParent instanceof ErlangRecordExpression || prevIsRadix(originalPosition) || prevIsRadix(grandPa)) {
           result.addAllElements(getRecordLookupElements(file));
         }
-        else if (originalParent instanceof ErlangExportFunctions && file instanceof ErlangFile) {
+        else if (grandPa instanceof ErlangExportFunction && file instanceof ErlangFile) {
           result.addAllElements(createFunctionLookupElements(((ErlangFile) file).getFunctions(), true));
         }
         else {
