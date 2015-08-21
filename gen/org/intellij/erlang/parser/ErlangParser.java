@@ -2640,13 +2640,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // plain_function_clause | maybe_macro_funciton_clause
+  // plain_function_clause | maybe_macro_function_clause
   public static boolean function_clause(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_clause")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, "<function clause>");
     r = plain_function_clause(b, l + 1);
-    if (!r) r = maybe_macro_funciton_clause(b, l + 1);
+    if (!r) r = maybe_macro_function_clause(b, l + 1);
     exit_section_(b, l, m, ERL_FUNCTION_CLAUSE, r, false, null);
     return r;
   }
@@ -3838,20 +3838,20 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // function_clause_head clause_guard? clause_body
-  static boolean maybe_macro_funciton_clause(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "maybe_macro_funciton_clause")) return false;
+  static boolean maybe_macro_function_clause(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "maybe_macro_function_clause")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = function_clause_head(b, l + 1);
-    r = r && maybe_macro_funciton_clause_1(b, l + 1);
+    r = r && maybe_macro_function_clause_1(b, l + 1);
     r = r && clause_body(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // clause_guard?
-  private static boolean maybe_macro_funciton_clause_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "maybe_macro_funciton_clause_1")) return false;
+  private static boolean maybe_macro_function_clause_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "maybe_macro_function_clause_1")) return false;
     clause_guard(b, l + 1);
     return true;
   }
