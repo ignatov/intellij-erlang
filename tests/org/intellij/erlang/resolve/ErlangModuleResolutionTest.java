@@ -25,9 +25,11 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.psi.ErlangModuleRef;
+import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -51,31 +53,34 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
     return "testData/resolve/module/" + getTestName(true) + "/";
   }
 
-  protected void doTest(String expectedModulePath, String ... filePaths) {
+  public void testKernelModulesAppearFirst() { doModuleRefTest("kernel-2.15.2/src/file.erl", "test.erl", "file.erl"); }
+  public void testStdlibModulesAppearFirst() { doModuleRefTest("stdlib-1.18.2/src/io.erl", "test.erl", "io.erl"); }
+
+  public void testModuleVariableInSpec() { doParameterTest("variableInArguments.erl", "variableInArguments.erl"); }
+  public void testModuleTypeInSpec()     { doParameterTest("typeInArguments.erl", "typeInArguments.erl"); }
+
+
+  private void doModuleRefTest(String expectedPath, String ... filePaths) {
+    doTest(ErlangModuleRef.class, expectedPath, filePaths);
+  }
+
+  private void doParameterTest(String expectedPath, String ... filePaths) {
+    doTest(ErlangQAtom.class, expectedPath, filePaths);
+  }
+
+  protected void doTest(@NotNull Class<? extends PsiElement> psiClass, String expectedPath, String ... filePaths) {
     myFixture.configureByFiles(filePaths);
     PsiElement focusedElement = myFixture.getFile().findElementAt(myFixture.getEditor().getCaretModel().getOffset());
-    focusedElement = PsiTreeUtil.getParentOfType(focusedElement, ErlangModuleRef.class);
+    focusedElement = PsiTreeUtil.getParentOfType(focusedElement, psiClass);
     assertNotNull(focusedElement);
     PsiReference reference = focusedElement.getReference();
-    assertNotNull(reference);
-    PsiElement moduleElement = reference.resolve();
-    assertNotNull(moduleElement);
-    PsiFile containingFile = moduleElement.getContainingFile();
-    assertNotNull(containingFile);
-    VirtualFile virtualFile = containingFile.getVirtualFile();
+    PsiElement module = reference != null ? reference.resolve() : null;
+    PsiFile containingFile = module != null ? module.getContainingFile() : null;
+    VirtualFile virtualFile = containingFile != null ? containingFile.getVirtualFile() : null;
     assertNotNull(virtualFile);
     String actualModulePath = virtualFile.getPath();
-    assertTrue(actualModulePath.endsWith(expectedModulePath));
+    assertTrue(actualModulePath.endsWith(expectedPath));
   }
-
-  public void testKernelModulesAppearFirst() {
-    doTest("kernel-2.15.2/src/file.erl", "src/test.erl", "src/file.erl");
-  }
-
-  public void testStdlibModulesAppearFirst() {
-    doTest("stdlib-1.18.2/src/io.erl", "src/test.erl", "src/io.erl");
-  }
-
   //TODO add small IDE tests
   //TODO test source roots are preferred to plain directories
   //TODO test plain directories are preferred to hidden directories
