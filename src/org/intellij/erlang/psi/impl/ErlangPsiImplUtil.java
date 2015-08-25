@@ -836,6 +836,20 @@ public class ErlangPsiImplUtil {
     return ObjectUtils.tryCast(resolved != null ? resolved.getContainingFile() : null, ErlangFile.class);
   }
 
+  @NotNull
+  public static List<ErlangFunction> resolveToFunctions(@Nullable ErlangFunctionCallExpression call) {
+    PsiReference reference = call != null ? call.getReference() : null;
+    ResolveResult[] results = reference instanceof PsiPolyVariantReference ?
+                              ((PsiPolyVariantReference) reference).multiResolve(true) : ResolveResult.EMPTY_ARRAY;
+    List<ErlangFunction> functions = ContainerUtil.newArrayList();
+    for (ResolveResult result : results) {
+      if (result.getElement() instanceof ErlangFunction) {
+        functions.add((ErlangFunction) result.getElement());
+      }
+    }
+    return functions;
+  }
+
   public static boolean renameQAtom(@Nullable ErlangQAtom qAtom, String newName) {
     return renameAtom(qAtom != null ? qAtom.getAtom() : null, newName);
   }
@@ -1819,6 +1833,53 @@ public class ErlangPsiImplUtil {
       }
     }
     return false;
+  }
+
+  public static class ErlangFunctionCallNamedParameter<T extends PsiElement> extends PatternCondition<T> {
+    private final List<String> NAMES;
+
+    public ErlangFunctionCallNamedParameter(@NotNull String... names) {
+      super("functionCallNamedParameter");
+      NAMES = ContainerUtil.newArrayList(names);
+    }
+
+    @Override
+    public boolean accepts(@NotNull T element, ProcessingContext context) {
+      ErlangQAtom argument = element instanceof ErlangQAtom ? (ErlangQAtom) element : null;
+      if (argument == null) return false;
+
+      int position = getPositionOfArgument(argument);
+      if (position == -1) return false;
+
+      ErlangFunctionCallExpression call = getFunctionCallExpression(argument);
+      List<ErlangFunction> functions = resolveToFunctions(call);
+      for (ErlangFunction function : functions) {
+        for (ErlangFunctionClause clause : function.getFunctionClauseList()) {
+          List<ErlangArgumentDefinition> definitions = clause.getArgumentDefinitionList().getArgumentDefinitionList();
+          ErlangArgumentDefinition definition = definitions.size() > position ? definitions.get(position) : null;
+          ErlangMaxExpression maxExpression = PsiTreeUtil.getChildOfType(definition, ErlangMaxExpression.class);
+          ErlangQVar var = PsiTreeUtil.getChildOfType(maxExpression, ErlangQVar.class);
+          if (var != null && NAMES.contains(var.getName())) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    @Nullable
+    private static ErlangFunctionCallExpression getFunctionCallExpression(@NotNull ErlangQAtom atom) {
+      PsiElement maxExpression = atom.getParent();
+      PsiElement argumentList = maxExpression != null ? maxExpression.getParent() : null;
+      return ObjectUtils.tryCast(argumentList != null ? argumentList.getParent() : null,
+                                 ErlangFunctionCallExpression.class);
+    }
+
+    private static int getPositionOfArgument(@NotNull ErlangQAtom argument) {
+      ErlangArgumentList argumentList = PsiTreeUtil.getParentOfType(argument, ErlangArgumentList.class);
+      ErlangExpression expression = ObjectUtils.tryCast(argument.getParent(), ErlangExpression.class);
+      return argumentList != null ? argumentList.getExpressionList().indexOf(expression) : -1;
+    }
   }
 
   public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {
