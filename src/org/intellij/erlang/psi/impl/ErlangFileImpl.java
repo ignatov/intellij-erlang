@@ -294,7 +294,8 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @NotNull
   @Override
   public FileType getFileType() {
-    return ErlangFileType.MODULE;
+    ErlangFileType type = ErlangFileType.getFileType(getName());
+    return type != null ? type : ErlangFileType.MODULE;
   }
 
   @Nullable

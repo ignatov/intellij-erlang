@@ -99,9 +99,10 @@ ERL_FILE
         ERL_TUPLE_EXPRESSION
           PsiElement({)('{')
           ERL_CONFIG_EXPRESSION
-            ERL_Q_ATOM
-              ERL_ATOM
-                PsiElement(atom_name)('rtb_coordinator_app')
+            ERL_MODULE_REF
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('rtb_coordinator_app')
           PsiElement(,)(',')
           ERL_LIST_EXPRESSION
             PsiElement([)('[')

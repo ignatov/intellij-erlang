@@ -73,6 +73,7 @@
   extends(".*type|.*_t")=type
   pin(".*(clauses|_exprs|list)(?:_\d.*)?")=1
   pin("config_.*_expression")=1
+  pin("app_.*")=1
 
   implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
   extends("q_var|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
@@ -83,7 +84,8 @@
   implements("case_expression|try_expression|receive_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
 }
 
-forms ::= console_expression | form_with_period *
+forms ::= console_expression | application_file_expression | form_with_period *
+private application_file_expression ::= is_app app_expression period {recoverWhile=form_recover pin=2}
 private console_expression ::= is_console empty console_expression_or_empty {pin=2}
 private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
@@ -91,7 +93,7 @@ private form_with_period ::= form period {recoverWhile=form_recover pin=1}
 private left period ::= '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
 private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '#'| '.')
 private form ::=
-    is_app_config config_expression
+    is_config config_expression
   | function
   | record_definition
   | include_lib
@@ -103,8 +105,11 @@ private form ::=
   | rule
   | !<<eofOrSpace>> /*&(!'.')*/
 
-private is_app_config ::= &<<isApplicationLanguage>>
+private is_app ::= &<<isApplicationLanguage>>
+private is_config ::= &<<isConfigLanguage>>
 private is_console ::= &<<isConsole>>
+
+private is_app_hack ::= is_app 'xxx' //TODO remove when Grammar-Kit won't generate a lookahead for '{' in is_app code
 
 atom ::= atom_name | (single_quote atom_name single_quote) {
   pin(".*") = 1
@@ -320,6 +325,49 @@ argument_definition_list ::= '(' argument_definition? (',' argument_definition)*
 
 clause_guard ::= when <<guarded guard>> {pin=1}
 clause_body ::= '->' exprs {pin=1}
+
+app_expression ::= '{' app_application_keyword ',' app_atom_expression ',' app_parameters '}' {elementType=tuple_expression}
+app_application_keyword ::= &'application' q_atom {elementType=config_expression}
+app_atom_expression ::= q_atom {elementType=config_expression}
+app_parameters ::= '[' app_parameter? (',' app_parameter)* ']' {elementType=list_expression}
+
+app_parameter ::= '{'
+   (app_description_keyword ',' string_literal
+  | app_id_keyword ',' string_literal
+  | app_vsn_keyword ',' string_literal
+  | app_modules_keyword ',' <<list_generator app_module_expression>>
+  | app_maxP_keyword ',' app_integer
+  | app_maxT_keyword ',' app_integer
+  | app_registered_keyword ',' <<list_generator app_module_expression>>
+  | app_included_applications_keyword ',' <<list_generator app_atom_expression>>
+  | app_applications_keyword ',' <<list_generator app_atom_expression>>
+  | app_env_keyword ',' <<list_generator app_env_expression>>
+  | app_mod_keyword ',' app_mod
+  | app_start_phases_keyword ',' config_expression
+  | app_runtime_dependencies_keyword ',' app_runtime_deps
+  | config_exprs)
+  '}' {elementType=tuple_expression}
+
+meta list_generator ::= '[' <<p>>? (',' <<p>>)* ']' {elementType=list_expression pin=1}
+app_module_expression ::= module_ref {elementType=config_expression}
+app_integer ::= &integer atomic {elementType=config_expression}
+app_env_expression ::= '{' app_atom_expression ',' config_expression '}' {elementType=tuple_expression}
+app_mod ::= '{' app_module_expression ',' config_expression '}' {elementType=tuple_expression}
+app_runtime_deps ::= '[' string_literal? ']' {elementType=list_expression}
+
+app_description_keyword ::= &'description' q_atom {elementType=config_expression}
+app_id_keyword ::= &'id' q_atom {elementType=config_expression}
+app_vsn_keyword ::= &'vsn' q_atom {elementType=config_expression}
+app_modules_keyword ::= &'modules' q_atom {elementType=config_expression}
+app_maxP_keyword ::= &'maxP' q_atom {elementType=config_expression}
+app_maxT_keyword ::= &'maxT' q_atom {elementType=config_expression}
+app_registered_keyword ::= &'registered' q_atom {elementType=config_expression}
+app_included_applications_keyword ::= &'included_applications' q_atom {elementType=config_expression}
+app_applications_keyword ::= &'applications' q_atom {elementType=config_expression}
+app_env_keyword ::= &'env' q_atom {elementType=config_expression}
+app_mod_keyword ::= &'mod' q_atom {elementType=config_expression}
+app_start_phases_keyword ::= &'start_phases' q_atom {elementType=config_expression}
+app_runtime_dependencies_keyword ::= &'runtime_dependencies' q_atom {elementType=config_expression}
 
 config_expression ::=
     config_tuple_expression

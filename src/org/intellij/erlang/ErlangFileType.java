@@ -104,6 +104,11 @@ public class ErlangFileType extends LanguageFileType {
     public Icon getIcon() {
       return ErlangIcons.OTP_APP_RESOURCE;
     }
+
+    @NotNull
+    public static String getExtensionForBuildTools() {
+      return "app.src";
+    }
   }
 
   public static class ErlangTermsFileType extends ErlangFileType {
@@ -136,7 +141,8 @@ public class ErlangFileType extends LanguageFileType {
     if (filename == null) return null;
     if (filename.endsWith(MODULE.getDefaultExtension())) return MODULE;
     if (filename.endsWith(HEADER.getDefaultExtension())) return HEADER;
-    if (filename.endsWith(APP.getDefaultExtension())) return APP;
+    if (filename.endsWith(APP.getDefaultExtension()) ||
+        filename.endsWith(AppFileType.getExtensionForBuildTools())) return APP;
     if (filename.endsWith(TERMS.getDefaultExtension())) return TERMS;
     return null;
   }

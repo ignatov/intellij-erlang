@@ -20,7 +20,6 @@ import com.intellij.lang.LighterASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiFile;
@@ -38,7 +37,13 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static boolean isApplicationLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
     PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
     assert file != null;
-    return isApplicationConfigFileType(file);
+    return file.getFileType() == ErlangFileType.APP;
+  }
+
+  public static boolean isConfigLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
+    PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
+    assert file != null;
+    return file.getFileType() == ErlangFileType.TERMS;
   }
 
   public static boolean isConsole(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
@@ -52,9 +57,8 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   }
 
   public static boolean isApplicationConfigFileType(@NotNull PsiFile file) {
-    FileType fileType = file.getViewProvider().getVirtualFile().getFileType();
-    return fileType == ErlangFileType.APP || fileType == ErlangFileType.TERMS ||
-      ApplicationManager.getApplication().isUnitTestMode() && (fileType.getDefaultExtension().equals("app") || fileType.getDefaultExtension().equals("config"));
+    FileType fileType = file.getFileType();
+    return fileType == ErlangFileType.APP || fileType == ErlangFileType.TERMS;
   }
 
   private static final Key<TObjectLongHashMap<String>> MODES_KEY = Key.create("MODES_KEY");
