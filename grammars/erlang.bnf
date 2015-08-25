@@ -409,7 +409,7 @@ begin_end_expression ::= begin begin_end_body end {pin=1}
 begin_end_body ::= exprs {name="expression"}
 
 private expr_with_brackets ::= <<maybeComprehension list_expr_or_comprehension>>
-list_expr_or_comprehension ::= '[' list_expr_or_comprehension_body? ']' { pin=1 elementType="list_expression" }
+list_expr_or_comprehension ::= '[' list_expr_or_comprehension_body? ']' { pin=1 elementType=list_expression }
 private list_expr_or_comprehension_body ::= expression_parse_error? marked_lc_tail | expression (marked_lc_tail | list_expression_tail)
 private marked_lc_tail ::= '||' <<markComprehension>> lc_exprs {pin=1}
 private expression_parse_error ::= &('||') expression {pin=1}
@@ -423,7 +423,7 @@ list_comprehension ::= '[' expression '||' lc_exprs ']' { methods=[processDeclar
 private meta comprehension_element ::= (&('||'))? <<p1>> {pin=1}
 private lc_exprs ::= lc_expression (',' lc_expression)*
 lc_expression ::= [ lc_generator_definition ('<-' | '<=')] expression {pin(".*")=2}
-lc_generator_definition ::= (map_match | expression) {elementType="argument_definition"}
+lc_generator_definition ::= (map_match | expression) {elementType=argument_definition}
 private map_match ::= expression ':=' expression {pin=2}
 
 binary_expression ::= '<<' bin_element_list? '>>' {pin=1}
@@ -440,7 +440,7 @@ bit_type ::= q_atom [':' integer]
 
 binary_comprehension ::= '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>' {
   pin=3
-  elementType="list_comprehension"
+  elementType=list_comprehension
 }
 
 tuple_expression ::= '{' (&'}' | exprs) '}' {pin=1}
@@ -453,7 +453,7 @@ private record_tail ::= record_head (record_field_ref | record_tuple | ()) {pin=
 private record_head ::= record_head_classic | macros &('{'|'.' q_atom &(!('(')))
 private record_head_classic ::= record_hash record_ref {pin=1}
 private record_hash ::= '#' &(!'{')
-record_field_ref ::= '.' q_atom {pin=1 elementType="record_field"}
+record_field_ref ::= '.' q_atom {pin=1 elementType=record_field}
 record_ref ::= q_atom {methods = [getReference]}
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
@@ -474,7 +474,7 @@ module_ref ::= q_atom {
 map_comprehension ::= '#' '{' <<comprehension_element map_assoc>> '||' lc_exprs '}' {
   pin=4
   methods=[processDeclarations]
-  elementType="list_comprehension"
+  elementType=list_comprehension
 }
 private map_assoc ::= expression '=>' expression {pin=2 elementType=map_entry}
 
