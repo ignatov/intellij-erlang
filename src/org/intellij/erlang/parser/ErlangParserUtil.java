@@ -152,4 +152,11 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     IS_COMPREHENSION_KEY.set(builder, previousIsComprehensionValue);
     return result;
   }
+
+  public static boolean app_atom_named(PsiBuilder b, int l, String name) {
+    PsiBuilder.Marker nameLookaheadMarker = enter_section_(b, l, _AND_, null);
+    boolean r = consumeToken(b, name);
+    exit_section_(b, l, nameLookaheadMarker, null, r, false, null);
+    return r && ErlangParser.app_atom(b, l);
+  }
 }

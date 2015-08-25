@@ -472,87 +472,18 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // &'application' q_atom
-  public static boolean app_application_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_application_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app application keyword>");
-    r = app_application_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'application'
-  private static boolean app_application_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_application_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "application");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // &'applications' q_atom
-  public static boolean app_applications_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_applications_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app applications keyword>");
-    r = app_applications_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'applications'
-  private static boolean app_applications_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_applications_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "applications");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
   // q_atom
-  public static boolean app_atom_expression(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_atom_expression")) return false;
+  public static boolean app_atom(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "app_atom")) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, "<expression>");
+    Marker m = enter_section_(b, l, _NONE_, "<app atom>");
     r = q_atom(b, l + 1);
     exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, false, null);
     return r;
   }
 
   /* ********************************************************** */
-  // &'description' q_atom
-  public static boolean app_description_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_description_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app description keyword>");
-    r = app_description_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'description'
-  private static boolean app_description_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_description_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "description");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // '{' app_atom_expression ',' config_expression '}'
+  // '{' app_atom ',' config_expression '}'
   public static boolean app_env_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_env_expression")) return false;
     if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
@@ -560,7 +491,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, null);
     r = consumeToken(b, ERL_CURLY_LEFT);
     p = r; // pin = 1
-    r = r && report_error_(b, app_atom_expression(b, l + 1));
+    r = r && report_error_(b, app_atom(b, l + 1));
     r = p && report_error_(b, consumeToken(b, ERL_COMMA)) && r;
     r = p && report_error_(b, config_expression(b, l + 1)) && r;
     r = p && consumeToken(b, ERL_CURLY_RIGHT) && r;
@@ -569,30 +500,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // &'env' q_atom
-  public static boolean app_env_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_env_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app env keyword>");
-    r = app_env_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'env'
-  private static boolean app_env_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_env_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "env");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // '{' app_application_keyword ',' app_atom_expression ',' app_parameters '}'
+  // '{' <<app_atom_named "application">> ',' app_atom ',' <<list_of app_parameter>> '}'
   public static boolean app_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_expression")) return false;
     if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
@@ -600,60 +508,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, null);
     r = consumeToken(b, ERL_CURLY_LEFT);
     p = r; // pin = 1
-    r = r && report_error_(b, app_application_keyword(b, l + 1));
+    r = r && report_error_(b, app_atom_named(b, l + 1, "application"));
     r = p && report_error_(b, consumeToken(b, ERL_COMMA)) && r;
-    r = p && report_error_(b, app_atom_expression(b, l + 1)) && r;
+    r = p && report_error_(b, app_atom(b, l + 1)) && r;
     r = p && report_error_(b, consumeToken(b, ERL_COMMA)) && r;
-    r = p && report_error_(b, app_parameters(b, l + 1)) && r;
+    r = p && report_error_(b, list_of(b, l + 1, app_parameter_parser_)) && r;
     r = p && consumeToken(b, ERL_CURLY_RIGHT) && r;
     exit_section_(b, l, m, ERL_TUPLE_EXPRESSION, r, p, null);
     return r || p;
-  }
-
-  /* ********************************************************** */
-  // &'id' q_atom
-  public static boolean app_id_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_id_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app id keyword>");
-    r = app_id_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'id'
-  private static boolean app_id_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_id_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "id");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // &'included_applications' q_atom
-  public static boolean app_included_applications_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_included_applications_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app included applications keyword>");
-    r = app_included_applications_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'included_applications'
-  private static boolean app_included_applications_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_included_applications_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "included_applications");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
   }
 
   /* ********************************************************** */
@@ -681,52 +543,6 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // &'maxP' q_atom
-  public static boolean app_maxP_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_maxP_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app max p keyword>");
-    r = app_maxP_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'maxP'
-  private static boolean app_maxP_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_maxP_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "maxP");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // &'maxT' q_atom
-  public static boolean app_maxT_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_maxT_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app max t keyword>");
-    r = app_maxT_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'maxT'
-  private static boolean app_maxT_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_maxT_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "maxT");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
   // '{' app_module_expression ',' config_expression '}'
   public static boolean app_mod(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_mod")) return false;
@@ -744,29 +560,6 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // &'mod' q_atom
-  public static boolean app_mod_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_mod_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app mod keyword>");
-    r = app_mod_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'mod'
-  private static boolean app_mod_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_mod_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "mod");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
   // module_ref
   public static boolean app_module_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_module_expression")) return false;
@@ -778,43 +571,20 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // &'modules' q_atom
-  public static boolean app_modules_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_modules_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app modules keyword>");
-    r = app_modules_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'modules'
-  private static boolean app_modules_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_modules_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "modules");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
   // '{'
-  //    (app_description_keyword ',' string_literal
-  //   | app_id_keyword ',' string_literal
-  //   | app_vsn_keyword ',' string_literal
-  //   | app_modules_keyword ',' <<list_generator app_module_expression>>
-  //   | app_maxP_keyword ',' app_integer
-  //   | app_maxT_keyword ',' app_integer
-  //   | app_registered_keyword ',' <<list_generator app_module_expression>>
-  //   | app_included_applications_keyword ',' <<list_generator app_atom_expression>>
-  //   | app_applications_keyword ',' <<list_generator app_atom_expression>>
-  //   | app_env_keyword ',' <<list_generator app_env_expression>>
-  //   | app_mod_keyword ',' app_mod
-  //   | app_start_phases_keyword ',' config_expression
-  //   | app_runtime_dependencies_keyword ',' app_runtime_deps
+  //    (<<app_atom_named "description">> ',' string_literal
+  //   | <<app_atom_named "id">> ',' string_literal
+  //   | <<app_atom_named "vsn">> ',' string_literal
+  //   | <<app_atom_named "modules">> ',' <<list_of app_module_expression>>
+  //   | <<app_atom_named "maxP">> ',' app_integer
+  //   | <<app_atom_named "maxT">> ',' app_integer
+  //   | <<app_atom_named "registered">> ',' <<list_of app_module_expression>>
+  //   | <<app_atom_named "included_applications">> ',' <<list_of app_atom>>
+  //   | <<app_atom_named "applications">> ',' <<list_of app_atom>>
+  //   | <<app_atom_named "env">> ',' <<list_of app_env_expression>>
+  //   | <<app_atom_named "mod">> ',' app_mod
+  //   | <<app_atom_named "start_phases">> ',' config_expression
+  //   | <<app_atom_named "runtime_dependencies">> ',' app_runtime_deps
   //   | config_exprs)
   //   '}'
   public static boolean app_parameter(PsiBuilder b, int l) {
@@ -830,19 +600,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // app_description_keyword ',' string_literal
-  //   | app_id_keyword ',' string_literal
-  //   | app_vsn_keyword ',' string_literal
-  //   | app_modules_keyword ',' <<list_generator app_module_expression>>
-  //   | app_maxP_keyword ',' app_integer
-  //   | app_maxT_keyword ',' app_integer
-  //   | app_registered_keyword ',' <<list_generator app_module_expression>>
-  //   | app_included_applications_keyword ',' <<list_generator app_atom_expression>>
-  //   | app_applications_keyword ',' <<list_generator app_atom_expression>>
-  //   | app_env_keyword ',' <<list_generator app_env_expression>>
-  //   | app_mod_keyword ',' app_mod
-  //   | app_start_phases_keyword ',' config_expression
-  //   | app_runtime_dependencies_keyword ',' app_runtime_deps
+  // <<app_atom_named "description">> ',' string_literal
+  //   | <<app_atom_named "id">> ',' string_literal
+  //   | <<app_atom_named "vsn">> ',' string_literal
+  //   | <<app_atom_named "modules">> ',' <<list_of app_module_expression>>
+  //   | <<app_atom_named "maxP">> ',' app_integer
+  //   | <<app_atom_named "maxT">> ',' app_integer
+  //   | <<app_atom_named "registered">> ',' <<list_of app_module_expression>>
+  //   | <<app_atom_named "included_applications">> ',' <<list_of app_atom>>
+  //   | <<app_atom_named "applications">> ',' <<list_of app_atom>>
+  //   | <<app_atom_named "env">> ',' <<list_of app_env_expression>>
+  //   | <<app_atom_named "mod">> ',' app_mod
+  //   | <<app_atom_named "start_phases">> ',' config_expression
+  //   | <<app_atom_named "runtime_dependencies">> ',' app_runtime_deps
   //   | config_exprs
   private static boolean app_parameter_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1")) return false;
@@ -866,12 +636,12 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // app_description_keyword ',' string_literal
+  // <<app_atom_named "description">> ',' string_literal
   private static boolean app_parameter_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_0")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_description_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "description");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
     r = p && string_literal(b, l + 1) && r;
@@ -879,12 +649,12 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // app_id_keyword ',' string_literal
+  // <<app_atom_named "id">> ',' string_literal
   private static boolean app_parameter_1_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_1")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_id_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "id");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
     r = p && string_literal(b, l + 1) && r;
@@ -892,12 +662,12 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // app_vsn_keyword ',' string_literal
+  // <<app_atom_named "vsn">> ',' string_literal
   private static boolean app_parameter_1_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_2")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_vsn_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "vsn");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
     r = p && string_literal(b, l + 1) && r;
@@ -905,25 +675,25 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // app_modules_keyword ',' <<list_generator app_module_expression>>
+  // <<app_atom_named "modules">> ',' <<list_of app_module_expression>>
   private static boolean app_parameter_1_3(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_3")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_modules_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "modules");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && list_generator(b, l + 1, app_module_expression_parser_) && r;
+    r = p && list_of(b, l + 1, app_module_expression_parser_) && r;
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
 
-  // app_maxP_keyword ',' app_integer
+  // <<app_atom_named "maxP">> ',' app_integer
   private static boolean app_parameter_1_4(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_4")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_maxP_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "maxP");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
     r = p && app_integer(b, l + 1) && r;
@@ -931,12 +701,12 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // app_maxT_keyword ',' app_integer
+  // <<app_atom_named "maxT">> ',' app_integer
   private static boolean app_parameter_1_5(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_5")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_maxT_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "maxT");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
     r = p && app_integer(b, l + 1) && r;
@@ -944,64 +714,64 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // app_registered_keyword ',' <<list_generator app_module_expression>>
+  // <<app_atom_named "registered">> ',' <<list_of app_module_expression>>
   private static boolean app_parameter_1_6(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_6")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_registered_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "registered");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && list_generator(b, l + 1, app_module_expression_parser_) && r;
+    r = p && list_of(b, l + 1, app_module_expression_parser_) && r;
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
 
-  // app_included_applications_keyword ',' <<list_generator app_atom_expression>>
+  // <<app_atom_named "included_applications">> ',' <<list_of app_atom>>
   private static boolean app_parameter_1_7(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_7")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_included_applications_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "included_applications");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && list_generator(b, l + 1, app_atom_expression_parser_) && r;
+    r = p && list_of(b, l + 1, app_atom_parser_) && r;
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
 
-  // app_applications_keyword ',' <<list_generator app_atom_expression>>
+  // <<app_atom_named "applications">> ',' <<list_of app_atom>>
   private static boolean app_parameter_1_8(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_8")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_applications_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "applications");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && list_generator(b, l + 1, app_atom_expression_parser_) && r;
+    r = p && list_of(b, l + 1, app_atom_parser_) && r;
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
 
-  // app_env_keyword ',' <<list_generator app_env_expression>>
+  // <<app_atom_named "env">> ',' <<list_of app_env_expression>>
   private static boolean app_parameter_1_9(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_9")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_env_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "env");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && list_generator(b, l + 1, app_env_expression_parser_) && r;
+    r = p && list_of(b, l + 1, app_env_expression_parser_) && r;
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
 
-  // app_mod_keyword ',' app_mod
+  // <<app_atom_named "mod">> ',' app_mod
   private static boolean app_parameter_1_10(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_10")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_mod_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "mod");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
     r = p && app_mod(b, l + 1) && r;
@@ -1009,12 +779,12 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // app_start_phases_keyword ',' config_expression
+  // <<app_atom_named "start_phases">> ',' config_expression
   private static boolean app_parameter_1_11(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_11")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_start_phases_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "start_phases");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
     r = p && config_expression(b, l + 1) && r;
@@ -1022,110 +792,17 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // app_runtime_dependencies_keyword ',' app_runtime_deps
+  // <<app_atom_named "runtime_dependencies">> ',' app_runtime_deps
   private static boolean app_parameter_1_12(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_12")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, null);
-    r = app_runtime_dependencies_keyword(b, l + 1);
+    r = app_atom_named(b, l + 1, "runtime_dependencies");
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
     r = p && app_runtime_deps(b, l + 1) && r;
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
-  }
-
-  /* ********************************************************** */
-  // '[' app_parameter? (',' app_parameter)* ']'
-  public static boolean app_parameters(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_parameters")) return false;
-    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, null);
-    r = consumeToken(b, ERL_BRACKET_LEFT);
-    p = r; // pin = 1
-    r = r && report_error_(b, app_parameters_1(b, l + 1));
-    r = p && report_error_(b, app_parameters_2(b, l + 1)) && r;
-    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
-    exit_section_(b, l, m, ERL_LIST_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // app_parameter?
-  private static boolean app_parameters_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_parameters_1")) return false;
-    app_parameter(b, l + 1);
-    return true;
-  }
-
-  // (',' app_parameter)*
-  private static boolean app_parameters_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_parameters_2")) return false;
-    int c = current_position_(b);
-    while (true) {
-      if (!app_parameters_2_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "app_parameters_2", c)) break;
-      c = current_position_(b);
-    }
-    return true;
-  }
-
-  // ',' app_parameter
-  private static boolean app_parameters_2_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_parameters_2_0")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, null);
-    r = consumeToken(b, ERL_COMMA);
-    p = r; // pin = 1
-    r = r && app_parameter(b, l + 1);
-    exit_section_(b, l, m, null, r, p, null);
-    return r || p;
-  }
-
-  /* ********************************************************** */
-  // &'registered' q_atom
-  public static boolean app_registered_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_registered_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app registered keyword>");
-    r = app_registered_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'registered'
-  private static boolean app_registered_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_registered_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "registered");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // &'runtime_dependencies' q_atom
-  public static boolean app_runtime_dependencies_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_runtime_dependencies_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app runtime dependencies keyword>");
-    r = app_runtime_dependencies_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'runtime_dependencies'
-  private static boolean app_runtime_dependencies_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_runtime_dependencies_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "runtime_dependencies");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
   }
 
   /* ********************************************************** */
@@ -1148,52 +825,6 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "app_runtime_deps_1")) return false;
     string_literal(b, l + 1);
     return true;
-  }
-
-  /* ********************************************************** */
-  // &'start_phases' q_atom
-  public static boolean app_start_phases_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_start_phases_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app start phases keyword>");
-    r = app_start_phases_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'start_phases'
-  private static boolean app_start_phases_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_start_phases_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "start_phases");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // &'vsn' q_atom
-  public static boolean app_vsn_keyword(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_vsn_keyword")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, "<app vsn keyword>");
-    r = app_vsn_keyword_0(b, l + 1);
-    p = r; // pin = 1
-    r = r && q_atom(b, l + 1);
-    exit_section_(b, l, m, ERL_CONFIG_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // &'vsn'
-  private static boolean app_vsn_keyword_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_vsn_keyword_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_, null);
-    r = consumeToken(b, "vsn");
-    exit_section_(b, l, m, null, r, false, null);
-    return r;
   }
 
   /* ********************************************************** */
@@ -4148,52 +3779,6 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '[' <<p>>? (',' <<p>>)* ']'
-  public static boolean list_generator(PsiBuilder b, int l, final Parser _p) {
-    if (!recursion_guard_(b, l, "list_generator")) return false;
-    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, null);
-    r = consumeToken(b, ERL_BRACKET_LEFT);
-    p = r; // pin = 1
-    r = r && report_error_(b, list_generator_1(b, l + 1, _p));
-    r = p && report_error_(b, list_generator_2(b, l + 1, _p)) && r;
-    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
-    exit_section_(b, l, m, ERL_LIST_EXPRESSION, r, p, null);
-    return r || p;
-  }
-
-  // <<p>>?
-  private static boolean list_generator_1(PsiBuilder b, int l, final Parser _p) {
-    if (!recursion_guard_(b, l, "list_generator_1")) return false;
-    _p.parse(b, l);
-    return true;
-  }
-
-  // (',' <<p>>)*
-  private static boolean list_generator_2(PsiBuilder b, int l, final Parser _p) {
-    if (!recursion_guard_(b, l, "list_generator_2")) return false;
-    int c = current_position_(b);
-    while (true) {
-      if (!list_generator_2_0(b, l + 1, _p)) break;
-      if (!empty_element_parsed_guard_(b, "list_generator_2", c)) break;
-      c = current_position_(b);
-    }
-    return true;
-  }
-
-  // ',' <<p>>
-  private static boolean list_generator_2_0(PsiBuilder b, int l, final Parser _p) {
-    if (!recursion_guard_(b, l, "list_generator_2_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_COMMA);
-    r = r && _p.parse(b, l);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  /* ********************************************************** */
   // (',' expression)+
   static boolean list_items(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_items")) return false;
@@ -4219,6 +3804,53 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, ERL_COMMA);
     p = r; // pin = 1
     r = r && expression(b, l + 1, -1);
+    exit_section_(b, l, m, null, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // '[' <<p>>? (',' <<p>>)* ']'
+  public static boolean list_of(PsiBuilder b, int l, final Parser _p) {
+    if (!recursion_guard_(b, l, "list_of")) return false;
+    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = consumeToken(b, ERL_BRACKET_LEFT);
+    p = r; // pin = 1
+    r = r && report_error_(b, list_of_1(b, l + 1, _p));
+    r = p && report_error_(b, list_of_2(b, l + 1, _p)) && r;
+    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
+    exit_section_(b, l, m, ERL_LIST_EXPRESSION, r, p, null);
+    return r || p;
+  }
+
+  // <<p>>?
+  private static boolean list_of_1(PsiBuilder b, int l, final Parser _p) {
+    if (!recursion_guard_(b, l, "list_of_1")) return false;
+    _p.parse(b, l);
+    return true;
+  }
+
+  // (',' <<p>>)*
+  private static boolean list_of_2(PsiBuilder b, int l, final Parser _p) {
+    if (!recursion_guard_(b, l, "list_of_2")) return false;
+    int c = current_position_(b);
+    while (true) {
+      if (!list_of_2_0(b, l + 1, _p)) break;
+      if (!empty_element_parsed_guard_(b, "list_of_2", c)) break;
+      c = current_position_(b);
+    }
+    return true;
+  }
+
+  // ',' <<p>>
+  private static boolean list_of_2_0(PsiBuilder b, int l, final Parser _p) {
+    if (!recursion_guard_(b, l, "list_of_2_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null);
+    r = consumeToken(b, ERL_COMMA);
+    p = r; // pin = 1
+    r = r && _p.parse(b, l);
     exit_section_(b, l, m, null, r, p, null);
     return r || p;
   }
@@ -6961,9 +6593,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  final static Parser app_atom_expression_parser_ = new Parser() {
+  final static Parser app_atom_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
-      return app_atom_expression(b, l + 1);
+      return app_atom(b, l + 1);
     }
   };
   final static Parser app_env_expression_parser_ = new Parser() {
@@ -6974,6 +6606,11 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   final static Parser app_module_expression_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_module_expression(b, l + 1);
+    }
+  };
+  final static Parser app_parameter_parser_ = new Parser() {
+    public boolean parse(PsiBuilder b, int l) {
+      return app_parameter(b, l + 1);
     }
   };
   final static Parser argument_definition_parser_ = new Parser() {

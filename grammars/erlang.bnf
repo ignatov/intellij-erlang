@@ -326,48 +326,31 @@ argument_definition_list ::= '(' argument_definition? (',' argument_definition)*
 clause_guard ::= when <<guarded guard>> {pin=1}
 clause_body ::= '->' exprs {pin=1}
 
-app_expression ::= '{' app_application_keyword ',' app_atom_expression ',' app_parameters '}' {elementType=tuple_expression}
-app_application_keyword ::= &'application' q_atom {elementType=config_expression}
-app_atom_expression ::= q_atom {elementType=config_expression}
-app_parameters ::= '[' app_parameter? (',' app_parameter)* ']' {elementType=list_expression}
-
+// source: "FILE SYNTAX" section of http://www.erlang.org/doc/man/app.html
+app_expression ::= '{' <<app_atom_named "application">> ',' app_atom ',' <<list_of app_parameter>> '}' {elementType=tuple_expression}
+app_atom ::= q_atom {elementType=config_expression}
+meta list_of ::= '[' <<p>>? (',' <<p>>)* ']' {elementType=list_expression pin(".*")=1}
 app_parameter ::= '{'
-   (app_description_keyword ',' string_literal
-  | app_id_keyword ',' string_literal
-  | app_vsn_keyword ',' string_literal
-  | app_modules_keyword ',' <<list_generator app_module_expression>>
-  | app_maxP_keyword ',' app_integer
-  | app_maxT_keyword ',' app_integer
-  | app_registered_keyword ',' <<list_generator app_module_expression>>
-  | app_included_applications_keyword ',' <<list_generator app_atom_expression>>
-  | app_applications_keyword ',' <<list_generator app_atom_expression>>
-  | app_env_keyword ',' <<list_generator app_env_expression>>
-  | app_mod_keyword ',' app_mod
-  | app_start_phases_keyword ',' config_expression
-  | app_runtime_dependencies_keyword ',' app_runtime_deps
+   (<<app_atom_named "description">> ',' string_literal
+  | <<app_atom_named "id">> ',' string_literal
+  | <<app_atom_named "vsn">> ',' string_literal
+  | <<app_atom_named "modules">> ',' <<list_of app_module_expression>>
+  | <<app_atom_named "maxP">> ',' app_integer
+  | <<app_atom_named "maxT">> ',' app_integer
+  | <<app_atom_named "registered">> ',' <<list_of app_module_expression>>
+  | <<app_atom_named "included_applications">> ',' <<list_of app_atom>>
+  | <<app_atom_named "applications">> ',' <<list_of app_atom>>
+  | <<app_atom_named "env">> ',' <<list_of app_env_expression>>
+  | <<app_atom_named "mod">> ',' app_mod
+  | <<app_atom_named "start_phases">> ',' config_expression
+  | <<app_atom_named "runtime_dependencies">> ',' app_runtime_deps
   | config_exprs)
   '}' {elementType=tuple_expression}
-
-meta list_generator ::= '[' <<p>>? (',' <<p>>)* ']' {elementType=list_expression pin=1}
 app_module_expression ::= module_ref {elementType=config_expression}
 app_integer ::= &integer atomic {elementType=config_expression}
-app_env_expression ::= '{' app_atom_expression ',' config_expression '}' {elementType=tuple_expression}
+app_env_expression ::= '{' app_atom ',' config_expression '}' {elementType=tuple_expression}
 app_mod ::= '{' app_module_expression ',' config_expression '}' {elementType=tuple_expression}
 app_runtime_deps ::= '[' string_literal? ']' {elementType=list_expression}
-
-app_description_keyword ::= &'description' q_atom {elementType=config_expression}
-app_id_keyword ::= &'id' q_atom {elementType=config_expression}
-app_vsn_keyword ::= &'vsn' q_atom {elementType=config_expression}
-app_modules_keyword ::= &'modules' q_atom {elementType=config_expression}
-app_maxP_keyword ::= &'maxP' q_atom {elementType=config_expression}
-app_maxT_keyword ::= &'maxT' q_atom {elementType=config_expression}
-app_registered_keyword ::= &'registered' q_atom {elementType=config_expression}
-app_included_applications_keyword ::= &'included_applications' q_atom {elementType=config_expression}
-app_applications_keyword ::= &'applications' q_atom {elementType=config_expression}
-app_env_keyword ::= &'env' q_atom {elementType=config_expression}
-app_mod_keyword ::= &'mod' q_atom {elementType=config_expression}
-app_start_phases_keyword ::= &'start_phases' q_atom {elementType=config_expression}
-app_runtime_dependencies_keyword ::= &'runtime_dependencies' q_atom {elementType=config_expression}
 
 config_expression ::=
     config_tuple_expression
