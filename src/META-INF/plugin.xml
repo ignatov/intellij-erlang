@@ -97,6 +97,7 @@
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangVariableCompletionContributor" id="ErlangVariableCompletion"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangCompletionContributor" id="ErlangCompletion" order="after ErlangVariableCompletion"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangKeywordsCompletionContributor" order="before ErlangCompletion"/>
+        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangAppCompletionContributor" order="before ErlangCompletion"/>
 
         <renameInputValidator implementation="org.intellij.erlang.rename.ErlangRenameInputValidator"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameVariableProcessor"/>

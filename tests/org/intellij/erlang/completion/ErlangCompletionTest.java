@@ -24,6 +24,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.List;
+import java.util.Set;
 
 public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
@@ -184,6 +185,40 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testOptionalCallbacks() { doCheckResult("-optional_c<caret>", "-optional_callbacks([<caret>])."); }
   public void testBehaviour()         { doCheckResult("-behaviou<caret>", "-behaviour(<caret>)."); }
   public void testBehavior()          { doCheckResult("-behavior<caret>", "-behavior(<caret>)."); }
+
+  public void testAppFile() {
+    doAppFileCheckResult("{ap<caret>}.", "{application}.");
+  }
+
+  public void testAppFileBadPosition() {
+    doAppFileCheckResult("{application, <caret>}.", "{application, <caret>}.");
+  }
+
+  public void testAppFileParameter() {
+    doAppFileCheckResult("{application, name, [{re<caret>}]}.", "{application, name, [{registered<caret>}]}.");
+  }
+
+  public void testAppFileBadParameterPosition() {
+    doAppFileCheckResult("{application, aaa, [{custom, star<caret>}]}.",
+                         "{application, aaa, [{custom, star<caret>}]}.");
+  }
+
+  public void testAppFileKeywordNotInTuple() {
+    doAppFileCheckResult("{application, name, [<caret>]}.", "{application, name, [<caret>]}.");
+  }
+
+  public void testAppFileBadListPosition() {
+    doAppFileCheckResult("{application, [{<caret>}]}.", "{application, [{<caret>}]}.");
+  }
+
+  public void testAppFileBadKeyword() {
+    doAppFileCheckResult("{regis<caret>}.", "{regis<caret>}.");
+  }
+
+  public void testAppFileKeywordsAreDistinct() {
+    Set<String> set = ContainerUtil.newHashSet(ErlangAppCompletionContributor.KEYWORDS);
+    assertTrue(set.size() == ErlangAppCompletionContributor.KEYWORDS.size());
+  }
 
   public void testSingleQuotes() {
     myFixture.configureByText("a.erl", "");

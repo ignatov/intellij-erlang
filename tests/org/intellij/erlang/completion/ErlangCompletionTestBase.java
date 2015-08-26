@@ -83,6 +83,12 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
     myFixture.checkResult(after);
   }
 
+  protected void doAppFileCheckResult(@NotNull String before, @NotNull String after) {
+    myFixture.configureByText("a.app", before);
+    myFixture.completeBasic();
+    myFixture.checkResult(after);
+  }
+
   protected void doTestInclude(String txt, String... variants) {
     doTestVariants(txt, CompletionType.BASIC, 1, CheckType.INCLUDES, variants);
   }
