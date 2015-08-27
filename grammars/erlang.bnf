@@ -327,23 +327,24 @@ clause_guard ::= when <<guarded guard>> {pin=1}
 clause_body ::= '->' exprs {pin=1}
 
 // source: "FILE SYNTAX" section of http://www.erlang.org/doc/man/app.html
-app_expression ::= '{' <<app_atom_named "application">> ',' app_atom ',' <<list_of app_parameter>> '}' {elementType=tuple_expression}
+app_expression ::= '{' <<app_atom_named ('application')>> ',' app_atom ',' <<list_of app_parameter>> '}' {elementType=tuple_expression}
+private meta app_atom_named ::= &<<p>> app_atom
 app_atom ::= q_atom {elementType=config_expression}
 meta list_of ::= '[' <<p>>? (',' <<p>>)* ']' {elementType=list_expression pin(".*")=1}
 app_parameter ::= '{'
-   (<<app_atom_named "description">> ',' string_literal
-  | <<app_atom_named "id">> ',' string_literal
-  | <<app_atom_named "vsn">> ',' string_literal
-  | <<app_atom_named "modules">> ',' <<list_of app_module_expression>>
-  | <<app_atom_named "maxP">> ',' app_integer
-  | <<app_atom_named "maxT">> ',' app_integer
-  | <<app_atom_named "registered">> ',' <<list_of app_module_expression>>
-  | <<app_atom_named "included_applications">> ',' <<list_of app_atom>>
-  | <<app_atom_named "applications">> ',' <<list_of app_atom>>
-  | <<app_atom_named "env">> ',' <<list_of app_env_expression>>
-  | <<app_atom_named "mod">> ',' app_mod
-  | <<app_atom_named "start_phases">> ',' config_expression
-  | <<app_atom_named "runtime_dependencies">> ',' app_runtime_deps
+   (<<app_atom_named ('description')>> ',' string_literal
+  | <<app_atom_named ('id')>> ',' string_literal
+  | <<app_atom_named ('vsn')>> ',' string_literal
+  | <<app_atom_named ('modules')>> ',' <<list_of app_module_expression>>
+  | <<app_atom_named ('maxP')>> ',' app_integer
+  | <<app_atom_named ('maxT')>> ',' app_integer
+  | <<app_atom_named ('registered')>> ',' <<list_of app_module_expression>>
+  | <<app_atom_named ('included_applications')>> ',' <<list_of app_atom>>
+  | <<app_atom_named ('applications')>> ',' <<list_of app_atom>>
+  | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
+  | <<app_atom_named ('mod')>> ',' app_mod
+  | <<app_atom_named ('start_phases')>> ',' config_expression
+  | <<app_atom_named ('runtime_dependencies')>> ',' app_runtime_deps
   | config_exprs)
   '}' {elementType=tuple_expression}
 app_module_expression ::= module_ref {elementType=config_expression}
