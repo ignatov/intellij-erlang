@@ -18,62 +18,76 @@ package org.intellij.erlang;
 
 import com.intellij.patterns.PsiElementPattern;
 import com.intellij.psi.*;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.psi.ErlangArgumentList;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangMaxExpression;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil.ErlangFunctionCallModuleParameter;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil.ErlangFunctionCallParameter;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil.ErlangFunctionCallModuleParameter;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil.ErlangFunctionCallFunctionParameter;
 import org.jetbrains.annotations.NotNull;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangReferenceContributor extends PsiReferenceContributor {
-  private enum Kind {FUNCTION, MODULE, RECORD}
-
   @SuppressWarnings("unchecked")
   PsiElementPattern.Capture<ErlangQAtom> myAtomArgInFunctionCall = psiElement(ErlangQAtom.class)
     .withParents(ErlangMaxExpression.class, ErlangArgumentList.class, ErlangFunctionCallExpression.class);
 
   @Override
   public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
-    register(registrar, Kind.RECORD,   "erlang", "is_record",  2, 1);
-    register(registrar, Kind.RECORD,   "erlang", "is_record",  3, 1);
-    register(registrar, Kind.FUNCTION, "erlang", "spawn",      3, 1);
-    register(registrar, Kind.FUNCTION, "erlang", "spawn_link", 3, 1);
+    registerRecords(registrar, "erlang", "is_record", 2, 1);
+    registerRecords(registrar, "erlang", "is_record", 3, 1);
 
     registrar.registerReferenceProvider(
-      myAtomArgInFunctionCall.with(new ErlangFunctionCallModuleParameter()), new AtomReferenceProvider(Kind.MODULE));
+      myAtomArgInFunctionCall.with(new ErlangFunctionCallModuleParameter()), new ModuleReferenceProvider());
+    registrar.registerReferenceProvider(
+      myAtomArgInFunctionCall.with(new ErlangFunctionCallFunctionParameter()), new FunctionReferenceProvider());
   }
 
-  private static void register(@NotNull PsiReferenceRegistrar registrar, @NotNull final Kind kind,
-                               @NotNull String module, @NotNull String function, int arity, int position) {
-    registrar.registerReferenceProvider(psiElement(ErlangQAtom.class).with(
-      new ErlangFunctionCallParameter<PsiElement>(function, module, arity, position)), new AtomReferenceProvider(kind));
+  private void registerRecords(@NotNull PsiReferenceRegistrar registrar, @NotNull String module,
+                               @NotNull String function, int arity, int position) {
+    registrar.registerReferenceProvider(
+      myAtomArgInFunctionCall.with(new ErlangFunctionCallParameter<PsiElement>(function, module, arity, position)),
+      new RecordReferenceProvider());
   }
 
-  private static class AtomReferenceProvider extends PsiReferenceProvider {
-    private final Kind myKind;
-
-    public AtomReferenceProvider(Kind kind) {
-      myKind = kind;
+  private static class ModuleReferenceProvider extends ReferenceProvider {
+    @NotNull
+    @Override
+    protected PsiReference createReference(@NotNull ErlangQAtom atom) {
+      return ErlangPsiImplUtil.createModuleReference(atom);
     }
+  }
 
+  private static class FunctionReferenceProvider extends ReferenceProvider {
+    @NotNull
+    @Override
+    protected PsiReference createReference(@NotNull ErlangQAtom atom) {
+      return ErlangPsiImplUtil.createFunctionReference(atom);
+    }
+  }
+
+  private static class RecordReferenceProvider extends ReferenceProvider {
+    @NotNull
+    @Override
+    protected PsiReference createReference(@NotNull ErlangQAtom atom) {
+      return ErlangPsiImplUtil.createRecordRef(atom);
+    }
+  }
+
+  private static abstract class ReferenceProvider extends PsiReferenceProvider {
     @NotNull
     @Override
     public PsiReference[] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
-      return element instanceof ErlangQAtom ? new PsiReference[]{createReference((ErlangQAtom) element)}
-                                            : PsiReference.EMPTY_ARRAY;
+      ErlangQAtom atom = ObjectUtils.tryCast(element, ErlangQAtom.class);
+      return atom != null ? new PsiReference[]{createReference(atom)}
+                          : PsiReference.EMPTY_ARRAY;
     }
-
     @NotNull
-    private PsiReference createReference(@NotNull ErlangQAtom element) {
-      if (myKind == Kind.MODULE) return ErlangPsiImplUtil.createModuleReference(element);
-      if (myKind == Kind.FUNCTION) return ErlangPsiImplUtil.createFunctionReference(element);
-      if (myKind == Kind.RECORD) return ErlangPsiImplUtil.createRecordRef(element);
-      throw new UnsupportedOperationException("Unknown kind of reference: " + myKind);
-    }
+    protected abstract PsiReference createReference(@NotNull ErlangQAtom atom);
   }
 }
