@@ -75,11 +75,11 @@
   pin("config_.*_expression")=1
   pin("app_.*")=1
 
-  implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr")="org.intellij.erlang.psi.ErlangNamedElement"
+  implements("record_definition|function|q_var|module|macros_definition|type_definition|typed_expr|specification")="org.intellij.erlang.psi.ErlangNamedElement"
   extends("q_var|typed_expr")="org.intellij.erlang.psi.impl.ErlangNamedElementImpl"
-  extends("function|module|record_definition|type_definition|macros_definition")="org.intellij.erlang.psi.impl.ErlangNamedStubbedPsiElementBase<?>"
+  extends("function|module|record_definition|type_definition|macros_definition|specification")="org.intellij.erlang.psi.impl.ErlangNamedStubbedPsiElementBase<?>"
   extends("behaviour|type_definition|include|include_lib|callback_spec|callback_function")="org.intellij.erlang.psi.impl.ErlangStubbedPsiElementBase<?>"
-  elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec|callback_function")="org.intellij.erlang.ErlangElementTypeFactory.factory"
+  elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec|callback_function|specification")="org.intellij.erlang.ErlangElementTypeFactory.factory"
 
   implements("case_expression|try_expression|receive_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
 }
@@ -181,7 +181,8 @@ callback_spec ::= 'callback' type_spec {
 optional_callbacks ::= 'optional_callbacks' <<attribute_tail optional_callback_functions>> {pin=1}
 specification ::= 'spec' type_spec {
   pin=1
-  methods = [getSignature]
+  methods = [getSignature getNameIdentifier getName setName getArity]
+  stubClass="org.intellij.erlang.stubs.ErlangSpecificationStub"
 }
 export ::= 'export' <<attribute_tail export_functions>> {pin=1}
 export_type_attribute ::= 'export_type' <<attribute_tail export_types>> {pin=1}

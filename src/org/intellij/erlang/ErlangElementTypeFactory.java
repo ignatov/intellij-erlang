@@ -36,6 +36,7 @@ public class ErlangElementTypeFactory {
     else if (name.equals("ERL_INCLUDE_LIB"))        return new ErlangIncludeLibElementType(name);
     else if (name.equals("ERL_CALLBACK_SPEC"))      return new ErlangCallbackStubElementType(name);
     else if (name.equals("ERL_CALLBACK_FUNCTION"))  return new ErlangCallbackFunctionStubElementType(name);
+    else if (name.equals("ERL_SPECIFICATION"))      return new ErlangSpecificationElementType(name);
 
     throw new RuntimeException("Unknown element type: " + name);
   }

@@ -442,7 +442,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitSpecification(@NotNull ErlangSpecification o) {
-    visitCompositeElement(o);
+    visitNamedElement(o);
   }
 
   public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
