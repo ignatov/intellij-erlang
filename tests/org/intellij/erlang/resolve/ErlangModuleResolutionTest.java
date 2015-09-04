@@ -21,7 +21,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.psi.ErlangModuleRef;
@@ -68,11 +67,9 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
     doTest(ErlangQAtom.class, expectedPath, filePaths);
   }
 
-  protected void doTest(@NotNull Class<? extends PsiElement> psiClass, String expectedPath, String ... filePaths) {
+  protected void doTest(@NotNull Class<? extends PsiElement> clazz, String expectedPath, String ... filePaths) {
     myFixture.configureByFiles(filePaths);
-    PsiElement focusedElement = myFixture.getFile().findElementAt(myFixture.getEditor().getCaretModel().getOffset());
-    focusedElement = PsiTreeUtil.getParentOfType(focusedElement, psiClass);
-    assertNotNull(focusedElement);
+    PsiElement focusedElement = getElementAtCaret(clazz);
     PsiReference reference = focusedElement.getReference();
     PsiElement module = reference != null ? reference.resolve() : null;
     PsiFile containingFile = module != null ? module.getContainingFile() : null;

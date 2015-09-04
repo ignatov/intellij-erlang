@@ -21,7 +21,10 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.PlatformUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
@@ -84,5 +87,12 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Ligh
   
   protected void assertNoIntentionsAvailable(@NotNull String name) {
     assertNoIntentionsAvailable(name, null);
+  }
+
+  @NotNull
+  protected <T extends PsiElement> T getElementAtCaret(@NotNull Class<T> clazz) {
+    int offset = myFixture.getEditor().getCaretModel().getOffset();
+    PsiElement focused = myFixture.getFile().findElementAt(offset);
+    return ObjectUtils.assertNotNull(PsiTreeUtil.getParentOfType(focused, clazz));
   }
 }

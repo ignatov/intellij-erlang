@@ -17,9 +17,7 @@
 package org.intellij.erlang.resolve;
 
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtil;
@@ -104,12 +102,5 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
 
     assertEquals(function, resolvedFunction.getName());
     assertEquals(arity, resolvedFunction.getArity());
-  }
-
-  @NotNull
-  private <T extends PsiElement> T getElementAtCaret(Class<T> clazz) {
-    int offset = myFixture.getEditor().getCaretModel().getOffset();
-    PsiElement focused = myFixture.getFile().findElementAt(offset);
-    return ObjectUtils.assertNotNull(PsiTreeUtil.getParentOfType(focused, clazz));
   }
 }

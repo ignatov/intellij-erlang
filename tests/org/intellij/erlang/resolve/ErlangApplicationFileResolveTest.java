@@ -17,7 +17,6 @@
 package org.intellij.erlang.resolve;
 
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModuleRef;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -36,9 +35,7 @@ public class ErlangApplicationFileResolveTest extends ErlangLightPlatformCodeIns
     ErlangFile expectedFile = (ErlangFile) files[1];
     assertNotNull(expectedFile);
 
-    int offset = myFixture.getEditor().getCaretModel().getOffset();
-    ErlangModuleRef ref = PsiTreeUtil.getParentOfType(focusedFile.findElementAt(offset), ErlangModuleRef.class);
-    assertNotNull(ref);
+    ErlangModuleRef ref = getElementAtCaret(ErlangModuleRef.class);
     ErlangFile resolvedFile = ErlangPsiImplUtil.resolveToFile(ref);
 
     assertSame(resolvedFile, expectedFile);
