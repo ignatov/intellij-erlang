@@ -30,7 +30,6 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
@@ -52,26 +51,222 @@ import static java.util.Collections.*;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
+  private final CachedValue<List<ErlangRule>> myRulesValue =
+    createCachedValue(new ValueProvider<List<ErlangRule>>() {
+      @NotNull
+      @Override
+      protected List<ErlangRule> computeValue() {
+        return unmodifiableList(calcRules());
+      }
+    });
+  private final CachedValue<List<ErlangFunction>> myFunctionValue =
+    createCachedValue(new ValueProvider<List<ErlangFunction>>() {
+      @NotNull
+      @Override
+      public List<ErlangFunction> computeValue() {
+        return unmodifiableList(calcFunctions());
+      }
+    });
+  private final CachedValue<List<ErlangImportFunction>> myImportValue =
+    createCachedValue(new ValueProvider<List<ErlangImportFunction>>() {
+      @NotNull
+      @Override
+      public List<ErlangImportFunction> computeValue() {
+        return unmodifiableList(calcImports());
+      }
+    });
+  private final CachedValue<Set<ErlangFunction>> myExportedFunctionValue =
+    createCachedValue(new ValueProvider<Set<ErlangFunction>>() {
+      @NotNull
+      @Override
+      public Set<ErlangFunction> computeValue() {
+        return unmodifiableSet(calcExportedFunctions());
+      }
+    });
+  private final CachedValue<List<ErlangAttribute>> myAttributeValue =
+    createCachedValue(new ValueProvider<List<ErlangAttribute>>() {
+      @NotNull
+      @Override
+      public List<ErlangAttribute> computeValue() {
+        return unmodifiableList(calcAttributes());
+      }
+    });
+  private final CachedValue<List<ErlangRecordDefinition>> myRecordValue =
+    createCachedValue(new ValueProvider<List<ErlangRecordDefinition>>() {
+      @NotNull
+      @Override
+      public List<ErlangRecordDefinition> computeValue() {
+        return unmodifiableList(calcRecords());
+      }
+    });
+  private final CachedValue<List<ErlangInclude>> myIncludeValue =
+    createCachedValue(new ValueProvider<List<ErlangInclude>>() {
+      @NotNull
+      @Override
+      public List<ErlangInclude> computeValue() {
+        return unmodifiableList(calcIncludes());
+      }
+    });
+  private final CachedValue<List<ErlangIncludeLib>> myIncludeLibValue =
+    createCachedValue(new ValueProvider<List<ErlangIncludeLib>>() {
+      @NotNull
+      @Override
+      public List<ErlangIncludeLib> computeValue() {
+        return unmodifiableList(calcIncludeLibs());
+      }
+    });
+  private final CachedValue<MultiMap<String, ErlangFunction>> myFunctionsMap =
+    createCachedValue(new ValueProvider<MultiMap<String, ErlangFunction>>() {
+      @NotNull
+      @Override
+      public MultiMap<String, ErlangFunction> computeValue() {
+        MultiMap<String, ErlangFunction> map = new MultiMap<String, ErlangFunction>();
+        for (ErlangFunction function : getFunctions()) {
+          map.putValue(function.getName(), function);
+        }
+        return map;
+      }
+    });
+  private final CachedValue<MultiMap<String, ErlangImportFunction>> myImportsMap =
+    createCachedValue(new ValueProvider<MultiMap<String, ErlangImportFunction>>() {
+      @NotNull
+      @Override
+      public MultiMap<String, ErlangImportFunction> computeValue() {
+        MultiMap<String, ErlangImportFunction> map = new MultiMap<String, ErlangImportFunction>();
+        for (ErlangImportFunction importFunction : getImportedFunctions()) {
+          map.putValue(ErlangPsiImplUtil.getName(importFunction), importFunction);
+        }
+        return map;
+      }
+    });
+  private final CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap =
+    createCachedValue(new ValueProvider<Map<String, ErlangRecordDefinition>>() {
+      @NotNull
+      @Override
+      public Map<String, ErlangRecordDefinition> computeValue() {
+        Map<String, ErlangRecordDefinition> map = new THashMap<String, ErlangRecordDefinition>();
+        for (ErlangRecordDefinition record : getRecords()) {
+          String recordName = record.getName();
+          if (!map.containsKey(recordName)) {
+            map.put(recordName, record);
+          }
+        }
+        return map;
+      }
+    });
+  private final CachedValue<List<ErlangMacrosDefinition>> myMacrosValue =
+    createCachedValue(new ValueProvider<List<ErlangMacrosDefinition>>() {
+      @NotNull
+      @Override
+      public List<ErlangMacrosDefinition> computeValue() {
+        return unmodifiableList(calcMacroses());
+      }
+    });
+  private final CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap =
+    createCachedValue(new ValueProvider<Map<String, ErlangMacrosDefinition>>() {
+      @NotNull
+      @Override
+      public Map<String, ErlangMacrosDefinition> computeValue() {
+        Map<String, ErlangMacrosDefinition> map = new THashMap<String, ErlangMacrosDefinition>();
+        for (ErlangMacrosDefinition macros : getMacroses()) {
+          String macrosName = ErlangPsiImplUtil.getName(macros);
+          if (!map.containsKey(macrosName)) {
+            map.put(macrosName, macros);
+          }
+        }
+        return map;
+      }
+    });
+  private final CachedValue<List<ErlangTypeDefinition>> myTypeValue =
+    createCachedValue(new ValueProvider<List<ErlangTypeDefinition>>() {
+      @NotNull
+      @Override
+      public List<ErlangTypeDefinition> computeValue() {
+        return unmodifiableList(calcTypes());
+      }
+    });
+  private final CachedValue<Map<String, ErlangTypeDefinition>> myTypeMap =
+    createCachedValue(new ValueProvider<Map<String, ErlangTypeDefinition>>() {
+      @NotNull
+      @Override
+      public Map<String, ErlangTypeDefinition> computeValue() {
+        Map<String, ErlangTypeDefinition> map = new THashMap<String, ErlangTypeDefinition>();
+        for (ErlangTypeDefinition type : getTypes()) {
+          String mName = type.getName();
+          if (!map.containsKey(mName)) {
+            map.put(mName, type);
+          }
+        }
+        return map;
+      }
+    });
+  private final CachedValue<Map<String, ErlangCallbackSpec>> myCallbackMap =
+    createCachedValue(new ValueProvider<Map<String, ErlangCallbackSpec>>() {
+      @NotNull
+      @Override
+      public Map<String, ErlangCallbackSpec> computeValue() {
+        return unmodifiableMap(calcCallbacks());
+      }
+    });
+  private final CachedValue<List<ErlangBehaviour>> myBehavioursValue =
+    createCachedValue(new ValueProvider<List<ErlangBehaviour>>() {
+      @NotNull
+      @Override
+      public List<ErlangBehaviour> computeValue() {
+        return unmodifiableList(calcBehaviours());
+      }
+    });
+  private final CachedValue<Collection<ErlangCallbackFunction>> myOptionalCallbacks =
+    createCachedValue(new ValueProvider<Collection<ErlangCallbackFunction>>() {
+      @NotNull
+      @Override
+      public Collection<ErlangCallbackFunction> computeValue() {
+        return unmodifiableCollection(calcOptionalCallbacks());
+      }
+    });
+  private final CachedValue<List<ErlangSpecification>> mySpecificationsValue =
+    createCachedValue(new ValueProvider<List<ErlangSpecification>>() {
+      @NotNull
+      @Override
+      public List<ErlangSpecification> computeValue() {
+        return unmodifiableList(calcSpecifications());
+      }
+    });
+  private final CachedValue<Boolean> myExportAll =
+    createCachedValue(new ValueProvider<Boolean>() {
+      @NotNull
+      @Override
+      public Boolean computeValue() {
+        return calcExportAll();
+      }
+    });
+  private final CachedValue<Boolean> myNoAutoImportAll =
+    createCachedValue(new ValueProvider<Boolean>() {
+      @NotNull
+      @Override
+      public Boolean computeValue() {
+        return calcNoAutoImportAll();
+      }
+    });
+  private final CachedValue<Set<String>> myExportedFunctionsSignatures =
+    createCachedValue(new ValueProvider<Set<String>>() {
+      @NotNull
+      @Override
+      public Set<String> computeValue() {
+        return unmodifiableSet(calcExportedSignatures());
+      }
+    });
+  private final CachedValue<Set<String>> myNoAutoImportFunctionsSignatures =
+    createCachedValue(new ValueProvider<Set<String>>() {
+      @NotNull
+      @Override
+      public Set<String> computeValue() {
+        return unmodifiableSet(calcNoAutoImportSignatures());
+      }
+    });
+
   public ErlangFileImpl(@NotNull FileViewProvider viewProvider) {
     super(viewProvider, ErlangLanguage.INSTANCE);
-  }
-
-  @Nullable
-  @Override
-  public ErlangModule getModule() {
-    ErlangFileStub stub = getStub();
-    if (stub != null) {
-      return ArrayUtil.getFirstElement(stub.getChildrenByType(ErlangTypes.ERL_MODULE, ErlangModuleStubElementType.ARRAY_FACTORY));
-    }
-
-    List<ErlangAttribute> attributes = PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangAttribute.class);
-    for (ErlangAttribute attribute : attributes) {
-      ErlangModule module = attribute.getModule();
-      if (module != null) {
-        return module;
-      }
-    }
-    return null;
   }
 
   @Override
@@ -95,198 +290,6 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return super.setName(name);
   }
 
-  private CachedValue<List<ErlangRule>> myRulesValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangRule>>() {
-      @Override
-      public Result<List<ErlangRule>> compute() {
-        return Result.create(unmodifiableList(calcRules()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangFunction>> myFunctionValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangFunction>>() {
-      @Override
-      public Result<List<ErlangFunction>> compute() {
-        return Result.create(unmodifiableList(calcFunctions()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangImportFunction>> myImportValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangImportFunction>>() {
-      @Override
-      public Result<List<ErlangImportFunction>> compute() {
-        return Result.create(unmodifiableList(calcImports()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Set<ErlangFunction>> myExportedFunctionValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<ErlangFunction>>() {
-      @Override
-      public Result<Set<ErlangFunction>> compute() {
-        return Result.create(unmodifiableSet(calcExportedFunctions()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangAttribute>> myAttributeValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangAttribute>>() {
-      @Override
-      public Result<List<ErlangAttribute>> compute() {
-        return Result.create(unmodifiableList(calcAttributes()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangRecordDefinition>> myRecordValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangRecordDefinition>>() {
-      @Override
-      public Result<List<ErlangRecordDefinition>> compute() {
-        return Result.create(unmodifiableList(calcRecords()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangInclude>> myIncludeValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangInclude>>() {
-      @Override
-      public Result<List<ErlangInclude>> compute() {
-        return Result.create(unmodifiableList(calcIncludes()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangIncludeLib>> myIncludeLibValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangIncludeLib>>() {
-      @Override
-      public Result<List<ErlangIncludeLib>> compute() {
-        return Result.create(unmodifiableList(calcIncludeLibs()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<MultiMap<String, ErlangFunction>> myFunctionsMap =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<MultiMap<String, ErlangFunction>>() {
-      @Override
-      public Result<MultiMap<String, ErlangFunction>> compute() {
-        MultiMap<String, ErlangFunction> map = new MultiMap<String, ErlangFunction>();
-        for (ErlangFunction function : getFunctions()) {
-          map.putValue(function.getName(), function);
-        }
-        return Result.create(map, ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<MultiMap<String, ErlangImportFunction>> myImportsMap =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<MultiMap<String, ErlangImportFunction>>() {
-      @Override
-      public Result<MultiMap<String, ErlangImportFunction>> compute() {
-        MultiMap<String, ErlangImportFunction> map = new MultiMap<String, ErlangImportFunction>();
-        for (ErlangImportFunction importFunction : getImportedFunctions()) {
-          map.putValue(ErlangPsiImplUtil.getName(importFunction), importFunction);
-        }
-        return Result.create(map, ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangRecordDefinition>>() {
-      @Override
-      public Result<Map<String, ErlangRecordDefinition>> compute() {
-        Map<String, ErlangRecordDefinition> map = new THashMap<String, ErlangRecordDefinition>();
-        for (ErlangRecordDefinition record : getRecords()) {
-          String recordName = record.getName();
-          if (!map.containsKey(recordName)) {
-            map.put(recordName, record);
-          }
-        }
-        return Result.create(map, ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangMacrosDefinition>> myMacrosValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangMacrosDefinition>>() {
-      @Override
-      public Result<List<ErlangMacrosDefinition>> compute() {
-        return Result.create(unmodifiableList(calcMacroses()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangMacrosDefinition>>() {
-      @Override
-      public Result<Map<String, ErlangMacrosDefinition>> compute() {
-        Map<String, ErlangMacrosDefinition> map = new THashMap<String, ErlangMacrosDefinition>();
-        for (ErlangMacrosDefinition macros : getMacroses()) {
-          String macrosName = ErlangPsiImplUtil.getName(macros);
-          if (!map.containsKey(macrosName)) {
-            map.put(macrosName, macros);
-          }
-        }
-        return Result.create(map, ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangTypeDefinition>> myTypeValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangTypeDefinition>>() {
-      @Override
-      public Result<List<ErlangTypeDefinition>> compute() {
-        return Result.create(unmodifiableList(calcTypes()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Map<String, ErlangTypeDefinition>> myTypeMap =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangTypeDefinition>>() {
-      @Override
-      public Result<Map<String, ErlangTypeDefinition>> compute() {
-        Map<String, ErlangTypeDefinition> map = new THashMap<String, ErlangTypeDefinition>();
-        for (ErlangTypeDefinition type : getTypes()) {
-          String mName = type.getName();
-          if (!map.containsKey(mName)) {
-            map.put(mName, type);
-          }
-        }
-        return Result.create(map, ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Map<String, ErlangCallbackSpec>> myCallbackMap =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Map<String, ErlangCallbackSpec>>() {
-      @Nullable
-      @Override
-      public Result<Map<String, ErlangCallbackSpec>> compute() {
-        return Result.create(unmodifiableMap(calcCallbacks()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangBehaviour>> myBehavioursValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangBehaviour>>() {
-      @Override
-      public Result<List<ErlangBehaviour>> compute() {
-        return Result.create(unmodifiableList(calcBehaviours()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Collection<ErlangCallbackFunction>> myOptionalCallbacks =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Collection<ErlangCallbackFunction>>() {
-      @Override
-      public Result<Collection<ErlangCallbackFunction>> compute() {
-        return Result.create(unmodifiableCollection(calcOptionalCallbacks()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<List<ErlangSpecification>> mySpecificationsValue =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<List<ErlangSpecification>>() {
-      @Override
-      public Result<List<ErlangSpecification>> compute() {
-        return Result.create(unmodifiableList(calcSpecifications()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Boolean> myExportAll =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Boolean>() {
-      @Override
-      public Result<Boolean> compute() {
-        return Result.create(calcExportAll(), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Boolean> myNoAutoImportAll =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Boolean>() {
-      @Override
-      public Result<Boolean> compute() {
-        return Result.create(calcNoAutoImportAll(), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Set<String>> myExportedFunctionsSignatures =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<String>>() {
-      @Override
-      public Result<Set<String>> compute() {
-        return Result.create(unmodifiableSet(calcExportedSignatures()), ErlangFileImpl.this);
-      }
-    }, false);
-  private CachedValue<Set<String>> myNoAutoImportFunctionsSignatures =
-    CachedValuesManager.getManager(getProject()).createCachedValue(new CachedValueProvider<Set<String>>() {
-      @Override
-      public Result<Set<String>> compute() {
-        return Result.create(unmodifiableSet(calcNoAutoImportSignatures()), ErlangFileImpl.this);
-      }
-    }, false);
-
   @NotNull
   @Override
   public FileType getFileType() {
@@ -295,10 +298,27 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   @Nullable
+  @Override
   public ErlangFileStub getStub() {
     StubElement stub = super.getStub();
-    if (stub == null) return null;
     return (ErlangFileStub) stub;
+  }
+
+  @Nullable
+  @Override
+  public ErlangModule getModule() {
+    ErlangFileStub stub = getStub();
+    if (stub != null) {
+      return ArrayUtil.getFirstElement(stub.getChildrenByType(ErlangTypes.ERL_MODULE, ErlangModuleStubElementType.ARRAY_FACTORY));
+    }
+
+    for (ErlangAttribute attribute : getAttributes()) {
+      ErlangModule module = attribute.getModule();
+      if (module != null) {
+        return module;
+      }
+    }
+    return null;
   }
 
   @Override
@@ -765,6 +785,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   @NotNull
+  private <T> CachedValue<T> createCachedValue(@NotNull CachedValueProvider<T> provider) {
+    return CachedValuesManager.getManager(getProject()).createCachedValue(provider, false);
+  }
+
+  @NotNull
   private <T extends PsiElement> List<T> collectChildrenDummyAware(@NotNull final Class<T> clazz) {
     final List<T> result = ContainerUtil.newArrayList();
     processChildrenDummyAware(this, new Processor<PsiElement>() {
@@ -800,5 +825,16 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
                                                                               @NotNull IElementType elementType,
                                                                               @NotNull ArrayFactory<E> arrayFactory) {
     return ContainerUtil.list(stub.getChildrenByType(elementType, arrayFactory));
+  }
+
+  private abstract class ValueProvider<T> implements CachedValueProvider<T> {
+    @NotNull
+    @Override
+    public final Result<T> compute() {
+      return Result.create(computeValue(), ErlangFileImpl.this);
+    }
+
+    @NotNull
+    protected abstract T computeValue();
   }
 }
