@@ -646,7 +646,13 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
                                ErlangCallbackFunctionStubElementType.ARRAY_FACTORY);
     }
 
-    return PsiTreeUtil.findChildrenOfType(this, ErlangCallbackFunction.class);
+    List<ErlangCallbackFunction> optionalCallbacks = ContainerUtil.newArrayList();
+    for (ErlangAttribute attr : getAttributes()) {
+      ErlangOptionalCallbacks callbacks = attr.getOptionalCallbacks();
+      ErlangOptionalCallbackFunctions opts = callbacks != null ? callbacks.getOptionalCallbackFunctions() : null;
+      optionalCallbacks.addAll(opts != null ? opts.getCallbackFunctionList() : ContainerUtil.<ErlangCallbackFunction>emptyList());
+    }
+    return optionalCallbacks;
   }
 
   @NotNull
