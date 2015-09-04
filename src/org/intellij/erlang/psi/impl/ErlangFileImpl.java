@@ -51,6 +51,14 @@ import static java.util.Collections.*;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
+  private final CachedValue<ErlangModule> myModuleValue =
+    createCachedValue(new ValueProvider<ErlangModule>() {
+      @Nullable
+      @Override
+      protected ErlangModule computeValue() {
+        return calcModule();
+      }
+    });
   private final CachedValue<List<ErlangRule>> myRulesValue =
     createCachedValue(new ValueProvider<List<ErlangRule>>() {
       @NotNull
@@ -307,6 +315,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @Nullable
   @Override
   public ErlangModule getModule() {
+    return myModuleValue.getValue();
+  }
+
+  @Nullable
+  private ErlangModule calcModule() {
     ErlangFileStub stub = getStub();
     if (stub != null) {
       return ArrayUtil.getFirstElement(stub.getChildrenByType(ErlangTypes.ERL_MODULE, ErlangModuleStubElementType.ARRAY_FACTORY));
@@ -834,7 +847,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       return Result.create(computeValue(), ErlangFileImpl.this);
     }
 
-    @NotNull
+    @Nullable
     protected abstract T computeValue();
   }
 }
