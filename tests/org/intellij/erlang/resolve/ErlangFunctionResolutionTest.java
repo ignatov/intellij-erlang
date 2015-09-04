@@ -16,48 +16,100 @@
 
 package org.intellij.erlang.resolve;
 
+import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtil;
-import org.intellij.erlang.psi.ErlangFile;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
+import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return new DefaultLightProjectDescriptor() {
+      @Override
+      public Sdk getSdk() {
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
+      }
+    };
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setUpProjectSdk();
+  }
+
   @Override
   protected String getTestDataPath() {
     return "testData/resolve/function/" + getTestName(true) + "/";
   }
 
-  protected void doTest(String focusedFilePath, String expectedFilePath, String... otherFilePaths) {
-    String[] paths = {focusedFilePath, expectedFilePath};
-    PsiFile[] files = myFixture.configureByFiles(ArrayUtil.mergeArrays(paths, otherFilePaths));
-    ErlangFile focusedFile = (ErlangFile) files[0];
-    assertNotNull(focusedFile);
-    ErlangFile expectedFile = (ErlangFile) files[1];
-    assertNotNull(expectedFile);
+  public void testNoAutoImport()               { doFunctionCallTest("test.erl", "incl.erl"); }
+  public void testNoAutoImportWithTuple()      { doFunctionCallTest("test.erl", "incl.erl"); }
+  public void testPreferImportFromUserModule() { doFunctionCallTest("test.erl", "incl.erl"); }
+  public void testPreferLocalFunction()        { doFunctionCallTest("test.erl", "test.erl", "incl.erl"); }
+  public void testPreferFirstImport()          { doFunctionCallTest("test.erl", "incl.erl", "another_incl.erl"); }
 
-    int offset = myFixture.getEditor().getCaretModel().getOffset();
-    ErlangFunctionCallExpression functionCall = PsiTreeUtil.getParentOfType(focusedFile.findElementAt(offset),
-                                                                            ErlangFunctionCallExpression.class);
-    assertNotNull(functionCall);
+  public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl", "bar", 1); }
+  public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl", "bar", 1); }
+  public void testFunParameterInSpawnMonitor() { doParameterTest("test.erl", "test.erl", "foo", 1); }
+
+  private void doFunctionCallTest(@NotNull String focusedFile, @NotNull String expectedFile,
+                                  @NotNull String... otherFiles) {
+    String[] files = {focusedFile, expectedFile};
+    myFixture.configureByFiles(ArrayUtil.mergeArrays(files, otherFiles));
+
+    ErlangFunctionCallExpression functionCall = getElementAtCaret(ErlangFunctionCallExpression.class);
     PsiReference reference = functionCall.getReference();
-    assertNotNull(reference);
-    PsiElement resolvedFunction = reference.resolve();
-    assertNotNull(resolvedFunction);
-
     String name = functionCall.getName();
     int arity = functionCall.getArgumentList().getExpressionList().size();
-    ErlangFunction expectedFunction = expectedFile.getFunction(name, arity);
-    assertSame(expectedFunction, resolvedFunction);
+
+    assertResolvesTo(reference, expectedFile, name, arity);
   }
 
-  public void testNoAutoImport()               { doTest("test.erl", "incl.erl"); }
-  public void testNoAutoImportWithTuple()      { doTest("test.erl", "incl.erl"); }
-  public void testPreferImportFromUserModule() { doTest("test.erl", "incl.erl"); }
-  public void testPreferLocalFunction()        { doTest("test.erl", "test.erl", "incl.erl"); }
-  public void testPreferFirstImport()          { doTest("test.erl", "incl.erl", "another_incl.erl"); }
+  private void doParameterTest(@NotNull String focusedFile,
+                               @NotNull String expectedFile,
+                               @NotNull String expectedFunction,
+                               int expectedArity) {
+    myFixture.configureByFiles(focusedFile, expectedFile);
+
+    ErlangQAtom focusedAtom = getElementAtCaret(ErlangQAtom.class);
+    PsiReference reference = focusedAtom.getReference();
+
+    assertResolvesTo(reference, expectedFile, expectedFunction, expectedArity);
+  }
+
+  private static void assertResolvesTo(@Nullable PsiReference reference,
+                                       @NotNull String file,
+                                       @NotNull String function,
+                                       int arity) {
+    assertNotNull(reference);
+
+    ErlangFunction resolvedFunction = ObjectUtils.tryCast(reference.resolve(), ErlangFunction.class);
+    assertNotNull(resolvedFunction);
+
+    String actualFile = resolvedFunction.getContainingFile().getName();
+    assertEquals(file, actualFile);
+
+    assertEquals(function, resolvedFunction.getName());
+    assertEquals(arity, resolvedFunction.getArity());
+  }
+
+  @NotNull
+  private <T extends PsiElement> T getElementAtCaret(Class<T> clazz) {
+    int offset = myFixture.getEditor().getCaretModel().getOffset();
+    PsiElement focused = myFixture.getFile().findElementAt(offset);
+    return ObjectUtils.assertNotNull(PsiTreeUtil.getParentOfType(focused, clazz));
+  }
 }
