@@ -29,7 +29,6 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.stubs.StubElement;
-import com.intellij.psi.stubs.StubTree;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
@@ -869,16 +868,6 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private static boolean processChildrenDummyAware(ErlangFileImpl file, final Processor<PsiElement> processor) {
-    StubTree stubTree = file.getStubTree();
-    if (stubTree != null) {
-      List<StubElement<?>> plainList = stubTree.getPlainList();
-      for (StubElement<?> stubElement : plainList) {
-        PsiElement psi = stubElement.getPsi();
-        if (!processor.process(psi)) return false;
-      }
-      return true;
-    }
-
     return new Processor<PsiElement>() {
       @Override
       public boolean process(PsiElement psiElement) {
