@@ -22,10 +22,7 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.FileViewProvider;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNameIdentifierOwner;
-import com.intellij.psi.PsiReference;
+import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.stubs.StubElement;
@@ -510,22 +507,13 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private Set<ErlangFunction> calcExportedFunctions() {
-    if (isExportedAll()) {
-      return ContainerUtil.newHashSet(getFunctions());
-    }
-    final Set<ErlangFunction> result = new HashSet<ErlangFunction>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
+    return ContainerUtil.map2SetNotNull(getFunctions(), new Function<ErlangFunction, ErlangFunction>() {
+      @Nullable
       @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangFunction) {
-          if (((ErlangFunction) psiElement).isExported()) {
-            result.add((ErlangFunction) psiElement);
-          }
-        }
-        return true;
+      public ErlangFunction fun(ErlangFunction f) {
+        return f.isExported() ? f : null;
       }
     });
-    return result;
   }
 
   @Nullable
@@ -566,26 +554,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private List<ErlangTypeDefinition> calcTypes() {
-    ErlangFileStub stub = getStub();
-    if (stub != null) {
-      return getChildrenByType(stub, ErlangTypes.ERL_TYPE_DEFINITION, ErlangTypeDefinitionElementType.ARRAY_FACTORY);
-    }
-
-    final List<ErlangTypeDefinition> result = new ArrayList<ErlangTypeDefinition>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangTypeDefinition) {
-          result.add((ErlangTypeDefinition) psiElement);
-        }
-        return true;
-      }
-    });
-    return result;
-  }
-
-  private static <E extends PsiElement> List<E> getChildrenByType(ErlangFileStub stub, IElementType elementType, ArrayFactory<E> f) {
-    return Arrays.asList(stub.getChildrenByType(elementType, f));
+    return calcChildren(ErlangTypeDefinition.class,
+                        ErlangTypes.ERL_TYPE_DEFINITION,
+                        ErlangTypeDefinitionElementType.ARRAY_FACTORY);
   }
 
   @Override
@@ -600,22 +571,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private List<ErlangMacrosDefinition> calcMacroses() {
-    ErlangFileStub stub = getStub();
-    if (stub != null) {
-      return getChildrenByType(stub, ErlangTypes.ERL_MACROS_DEFINITION, ErlangMacrosDefinitionElementType.ARRAY_FACTORY);
-    }
-
-    final List<ErlangMacrosDefinition> result = new ArrayList<ErlangMacrosDefinition>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangMacrosDefinition) {
-          result.add((ErlangMacrosDefinition) psiElement);
-        }
-        return true;
-      }
-    });
-    return result;
+    return calcChildren(ErlangMacrosDefinition.class,
+                        ErlangTypes.ERL_MACROS_DEFINITION,
+                        ErlangMacrosDefinitionElementType.ARRAY_FACTORY);
   }
 
   @Override
@@ -624,22 +582,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private List<ErlangRecordDefinition> calcRecords() {
-    ErlangFileStub stub = getStub();
-    if (stub != null) {
-      return getChildrenByType(stub, ErlangTypes.ERL_RECORD_DEFINITION, ErlangRecordDefinitionElementType.ARRAY_FACTORY);
-    }
-
-    final List<ErlangRecordDefinition> result = new ArrayList<ErlangRecordDefinition>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangRecordDefinition) {
-          result.add((ErlangRecordDefinition) psiElement);
-        }
-        return true;
-      }
-    });
-    return result;
+    return calcChildren(ErlangRecordDefinition.class,
+                        ErlangTypes.ERL_RECORD_DEFINITION,
+                        ErlangRecordDefinitionElementType.ARRAY_FACTORY);
   }
 
   @NotNull
@@ -655,41 +600,15 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private List<ErlangInclude> calcIncludes() {
-    ErlangFileStub stub = getStub();
-    if (stub != null) {
-      return getChildrenByType(stub, ErlangTypes.ERL_INCLUDE, ErlangIncludeElementType.ARRAY_FACTORY);
-    }
-
-    final List<ErlangInclude> result = new ArrayList<ErlangInclude>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangInclude) {
-          result.add((ErlangInclude) psiElement);
-        }
-        return true;
-      }
-    });
-    return result;
+    return calcChildren(ErlangInclude.class,
+                        ErlangTypes.ERL_INCLUDE,
+                        ErlangIncludeElementType.ARRAY_FACTORY);
   }
 
   private List<ErlangIncludeLib> calcIncludeLibs() {
-    ErlangFileStub stub = getStub();
-    if (stub != null) {
-      return getChildrenByType(stub, ErlangTypes.ERL_INCLUDE_LIB, ErlangIncludeLibElementType.ARRAY_FACTORY);
-    }
-
-    final List<ErlangIncludeLib> result = new ArrayList<ErlangIncludeLib>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangIncludeLib) {
-          result.add((ErlangIncludeLib) psiElement);
-        }
-        return true;
-      }
-    });
-    return result;
+    return calcChildren(ErlangIncludeLib.class,
+                        ErlangTypes.ERL_INCLUDE_LIB,
+                        ErlangIncludeLibElementType.ARRAY_FACTORY);
   }
 
   @NotNull
@@ -704,17 +623,13 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       return getChildrenByType(stub, ErlangTypes.ERL_BEHAVIOUR, ErlangBehaviourStubElementType.ARRAY_FACTORY);
     }
 
-    final List<ErlangBehaviour> result = new ArrayList<ErlangBehaviour>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
+    return ContainerUtil.mapNotNull(getAttributes(), new Function<ErlangAttribute, ErlangBehaviour>() {
+      @Nullable
       @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangAttribute && ((ErlangAttribute) psiElement).getBehaviour() != null) {
-          result.add(((ErlangAttribute) psiElement).getBehaviour());
-        }
-        return true;
+      public ErlangBehaviour fun(ErlangAttribute attribute) {
+        return attribute.getBehaviour();
       }
     });
-    return result;
   }
 
   @NotNull
@@ -746,17 +661,13 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       return getChildrenByType(stub, ErlangTypes.ERL_SPECIFICATION, ErlangSpecificationElementType.ARRAY_FACTORY);
     }
 
-    final ArrayList<ErlangSpecification> result = new ArrayList<ErlangSpecification>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
+    return ContainerUtil.mapNotNull(getAttributes(), new Function<ErlangAttribute, ErlangSpecification>() {
+      @Nullable
       @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangAttribute && ((ErlangAttribute) psiElement).getSpecification() != null) {
-          result.add(((ErlangAttribute) psiElement).getSpecification());
-        }
-        return true;
+      public ErlangSpecification fun(ErlangAttribute attribute) {
+        return attribute.getSpecification();
       }
     });
-    return result;
   }
 
   @Override
@@ -794,50 +705,17 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private List<ErlangFunction> calcFunctions() {
-    ErlangFileStub stub = getStub();
-    if (stub != null) {
-      return getChildrenByType(stub, ErlangTypes.ERL_FUNCTION, ErlangFunctionStubElementType.ARRAY_FACTORY);
-    }
-
-    final List<ErlangFunction> result = new ArrayList<ErlangFunction>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangFunction) {
-          result.add((ErlangFunction) psiElement);
-        }
-        return true;
-      }
-    });
-    return result;
+    return calcChildren(ErlangFunction.class,
+                        ErlangTypes.ERL_FUNCTION,
+                        ErlangFunctionStubElementType.ARRAY_FACTORY);
   }
 
   private List<ErlangAttribute> calcAttributes() {
-    final List<ErlangAttribute> result = new ArrayList<ErlangAttribute>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangAttribute) {
-          result.add((ErlangAttribute) psiElement);
-        }
-        return true;
-      }
-    });
-    return result;
+    return collectChildrenDummyAware(ErlangAttribute.class);
   }
 
   private List<ErlangRule> calcRules() {
-    final List<ErlangRule> result = new ArrayList<ErlangRule>();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement psiElement) {
-        if (psiElement instanceof ErlangRule) {
-          result.add((ErlangRule) psiElement);
-        }
-        return true;
-      }
-    });
-    return result;
+    return collectChildrenDummyAware(ErlangRule.class);
   }
 
   @Override
@@ -867,6 +745,35 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     }
   }
 
+  @Nullable
+  @Override
+  public PsiElement getNameIdentifier() {
+    return null; // hack for inplace rename: InplaceRefactoring#getVariable()
+  }
+
+  private <T extends StubBasedPsiElement<?>> List<T> calcChildren(@NotNull Class<T> clazz,
+                                                                  @NotNull IElementType elementType,
+                                                                  @NotNull ArrayFactory<T> arrayFactory) {
+    ErlangFileStub stub = getStub();
+    return stub != null ? getChildrenByType(stub, elementType, arrayFactory) : collectChildrenDummyAware(clazz);
+  }
+
+  @NotNull
+  private <T extends PsiElement> List<T> collectChildrenDummyAware(@NotNull final Class<T> clazz) {
+    final List<T> result = ContainerUtil.newArrayList();
+    processChildrenDummyAware(this, new Processor<PsiElement>() {
+      @Override
+      public boolean process(PsiElement element) {
+        if (clazz.isInstance(element)) {
+          //noinspection unchecked
+          result.add((T)element);
+        }
+        return true;
+      }
+    });
+    return result;
+  }
+
   private static boolean processChildrenDummyAware(ErlangFileImpl file, final Processor<PsiElement> processor) {
     return new Processor<PsiElement>() {
       @Override
@@ -882,9 +789,10 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     }.process(file);
   }
 
-  @Nullable
-  @Override
-  public PsiElement getNameIdentifier() {
-    return null; // hack for inplace rename: InplaceRefactoring#getVariable()
+  @NotNull
+  private static <E extends StubBasedPsiElement<?>> List<E> getChildrenByType(@NotNull ErlangFileStub stub,
+                                                                              @NotNull IElementType elementType,
+                                                                              @NotNull ArrayFactory<E> arrayFactory) {
+    return ContainerUtil.list(stub.getChildrenByType(elementType, arrayFactory));
   }
 }
