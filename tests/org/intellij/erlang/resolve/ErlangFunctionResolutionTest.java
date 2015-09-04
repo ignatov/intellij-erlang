@@ -62,8 +62,7 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
 
   public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl"); }
   public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl"); }
-  //This test needs ErlangSpecificationStub
-  //public void testFunParameterInSpawnMonitor() { doParameterTest("test.erl", "test.erl"); }
+  public void testFunParameterInSpawnMonitor() { doParameterTest("test.erl", "test.erl"); }
 
   private void doFunctionCallTest(@NotNull String focusedFilePath, @NotNull String expectedFilePath,
                                   @NotNull String... otherFilePaths) {

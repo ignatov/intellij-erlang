@@ -33,25 +33,26 @@ import org.jetbrains.annotations.NotNull;
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangReferenceContributor extends PsiReferenceContributor {
-  @SuppressWarnings("unchecked")
-  PsiElementPattern.Capture<ErlangQAtom> myAtomArgInFunctionCall = psiElement(ErlangQAtom.class)
-    .withParents(ErlangMaxExpression.class, ErlangArgumentList.class, ErlangFunctionCallExpression.class);
-
   @Override
   public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
-    registerRecords(registrar, "erlang", "is_record", 2, 1);
-    registerRecords(registrar, "erlang", "is_record", 3, 1);
+    //noinspection unchecked
+    PsiElementPattern.Capture<ErlangQAtom> atomArgInFunctionCall = psiElement(ErlangQAtom.class)
+      .withParents(ErlangMaxExpression.class, ErlangArgumentList.class, ErlangFunctionCallExpression.class);
+
+    registerRecords(registrar, atomArgInFunctionCall, "erlang", "is_record", 2, 1);
+    registerRecords(registrar, atomArgInFunctionCall, "erlang", "is_record", 3, 1);
 
     registrar.registerReferenceProvider(
-      myAtomArgInFunctionCall.with(new ErlangFunctionCallModuleParameter()), new ModuleReferenceProvider());
+      atomArgInFunctionCall.with(new ErlangFunctionCallModuleParameter()), new ModuleReferenceProvider());
     registrar.registerReferenceProvider(
-      myAtomArgInFunctionCall.with(new ErlangFunctionCallFunctionParameter()), new FunctionReferenceProvider());
+      atomArgInFunctionCall.with(new ErlangFunctionCallFunctionParameter()), new FunctionReferenceProvider());
   }
 
-  private void registerRecords(@NotNull PsiReferenceRegistrar registrar, @NotNull String module,
+  private static void registerRecords(@NotNull PsiReferenceRegistrar registrar,
+                               @NotNull PsiElementPattern.Capture<ErlangQAtom> pattern, @NotNull String module,
                                @NotNull String function, int arity, int position) {
     registrar.registerReferenceProvider(
-      myAtomArgInFunctionCall.with(new ErlangFunctionCallParameter<PsiElement>(function, module, arity, position)),
+      pattern.with(new ErlangFunctionCallParameter<PsiElement>(function, module, arity, position)),
       new RecordReferenceProvider());
   }
 

@@ -1895,7 +1895,22 @@ public class ErlangPsiImplUtil {
     return false;
   }
 
-  public static class ErlangFunctionCallParameter<T extends PsiElement> extends PatternCondition<T> {
+  public static abstract class ErlangFunctionCallParameterBase<T extends PsiElement> extends PatternCondition<T> {
+    public ErlangFunctionCallParameterBase(@Nullable String debugMethodName) {
+      super(debugMethodName);
+    }
+
+    @Override
+    public boolean accepts(@NotNull T element, ProcessingContext context) {
+      ErlangFunctionCallExpression call = PsiTreeUtil.getParentOfType(element, ErlangFunctionCallExpression.class);
+      int position = call != null ? getPositionInFunctionCall(call, element) : -1;
+      return call != null && position != -1 && accepts(call, position, context);
+    }
+
+    public abstract boolean accepts(@NotNull ErlangFunctionCallExpression call, int position, ProcessingContext context);
+  }
+
+  public static class ErlangFunctionCallParameter<T extends PsiElement> extends ErlangFunctionCallParameterBase<T> {
     @NotNull
     private final String myFunName;
     @NotNull
@@ -1912,9 +1927,9 @@ public class ErlangPsiImplUtil {
     }
 
     @Override
-    public boolean accepts(@NotNull T element, ProcessingContext context) {
-      ErlangFunctionCallExpression call = PsiTreeUtil.getParentOfType(element, ErlangFunctionCallExpression.class);
-      if (call == null || getPositionInFunctionCall(call, element) != myPosition) return false;
+    public boolean accepts(@NotNull ErlangFunctionCallExpression call, int position, ProcessingContext context) {
+      if (position != myPosition) return false;
+
       for (ErlangFunction function : resolveToFunctions(call)) {
         if (expectedFunction(function)) return true;
       }
@@ -1930,17 +1945,13 @@ public class ErlangPsiImplUtil {
     }
   }
 
-  public static class ErlangFunctionCallModuleParameter extends PatternCondition<ErlangQAtom> {
+  public static class ErlangFunctionCallModuleParameter extends ErlangFunctionCallParameterBase<ErlangQAtom> {
     public ErlangFunctionCallModuleParameter() {
       super("functionCallModuleParameter");
     }
 
     @Override
-    public boolean accepts(@NotNull ErlangQAtom element, ProcessingContext context) {
-      ErlangFunctionCallExpression call = PsiTreeUtil.getParentOfType(element, ErlangFunctionCallExpression.class);
-      int position = call != null ? getPositionInFunctionCall(call, element) : -1;
-      if (position == -1) return false;
-
+    public boolean accepts(@NotNull ErlangFunctionCallExpression call, int position, ProcessingContext context) {
       ErlangSpecification specification = findSpecification(resolveToFunction(call));
       ErlangFunTypeSigs signature = specification != null ? specification.getSignature() : null;
       if (signature == null) return false;
@@ -1977,19 +1988,17 @@ public class ErlangPsiImplUtil {
     }
   }
 
-  public static class ErlangFunctionCallFunctionParameter extends PatternCondition<ErlangQAtom> {
+  public static class ErlangFunctionCallFunctionParameter extends ErlangFunctionCallParameterBase<ErlangQAtom> {
     public ErlangFunctionCallFunctionParameter() {
       super("functionCallFunctionParameter");
     }
 
     @Override
-    public boolean accepts(@NotNull ErlangQAtom element, ProcessingContext context) {
-      ErlangFunctionCallExpression call = PsiTreeUtil.getParentOfType(element, ErlangFunctionCallExpression.class);
-      if (call == null) return false;
-      int position = getPositionInFunctionCall(call, element);
-      List<ErlangExpression> expressions = call.getArgumentList().getExpressionList();
+    public boolean accepts(@NotNull ErlangFunctionCallExpression call, int position, ProcessingContext context) {
+      if (position < 1) return false;
 
-      return position > 0 && isModule(expressions.get(position - 1), context);
+      List<ErlangExpression> expressions = call.getArgumentList().getExpressionList();
+      return isModule(expressions.get(position - 1), context);
     }
 
     private static boolean isModule(@NotNull ErlangExpression element, ProcessingContext context) {
