@@ -18,19 +18,20 @@ package org.intellij.erlang.resolve;
 
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtil;
-import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangFunctionReferenceImpl;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangFunctionCallExpression;
+import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -60,41 +61,55 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
   public void testPreferLocalFunction()        { doFunctionCallTest("test.erl", "test.erl", "incl.erl"); }
   public void testPreferFirstImport()          { doFunctionCallTest("test.erl", "incl.erl", "another_incl.erl"); }
 
-  public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl"); }
-  public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl"); }
-  public void testFunParameterInSpawnMonitor() { doParameterTest("test.erl", "test.erl"); }
+  public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl", "bar", 1); }
+  public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl", "bar", 1); }
+  public void testFunParameterInSpawnMonitor() { doParameterTest("test.erl", "test.erl", "foo", 1); }
 
-  private void doFunctionCallTest(@NotNull String focusedFilePath, @NotNull String expectedFilePath,
-                                  @NotNull String... otherFilePaths) {
-    String[] paths = {focusedFilePath, expectedFilePath};
-    PsiFile[] files = myFixture.configureByFiles(ArrayUtil.mergeArrays(paths, otherFilePaths));
-    ErlangFile focusedFile = (ErlangFile) files[0];
-    ErlangFile expectedFile = (ErlangFile) files[1];
-    int offset = myFixture.getEditor().getCaretModel().getOffset();
+  private void doFunctionCallTest(@NotNull String focusedFile, @NotNull String expectedFile,
+                                  @NotNull String... otherFiles) {
+    String[] files = {focusedFile, expectedFile};
+    myFixture.configureByFiles(ArrayUtil.mergeArrays(files, otherFiles));
 
-    ErlangFunctionCallExpression functionCall = PsiTreeUtil.getParentOfType(
-      focusedFile != null ? focusedFile.findElementAt(offset) : null, ErlangFunctionCallExpression.class);
-    assertNotNull(functionCall);
-    ErlangFunction resolvedFunction = ErlangPsiImplUtil.resolveToFunction(functionCall);
-
+    ErlangFunctionCallExpression functionCall = getElementAtCaret(ErlangFunctionCallExpression.class);
+    PsiReference reference = functionCall.getReference();
     String name = functionCall.getName();
     int arity = functionCall.getArgumentList().getExpressionList().size();
-    assertSame(expectedFile != null ? expectedFile.getFunction(name, arity) : null, resolvedFunction);
+
+    assertResolvesTo(reference, expectedFile, name, arity);
   }
 
-  private void doParameterTest(@NotNull String focusedFilePath, @NotNull String expectedFilePath) {
-    PsiFile[] files = myFixture.configureByFiles(focusedFilePath, expectedFilePath);
-    ErlangFile focusedFile = (ErlangFile) files[0];
-    ErlangFile expectedFile = (ErlangFile) files[1];
-    assertTrue(focusedFile != null && expectedFile != null);
-    int offset = myFixture.getEditor().getCaretModel().getOffset();
+  private void doParameterTest(@NotNull String focusedFile,
+                               @NotNull String expectedFile,
+                               @NotNull String expectedFunction,
+                               int expectedArity) {
+    myFixture.configureByFiles(focusedFile, expectedFile);
 
-    ErlangQAtom focusedAtom = PsiTreeUtil.getParentOfType(focusedFile.findElementAt(offset), ErlangQAtom.class);
-    PsiReference reference = focusedAtom != null ? focusedAtom.getReference() : null;
-    PsiElement resolvedFunction = reference != null ? reference.resolve() : null;
+    ErlangQAtom focusedAtom = getElementAtCaret(ErlangQAtom.class);
+    PsiReference reference = focusedAtom.getReference();
+
+    assertResolvesTo(reference, expectedFile, expectedFunction, expectedArity);
+  }
+
+  private static void assertResolvesTo(@Nullable PsiReference reference,
+                                       @NotNull String file,
+                                       @NotNull String function,
+                                       int arity) {
+    assertNotNull(reference);
+
+    ErlangFunction resolvedFunction = ObjectUtils.tryCast(reference.resolve(), ErlangFunction.class);
     assertNotNull(resolvedFunction);
 
-    ErlangFunctionReferenceImpl expectedReference = ErlangPsiImplUtil.createFunctionReference(focusedAtom);
-    assertSame(expectedFile.getFunction(expectedReference.getName(), expectedReference.getArity()), resolvedFunction);
+    String actualFile = resolvedFunction.getContainingFile().getName();
+    assertEquals(file, actualFile);
+
+    assertEquals(function, resolvedFunction.getName());
+    assertEquals(arity, resolvedFunction.getArity());
+  }
+
+  @NotNull
+  private <T extends PsiElement> T getElementAtCaret(Class<T> clazz) {
+    int offset = myFixture.getEditor().getCaretModel().getOffset();
+    PsiElement focused = myFixture.getFile().findElementAt(offset);
+    return ObjectUtils.assertNotNull(PsiTreeUtil.getParentOfType(focused, clazz));
   }
 }

@@ -26,8 +26,6 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.execution.console.LanguageConsoleImpl;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
-import com.intellij.openapi.application.AccessToken;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
@@ -49,7 +47,6 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.stubs.NamedStubBase;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -854,27 +851,14 @@ public class ErlangPsiImplUtil {
     return ObjectUtils.tryCast(resolvedFunction, ErlangFunction.class);
   }
 
-  @NotNull
-  public static List<ErlangFunction> resolveToFunctions(@NotNull ErlangFunctionCallExpression call) {
-    PsiReference reference = call.getReference();
-    ResolveResult[] results = reference instanceof PsiPolyVariantReference ?
-                              ((PsiPolyVariantReference) reference).multiResolve(true) : ResolveResult.EMPTY_ARRAY;
-    return ContainerUtil.mapNotNull(results, new Function<ResolveResult, ErlangFunction>() {
-      @Override
-      @Nullable
-      public ErlangFunction fun(ResolveResult resolveResult) {
-        return ObjectUtils.tryCast(resolveResult.getElement(), ErlangFunction.class);
-      }
-    });
-  }
-
   @Nullable
   public static ErlangExpression getFunctionCallArgument(@NotNull ErlangFunctionCallExpression call,
                                                          @Nullable PsiElement child) {
     ErlangArgumentList argumentList = call.getArgumentList();
     PsiElement argument = child;
-    while (argument != null && argument.getParent() != argumentList) {
-      argument = argument.getParent();
+    PsiElement parent;
+    while (argument != null && (parent = argument.getParent()) != argumentList) {
+      argument = parent;
     }
     return ObjectUtils.tryCast(argument, ErlangExpression.class);
   }
@@ -987,7 +971,7 @@ public class ErlangPsiImplUtil {
   public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return processDeclarationRecursive(o, processor, state);
   }
-  
+
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
@@ -1773,8 +1757,8 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static <T extends PsiElement >ErlangFunctionCallParameter<T> inIsRecord(int position) {
-    return new ErlangFunctionCallParameter<T>("is_record", "erlang", 2, position);
+  public static <T extends PsiElement >ErlangFunctionCallArgument<T> inIsRecord(int position) {
+    return new ErlangFunctionCallArgument<T>("erlang", "is_record", 2, position);
   }
 
   public static boolean isExported(@NotNull ErlangFunction o) {
@@ -1895,8 +1879,8 @@ public class ErlangPsiImplUtil {
     return false;
   }
 
-  public static abstract class ErlangFunctionCallParameterBase<T extends PsiElement> extends PatternCondition<T> {
-    public ErlangFunctionCallParameterBase(@Nullable String debugMethodName) {
+  public static class ErlangFunctionCallArgumentBase<T extends PsiElement> extends PatternCondition<T> {
+    protected ErlangFunctionCallArgumentBase(@Nullable String debugMethodName) {
       super(debugMethodName);
     }
 
@@ -1904,13 +1888,33 @@ public class ErlangPsiImplUtil {
     public boolean accepts(@NotNull T element, ProcessingContext context) {
       ErlangFunctionCallExpression call = PsiTreeUtil.getParentOfType(element, ErlangFunctionCallExpression.class);
       int position = call != null ? getPositionInFunctionCall(call, element) : -1;
-      return call != null && position != -1 && accepts(call, position, context);
+      return call != null && position != -1 && acceptsArgument(call, position);
     }
 
-    public abstract boolean accepts(@NotNull ErlangFunctionCallExpression call, int position, ProcessingContext context);
+    protected boolean acceptsArgument(@NotNull ErlangFunctionCallExpression call, int position) {
+      return true;
+    }
   }
 
-  public static class ErlangFunctionCallParameter<T extends PsiElement> extends ErlangFunctionCallParameterBase<T> {
+  public static class ErlangFunctionCallQAtomArgument extends ErlangFunctionCallArgumentBase<ErlangQAtom> {
+    protected ErlangFunctionCallQAtomArgument(@Nullable String debugMethodName) {
+      super(debugMethodName);
+    }
+
+    @Override
+    protected final boolean acceptsArgument(@NotNull ErlangFunctionCallExpression call, int position) {
+      ErlangExpression arg = call.getArgumentList().getExpressionList().get(position);
+      return arg instanceof ErlangMaxExpression &&
+             ((ErlangMaxExpression) arg).getQAtom() != null &&
+             acceptsAtomArgument(call, position);
+    }
+
+    protected boolean acceptsAtomArgument(@NotNull ErlangFunctionCallExpression call, int position) {
+      return true;
+    }
+  }
+
+  public static class ErlangFunctionCallArgument<T extends PsiElement> extends ErlangFunctionCallArgumentBase<T> {
     @NotNull
     private final String myFunName;
     @NotNull
@@ -1918,8 +1922,8 @@ public class ErlangPsiImplUtil {
     private final int myArity;
     private final int myPosition;
 
-    public ErlangFunctionCallParameter(@NotNull String funName, @NotNull String module, int arity, int position) {
-      super("functionCallParameter");
+    public ErlangFunctionCallArgument(@NotNull String module, @NotNull String funName, int arity, int position) {
+      super("functionCallArgument");
       myFunName = funName;
       myModule = module;
       myArity = arity;
@@ -1927,33 +1931,40 @@ public class ErlangPsiImplUtil {
     }
 
     @Override
-    public boolean accepts(@NotNull ErlangFunctionCallExpression call, int position, ProcessingContext context) {
+    public boolean acceptsArgument(@NotNull ErlangFunctionCallExpression call, int position) {
       if (position != myPosition) return false;
 
-      for (ErlangFunction function : resolveToFunctions(call)) {
-        if (expectedFunction(function)) return true;
+      ErlangFunctionReferenceImpl reference = (ErlangFunctionReferenceImpl)call.getReference();
+      ResolveResult[] variants = reference != null ? reference.multiResolve(true) : ResolveResult.EMPTY_ARRAY;
+      for (ResolveResult variant : variants) {
+        if (isExpectedFunction(ObjectUtils.tryCast(variant.getElement(), ErlangFunction.class))) {
+          return true;
+        }
       }
       return false;
     }
 
-    private boolean expectedFunction(@NotNull ErlangFunction resolvedFunction) {
-      ErlangFile containingFile = ObjectUtils.tryCast(resolvedFunction.getContainingFile(), ErlangFile.class);
+    private boolean isExpectedFunction(@Nullable ErlangFunction function) {
+      PsiFile file = function != null ? function.getContainingFile() : null;
+      ErlangFile containingFile = ObjectUtils.tryCast(file, ErlangFile.class);
       ErlangModule module = containingFile != null ? containingFile.getModule() : null;
       String moduleName = module != null ? module.getName() : null;
-      return myModule.equals(moduleName) && myFunName.equals(resolvedFunction.getName()) &&
-             myArity == getArity(resolvedFunction);
+      return myModule.equals(moduleName) && myFunName.equals(function.getName()) && myArity == getArity(function);
     }
   }
 
-  public static class ErlangFunctionCallModuleParameter extends ErlangFunctionCallParameterBase<ErlangQAtom> {
-    public ErlangFunctionCallModuleParameter() {
-      super("functionCallModuleParameter");
+  public static class ErlangFunctionCallModuleArgument extends ErlangFunctionCallQAtomArgument {
+    public ErlangFunctionCallModuleArgument() {
+      super("functionCallModuleArgument");
     }
 
     @Override
-    public boolean accepts(@NotNull ErlangFunctionCallExpression call, int position, ProcessingContext context) {
-      ErlangSpecification specification = findSpecification(resolveToFunction(call));
-      ErlangFunTypeSigs signature = specification != null ? specification.getSignature() : null;
+    public boolean acceptsAtomArgument(@NotNull ErlangFunctionCallExpression call, int position) {
+      return isModuleParameter(call, position);
+    }
+
+    static boolean isModuleParameter(@NotNull ErlangFunctionCallExpression call, int position) {
+      ErlangFunTypeSigs signature = getSignature(findSpecification(resolveToFunction(call)));
       if (signature == null) return false;
 
       for (ErlangTypeSig typeSig : signature.getTypeSigList()) {
@@ -1988,23 +1999,19 @@ public class ErlangPsiImplUtil {
     }
   }
 
-  public static class ErlangFunctionCallFunctionParameter extends ErlangFunctionCallParameterBase<ErlangQAtom> {
-    public ErlangFunctionCallFunctionParameter() {
-      super("functionCallFunctionParameter");
+  public static class ErlangFunctionCallFunctionArgument extends ErlangFunctionCallQAtomArgument {
+    public ErlangFunctionCallFunctionArgument() {
+      super("functionCallFunctionArgument");
     }
 
     @Override
-    public boolean accepts(@NotNull ErlangFunctionCallExpression call, int position, ProcessingContext context) {
-      if (position < 1) return false;
-
+    public boolean acceptsAtomArgument(@NotNull ErlangFunctionCallExpression call, int position) {
+      int moduleArgPosition = position - 1;
       List<ErlangExpression> expressions = call.getArgumentList().getExpressionList();
-      return isModule(expressions.get(position - 1), context);
-    }
-
-    private static boolean isModule(@NotNull ErlangExpression element, ProcessingContext context) {
-      ErlangMaxExpression expression = ObjectUtils.tryCast(element, ErlangMaxExpression.class);
-      ErlangQAtom atom = expression != null ? expression.getQAtom() : null;
-      return atom != null && new ErlangFunctionCallModuleParameter().accepts(atom, context);
+      ErlangExpression moduleArg = position < 1 ? null : expressions.get(moduleArgPosition);
+      ErlangMaxExpression moduleExpr = ObjectUtils.tryCast(moduleArg, ErlangMaxExpression.class);
+      ErlangQAtom moduleAtom = moduleExpr != null ? moduleExpr.getQAtom() : null;
+      return moduleAtom != null && ErlangFunctionCallModuleArgument.isModuleParameter(call, moduleArgPosition);
     }
   }
 }
