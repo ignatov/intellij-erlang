@@ -116,7 +116,7 @@ public interface ErlangTypes {
   IElementType ERL_RULE_BODY = new ErlangCompositeElementType("ERL_RULE_BODY");
   IElementType ERL_RULE_CLAUSE = new ErlangCompositeElementType("ERL_RULE_CLAUSE");
   IElementType ERL_SEND_EXPRESSION = new ErlangCompositeElementType("ERL_SEND_EXPRESSION");
-  IElementType ERL_SPECIFICATION = new ErlangCompositeElementType("ERL_SPECIFICATION");
+  IElementType ERL_SPECIFICATION = ErlangElementTypeFactory.factory("ERL_SPECIFICATION");
   IElementType ERL_SPEC_FUN = new ErlangCompositeElementType("ERL_SPEC_FUN");
   IElementType ERL_STRING_LITERAL = new ErlangCompositeElementType("ERL_STRING_LITERAL");
   IElementType ERL_TOP_TYPE = new ErlangCompositeElementType("ERL_TOP_TYPE");

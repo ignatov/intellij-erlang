@@ -752,6 +752,17 @@ public class ErlangPsiImplUtil {
     return o.getFirstClause().getArgumentDefinitionList().getArgumentDefinitionList().size();
   }
 
+  public static int getArity(@NotNull ErlangSpecification o) {
+    ErlangSpecificationStub stub = o.getStub();
+    if (stub != null) return stub.getArity();
+
+    ErlangFunTypeSigs signature = getSignature(o);
+    List<ErlangTypeSig> typeSigs = signature != null ? signature.getTypeSigList()
+                                                     : ContainerUtil.<ErlangTypeSig>emptyList();
+    ErlangTypeSig sig = typeSigs.size() > 0 ? typeSigs.get(0) : null;
+    return sig != null ? sig.getFunType().getFunTypeArguments().getTypeList().size() : -1;
+  }
+
   public static int getArity(@NotNull ErlangImportFunction o) {
     return getArity(o.getInteger());
   }
@@ -875,8 +886,26 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
+  public static PsiElement setName(@NotNull ErlangSpecification o, @NotNull String newName) {
+    ErlangFunTypeSigs sigs = o.getFunTypeSigs();
+    renameQAtom(sigs != null ? sigs.getSpecFun().getQAtom() : null, newName);
+    return o;
+  }
+
+  @NotNull
   public static String getName(@NotNull ErlangModule o) {
     return getNameImpl(o);
+  }
+
+  @NotNull
+  public static String getName(@NotNull ErlangSpecification o) {
+    ErlangSpecificationStub stub = o.getStub();
+    String nameFromStub = stub != null ? stub.getName() : null;
+    if (nameFromStub != null) return nameFromStub;
+
+    ErlangFunTypeSigs signature = getSignature(o);
+    ErlangAtom atom = signature != null ? signature.getSpecFun().getQAtom().getAtom() : null;
+    return atom != null ? atom.getName() : "";
   }
 
   @NotNull
@@ -1251,6 +1280,12 @@ public class ErlangPsiImplUtil {
     return qAtom != null ? getNameIdentifier(qAtom) : o;
   }
 
+  @NotNull
+  public static PsiElement getNameIdentifier(@NotNull ErlangSpecification o) {
+    ErlangFunTypeSigs sigs = o.getFunTypeSigs();
+    return sigs != null ? getNameIdentifier(sigs.getSpecFun().getQAtom()) : o;
+  }
+
   public static int getTextOffset(@NotNull ErlangTypeDefinition o) {
     if (o.getQAtom() == null) return 0;
     return getNameIdentifier(o).getTextOffset();
@@ -1534,19 +1569,15 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static ErlangSpecification findSpecification(@Nullable ErlangFunction function) {
-    if (function == null) return null;
-    PsiFile file = function.getContainingFile();
-    if (!(file instanceof ErlangFile)) return null;
-    List<ErlangSpecification> specifications = ((ErlangFile) file).getSpecifications();
-    LocalSearchScope scope = new LocalSearchScope(ArrayUtil.toObjectArray(specifications, ErlangSpecification.class));
-    AccessToken token = ApplicationManager.getApplication().acquireReadActionLock();
-    try {
-      Query<PsiReference> search = ReferencesSearch.search(function, scope);
-      PsiReference first = search.findFirst();
-      return PsiTreeUtil.getParentOfType(first != null ? first.getElement() : null, ErlangSpecification.class);
-    } finally {
-      token.finish();
+    ErlangFile file = ObjectUtils.tryCast(function != null ? function.getContainingFile() : null, ErlangFile.class);
+    if (file != null) {
+      String name = function.getName();
+      int arity = function.getArity();
+      for (ErlangSpecification spec : file.getSpecifications()) {
+        if (name.equals(spec.getName()) && arity == spec.getArity()) return spec;
+      }
     }
+    return null;
   }
 
   public static boolean notFromPreviousFunction(@NotNull PsiElement spec, @Nullable ErlangFunction prevFunction) {

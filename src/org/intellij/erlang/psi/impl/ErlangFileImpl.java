@@ -742,6 +742,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private List<ErlangSpecification> calcSpecifications() {
+    ErlangFileStub stub = getStub();
+    if (stub != null) {
+      return getChildrenByType(stub, ErlangTypes.ERL_SPECIFICATION, ErlangSpecificationElementType.ARRAY_FACTORY);
+    }
+
     final ArrayList<ErlangSpecification> result = new ArrayList<ErlangSpecification>();
     processChildrenDummyAware(this, new Processor<PsiElement>() {
       @Override
