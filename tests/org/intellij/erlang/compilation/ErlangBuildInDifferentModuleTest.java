@@ -23,6 +23,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import java.util.Collections;
 
 import static org.intellij.erlang.compilation.ErlangModuleTextGenerator.*;
+import static org.junit.Assert.assertNotEquals;
 
 public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase {
 
@@ -70,9 +71,43 @@ public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase 
     compileAndAssertOutput();
   }
 
+  public void testRebuildWithParseTransformInDifferentModule() throws Exception {
+    VirtualFile parseTransform = addSourceFile(myOtherModule, "parse_transform1.erl", pt("parse_transform1").build());
+    VirtualFile sourceFile = addSourceFile(myModule, "module1.erl", module("module1").pt("parse_transform1").build());
+    doTestCrossModulesDependency(parseTransform, sourceFile);
+  }
+
+  public void testRebuildWithBehaviourInDifferentModule() throws Exception {
+    ErlangModuleTextGenerator.BehaviourBuilder behaviour = behaviour("behaviour1").callback("foo", 0);
+    VirtualFile behaviourFile = addSourceFile(myOtherModule, "behaviour1.erl", behaviour.build());
+    VirtualFile sourceFile = addSourceFile(myModule, "module1.erl", module("module1").behaviour(behaviour).build());
+    doTestCrossModulesDependency(behaviourFile, sourceFile);
+  }
+
+  public void testRebuildWithIncludesInDifferentModule() throws Exception {
+    VirtualFile headerFile = addSourceFile(myModule, "header.hrl", "");
+    VirtualFile sourceFile = addSourceFile(myModule, "module1.erl", module("module1").include("header.hrl").build());
+    doTestCrossModulesDependency(headerFile, sourceFile);
+  }
+
   protected void compileAndAssertOutput() throws Exception {
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     assertSourcesCompiled(myOtherModule, false);
+  }
+
+  protected void doTestCrossModulesDependency(VirtualFile dependency,
+                                              VirtualFile sourceFile) throws Exception {
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+    assertSourcesCompiled(myOtherModule, false);
+    long sourceModificationTime = lastOutputModificationTime(myModule, sourceFile);
+    myCompilationRunner.touch(dependency);
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+    assertSourcesCompiled(myOtherModule, false);
+    assertNotEquals(sourceFile.getPath() + " wasn't rebuild after change in dependency.",
+                    sourceModificationTime,
+                    lastOutputModificationTime(myModule, sourceFile));
   }
 }
