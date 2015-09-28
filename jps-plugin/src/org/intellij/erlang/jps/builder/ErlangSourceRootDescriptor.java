@@ -24,13 +24,18 @@ import java.io.File;
 import java.io.FileFilter;
 
 public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
-  private File myRoot;
-  private final ErlangTarget myErlangTarget;
-  private boolean myTests;
+  private final File myRoot;
+  private final String myModuleName;
+  private final BuildTarget<? extends ErlangSourceRootDescriptor> myErlangTarget;
+  private final boolean myTests;
 
-  public ErlangSourceRootDescriptor(File root, ErlangTarget erlangTarget, boolean isTests) {
+  public ErlangSourceRootDescriptor(@NotNull File root,
+                                    @NotNull BuildTarget<? extends ErlangSourceRootDescriptor> erlangTarget,
+                                    @NotNull String moduleName,
+                                    boolean isTests) {
     myRoot = root;
     myErlangTarget = erlangTarget;
+    myModuleName = moduleName;
     myTests = isTests;
   }
 
@@ -56,15 +61,19 @@ public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
       @Override
       public boolean accept(@NotNull File file) {
         String name = file.getName();
-        return name.endsWith(".erl") ||
-               name.endsWith(".app") ||
-               name.endsWith(".app.src") ||
-               name.endsWith(".hrl");
+        return ErlangBuilderUtil.isSource(name) ||
+               ErlangBuilderUtil.isHeader(name) ||
+               ErlangBuilderUtil.isAppConfigFileName(name);
       }
     };
   }
 
   public boolean isTests() {
     return myTests;
+  }
+
+  @NotNull
+  public String getModuleName() {
+    return myModuleName;
   }
 }

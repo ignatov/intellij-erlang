@@ -21,13 +21,16 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.Couple;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.Function;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.SystemProperties;
@@ -39,10 +42,10 @@ import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
-import org.intellij.erlang.jps.builder.ErlangBuilder;
+import org.intellij.erlang.index.ErlangModuleIndex;
+import org.intellij.erlang.jps.builder.ErlangBuilderUtil;
 import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
-import org.intellij.erlang.jps.builder.ErlangModuleBuildOrderDescriptor;
-import org.intellij.erlang.jps.builder.ErlangModuleBuildOrders;
+import org.intellij.erlang.jps.builder.ErlangProjectBuildOrder;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.utils.ErlangModulesUtil;
@@ -55,8 +58,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-
 public class ErlangPrepareDependenciesCompileTask implements CompileTask {
+  private static final Logger LOG = Logger.getInstance(ErlangPrepareDependenciesCompileTask.class);
+
   @Override
   public boolean execute(final CompileContext context) {
     Project project = context.getProject();
@@ -64,73 +68,77 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       // delegate dependencies resolution to rebar
       return true;
     }
+    LOG.info("Prepare build order for project " + project.getName());
 
     File projectSystemDirectory = BuildManager.getInstance().getProjectSystemDirectory(project);
     if (projectSystemDirectory == null) {
       addPrepareDependenciesFailedMessage(context);
       return true;
     }
-
-    ErlangModuleBuildOrders buildOrders = ApplicationManager.getApplication().runReadAction(new Computable<ErlangModuleBuildOrders>() {
+    ErlangProjectBuildOrder projectBuildOrder = ApplicationManager.getApplication().runReadAction(new Computable<ErlangProjectBuildOrder>() {
       @Nullable
       @Override
-      public ErlangModuleBuildOrders compute() {
-        return getModuleBuildOrders(context);
+      public ErlangProjectBuildOrder compute() {
+        return getProjectBuildOrder(context);
       }
     });
-    if (buildOrders == null) {
+    if (projectBuildOrder == null) {
       return false; // errors are reported to context.
     }
+    writeBuildOrder(context, projectSystemDirectory, projectBuildOrder);
+    return true;
+  }
+
+  public static boolean writeBuildOrder(CompileContext context,
+                                        File projectSystemDirectory,
+                                        ErlangProjectBuildOrder projectBuildOrder) {
     try {
-      Document serializedBuildOrders = new Document(XmlSerializer.serialize(buildOrders, new SkipDefaultValuesSerializationFilters()));
-      File file = new File(projectSystemDirectory, ErlangBuilder.DEPENDENCIES_CONFIG_FILE_PATH);
+      LOG.debug("Serialize build order");
+      Document serializedDocument = new Document(XmlSerializer.serialize(projectBuildOrder, new SkipDefaultValuesSerializationFilters()));
+      File parentDir = new File(projectSystemDirectory, ErlangBuilderUtil.BUILDER_DIRECTORY);
       //noinspection ResultOfMethodCallIgnored
-      file.getParentFile().mkdirs();
-      JDOMUtil.writeDocument(serializedBuildOrders, file, SystemProperties.getLineSeparator());
+      parentDir.mkdirs();
+      File file = new File(parentDir, ErlangBuilderUtil.BUILD_ORDER_FILE_NAME);
+      LOG.debug("Write build order to " + file.getAbsolutePath());
+      JDOMUtil.writeDocument(serializedDocument, file, SystemProperties.getLineSeparator());
     }
     catch (XmlSerializationException e) {
+      LOG.error("Can't serialize build order object.", e);
       addPrepareDependenciesFailedMessage(context);
       return true;
     }
     catch (IOException e) {
+      LOG.warn("Some I/O errors occurred while writing build orders to file", e);
       addPrepareDependenciesFailedMessage(context);
       return true;
     }
-
     return true;
   }
 
-  public static void addPrepareDependenciesFailedMessage(CompileContext context) {
-    context.addMessage(CompilerMessageCategory.WARNING, "Failed to submit dependencies info to compiler. Parse transform failures may occur.", null, -1, -1);
+  public static void addPrepareDependenciesFailedMessage(@NotNull CompileContext context) {
+    context.addMessage(CompilerMessageCategory.WARNING, "Failed to submit dependencies info to compiler.", null, -1, -1);
   }
 
   @TestOnly
-  static ErlangModuleBuildOrderDescriptor getModuleBuildOrder(Module module) throws CyclicDependencyFoundException {
-    return getModuleBuildOrderInner(module);
+  @NotNull
+  static List<ErlangFileDescriptor> getBuildOrder(@NotNull Module module) throws CyclicDependencyFoundException {
+    return getTopologicallySortedFileDescriptors(module);
   }
 
   @Nullable
-  private static ErlangModuleBuildOrders getModuleBuildOrders(CompileContext context) {
-    Module[] modulesToCompile = context.getCompileScope().getAffectedModules();
-    ErlangModuleBuildOrders buildOrders = new ErlangModuleBuildOrders(modulesToCompile.length);
+  private static ErlangProjectBuildOrder getProjectBuildOrder(@NotNull CompileContext context) {
     try {
-      for (Module module : modulesToCompile) {
-        buildOrders.myModuleBuildOrderDescriptors.add(getModuleBuildOrderInner(module));
-      }
+      Module[] modulesToCompile = context.getCompileScope().getAffectedModules();
+      return new ErlangProjectBuildOrder(getTopologicallySortedFileDescriptors(modulesToCompile));
     }
     catch (CyclicDependencyFoundException e) {
-      context.addMessage(CompilerMessageCategory.ERROR, "Cyclic erlang module dependency detected. Check parse_transform usages.", null, -1, -1);
+      String message = "Cyclic erlang module dependency detected. Check files " +
+                       e.getFistFileInCycle() + " and " + e.getLastFileInCycle() +
+                       "or their dependencies(parse_transform, behaviour, include)";
+      LOG.debug(message, e);
+      context.addMessage(CompilerMessageCategory.ERROR, message, null, -1, -1);
       return null;
     }
-    return buildOrders;
-  }
-
-  private static ErlangModuleBuildOrderDescriptor getModuleBuildOrderInner(Module module) throws CyclicDependencyFoundException {
-    ErlangModuleBuildOrderDescriptor buildOrder = new ErlangModuleBuildOrderDescriptor();
-    buildOrder.myModuleName = module.getName();
-    buildOrder.myOrderedErlangFilePaths = getTopologicallySortedErlangFilesPaths(module, false);
-    buildOrder.myOrderedErlangTestFilePaths = getTopologicallySortedErlangFilesPaths(module, true);
-    return buildOrder;
   }
 
   @NotNull
@@ -140,55 +148,95 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   }
 
   @NotNull
-  private static List<ErlangFileDescriptor> getTopologicallySortedErlangFilesPaths(@NotNull Module module,
-                                                                                   boolean onlyTestModules) throws CyclicDependencyFoundException {
-    final ErlangFilesDependencyGraph semiGraph = ErlangFilesDependencyGraph.createSemiGraph(module, onlyTestModules);
+  private static List<ErlangFileDescriptor> getTopologicallySortedFileDescriptors(@NotNull Module... modulesToCompile) throws CyclicDependencyFoundException {
+    final ErlangFilesDependencyGraph semiGraph = ErlangFilesDependencyGraph.createSemiGraph(modulesToCompile);
     DFSTBuilder<String> builder = new DFSTBuilder<String>(GraphGenerator.create(semiGraph));
     builder.buildDFST();
     if (!builder.isAcyclic()) {
-      throw new CyclicDependencyFoundException();
+      throw new CyclicDependencyFoundException(builder.getCircularDependency());
     }
     return ContainerUtil.map(builder.getSortedNodes(), new Function<String, ErlangFileDescriptor>() {
       @Override
       public ErlangFileDescriptor fun(String filePath) {
-        List<String> dependencies = semiGraph.getDependencies(filePath);
-        return new ErlangFileDescriptor(filePath, dependencies);
+        return new ErlangFileDescriptor(filePath, semiGraph.getDependencies(filePath));
       }
     });
   }
 
   private static class ErlangFilesDependencyGraph implements GraphGenerator.SemiGraph<String> {
 
-    private final Map<String, String> myNamesToPathsMap = ContainerUtil.newHashMap();
-    private final Map<String, List<String>> myPathsToDependenciesMap = ContainerUtil.newHashMap();
+    private final Project myProject;
     private final PsiManager myPsiManager;
+    private final Set<String> myHeaders;
+    private final Map<String, List<String>> myPathsToDependenciesMap = ContainerUtil.newHashMap();
 
-    private ErlangFilesDependencyGraph(@NotNull Collection<VirtualFile> erlangModules,
-                                       @NotNull Collection<VirtualFile> erlangHeaders,
-                                       @NotNull List<String> globalParseTransforms,
-                                       @NotNull PsiManager psiManager) {
-      myPsiManager = psiManager;
-      buildNamesMap(erlangModules);
-      buildForHeaders(erlangHeaders);
-      buildForModules(erlangModules, globalParseTransforms);
+    private ErlangFilesDependencyGraph(@NotNull Module[] modulesToCompile) {
+      assert modulesToCompile.length > 0;
+      myProject = modulesToCompile[0].getProject();
+      myPsiManager = PsiManager.getInstance(myProject);
+      myHeaders = collectHeaderPaths(modulesToCompile);
+      for (Module module : modulesToCompile) {
+        buildDependenciesMap(module);
+      }
     }
 
     @NotNull
-    public static ErlangFilesDependencyGraph createSemiGraph(@NotNull Module module,
-                                                             boolean onlyTestModules) {
-      Collection<VirtualFile> erlangModules = ErlangModulesUtil.getErlangModuleFiles(module, onlyTestModules);
-      Collection<VirtualFile> erlangHeaders = ErlangModulesUtil.getErlangHeaderFiles(module, onlyTestModules);
-
-      return new ErlangFilesDependencyGraph(erlangModules, erlangHeaders, getGlobalParseTransform(module), PsiManager.getInstance(module.getProject()));
+    public static ErlangFilesDependencyGraph createSemiGraph(@NotNull Module[] modulesToCompile) {
+      return new ErlangFilesDependencyGraph(modulesToCompile);
     }
 
-    private void buildForModules(@NotNull Collection<VirtualFile> erlangModules,
-                                 @NotNull List<String> globalParseTransforms) {
+    @NotNull
+    private static Set<String> collectHeaderPaths(@NotNull Module[] modulesToCompile) {
+      Set<String> erlangHeaders = ContainerUtil.newHashSet();
+      for (Module module : modulesToCompile) {
+        erlangHeaders.addAll(getHeaders(module, false));
+        erlangHeaders.addAll(getHeaders(module, true));
+      }
+      return erlangHeaders;
+    }
+
+    @NotNull
+    private static List<String> getHeaders(Module module, boolean onlyTestModules) {
+      return ContainerUtil.map(ErlangModulesUtil.getErlangHeaderFiles(module, onlyTestModules), new Function<VirtualFile, String>() {
+        @Override
+        public String fun(VirtualFile virtualFile) {
+          return virtualFile.getPath();
+        }
+      });
+    }
+
+    @Override
+    public Collection<String> getNodes() {
+      return myPathsToDependenciesMap.keySet();
+    }
+
+    @Override
+    public Iterator<String> getIn(@NotNull String filePath) {
+      return myPathsToDependenciesMap.get(filePath).iterator();
+    }
+
+    @NotNull
+    public List<String> getDependencies(@NotNull String filePath) {
+      List<String> dependencies = myPathsToDependenciesMap.get(filePath);
+      assert dependencies != null;
+      return dependencies;
+    }
+
+    private void buildDependenciesMap(@NotNull Module module) {
+      List<String> globalParseTransform = resolvePathsFromNames(getGlobalParseTransform(module), module);
+      buildDependenciesMap(module, ErlangModulesUtil.getErlangHeaderFiles(module, false), ContainerUtil.<String>emptyList());
+      buildDependenciesMap(module, ErlangModulesUtil.getErlangHeaderFiles(module, true), ContainerUtil.<String>emptyList());
+      buildDependenciesMap(module, ErlangModulesUtil.getErlangModuleFiles(module, false), globalParseTransform);
+      buildDependenciesMap(module, ErlangModulesUtil.getErlangModuleFiles(module, true), globalParseTransform);
+    }
+
+    private void buildDependenciesMap(@NotNull Module module, @NotNull Collection<VirtualFile> erlangModules,
+                                      @NotNull List<String> globalParseTransforms) {
       for (VirtualFile erlangModule : erlangModules) {
         Set<String> dependencies = ContainerUtil.newHashSet();
         ErlangFile erlangFile = getErlangFile(erlangModule);
-        addDeclaredDependencies(erlangFile, dependencies);
-        dependencies.addAll(getPathsFromNames(globalParseTransforms));
+        addDeclaredDependencies(module, erlangFile, dependencies);
+        dependencies.addAll(globalParseTransforms);
         myPathsToDependenciesMap.put(erlangModule.getPath(), ContainerUtil.newArrayList(dependencies));
       }
     }
@@ -201,22 +249,35 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       return erlangFile;
     }
 
-    private void buildForHeaders(@NotNull Collection<VirtualFile> erlangHeaders) {
-      for (VirtualFile header : erlangHeaders) {
-        myPathsToDependenciesMap.put(header.getPath(), ContainerUtil.<String>newArrayList());
-      }
-      for (VirtualFile header : erlangHeaders) {
-        Set<String> dependencies = ContainerUtil.newHashSet();
-        ErlangFile erlangFile = getErlangFile(header);
-        addDeclaredDependencies(erlangFile, dependencies);
-        myPathsToDependenciesMap.get(header.getPath()).addAll(dependencies);
-      }
+    private void addDeclaredDependencies(@NotNull Module module,
+                                         @NotNull ErlangFile erlangModule,
+                                         @NotNull Set<String> dependencies) {
+      dependencies.addAll(getDeclaredParseTransformPaths(module, erlangModule));
+      dependencies.addAll(getDeclaredBehaviourPaths(module, erlangModule));
+      dependencies.addAll(getDeclaredIncludePaths(erlangModule));
     }
 
-    private void addDeclaredDependencies(@NotNull ErlangFile erlangModule, @NotNull Set<String> dependencies) {
-      dependencies.addAll(getDeclaredParseTransformPaths(erlangModule));
-      dependencies.addAll(getDeclaredBehaviourPaths(erlangModule));
-      dependencies.addAll(getDeclaredIncludePaths(erlangModule));
+    @NotNull
+    private List<String> getDeclaredParseTransformPaths(@NotNull Module module, @NotNull ErlangFile erlangModule) {
+      Set<String> pt = ContainerUtil.newHashSet();
+      erlangModule.addDeclaredParseTransforms(pt);
+      return resolvePathsFromNames(pt, module);
+    }
+
+    @NotNull
+    private List<String> getDeclaredBehaviourPaths(@NotNull Module module, @NotNull ErlangFile erlangModule) {
+      Set<String> behaviours = ContainerUtil.newHashSet();
+      ErlangPsiImplUtil.addDeclaredBehaviourModuleNames(erlangModule, behaviours);
+      return resolvePathsFromNames(behaviours, module);
+    }
+
+    @NotNull
+    private List<String> resolvePathsFromNames(@NotNull Collection<String> erlangModuleNames, @NotNull Module module) {
+      List<String> paths = ContainerUtil.newArrayList();
+      for (String erlangModuleName : erlangModuleNames) {
+        paths.addAll(getPathsFromModuleName(erlangModuleName, module));
+      }
+      return paths;
     }
 
     @NotNull
@@ -226,61 +287,42 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
         @Override
         public String fun(ErlangFile erlangFile) {
           VirtualFile virtualFile = erlangFile.getVirtualFile();
-          return virtualFile != null && myPathsToDependenciesMap.containsKey(virtualFile.getPath()) ? virtualFile.getPath() : null;
+          return virtualFile != null && myHeaders.contains(virtualFile.getPath()) ? virtualFile.getPath() : null;
         }
       });
     }
 
     @NotNull
-    private List<String> getDeclaredBehaviourPaths(@NotNull ErlangFile erlangModule) {
-      Set<String> behaviours = ContainerUtil.newHashSet();
-      ErlangPsiImplUtil.addDeclaredBehaviourModuleNames(erlangModule, behaviours);
-      return getPathsFromNames(behaviours);
-    }
-
-    @NotNull
-    private List<String> getDeclaredParseTransformPaths(@NotNull ErlangFile erlangModule) {
-      Set<String> pt = ContainerUtil.newHashSet();
-      erlangModule.addDeclaredParseTransforms(pt);
-      return getPathsFromNames(pt);
-    }
-
-    private void buildNamesMap(@NotNull Collection<VirtualFile> erlangModules) {
-      for (VirtualFile erlangModule : erlangModules) {
-        myNamesToPathsMap.put(erlangModule.getNameWithoutExtension(), erlangModule.getPath());
-      }
-    }
-
-    @NotNull
-    private List<String> getPathsFromNames(@NotNull Collection<String> erlangModuleNames) {
-      return ContainerUtil.mapNotNull(erlangModuleNames, new Function<String, String>() {
+    private List<String> getPathsFromModuleName(@NotNull String erlangModuleName, @NotNull Module module) {
+      List<ErlangFile> filesByName = ErlangModuleIndex.getFilesByName(myProject,
+                                                                      erlangModuleName,
+                                                                      GlobalSearchScope.moduleWithDependenciesScope(module));
+      return ContainerUtil.mapNotNull(filesByName, new Function<ErlangFile, String>() {
+        @Nullable
         @Override
-        public String fun(String name) {
-          return myNamesToPathsMap.get(name);
+        public String fun(ErlangFile erlangFile) {
+          VirtualFile virtualFile = erlangFile.getVirtualFile();
+          return virtualFile != null ? virtualFile.getPath() : null;
         }
       });
-    }
-
-    @Override
-    public Collection<String> getNodes() {
-      return myPathsToDependenciesMap.keySet();
-    }
-
-    @Override
-    public Iterator<String> getIn(String filePath) {
-      return myPathsToDependenciesMap.get(filePath).iterator();
-    }
-
-    @NotNull
-    public List<String> getDependencies(@NotNull String filePath) {
-      List<String> dependencies = myPathsToDependenciesMap.get(filePath);
-      assert dependencies != null;
-      return dependencies;
     }
   }
 
   static class CyclicDependencyFoundException extends Exception {
-    CyclicDependencyFoundException() {
+    private final Couple<String> myCyclicDependencies;
+
+    CyclicDependencyFoundException(@NotNull Couple<String> cyclicDependencies) {
+      this.myCyclicDependencies = cyclicDependencies;
+    }
+
+    @NotNull
+    public String getFistFileInCycle() {
+      return myCyclicDependencies.getFirst();
+    }
+
+    @NotNull
+    public String getLastFileInCycle() {
+      return myCyclicDependencies.getSecond();
     }
   }
 }

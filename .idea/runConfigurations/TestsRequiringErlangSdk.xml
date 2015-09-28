@@ -2,7 +2,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="TestsRequiringErlangSdk" type="CompoundRunConfigurationType" factoryName="Compound Run Configuration">
     <toRun type="JUnit" name="ErlangBuilderTest" />
-    <toRun type="JUnit" name="ErlangModuleCompilationTest" />
+    <toRun type="JUnit" name="ErlangCompilationTestCase" />
     <method />
   </configuration>
 </component>

@@ -127,6 +127,14 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     return new ModuleCompileScope(myProject, modules, false);
   }
 
+  protected void compileAndAssertOutput(boolean withTest) throws Exception {
+    myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+    if (withTest) {
+      assertSourcesCompiled(myModule, true);
+    }
+  }
+
   protected static VirtualFile addTestFile(Module module, String relativePath, String content) throws IOException {
     return addFile(module, relativePath, content, true);
   }
@@ -160,6 +168,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
       }
     });
   }
+
   protected static VirtualFile addIncludeRoot(@NotNull final Module module,
                                               @NotNull final String sourceRootName) throws IOException {
     return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
@@ -209,6 +218,12 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     assertNotNull(outputDirectory);
     String expectedOutputFileName = getExpectedOutputFileName(sourceFile.getName());
     return expectedOutputFileName == null ? null : new File(outputDirectory.getCanonicalPath(), expectedOutputFileName);
+  }
+
+  protected static long lastOutputModificationTime(@NotNull Module module, @NotNull VirtualFile sourceFile) {
+    File outputFile = getOutputFile(module, sourceFile, false);
+    assertNotNull(outputFile);
+    return outputFile.lastModified();
   }
 
   @NotNull

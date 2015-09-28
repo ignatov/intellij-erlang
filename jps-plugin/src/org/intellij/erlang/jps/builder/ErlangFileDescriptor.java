@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.jps.builder;
 
-
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Attribute;
@@ -25,22 +24,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-@Tag("module")
 public class ErlangFileDescriptor {
   @Attribute("path")
-  public String myErlangModulePath;
+  public String myPath;
 
   @Tag("dependencies")
   @AbstractCollection(surroundWithTag = false, elementTag = "dependency")
-  public List<String> myDependencies;
+  public List<String> myDependencies = ContainerUtil.newArrayList();
 
-  @SuppressWarnings("unused") //reflection
+  @SuppressWarnings("unused") // reflection
   public ErlangFileDescriptor() {
-    myDependencies = ContainerUtil.newArrayList();
   }
 
-  public ErlangFileDescriptor(@NotNull String erlangModulePath, @NotNull List<String> dependencies) {
-    myErlangModulePath = erlangModulePath;
+  public ErlangFileDescriptor(@NotNull String path, @NotNull List<String> dependencies) {
+    myPath = path;
     myDependencies = dependencies;
   }
 }

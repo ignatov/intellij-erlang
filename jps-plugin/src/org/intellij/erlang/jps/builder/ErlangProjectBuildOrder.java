@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2015 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,21 +18,22 @@ package org.intellij.erlang.jps.builder;
 
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.annotations.AbstractCollection;
-import com.intellij.util.xmlb.annotations.Attribute;
 import com.intellij.util.xmlb.annotations.Tag;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-@Tag("module")
-public class ErlangModuleBuildOrderDescriptor {
-  @Attribute("name")
-  public String myModuleName = "";
+@Tag("dependenciesTree")
+public class ErlangProjectBuildOrder {
+  @Tag("files")
+  @AbstractCollection(surroundWithTag = false, elementTag = "file")
+  public List<ErlangFileDescriptor> myErlangFiles = ContainerUtil.newArrayList();
 
-  @Tag("erlangModules")
-  @AbstractCollection(surroundWithTag = false)
-  public List<ErlangFileDescriptor> myOrderedErlangFilePaths = ContainerUtil.newArrayList();
+  @SuppressWarnings("unused") // reflection
+  public ErlangProjectBuildOrder() {
+  }
 
-  @Tag("testErlangModules")
-  @AbstractCollection(surroundWithTag = false)
-  public List<ErlangFileDescriptor> myOrderedErlangTestFilePaths = ContainerUtil.newArrayList();
+  public ErlangProjectBuildOrder(@NotNull List<ErlangFileDescriptor> topologicallySortedErlangFilesDescriptors) {
+    myErlangFiles = topologicallySortedErlangFilesDescriptors;
+  }
 }
