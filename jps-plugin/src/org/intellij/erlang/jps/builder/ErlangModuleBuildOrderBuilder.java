@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.jps.builder;
 
+import com.intellij.openapi.util.Conditions;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.graph.GraphGenerator;
@@ -57,19 +58,10 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
       return;
     }
 
-    List<ErlangTarget> erlangTargets = ContainerUtil.mapNotNull(context.getProjectDescriptor().getBuildTargetIndex().getAllTargets(), new Function<BuildTarget<?>, ErlangTarget>() {
-      @Nullable
-      @Override
-      public ErlangTarget fun(BuildTarget<?> buildTarget) {
-        return buildTarget instanceof ErlangTarget ? (ErlangTarget) buildTarget : null;
-      }
-    });
-    for (ErlangTarget erlangTarget : erlangTargets) {
-      erlangTarget.setBuildOrder(new ErlangModuleBuildOrder());
-    }
+    setEmptyBuildOrders(context);
 
     LOG.debug("Collect dirty files.");
-    List<String> dirtyErlangFilePaths = new DirtyFileProcessor<String, ErlangModuleBuildOrderTarget>() {
+    List<String> dirtyErlangFilePaths = new DirtyFilesProcessor<String, ErlangModuleBuildOrderTarget>() {
       @Nullable
       @Override
       protected String getDirtyElement(@NotNull File file) throws IOException {
@@ -79,20 +71,27 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
     }.collectDirtyElements(holder);
 
     if (dirtyErlangFilePaths.isEmpty()) {
-      LOG.debug("There aren't dirty .erl or .hrl files.");
+      LOG.debug("There are no dirty .erl or .hrl files.");
     }
     else {
       LOG.debug("Search dirty modules.");
       List<String> sortedDirtyModules = getSortedDirtyModules(projectBuildOrder, dirtyErlangFilePaths);
-      addFilesToBuiltTarget(context, sortedDirtyModules);
+      addFilesToBuildTarget(context, sortedDirtyModules);
     }
-
   }
 
   @NotNull
   @Override
   public String getPresentableName() {
     return NAME;
+  }
+
+  private static void setEmptyBuildOrders(@NotNull CompileContext context) {
+    List<BuildTarget<?>> allTargets = context.getProjectDescriptor().getBuildTargetIndex().getAllTargets();
+    List<BuildTarget<?>> erlangTargets = ContainerUtil.filter(allTargets, Conditions.instanceOf(ErlangTarget.class));
+    for (BuildTarget<?> erlangTarget : erlangTargets) {
+      ((ErlangTarget) erlangTarget).setBuildOrder(new ErlangModuleBuildOrder());
+    }
   }
 
   @Nullable
@@ -145,7 +144,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
     });
   }
 
-  private static void addFilesToBuiltTarget(@NotNull CompileContext context,
+  private static void addFilesToBuildTarget(@NotNull CompileContext context,
                                             @NotNull List<String> sortedDirtyErlangModules) {
     List<ErlangTargetType> targetTypes = Collections.singletonList(ErlangTargetType.INSTANCE);
     BuildRootIndex buildRootIndex = context.getProjectDescriptor().getBuildRootIndex();

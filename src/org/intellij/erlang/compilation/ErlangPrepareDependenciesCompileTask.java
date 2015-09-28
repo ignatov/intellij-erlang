@@ -89,9 +89,9 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     return true;
   }
 
-  public static boolean writeBuildOrder(CompileContext context,
-                                        File projectSystemDirectory,
-                                        ErlangProjectBuildOrder projectBuildOrder) {
+  public static void writeBuildOrder(@NotNull CompileContext context,
+                                     @NotNull File projectSystemDirectory,
+                                     @NotNull ErlangProjectBuildOrder projectBuildOrder) {
     try {
       LOG.debug("Serialize build order");
       Document serializedDocument = new Document(XmlSerializer.serialize(projectBuildOrder, new SkipDefaultValuesSerializationFilters()));
@@ -105,14 +105,11 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     catch (XmlSerializationException e) {
       LOG.error("Can't serialize build order object.", e);
       addPrepareDependenciesFailedMessage(context);
-      return true;
     }
     catch (IOException e) {
       LOG.warn("Some I/O errors occurred while writing build orders to file", e);
       addPrepareDependenciesFailedMessage(context);
-      return true;
     }
-    return true;
   }
 
   public static void addPrepareDependenciesFailedMessage(@NotNull CompileContext context) {
@@ -133,7 +130,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     }
     catch (CyclicDependencyFoundException e) {
       String message = "Cyclic erlang module dependency detected. Check files " +
-                       e.getFistFileInCycle() + " and " + e.getLastFileInCycle() +
+                       e.getFirstFileInCycle() + " and " + e.getLastFileInCycle() +
                        "or their dependencies(parse_transform, behaviour, include)";
       LOG.debug(message, e);
       context.addMessage(CompilerMessageCategory.ERROR, message, null, -1, -1);
@@ -164,7 +161,6 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   }
 
   private static class ErlangFilesDependencyGraph implements GraphGenerator.SemiGraph<String> {
-
     private final Project myProject;
     private final PsiManager myPsiManager;
     private final Set<String> myHeaders;
@@ -217,9 +213,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     @NotNull
     public List<String> getDependencies(@NotNull String filePath) {
-      List<String> dependencies = myPathsToDependenciesMap.get(filePath);
-      assert dependencies != null;
-      return dependencies;
+      return ObjectUtils.assertNotNull(myPathsToDependenciesMap.get(filePath));
     }
 
     private void buildDependenciesMap(@NotNull Module module) {
@@ -230,7 +224,8 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       buildDependenciesMap(module, ErlangModulesUtil.getErlangModuleFiles(module, true), globalParseTransform);
     }
 
-    private void buildDependenciesMap(@NotNull Module module, @NotNull Collection<VirtualFile> erlangModules,
+    private void buildDependenciesMap(@NotNull Module module,
+                                      @NotNull Collection<VirtualFile> erlangModules,
                                       @NotNull List<String> globalParseTransforms) {
       for (VirtualFile erlangModule : erlangModules) {
         Set<String> dependencies = ContainerUtil.newHashSet();
@@ -316,7 +311,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     }
 
     @NotNull
-    public String getFistFileInCycle() {
+    public String getFirstFileInCycle() {
       return myCyclicDependencies.getFirst();
     }
 

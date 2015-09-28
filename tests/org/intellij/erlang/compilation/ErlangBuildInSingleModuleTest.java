@@ -83,7 +83,7 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     long lastModificationTime2 = lastOutputModificationTime(myModule, sourceFile);
     myCompilationRunner.touch(sourceFile);
     compileAndAssertOutput(false);
-    assertNotEquals(sourceFile.getCanonicalPath() + " wasn't rebuild after changes in file.",
+    assertNotEquals(sourceFile.getCanonicalPath() + " wasn't rebuilt after changes in file.",
                     lastModificationTime2,
                     lastOutputModificationTime(myModule, sourceFile));
   }
@@ -95,7 +95,7 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     long lastModificationTime1 = lastOutputModificationTime(myModule, sourceFile1);
     myCompilationRunner.touch(sourceFile2);
     compileAndAssertOutput(false);
-    assertEquals(sourceFile1.getCanonicalPath() + " was rebuild without changes. Some file in project was changed.",
+    assertEquals(sourceFile1.getCanonicalPath() + " was rebuilt without changes. Some file in project was changed.",
                  lastModificationTime1,
                  lastOutputModificationTime(myModule, sourceFile1));
   }
@@ -140,7 +140,7 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     long sourceModificationTime = lastOutputModificationTime(myModule, sourceFileWithDependency);
     myCompilationRunner.touch(dependency);
     compileAndAssertOutput(false);
-    assertNotEquals(sourceFileWithDependency.getCanonicalPath() + " wasn't rebuild after modification of its dependencies.",
+    assertNotEquals(sourceFileWithDependency.getCanonicalPath() + " wasn't rebuilt after modification of its dependencies.",
                     sourceModificationTime,
                     lastOutputModificationTime(myModule, sourceFileWithDependency));
   }

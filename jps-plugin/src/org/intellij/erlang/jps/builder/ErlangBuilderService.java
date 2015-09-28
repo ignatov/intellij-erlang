@@ -26,7 +26,6 @@ import org.jetbrains.jps.incremental.TargetBuilder;
 import java.util.List;
 
 public class ErlangBuilderService extends BuilderService {
-
   @NotNull
   @Override
   public List<? extends BuildTargetType<?>> getTargetTypes() {

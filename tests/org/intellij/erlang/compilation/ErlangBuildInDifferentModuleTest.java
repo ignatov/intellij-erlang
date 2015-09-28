@@ -106,7 +106,7 @@ public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase 
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     assertSourcesCompiled(myOtherModule, false);
-    assertNotEquals(sourceFile.getPath() + " wasn't rebuild after change in dependency.",
+    assertNotEquals(sourceFile.getPath() + " wasn't rebuilt after change in dependency.",
                     sourceModificationTime,
                     lastOutputModificationTime(myModule, sourceFile));
   }

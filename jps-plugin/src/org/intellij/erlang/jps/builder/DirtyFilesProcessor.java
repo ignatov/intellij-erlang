@@ -27,7 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public abstract class DirtyFileProcessor<T, P extends BuildTarget<ErlangSourceRootDescriptor>> implements FileProcessor<ErlangSourceRootDescriptor, P> {
+public abstract class DirtyFilesProcessor<T, P extends BuildTarget<ErlangSourceRootDescriptor>> implements FileProcessor<ErlangSourceRootDescriptor, P> {
   private final List<T> myDirtyElements = ContainerUtil.newArrayList();
 
   public List<T> collectDirtyElements(@NotNull DirtyFilesHolder<ErlangSourceRootDescriptor, P> holder) throws IOException {

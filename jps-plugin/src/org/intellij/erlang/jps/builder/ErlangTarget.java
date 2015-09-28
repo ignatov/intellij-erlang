@@ -31,13 +31,11 @@ import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.module.JpsModule;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> {
-
   private ErlangModuleBuildOrder myBuildOrder;
 
   public ErlangTarget(@NotNull JpsModule module, ErlangTargetType targetType) {
@@ -52,7 +50,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   @Override
   public Collection<BuildTarget<?>> computeDependencies(BuildTargetRegistry targetRegistry,
                                                         TargetOutputIndex outputIndex) {
-    List<BuildTarget<?>> dependencies = new ArrayList<BuildTarget<?>>();
+    List<BuildTarget<?>> dependencies = ContainerUtil.newArrayList();
     Set<JpsModule> modules = getDependenciesModules();
     for (JpsModule module : modules) {
       if (module.getModuleType().equals(JpsErlangModuleType.INSTANCE)) {
@@ -74,7 +72,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
                                                                  ModuleExcludeIndex index,
                                                                  IgnoredFileIndex ignoredFileIndex,
                                                                  BuildDataPaths dataPaths) {
-    List<ErlangSourceRootDescriptor> result = new ArrayList<ErlangSourceRootDescriptor>();
+    List<ErlangSourceRootDescriptor> result = ContainerUtil.newArrayList();
     ErlangTargetBuilderUtil.addRootDescriptors(this, myModule, result);
     return result;
   }

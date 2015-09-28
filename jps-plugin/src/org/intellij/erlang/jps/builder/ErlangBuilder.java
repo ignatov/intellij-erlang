@@ -191,7 +191,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
                                             BuildOutputConsumer outputConsumer,
                                             CompileContext context,
                                             File... outputDirectories) throws IOException {
-    List<File> appConfigFiles = new DirtyFileProcessor<File, ErlangTarget>() {
+    List<File> appConfigFiles = new DirtyFilesProcessor<File, ErlangTarget>() {
       @Nullable
       @Override
       protected File getDirtyElement(@NotNull File file) throws IOException {
