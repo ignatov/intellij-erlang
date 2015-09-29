@@ -24,9 +24,11 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil;
 import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.ThrowableComputable;
@@ -73,14 +75,24 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
       @Nullable
       @Override
       public Object compute() throws Exception {
-        Sdk sdk = SdkConfigurationUtil.createAndAddSDK(SDK_PATH, ErlangSdkType.getInstance());
-        ProjectRootManager.getInstance(myProject).setProjectSdk(sdk);
-        addSourceRoot(myModule, "src", false);
-        addSourceRoot(myModule, "tests", true);
-        ErlangFacet.createFacet(myModule);
+        createSdk();
+        setupSourceRootsFacetAndSdk(myModule);
         return null;
       }
     });
+  }
+
+  private void createSdk() {
+    Sdk sdk = SdkConfigurationUtil.createAndAddSDK(SDK_PATH, ErlangSdkType.getInstance());
+    assert sdk != null;
+
+    // Erlang SDK can contain symlinks to files outside of allowed root set.
+    // So we remove all roots from the sdk as we don't need SDK contents anyway.
+    SdkModificator sdkModificator = sdk.getSdkModificator();
+    sdkModificator.removeAllRoots();
+    sdkModificator.commitChanges();
+
+    ProjectRootManager.getInstance(myProject).setProjectSdk(sdk);
   }
 
   @Override
@@ -99,17 +111,23 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     return false;
   }
 
+  @NotNull
   protected Module createModuleInOwnDirectoryWithSourceAndTestRoot(final String moduleName) throws Exception {
     return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<Module, IOException>() {
       @Override
       public Module compute() throws IOException {
         Module module = createModuleInDirectory(moduleName);
-        ErlangFacet.createFacet(module);
-        addSourceRoot(module, "src", false);
-        addSourceRoot(module, "tests", true);
+        setupSourceRootsFacetAndSdk(module);
         return module;
       }
     });
+  }
+
+  private static void setupSourceRootsFacetAndSdk(@NotNull Module module) throws IOException {
+    ModuleRootModificationUtil.setSdkInherited(module);
+    ErlangFacet.createFacet(module);
+    addSourceRoot(module, "src", false);
+    addSourceRoot(module, "tests", true);
   }
 
   @NotNull
