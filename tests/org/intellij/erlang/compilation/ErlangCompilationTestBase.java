@@ -58,7 +58,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-
 public abstract class ErlangCompilationTestBase extends PlatformTestCase {
   public static final String SDK_PATH = "/usr/lib/erlang/";
   protected CompilationRunner myCompilationRunner;
@@ -84,7 +83,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
   private void createSdk() {
     Sdk sdk = SdkConfigurationUtil.createAndAddSDK(SDK_PATH, ErlangSdkType.getInstance());
-    assert sdk != null;
+    assertNotNull("Failed to setup an Erlang SDK at " + SDK_PATH, sdk);
 
     // Erlang SDK can contain symlinks to files outside of allowed root set.
     // So we remove all roots from the sdk as we don't need SDK contents anyway.
