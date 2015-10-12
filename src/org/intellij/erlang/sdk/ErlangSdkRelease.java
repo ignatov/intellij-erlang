@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.sdk;
 
-import com.sun.xml.internal.ws.util.VersionUtil;
+import com.intellij.util.text.VersionComparatorUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,7 +52,7 @@ public final class ErlangSdkRelease {
   }
 
   public boolean isNewerThan(@NotNull ErlangSdkRelease other) {
-    return VersionUtil.compare(myErtsVersion, other.myErtsVersion) > 0;
+    return VersionComparatorUtil.compare(myErtsVersion, other.myErtsVersion) > 0;
   }
 
   public boolean needBifCompletion(@NotNull String moduleName) {
