@@ -16,7 +16,6 @@
 
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2">
     <id>org.jetbrains.erlang</id>
-    <version>0.5.11</version>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
     <idea-version since-build="141.176.5" until-build="141.9999"/>
     <depends>com.intellij.modules.lang</depends>
@@ -25,7 +24,6 @@
     <description>Erlang plugin</description>
     <change-notes>
         <![CDATA[
-            <p>0.5.11.NEXT</p>
             <ul>
               <li>Improved build system - incremental compilation (<a href="https://github.com/ignatov/intellij-erlang/issues/657">#657</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/609">#609</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/513">#513</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/475">#475</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/428">#428</a>)</li>
               <li>Enhanced .app files support: reference resolution and autocomplete</li>
