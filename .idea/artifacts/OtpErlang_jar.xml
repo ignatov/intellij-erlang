@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact name="OtpErlang.jar">
-    <output-path>$PROJECT_DIR$/bin</output-path>
-    <root id="root">
-      <element id="library" level="project" name="OtpErlang" />
-    </root>
-  </artifact>
-</component>

@@ -1,5 +1,12 @@
 .idea/workspace.xml
-out/
-bin/
-system-test/
-config-test/
+.idea/modules.xml
+.idea/misc.xml
+.idea/gradle.xml
+.idea/shelf/
+.idea/libraries/
+.idea/.name
+*.iml
+
+build
+jps-plugin/build
+.gradle

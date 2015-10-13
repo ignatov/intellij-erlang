@@ -1,0 +1,70 @@
+plugins {
+  id 'org.jetbrains.intellij' version "0.0.23"
+}
+
+version = "${version}.$buildNumber"
+allprojects {
+  apply plugin: 'java'
+  sourceCompatibility = javaVersion
+  targetCompatibility = javaVersion
+  tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
+
+  sourceSets {
+    main {
+      java.srcDirs 'src', 'gen'
+      resources.srcDir 'resources'
+    }
+    test {
+      java.srcDir 'tests'
+    }
+  }
+
+  apply plugin: 'org.jetbrains.intellij'
+  intellij {
+    version ideaVersion
+    plugins 'copyright'
+    downloadSources Boolean.valueOf(sources)
+  }
+  
+  def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
+  
+  test {
+    useJUnit {
+      exclude compilationPackages
+    }
+    testLogging {
+      exceptionFormat = 'full'
+    }
+  }
+
+  task testCompilation(type: Test, group: 'Verification', dependsOn: [classes, testClasses]) {
+    useJUnit {
+      include compilationPackages
+    }
+    testLogging {
+      exceptionFormat = 'full'
+    }
+  }
+}
+
+repositories {
+  flatDir {
+    dirs 'libs'
+  }
+}
+
+dependencies {
+  compile name: 'OtpErlang'
+  compile project('jps-plugin')
+}
+
+apply plugin: 'idea'
+idea {
+  project {
+    jdkName = javaVersion
+    languageLevel = javaVersion
+  }
+  module {
+    generatedSourceDirs += file('gen')
+  }
+}

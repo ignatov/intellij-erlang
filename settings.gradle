@@ -14,17 +14,5 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang.compilation;
-
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-@SuppressWarnings("ALL")
-public class ErlangCompilationTestCase extends TestCase {
-  public static TestSuite suite() {
-    TestSuite suite = new TestSuite();
-    suite.addTestSuite(ErlangBuildInSingleModuleTest.class);
-    suite.addTestSuite(ErlangBuildInDifferentModuleTest.class);
-    return suite;
-  }
-}
+rootProject.name = 'Erlang'
+include 'jps-plugin'
