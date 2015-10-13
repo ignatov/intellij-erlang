@@ -11,7 +11,7 @@ You can manually set up the latest plugin version from the [releases page](https
 Note for **Mac OS X** users: you need to download the entire zip file, not a several jars (see [Apple discussion forum](https://discussions.apple.com/thread/1483114)).
 
 ## Recent changes
-### Version 0.5.11.NEXT
+### The latest version
 * Improved build system - incremental compilation (<a href="https://github.com/ignatov/intellij-erlang/issues/657">#657</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/609">#609</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/513">#513</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/475">#475</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/428">#428</a>)
 * Enhanced .app files support: reference resolution and autocomplete
 * Erlang 18 compatibility: optional callbacks support (<a href="https://github.com/ignatov/intellij-erlang/issues/644">#644</a>), eunit compatibility (<a href="https://github.com/ignatov/intellij-erlang/issues/629">#629</a>)
