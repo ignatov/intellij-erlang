@@ -23,6 +23,7 @@ import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ResourceUtil;
 import com.intellij.util.net.HttpConfigurable;
@@ -256,7 +257,8 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @Nullable
   private static BufferedReader createFileReader(@NotNull URL url) {
     try {
-      InputStreamReader stream = new InputStreamReader(url.openStream());
+      //noinspection IOResourceOpenedButNotSafelyClosed
+      InputStreamReader stream = new InputStreamReader(url.openStream(), CharsetToolkit.UTF8_CHARSET);
       return new BufferedReader(stream);
     } catch (IOException e) {
       return null;
