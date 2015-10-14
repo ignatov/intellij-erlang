@@ -44,7 +44,7 @@ allprojects {
     testLogging {
       exceptionFormat = 'full'
     }
-    outputs.upToDateWhen { false }
+    doLast {}
   }
 }
 
