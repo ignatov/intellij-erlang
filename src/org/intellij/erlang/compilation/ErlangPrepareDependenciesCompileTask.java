@@ -48,7 +48,6 @@ import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
 import org.intellij.erlang.jps.builder.ErlangProjectBuildOrder;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jdom.Document;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,6 +56,9 @@ import org.jetbrains.annotations.TestOnly;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
+import static org.intellij.erlang.utils.ErlangModulesUtil.getErlangHeaderFiles;
+import static org.intellij.erlang.utils.ErlangModulesUtil.getErlangModuleFiles;
 
 public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   private static final Logger LOG = Logger.getInstance(ErlangPrepareDependenciesCompileTask.class);
@@ -139,7 +141,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   }
 
   @NotNull
-  private static List<String> getGlobalParseTransform(@NotNull Module module) {
+  private static List<String> getGlobalParseTransforms(@NotNull Module module) {
     ErlangFacet erlangFacet = ErlangFacet.getFacet(module);
     return erlangFacet != null ? erlangFacet.getConfiguration().getParseTransforms() : ContainerUtil.<String>emptyList();
   }
@@ -193,7 +195,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     @NotNull
     private static List<String> getHeaders(Module module, boolean onlyTestModules) {
-      return ContainerUtil.map(ErlangModulesUtil.getErlangHeaderFiles(module, onlyTestModules), new Function<VirtualFile, String>() {
+      return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), new Function<VirtualFile, String>() {
         @Override
         public String fun(VirtualFile virtualFile) {
           return virtualFile.getPath();
@@ -217,31 +219,29 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     }
 
     private void buildDependenciesMap(@NotNull Module module) {
-      List<String> globalParseTransform = resolvePathsFromNames(getGlobalParseTransform(module), module);
-      buildDependenciesMap(module, ErlangModulesUtil.getErlangHeaderFiles(module, false), ContainerUtil.<String>emptyList());
-      buildDependenciesMap(module, ErlangModulesUtil.getErlangHeaderFiles(module, true), ContainerUtil.<String>emptyList());
-      buildDependenciesMap(module, ErlangModulesUtil.getErlangModuleFiles(module, false), globalParseTransform);
-      buildDependenciesMap(module, ErlangModulesUtil.getErlangModuleFiles(module, true), globalParseTransform);
+      List<String> globalParseTransform = resolvePathsFromNames(getGlobalParseTransforms(module), module);
+      buildDependenciesMap(module, getErlangHeaderFiles(module, false), ContainerUtil.<String>emptyList());
+      buildDependenciesMap(module, getErlangHeaderFiles(module, true), ContainerUtil.<String>emptyList());
+      buildDependenciesMap(module, getErlangModuleFiles(module, false), globalParseTransform);
+      buildDependenciesMap(module, getErlangModuleFiles(module, true), globalParseTransform);
     }
 
     private void buildDependenciesMap(@NotNull Module module,
-                                      @NotNull Collection<VirtualFile> erlangModules,
+                                      @NotNull Collection<VirtualFile> erlangFiles,
                                       @NotNull List<String> globalParseTransforms) {
-      for (VirtualFile erlangModule : erlangModules) {
+      for (VirtualFile file : erlangFiles) {
         Set<String> dependencies = ContainerUtil.newHashSet();
-        ErlangFile erlangFile = getErlangFile(erlangModule);
-        addDeclaredDependencies(module, erlangFile, dependencies);
+        ErlangFile psi = getErlangFile(file);
+        addDeclaredDependencies(module, psi, dependencies);
         dependencies.addAll(globalParseTransforms);
-        myPathsToDependenciesMap.put(erlangModule.getPath(), ContainerUtil.newArrayList(dependencies));
+        myPathsToDependenciesMap.put(file.getPath(), ContainerUtil.newArrayList(dependencies));
       }
     }
 
     @NotNull
     private ErlangFile getErlangFile(@NotNull VirtualFile virtualFile) {
       PsiFile psiFile = myPsiManager.findFile(virtualFile);
-      ErlangFile erlangFile = ObjectUtils.tryCast(psiFile, ErlangFile.class);
-      assert erlangFile != null;
-      return erlangFile;
+      return ObjectUtils.assertNotNull(ObjectUtils.tryCast(psiFile, ErlangFile.class));
     }
 
     private void addDeclaredDependencies(@NotNull Module module,
