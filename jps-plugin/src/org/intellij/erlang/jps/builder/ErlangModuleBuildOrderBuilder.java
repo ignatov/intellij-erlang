@@ -19,6 +19,7 @@ package org.intellij.erlang.jps.builder;
 import com.intellij.openapi.util.Conditions;
 import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.graph.Graph;
 import com.intellij.util.graph.GraphGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -113,22 +114,22 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
   @NotNull
   private static Set<String> getAllDirtyFiles(@NotNull ErlangProjectBuildOrder projectBuildOrder,
                                               @NotNull List<String> dirtyFiles) {
-    SortedModuleDependencyGraph graph = new SortedModuleDependencyGraph(projectBuildOrder);
+    Graph<String> dependencies = GraphGenerator.create(new SortedModuleDependencyGraph(projectBuildOrder));
     Set<String> allDirtyFiles = ContainerUtil.newHashSet();
-    for (String node : dirtyFiles) {
-      findDirtyFiles(node, GraphGenerator.create(graph), allDirtyFiles);
+    for (String dirtyFile : dirtyFiles) {
+      collectDirtyFiles(dirtyFile, dependencies, allDirtyFiles);
     }
     return allDirtyFiles;
   }
 
-  private static void findDirtyFiles(@NotNull String filePath,
-                                     @NotNull GraphGenerator<String> dependenciesGraph,
-                                     @NotNull Set<String> dirtyFiles) {
+  private static void collectDirtyFiles(@NotNull String filePath,
+                                        @NotNull Graph<String> dependenciesGraph,
+                                        @NotNull Set<String> dirtyFiles) {
     if (dirtyFiles.contains(filePath)) return;
     dirtyFiles.add(filePath);
     Iterator<String> dependentFilesIterator = dependenciesGraph.getOut(filePath);
     while (dependentFilesIterator.hasNext()) {
-      findDirtyFiles(dependentFilesIterator.next(), dependenciesGraph, dirtyFiles);
+      collectDirtyFiles(dependentFilesIterator.next(), dependenciesGraph, dirtyFiles);
     }
   }
 
