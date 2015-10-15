@@ -127,6 +127,12 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
                                         @NotNull Set<String> dirtyFiles) {
     if (dirtyFiles.contains(filePath)) return;
     dirtyFiles.add(filePath);
+    if (!dependenciesGraph.getNodes().contains(filePath)) {
+      LOG.warn("Unexpected dirty file detected. " +
+               "Please, report to https://github.com/ignatov/intellij-erlang/issues/685. " +
+               "Path: " + filePath);
+      return;
+    }
     Iterator<String> dependentFilesIterator = dependenciesGraph.getOut(filePath);
     while (dependentFilesIterator.hasNext()) {
       collectDirtyFiles(dependentFilesIterator.next(), dependenciesGraph, dirtyFiles);
