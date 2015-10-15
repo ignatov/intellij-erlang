@@ -1,16 +1,11 @@
 ## How to contribute
-If you would like to help, you may check out issues [for collaboration](https://github.com/ignatov/intellij-erlang/issues?labels=for+collaboration&state=open).
-Before sending a pull request please check that the **ErlangTestCase** is successfully passed. Moreover, new tests will be gladly accepted.
+To figure out how you can contribute, you may check out current [issues](https://github.com/ignatov/intellij-erlang/issues).
+Before submitting a pull request please make sure all tests run by **Tests** run configuration pass.
 
 ## Getting started with the plugin development
-1. [Download](http://www.jetbrains.com/idea/download/) the latest 14 IntelliJ IDEA build and install it
-1. Checkout plugin repo and open the project
-1. Setup [IDEA SDK](http://confluence.jetbrains.net/display/IDEADEV/Getting+Started+with+Plugin+Development#GettingStartedwithPluginDevelopment-anchor2):
-select the IDEA installation directory as SDK root (should be named ```IDEA IC-13```)
-1. **Manually add ```$IDEA_SDK_PATH$/plugins/copyright/lib/copyright.jar``` to IDEA SDK classpath**
-1. Setup the latest version of [Grammar-Kit](https://github.com/JetBrains/Grammar-Kit) plugin
-1. Setup **UI Designer** plugin
-1. Run the **Erlang** run configuration
+1. Checkout the plugin repo
+2. Import the project using [gradle](https://www.jetbrains.com/idea/help/gradle.html)
+3. Run the **Erlang** run configuration
 
 Please don't use class comments with information about author or date and time creation.
 
