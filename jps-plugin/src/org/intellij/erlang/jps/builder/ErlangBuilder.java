@@ -82,7 +82,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
     JpsModule module = target.getModule();
     JpsProject project = module.getProject();
-    ErlangCompilerOptions compilerOptions = JpsErlangCompilerOptionsExtension.getOrCreateExtension(project).getOptions();
+    ErlangCompilerOptions compilerOptions = ErlangBuilderUtil.getCompilerOptions(project);
     if (compilerOptions.myUseRebarCompiler) return;
 
     LOG.info("Build module " + target.getPresentableName());

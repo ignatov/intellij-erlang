@@ -23,7 +23,6 @@ import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.jps.builder.*;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
-import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsExtension;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,7 +61,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
 
     JpsModule module = target.getModule();
     JpsProject project = module.getProject();
-    ErlangCompilerOptions compilerOptions = JpsErlangCompilerOptionsExtension.getOrCreateExtension(project).getOptions();
+    ErlangCompilerOptions compilerOptions = ErlangBuilderUtil.getCompilerOptions(project);
     if (!compilerOptions.myUseRebarCompiler) return;
 
     String rebarPath = getRebarExecutablePath(project);

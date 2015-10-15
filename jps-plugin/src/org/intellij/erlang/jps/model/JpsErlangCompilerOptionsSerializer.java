@@ -31,10 +31,9 @@ public class JpsErlangCompilerOptionsSerializer extends JpsProjectExtensionSeria
 
   @Override
   public void loadExtension(@NotNull JpsProject project, @NotNull Element componentTag) {
-    JpsErlangCompilerOptionsExtension extension = JpsErlangCompilerOptionsExtension.getOrCreateExtension(project);
     ErlangCompilerOptions options = XmlSerializer.deserialize(componentTag, ErlangCompilerOptions.class);
     if (options != null) {
-      extension.setOptions(options);
+      project.getContainer().setChild(JpsErlangCompilerOptionsExtension.ROLE, new JpsErlangCompilerOptionsExtension(options));
     }
   }
 

@@ -18,7 +18,6 @@ package org.intellij.erlang.jps.model;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.JpsElementChildRole;
-import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.ex.JpsCompositeElementBase;
 import org.jetbrains.jps.model.ex.JpsElementChildRoleBase;
 
@@ -27,7 +26,7 @@ public class JpsErlangCompilerOptionsExtension extends JpsCompositeElementBase<J
 
   private ErlangCompilerOptions myOptions;
 
-  public JpsErlangCompilerOptionsExtension(ErlangCompilerOptions options) {
+  public JpsErlangCompilerOptionsExtension(@NotNull ErlangCompilerOptions options) {
     myOptions = options;
   }
 
@@ -37,20 +36,8 @@ public class JpsErlangCompilerOptionsExtension extends JpsCompositeElementBase<J
     return new JpsErlangCompilerOptionsExtension(new ErlangCompilerOptions(myOptions));
   }
 
+  @NotNull
   public ErlangCompilerOptions getOptions() {
     return myOptions;
-  }
-
-  public void setOptions(ErlangCompilerOptions options) {
-    myOptions = options;
-  }
-
-  @NotNull
-  public static JpsErlangCompilerOptionsExtension getOrCreateExtension(@NotNull JpsProject project) {
-    JpsErlangCompilerOptionsExtension extension = project.getContainer().getChild(ROLE);
-    if (extension == null) {
-      extension = project.getContainer().setChild(ROLE, new JpsErlangCompilerOptionsExtension(new ErlangCompilerOptions()));
-    }
-    return extension;
   }
 }

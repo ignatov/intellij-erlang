@@ -3,11 +3,14 @@ package org.intellij.erlang.jps.builder;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.util.xmlb.XmlSerializer;
+import org.intellij.erlang.jps.model.ErlangCompilerOptions;
+import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsExtension;
 import org.jdom.Document;
 import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.incremental.CompileContext;
+import org.jetbrains.jps.model.JpsProject;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,5 +60,12 @@ public class ErlangBuilderUtil {
 
   public static boolean isHeader(@NotNull String fileName) {
     return fileName.endsWith(".hrl");
+  }
+
+  @NotNull
+  public static ErlangCompilerOptions getCompilerOptions(@NotNull JpsProject project) {
+    JpsErlangCompilerOptionsExtension extension = project.getContainer().getChild(JpsErlangCompilerOptionsExtension.ROLE);
+    ErlangCompilerOptions options = extension != null ? extension.getOptions() : null;
+    return options != null ? options : new ErlangCompilerOptions();
   }
 }
