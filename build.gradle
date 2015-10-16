@@ -48,6 +48,8 @@ allprojects {
   }
 }
 
+testCompilation.dependsOn('prepareSandbox')
+
 repositories {
   flatDir {
     dirs 'libs'
