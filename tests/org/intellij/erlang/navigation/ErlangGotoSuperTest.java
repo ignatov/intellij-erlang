@@ -16,8 +16,8 @@
 
 package org.intellij.erlang.navigation;
 
+import com.intellij.codeInsight.CodeInsightActionHandler;
 import com.intellij.lang.CodeInsightActions;
-import com.intellij.lang.LanguageCodeInsightActionHandler;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
@@ -49,7 +49,7 @@ public class ErlangGotoSuperTest extends LightPlatformCodeInsightFixtureTestCase
   private void doTest(int expectedCallbacksCount, String... filesToLoad) {
     myFixture.configureByFiles(filesToLoad);
 
-    LanguageCodeInsightActionHandler handler = CodeInsightActions.GOTO_SUPER.forLanguage(ErlangLanguage.INSTANCE);
+    CodeInsightActionHandler handler = CodeInsightActions.GOTO_SUPER.forLanguage(ErlangLanguage.INSTANCE);
     assertNotNull("GotoSuperHandler for Erlang was not found.", handler);
 
     PsiElement focusedElement = myFixture.getFile().findElementAt(myFixture.getEditor().getCaretModel().getOffset());

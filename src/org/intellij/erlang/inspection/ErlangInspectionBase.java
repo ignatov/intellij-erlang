@@ -79,9 +79,9 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   @Override
   public SuppressIntentionAction[] getSuppressActions(@Nullable PsiElement element) {
     return new SuppressIntentionAction[]{
-      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for function", ErlangFunction.class),
-      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for attribute", ErlangAttribute.class),
-      new ErlangSuppressInspectionFix(getSuppressId(), "Suppress for expression", ErlangExpression.class)
+      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for function", ErlangFunction.class),
+      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for attribute", ErlangAttribute.class),
+      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for expression", ErlangExpression.class)
     };
   }
 
@@ -138,11 +138,11 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
 
   private boolean isSuppressedInComment(String commentText) {
     Matcher m = SUPPRESS_PATTERN.matcher(commentText);
-    return m.matches() && SuppressionUtil.isInspectionToolIdMentioned(m.group(1), getSuppressId());
+    return m.matches() && SuppressionUtil.isInspectionToolIdMentioned(m.group(1), getMySuppressId());
   }
   
   @NotNull
-  protected String getSuppressId() {
+  private String getMySuppressId() { // todo: rewrite with the new suppression API
     return getShortName().replace("Inspection", "");
   }
 

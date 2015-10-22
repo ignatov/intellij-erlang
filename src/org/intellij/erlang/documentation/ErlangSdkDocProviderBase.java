@@ -43,7 +43,7 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.intellij.codeInsight.documentation.DocumentationManager.PSI_ELEMENT_PROTOCOL;
+import static com.intellij.codeInsight.documentation.DocumentationManagerProtocol.PSI_ELEMENT_PROTOCOL;
 
 abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   private static final Pattern PATTERN_HREF = Pattern.compile("<a href=\"(.*?)\">");
