@@ -142,8 +142,15 @@ public final class ErlangSourcePosition {
   }
 
   @Nullable
-  public static ErlangSourcePosition create(@NotNull ErlangDebugLocationResolver resolver, @NotNull String module, int line) {
-    XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(resolver.resolveModuleFile(module), line);
+  public static ErlangSourcePosition create(@NotNull final ErlangDebugLocationResolver resolver, @NotNull final String module, int line) {
+    VirtualFile file = ApplicationManager.getApplication().runReadAction(new Computable<VirtualFile>() {
+      @Nullable
+      @Override
+      public VirtualFile compute() {
+        return resolver.resolveModuleFile(module);
+      }
+    });
+    XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(file, line);
     return sourcePosition != null ? new ErlangSourcePosition(sourcePosition) : null;
   }
 
