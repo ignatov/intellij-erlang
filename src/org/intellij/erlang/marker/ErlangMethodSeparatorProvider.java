@@ -35,20 +35,12 @@ import java.util.Collection;
 import java.util.List;
 
 public class ErlangMethodSeparatorProvider implements LineMarkerProvider {
-  private final DaemonCodeAnalyzerSettings myDaemonSettings;
-  private final EditorColorsManager myColorsManager;
-
-  public ErlangMethodSeparatorProvider(DaemonCodeAnalyzerSettings daemonSettings, EditorColorsManager colorsManager) {
-    myDaemonSettings = daemonSettings;
-    myColorsManager = colorsManager;
-  }
-
   @Nullable
   @Override
   public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement function) {
-    if (myDaemonSettings.SHOW_METHOD_SEPARATORS && function instanceof ErlangFunction) {
+    if (DaemonCodeAnalyzerSettings.getInstance().SHOW_METHOD_SEPARATORS && function instanceof ErlangFunction) {
       PsiElement anchor = findAnchorElementForMethodSeparator((ErlangFunction) function);
-      return LineMarkersPass.createMethodSeparatorLineMarker(anchor, myColorsManager);
+      return LineMarkersPass.createMethodSeparatorLineMarker(anchor, EditorColorsManager.getInstance());
     }
     return null;
   }
