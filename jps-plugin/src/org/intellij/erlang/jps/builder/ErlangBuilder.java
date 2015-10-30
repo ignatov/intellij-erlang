@@ -240,7 +240,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     handler.addProcessListener(adapter);
     handler.startNotify();
     handler.waitFor();
-    consumeFiles(outputConsumer, getBeams(erlangModulePathsToCompile, outputDirectory));
+    registerBeams(outputConsumer, erlangModulePathsToCompile, outputDirectory);
   }
 
   private static GeneralCommandLine getErlcCommandLine(ErlangTarget target,
@@ -391,11 +391,16 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void consumeFiles(@NotNull BuildOutputConsumer outputConsumer,
-                                   @NotNull List<File> dirtyFilePaths) throws IOException {
-    for (File outputFile : dirtyFilePaths) {
-      if (outputFile.exists()) {
-        outputConsumer.registerOutputFile(outputFile, Collections.singletonList(outputFile.getAbsolutePath()));
+  private static void registerBeams(@NotNull BuildOutputConsumer outputConsumer,
+                                    @NotNull List<String> sourcePaths,
+                                    @NotNull File outputDir) throws IOException {
+    List<File> beams = getBeams(sourcePaths, outputDir);
+    assert beams.size() == sourcePaths.size();
+    for (int i = 0; i < sourcePaths.size(); i++) {
+      File beam = beams.get(i);
+      if (beam.exists()) {
+        String erl = sourcePaths.get(i);
+        outputConsumer.registerOutputFile(beam, ContainerUtil.createMaybeSingletonList(erl));
       }
     }
   }
