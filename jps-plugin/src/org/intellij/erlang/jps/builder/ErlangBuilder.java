@@ -100,18 +100,6 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return NAME;
   }
 
-  @NotNull
-  private static List<File> getBeams(@NotNull Collection<String> erlPaths,
-                                     @NotNull final File outputDirectory) {
-    return ContainerUtil.map(erlPaths, new Function<String, File>() {
-      @Override
-      public File fun(String filePath) {
-        String name = FileUtil.getNameWithoutExtension(new File(filePath));
-        return new File(outputDirectory.getAbsolutePath() + File.separator + name + ".beam");
-      }
-    });
-  }
-
   private static void buildSources(@NotNull ErlangTarget target,
                                    @NotNull CompileContext context,
                                    @NotNull ErlangCompilerOptions compilerOptions,
@@ -364,16 +352,19 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   }
 
   private static void registerBeams(@NotNull BuildOutputConsumer outputConsumer,
-                                    @NotNull List<String> sourcePaths,
+                                    @NotNull List<String> erlPaths,
                                     @NotNull File outputDir) throws IOException {
-    List<File> beams = getBeams(sourcePaths, outputDir);
-    assert beams.size() == sourcePaths.size();
-    for (int i = 0; i < sourcePaths.size(); i++) {
-      File beam = beams.get(i);
+    for (String erlPath : erlPaths) {
+      File beam = getBeam(outputDir, erlPath);
       if (beam.exists()) {
-        String erl = sourcePaths.get(i);
-        outputConsumer.registerOutputFile(beam, ContainerUtil.createMaybeSingletonList(erl));
+        outputConsumer.registerOutputFile(beam, ContainerUtil.createMaybeSingletonList(erlPath));
       }
     }
+  }
+
+  @NotNull
+  private static File getBeam(@NotNull File outputDirectory, @NotNull String erlPath) {
+    String name = FileUtil.getNameWithoutExtension(new File(erlPath));
+    return new File(outputDirectory.getAbsolutePath() + File.separator + name + ".beam");
   }
 }
