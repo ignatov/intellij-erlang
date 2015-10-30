@@ -20,7 +20,6 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.BaseOSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
-import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.CommonProcessors;
@@ -89,11 +88,6 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     File sourceOutput = getBuildOutputDirectory(module, false, context);
     File testOutput = getBuildOutputDirectory(module, true, context);
 
-    if (holder.hasRemovedFiles()) {
-      LOG.debug("Remove invalid .beam and .app files.");
-      removeOutputFiles(holder.getRemovedFiles(target), sourceOutput, testOutput);
-    }
-
     buildSources(target, context, compilerOptions, outputConsumer, sourceOutput, false);
     buildSources(target, context, compilerOptions, outputConsumer, testOutput, true);
 
@@ -106,18 +100,6 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return NAME;
   }
 
-  private static void removeOutputFiles(@NotNull Collection<String> removedFiles, @NotNull File... outputDirectories) {
-    for (File dir : outputDirectories) {
-      List<File> outputErlangModuleFiles = ContainerUtil.concat(getBeams(findErlFiles(removedFiles), dir),
-                                                                getAppsOutput(findAppFiles(removedFiles), dir));
-      for (File output : outputErlangModuleFiles) {
-        if (output.exists() && !output.delete()) {
-          LOG.warn("Can't delete file " + output.getAbsolutePath());
-        }
-      }
-    }
-  }
-
   @NotNull
   private static List<File> getBeams(@NotNull Collection<String> erlPaths,
                                      @NotNull final File outputDirectory) {
@@ -126,16 +108,6 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       public File fun(String filePath) {
         String name = FileUtil.getNameWithoutExtension(new File(filePath));
         return new File(outputDirectory.getAbsolutePath() + File.separator + name + ".beam");
-      }
-    });
-  }
-
-  @NotNull
-  private static List<File> getAppsOutput(@NotNull List<String> sourceApps, @NotNull final File outputDir) {
-    return ContainerUtil.map(sourceApps, new Function<String, File>() {
-      @Override
-      public File fun(String sourceFile) {
-        return getDestinationAppConfig(outputDir, sourceFile);
       }
     });
   }
@@ -404,25 +376,4 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       }
     }
   }
-
-  @NotNull
-  private static List<String> findAppFiles(@NotNull Collection<String> removedFiles) {
-    return ContainerUtil.filter(removedFiles, new Condition<String>() {
-      @Override
-      public boolean value(String filePath) {
-        return ErlangBuilderUtil.isAppConfigFileName(filePath);
-      }
-    });
-  }
-
-  @NotNull
-  private static List<String> findErlFiles(@NotNull Collection<String> removedFiles) {
-    return ContainerUtil.filter(removedFiles, new Condition<String>() {
-      @Override
-      public boolean value(String s) {
-        return ErlangBuilderUtil.isSource(s);
-      }
-    });
-  }
-
 }
