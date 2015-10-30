@@ -18,6 +18,8 @@ package org.intellij.erlang.build;
 
 import com.intellij.openapi.vfs.VirtualFile;
 
+import java.io.File;
+
 import static org.junit.Assert.assertNotEquals;
 
 public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
@@ -131,6 +133,19 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     addSourceFile(myModule, "behaviour1.erl", behaviour.include("header.hrl").build());
     VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").behaviour(behaviour).build());
     doTestRebuildInSingleModule(headerFile, sourceFileWithDependency);
+  }
+
+  public void testBeamsForDeletedSourcesAreDeleted() throws Exception {
+    VirtualFile erl = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").build());
+
+    compileAndAssertOutput(false);
+    File beam = getOutputFile(myModule, erl, false);
+    assertNotNull(beam);
+    assertTrue(beam.exists());
+
+    delete(erl);
+    compileAndAssertOutput(false);
+    assertFalse(beam.exists());
   }
 
   private void doTestRebuildInSingleModule(VirtualFile dependency,
