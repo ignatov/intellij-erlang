@@ -326,7 +326,7 @@ public class ErlangDebuggerNode {
       return new OtpInputStream(bytes).read_any();
     }
     catch (OtpErlangDecodeException e) {
-      LOG.debug("Failed to decode an erlang term.", e);
+      LOG.warn("Failed to decode an erlang term.", e);
       return null;
     }
   }
