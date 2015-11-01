@@ -55,6 +55,11 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
   public void testEnterBetweenCurlies()                  { doTest(); }
   public void testEnterBetweenParens()                   { doTest(); }
 
+  public void testEnterInComment()                       { doTest(); }
+  public void testEnterInFunctionDocComment()            { doTest(); }
+  public void testEnterInModuleDocComment()              { doTest(); }
+  public void testEnterInShebang()                       { doTest(); }
+
   private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.type('\n');

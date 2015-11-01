@@ -110,6 +110,7 @@
 
         <quoteHandler fileType="Erlang" className="org.intellij.erlang.ErlangQuoteHandler"/>
         <typedHandler implementation="org.intellij.erlang.editor.ErlangTypedHandler" id="ErlangBinary"/>
+        <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterInCommentsHandler" id="ErlangEnterInComments"/>
         <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterHandler" id="ErlangEnter"/>
         <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterBetweenBracesHandler" id="ErlangEnterBetweenBraces"/>
 
