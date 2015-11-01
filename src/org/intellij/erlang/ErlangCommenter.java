@@ -16,13 +16,11 @@
 
 package org.intellij.erlang;
 
-import com.intellij.lang.CodeDocumentationAwareCommenter;
-import com.intellij.psi.PsiComment;
-import com.intellij.psi.tree.IElementType;
+import com.intellij.lang.Commenter;
 
-public class ErlangCommenter implements CodeDocumentationAwareCommenter {
+public class ErlangCommenter implements Commenter {
   public String getLineCommentPrefix() {
-    return "%% ";
+    return "%%";
   }
 
   public String getBlockCommentPrefix() {
@@ -39,40 +37,5 @@ public class ErlangCommenter implements CodeDocumentationAwareCommenter {
 
   public String getCommentedBlockCommentSuffix() {
     return null;
-  }
-
-  @Override
-  public IElementType getLineCommentTokenType() {
-    return ErlangParserDefinition.ERL_COMMENT;
-  }
-
-  @Override
-  public IElementType getBlockCommentTokenType() {
-    return null;
-  }
-
-  @Override
-  public IElementType getDocumentationCommentTokenType() {
-    return null;
-  }
-
-  @Override
-  public String getDocumentationCommentPrefix() {
-    return null;
-  }
-
-  @Override
-  public String getDocumentationCommentLinePrefix() {
-    return null;
-  }
-
-  @Override
-  public String getDocumentationCommentSuffix() {
-    return null;
-  }
-
-  @Override
-  public boolean isDocumentationComment(PsiComment element) {
-    return false;
   }
 }
