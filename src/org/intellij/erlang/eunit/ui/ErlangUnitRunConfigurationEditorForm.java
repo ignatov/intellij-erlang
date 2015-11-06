@@ -74,11 +74,13 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
 
     myErlangModulesField.setText(getCommaSeparatedNamesString(configData.getModuleNames()));
     myErlangFunctionsField.setText(getCommaSeparatedNamesString(configData.getFunctionNames()));
+    myWorkingDirectoryComponent.setText(StringUtil.notNullize(configuration.getWorkDirectory()));
   }
 
   @Override
   protected void doApplyEditorTo(ErlangUnitRunConfiguration configuration) throws ConfigurationException {
     configuration.setModule(myModuleComboBox.getSelectedModule());
+    configuration.setWorkDirectory(StringUtil.nullize(myWorkingDirectoryComponent.getText()));
 
     ErlangUnitRunConfiguration.ErlangUnitConfigData configData = configuration.getConfigData();
     configData.setFunctionNames(parseCommaSeparatedNames(myErlangFunctionsField.getText()));
