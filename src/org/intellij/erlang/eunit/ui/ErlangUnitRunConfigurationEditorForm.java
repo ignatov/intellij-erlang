@@ -44,6 +44,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   private JLabel myErlangModulesLabel;
   private JLabel myErlangFunctionsLabel;
   private JComboBox myTestKindComboBox;
+  @SuppressWarnings("unused")
   private HideableTitledPanel myDebugOptionsHideablePanel;
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
 
@@ -67,9 +68,11 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
     myTestKindComboBox.removeAllItems();
     ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind[] kinds = ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.values();
     for (ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind : kinds) {
+      //noinspection unchecked
       myTestKindComboBox.addItem(kind);
     }
     myTestKindComboBox.setSelectedItem(configData.getKind());
+    //noinspection unchecked
     myTestKindComboBox.setRenderer(getTestKindListCellRendererWrapper());
 
     myErlangModulesField.setText(getCommaSeparatedNamesString(configData.getModuleNames()));
