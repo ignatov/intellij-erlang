@@ -38,6 +38,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   @SuppressWarnings("unused")
   private HideableTitledPanel myDebugOptionsHideablePanel;
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
+  private JCheckBox myUseTestsCodePathCheckBox;
 
   public ErlangRunConfigurationEditorForm(){
     myWorkingDirectoryComponent.addBrowseFolderListener("Choose working directory", "", null,
@@ -53,6 +54,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
     myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
     myErlFlagsTextField.setText(configuration.getErlFlags());
     myWorkingDirectoryComponent.setText(configuration.getWorkDirectory());
+    myUseTestsCodePathCheckBox.setSelected(configuration.isUseTestCodePath());
   }
 
   @Override
@@ -63,6 +65,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
     configuration.setErlFlags(myErlFlagsTextField.getText());
     configuration.setStopErlang(myStopErlangInterpreterCheckBox.isSelected());
     configuration.setWorkDirectory(myWorkingDirectoryComponent.getText());
+    configuration.setUseTestCodePath(myUseTestsCodePathCheckBox.isSelected());
   }
 
   @NotNull

@@ -60,7 +60,7 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
   }
 
   @Override
-  public boolean isTestRunConfiguration() {
+  public boolean isUseTestCodePath() {
     return true;
   }
 

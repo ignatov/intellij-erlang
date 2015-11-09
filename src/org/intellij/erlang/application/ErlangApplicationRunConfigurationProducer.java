@@ -51,14 +51,15 @@ public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableR
     Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
     VirtualFile vFile = containingFile.getVirtualFile();
     if (vFile == null) return false;
+
     String moduleName = vFile.getNameWithoutExtension();
     String functionName = function.getName();
 
     configuration.setModuleAndFunction(moduleNameAndFunction(moduleName, functionName));
     configuration.setName(moduleName + "." + functionName);
-    if (module != null) {
-      configuration.setModule(module);
-    }
+    configuration.setModule(module);
+    configuration.setUseTestCodePath(module != null && module.getModuleTestsWithDependentsScope().contains(vFile));
+
     return true;
   }
 

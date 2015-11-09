@@ -38,7 +38,7 @@ public class ErlangRemoteDebugRunConfiguration extends ErlangRunConfigurationBas
   }
 
   @Override
-  public boolean isTestRunConfiguration() {
+  public boolean isUseTestCodePath() {
     return false;
   }
 

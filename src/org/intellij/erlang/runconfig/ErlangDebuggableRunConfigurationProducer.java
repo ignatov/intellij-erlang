@@ -70,7 +70,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
                                                             @NotNull PsiElement location);
 
   protected boolean setupDebugOptions(@NotNull RunConfig runConfig, @NotNull ConfigurationContext context) {
-    runConfig.setDebugOptions(createDefaultDebugOptions(context.getModule(), runConfig.isTestRunConfiguration()));
+    runConfig.setDebugOptions(createDefaultDebugOptions(context.getModule(), runConfig.isUseTestCodePath()));
     return true;
   }
 
@@ -78,7 +78,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
     ErlangRunConfigurationBase.ErlangDebugOptions debugOptions = runConfig.getDebugOptions();
     Module module = runConfig.getConfigurationModule().getModule();
     if (debugOptions.isAutoUpdateModulesNotToInterpret() && module != null) {
-      debugOptions.setModulesNotToInterpret(getErlangModulesWithCallsToLoadNIF(module, runConfig.isTestRunConfiguration()));
+      debugOptions.setModulesNotToInterpret(getErlangModulesWithCallsToLoadNIF(module, runConfig.isUseTestCodePath()));
     }
   }
 

@@ -40,7 +40,7 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
 
   @Override
   protected boolean useTestCodePath() {
-    return false;
+    return myConfiguration.isUseTestCodePath();
   }
 
   @Override

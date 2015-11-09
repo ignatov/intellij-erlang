@@ -120,7 +120,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
     return module != null ? newRunningState(environment, module) : null;
   }
 
-  public abstract boolean isTestRunConfiguration();
+  public abstract boolean isUseTestCodePath();
 
   protected abstract RunningState newRunningState(ExecutionEnvironment env, Module module);
 

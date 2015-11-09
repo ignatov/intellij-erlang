@@ -39,6 +39,7 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
   private String myModuleAndFunction = "";
   private String myErlFlags = "";
   private boolean myStopErlang = true;
+  private boolean myUseTestCodePath;
 
   public ErlangApplicationConfiguration(Project project, String name, ConfigurationType configurationType) {
     super(name, new ErlangModuleBasedConfiguration(project), configurationType.getConfigurationFactories()[0]);
@@ -61,8 +62,12 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
   }
 
   @Override
-  public boolean isTestRunConfiguration() {
-    return false;
+  public boolean isUseTestCodePath() {
+    return myUseTestCodePath;
+  }
+
+  public void setUseTestCodePath(boolean useTestCodePath) {
+    myUseTestCodePath = useTestCodePath;
   }
 
   public String getParams() {

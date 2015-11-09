@@ -109,7 +109,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
     ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
     myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
-                                                         runConfig.getConfigurationModule().getModule(), runConfig.isTestRunConfiguration());
+                                                         runConfig.getConfigurationModule().getModule(),
+                                                         runConfig.isUseTestCodePath());
   }
 
   @Override
@@ -188,7 +189,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     Project project = myExecutionEnvironment.getProject();
     Collection<ErlangFile> erlangModules = ErlangModulesUtil.getErlangModules(project);
     ErlangRunConfigurationBase<?> runConfiguration = getRunConfiguration();
-    if (runConfiguration.isTestRunConfiguration()) {
+    if (runConfiguration.isUseTestCodePath()) {
       HashSet<ErlangFile> erlangTestModules = new HashSet<ErlangFile>();
       for (Module module : runConfiguration.getModules()) {
         erlangTestModules.addAll(ErlangModulesUtil.getErlangModules(module, true));
