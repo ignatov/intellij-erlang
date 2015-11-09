@@ -16,17 +16,16 @@
 
 package org.intellij.erlang.console;
 
-import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.ListCellRendererWrapper;
 import com.intellij.ui.RawCommandLineEditor;
 import org.intellij.erlang.module.ErlangModuleType;
+import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,7 +42,7 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   public ErlangConsoleRunConfigurationForm(@NotNull Project project, @Nullable Module module) {
     myInitialModule = module;
     myModuleComboBox.setEnabled(true);
-    addFileChooser("Choose Working Directory", myWorkingDirPathField, project);
+    ErlangUiUtil.installWorkingDirectoryChooser(myWorkingDirPathField, project);
     myWorkingDirPathField.setText(project.getBasePath());
   }
 
@@ -80,22 +79,6 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   @Override
   protected void disposeEditor() {
     myPanel.setVisible(false);
-  }
-
-  @NotNull
-  private static FileChooserDescriptor addFileChooser(@NotNull String title,
-                                                      @NotNull TextFieldWithBrowseButton textField,
-                                                      @NotNull Project project) {
-    FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(
-      false, true, false, false, false, false) {
-      @Override
-      public boolean isFileVisible(VirtualFile file, boolean showHiddenFiles) {
-        return super.isFileVisible(file, showHiddenFiles) && file.isDirectory();
-      }
-    };
-    fileChooserDescriptor.setTitle(title);
-    textField.addBrowseFolderListener(title, null, project, fileChooserDescriptor);
-    return fileChooserDescriptor;
   }
 
   @NotNull

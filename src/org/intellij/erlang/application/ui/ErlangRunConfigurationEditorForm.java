@@ -17,13 +17,13 @@
 package org.intellij.erlang.application.ui;
 
 import com.intellij.application.options.ModulesComboBox;
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
+import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -41,8 +41,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   private JCheckBox myUseTestsCodePathCheckBox;
 
   public ErlangRunConfigurationEditorForm(){
-    myWorkingDirectoryComponent.addBrowseFolderListener("Choose working directory", "", null,
-      FileChooserDescriptorFactory.createSingleFolderDescriptor());
+    ErlangUiUtil.installWorkingDirectoryChooser(myWorkingDirectoryComponent, null);
   }
 
   @Override
