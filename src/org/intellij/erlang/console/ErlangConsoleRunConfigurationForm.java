@@ -51,6 +51,7 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
     myModuleComboBox.removeAllItems();
     for (Module module : config.getValidModules()) {
       if (ModuleType.get(module) == ErlangModuleType.getInstance()) {
+        //noinspection unchecked
         myModuleComboBox.addItem(module);
       }
     }
