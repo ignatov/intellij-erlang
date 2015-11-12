@@ -288,6 +288,17 @@ public class ErlangPsiImplUtil {
           return ContainerUtil.getFirstItem(files);
         }
 
+        @Override
+        public PsiElement bindToElement(@NotNull PsiElement element) throws IncorrectOperationException {
+          if (!(element instanceof ErlangFile)) {
+            throw new AssertionError("Unexpected reference target");
+          }
+
+          //TODO change path accordingly!
+
+          return o;
+        }
+
         @NotNull
         @Override
         public PsiElement handleElementRename(@NotNull String newName) throws IncorrectOperationException {
