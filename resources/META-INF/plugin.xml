@@ -324,4 +324,10 @@
         </group>
 
     </actions>
+
+    <application-components>
+        <component>
+            <implementation-class>org.intellij.erlang.UpdateComponent</implementation-class>
+        </component>
+    </application-components>
 </idea-plugin>
