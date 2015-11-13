@@ -75,6 +75,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.io.File;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -277,57 +278,89 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static PsiReference getReference(@NotNull final ErlangIncludeString o) {
-    final PsiElement parent = o.getParent();
-    if (o.getTextLength() >= 2) {
-      return new PsiReferenceBase<PsiElement>(o, TextRange.from(1, o.getTextLength() - 2)) {
-        @Override
-        public PsiElement resolve() {
-          ErlangFile file = (ErlangFile) o.getContainingFile();
-          List<ErlangFile> files = parent instanceof ErlangInclude ? getDirectlyIncludedFiles((ErlangInclude) parent, file) : getDirectlyIncludedFiles((ErlangIncludeLib) parent, file);
-          return ContainerUtil.getFirstItem(files);
-        }
+  public static PsiReference getReference(@NotNull ErlangIncludeString o) {
+    return o.getTextLength() < 2 ? null :
+           new PsiReferenceBase<ErlangIncludeString>(o, TextRange.from(1, o.getTextLength() - 2)) {
+             @Override
+             public PsiElement resolve() {
+               ErlangFile file = (ErlangFile) myElement.getContainingFile();
+               PsiElement parent = myElement.getParent();
+               List<ErlangFile> files = parent instanceof ErlangInclude ?
+                                        getDirectlyIncludedFiles((ErlangInclude) parent, file) :
+                                        getDirectlyIncludedFiles((ErlangIncludeLib) parent, file);
+               return ContainerUtil.getFirstItem(files);
+             }
 
-        @Override
-        public PsiElement bindToElement(@NotNull PsiElement element) throws IncorrectOperationException {
-          if (!(element instanceof ErlangFile)) {
-            throw new AssertionError("Unexpected reference target");
-          }
+             @Override
+             public PsiElement bindToElement(@NotNull PsiElement element) throws IncorrectOperationException {
+               if (!(element instanceof ErlangFile)) {
+                 throw new IncorrectOperationException("Unexpected element");
+               }
 
-          //TODO change path accordingly!
+               String includeStringText = computeNewIncludeStringText((ErlangFile) element);
+               if (includeStringText == null) {
+                 throw new IncorrectOperationException("Failed to update include path");
+               }
 
-          return o;
-        }
+               myElement.getString().replace(
+                 ErlangElementFactory.createIncludeString(element.getProject(), includeStringText).getString());
+               return myElement;
+             }
 
-        @NotNull
-        @Override
-        public PsiElement handleElementRename(@NotNull String newName) throws IncorrectOperationException {
-          PsiElement resolve = resolve();
-          if (resolve instanceof ErlangFile) {
-            PsiElement st;
-            try {
-              String fileName = ((ErlangFile) resolve).getName();
-              String newIncludeString = StringUtil.unquoteString(o.getString().getText()).replace(fileName, newName);
-              st = ErlangElementFactory.createStringFromText(o.getProject(), newIncludeString);
-            } catch (Exception e) {
-              st = null;
-            }
+             @NotNull
+             @Override
+             public PsiElement handleElementRename(@NotNull String newName) throws IncorrectOperationException {
+               PsiElement resolve = resolve();
+               if (resolve instanceof ErlangFile) {
+                 PsiElement st;
+                 try {
+                   String fileName = ((ErlangFile) resolve).getName();
+                   String newIncludeString = StringUtil.unquoteString(myElement.getString().getText()).replace(fileName, newName);
+                   st = ErlangElementFactory.createStringFromText(myElement.getProject(), newIncludeString);
+                 }
+                 catch (Exception e) {
+                   st = null;
+                 }
 
-            if (st != null) {
-              o.getString().replace(st);
-            }
-          }
-          return o;
-        }
+                 if (st != null) {
+                   myElement.getString().replace(st);
+                 }
+               }
+               return myElement;
+             }
 
-        @NotNull
-        @Override
-        public Object[] getVariants() {
-          return ArrayUtil.EMPTY_OBJECT_ARRAY;
-        }
-      };
-    }
-    return null;
+             @NotNull
+             @Override
+             public Object[] getVariants() {
+               return ArrayUtil.EMPTY_OBJECT_ARRAY;
+             }
+
+             @Nullable
+             private String computeNewIncludeStringText(@NotNull ErlangFile newHeader) {
+               VirtualFile newHeaderVirtualFile = newHeader.getVirtualFile();
+               File newHeaderIoFile = VfsUtilCore.virtualToIoFile(newHeaderVirtualFile);
+
+               ErlangFile file = (ErlangFile) myElement.getContainingFile();
+               VirtualFile virtualFile = file.getVirtualFile();
+               File ioFile = VfsUtilCore.virtualToIoFile(virtualFile);
+
+               String relativePath = FileUtilRt.getRelativePath(ioFile, newHeaderIoFile);
+
+               Module module = ModuleUtilCore.findModuleForPsiElement(file);
+               for (VirtualFile includeDir : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
+                 if (!VfsUtilCore.isAncestor(includeDir, newHeaderVirtualFile, true)) continue;
+
+                 File includeIoDir = VfsUtilCore.virtualToIoFile(includeDir);
+                 String includeDirToHeaderPath = FileUtilRt.getRelativePath(includeIoDir, newHeaderIoFile);
+                 if (includeDirToHeaderPath != null &&
+                     (relativePath == null || relativePath.length() > includeDirToHeaderPath.length())) {
+                   relativePath = includeDirToHeaderPath;
+                 }
+               }
+
+               return PathUtil.toSystemIndependentName(relativePath);
+             }
+           };
   }
 
   @Nullable

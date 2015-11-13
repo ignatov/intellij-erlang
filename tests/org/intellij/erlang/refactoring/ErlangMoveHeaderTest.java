@@ -16,22 +16,23 @@
 
 package org.intellij.erlang.refactoring;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor;
+import com.intellij.testFramework.fixtures.CodeInsightFixtureTestCase;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
-import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ErlangMoveHeaderTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
   public void testMoveFromIncludeDirToModuleDir() {
     PsiFile includeFile = myFixture.addFileToProject("include/a.hrl", "");
     PsiDirectory includeDir = includeFile.getParent();
-    ErlangIncludeDirectoryUtil.markAsIncludeDirectory(myModule, vFile(includeDir));
+    markAsIncludeDirectory(includeDir);
 
     String moduleText = "-module(a).\n-include(\"a.hrl\").";
     PsiFile moduleFile = myFixture.configureByText("a.erl", moduleText);
@@ -45,7 +46,7 @@ public class ErlangMoveHeaderTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMoveFromIncludeDirToIncludeDirChild() {
     PsiFile includeFile = myFixture.addFileToProject("include/a.hrl", "");
     PsiDirectory includeDir = includeFile.getParent();
-    ErlangIncludeDirectoryUtil.markAsIncludeDirectory(myModule, vFile(includeDir));
+    markAsIncludeDirectory(includeDir);
     PsiDirectory includeDirChild = createSubdirectory(includeDir, "child");
 
     PsiFile moduleFile = myFixture.configureByText("a.erl", "-module(a).\n-include(\"a.hrl\").");
@@ -62,7 +63,7 @@ public class ErlangMoveHeaderTest extends ErlangLightPlatformCodeInsightFixtureT
     PsiFile moduleFile = myFixture.configureByText("a.erl", moduleText);
 
     PsiDirectory includeDir = createSubdirectory(moduleFile.getParent(), "include");
-    ErlangIncludeDirectoryUtil.markAsIncludeDirectory(myModule, includeDir.getVirtualFile());
+    markAsIncludeDirectory(includeDir);
 
     move(includeFile, includeDir);
 
@@ -86,18 +87,25 @@ public class ErlangMoveHeaderTest extends ErlangLightPlatformCodeInsightFixtureT
     new MoveFilesOrDirectoriesProcessor(project, files, where, true, false, false, null, null).run();
   }
 
-  @NotNull
-  private static PsiDirectory createSubdirectory(@Nullable PsiDirectory dir, @Nullable String name) {
+  private void markAsIncludeDirectory(@Nullable final PsiDirectory dir) {
     assertNotNull(dir);
-    assertNotNull(name);
-    return dir.createSubdirectory(name);
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        ErlangIncludeDirectoryUtil.markAsIncludeDirectory(myModule, dir.getVirtualFile());
+      }
+    });
   }
 
   @NotNull
-  private static VirtualFile vFile(@Nullable PsiDirectory psi) {
-    assertNotNull(psi);
-    VirtualFile vFile = psi.getVirtualFile();
-    assertNotNull(vFile);
-    return vFile;
+  private static PsiDirectory createSubdirectory(@Nullable final PsiDirectory dir, @Nullable final String name) {
+    assertNotNull(dir);
+    assertNotNull(name);
+    return ApplicationManager.getApplication().runWriteAction(new Computable<PsiDirectory>() {
+      @Override
+      public PsiDirectory compute() {
+        return dir.createSubdirectory(name);
+      }
+    });
   }
 }
