@@ -31,10 +31,12 @@ import com.intellij.openapi.editor.event.EditorFactoryEvent;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.updateSettings.impl.UpdateChecker;
+import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.io.HttpRequests;
+import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +48,7 @@ public class UpdateComponent implements ApplicationComponent, Disposable {
   private static final String PLUGIN_ID = "org.jetbrains.erlang";
   private static final String KEY = "erlang.last.update.timestamp";
   private static Logger LOG = Logger.getInstance(UpdateComponent.class);
-  private EditorFactoryAdapter myListener = new EditorFactoryAdapter() {
+  private final EditorFactoryAdapter myListener = new EditorFactoryAdapter() {
     @Override
     public void editorCreated(@NotNull EditorFactoryEvent event) {
       Document document = event.getEditor().getDocument();
@@ -96,7 +98,13 @@ public class UpdateComponent implements ApplicationComponent, Disposable {
                 @Nullable
                 @Override
                 public Object process(@NotNull HttpRequests.Request request) throws IOException {
-                  LOG.info("Updating: " + url);
+                  try {
+                    JDOMUtil.load(request.getReader());
+                    LOG.info((request.isSuccessful() ? "Successful" : "Unsuccessful") + " update: " + url);
+                  }
+                  catch (JDOMException e) {
+                    LOG.warn(e);
+                  }
                   return null;
                 }
               }
