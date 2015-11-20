@@ -30,7 +30,6 @@ import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
@@ -45,6 +44,7 @@ import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
@@ -59,12 +59,7 @@ import java.util.Collection;
 import java.util.List;
 
 public abstract class ErlangCompilationTestBase extends PlatformTestCase {
-  public static final String SDK_PATH = "/usr/lib/erlang/";
   protected CompilationRunner myCompilationRunner;
-
-  public ErlangCompilationTestBase() {
-    assertTrue("Unsupported OS.", SystemInfo.isLinux);
-  }
 
   @Override
   protected void setUp() throws Exception {
@@ -82,8 +77,10 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
   }
 
   private void createSdk() {
-    Sdk sdk = SdkConfigurationUtil.createAndAddSDK(SDK_PATH, ErlangSdkType.getInstance());
-    assertNotNull("Failed to setup an Erlang SDK at " + SDK_PATH, sdk);
+    Sdk sdk = SdkConfigurationUtil.createAndAddSDK(JpsErlangSdkType.getTestsSdkPath(), ErlangSdkType.getInstance());
+    if (sdk == null) {
+      fail(JpsErlangSdkType.getSdkConfigurationFailureMessage());
+    }
 
     // Erlang SDK can contain symlinks to files outside of allowed root set.
     // So we remove all roots from the sdk as we don't need SDK contents anyway.

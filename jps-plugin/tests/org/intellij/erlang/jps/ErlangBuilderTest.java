@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.jps;
 
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.PathUtilRt;
 import org.intellij.erlang.jps.model.JpsErlangModuleType;
@@ -31,9 +30,9 @@ import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.util.JpsPathUtil;
 
-public class ErlangBuilderTest extends JpsBuildTestCase {
-  public static final String ERLANG_SDK_PATH = "/usr/lib/erlang";
+import java.io.File;
 
+public class ErlangBuilderTest extends JpsBuildTestCase {
   public void testSimple() throws Exception {
     doSingleFileTest("src/simple.erl", "-module(simple). foo() -> ok.", "simple.beam");
   }
@@ -61,17 +60,14 @@ public class ErlangBuilderTest extends JpsBuildTestCase {
 
   @Override
   protected JpsSdk<JpsDummyElement> addJdk(String name, String path) {
-    String homePath = getErlangSdkPath();
+    String homePath = JpsErlangSdkType.getTestsSdkPath();
+    if (!new File(homePath).isDirectory()) {
+      fail(JpsErlangSdkType.getSdkConfigurationFailureMessage());
+    }
     String versionString = "R16B";
     JpsTypedLibrary<JpsSdk<JpsDummyElement>> jdk = myModel.getGlobal().addSdk(versionString, homePath, versionString, JpsErlangSdkType.INSTANCE);
     jdk.addRoot(JpsPathUtil.pathToUrl(homePath), JpsOrderRootType.COMPILED);
     return jdk.getProperties();
-  }
-
-  @NotNull
-  private static String getErlangSdkPath() {
-    if (SystemInfo.isLinux) return ERLANG_SDK_PATH;
-    throw new RuntimeException("Only linux supported");
   }
 
   @Override

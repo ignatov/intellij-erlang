@@ -17,7 +17,9 @@
 package org.intellij.erlang.jps.model;
 
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.jps.model.JpsDummyElement;
 import org.jetbrains.jps.model.JpsElementFactory;
 import org.jetbrains.jps.model.JpsElementTypeWithDefaultProperties;
@@ -31,6 +33,9 @@ public class JpsErlangSdkType extends JpsSdkType<JpsDummyElement> implements Jps
   public static final String BYTECODE_INTERPRETER = "erl";
   public static final String BYTECODE_COMPILER = "erlc";
   public static final String SCRIPT_INTERPRETER = "escript";
+
+  private static final String TESTS_SDK_PATH_PROPERTY = "erlang.sdk.path";
+  private static final String DEFAULT_TESTS_SDK_PATH = "/usr/lib/erlang/";
 
   @NotNull
   public static File getByteCodeInterpreterExecutable(@NotNull String sdkHome) {
@@ -56,6 +61,20 @@ public class JpsErlangSdkType extends JpsSdkType<JpsDummyElement> implements Jps
   @NotNull
   public static String getExecutableFileName(@NotNull String executableName) {
     return SystemInfo.isWindows ? executableName + ".exe" : executableName;
+  }
+
+  @TestOnly
+  @NotNull
+  public static String getTestsSdkPath() {
+    String sdkPathFromProperty = StringUtil.nullize(System.getProperty(TESTS_SDK_PATH_PROPERTY));
+    return StringUtil.notNullize(sdkPathFromProperty, DEFAULT_TESTS_SDK_PATH);
+  }
+
+  @TestOnly
+  @NotNull
+  public static String getSdkConfigurationFailureMessage() {
+    return "Failed to setup an Erlang SDK at " + getTestsSdkPath() +
+           "\nUse " + TESTS_SDK_PATH_PROPERTY + " system property to set sdk path";
   }
 
   @NotNull

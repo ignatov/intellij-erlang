@@ -44,6 +44,9 @@ allprojects {
     testLogging {
       exceptionFormat = 'full'
     }
+    systemProperties = [
+      "erlang.sdk.path": System.getProperty("erlang.sdk.path")
+    ]
   }
 }
 
