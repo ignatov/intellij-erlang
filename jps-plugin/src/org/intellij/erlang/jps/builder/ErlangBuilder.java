@@ -163,8 +163,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       for (File outputDir : outputDirectories) {
         File appConfigDst = getDestinationAppConfig(outputDir, appConfigSrc.getName());
         FileUtil.copy(appConfigSrc, appConfigDst);
-        reportMessage(context, String.format("Copy %s to %s", appConfigSrc.getAbsolutePath(), outputDir.getAbsolutePath()));
-        outputConsumer.registerOutputFile(appConfigDst, Collections.singletonList(appConfigSrc.getAbsolutePath()));
+        reportMessage(context, String.format("Copy %s to %s", ErlangBuilderUtil.getPath(appConfigSrc), ErlangBuilderUtil.getPath(outputDir)));
+        outputConsumer.registerOutputFile(appConfigDst, Collections.singletonList(ErlangBuilderUtil.getPath(appConfigSrc)));
       }
     }
   }
@@ -288,7 +288,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
       @NotNull
       @Override
       public String fun(@NotNull File file) {
-        return file.getAbsolutePath();
+        return ErlangBuilderUtil.getPath(file);
       }
     });
   }
@@ -365,6 +365,6 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   @NotNull
   private static File getBeam(@NotNull File outputDirectory, @NotNull String erlPath) {
     String name = FileUtil.getNameWithoutExtension(new File(erlPath));
-    return new File(outputDirectory.getAbsolutePath() + File.separator + name + ".beam");
+    return new File(outputDirectory, name + ".beam");
   }
 }

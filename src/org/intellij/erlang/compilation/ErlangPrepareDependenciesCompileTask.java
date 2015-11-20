@@ -27,6 +27,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Couple;
 import com.intellij.openapi.util.JDOMUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -161,6 +162,12 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     });
   }
 
+  @NotNull
+  private static String getPath(@NotNull VirtualFile file) {
+    File ioFile = VfsUtilCore.virtualToIoFile(file);
+    return ErlangBuilderUtil.getPath(ioFile);
+  }
+
   private static class ErlangFilesDependencyGraph implements GraphGenerator.SemiGraph<String> {
     private final Project myProject;
     private final PsiManager myPsiManager;
@@ -197,7 +204,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), new Function<VirtualFile, String>() {
         @Override
         public String fun(VirtualFile virtualFile) {
-          return virtualFile.getPath();
+          return getPath(virtualFile);
         }
       });
     }
@@ -233,7 +240,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
         ErlangFile psi = getErlangFile(file);
         addDeclaredDependencies(module, psi, dependencies);
         dependencies.addAll(globalParseTransforms);
-        myPathsToDependenciesMap.put(file.getPath(), ContainerUtil.newArrayList(dependencies));
+        myPathsToDependenciesMap.put(getPath(file), ContainerUtil.newArrayList(dependencies));
       }
     }
 
@@ -280,8 +287,9 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
         @Nullable
         @Override
         public String fun(ErlangFile erlangFile) {
-          VirtualFile virtualFile = erlangFile.getVirtualFile();
-          return virtualFile != null && myHeaders.contains(virtualFile.getPath()) ? virtualFile.getPath() : null;
+          VirtualFile file = erlangFile.getVirtualFile();
+          String path = file != null ? getPath(file) : null;
+          return path != null && myHeaders.contains(path) ? path : null;
         }
       });
     }
@@ -296,7 +304,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
         @Override
         public String fun(ErlangFile erlangFile) {
           VirtualFile virtualFile = erlangFile.getVirtualFile();
-          return virtualFile != null ? virtualFile.getPath() : null;
+          return virtualFile != null ? getPath(virtualFile) : null;
         }
       });
     }

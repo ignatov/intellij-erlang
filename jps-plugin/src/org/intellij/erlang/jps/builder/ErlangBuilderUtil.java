@@ -68,4 +68,9 @@ public class ErlangBuilderUtil {
     ErlangCompilerOptions options = extension != null ? extension.getOptions() : null;
     return options != null ? options : new ErlangCompilerOptions();
   }
+
+  @NotNull
+  public static String getPath(@NotNull File file) {
+    return file.getAbsolutePath();
+  }
 }

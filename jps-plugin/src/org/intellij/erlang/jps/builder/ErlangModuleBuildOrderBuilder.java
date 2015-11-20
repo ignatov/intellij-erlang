@@ -67,7 +67,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
       @Override
       protected String getDirtyElement(@NotNull File file) throws IOException {
         String fileName = file.getName();
-        return isSource(fileName) || isHeader(fileName) ? file.getAbsolutePath() : null;
+        return isSource(fileName) || isHeader(fileName) ? ErlangBuilderUtil.getPath(file) : null;
       }
     }.collectDirtyElements(holder);
 
