@@ -39,8 +39,12 @@ public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase 
 
   @Override
   protected void tearDown() throws Exception {
-    myCompilationRunner.tearDown();
-    super.tearDown();
+    try {
+      myCompilationRunner.tearDown();
+    }
+    finally {
+      super.tearDown();
+    }
   }
 
   public void testBuildWithGlobalParseTransform() throws Exception {

@@ -98,8 +98,12 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
   @Override
   protected void tearDown() throws Exception {
-    myCompilationRunner.tearDown();
-    super.tearDown();
+    try {
+      myCompilationRunner.tearDown();
+    }
+    finally {
+      super.tearDown();
+    }
   }
 
   @Override
