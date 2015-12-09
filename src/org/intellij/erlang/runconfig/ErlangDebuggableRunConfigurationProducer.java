@@ -82,7 +82,8 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
     }
   }
 
-  public static ErlangRunConfigurationBase.ErlangDebugOptions createDefaultDebugOptions(@NotNull Module module, boolean includeTests) {
+  @NotNull
+  public static ErlangRunConfigurationBase.ErlangDebugOptions createDefaultDebugOptions(@Nullable Module module, boolean includeTests) {
     ErlangRunConfigurationBase.ErlangDebugOptions debugOptions = new ErlangRunConfigurationBase.ErlangDebugOptions();
     debugOptions.setModulesNotToInterpret(getErlangModulesWithCallsToLoadNIF(module, includeTests));
     return debugOptions;
