@@ -35,6 +35,6 @@ public abstract class ErlangNamedStubbedPsiElementBase<T extends StubElement<?>>
   @Override
   public int getTextOffset() {
     PsiElement nameIdentifier = getNameIdentifier();
-    return nameIdentifier != null ? nameIdentifier.getTextOffset() : super.getTextOffset();
+    return nameIdentifier != null && nameIdentifier != this ? nameIdentifier.getTextOffset() : super.getTextOffset();
   }
 }
