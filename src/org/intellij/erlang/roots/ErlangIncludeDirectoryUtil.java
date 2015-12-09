@@ -20,6 +20,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.roots.ContentEntry;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
@@ -41,7 +42,11 @@ public final class ErlangIncludeDirectoryUtil {
   }
 
   public static void markAsIncludeDirectory(@NotNull ContentEntry contentEntry, @NotNull VirtualFile directory) {
-    contentEntry.addSourceFolder(directory, ErlangIncludeSourceRootType.INSTANCE);
+    String path = VfsUtilCore.urlToPath(directory.getUrl());
+    String rootPath = VfsUtilCore.urlToPath(contentEntry.getUrl());
+    if (FileUtil.isAncestor(rootPath, path, false)) {
+      contentEntry.addSourceFolder(directory, ErlangIncludeSourceRootType.INSTANCE);
+    }
   }
 
   public static void markAsIncludeDirectory(@NotNull Module module, @NotNull VirtualFile directory) {
