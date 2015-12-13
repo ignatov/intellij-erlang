@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Set;
 
 public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider, DumbAware {
-
   @Override
   public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
     return null; //do nothing
@@ -71,14 +70,13 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
 
   private static class RecursiveMethodCallMarkerInfo extends LineMarkerInfo<PsiElement> {
     private RecursiveMethodCallMarkerInfo(@NotNull PsiElement methodCall) {
-
       super(methodCall,
-        methodCall.getTextRange(),
-        ErlangIcons.RECURSIVE_CALL,
-        Pass.UPDATE_OVERRIDEN_MARKERS,
-        FunctionUtil.<PsiElement, String>constant("Recursive call"),
-        null,
-        GutterIconRenderer.Alignment.RIGHT
+            methodCall.getTextRange(),
+            ErlangIcons.RECURSIVE_CALL,
+            Pass.UPDATE_OVERRIDEN_MARKERS,
+            FunctionUtil.<PsiElement, String>constant("Recursive call"),
+            null,
+            GutterIconRenderer.Alignment.RIGHT
       );
     }
   }
