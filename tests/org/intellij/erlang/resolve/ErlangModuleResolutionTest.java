@@ -54,6 +54,7 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
 
   public void testKernelModulesAppearFirst() { doModuleRefTest("kernel-2.15.2/src/file.erl", "test.erl", "file.erl"); }
   public void testStdlibModulesAppearFirst() { doModuleRefTest("stdlib-1.18.2/src/io.erl", "test.erl", "io.erl"); }
+  public void testUserModulesAppearFirst()   { doModuleRefTest("eunit.erl", "test.erl", "eunit.erl"); }
 
   public void testModuleVariableInSpec() { doParameterTest("variableInArguments.erl", "variableInArguments.erl"); }
   public void testModuleTypeInSpec()     { doParameterTest("typeInArguments.erl", "typeInArguments.erl"); }
@@ -76,7 +77,8 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
     VirtualFile virtualFile = containingFile != null ? containingFile.getVirtualFile() : null;
     assertNotNull(virtualFile);
     String actualModulePath = virtualFile.getPath();
-    assertTrue(actualModulePath.endsWith(expectedPath));
+    assertTrue("Expected path: *" + expectedPath + ", Actual: " + actualModulePath,
+               actualModulePath.endsWith(expectedPath));
   }
   //TODO add small IDE tests
   //TODO test source roots are preferred to plain directories
