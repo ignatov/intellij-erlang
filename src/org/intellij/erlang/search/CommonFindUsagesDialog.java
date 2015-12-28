@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 
 public class CommonFindUsagesDialog extends AbstractFindUsagesDialog {
-  @NotNull protected final PsiElement myPsiElement;
+  @NotNull private final PsiElement myPsiElement;
 
   public CommonFindUsagesDialog(@NotNull PsiElement element,
                                 @NotNull Project project,
