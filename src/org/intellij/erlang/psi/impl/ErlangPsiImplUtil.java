@@ -91,7 +91,9 @@ public class ErlangPsiImplUtil {
   );
   public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 
+  @NotNull
   private static Pattern ATOM_PATTERN = Pattern.compile("[a-z][a-zA-Z_@0-9]*");
+  @NotNull
   private static Pattern QUOTED_ATOM_NAME = Pattern.compile("(\\\\\\^.|\\\\.|[^'])*"); //see https://github.com/rvirding/leex/blob/master/examples/erlang_scan.xrl
 
   private ErlangPsiImplUtil() {
@@ -472,7 +474,7 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangMacrosDefinition.class) != null;
   }
 
-  public static boolean inMacroCallArguments(PsiElement psiElement) {
+  public static boolean inMacroCallArguments(@NotNull PsiElement psiElement) {
     PsiElement child = psiElement;
     ErlangFunctionCallExpression functionCall;
     while ((functionCall = PsiTreeUtil.getParentOfType(child, ErlangFunctionCallExpression.class, true)) != null) {
@@ -629,7 +631,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static InsertHandler<LookupElement> getInsertHandler(final String name, final int arity, boolean withArity) {
+  private static InsertHandler<LookupElement> getInsertHandler(@NotNull final String name, final int arity, boolean withArity) {
     return getInsertHandler(name, null, arity, withArity);
   }
 
@@ -889,15 +891,15 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static ErlangFunction resolveToFunction(@Nullable ErlangFunctionCallExpression call) {
+  private static ErlangFunction resolveToFunction(@Nullable ErlangFunctionCallExpression call) {
     PsiReference reference = call != null ? call.getReference() : null;
     PsiElement resolvedFunction = reference != null ? reference.resolve() : null;
     return ObjectUtils.tryCast(resolvedFunction, ErlangFunction.class);
   }
 
   @Nullable
-  public static ErlangExpression getFunctionCallArgument(@NotNull ErlangFunctionCallExpression call,
-                                                         @Nullable PsiElement child) {
+  private static ErlangExpression getFunctionCallArgument(@NotNull ErlangFunctionCallExpression call,
+                                                          @Nullable PsiElement child) {
     ErlangArgumentList argumentList = call.getArgumentList();
     PsiElement argument = child;
     PsiElement parent;
@@ -907,7 +909,7 @@ public class ErlangPsiImplUtil {
     return ObjectUtils.tryCast(argument, ErlangExpression.class);
   }
 
-  public static int getPositionInFunctionCall(@NotNull ErlangFunctionCallExpression call, @Nullable PsiElement child) {
+  private static int getPositionInFunctionCall(@NotNull ErlangFunctionCallExpression call, @Nullable PsiElement child) {
     return call.getArgumentList().getExpressionList().indexOf(getFunctionCallArgument(call, child));
   }
 
@@ -1032,7 +1034,7 @@ public class ErlangPsiImplUtil {
     return processDeclarationRecursive(o, processor, state);
   }
 
-  private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, ResolveState state) {
+  private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state) {
     Queue<ErlangCompositeElement> queue = new LinkedList<ErlangCompositeElement>();
     queue.add(o);
     while (!queue.isEmpty()) {
@@ -1048,7 +1050,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
+  private static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
     HashSet<ErlangFile> includedFiles = new HashSet<ErlangFile>();
     addIncludedFiles(file, includedFiles);
     return includedFiles;
@@ -1105,7 +1107,8 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<ErlangFile> getDirectlyIncludedFiles(@Nullable ErlangIncludeString includeString, @NotNull ErlangFile erlangFile) {
+  private static List<ErlangFile> getDirectlyIncludedFiles(@Nullable ErlangIncludeString includeString,
+                                                           @NotNull ErlangFile erlangFile) {
     if (includeString == null) return ContainerUtil.emptyList();
     VirtualFile containingVirtualFile = erlangFile.getOriginalFile().getVirtualFile();
     VirtualFile parent = containingVirtualFile != null ? containingVirtualFile.getParent() : null;
@@ -1422,7 +1425,8 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project, @NotNull String moduleName) {
+  private static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project,
+                                                                       @NotNull String moduleName) {
     List<ErlangFunction> result = ContainerUtil.newArrayList();
     List<ErlangFile> erlangModules = ErlangModuleIndex.getFilesByName(project, moduleName, GlobalSearchScope.allScope(project));
     for (ErlangFile file : erlangModules) {
@@ -1474,7 +1478,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static Integer getArity(@NotNull ErlangSpecFun o) {
+  private static Integer getArity(@NotNull ErlangSpecFun o) {
     PsiElement integer = o.getInteger();
     Integer arity = null;
     if (integer != null) arity = getArity(integer);
@@ -1587,7 +1591,7 @@ public class ErlangPsiImplUtil {
     return isEunitTestFunctionName(name) || isEunitTestGeneratorFunctionName(name);
   }
 
-  public static boolean isEunitTestFunctionName(@NotNull String functionName) {
+  private static boolean isEunitTestFunctionName(@NotNull String functionName) {
     return StringUtil.endsWith(functionName, "_test");
   }
 
@@ -1696,7 +1700,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  public static ErlangFunTypeSigs getFunTypeSigs(@NotNull ErlangCallbackSpec spec) {
+  private static ErlangFunTypeSigs getFunTypeSigs(@NotNull ErlangCallbackSpec spec) {
     ErlangFunTypeSigs funTypeSigs = spec.getFunTypeSigs();
     if (funTypeSigs == null) {
       ErlangFunTypeSigsBraces braces = spec.getFunTypeSigsBraces();
@@ -1905,7 +1909,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  private static String getNameFromStub(StubBasedPsiElement element) {
+  private static String getNameFromStub(@NotNull StubBasedPsiElement element) {
     NamedStubBase<?> stub = ObjectUtils.tryCast(element.getStub(), NamedStubBase.class);
     return stub != null ? StringUtil.notNullize(stub.getName()) : null;
   }
