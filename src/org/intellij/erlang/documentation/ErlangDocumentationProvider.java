@@ -92,6 +92,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Nullable
   @Override
   public String fetchExternalDocumentation(Project project, PsiElement element, List<String> docUrls) {
+    //TODO Encode all the info you need in URLs and do not use PSI here.
     ElementDocProvider docProvider = ElementDocProviderFactory.create(element);
     return docProvider instanceof ErlangSdkDocProviderBase ? docProvider.getDocText() : null;
   }
