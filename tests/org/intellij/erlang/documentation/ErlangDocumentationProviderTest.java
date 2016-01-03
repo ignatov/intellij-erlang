@@ -33,6 +33,8 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 @SuppressWarnings("ConstantConditions")
 public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private ErlangDocumentationProvider myErlangDocProvider;
@@ -66,7 +68,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testGenerateDocSdkBif() {
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -91,7 +93,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testGenerateDocSdkFunction() {
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -114,7 +116,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testGenerateDocSdkFunctionMulti() {
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -158,7 +160,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testGenerateDocSdkLastFunction() {
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -196,7 +198,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testGenerateDocSdkModule() {
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -243,7 +245,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testGenerateDocSdkType() {
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -257,7 +259,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testGenerateDocSdkLastType() {
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -274,7 +276,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   public void testLinkConverterLocal() {
     // <a href="#write_$FUNC$-$ARITY$">
     // <a href="#type-$TYPE$">
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -297,7 +299,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   public void testLinkConverterErlRef() {
     // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html#type-$TYPE$');">
     // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html');">
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -324,7 +326,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
 
   public void testLinkConverterErlRef2() {
     // <a href="javascript:erlhref('$REL-PATH$','$APPLICATION$','$MODULE$.html#$FUNCTION$-$ARITY$');">
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -378,7 +380,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   public void testLinkConverterInModule() {
     // <a href="$MODULE$.html#$FUNCTION$-$ARITY$">
     // <a href="$MODULE$.html#type-$TYPE$">
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -426,7 +428,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testLinkConverterWithLineBreak() {
-    doTestGenerateDoc(
+    doTestExternalDoc(
       "<html>\n" +
         ErlangSdkDocProviderBase.HTTP_STYLE +
         "<body>\n" +
@@ -525,9 +527,10 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertEquals(expected, myErlangDocProvider.getUrlFor(element, null).get(0));
   }
 
-  private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
+  private void doTestExternalDoc(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
-    assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
+    List<String> urls = myErlangDocProvider.getUrlFor(element, null);
+    assertEquals(expected, myErlangDocProvider.fetchExternalDocumentation(getProject(), element, urls));
   }
 
   @NotNull

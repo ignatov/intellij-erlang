@@ -17,6 +17,7 @@
 package org.intellij.erlang.documentation;
 
 import com.intellij.lang.documentation.AbstractDocumentationProvider;
+import com.intellij.lang.documentation.ExternalDocumentationProvider;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -31,7 +32,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
+public class ErlangDocumentationProvider extends AbstractDocumentationProvider implements ExternalDocumentationProvider {
   private static final Pattern PATTERN_PSI_LINK = Pattern.compile("(.+?)(#(.*?)-(.*?))?");
 
   @Nullable
@@ -48,7 +49,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
   @Override
   public String generateDoc(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
     ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
-    if (elementDocProvider != null) {
+    if (elementDocProvider != null && !(elementDocProvider instanceof ErlangSdkDocProviderBase)) {
       return elementDocProvider.getDocText();
     }
     return null;
@@ -86,5 +87,26 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider {
       }
     }
     return super.getDocumentationElementForLink(psiManager, link, context);
+  }
+
+  @Nullable
+  @Override
+  public String fetchExternalDocumentation(Project project, PsiElement element, List<String> docUrls) {
+    ElementDocProvider docProvider = ElementDocProviderFactory.create(element);
+    return docProvider instanceof ErlangSdkDocProviderBase ? docProvider.getDocText() : null;
+  }
+
+  @Override
+  public boolean hasDocumentationFor(PsiElement element, PsiElement originalElement) {
+    return ElementDocProviderFactory.create(element) instanceof ErlangSdkDocProviderBase;
+  }
+
+  @Override
+  public boolean canPromptToConfigureDocumentation(PsiElement element) {
+    return false;
+  }
+
+  @Override
+  public void promptToConfigureDocumentation(PsiElement element) {
   }
 }
