@@ -18,12 +18,15 @@ package org.intellij.erlang.documentation;
 
 import com.intellij.lang.documentation.AbstractDocumentationProvider;
 import com.intellij.lang.documentation.ExternalDocumentationProvider;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -91,10 +94,16 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
 
   @Nullable
   @Override
-  public String fetchExternalDocumentation(Project project, PsiElement element, List<String> docUrls) {
-    //TODO Encode all the info you need in URLs and do not use PSI here.
-    ElementDocProvider docProvider = ElementDocProviderFactory.create(element);
-    return docProvider instanceof ErlangSdkDocProviderBase ? docProvider.getDocText() : null;
+  public String fetchExternalDocumentation(Project project, final PsiElement element, List<String> docUrls) {
+    ErlangSdkDocProviderBase externalDocProvider =
+      ApplicationManager.getApplication().runReadAction(new Computable<ErlangSdkDocProviderBase>() {
+        @Nullable
+        @Override
+        public ErlangSdkDocProviderBase compute() {
+          return ObjectUtils.tryCast(ElementDocProviderFactory.create(element), ErlangSdkDocProviderBase.class);
+        }
+      });
+    return externalDocProvider != null ? externalDocProvider.getDocText() : null;
   }
 
   @Override
