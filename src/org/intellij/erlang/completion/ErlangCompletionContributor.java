@@ -21,6 +21,7 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.IdeActions;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
@@ -44,6 +45,7 @@ import com.intellij.util.Function;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.containers.JBIterable;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
@@ -378,7 +380,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
   private static LookupElementBuilder getDefaultPathLookupElementBuilder(@NotNull String includeText, @NotNull VirtualFile lookedUpFile, @Nullable String appName) {
     String slash = lookedUpFile.isDirectory() ? "/" : "";
-    Icon icon = lookedUpFile.isDirectory() ? ErlangIcons.MODULE : ErlangFileType.getIconForFile(lookedUpFile.getName());
+    Icon icon = lookedUpFile.isDirectory() ? ErlangIcons.MODULE : lookedUpFile.getFileType().getIcon();
     return LookupElementBuilder.create(getCompletedString(includeText, lookedUpFile, appName))
                                .withPresentableText(lookedUpFile.getName() + slash)
                                .withIcon(icon)
@@ -395,23 +397,29 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
   private static void addMatchingFiles(VirtualFile searchRoot, @NotNull String includeText, @NotNull List<VirtualFile> result) {
     String[] split = includeText.split("/");
+    if (split.length == 0) return;
 
-    if (split.length != 0) {
-      int joinEndIndex = includeText.endsWith("/") ? split.length : split.length - 1;
-      String childPrefix = joinEndIndex == split.length ? "" : split[split.length - 1];
-      VirtualFile directory = VfsUtilCore.findRelativeFile(StringUtil.join(split, 0, joinEndIndex, "/"), searchRoot);
-      VirtualFile[] children = directory != null ? directory.getChildren() : null;
+    int joinEndIndex = includeText.endsWith("/") ? split.length : split.length - 1;
+    final String childPrefix = joinEndIndex == split.length ? "" : split[split.length - 1];
+    VirtualFile directory = VfsUtilCore.findRelativeFile(StringUtil.join(split, 0, joinEndIndex, "/"), searchRoot);
+    VirtualFile[] children = directory != null ? directory.getChildren() : null;
+    if (children == null) return;
 
-      if (children == null) return;
-
-      for (VirtualFile child : children) {
-        ErlangFileType childType = ErlangFileType.getFileType(child.getName());
-        if (child.getName().startsWith(childPrefix) &&
-            (child.isDirectory() || childType == ErlangFileType.HEADER || childType == ErlangFileType.MODULE)) {
-          result.add(child);
+    JBIterable
+      .of(children)
+      .filter(new Condition<VirtualFile>() {
+        @Override
+        public boolean value(VirtualFile child) {
+          return child.getName().startsWith(childPrefix) && (child.isDirectory() || canBeIncluded(child));
         }
-      }
-    }
+
+        private boolean canBeIncluded(@NotNull VirtualFile file) {
+          FileType type = file.getFileType();
+          return type == ErlangFileType.HEADER ||
+                 type == ErlangFileType.MODULE;
+        }
+      })
+      .addAllTo(result);
   }
 
   private static boolean prevIsRadix(@Nullable PsiElement element) {

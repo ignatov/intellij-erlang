@@ -17,6 +17,7 @@
 package org.intellij.erlang.psi.impl;
 
 import com.intellij.extapi.psi.PsiFileBase;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.Condition;
@@ -301,8 +302,29 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @NotNull
   @Override
   public FileType getFileType() {
-    ErlangFileType type = ErlangFileType.getFileType(getName());
-    return type != null ? type : ErlangFileType.MODULE;
+    FileType fileType = getViewProvider().getFileType();
+    if (!(fileType instanceof ErlangFileType)) {
+      return getFileTypeForTests();
+    }
+    return fileType;
+  }
+
+  @NotNull
+  private FileType getFileTypeForTests() {
+    // when in unit test mode fileViewProvider gets replaced by a mock and we don't get filetype set correctly
+
+    assert ApplicationManager.getApplication().isUnitTestMode() :
+      "This method should only be called in unit tests";
+
+    String extension = PathUtil.getFileExtension(getName());
+    for (ErlangFileType type : ErlangFileType.TYPES) {
+      for (String defaultExtension : type.getDefaultExtensions()) {
+        if (StringUtil.equalsIgnoreCase(defaultExtension, extension)) {
+          return type;
+        }
+      }
+    }
+    return ErlangFileType.MODULE;
   }
 
   @Nullable

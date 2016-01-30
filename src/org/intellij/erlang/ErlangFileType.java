@@ -16,140 +16,125 @@
 
 package org.intellij.erlang;
 
+import com.intellij.openapi.fileTypes.ExtensionFileNameMatcher;
+import com.intellij.openapi.fileTypes.FileTypeConsumer;
 import com.intellij.openapi.fileTypes.LanguageFileType;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.jps.model.fileTypes.FileNameMatcherFactory;
 
 import javax.swing.*;
+import java.util.List;
 
-public class ErlangFileType extends LanguageFileType {
-  public static ErlangFileType MODULE = new ErlangFileType();
-  public static HrlFileType HEADER = new HrlFileType();
-  public static AppFileType APP = new AppFileType();
-  public static ErlangTermsFileType TERMS = new ErlangTermsFileType();
+public abstract class ErlangFileType extends LanguageFileType {
+  public static ErlangFileType MODULE = new ModuleFileType();
+  public static ErlangFileType HEADER = new HrlFileType();
+  public static ErlangFileType APP = new AppFileType();
+  public static ErlangFileType TERMS = new ErlangTermsFileType();
+  public static List<ErlangFileType> TYPES = ContainerUtil.immutableList(MODULE, HEADER, APP, TERMS);
 
-  protected ErlangFileType() {
+  private final String myName;
+  private final String myDescription;
+  private final Icon myIcon;
+  private final List<String> myExtensions;
+
+  private ErlangFileType(
+    @NotNull String name,
+    @NotNull String description,
+    @NotNull Icon icon,
+    @NotNull String... extensions) {
     super(ErlangLanguage.INSTANCE);
+
+    myName = name;
+    myDescription = description;
+    myIcon = icon;
+    myExtensions = ContainerUtil.immutableList(extensions);
   }
 
   @NotNull
   @Override
-  public String getName() {
-    return "Erlang";
+  public final String getName() {
+    return myName;
   }
 
   @NotNull
   @Override
-  public String getDescription() {
-    return "Erlang";
-  }
-
-  @NotNull
-  @Override
-  public String getDefaultExtension() {
-    return "erl";
-  }
-
-  @Override
-  public Icon getIcon() {
-    return ErlangIcons.FILE;
-  }
-
-  public static class HrlFileType extends ErlangFileType {
-    @NotNull
-    @Override
-    public String getName() {
-      return "Erlang Header";
-    }
-
-    @NotNull
-    @Override
-    public String getDescription() {
-      return "Erlang/OTP Header File";
-    }
-
-    @NotNull
-    @Override
-    public String getDefaultExtension() {
-      return "hrl";
-    }
-
-    @Override
-    public Icon getIcon() {
-      return ErlangIcons.HEADER;
-    }
-  }
-
-  public static class AppFileType extends ErlangFileType {
-    @NotNull
-    @Override
-    public String getName() {
-      return "Erlang/OTP app";
-    }
-
-    @NotNull
-    @Override
-    public String getDescription() {
-      return "Erlang/OTP Application Resource File";
-    }
-
-    @NotNull
-    @Override
-    public String getDefaultExtension() {
-      return "app";
-    }
-
-    @Override
-    public Icon getIcon() {
-      return ErlangIcons.OTP_APP_RESOURCE;
-    }
-
-    @NotNull
-    public static String getExtensionForBuildTools() {
-      return "app.src";
-    }
-  }
-
-  public static class ErlangTermsFileType extends ErlangFileType {
-    @NotNull
-    @Override
-    public String getName() {
-      return "Erlang Terms";
-    }
-
-    @NotNull
-    @Override
-    public String getDescription() {
-      return "Erlang Terms File";
-    }
-
-    @NotNull
-    @Override
-    public String getDefaultExtension() {
-      return "config";
-    }
-
-    @Override
-    public Icon getIcon() {
-      return ErlangIcons.TERMS;
-    }
+  public final String getDescription() {
+    return myDescription;
   }
 
   @Nullable
-  public static ErlangFileType getFileType(String filename) {
-    if (filename == null) return null;
-    if (filename.endsWith(MODULE.getDefaultExtension())) return MODULE;
-    if (filename.endsWith(HEADER.getDefaultExtension())) return HEADER;
-    if (filename.endsWith(APP.getDefaultExtension()) ||
-        filename.endsWith(AppFileType.getExtensionForBuildTools())) return APP;
-    if (filename.endsWith(TERMS.getDefaultExtension())) return TERMS;
-    return null;
+  @Override
+  public final Icon getIcon() {
+    return myIcon;
   }
 
-  @Nullable
-  public static Icon getIconForFile(String filename) {
-    ErlangFileType fileType = getFileType(filename);
-    return fileType == null ? null : fileType.getIcon();
+  @NotNull
+  @Override
+  public final String getDefaultExtension() {
+    return myExtensions.get(0);
+  }
+
+  @NotNull
+  public final List<String> getDefaultExtensions() {
+    return myExtensions;
+  }
+
+  public void register(@NotNull FileTypeConsumer registrar) {
+    registrar.consume(this, StringUtil.join(myExtensions, FileTypeConsumer.EXTENSION_DELIMITER));
+  }
+
+
+  private static class ModuleFileType extends ErlangFileType {
+    private ModuleFileType() {
+      super("Erlang",
+            "Erlang",
+            ErlangIcons.FILE,
+            "erl");
+    }
+  }
+
+  private static class HrlFileType extends ErlangFileType {
+    private HrlFileType() {
+      super("Erlang Header",
+            "Erlang/OTP Header File",
+            ErlangIcons.HEADER,
+            "hrl");
+    }
+  }
+
+  private static class AppFileType extends ErlangFileType {
+    private static final String APP = "app";
+    private static final String APP_SRC = "app.src";
+
+    private AppFileType() {
+      super("Erlang/OTP app",
+            "Erlang/OTP Application Resource File",
+            ErlangIcons.OTP_APP_RESOURCE,
+            APP,
+            APP_SRC);
+    }
+
+    @Override
+    public void register(@NotNull FileTypeConsumer registrar) {
+      // if we feed "app.src" as an extension, it may get compared to extension part of file name and won't match.
+      registrar.consume(this,
+                        new ExtensionFileNameMatcher(APP),
+                        FileNameMatcherFactory.getInstance().createMatcher("*." + APP_SRC));
+    }
+  }
+
+  private static class ErlangTermsFileType extends ErlangFileType {
+    private ErlangTermsFileType() {
+      super("Erlang Terms",
+            "Erlang Terms File",
+            ErlangIcons.TERMS,
+            "config",
+            "routes",
+            "rel");
+    }
   }
 }

@@ -1,0 +1,13 @@
+{paths, ["apps", "deps"]}.
+
+{release, {querl, "0.0.1"},
+ [querl,
+  frontend,
+  jsx,
+  cowboy,
+  ranch,
+  goldrush,
+  lager
+ ]}.
+{extended_start_script, true}.
+{sys_config, "./config/sys.config"}.

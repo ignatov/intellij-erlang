@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2016 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package org.intellij.erlang;
+package org.intellij.erlang.parser;
 
-import com.intellij.openapi.fileTypes.FileTypeConsumer;
-import com.intellij.openapi.fileTypes.FileTypeFactory;
-import org.jetbrains.annotations.NotNull;
+import org.intellij.erlang.ErlangParserDefinition;
 
-public class ErlangFileTypeFactory extends FileTypeFactory {
-  @Override
-  public void createFileTypes(@NotNull FileTypeConsumer fileTypeConsumer) {
-    for (ErlangFileType type : ErlangFileType.TYPES) {
-      type.register(fileTypeConsumer);
-    }
+public class ErlangReleaseFileParserTest extends ErlangParserTestBase {
+  private static final boolean OVERRIDE_TEST_DATA = false;
+
+  public ErlangReleaseFileParserTest() {
+    super("parser", "rel", OVERRIDE_TEST_DATA, new ErlangParserDefinition());
   }
+
+  public void testRelease() { doTest(true, false); }
 }
