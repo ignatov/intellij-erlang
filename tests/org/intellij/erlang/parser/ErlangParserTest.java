@@ -97,4 +97,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testQuotedAtomFollowedByQuote() { doTest(true, true); }
   public void testOptionalCallbacksRecovery() { doTest(true, true); }
   public void testWhitespaceEscapeInCharLiterals() { doTest(true, false); }
+  public void testMacroCallsInCompoundStringLiterals() { doTest(true, false); }
 }

@@ -10,6 +10,9 @@ public interface ErlangConfigExpression extends ErlangExpression {
   @Nullable
   ErlangExpression getExpression();
 
+  @NotNull
+  List<ErlangMacros> getMacrosList();
+
   @Nullable
   ErlangQAtom getQAtom();
 

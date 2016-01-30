@@ -1153,7 +1153,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom !'(' | integer | string_literal+ | float | char
+  // q_atom !'(' | integer | (string_literal | macros)+ | float | char
   static boolean atomic(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic")) return false;
     boolean r;
@@ -1188,18 +1188,29 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // string_literal+
+  // (string_literal | macros)+
   private static boolean atomic_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic_2")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = string_literal(b, l + 1);
+    r = atomic_2_0(b, l + 1);
     int c = current_position_(b);
     while (r) {
-      if (!string_literal(b, l + 1)) break;
+      if (!atomic_2_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "atomic_2", c)) break;
       c = current_position_(b);
     }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // string_literal | macros
+  private static boolean atomic_2_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_2_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = string_literal(b, l + 1);
+    if (!r) r = macros(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }

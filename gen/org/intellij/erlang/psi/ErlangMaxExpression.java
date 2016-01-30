@@ -10,6 +10,9 @@ public interface ErlangMaxExpression extends ErlangExpression {
   @NotNull
   List<ErlangExpression> getExpressionList();
 
+  @NotNull
+  List<ErlangMacros> getMacrosList();
+
   @Nullable
   ErlangQAtom getQAtom();
 
