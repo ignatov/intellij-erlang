@@ -19,10 +19,8 @@ package org.intellij.erlang.parser;
 import org.intellij.erlang.ErlangParserDefinition;
 
 public class ErlangConfigParserTest extends ErlangParserTestBase {
-  private static final boolean OVERRIDE_TEST_DATA = false;
-
   public ErlangConfigParserTest() {
-    super("parser", "config", OVERRIDE_TEST_DATA, new ErlangParserDefinition());
+    super("parser", "config", new ErlangParserDefinition());
   }
 
   public void testRebar()        { doTest(true, false); }
