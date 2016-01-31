@@ -23,6 +23,6 @@ public class ErlangConfigParserTest extends ErlangParserTestBase {
     super("parser", "config", new ErlangParserDefinition());
   }
 
-  public void testRebar()        { doTest(true, false); }
-  public void testErlang17Maps() { doTest(true, false); }
+  public void testRebar()        { doTest(false); }
+  public void testErlang17Maps() { doTest(false); }
 }

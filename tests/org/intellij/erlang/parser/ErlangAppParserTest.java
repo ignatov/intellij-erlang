@@ -23,8 +23,8 @@ public class ErlangAppParserTest extends ErlangParserTestBase {
     super("parser", "app", new ErlangParserDefinition());
   }
 
-  public void testAllParameters()         { doTest(true, false); }
-  public void testRtbCoordinator()        { doTest(true, false); }
-  public void testNonExistentParameters() { doTest(true, false); }
-  public void test254()                   { doTest(true, true); }
+  public void testAllParameters()         { doTest(false); }
+  public void testRtbCoordinator()        { doTest(false); }
+  public void testNonExistentParameters() { doTest(false); }
+  public void test254()                   { doTest(true);  }
 }

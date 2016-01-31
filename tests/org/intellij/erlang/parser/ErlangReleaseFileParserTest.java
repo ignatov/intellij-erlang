@@ -23,5 +23,5 @@ public class ErlangReleaseFileParserTest extends ErlangParserTestBase {
     super("parser", "rel", new ErlangParserDefinition());
   }
 
-  public void testRelease() { doTest(true, false); }
+  public void testRelease() { doTest(false); }
 }

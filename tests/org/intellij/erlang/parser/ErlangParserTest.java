@@ -22,78 +22,78 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public ErlangParserTest() {
     super("parser", "erl", new ErlangParserDefinition());
   }
-
-  public void testHelloWorld()        { doTest(true, false); }
-  public void testExport()            { doTest(true, false); }
-  public void testH()                 { doTest(true, false); }
-  public void testMnesia()            { doTest(true, false); }
-  public void testIsDigits()          { doTest(true, false); }
-  public void testDialyzerDataflow()  { doTest(true, false); }
-  public void testTest()              { doTest(true, false); }
-  public void testRecords()           { doTest(true, false); }
-  public void testDialyzerClParse()   { doTest(true, false); }
-  public void testMp4Mux()            { doTest(true, false); }
-  public void testComments()          { doTest(true, false); }
-  public void testMultiline()         { doTest(true, false); }
-  public void testRecordExpression()  { doTest(true, false); }
-  public void testPeriods()           { doTest(true, true);  }
-  public void test19()                { doTest(true, true);  }
-  public void test25()                { doTest(true, false); }
-  public void test26()                { doTest(true, false); }
-  public void testFailedRecord()      { doTest(true, true);  }
-  public void testRecords2()          { doTest(true, false); }
-  public void testAtomWithArity()     { doTest(true, false); }
-  public void testNoAtomsWithArity()  { doTest(true, false); }
-  public void test77()                { doTest(true, false); }
-  public void test74()                { doTest(true, false); }
-  public void testErrors()            { doTest(true, true);  }
-  public void test51()                { doTest(true, false); } // performance
-  public void test96()                { doTest(true, false); }
-  public void test30()                { doTest(true, true);  }
-  public void test127()               { doTest(true, true);  }
-  public void testMeck()              { doTest(true, false); }
-  public void test145()               { doTest(true, false); }
-  public void test145_2()             { doTest(true, false); }
-  public void test29()                { doTest(true, false); }
-  public void testEmptyRecord()       { doTest(true, false); }
-  public void testTypeAgain()         { doTest(true, false); }
-  public void testTest2()             { doTest(true, true);  }
-  public void testDebug()             { doTest(true, true);  }
-  public void testDebug2()            { doTest(true, true);  }
-  public void test175()               { doTest(true, true);  }
-  public void test182()               { doTest(true, true);  }
-  public void test183()               { doTest(true, true);  }
-  public void test210()               { doTest(true, false); }
-  public void test213()               { doTest(true, false); }
-  public void test223()               { doTest(true, false); }
-  public void testQuotation()         { doTest(true, true);  }
-  public void testRiakHacks()         { doTest(true, true);  }
-  public void testRecover()           { doTest(true, true);  }
-  public void testRecover2()          { doTest(true, true);  }
-  public void testBeginEnd()          { doTest(true, true);  }
-  public void testBeginEnd2()         { doTest(true, true);  }
-  public void test296()               { doTest(true, true);  }
-  public void test304()               { doTest(true, true);  }
-  public void test305()               { doTest(true, true);  }
-  public void test306()               { doTest(true, true);  }
-  public void testEscriptShebang1()   { doTest(true, false); }
-  public void testEscriptShebang2()   { doTest(true, true);  }
-  public void test325()               { doTest(true, true);  }
-  public void test390()               { doTest(true, true);  }
-  public void testMapConstruct()      { doTest(true, false); }
-  public void testMapSingleValueAcc() { doTest(true, false); }
-  public void testMapUpdate()         { doTest(true, false); }
-  public void testMapMatch()          { doTest(true, false); }
-  public void testMapTypes()          { doTest(true, false); }
-  public void testComprehensions()    { doTest(true, false); }
-  public void testMacrosHacks()       { doTest(true, false); }
-  public void testMacrosUnderscore()  { doTest(true, false); }
-  public void testOptionalCallbacks() { doTest(true, false); }
-  public void testComprehensionsRecovery() { doTest(true, true); }
-  public void testSendExpressionPriority() { doTest(true, false); }
-  public void testLongListExpression632()  { doTest(false, false); }
-  public void testQuotedAtomFollowedByQuote() { doTest(true, true); }
-  public void testOptionalCallbacksRecovery() { doTest(true, true); }
-  public void testWhitespaceEscapeInCharLiterals() { doTest(true, false); }
-  public void testMacroCallsInCompoundStringLiterals() { doTest(true, false); }
+                  
+  public void testHelloWorld()                          { doTest(false); }
+  public void testExport()                              { doTest(false); }
+  public void testH()                                   { doTest(false); }
+  public void testMnesia()                              { doTest(false); }
+  public void testIsDigits()                            { doTest(false); }
+  public void testDialyzerDataflow()                    { doTest(false); }
+  public void testTest()                                { doTest(false); }
+  public void testRecords()                             { doTest(false); }
+  public void testDialyzerClParse()                     { doTest(false); }
+  public void testMp4Mux()                              { doTest(false); }
+  public void testComments()                            { doTest(false); }
+  public void testMultiline()                           { doTest(false); }
+  public void testRecordExpression()                    { doTest(false); }
+  public void testPeriods()                             { doTest(true);  }
+  public void test19()                                  { doTest(true);  }
+  public void test25()                                  { doTest(false); }
+  public void test26()                                  { doTest(false); }
+  public void testFailedRecord()                        { doTest(true);  }
+  public void testRecords2()                            { doTest(false); }
+  public void testAtomWithArity()                       { doTest(false); }
+  public void testNoAtomsWithArity()                    { doTest(false); }
+  public void test77()                                  { doTest(false); }
+  public void test74()                                  { doTest(false); }
+  public void testErrors()                              { doTest(true);  }
+  public void test51()                                  { doTest(false); } // performance
+  public void test96()                                  { doTest(false); }
+  public void test30()                                  { doTest(true);  }
+  public void test127()                                 { doTest(true);  }
+  public void testMeck()                                { doTest(false); }
+  public void test145()                                 { doTest(false); }
+  public void test145_2()                               { doTest(false); }
+  public void test29()                                  { doTest(false); }
+  public void testEmptyRecord()                         { doTest(false); }
+  public void testTypeAgain()                           { doTest(false); }
+  public void testTest2()                               { doTest(true);  }
+  public void testDebug()                               { doTest(true);  }
+  public void testDebug2()                              { doTest(true);  }
+  public void test175()                                 { doTest(true);  }
+  public void test182()                                 { doTest(true);  }
+  public void test183()                                 { doTest(true);  }
+  public void test210()                                 { doTest(false); }
+  public void test213()                                 { doTest(false); }
+  public void test223()                                 { doTest(false); }
+  public void testQuotation()                           { doTest(true);  }
+  public void testRiakHacks()                           { doTest(true);  }
+  public void testRecover()                             { doTest(true);  }
+  public void testRecover2()                            { doTest(true);  }
+  public void testBeginEnd()                            { doTest(true);  }
+  public void testBeginEnd2()                           { doTest(true);  }
+  public void test296()                                 { doTest(true);  }
+  public void test304()                                 { doTest(true);  }
+  public void test305()                                 { doTest(true);  }
+  public void test306()                                 { doTest(true);  }
+  public void testEscriptShebang1()                     { doTest(false); }
+  public void testEscriptShebang2()                     { doTest(true);  }
+  public void test325()                                 { doTest(true);  }
+  public void test390()                                 { doTest(true);  }
+  public void testMapConstruct()                        { doTest(false); }
+  public void testMapSingleValueAcc()                   { doTest(false); }
+  public void testMapUpdate()                           { doTest(false); }
+  public void testMapMatch()                            { doTest(false); }
+  public void testMapTypes()                            { doTest(false); }
+  public void testComprehensions()                      { doTest(false); }
+  public void testMacrosHacks()                         { doTest(false); }
+  public void testMacrosUnderscore()                    { doTest(false); }
+  public void testOptionalCallbacks()                   { doTest(false); }
+  public void testComprehensionsRecovery()              { doTest(true);  }
+  public void testSendExpressionPriority()              { doTest(false); }
+  public void testLongListExpression632()               { doTest(false); }
+  public void testQuotedAtomFollowedByQuote()           { doTest(true);  }
+  public void testOptionalCallbacksRecovery()           { doTest(true);  }
+  public void testWhitespaceEscapeInCharLiterals()      { doTest(false); }
+  public void testMacroCallsInCompoundStringLiterals()  { doTest(false); }
 }

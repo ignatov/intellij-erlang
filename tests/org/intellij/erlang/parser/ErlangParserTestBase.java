@@ -37,8 +37,8 @@ public abstract class ErlangParserTestBase extends ParsingTestCase {
     return true;
   }
 
-  protected void doTest(boolean checkResult, boolean suppressErrors) {
-    super.doTest(checkResult);
+  protected void doTest(boolean suppressErrors) {
+    super.doTest(true);
     if (!suppressErrors) {
       assertFalse(
         "PsiFile contains error elements",
@@ -52,5 +52,4 @@ public abstract class ErlangParserTestBase extends ParsingTestCase {
     super.setUp();
     CoreApplicationEnvironment.registerExtensionPoint(Extensions.getRootArea(), "com.intellij.lang.braceMatcher", LanguageExtensionPoint.class);
   }
-  
 }
