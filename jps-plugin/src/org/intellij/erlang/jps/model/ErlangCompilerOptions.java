@@ -16,7 +16,11 @@
 
 package org.intellij.erlang.jps.model;
 
+import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Tag;
+
+import java.util.List;
 
 public class ErlangCompilerOptions {
   public ErlangCompilerOptions() {
@@ -32,4 +36,8 @@ public class ErlangCompilerOptions {
 
   @Tag("useDebugInfo")
   public boolean myAddDebugInfoEnabled = true;
+
+  @Tag("additionalErlcArguments")
+  @AbstractCollection(elementTag = "arg", elementTypes = String.class)
+  public List<String> myAdditionalErlcArguments = ContainerUtil.newArrayList();
 }

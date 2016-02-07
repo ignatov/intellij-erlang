@@ -24,7 +24,9 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.ex.Settings;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.ui.RawCommandLineEditor;
 import com.intellij.util.ObjectUtils;
+import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.intellij.erlang.utils.AncestorAdapter;
@@ -34,6 +36,9 @@ import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.List;
 
 public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
 
@@ -41,6 +46,8 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   private JCheckBox myUseRebarCompilerCheckBox;
   private JButton myConfigureRebarButton;
   private JCheckBox myAddDebugInfoCheckBox;
+  private RawCommandLineEditor myAdditionalErlcArgumentsEditor;
+  private JLabel myAdditionalErlcArgumentsLabel;
   private final ErlangCompilerSettings mySettings;
   private final Project myProject;
 
@@ -69,6 +76,12 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
         reset();
       }
     });
+    myUseRebarCompilerCheckBox.addItemListener(new ItemListener() {
+      @Override
+      public void itemStateChanged(ItemEvent e) {
+        setUseRebarCompiler(myUseRebarCompilerCheckBox.isSelected());
+      }
+    });
   }
 
   @NotNull
@@ -92,19 +105,40 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
     boolean rebarPathIsSet = StringUtil.isNotEmpty(RebarSettings.getInstance(myProject).getRebarPath());
     myUseRebarCompilerCheckBox.setEnabled(rebarPathIsSet);
     myConfigureRebarButton.setVisible(!rebarPathIsSet);
-    myUseRebarCompilerCheckBox.setSelected(rebarPathIsSet && mySettings.isUseRebarCompilerEnabled());
+    setUseRebarCompiler(rebarPathIsSet && mySettings.isUseRebarCompilerEnabled());
     myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
+    myAdditionalErlcArgumentsEditor.setText(argumentsString(mySettings.getAdditionalErlcArguments()));
   }
 
   @Override
   public void apply() throws ConfigurationException {
     mySettings.setUseRebarCompilerEnabled(myUseRebarCompilerCheckBox.isSelected());
     mySettings.setAddDebugInfoEnabled(myAddDebugInfoCheckBox.isSelected());
+    mySettings.setAdditionalErlcArguments(arguments(myAdditionalErlcArgumentsEditor.getText()));
   }
 
   @Override
   public boolean isModified() {
     return myUseRebarCompilerCheckBox.isSelected() != mySettings.isUseRebarCompilerEnabled() ||
-      myAddDebugInfoCheckBox.isSelected() != mySettings.isAddDebugInfoEnabled();
+           myAddDebugInfoCheckBox.isSelected() != mySettings.isAddDebugInfoEnabled() ||
+           !StringUtil.equals(myAdditionalErlcArgumentsEditor.getText(),
+                              argumentsString(mySettings.getAdditionalErlcArguments()));
+  }
+
+  private void setUseRebarCompiler(boolean useRebarCompiler) {
+    myUseRebarCompilerCheckBox.setSelected(useRebarCompiler);
+
+    myAdditionalErlcArgumentsLabel.setVisible(!useRebarCompiler);
+    myAdditionalErlcArgumentsEditor.setVisible(!useRebarCompiler);
+  }
+
+  @NotNull
+  private static String argumentsString(@NotNull List<String> arguments) {
+    return ParametersListUtil.join(arguments);
+  }
+
+  @NotNull
+  private static List<String> arguments(@NotNull String argumentsText) {
+    return ParametersListUtil.parse(argumentsText);
   }
 }

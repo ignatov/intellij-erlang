@@ -220,6 +220,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     addDebugInfo(commandLine, compilerOptions.myAddDebugInfoEnabled);
     addIncludePaths(commandLine, module);
     addMacroDefinitions(commandLine, isTest);
+    commandLine.addParameters(compilerOptions.myAdditionalErlcArguments);
     commandLine.addParameters(erlangModulePaths);
     return commandLine;
   }
