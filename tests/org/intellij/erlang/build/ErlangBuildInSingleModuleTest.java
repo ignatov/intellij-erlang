@@ -143,7 +143,7 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     assertNotNull(beam);
     assertTrue(beam.exists());
 
-    delete(erl);
+    erl.delete(this);
     compileAndAssertOutput(false);
     assertFalse(beam.exists());
   }
