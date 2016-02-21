@@ -16,9 +16,11 @@
 
 package org.intellij.erlang.build;
 
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.vfs.VirtualFile;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertNotEquals;
 
@@ -136,14 +138,24 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
   }
 
   public void testBeamsForDeletedSourcesAreDeleted() throws Exception {
-    VirtualFile erl = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").build());
+    final VirtualFile erl = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").build());
 
     compileAndAssertOutput(false);
     File beam = getOutputFile(myModule, erl, false);
     assertNotNull(beam);
     assertTrue(beam.exists());
 
-    erl.delete(this);
+    WriteCommandAction.runWriteCommandAction(null, new Runnable() {
+      @Override
+      public void run() {
+        try {
+          erl.delete(null);
+        }
+        catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
     compileAndAssertOutput(false);
     assertFalse(beam.exists());
   }
