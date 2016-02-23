@@ -12,7 +12,7 @@ allprojects {
   sourceSets {
     main {
       java.srcDirs 'src', 'gen'
-      resources.srcDir 'resources'
+      resources.srcDirs 'resources', 'plugin/resources'
     }
     test {
       java.srcDir 'tests'
