@@ -17,9 +17,7 @@
 <idea-plugin url="http://ignatov.github.com/intellij-erlang" version="2" xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>org.jetbrains.erlang</id>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
-    <idea-version since-build="141.176.5" until-build="141.9999"/>
     <depends>com.intellij.modules.lang</depends>
-
     <name>Erlang</name>
     <description>Erlang plugin</description>
     <change-notes>
