@@ -56,10 +56,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
-  public static final Logger LOGGER = Logger.getInstance(ErlangExtractFunctionHandler.class);
+  private static final Logger LOGGER = Logger.getInstance(ErlangExtractFunctionHandler.class);
 
   @Override
-  public void invoke(@NotNull final Project project, Editor editor, PsiFile file, @Nullable DataContext dataContext) {
+  public void invoke(@NotNull final Project project, @NotNull Editor editor, @NotNull PsiFile file, @Nullable DataContext dataContext) {
     if (!CommonRefactoringUtil.checkReadOnlyStatus(file)) return;
 
     SelectionModel selectionModel = editor.getSelectionModel();
@@ -141,7 +141,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     return res;
   }
 
-  private static void perform(Editor editor, List<ErlangExpression> selection) {
+  private static void perform(@NotNull Editor editor, @NotNull List<ErlangExpression> selection) {
     final ErlangExpression first = ContainerUtil.getFirstItem(selection);
     final ErlangFunction function = PsiTreeUtil.getParentOfType(first, ErlangFunction.class);
     final ErlangExpression last = selection.get(selection.size() - 1);
@@ -169,7 +169,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
       final String functionText = signature + " ->\n" +
         StringUtil.join(selection, new Function<ErlangExpression, String>() {
           @Override
-          public String fun(ErlangExpression erlangExpression) {
+          public String fun(@NotNull ErlangExpression erlangExpression) {
             return erlangExpression.getText();
           }
         }, ",\n") + bindingsEx + ".";
@@ -206,8 +206,9 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   @NotNull
   static String generateSignature(@NotNull String functionName, @NotNull List<ErlangNamedElement> inParams) {
     return functionName + "(" + StringUtil.join(inParams, new Function<ErlangNamedElement, String>() {
+      @NotNull
       @Override
-      public String fun(ErlangNamedElement o) {
+      public String fun(@NotNull ErlangNamedElement o) {
         return ObjectUtils.notNull(o.getName(), "_");
       }
     }, ", ") + ")";
@@ -217,8 +218,9 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   private static String bindings(@NotNull List<ErlangNamedElement> out) {
     if (out.isEmpty()) return "";
     String join = StringUtil.join(out, new Function<ErlangNamedElement, String>() {
+      @NotNull
       @Override
-      public String fun(ErlangNamedElement o) {
+      public String fun(@NotNull ErlangNamedElement o) {
         return ObjectUtils.notNull(o.getName(), "_");
       }
     }, ", ");
@@ -227,7 +229,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   }
 
 
-  public static Pair<List<ErlangNamedElement>, List<ErlangNamedElement>> analyze(@NotNull List<? extends PsiElement> elements) {
+  private static Pair<List<ErlangNamedElement>, List<ErlangNamedElement>> analyze(@NotNull List<? extends PsiElement> elements) {
     PsiElement first = elements.get(0);
     PsiElement scope = PsiTreeUtil.getTopmostParentOfType(first, ErlangFunction.class);
     PsiElement lastElement = elements.get(elements.size() - 1);
@@ -241,7 +243,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
       getSimpleDeclarations(elements),
       new Condition<ErlangNamedElement>() {
         @Override
-        public boolean value(ErlangNamedElement componentName) {
+        public boolean value(@NotNull ErlangNamedElement componentName) {
           for (PsiReference usage : ReferencesSearch.search(componentName, localSearchScope, false).findAll()) {
             if (usage.getElement().getTextOffset() > lastElementEndOffset) {
               return true;
@@ -259,7 +261,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     Collection<ErlangNamedElement> names = visitor.getComponentNames();
     List<ErlangNamedElement> inComponentNames = ContainerUtil.filter(names, new Condition<ErlangNamedElement>() {
       @Override
-      public boolean value(ErlangNamedElement componentName) {
+      public boolean value(@NotNull ErlangNamedElement componentName) {
         int offset = componentName.getTextOffset();
         return offset >= lastElementEndOffset || offset < firstElementStartOffset;
       }
@@ -267,7 +269,8 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     return Pair.create(inComponentNames, outDeclarations);
   }
 
-  public static Set<ErlangNamedElement> getSimpleDeclarations(List<? extends PsiElement> children) {
+  @NotNull
+  private static Set<ErlangNamedElement> getSimpleDeclarations(@NotNull List<? extends PsiElement> children) {
     final Set<ErlangNamedElement> result = ContainerUtil.newLinkedHashSet();
     for (PsiElement child : children) {
       child.accept(new ErlangRecursiveVisitor() {
@@ -283,6 +286,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   private static class RefVisitor extends PsiRecursiveElementVisitor {
     private final LinkedHashSet<ErlangNamedElement> myComponentNames = ContainerUtil.newLinkedHashSet();
 
+    @NotNull
     public Collection<ErlangNamedElement> getComponentNames() {
       return myComponentNames;
     }
