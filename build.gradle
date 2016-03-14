@@ -24,6 +24,7 @@ allprojects {
     version ideaVersion
     plugins 'copyright'
     downloadSources Boolean.valueOf(sources)
+    sameSinceUntilBuild Boolean.valueOf(isEAP)
   }
   
   def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
