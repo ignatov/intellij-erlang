@@ -67,7 +67,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
     VirtualFile virtualFile = psiFile.getVirtualFile();
     if (virtualFile == null) return;
 
-    final String groupId = e.getPresentation().getText();
+    final String groupId = StringUtil.notNullize(e.getPresentation().getText(), NOTIFICATION_TITLE);
     try {
       GeneralCommandLine commandLine = new GeneralCommandLine();
       String emacsPath = EmacsSettings.getInstance(project).getEmacsPath();
