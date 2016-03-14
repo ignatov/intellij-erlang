@@ -24,11 +24,13 @@ import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -104,16 +106,16 @@ public class ErlangDebuggableRunConfigurationProducerTest extends ModuleTestCase
   }
 
 
-  protected void doTestDebugOptionsForSource(Module module, String... expectedModulesNotToInterpret) {
+  private void doTestDebugOptionsForSource(Module module, String... expectedModulesNotToInterpret) {
     doTestDebugOptions(ErlangApplicationRunConfigurationProducer.class, module, false, expectedModulesNotToInterpret);
   }
 
-  protected void doTestDebugOptionsForTests(Module module, String... expectedModulesNotToInterpret) {
+  private void doTestDebugOptionsForTests(Module module, String... expectedModulesNotToInterpret) {
     doTestDebugOptions(ErlangUnitRunConfigurationProducer.class, module, true, expectedModulesNotToInterpret);
   }
 
-  protected void doTestDebugOptions(Class<? extends ErlangDebuggableRunConfigurationProducer> producerClass,
-                                    Module module, boolean useTestSource, String... expectedModulesNotToInterpret) {
+  private void doTestDebugOptions(Class<? extends ErlangDebuggableRunConfigurationProducer> producerClass,
+                                  Module module, boolean useTestSource, String... expectedModulesNotToInterpret) {
     PsiElement elementToProduceFor = getElementToProduceFor(module, useTestSource);
     MapDataContext dataContext = new MapDataContext();
     dataContext.put(CommonDataKeys.PROJECT, myProject);
@@ -169,14 +171,25 @@ public class ErlangDebuggableRunConfigurationProducerTest extends ModuleTestCase
     return module;
   }
 
-  private static void addDependency(Module to, Module what) throws Exception {
-    ModifiableRootModel modifiableModel = ModuleRootManager.getInstance(to).getModifiableModel();
-    try {
-      modifiableModel.addModuleOrderEntry(what);
-      modifiableModel.commit();
-    } catch (Exception e) {
-      modifiableModel.dispose();
-      throw e;
+  private static void addDependency(final Module to, final Module what) throws Exception {
+    final Ref<Exception> ex = Ref.create();
+    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      @Override
+      public void run() {
+        ModifiableRootModel modifiableModel = ModuleRootManager.getInstance(to).getModifiableModel();
+        try {
+          modifiableModel.addModuleOrderEntry(what);
+          modifiableModel.commit();
+        }
+        catch (Exception e) {
+          modifiableModel.dispose();
+          ex.set(e);
+        }
+      }
+    });
+
+    if (!ex.isNull()) {
+      throw ex.get();
     }
   }
 }
