@@ -42,19 +42,9 @@
     <depends optional="true" config-file="java-deps.xml">com.intellij.modules.java</depends>
     <depends optional="true">com.intellij.copyright</depends>
 
-    <xi:include href="/META-INF/ErlangPlugin.xml" xpointer="xpointer(/idea-plugin/*)">
-        <!--
-        Erlang.zip layout: 
-        .
-        ├── META-INF
-        │   ├── java-deps.xml
-        │   └── plugin.xml
-        ├── classes
-        │   ├── META-INF
-        │   │   └── ErlangPlugin.xml
-        -->
+    <xi:include href="ErlangPlugin.xml" xpointer="xpointer(/idea-plugin/*)">
         <xi:fallback>
-            <xi:include href="../classes/META-INF/ErlangPlugin.xml" xpointer="xpointer(/idea-plugin/*)"/>
+            <xi:include href="/META-INF/ErlangPlugin.xml" xpointer="xpointer(/idea-plugin/*)"/>
         </xi:fallback>
     </xi:include>
 
