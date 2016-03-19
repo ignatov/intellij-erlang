@@ -29,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangCallbackStubElementType extends ErlangStubElementType<ErlangCallbackSpecStub, ErlangCallbackSpec> {
-  public static final ErlangCallbackSpec[] EMPTY_ARRAY = new ErlangCallbackSpec[0];
+  private static final ErlangCallbackSpec[] EMPTY_ARRAY = new ErlangCallbackSpec[0];
 
   public static final ArrayFactory<ErlangCallbackSpec> ARRAY_FACTORY = new ArrayFactory<ErlangCallbackSpec>() {
     @NotNull

@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangMacrosDefinitionElementType extends ErlangNamedStubElementType<ErlangMacrosDefinitionStub, ErlangMacrosDefinition> {
-  public static final ErlangMacrosDefinition[] EMPTY_ARRAY = new ErlangMacrosDefinition[0];
+  private static final ErlangMacrosDefinition[] EMPTY_ARRAY = new ErlangMacrosDefinition[0];
 
   public static final ArrayFactory<ErlangMacrosDefinition> ARRAY_FACTORY = new ArrayFactory<ErlangMacrosDefinition>() {
     @NotNull

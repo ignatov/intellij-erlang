@@ -29,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 
 public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
-  public static final String MODULE_TYPE_ID = "ERLANG_MODULE";
+  private static final String MODULE_TYPE_ID = "ERLANG_MODULE";
 
   public ErlangModuleType() {
     super(MODULE_TYPE_ID);

@@ -56,7 +56,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
     }
   }
 
-  public static boolean isUnusedFunction(@NotNull ErlangFile file, @NotNull final ErlangFunction function) {
+  private static boolean isUnusedFunction(@NotNull ErlangFile file, @NotNull final ErlangFunction function) {
     if (ErlangPsiImplUtil.isEunitImported(file) && ErlangPsiImplUtil.isEunitTestFunction(function)) return false;
     LocalSearchScope scope = new LocalSearchScope(file);
     List<PsiReference> refs = ContainerUtil.filter(ReferencesSearch.search(function, scope).findAll(), new Condition<PsiReference>() { // filtered specs out

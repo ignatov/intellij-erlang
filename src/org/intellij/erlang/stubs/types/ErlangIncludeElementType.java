@@ -30,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangIncludeElementType extends ErlangStubElementType<ErlangIncludeStub, ErlangInclude> {
-  public static final ErlangInclude[] EMPTY_ARRAY = new ErlangInclude[0];
+  private static final ErlangInclude[] EMPTY_ARRAY = new ErlangInclude[0];
 
   public static final ArrayFactory<ErlangInclude> ARRAY_FACTORY = new ArrayFactory<ErlangInclude>() {
     @NotNull

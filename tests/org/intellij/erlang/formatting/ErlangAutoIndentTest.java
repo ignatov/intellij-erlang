@@ -22,14 +22,14 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import java.io.File;
 
 public class ErlangAutoIndentTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  public static final boolean OVERRIDE_TEST_DATA = false;
+  private static final boolean OVERRIDE_TEST_DATA = false;
 
   @Override
   protected String getTestDataPath() {
     return "testData/auto-indent/";
   }
 
-  public void doTest() throws Exception {
+  private void doTest() throws Exception {
     String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
     myFixture.type("\n");

@@ -44,7 +44,7 @@ public class ErlangBuilderUtil {
   }
 
   @NotNull
-  public static File getXmlFile(@NotNull CompileContext context, @NotNull String filename) {
+  private static File getXmlFile(@NotNull CompileContext context, @NotNull String filename) {
     File dataStorageRoot = context.getProjectDescriptor().dataManager.getDataPaths().getDataStorageRoot();
     File parentDirectory = new File(dataStorageRoot, BUILDER_DIRECTORY);
     return new File(parentDirectory, filename);

@@ -161,10 +161,10 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     return addFile(module, relativePath, content, false);
   }
 
-  protected static VirtualFile addFile(final @NotNull Module module,
-                                       final @NotNull String relativePath,
-                                       final @NotNull String content,
-                                       final boolean toTests) throws IOException {
+  private static VirtualFile addFile(final @NotNull Module module,
+                                     final @NotNull String relativePath,
+                                     final @NotNull String content,
+                                     final boolean toTests) throws IOException {
     return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
       @Override
       public VirtualFile compute() throws IOException {
@@ -220,13 +220,13 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     }));
   }
 
-  protected static void assertContains(@Nullable VirtualFile parentPath, List<String> fileNames) {
+  private static void assertContains(@Nullable VirtualFile parentPath, List<String> fileNames) {
     assertNotNull(parentPath);
     List<String> actual = getChildrenNames(parentPath);
     assertUnorderedElementsAreEqual(actual, fileNames);
   }
 
-  protected static <T> void assertUnorderedElementsAreEqual(Collection<T> actual, Collection<T> expected) {
+  private static <T> void assertUnorderedElementsAreEqual(Collection<T> actual, Collection<T> expected) {
     assertEquals(ContainerUtil.newHashSet(expected), ContainerUtil.newHashSet(actual));
   }
 

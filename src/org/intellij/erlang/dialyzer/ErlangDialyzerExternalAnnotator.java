@@ -48,7 +48,7 @@ import java.util.List;
 
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
-  public static final NotificationGroup NOTIFICATION_GROUP = NotificationGroup.logOnlyGroup("Dialyzer-based inspections");
+  private static final NotificationGroup NOTIFICATION_GROUP = NotificationGroup.logOnlyGroup("Dialyzer-based inspections");
   
   @Nullable
   private static Problem parseProblem(String input) {

@@ -72,13 +72,13 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangCompletionContributor extends CompletionContributor {
-  public static final int ATOM_PRIORITY               = 50;
+  private static final int ATOM_PRIORITY               = 50;
   public static final int TYPE_PRIORITY               = 10;
   public static final int MODULE_FUNCTIONS_PRIORITY   = -4;
   public static final int BIF_PRIORITY                = -5;
   public static final int EXTERNAL_FUNCTIONS_PRIORITY = -7;
   public static final int KEYWORD_PRIORITY            = -10;
-  public static final int MODULE_PRIORITY             = -15;
+  private static final int MODULE_PRIORITY             = -15;
 
   @Override
   public void beforeCompletion(@NotNull CompletionInitializationContext context) {

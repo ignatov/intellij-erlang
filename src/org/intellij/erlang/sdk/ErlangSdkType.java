@@ -77,7 +77,7 @@ public class ErlangSdkType extends SdkType {
     return instance;
   }
 
-  public ErlangSdkType() {
+  private ErlangSdkType() {
     super(JpsErlangModelSerializerExtension.ERLANG_SDK_TYPE_ID);
   }
 

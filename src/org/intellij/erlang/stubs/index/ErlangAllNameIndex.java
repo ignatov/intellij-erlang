@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ErlangAllNameIndex extends StringStubIndexExtension<ErlangNamedElement> {
   public static final StubIndexKey<String, ErlangNamedElement> KEY = StubIndexKey.createIndexKey("erlang.all.name");
-  public static final int VERSION = 0;
+  private static final int VERSION = 0;
 
   @Override
   public int getVersion() {

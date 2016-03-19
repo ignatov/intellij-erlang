@@ -26,7 +26,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 
 public class ErlangApplicationRunConfigurationType extends ConfigurationTypeBase {
 
-  public ErlangApplicationRunConfigurationType() {
+  private ErlangApplicationRunConfigurationType() {
     super("ErlangApplicationRunConfiguration",
       "Erlang Application",
       "Erlang application run configuration",

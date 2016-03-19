@@ -40,7 +40,7 @@ import java.util.List;
 public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyVariantReferenceBase<T> implements ErlangFunctionReference {
   @Nullable
   private final ErlangQAtom myModuleAtom;
-  protected final String myReferenceName;
+  private final String myReferenceName;
   private final int myArity;
 
   public ErlangFunctionReferenceImpl(@NotNull T element, @Nullable ErlangQAtom moduleAtom, int arity) {

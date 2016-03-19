@@ -19,7 +19,7 @@ import com.intellij.codeInsight.template.impl.DefaultLiveTemplatesProvider;
 import com.intellij.util.ArrayUtil;
 
 public class ErlangLiveTemplateProvider implements DefaultLiveTemplatesProvider {
-  public static final String[] TEMPLATE_FILES = {"liveTemplates/erlang"};
+  private static final String[] TEMPLATE_FILES = {"liveTemplates/erlang"};
 
   @Override
   public String[] getDefaultLiveTemplateFiles() {

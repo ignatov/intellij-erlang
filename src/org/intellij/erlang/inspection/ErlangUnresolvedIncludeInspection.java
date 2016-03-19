@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
-  public static String INCLUDE_LABEL = "include";
+  private static String INCLUDE_LABEL = "include";
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {

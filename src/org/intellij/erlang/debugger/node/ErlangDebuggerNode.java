@@ -73,7 +73,7 @@ public class ErlangDebuggerNode {
     myStopped.set(true);
   }
 
-  public boolean isStopped() {
+  private boolean isStopped() {
     return myStopped.get();
   }
 

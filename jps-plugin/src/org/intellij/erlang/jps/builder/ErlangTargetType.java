@@ -30,7 +30,7 @@ import java.util.List;
 
 public class ErlangTargetType extends ModuleBasedBuildTargetType<ErlangTarget> {
   public static final ErlangTargetType INSTANCE = new ErlangTargetType();
-  public static final String TYPE_ID = "erlang modules";
+  private static final String TYPE_ID = "erlang modules";
 
   private ErlangTargetType() {
     super(TYPE_ID);

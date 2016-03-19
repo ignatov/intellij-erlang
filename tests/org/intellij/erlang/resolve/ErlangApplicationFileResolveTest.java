@@ -28,7 +28,7 @@ public class ErlangApplicationFileResolveTest extends ErlangLightPlatformCodeIns
     return "testData/resolve/app/";
   }
 
-  protected void doTest(String focusedFilePath, String expectedFilePath) {
+  private void doTest(String focusedFilePath, String expectedFilePath) {
     PsiFile[] files = myFixture.configureByFiles(focusedFilePath, expectedFilePath);
     ErlangFile focusedFile = (ErlangFile) files[0];
     assertNotNull(focusedFile);

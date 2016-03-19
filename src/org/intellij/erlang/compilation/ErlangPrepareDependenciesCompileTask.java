@@ -92,9 +92,9 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     return true;
   }
 
-  public static void writeBuildOrder(@NotNull CompileContext context,
-                                     @NotNull File projectSystemDirectory,
-                                     @NotNull ErlangProjectBuildOrder projectBuildOrder) {
+  private static void writeBuildOrder(@NotNull CompileContext context,
+                                      @NotNull File projectSystemDirectory,
+                                      @NotNull ErlangProjectBuildOrder projectBuildOrder) {
     try {
       LOG.debug("Serialize build order");
       Document serializedDocument = new Document(XmlSerializer.serialize(projectBuildOrder, new SkipDefaultValuesSerializationFilters()));
@@ -115,7 +115,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     }
   }
 
-  public static void addPrepareDependenciesFailedMessage(@NotNull CompileContext context) {
+  private static void addPrepareDependenciesFailedMessage(@NotNull CompileContext context) {
     context.addMessage(CompilerMessageCategory.WARNING, "Failed to submit dependencies info to compiler.", null, -1, -1);
   }
 

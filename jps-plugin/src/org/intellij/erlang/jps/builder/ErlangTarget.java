@@ -62,7 +62,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   }
 
   @NotNull
-  public Set<JpsModule> getDependenciesModules() {
+  private Set<JpsModule> getDependenciesModules() {
     return JpsJavaExtensionService.dependencies(myModule).includedIn(JpsJavaClasspathKind.compile(isTests())).getModules();
   }
 

@@ -27,7 +27,7 @@ public abstract class ErlangIncludeResolveTestBase extends ErlangLightPlatformCo
     super(isSmallIde);
   }
 
-  public ErlangIncludeResolveTestBase() {
+  protected ErlangIncludeResolveTestBase() {
     super(false);
   }
 

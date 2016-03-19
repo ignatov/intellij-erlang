@@ -90,7 +90,7 @@ final class OtpErlangTermUtil {
     return isAtom("error", errorObject);
   }
 
-  public static boolean isAtom(@NotNull String expectedAtom, @Nullable OtpErlangObject atomObject) {
+  private static boolean isAtom(@NotNull String expectedAtom, @Nullable OtpErlangObject atomObject) {
     return StringUtil.equals(expectedAtom, getAtomText(atomObject));
   }
 

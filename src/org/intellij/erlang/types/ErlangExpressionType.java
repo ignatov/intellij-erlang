@@ -38,7 +38,7 @@ public abstract class ErlangExpressionType {
 
   private final String myName;
 
-  public ErlangExpressionType(String name) {
+  protected ErlangExpressionType(String name) {
     myName = name;
   }
 
@@ -57,23 +57,23 @@ public abstract class ErlangExpressionType {
     }
   }
 
-  public static final ErlangExpressionType FLOAT      = new ErlangPrimitiveType("FLOAT");
-  public static final ErlangExpressionType FUN        = new ErlangPrimitiveType("FUN");
-  public static final ErlangExpressionType INTEGER    = new ErlangPrimitiveType("INTEGER");
-  public static final ErlangExpressionType CHAR       = new ErlangPrimitiveType("CHAR");
-  public static final ErlangExpressionType IOLIST     = new ErlangPrimitiveType("IOLIST");
-  public static final ErlangExpressionType TUPLE      = new ErlangPrimitiveType("TUPLE");
-  public static final ErlangExpressionType ATOM       = new ErlangPrimitiveType("ATOM");
-  public static final ErlangExpressionType BINARY     = new ErlangPrimitiveType("BINARY");
-  public static final ErlangExpressionType BITSTRING  = new ErlangPrimitiveType("BITSTRING");
-  public static final ErlangExpressionType STRING     = new ErlangPrimitiveType("STRING");
-  public static final ErlangExpressionType PID        = new ErlangPrimitiveType("PID");
-  public static final ErlangExpressionType PORT       = new ErlangPrimitiveType("PORT");
-  public static final ErlangExpressionType REF        = new ErlangPrimitiveType("REF");
-  public static final ErlangExpressionType TERM       = new ErlangPrimitiveType("TERM");
-  public static final ErlangExpressionType BOOLEAN    = new ErlangPrimitiveType("BOOLEAN");
+  private static final ErlangExpressionType FLOAT      = new ErlangPrimitiveType("FLOAT");
+  private static final ErlangExpressionType FUN        = new ErlangPrimitiveType("FUN");
+  private static final ErlangExpressionType INTEGER    = new ErlangPrimitiveType("INTEGER");
+  private static final ErlangExpressionType CHAR       = new ErlangPrimitiveType("CHAR");
+  private static final ErlangExpressionType IOLIST     = new ErlangPrimitiveType("IOLIST");
+  private static final ErlangExpressionType TUPLE      = new ErlangPrimitiveType("TUPLE");
+  private static final ErlangExpressionType ATOM       = new ErlangPrimitiveType("ATOM");
+  private static final ErlangExpressionType BINARY     = new ErlangPrimitiveType("BINARY");
+  private static final ErlangExpressionType BITSTRING  = new ErlangPrimitiveType("BITSTRING");
+  private static final ErlangExpressionType STRING     = new ErlangPrimitiveType("STRING");
+  private static final ErlangExpressionType PID        = new ErlangPrimitiveType("PID");
+  private static final ErlangExpressionType PORT       = new ErlangPrimitiveType("PORT");
+  private static final ErlangExpressionType REF        = new ErlangPrimitiveType("REF");
+  private static final ErlangExpressionType TERM       = new ErlangPrimitiveType("TERM");
+  private static final ErlangExpressionType BOOLEAN    = new ErlangPrimitiveType("BOOLEAN");
   public static final ErlangExpressionType UNKNOWN    = new ErlangPrimitiveType("UNKNOWN");
-  public static final ErlangExpressionType LIST       = new ErlangPrimitiveType("LIST") {
+  private static final ErlangExpressionType LIST       = new ErlangPrimitiveType("LIST") {
     @Override
     public boolean accept(ErlangExpressionType type) {
       return super.accept(type) || type.equals(STRING);

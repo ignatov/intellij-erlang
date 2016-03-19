@@ -40,7 +40,7 @@ public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangM
     myProperties = properties;
   }
 
-  public JpsErlangModuleExtension(JpsErlangModuleExtension moduleExtension) {
+  private JpsErlangModuleExtension(JpsErlangModuleExtension moduleExtension) {
     myProperties = new ErlangModuleExtensionProperties(moduleExtension.myProperties);
   }
 

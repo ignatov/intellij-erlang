@@ -26,7 +26,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
   public static final String PROTOCOL = "eunit";
 
-  protected ErlangUnitRunConfigurationType() {
+  private ErlangUnitRunConfigurationType() {
     super("ErlangUnitRunConfigurationType",
           "Erlang Eunit",
           "Eunit run configuration",

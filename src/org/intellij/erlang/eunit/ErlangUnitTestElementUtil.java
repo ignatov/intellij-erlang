@@ -75,7 +75,7 @@ public class ErlangUnitTestElementUtil {
   }
 
   @Nullable
-  public static ErlangFunction getZeroArityFunction(@Nullable PsiElement psiElement) {
+  private static ErlangFunction getZeroArityFunction(@Nullable PsiElement psiElement) {
     ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction)psiElement : PsiTreeUtil.getParentOfType(psiElement, ErlangFunction.class);
     int arity = function == null ? -1 : function.getArity();
     return 0 == arity ? function : null;

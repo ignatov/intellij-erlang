@@ -32,7 +32,7 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
     super(isSmallIde);
   }
 
-  public ErlangHighlightingTestBase() {
+  protected ErlangHighlightingTestBase() {
     super(false);
   }
 
@@ -98,7 +98,7 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
     doTest(true);
   }
 
-  protected void doTest(boolean withApp) {
+  private void doTest(boolean withApp) {
     String testDataFile = getTestName(false) + ".erl";
     if (withApp) {
       doTest(testDataFile, "testapp-1/ebin/testapp.app", "testapp-1/src/testapp.erl",

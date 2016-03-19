@@ -61,7 +61,7 @@ public class ErlangIconProvider extends IconProvider implements DumbAware {
   }
 
   @NotNull
-  public static ModuleType getModuleType(@NotNull ErlangFile file) {
+  private static ModuleType getModuleType(@NotNull ErlangFile file) {
     ModuleType type = ModuleType.REGULAR;
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       type = ModuleType.getType(behaviour.getName());

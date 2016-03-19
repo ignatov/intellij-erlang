@@ -23,14 +23,14 @@ import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangNamedElement;
 
 public class ErlangWithArityStub<T extends ErlangNamedElement> extends NamedStubBase<T> {
-  protected final int myArity;
+  private final int myArity;
 
-  public ErlangWithArityStub(StubElement parent, IStubElementType elementType, StringRef name, int arity) {
+  protected ErlangWithArityStub(StubElement parent, IStubElementType elementType, StringRef name, int arity) {
     super(parent, elementType, name);
     myArity = arity;
   }
 
-  public ErlangWithArityStub(StubElement parent, IStubElementType elementType, String name, int arity) {
+  protected ErlangWithArityStub(StubElement parent, IStubElementType elementType, String name, int arity) {
     super(parent, elementType, name);
     myArity = arity;
   }

@@ -23,7 +23,7 @@ import com.intellij.openapi.extensions.Extensions;
 import com.intellij.testFramework.ParsingTestCase;
 
 public abstract class ErlangParserTestBase extends ParsingTestCase {
-  public ErlangParserTestBase(String dataPath, String fileExt, ParserDefinition... definitions) {
+  protected ErlangParserTestBase(String dataPath, String fileExt, ParserDefinition... definitions) {
     super(dataPath, fileExt, definitions);
   }
 

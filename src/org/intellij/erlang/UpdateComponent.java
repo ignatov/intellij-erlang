@@ -68,7 +68,7 @@ public class UpdateComponent implements ApplicationComponent, Disposable {
 
   @NotNull
   @SuppressWarnings("ConstantConditions")
-  public static IdeaPluginDescriptor getPlugin() {
+  private static IdeaPluginDescriptor getPlugin() {
     return PluginManager.getPlugin(PluginId.getId(PLUGIN_ID));
   }
 

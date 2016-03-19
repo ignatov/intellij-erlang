@@ -28,7 +28,7 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
   private static final char QUOTE = '\'';
   private final String myName;
 
-  public QuoteInsertHandler(@NotNull String name) {
+  protected QuoteInsertHandler(@NotNull String name) {
     super(':');
     myName = name;
   }

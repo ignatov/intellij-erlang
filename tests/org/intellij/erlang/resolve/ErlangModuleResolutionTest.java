@@ -68,7 +68,7 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
     doTest(ErlangQAtom.class, expectedPath, filePaths);
   }
 
-  protected void doTest(@NotNull Class<? extends PsiElement> clazz, String expectedPath, String ... filePaths) {
+  private void doTest(@NotNull Class<? extends PsiElement> clazz, String expectedPath, String... filePaths) {
     myFixture.configureByFiles(filePaths);
     PsiElement focusedElement = getElementAtCaret(clazz);
     PsiReference reference = focusedElement.getReference();

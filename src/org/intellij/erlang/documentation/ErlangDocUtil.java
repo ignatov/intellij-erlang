@@ -32,7 +32,7 @@ import java.util.Set;
 public final class ErlangDocUtil {
 
   /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id59379">Overview tags</a> */
-  public static final Set<String> EDOC_OVERVIEW_TAGS = ContainerUtil.set(
+  private static final Set<String> EDOC_OVERVIEW_TAGS = ContainerUtil.set(
     "@author", "@copyright", "@doc", "@reference", "@see", "@since", "@title", "@version"
   );
   /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id60723">Module tags</a> */
@@ -44,7 +44,7 @@ public final class ErlangDocUtil {
     "@deprecated", "@doc", "@equiv", "@hidden", "@private", "@see", "@since", "@spec", "@throws"
   );
   /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id64336">Generic tags</a> */
-  static final Set<String> EDOC_GENERIC_TAGS = ContainerUtil.set(
+  private static final Set<String> EDOC_GENERIC_TAGS = ContainerUtil.set(
     "@clear", "@docfile", "@end", "@headerfile", "@todo", "@TODO", "@type"
   );
 

@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class ErlangNamedStubElementType<S extends NamedStubBase<T>, T extends ErlangNamedElement> extends ErlangStubElementType<S, T> {
-  public ErlangNamedStubElementType(@NonNls @NotNull String debugName) {
+  protected ErlangNamedStubElementType(@NonNls @NotNull String debugName) {
     super(debugName);
   }
 

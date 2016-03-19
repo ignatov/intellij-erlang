@@ -27,11 +27,11 @@ import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangStubbedPsiElementBase<T extends StubElement<?>> extends StubBasedPsiElementBase<T> implements ErlangCompositeElement {
-  public ErlangStubbedPsiElementBase(@NotNull T stub, @NotNull IStubElementType nodeType) {
+  protected ErlangStubbedPsiElementBase(@NotNull T stub, @NotNull IStubElementType nodeType) {
     super(stub, nodeType);
   }
 
-  public ErlangStubbedPsiElementBase(@NotNull ASTNode node) {
+  protected ErlangStubbedPsiElementBase(@NotNull ASTNode node) {
     super(node);
   }
 

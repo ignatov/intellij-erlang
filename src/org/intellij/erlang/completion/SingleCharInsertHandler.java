@@ -26,7 +26,7 @@ public class SingleCharInsertHandler extends BasicInsertHandler<LookupElement> {
   private final char myChar;
   private final boolean mySurroundWithSpaces;
 
-  public SingleCharInsertHandler(char aChar) {
+  protected SingleCharInsertHandler(char aChar) {
     myChar = aChar;
     mySurroundWithSpaces = false;
   }

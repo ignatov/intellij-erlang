@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangLanguage extends Language {
   public static final ErlangLanguage INSTANCE = new ErlangLanguage();
 
-  protected ErlangLanguage() {
+  private ErlangLanguage() {
     super("Erlang");
   }
 

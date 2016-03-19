@@ -51,7 +51,7 @@ public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeIn
     settings.SHOW_METHOD_SEPARATORS = b;
   }
 
-  protected void doTest(Integer ... expectedLineMarkers) {
+  private void doTest(Integer... expectedLineMarkers) {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.doHighlighting();
     assertSameElements(getMarkedLineNumbers(), expectedLineMarkers);

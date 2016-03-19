@@ -29,7 +29,7 @@ public class ErlangEunitReporterModule {
   }
 
   public static final String MODULE_NAME = "eunit_teamcity";
-  public static final String MODULE_BEAM = MODULE_NAME + ".beam";
+  private static final String MODULE_BEAM = MODULE_NAME + ".beam";
 
   public static void putReporterModuleTo(@NotNull File directory) throws IOException {
     URL moduleUrl = ResourceUtil.getResource(ErlangEunitReporterModule.class, "/eunit", MODULE_BEAM);

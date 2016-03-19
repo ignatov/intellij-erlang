@@ -93,14 +93,14 @@ public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase 
     doTestCrossModulesDependency(headerFile, sourceFile);
   }
 
-  protected void compileAndAssertOutput() throws Exception {
+  private void compileAndAssertOutput() throws Exception {
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     assertSourcesCompiled(myOtherModule, false);
   }
 
-  protected void doTestCrossModulesDependency(VirtualFile dependency,
-                                              VirtualFile sourceFile) throws Exception {
+  private void doTestCrossModulesDependency(VirtualFile dependency,
+                                            VirtualFile sourceFile) throws Exception {
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     assertSourcesCompiled(myOtherModule, false);

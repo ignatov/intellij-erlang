@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangBehaviourStubElementType extends ErlangStubElementType<ErlangBehaviourStub, ErlangBehaviour> {
-  public static final ErlangBehaviour[] EMPTY_ARRAY = new ErlangBehaviour[0];
+  private static final ErlangBehaviour[] EMPTY_ARRAY = new ErlangBehaviour[0];
 
   public static final ArrayFactory<ErlangBehaviour> ARRAY_FACTORY = new ArrayFactory<ErlangBehaviour>() {
     @NotNull

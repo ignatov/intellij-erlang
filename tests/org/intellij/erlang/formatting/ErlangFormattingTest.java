@@ -40,10 +40,10 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
 
   private CodeStyleSettings myTemporarySettings;
 
-  public void doTest()      throws Exception { doTest(true);  }
-  public void doEnterTest() throws Exception { doTest(false); }
+  private void doTest() throws Exception { doTest(true);  }
+  private void doEnterTest() throws Exception { doTest(false); }
 
-  public void doTest(boolean format) throws Exception {
+  private void doTest(boolean format) throws Exception {
     boolean parasite = isParasite();
     String appendix = parasite ? "\nfoo() -> ok." : "";
 

@@ -27,11 +27,11 @@ import org.intellij.erlang.psi.impl.ErlangElementFactory;
 abstract class ErlangStringContainerStub<T extends ErlangCompositeElement> extends StubBase<T> {
   private final StringRef myStringRef;
 
-  public ErlangStringContainerStub(StubElement parent, IStubElementType elementType, String name) {
+  protected ErlangStringContainerStub(StubElement parent, IStubElementType elementType, String name) {
     this(parent, elementType, StringRef.fromString(name));
   }
 
-  public ErlangStringContainerStub(StubElement parent, IStubElementType elementType, StringRef nameRef) {
+  protected ErlangStringContainerStub(StubElement parent, IStubElementType elementType, StringRef nameRef) {
     super(parent, elementType);
     myStringRef = nameRef;
   }

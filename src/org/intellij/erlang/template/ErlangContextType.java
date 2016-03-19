@@ -64,7 +64,7 @@ public abstract class ErlangContextType extends TemplateContextType {
     }
   }
 
-  public static class Declaration extends ErlangContextType {
+  protected static class Declaration extends ErlangContextType {
     protected Declaration() {
       super("ERLANG_DECLARATION", "Declaration", Generic.class);
     }
@@ -83,7 +83,7 @@ public abstract class ErlangContextType extends TemplateContextType {
     }
   }
 
-  public static class Statement extends ErlangContextType {
+  protected static class Statement extends ErlangContextType {
     protected Statement() {
       super("ERLANG_STATEMENT", "Statement", Generic.class);
     }
@@ -95,7 +95,7 @@ public abstract class ErlangContextType extends TemplateContextType {
     }
   }
 
-  public static class Expression extends ErlangContextType {
+  protected static class Expression extends ErlangContextType {
     protected Expression() {
       super("ERLANG_EXPRESSION", "Expression", Generic.class);
     }

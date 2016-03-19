@@ -23,7 +23,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 
 public final class RebarRunConfigurationType extends ConfigurationTypeBase {
-  RebarRunConfigurationType() {
+  private RebarRunConfigurationType() {
     super("RebarRunConfigurationType", "Erlang Rebar", "Runs a Rebar command", ErlangIcons.REBAR);
   }
 

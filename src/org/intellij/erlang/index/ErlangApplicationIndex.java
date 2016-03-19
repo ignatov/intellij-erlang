@@ -124,7 +124,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     }
   }
 
-  public static List<VirtualFile> getAppFilesFromEbinDirectories(@NotNull Project project, @Nullable String appName) {
+  private static List<VirtualFile> getAppFilesFromEbinDirectories(@NotNull Project project, @Nullable String appName) {
     List<VirtualFile> appFiles = new ArrayList<VirtualFile>();
     for (Module m : ModuleManager.getInstance(project).getModules()) {
       CompilerModuleExtension moduleExtension = ModuleRootManager.getInstance(m).getModuleExtension(CompilerModuleExtension.class);

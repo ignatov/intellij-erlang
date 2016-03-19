@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangTypeDefinitionElementType extends ErlangNamedStubElementType<ErlangTypeDefinitionStub, ErlangTypeDefinition> {
-  public static final ErlangTypeDefinition[] EMPTY_ARRAY = new ErlangTypeDefinition[0];
+  private static final ErlangTypeDefinition[] EMPTY_ARRAY = new ErlangTypeDefinition[0];
 
   public static final ArrayFactory<ErlangTypeDefinition> ARRAY_FACTORY = new ArrayFactory<ErlangTypeDefinition>() {
     @NotNull

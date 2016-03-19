@@ -83,7 +83,7 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   }
 
   @NotNull
-  public static ListCellRendererWrapper<Module> getListCellRendererWrapper() {
+  private static ListCellRendererWrapper<Module> getListCellRendererWrapper() {
     return new ListCellRendererWrapper<Module>() {
       @Override
       public void customize(JList list, @Nullable Module module, int index, boolean selected, boolean hasFocus) {

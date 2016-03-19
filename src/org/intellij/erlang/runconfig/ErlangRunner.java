@@ -24,7 +24,7 @@ import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRunner extends DefaultProgramRunner {
-  public static final String ERLANG_RUNNER_ID = "ErlangRunner";
+  private static final String ERLANG_RUNNER_ID = "ErlangRunner";
 
   @NotNull
   @Override

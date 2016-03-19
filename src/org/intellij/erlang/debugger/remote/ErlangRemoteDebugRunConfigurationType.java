@@ -27,7 +27,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 //TODO create a RunConfigurationProducer for this configuration type
 
 public class ErlangRemoteDebugRunConfigurationType extends ConfigurationTypeBase {
-  protected ErlangRemoteDebugRunConfigurationType() {
+  private ErlangRemoteDebugRunConfigurationType() {
     super("ErlangRemoteDebugRunConfiguration",
       "Erlang Remote Node",
       "Erlang remote node debug run configuration",

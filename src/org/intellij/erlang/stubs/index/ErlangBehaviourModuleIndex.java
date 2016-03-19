@@ -29,8 +29,8 @@ import java.util.Collection;
 
 public class ErlangBehaviourModuleIndex extends StringStubIndexExtension<ErlangModule> {
   private static final String KEY_NAME = "erlang.behaviour.module";
-  public static final StubIndexKey<String, ErlangModule> KEY = StubIndexKey.createIndexKey(KEY_NAME);
-  public static final int VERSION = 0;
+  private static final StubIndexKey<String, ErlangModule> KEY = StubIndexKey.createIndexKey(KEY_NAME);
+  private static final int VERSION = 0;
 
   @Override
   public int getVersion() {

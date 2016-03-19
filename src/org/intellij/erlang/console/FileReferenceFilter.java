@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 public final class FileReferenceFilter implements Filter {
   public static final String PATH_MACROS = "$FILE_PATH$";
   public static final String LINE_MACROS = "$LINE$";
-  public static final String COLUMN_MACROS = "$COLUMN$";
+  private static final String COLUMN_MACROS = "$COLUMN$";
 
   private static final String FILE_PATH_REGEXP = "((?:\\p{Alpha}\\:)?[0-9 a-z_A-Z\\-\\\\./]+)";
   private static final String NUMBER_REGEXP = "([0-9]+)";

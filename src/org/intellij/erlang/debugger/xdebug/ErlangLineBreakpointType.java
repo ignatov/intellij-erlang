@@ -33,8 +33,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangLineBreakpointType extends XLineBreakpointType<ErlangLineBreakpointProperties> {
-  public static final String ID = "ErlangLineBreakpoint";
-  public static final String NAME = "Line breakpoint";
+  private static final String ID = "ErlangLineBreakpoint";
+  private static final String NAME = "Line breakpoint";
 
   protected ErlangLineBreakpointType() {
     super(ID, NAME);

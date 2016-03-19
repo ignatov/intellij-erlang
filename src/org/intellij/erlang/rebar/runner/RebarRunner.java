@@ -22,7 +22,7 @@ import com.intellij.execution.runners.DefaultProgramRunner;
 import org.jetbrains.annotations.NotNull;
 
 public final class RebarRunner extends DefaultProgramRunner {
-  public static final String REBAR_RUNNER_ID = "RebarRunner";
+  private static final String REBAR_RUNNER_ID = "RebarRunner";
 
   @NotNull
   @Override

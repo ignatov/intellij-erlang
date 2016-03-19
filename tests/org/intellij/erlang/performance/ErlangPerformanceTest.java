@@ -55,7 +55,7 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
     return false;
   }
 
-  protected void doTest(int expectedMs) {
+  private void doTest(int expectedMs) {
     PlatformTestUtil.startPerformanceTest("erlang highlighting is slow", expectedMs, new ThrowableRunnable() {
       @Override
       public void run() {

@@ -41,7 +41,7 @@ import java.util.List;
 public abstract class ErlangRunningState extends CommandLineState {
   private final Module myModule;
 
-  public ErlangRunningState(ExecutionEnvironment env, Module module) {
+  protected ErlangRunningState(ExecutionEnvironment env, Module module) {
     super(env);
     myModule = module;
   }
@@ -67,7 +67,7 @@ public abstract class ErlangRunningState extends CommandLineState {
     return commandLine;
   }
 
-  public List<String> getCodePath() throws ExecutionException {
+  protected List<String> getCodePath() throws ExecutionException {
     return ErlangConsoleUtil.getCodePath(myModule, useTestCodePath());
   }
 
@@ -85,10 +85,10 @@ public abstract class ErlangRunningState extends CommandLineState {
     return ContainerUtil.emptyList();
   }
 
-  public abstract ErlangEntryPoint getEntryPoint() throws ExecutionException;
+  protected abstract ErlangEntryPoint getEntryPoint() throws ExecutionException;
 
   @Nullable
-  public abstract String getWorkDirectory();
+  protected abstract String getWorkDirectory();
 
   public ErlangEntryPoint getDebugEntryPoint() throws ExecutionException {
     return getEntryPoint();
@@ -122,7 +122,7 @@ public abstract class ErlangRunningState extends CommandLineState {
     if (isNoShellMode()) commandLine.addParameters("-noshell");
   }
 
-  public final void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
+  private void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
     ErlangEntryPoint entryPoint = getEntryPoint();
     commandLine.addParameters("-eval",
       entryPoint.getModuleName() + ":" + entryPoint.getFunctionName() +

@@ -27,8 +27,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSettingsProvider {
-  public static final String AROUND_OPERATORS = "Around Operators";
-  public static final String ALIGNMENT = "Alignment";
+  private static final String AROUND_OPERATORS = "Around Operators";
+  private static final String ALIGNMENT = "Alignment";
 
   @NotNull
   @Override

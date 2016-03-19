@@ -50,9 +50,9 @@ import static com.intellij.patterns.PlatformPatterns.psiElement;
 import static com.intellij.patterns.StandardPatterns.instanceOf;
 
 public class ErlangKeywordsCompletionContributor extends CompletionContributor implements DumbAware {
-  public static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
-    "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour", "behavior",
-    "optional_callbacks"
+  private static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
+                                                                                              "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour", "behavior",
+                                                                                              "optional_callbacks"
   );
 
   public ErlangKeywordsCompletionContributor() {
@@ -74,7 +74,7 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
   }
 
   @NotNull
-  static Collection<String> suggestKeywords(@NotNull PsiElement position) {
+  private static Collection<String> suggestKeywords(@NotNull PsiElement position) {
     TextRange posRange = position.getTextRange();
     ErlangFile posFile = (ErlangFile) position.getContainingFile();
     TextRange range = new TextRange(0, posRange.getStartOffset());
@@ -96,7 +96,7 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
   }
 
   @NotNull
-  static LookupElement createKeywordLookupElement(@NotNull String keyword) {
+  private static LookupElement createKeywordLookupElement(@NotNull String keyword) {
     boolean needHandler = KEYWORDS_WITH_PARENTHESIS.contains(keyword);
     boolean needQuotas = "include".equalsIgnoreCase(keyword) || "include_lib".equalsIgnoreCase(keyword);
     boolean needBrackets = "export".equalsIgnoreCase(keyword) || "export_type".equalsIgnoreCase(keyword) ||

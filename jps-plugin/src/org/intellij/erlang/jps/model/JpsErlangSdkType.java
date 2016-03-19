@@ -30,8 +30,8 @@ import java.io.File;
 public class JpsErlangSdkType extends JpsSdkType<JpsDummyElement> implements JpsElementTypeWithDefaultProperties<JpsDummyElement> {
   public static final JpsErlangSdkType INSTANCE = new JpsErlangSdkType();
 
-  public static final String BYTECODE_INTERPRETER = "erl";
-  public static final String BYTECODE_COMPILER = "erlc";
+  private static final String BYTECODE_INTERPRETER = "erl";
+  private static final String BYTECODE_COMPILER = "erlc";
   public static final String SCRIPT_INTERPRETER = "escript";
 
   private static final String TESTS_SDK_PATH_PROPERTY = "erlang.sdk.path";

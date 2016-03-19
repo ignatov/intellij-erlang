@@ -58,13 +58,13 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_TYPE_SIG_GUARD,
     ERL_TOP_TYPE_CLAUSE
   );
-  public static final TokenSet CURLY_CONTAINERS = TokenSet.create(
+  private static final TokenSet CURLY_CONTAINERS = TokenSet.create(
     ERL_TUPLE_EXPRESSION, ERL_RECORD_TUPLE, ERL_TYPED_RECORD_FIELDS, ERL_RECORD_LIKE_TYPE, ERL_MAP_TUPLE
   );
-  public static final TokenSet PARENTHESIS_CONTAINERS = TokenSet.create(
+  private static final TokenSet PARENTHESIS_CONTAINERS = TokenSet.create(
     ERL_PARENTHESIZED_EXPRESSION, ERL_ARGUMENT_LIST, ERL_ARGUMENT_DEFINITION_LIST, ERL_FUN_TYPE, ERL_FUN_TYPE_ARGUMENTS
   );
-  public static final TokenSet BRACKETS_CONTAINERS = TokenSet.create(
+  private static final TokenSet BRACKETS_CONTAINERS = TokenSet.create(
     ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES, ERL_BINARY_EXPRESSION
   );
   private static final TokenSet BINARY_EXPRESSIONS = TokenSet.create(

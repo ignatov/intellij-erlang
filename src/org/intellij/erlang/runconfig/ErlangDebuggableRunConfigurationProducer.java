@@ -41,7 +41,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends ErlangRunConfigurationBase> extends RunConfigurationProducer<RunConfig> {
-  public ErlangDebuggableRunConfigurationProducer(ConfigurationType configurationType) {
+  protected ErlangDebuggableRunConfigurationProducer(ConfigurationType configurationType) {
     super(configurationType);
   }
 
@@ -69,7 +69,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
                                                             @NotNull ConfigurationContext context,
                                                             @NotNull PsiElement location);
 
-  protected boolean setupDebugOptions(@NotNull RunConfig runConfig, @NotNull ConfigurationContext context) {
+  private boolean setupDebugOptions(@NotNull RunConfig runConfig, @NotNull ConfigurationContext context) {
     runConfig.setDebugOptions(createDefaultDebugOptions(context.getModule(), runConfig.isUseTestCodePath()));
     return true;
   }
@@ -83,14 +83,15 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
   }
 
   @NotNull
-  public static ErlangRunConfigurationBase.ErlangDebugOptions createDefaultDebugOptions(@Nullable Module module, boolean includeTests) {
+  private static ErlangRunConfigurationBase.ErlangDebugOptions createDefaultDebugOptions(@Nullable Module module,
+                                                                                         boolean includeTests) {
     ErlangRunConfigurationBase.ErlangDebugOptions debugOptions = new ErlangRunConfigurationBase.ErlangDebugOptions();
     debugOptions.setModulesNotToInterpret(getErlangModulesWithCallsToLoadNIF(module, includeTests));
     return debugOptions;
   }
 
   @NotNull
-  public static Set<String> getErlangModulesWithCallsToLoadNIF(@Nullable final Module module, boolean includeTests) {
+  private static Set<String> getErlangModulesWithCallsToLoadNIF(@Nullable final Module module, boolean includeTests) {
     if (module == null) return Collections.emptySet();
 
     // We want to process Erlang modules in current module, it's dependencies, and tests if includeTests is true

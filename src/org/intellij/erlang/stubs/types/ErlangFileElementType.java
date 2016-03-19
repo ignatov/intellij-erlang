@@ -28,10 +28,10 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> {
-  public static final int VERSION = 4;
+  private static final int VERSION = 4;
   public static final IStubFileElementType INSTANCE = new ErlangFileElementType();
 
-  public ErlangFileElementType() {
+  private ErlangFileElementType() {
     super("ERL_FILE", ErlangLanguage.INSTANCE);
   }
 

@@ -33,8 +33,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 public class ErlangTestFinder implements TestFinder {
-  public static final String EXT = "." + ErlangFileType.MODULE.getDefaultExtension();
-  public static String[] SUFFIXES = new String[]{"_test", "_tests"};
+  private static final String EXT = "." + ErlangFileType.MODULE.getDefaultExtension();
+  private static String[] SUFFIXES = new String[]{"_test", "_tests"};
 
   @Override
   public PsiFile findSourceElement(@NotNull PsiElement from) {

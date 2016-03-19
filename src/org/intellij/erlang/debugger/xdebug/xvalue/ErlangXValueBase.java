@@ -32,11 +32,11 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
   private final int myChildrenCount;
   private int myNextChildIdxToCompute;
 
-  public ErlangXValueBase(T value) {
+  protected ErlangXValueBase(T value) {
     this(value, 0);
   }
 
-  public ErlangXValueBase(T value, int childrenCount) {
+  protected ErlangXValueBase(T value, int childrenCount) {
     myValue = value;
     myChildrenCount = childrenCount;
   }
@@ -131,7 +131,7 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
     addNamedChild(childrenList, ErlangXValueFactory.create(child), name);
   }
 
-  protected static void addNamedChild(XValueChildrenList childrenList, XValue child, String name) {
+  private static void addNamedChild(XValueChildrenList childrenList, XValue child, String name) {
     childrenList.add(name, child);
   }
 }
@@ -148,7 +148,7 @@ class ErlangPrimitiveXValueBase<T extends OtpErlangObject> extends ErlangXValueB
 }
 
 class ErlangArrayXValueBase<T extends OtpErlangObject> extends ErlangXValueBase<T> {
-  public ErlangArrayXValueBase(T value, int childrenCount) {
+  protected ErlangArrayXValueBase(T value, int childrenCount) {
     super(value, childrenCount);
   }
 

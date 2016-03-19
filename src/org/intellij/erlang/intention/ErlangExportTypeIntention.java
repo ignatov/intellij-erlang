@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangExportTypeIntention extends ErlangBaseNamedElementIntention {
-  public static final String NAME = "Export type";
+  private static final String NAME = "Export type";
 
   public ErlangExportTypeIntention() {
     super(NAME, NAME);

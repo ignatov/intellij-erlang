@@ -36,7 +36,7 @@ public class ErlangStringManipulator extends AbstractElementManipulator<ErlangSt
     return getStringTokenRange(element);
   }
 
-  public static TextRange getStringTokenRange(ErlangStringLiteral element) {
+  private static TextRange getStringTokenRange(ErlangStringLiteral element) {
     return TextRange.from(1, element.getTextLength() - 2);
   }
 }

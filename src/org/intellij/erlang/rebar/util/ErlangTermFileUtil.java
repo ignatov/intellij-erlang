@@ -54,13 +54,15 @@ public final class ErlangTermFileUtil {
   }
 
   @NotNull
-  public static List<ErlangTupleExpression> findNamedTuples(@Nullable ErlangExpression listExpression, @Nullable String name) {
+  private static List<ErlangTupleExpression> findNamedTuples(@Nullable ErlangExpression listExpression,
+                                                             @Nullable String name) {
     ErlangListExpression propList = listExpression instanceof ErlangListExpression ? (ErlangListExpression) listExpression : null;
     return propList != null ? findNamedTuples(propList.getExpressionList(), name) : ContainerUtil.<ErlangTupleExpression>emptyList();
   }
 
   @NotNull
-  public static List<ErlangTupleExpression> findNamedTuples(@NotNull List<ErlangExpression> configExpressions, @Nullable final String name) {
+  private static List<ErlangTupleExpression> findNamedTuples(@NotNull List<ErlangExpression> configExpressions,
+                                                             @Nullable final String name) {
     return ContainerUtil.mapNotNull(configExpressions, new Function<ErlangExpression, ErlangTupleExpression>() {
       @Nullable
       @Override

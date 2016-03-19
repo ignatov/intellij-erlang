@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangModuleStubElementType extends ErlangNamedStubElementType<ErlangModuleStub, ErlangModule> {
-  public static final ErlangModule[] EMPTY_ARRAY = new ErlangModule[0];
+  private static final ErlangModule[] EMPTY_ARRAY = new ErlangModule[0];
 
   public static final ArrayFactory<ErlangModule> ARRAY_FACTORY = new ArrayFactory<ErlangModule>() {
     @NotNull
