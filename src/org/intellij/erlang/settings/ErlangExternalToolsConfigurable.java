@@ -66,7 +66,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myDialyzerSettings = DialyzerSettings.getInstance(project);
     myEmacsPathSelector.addBrowseFolderListener("Select Emacs Executable", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     myPltPathSelector.addBrowseFolderListener("Select Dialyzer PLT", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
-    mySdkPathSelector.addBrowseFolderListener("Select Erlang SDK Path", "", null, FileChooserDescriptorFactory.getDirectoryChooserDescriptor("Erlang SDK root"));
+    mySdkPathSelector.addBrowseFolderListener("Select Erlang SDK Path", "", null, FileChooserDescriptorFactory.createSingleFolderDescriptor().withTitle("Select Erlang SDK Root"));
     myPrevEmacsPath = myEmacsSettings.getEmacsPath();
 
     if (StringUtil.isEmpty(myRebarSettings.getRebarPath())) {
