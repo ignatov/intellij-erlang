@@ -61,7 +61,7 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
         @Nullable
         @Override
         public String getErrorText(String inputString) {
-          return !StringUtil.isEmpty(inputString) && FileUtil.sanitizeName(inputString).equals(inputString) ? null :
+          return !StringUtil.isEmpty(inputString) && FileUtil.sanitizeFileName(inputString, false).equals(inputString) ? null :
             "'" + inputString + "'" + " is not a valid Erlang module name";
         }
       })
