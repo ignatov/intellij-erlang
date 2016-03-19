@@ -17,7 +17,7 @@
 package org.intellij.erlang.search;
 
 import com.intellij.codeInsight.TargetElementEvaluatorEx;
-import com.intellij.codeInsight.TargetElementUtilBase;
+import com.intellij.codeInsight.TargetElementUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -39,7 +39,7 @@ public class ErlangTargetElementEvaluator implements TargetElementEvaluatorEx {
   @Nullable
   @Override
   public PsiElement getElementByReference(@NotNull PsiReference ref, int flags) {
-    if ((flags & TargetElementUtilBase.ELEMENT_NAME_ACCEPTED) == 0) return null;
+    if ((flags & TargetElementUtil.ELEMENT_NAME_ACCEPTED) == 0) return null;
     PsiElement element = ref.getElement();
     return element instanceof ErlangQAtom && ref.resolve() == null ? element : null;
   }
