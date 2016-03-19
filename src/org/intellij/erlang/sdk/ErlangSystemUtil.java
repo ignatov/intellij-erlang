@@ -20,18 +20,13 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessOutput;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.OrderRootType;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.PlatformUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.*;
 
 public class ErlangSystemUtil {
-  public static final int STANDARD_TIMEOUT = 10 * 1000;
+  private static final int STANDARD_TIMEOUT = 10 * 1000;
 
   private ErlangSystemUtil() {
   }
@@ -44,10 +39,10 @@ public class ErlangSystemUtil {
   }
 
   @NotNull
-  public static ProcessOutput getProcessOutput(int timeout,
-                                               @NotNull String workDir,
-                                               @NotNull String exePath,
-                                               @NotNull String... arguments) throws ExecutionException {
+  private static ProcessOutput getProcessOutput(int timeout,
+                                                @NotNull String workDir,
+                                                @NotNull String exePath,
+                                                @NotNull String... arguments) throws ExecutionException {
     if (!new File(workDir).isDirectory() || !new File(exePath).canExecute()) {
       return new ProcessOutput();
     }
@@ -67,22 +62,8 @@ public class ErlangSystemUtil {
 
   @NotNull
   public static ProcessOutput execute(@NotNull GeneralCommandLine cmd, int timeout) throws ExecutionException {
-    CapturingProcessHandler processHandler = new CapturingProcessHandler(cmd.createProcess());
+    CapturingProcessHandler processHandler = new CapturingProcessHandler(cmd);
     return timeout < 0 ? processHandler.runProcess() : processHandler.runProcess(timeout);
-  }
-
-  public static void addStdPaths(@NotNull GeneralCommandLine cmd, @NotNull Sdk sdk) {
-    List<VirtualFile> files = new ArrayList<VirtualFile>();
-    files.addAll(Arrays.asList(sdk.getRootProvider().getFiles(OrderRootType.SOURCES)));
-    files.addAll(Arrays.asList(sdk.getRootProvider().getFiles(OrderRootType.CLASSES)));
-    Set<String> paths = new HashSet<String>();
-    for (VirtualFile file : files) {
-      paths.add(FileUtil.toSystemDependentName(file.getPath()));
-    }
-    for (String path : paths) {
-      cmd.addParameter("-I");
-      cmd.addParameter(path);
-    }
   }
 
   public static boolean isSmallIde() {
