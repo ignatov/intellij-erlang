@@ -18,7 +18,6 @@ package org.intellij.erlang.editor;
 
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
-import com.intellij.openapi.editor.colors.CodeInsightColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.TokenType;
@@ -40,19 +39,19 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey BRACES        = createTextAttributesKey("ERL_BRACES", DefaultLanguageHighlighterColors.BRACES);
   public static final TextAttributesKey BRACKETS      = createTextAttributesKey("ERL_BRACKETS", DefaultLanguageHighlighterColors.BRACKETS);
   public static final TextAttributesKey ATOM          = createTextAttributesKey("ERL_ATOM", DefaultLanguageHighlighterColors.IDENTIFIER);
-  public static final TextAttributesKey MACRO         = createTextAttributesKey("ERL_MACRO", CodeInsightColors.STATIC_FINAL_FIELD_ATTRIBUTES);
+  public static final TextAttributesKey MACRO         = createTextAttributesKey("ERL_MACRO", DefaultLanguageHighlighterColors.STATIC_FIELD);
   public static final TextAttributesKey VARIABLES     = createTextAttributesKey("ERL_VARIABLES", DefaultLanguageHighlighterColors.GLOBAL_VARIABLE);
-  public static final TextAttributesKey RECORDS       = createTextAttributesKey("ERL_RECORDS", CodeInsightColors.INSTANCE_FIELD_ATTRIBUTES);
+  public static final TextAttributesKey RECORDS       = createTextAttributesKey("ERL_RECORDS", DefaultLanguageHighlighterColors.INSTANCE_FIELD);
   public static final TextAttributesKey OP_SIGN       = createTextAttributesKey("ERL_OP_SIGN", DefaultLanguageHighlighterColors.OPERATION_SIGN);
   public static final TextAttributesKey DOC_TAG       = createTextAttributesKey("ERL_DOC_TAG", DefaultLanguageHighlighterColors.DOC_COMMENT_TAG);
-  public static final TextAttributesKey FUNCTION      = createTextAttributesKey("ERL_FUNCTION", CodeInsightColors.METHOD_DECLARATION_ATTRIBUTES);
-  public static final TextAttributesKey TYPE          = createTextAttributesKey("ERL_TYPE", CodeInsightColors.ANNOTATION_ATTRIBUTE_NAME_ATTRIBUTES);
-  public static final TextAttributesKey BUILT_IN_TYPE = createTextAttributesKey("ERL_BUILT_IN_TYPE", CodeInsightColors.ANNOTATION_ATTRIBUTE_NAME_ATTRIBUTES);
-  public static final TextAttributesKey ATTRIBUTE     = createTextAttributesKey("ERL_ATTRIBUTE", CodeInsightColors.ANNOTATION_NAME_ATTRIBUTES);
-  public static final TextAttributesKey FUNCTION_CALL = createTextAttributesKey("ERL_FUNCTION_CALL", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
-  public static final TextAttributesKey GUARD         = createTextAttributesKey("ERL_GUARD", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
-  public static final TextAttributesKey SPEC          = createTextAttributesKey("ERL_SPEC", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
-  public static final TextAttributesKey CALLBACK      = createTextAttributesKey("ERL_CALLBACK", CodeInsightColors.METHOD_CALL_ATTRIBUTES);
+  public static final TextAttributesKey FUNCTION      = createTextAttributesKey("ERL_FUNCTION", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
+  public static final TextAttributesKey TYPE          = createTextAttributesKey("ERL_TYPE", DefaultLanguageHighlighterColors.METADATA);
+  public static final TextAttributesKey BUILT_IN_TYPE = createTextAttributesKey("ERL_BUILT_IN_TYPE", DefaultLanguageHighlighterColors.METADATA);
+  public static final TextAttributesKey ATTRIBUTE     = createTextAttributesKey("ERL_ATTRIBUTE", DefaultLanguageHighlighterColors.METADATA);
+  public static final TextAttributesKey FUNCTION_CALL = createTextAttributesKey("ERL_FUNCTION_CALL", DefaultLanguageHighlighterColors.FUNCTION_CALL);
+  public static final TextAttributesKey GUARD         = createTextAttributesKey("ERL_GUARD", DefaultLanguageHighlighterColors.FUNCTION_CALL);
+  public static final TextAttributesKey SPEC          = createTextAttributesKey("ERL_SPEC", DefaultLanguageHighlighterColors.FUNCTION_CALL);
+  public static final TextAttributesKey CALLBACK      = createTextAttributesKey("ERL_CALLBACK", DefaultLanguageHighlighterColors.FUNCTION_CALL);
   public static final TextAttributesKey MODULE_REF    = createTextAttributesKey("ERL_MODULE_REF", DefaultLanguageHighlighterColors.CLASS_NAME);
 
   @NotNull
