@@ -1822,10 +1822,13 @@ public class ErlangPsiImplUtil {
     ErlangCallbackSpecStub stub = spec.getStub();
     if (stub != null) return stub.isOptional();
 
-    ErlangFile file = ObjectUtils.tryCast(spec.getContainingFile(), ErlangFile.class);
     String specName = getCallbackSpecName(spec);
+    if (specName == null) {
+      return false;
+    }
+
+    ErlangFile file = ObjectUtils.assertNotNull(ObjectUtils.tryCast(spec.getContainingFile(), ErlangFile.class));
     int specArity = getCallBackSpecArguments(spec).size();
-    assert file != null && specName != null;
 
     for (ErlangCallbackFunction callback : file.getOptionalCallbacks()) {
       ErlangAtom functionNameAtom = callback.getQAtom().getAtom();
