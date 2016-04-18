@@ -37,6 +37,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   private HideableTitledPanel myDebugOptionsPanel;
   private JTextField myHostTextField;
   private JLabel myHostLabel;
+  private JTextField myDebugNodeArgsTextField;
 
   public ErlangRemoteDebugConfigurationEditorForm() {
     myUseShortNamesCheckBox.addItemListener(new ItemListener() {
@@ -55,6 +56,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
     myCookieTextField.setText(configuration.getCookie());
     myUseShortNamesCheckBox.setSelected(configuration.isUseShortNames());
     myHostTextField.setText(configuration.getHost());
+    myDebugNodeArgsTextField.setText(configuration.getDebugNodeArgs());
     setUseShortNames(myUseShortNamesCheckBox.isSelected());
   }
 
@@ -65,6 +67,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
     configuration.setCookie(myCookieTextField.getText());
     configuration.setUseShortNames(myUseShortNamesCheckBox.isSelected());
     configuration.setHost(myHostTextField.getText());
+    configuration.setDebugNodeArgs(myDebugNodeArgsTextField.getText());
   }
 
   @NotNull
