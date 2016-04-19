@@ -25,14 +25,13 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ErlangRemoteDebugRunningState extends ErlangRunningState {
@@ -78,21 +77,17 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
 
   @Override
   protected List<String> getErlFlags() {
-    List<String> result;
-
 
     if (myConfiguration.isUseShortNames()) {
-      result = new ArrayList<String>(ContainerUtil.list("-sname", getNodeName()));
+      return ContainerUtil.concat(ContainerUtil.list("-sname", getNodeName()),
+                                  ParametersListUtil.parse(myConfiguration.getDebugNodeArgs()));
 
-    } else {
-      String host = StringUtil.nullize(myConfiguration.getHost(), true);
-      String qualifiedName = getNodeName() + "@" + (host == null ? getDefaultHost() : host);
-      result = new ArrayList<String>(ContainerUtil.list("-name", qualifiedName));
     }
 
-    List<String> debugNodeArgs = Arrays.asList(myConfiguration.getDebugNodeArgs().split(" "));
-    result.addAll(debugNodeArgs);
-    return result;
+    String host = StringUtil.nullize(myConfiguration.getHost(), true);
+    String qualifiedName = getNodeName() + "@" + (host == null ? getDefaultHost() : host);
+    return ContainerUtil.concat(ContainerUtil.list("-name", qualifiedName),
+                                ParametersListUtil.parse(myConfiguration.getDebugNodeArgs()));
   }
 
   @NotNull
