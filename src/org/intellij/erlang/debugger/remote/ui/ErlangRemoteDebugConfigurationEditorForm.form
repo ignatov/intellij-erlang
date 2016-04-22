@@ -104,7 +104,7 @@
         </constraints>
         <properties>
           <labelFor value="765c"/>
-          <text value="Debugger node &amp;args:"/>
+          <text value="&amp;Debugger node args:"/>
           <toolTipText value="Additional arguments to pass to the local debugger node"/>
         </properties>
       </component>

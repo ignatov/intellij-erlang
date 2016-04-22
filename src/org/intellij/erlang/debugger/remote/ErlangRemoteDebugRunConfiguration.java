@@ -86,8 +86,12 @@ public class ErlangRemoteDebugRunConfiguration extends ErlangRunConfigurationBas
     myHost = host;
   }
 
-  public String getDebugNodeArgs() {return myDebugNodeArgs; }
+  public String getDebugNodeArgs() {
+    return myDebugNodeArgs;
+  }
 
-  public void setDebugNodeArgs(String debugNodeArgs) {myDebugNodeArgs = debugNodeArgs; }
+  public void setDebugNodeArgs(String debugNodeArgs) {
+    myDebugNodeArgs = debugNodeArgs;
+  }
 
 }
