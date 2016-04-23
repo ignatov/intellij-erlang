@@ -25,6 +25,7 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -76,13 +77,17 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
 
   @Override
   protected List<String> getErlFlags() {
+
     if (myConfiguration.isUseShortNames()) {
-      return ContainerUtil.list("-sname", getNodeName());
+      return ContainerUtil.concat(ContainerUtil.list("-sname", getNodeName()),
+                                  ParametersListUtil.parse(myConfiguration.getDebugNodeArgs()));
+
     }
 
     String host = StringUtil.nullize(myConfiguration.getHost(), true);
     String qualifiedName = getNodeName() + "@" + (host == null ? getDefaultHost() : host);
-    return ContainerUtil.list("-name", qualifiedName);
+    return ContainerUtil.concat(ContainerUtil.list("-name", qualifiedName),
+                                ParametersListUtil.parse(myConfiguration.getDebugNodeArgs()));
   }
 
   @NotNull
