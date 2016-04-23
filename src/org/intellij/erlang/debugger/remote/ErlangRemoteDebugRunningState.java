@@ -77,17 +77,19 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
 
   @Override
   protected List<String> getErlFlags() {
+    List<String> nodeNameArgs = getNodeNameArgs();
+    List<String> additionalArgs = ParametersListUtil.parse(myConfiguration.getDebugNodeArgs());
+    return ContainerUtil.concat(nodeNameArgs, additionalArgs);
+  }
 
+  @NotNull
+  private List<String> getNodeNameArgs() {
     if (myConfiguration.isUseShortNames()) {
-      return ContainerUtil.concat(ContainerUtil.list("-sname", getNodeName()),
-                                  ParametersListUtil.parse(myConfiguration.getDebugNodeArgs()));
-
+      return ContainerUtil.list("-sname", getNodeName());
     }
-
     String host = StringUtil.nullize(myConfiguration.getHost(), true);
     String qualifiedName = getNodeName() + "@" + (host == null ? getDefaultHost() : host);
-    return ContainerUtil.concat(ContainerUtil.list("-name", qualifiedName),
-                                ParametersListUtil.parse(myConfiguration.getDebugNodeArgs()));
+    return ContainerUtil.list("-name", qualifiedName);
   }
 
   @NotNull
