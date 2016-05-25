@@ -127,9 +127,9 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test273()    throws Exception { getErlangSettings().ALIGN_GUARDS = true; doTest(); }
   public void test379()    throws Exception { setUpCommaFirst(); doTest(); }
   public void test433()    throws Exception { getErlangSettings().ALIGN_FUN_CLAUSES = true; doTest(); }
-  public void test434()    throws Exception { getErlangSettings().ALIGN_MULTILINE_BLOCK = true; doTest(); }
+  public void test434()    throws Exception { alignBlocks(); doTest(); }
   public void test451()    throws Exception { getErlangSettings().ALIGN_RECORD_FIELD_ASSIGNMENTS = true; setUpCommaFirst(); doTest(); }
-  public void test444()    throws Exception { getErlangSettings().ALIGN_MULTILINE_BLOCK = true; doTest(); }
+  public void test444()    throws Exception { alignBlocks(); doTest(); }
   public void test478()    throws Exception { doTest(); }
 
   public void test292() throws Exception {
@@ -141,7 +141,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   }
 
   public void testAligned() throws Exception {
-    getErlangSettings().ALIGN_MULTILINE_BLOCK = true;
+    alignBlocks();
     doTest();
   }
 
@@ -171,7 +171,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void testUniformBinaryExpressionsStyle() throws Exception {
     getErlangSettings().UNIFORM_BINARY_EXPRESSIONS = true;
-    getErlangSettings().ALIGN_MULTILINE_BLOCK = true;
+    alignBlocks();
     doTest();
   }
 
@@ -408,19 +408,23 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapComprehensionAfterOrOr()        throws Exception { doEnterTest(); }
   public void testMapComprehensionAfterFirstExpr()   throws Exception { doEnterTest(); }
   public void testMapComprehensionAfterLastExpr()    throws Exception { doEnterTest(); }
-
+  
+  public void testListAlignOnEnter()                 throws Exception { alignBlocks(); doEnterTest(); }
 
   public void testCommaFirstEnterRecords() throws Exception { setUpCommaFirst(); doEnterTest(); }
+
   public void testCommaFirstEnter()        throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter2()       throws Exception { setUpCommaFirst(); doEnterTest(); }
-
   public void testNamedFunExpr()   throws Exception { doTest(); }
+
   public void testComprehensions() throws Exception { doTest(); }
 
   private void setUpCommaFirst() {
     getErlangSettings().NEW_LINE_BEFORE_COMMA = true;
-    getErlangSettings().ALIGN_MULTILINE_BLOCK = true;
+    alignBlocks();
   }
+
+  private void alignBlocks() { getErlangSettings().ALIGN_MULTILINE_BLOCK = true; }
 
   private ErlangCodeStyleSettings getErlangSettings() {
     return myTemporarySettings.getCustomSettings(ErlangCodeStyleSettings.class);
