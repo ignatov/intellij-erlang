@@ -121,7 +121,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (myErlangSettings.UNIFORM_BINARY_EXPRESSIONS && BINARY_EXPRESSIONS.contains(myNode.getElementType())) {
       class BinaryExpressionSequenceBlocksBuilder {
         private int myBinaryExpressionIndex = 0;
-        void build(ASTNode node) {
+        private void build(ASTNode node) {
           for (ASTNode child = node.getFirstChildNode(); child != null; child = child.getTreeNext()) {
             if (!shouldCreateBlockFor(child)) continue;
             IElementType childType = child.getElementType();
