@@ -271,7 +271,7 @@ top_type ::= [q_var '::'] type_list
 private type_list ::= type ('|' type)*
 map_type ::= '#' '{' map_entry_type_list? '}' {pin=1 extends=type}
 private map_entry_type_list ::= map_entry_type (',' map_entry_type)* {pin(".*")=1}
-map_entry_type ::= top_type '=>' top_type {pin=2 extends=type}
+map_entry_type ::= (top_type ('=>' | ':=') top_type) | '...' {pin(".*")=2 extends=type}
 
 type ::=
   '(' top_type ')'

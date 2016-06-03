@@ -16,8 +16,12 @@ public class ErlangMapEntryTypeImpl extends ErlangTypeImpl implements ErlangMapE
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitMapEntryType(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMapEntryType(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -28,9 +32,21 @@ public class ErlangMapEntryTypeImpl extends ErlangTypeImpl implements ErlangMapE
   }
 
   @Override
-  @NotNull
+  @Nullable
   public PsiElement getAssoc() {
-    return findNotNullChildByType(ERL_ASSOC);
+    return findChildByType(ERL_ASSOC);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getDotDotDot() {
+    return findChildByType(ERL_DOT_DOT_DOT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getMatch() {
+    return findChildByType(ERL_MATCH);
   }
 
 }

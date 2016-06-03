@@ -8,7 +8,7 @@ import com.intellij.psi.PsiElement;
 public interface ErlangMapType extends ErlangType {
 
   @NotNull
-  List<ErlangMapEntryType> getMapEntryTypeList();
+  List<ErlangType> getTypeList();
 
   @Nullable
   PsiElement getCurlyLeft();
