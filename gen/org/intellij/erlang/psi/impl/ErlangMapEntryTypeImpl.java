@@ -32,9 +32,21 @@ public class ErlangMapEntryTypeImpl extends ErlangTypeImpl implements ErlangMapE
   }
 
   @Override
-  @NotNull
+  @Nullable
   public PsiElement getAssoc() {
-    return notNullChild(findChildByType(ERL_ASSOC));
+    return findChildByType(ERL_ASSOC);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getDotDotDot() {
+    return findChildByType(ERL_DOT_DOT_DOT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getMatch() {
+    return findChildByType(ERL_MATCH);
   }
 
 }

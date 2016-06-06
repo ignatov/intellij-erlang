@@ -4264,17 +4264,39 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // top_type '=>' top_type
+  // (top_type ('=>' | ':=') top_type) | '...'
   public static boolean map_entry_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_entry_type")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _COLLAPSE_, ERL_MAP_ENTRY_TYPE, "<type>");
+    r = map_entry_type_0(b, l + 1);
+    if (!r) r = consumeToken(b, ERL_DOT_DOT_DOT);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // top_type ('=>' | ':=') top_type
+  private static boolean map_entry_type_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_entry_type_0")) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, ERL_MAP_ENTRY_TYPE, "<type>");
+    Marker m = enter_section_(b, l, _NONE_);
     r = top_type(b, l + 1);
-    r = r && consumeToken(b, ERL_ASSOC);
+    r = r && map_entry_type_0_1(b, l + 1);
     p = r; // pin = 2
     r = r && top_type(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  // '=>' | ':='
+  private static boolean map_entry_type_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_entry_type_0_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_ASSOC);
+    if (!r) r = consumeToken(b, ERL_MATCH);
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   /* ********************************************************** */

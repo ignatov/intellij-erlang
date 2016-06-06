@@ -103,7 +103,7 @@ ERL_FILE
                           PsiElement(single_quote)(''')
                           PsiElement(atom_name)('status')
                           PsiElement(single_quote)(''')
-                  PsiElement(=>)('=>')
+                  PsiElement(:=)(':=')
                   ERL_TYPE
                     ERL_Q_VAR
                       PsiElement(var)('S')
@@ -164,7 +164,7 @@ ERL_FILE
                             PsiElement(single_quote)(''')
                             PsiElement(atom_name)('status')
                             PsiElement(single_quote)(''')
-                    PsiElement(=>)('=>')
+                    PsiElement(:=)(':=')
                     ERL_TYPE
                       ERL_Q_VAR
                         PsiElement(var)('S')
@@ -185,6 +185,9 @@ ERL_FILE
                             PsiElement(atom_name)('integer')
                       PsiElement(()('(')
                       PsiElement())(')')
+                  PsiElement(,)(',')
+                  ERL_MAP_ENTRY_TYPE
+                    PsiElement(...)('...')
                   PsiElement(})('}')
             PsiElement(,)(',')
             ERL_TYPE_GUARD

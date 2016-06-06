@@ -10,7 +10,13 @@ public interface ErlangMapEntryType extends ErlangType {
   @NotNull
   List<ErlangType> getTypeList();
 
-  @NotNull
+  @Nullable
   PsiElement getAssoc();
+
+  @Nullable
+  PsiElement getDotDotDot();
+
+  @Nullable
+  PsiElement getMatch();
 
 }

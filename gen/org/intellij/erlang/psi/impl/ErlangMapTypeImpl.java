@@ -27,8 +27,8 @@ public class ErlangMapTypeImpl extends ErlangTypeImpl implements ErlangMapType {
 
   @Override
   @NotNull
-  public List<ErlangMapEntryType> getMapEntryTypeList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangMapEntryType.class);
+  public List<ErlangType> getTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
   }
 
   @Override

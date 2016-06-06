@@ -1,9 +1,9 @@
 -type map1() :: #{ binary() => integer() }.
 -type map2() :: #{ one | two => [number()] }.
 
--spec func(Opt, M) -> #{'status' => S, 'c' => integer()} when
+-spec func(Opt, M) -> #{'status' := S, 'c' => integer()} when
   Opt :: 'inc' | 'dec',
-  M :: #{'status' => S, 'c' => integer()},
+  M :: #{'status' := S, 'c' => integer(), ...},
   S :: 'update' | 'keep'.
 
 func(inc, #{status := update, c := C} = M) -> M#{c := C + 1};
