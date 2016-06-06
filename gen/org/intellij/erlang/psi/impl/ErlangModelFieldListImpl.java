@@ -16,8 +16,12 @@ public class ErlangModelFieldListImpl extends ErlangCompositeElementImpl impleme
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitModelFieldList(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitModelFieldList(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangModelFieldListImpl extends ErlangCompositeElementImpl impleme
   @Override
   @NotNull
   public PsiElement getBracketLeft() {
-    return findNotNullChildByType(ERL_BRACKET_LEFT);
+    return notNullChild(findChildByType(ERL_BRACKET_LEFT));
   }
 
   @Override

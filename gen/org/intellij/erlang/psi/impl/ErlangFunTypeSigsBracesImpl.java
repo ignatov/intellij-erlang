@@ -16,21 +16,25 @@ public class ErlangFunTypeSigsBracesImpl extends ErlangCompositeElementImpl impl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitFunTypeSigsBraces(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeSigsBraces(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangFunTypeSigs getFunTypeSigs() {
-    return findChildByClass(ErlangFunTypeSigs.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangFunTypeSigs.class);
   }
 
   @Override
   @NotNull
   public PsiElement getParLeft() {
-    return findNotNullChildByType(ERL_PAR_LEFT);
+    return notNullChild(findChildByType(ERL_PAR_LEFT));
   }
 
   @Override

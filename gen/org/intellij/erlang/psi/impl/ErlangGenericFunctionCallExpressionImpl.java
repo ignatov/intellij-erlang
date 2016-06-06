@@ -16,21 +16,25 @@ public class ErlangGenericFunctionCallExpressionImpl extends ErlangExpressionImp
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitGenericFunctionCallExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitGenericFunctionCallExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangArgumentList getArgumentList() {
-    return findNotNullChildByClass(ErlangArgumentList.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangArgumentList.class));
   }
 
   @Override
   @Nullable
   public ErlangMacros getMacros() {
-    return findChildByClass(ErlangMacros.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangMacros.class);
   }
 
   @Override

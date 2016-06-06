@@ -16,39 +16,43 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitFunExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangFunClauses getFunClauses() {
-    return findChildByClass(ErlangFunClauses.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangFunClauses.class);
   }
 
   @Override
   @Nullable
   public ErlangFunctionWithArity getFunctionWithArity() {
-    return findChildByClass(ErlangFunctionWithArity.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangFunctionWithArity.class);
   }
 
   @Override
   @Nullable
   public ErlangFunctionWithArityVariables getFunctionWithArityVariables() {
-    return findChildByClass(ErlangFunctionWithArityVariables.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangFunctionWithArityVariables.class);
   }
 
   @Override
   @Nullable
   public ErlangModuleRef getModuleRef() {
-    return findChildByClass(ErlangModuleRef.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangModuleRef.class);
   }
 
   @Override
   @Nullable
   public ErlangQVar getQVar() {
-    return findChildByClass(ErlangQVar.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangQVar.class);
   }
 
   @Override
@@ -66,7 +70,7 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   @Override
   @NotNull
   public PsiElement getFun() {
-    return findNotNullChildByType(ERL_FUN);
+    return notNullChild(findChildByType(ERL_FUN));
   }
 
 }

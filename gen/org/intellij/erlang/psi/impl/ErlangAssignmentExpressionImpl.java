@@ -16,8 +16,12 @@ public class ErlangAssignmentExpressionImpl extends ErlangFakeBinaryExpressionIm
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitAssignmentExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAssignmentExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangAssignmentExpressionImpl extends ErlangFakeBinaryExpressionIm
   @Override
   @NotNull
   public PsiElement getOpEq() {
-    return findNotNullChildByType(ERL_OP_EQ);
+    return notNullChild(findChildByType(ERL_OP_EQ));
   }
 
 }

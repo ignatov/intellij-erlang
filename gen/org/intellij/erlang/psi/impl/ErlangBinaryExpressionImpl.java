@@ -16,8 +16,12 @@ public class ErlangBinaryExpressionImpl extends ErlangExpressionImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitBinaryExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinaryExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -36,7 +40,7 @@ public class ErlangBinaryExpressionImpl extends ErlangExpressionImpl implements 
   @Override
   @NotNull
   public PsiElement getBinStart() {
-    return findNotNullChildByType(ERL_BIN_START);
+    return notNullChild(findChildByType(ERL_BIN_START));
   }
 
 }

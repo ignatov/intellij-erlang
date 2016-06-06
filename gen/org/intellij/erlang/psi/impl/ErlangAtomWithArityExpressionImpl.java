@@ -16,27 +16,31 @@ public class ErlangAtomWithArityExpressionImpl extends ErlangExpressionImpl impl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitAtomWithArityExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAtomWithArityExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangQAtom getQAtom() {
-    return findNotNullChildByClass(ErlangQAtom.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
   }
 
   @Override
   @NotNull
   public PsiElement getOpArDiv() {
-    return findNotNullChildByType(ERL_OP_AR_DIV);
+    return notNullChild(findChildByType(ERL_OP_AR_DIV));
   }
 
   @Override
   @NotNull
   public PsiElement getInteger() {
-    return findNotNullChildByType(ERL_INTEGER);
+    return notNullChild(findChildByType(ERL_INTEGER));
   }
 
 }

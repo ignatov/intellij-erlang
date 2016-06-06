@@ -16,15 +16,19 @@ public class ErlangFunType100TImpl extends ErlangTypeImpl implements ErlangFunTy
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitFunType100T(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunType100T(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangTopTypeClause getTopTypeClause() {
-    return findChildByClass(ErlangTopTypeClause.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangTopTypeClause.class);
   }
 
   @Override
@@ -42,7 +46,7 @@ public class ErlangFunType100TImpl extends ErlangTypeImpl implements ErlangFunTy
   @Override
   @NotNull
   public PsiElement getParLeft() {
-    return findNotNullChildByType(ERL_PAR_LEFT);
+    return notNullChild(findChildByType(ERL_PAR_LEFT));
   }
 
   @Override

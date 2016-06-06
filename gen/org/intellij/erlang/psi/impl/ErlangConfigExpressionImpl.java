@@ -16,15 +16,19 @@ public class ErlangConfigExpressionImpl extends ErlangExpressionImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitConfigExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitConfigExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangExpression.class);
   }
 
   @Override
@@ -36,13 +40,13 @@ public class ErlangConfigExpressionImpl extends ErlangExpressionImpl implements 
   @Override
   @Nullable
   public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangQAtom.class);
   }
 
   @Override
   @Nullable
   public ErlangQVar getQVar() {
-    return findChildByClass(ErlangQVar.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangQVar.class);
   }
 
   @Override

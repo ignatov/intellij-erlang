@@ -16,21 +16,25 @@ public class ErlangIntTypeImpl extends ErlangTypeImpl implements ErlangIntType {
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitIntType(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIntType(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangArgumentList getArgumentList() {
-    return findChildByClass(ErlangArgumentList.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangArgumentList.class);
   }
 
   @Override
   @Nullable
   public ErlangMacros getMacros() {
-    return findChildByClass(ErlangMacros.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangMacros.class);
   }
 
   @Override

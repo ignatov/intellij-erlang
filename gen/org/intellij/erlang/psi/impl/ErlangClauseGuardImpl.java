@@ -16,21 +16,25 @@ public class ErlangClauseGuardImpl extends ErlangCompositeElementImpl implements
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitClauseGuard(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitClauseGuard(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangGuard getGuard() {
-    return findChildByClass(ErlangGuard.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangGuard.class);
   }
 
   @Override
   @NotNull
   public PsiElement getWhen() {
-    return findNotNullChildByType(ERL_WHEN);
+    return notNullChild(findChildByType(ERL_WHEN));
   }
 
 }

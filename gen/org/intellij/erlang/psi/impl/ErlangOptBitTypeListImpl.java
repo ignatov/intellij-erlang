@@ -16,8 +16,12 @@ public class ErlangOptBitTypeListImpl extends ErlangCompositeElementImpl impleme
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitOptBitTypeList(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitOptBitTypeList(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangOptBitTypeListImpl extends ErlangCompositeElementImpl impleme
   @Override
   @NotNull
   public PsiElement getOpArDiv() {
-    return findNotNullChildByType(ERL_OP_AR_DIV);
+    return notNullChild(findChildByType(ERL_OP_AR_DIV));
   }
 
 }

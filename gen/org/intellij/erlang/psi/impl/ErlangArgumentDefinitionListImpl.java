@@ -16,8 +16,12 @@ public class ErlangArgumentDefinitionListImpl extends ErlangCompositeElementImpl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitArgumentDefinitionList(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitArgumentDefinitionList(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangArgumentDefinitionListImpl extends ErlangCompositeElementImpl
   @Override
   @NotNull
   public PsiElement getParLeft() {
-    return findNotNullChildByType(ERL_PAR_LEFT);
+    return notNullChild(findChildByType(ERL_PAR_LEFT));
   }
 
   @Override

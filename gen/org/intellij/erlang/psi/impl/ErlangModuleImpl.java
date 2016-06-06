@@ -24,27 +24,31 @@ public class ErlangModuleImpl extends ErlangNamedStubbedPsiElementBase<ErlangMod
     super(stub, nodeType);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitModule(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitModule(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangArgumentDefinition getArgumentDefinition() {
-    return findChildByClass(ErlangArgumentDefinition.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangArgumentDefinition.class);
   }
 
   @Override
   @Nullable
   public ErlangModelFieldList getModelFieldList() {
-    return findChildByClass(ErlangModelFieldList.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangModelFieldList.class);
   }
 
   @Override
   @Nullable
   public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangQAtom.class);
   }
 
   @Override

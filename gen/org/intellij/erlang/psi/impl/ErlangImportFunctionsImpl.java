@@ -16,8 +16,12 @@ public class ErlangImportFunctionsImpl extends ErlangCompositeElementImpl implem
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitImportFunctions(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitImportFunctions(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,13 +34,13 @@ public class ErlangImportFunctionsImpl extends ErlangCompositeElementImpl implem
   @Override
   @NotNull
   public PsiElement getBracketLeft() {
-    return findNotNullChildByType(ERL_BRACKET_LEFT);
+    return notNullChild(findChildByType(ERL_BRACKET_LEFT));
   }
 
   @Override
   @NotNull
   public PsiElement getBracketRight() {
-    return findNotNullChildByType(ERL_BRACKET_RIGHT);
+    return notNullChild(findChildByType(ERL_BRACKET_RIGHT));
   }
 
 }

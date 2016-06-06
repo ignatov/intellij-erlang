@@ -16,8 +16,12 @@ public class ErlangFunTypeArgumentsImpl extends ErlangCompositeElementImpl imple
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitFunTypeArguments(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunTypeArguments(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangFunTypeArgumentsImpl extends ErlangCompositeElementImpl imple
   @Override
   @NotNull
   public PsiElement getParLeft() {
-    return findNotNullChildByType(ERL_PAR_LEFT);
+    return notNullChild(findChildByType(ERL_PAR_LEFT));
   }
 
   @Override

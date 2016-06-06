@@ -18,8 +18,12 @@ public class ErlangListComprehensionImpl extends ErlangExpressionImpl implements
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitListComprehension(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitListComprehension(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -32,19 +36,19 @@ public class ErlangListComprehensionImpl extends ErlangExpressionImpl implements
   @Override
   @NotNull
   public PsiElement getBracketLeft() {
-    return findNotNullChildByType(ERL_BRACKET_LEFT);
+    return notNullChild(findChildByType(ERL_BRACKET_LEFT));
   }
 
   @Override
   @NotNull
   public PsiElement getBracketRight() {
-    return findNotNullChildByType(ERL_BRACKET_RIGHT);
+    return notNullChild(findChildByType(ERL_BRACKET_RIGHT));
   }
 
   @Override
   @NotNull
   public PsiElement getOrOr() {
-    return findNotNullChildByType(ERL_OR_OR);
+    return notNullChild(findChildByType(ERL_OR_OR));
   }
 
   public boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place) {

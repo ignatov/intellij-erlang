@@ -16,21 +16,25 @@ public class ErlangTypeSigImpl extends ErlangCompositeElementImpl implements Erl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitTypeSig(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeSig(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangFunType getFunType() {
-    return findNotNullChildByClass(ErlangFunType.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangFunType.class));
   }
 
   @Override
   @Nullable
   public ErlangTypeSigGuard getTypeSigGuard() {
-    return findChildByClass(ErlangTypeSigGuard.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangTypeSigGuard.class);
   }
 
 }

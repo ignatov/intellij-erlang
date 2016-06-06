@@ -16,8 +16,12 @@ public class ErlangColonQualifiedExpressionImpl extends ErlangExpressionImpl imp
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitColonQualifiedExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitColonQualifiedExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangColonQualifiedExpressionImpl extends ErlangExpressionImpl imp
   @Override
   @NotNull
   public PsiElement getColon() {
-    return findNotNullChildByType(ERL_COLON);
+    return notNullChild(findChildByType(ERL_COLON));
   }
 
 }

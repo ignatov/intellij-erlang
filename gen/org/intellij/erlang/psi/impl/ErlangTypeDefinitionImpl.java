@@ -22,27 +22,31 @@ public class ErlangTypeDefinitionImpl extends ErlangNamedStubbedPsiElementBase<E
     super(stub, nodeType);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitTypeDefinition(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypeDefinition(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangArgumentDefinitionList getArgumentDefinitionList() {
-    return findChildByClass(ErlangArgumentDefinitionList.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangArgumentDefinitionList.class);
   }
 
   @Override
   @Nullable
   public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangQAtom.class);
   }
 
   @Override
   @Nullable
   public ErlangType getType() {
-    return findChildByClass(ErlangType.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangType.class);
   }
 
   @Override
@@ -54,7 +58,7 @@ public class ErlangTypeDefinitionImpl extends ErlangNamedStubbedPsiElementBase<E
   @Override
   @NotNull
   public PsiElement getOpMinus() {
-    return findNotNullChildByType(ERL_OP_MINUS);
+    return notNullChild(findChildByType(ERL_OP_MINUS));
   }
 
   @Override

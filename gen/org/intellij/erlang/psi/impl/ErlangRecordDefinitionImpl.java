@@ -22,21 +22,25 @@ public class ErlangRecordDefinitionImpl extends ErlangNamedStubbedPsiElementBase
     super(stub, nodeType);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitRecordDefinition(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordDefinition(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangQAtom getQAtom() {
-    return findChildByClass(ErlangQAtom.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangQAtom.class);
   }
 
   @Override
   @Nullable
   public ErlangTypedRecordFields getTypedRecordFields() {
-    return findChildByClass(ErlangTypedRecordFields.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangTypedRecordFields.class);
   }
 
   @Override
@@ -48,7 +52,7 @@ public class ErlangRecordDefinitionImpl extends ErlangNamedStubbedPsiElementBase
   @Override
   @NotNull
   public PsiElement getOpMinus() {
-    return findNotNullChildByType(ERL_OP_MINUS);
+    return notNullChild(findChildByType(ERL_OP_MINUS));
   }
 
   @Override

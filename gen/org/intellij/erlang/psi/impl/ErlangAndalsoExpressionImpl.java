@@ -16,8 +16,12 @@ public class ErlangAndalsoExpressionImpl extends ErlangFakeBinaryExpressionImpl 
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitAndalsoExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAndalsoExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangAndalsoExpressionImpl extends ErlangFakeBinaryExpressionImpl 
   @Override
   @NotNull
   public PsiElement getAndalso() {
-    return findNotNullChildByType(ERL_ANDALSO);
+    return notNullChild(findChildByType(ERL_ANDALSO));
   }
 
 }

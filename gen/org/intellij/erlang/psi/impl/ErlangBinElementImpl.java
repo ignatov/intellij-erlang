@@ -16,8 +16,12 @@ public class ErlangBinElementImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitBinElement(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinElement(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangBinElementImpl extends ErlangCompositeElementImpl implements 
   @Override
   @Nullable
   public ErlangOptBitTypeList getOptBitTypeList() {
-    return findChildByClass(ErlangOptBitTypeList.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangOptBitTypeList.class);
   }
 
   @Override

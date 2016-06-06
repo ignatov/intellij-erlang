@@ -18,8 +18,12 @@ public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements Er
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitCaseExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCaseExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -32,13 +36,13 @@ public class ErlangCaseExpressionImpl extends ErlangExpressionImpl implements Er
   @Override
   @Nullable
   public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangExpression.class);
   }
 
   @Override
   @NotNull
   public PsiElement getCase() {
-    return findNotNullChildByType(ERL_CASE);
+    return notNullChild(findChildByType(ERL_CASE));
   }
 
   @Override

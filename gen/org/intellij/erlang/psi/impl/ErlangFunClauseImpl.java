@@ -16,33 +16,37 @@ public class ErlangFunClauseImpl extends ErlangCompositeElementImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitFunClause(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunClause(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangArgumentDefinition getArgumentDefinition() {
-    return findChildByClass(ErlangArgumentDefinition.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangArgumentDefinition.class);
   }
 
   @Override
   @NotNull
   public ErlangArgumentDefinitionList getArgumentDefinitionList() {
-    return findNotNullChildByClass(ErlangArgumentDefinitionList.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangArgumentDefinitionList.class));
   }
 
   @Override
   @Nullable
   public ErlangClauseBody getClauseBody() {
-    return findChildByClass(ErlangClauseBody.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangClauseBody.class);
   }
 
   @Override
   @Nullable
   public ErlangClauseGuard getClauseGuard() {
-    return findChildByClass(ErlangClauseGuard.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangClauseGuard.class);
   }
 
 }

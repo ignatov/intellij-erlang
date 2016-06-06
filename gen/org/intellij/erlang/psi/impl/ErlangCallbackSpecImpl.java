@@ -22,21 +22,25 @@ public class ErlangCallbackSpecImpl extends ErlangStubbedPsiElementBase<ErlangCa
     super(stub, nodeType);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitCallbackSpec(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCallbackSpec(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangFunTypeSigs getFunTypeSigs() {
-    return findChildByClass(ErlangFunTypeSigs.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangFunTypeSigs.class);
   }
 
   @Override
   @Nullable
   public ErlangFunTypeSigsBraces getFunTypeSigsBraces() {
-    return findChildByClass(ErlangFunTypeSigsBraces.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangFunTypeSigsBraces.class);
   }
 
   public boolean isOptional() {

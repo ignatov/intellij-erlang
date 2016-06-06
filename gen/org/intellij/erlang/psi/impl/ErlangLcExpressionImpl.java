@@ -16,21 +16,25 @@ public class ErlangLcExpressionImpl extends ErlangExpressionImpl implements Erla
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitLcExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitLcExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangArgumentDefinition getArgumentDefinition() {
-    return findChildByClass(ErlangArgumentDefinition.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangArgumentDefinition.class);
   }
 
   @Override
   @NotNull
   public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangExpression.class));
   }
 
   @Override

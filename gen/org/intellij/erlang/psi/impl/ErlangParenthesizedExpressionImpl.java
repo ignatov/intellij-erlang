@@ -16,21 +16,25 @@ public class ErlangParenthesizedExpressionImpl extends ErlangExpressionImpl impl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitParenthesizedExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitParenthesizedExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangExpression getExpression() {
-    return findChildByClass(ErlangExpression.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangExpression.class);
   }
 
   @Override
   @NotNull
   public PsiElement getParLeft() {
-    return findNotNullChildByType(ERL_PAR_LEFT);
+    return notNullChild(findChildByType(ERL_PAR_LEFT));
   }
 
   @Override

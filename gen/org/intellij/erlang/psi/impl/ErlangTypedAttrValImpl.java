@@ -16,27 +16,31 @@ public class ErlangTypedAttrValImpl extends ErlangCompositeElementImpl implement
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitTypedAttrVal(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedAttrVal(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangExpression.class));
   }
 
   @Override
   @Nullable
   public ErlangType getType() {
-    return findChildByClass(ErlangType.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangType.class);
   }
 
   @Override
   @Nullable
   public ErlangTypedRecordFields getTypedRecordFields() {
-    return findChildByClass(ErlangTypedRecordFields.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangTypedRecordFields.class);
   }
 
   @Override

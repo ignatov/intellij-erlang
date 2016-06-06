@@ -17,27 +17,31 @@ public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements Erlan
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitQAtom(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitQAtom(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangAtom getAtom() {
-    return findChildByClass(ErlangAtom.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangAtom.class);
   }
 
   @Override
   @Nullable
   public ErlangMacros getMacros() {
-    return findChildByClass(ErlangMacros.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangMacros.class);
   }
 
   @Override
   @Nullable
   public ErlangMacrosArg getMacrosArg() {
-    return findChildByClass(ErlangMacrosArg.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangMacrosArg.class);
   }
 
   @Nullable

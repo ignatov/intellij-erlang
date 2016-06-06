@@ -22,27 +22,31 @@ public class ErlangMacrosDefinitionImpl extends ErlangNamedStubbedPsiElementBase
     super(stub, nodeType);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitMacrosDefinition(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacrosDefinition(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangArgumentDefinitionList getArgumentDefinitionList() {
-    return findChildByClass(ErlangArgumentDefinitionList.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangArgumentDefinitionList.class);
   }
 
   @Override
   @Nullable
   public ErlangMacrosBody getMacrosBody() {
-    return findChildByClass(ErlangMacrosBody.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangMacrosBody.class);
   }
 
   @Override
   @Nullable
   public ErlangMacrosName getMacrosName() {
-    return findChildByClass(ErlangMacrosName.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangMacrosName.class);
   }
 
   @Override
@@ -54,7 +58,7 @@ public class ErlangMacrosDefinitionImpl extends ErlangNamedStubbedPsiElementBase
   @Override
   @NotNull
   public PsiElement getOpMinus() {
-    return findNotNullChildByType(ERL_OP_MINUS);
+    return notNullChild(findChildByType(ERL_OP_MINUS));
   }
 
   @Override

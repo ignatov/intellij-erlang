@@ -16,8 +16,12 @@ public class ErlangRecordLikeTypeImpl extends ErlangTypeImpl implements ErlangRe
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitRecordLikeType(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordLikeType(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,13 +34,13 @@ public class ErlangRecordLikeTypeImpl extends ErlangTypeImpl implements ErlangRe
   @Override
   @NotNull
   public PsiElement getCurlyLeft() {
-    return findNotNullChildByType(ERL_CURLY_LEFT);
+    return notNullChild(findChildByType(ERL_CURLY_LEFT));
   }
 
   @Override
   @NotNull
   public PsiElement getCurlyRight() {
-    return findNotNullChildByType(ERL_CURLY_RIGHT);
+    return notNullChild(findChildByType(ERL_CURLY_RIGHT));
   }
 
 }

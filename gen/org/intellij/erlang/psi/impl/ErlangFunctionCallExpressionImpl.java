@@ -17,21 +17,25 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitFunctionCallExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunctionCallExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangArgumentList getArgumentList() {
-    return findNotNullChildByClass(ErlangArgumentList.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangArgumentList.class));
   }
 
   @Override
   @NotNull
   public ErlangQAtom getQAtom() {
-    return findNotNullChildByClass(ErlangQAtom.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
   }
 
   @Nullable

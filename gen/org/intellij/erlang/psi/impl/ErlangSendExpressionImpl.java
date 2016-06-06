@@ -16,8 +16,12 @@ public class ErlangSendExpressionImpl extends ErlangFakeBinaryExpressionImpl imp
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitSendExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitSendExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangSendExpressionImpl extends ErlangFakeBinaryExpressionImpl imp
   @Override
   @NotNull
   public PsiElement getOpExl() {
-    return findNotNullChildByType(ERL_OP_EXL);
+    return notNullChild(findChildByType(ERL_OP_EXL));
   }
 
 }

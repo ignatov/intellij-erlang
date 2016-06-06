@@ -16,8 +16,12 @@ public class ErlangListExpressionImpl extends ErlangExpressionImpl implements Er
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitListExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitListExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,13 +34,13 @@ public class ErlangListExpressionImpl extends ErlangExpressionImpl implements Er
   @Override
   @NotNull
   public PsiElement getBracketLeft() {
-    return findNotNullChildByType(ERL_BRACKET_LEFT);
+    return notNullChild(findChildByType(ERL_BRACKET_LEFT));
   }
 
   @Override
   @NotNull
   public PsiElement getBracketRight() {
-    return findNotNullChildByType(ERL_BRACKET_RIGHT);
+    return notNullChild(findChildByType(ERL_BRACKET_RIGHT));
   }
 
   @Override

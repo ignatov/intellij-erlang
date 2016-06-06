@@ -17,39 +17,43 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitRecordExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitRecordExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangExpression.class));
   }
 
   @Override
   @Nullable
   public ErlangMacros getMacros() {
-    return findChildByClass(ErlangMacros.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangMacros.class);
   }
 
   @Override
   @Nullable
   public ErlangRecordField getRecordField() {
-    return findChildByClass(ErlangRecordField.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangRecordField.class);
   }
 
   @Override
   @Nullable
   public ErlangRecordRef getRecordRef() {
-    return findChildByClass(ErlangRecordRef.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangRecordRef.class);
   }
 
   @Override
   @Nullable
   public ErlangRecordTuple getRecordTuple() {
-    return findChildByClass(ErlangRecordTuple.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangRecordTuple.class);
   }
 
   @Override

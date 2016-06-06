@@ -16,21 +16,25 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitAtomAttribute(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAtomAttribute(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangAttrVal getAttrVal() {
-    return findChildByClass(ErlangAttrVal.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangAttrVal.class);
   }
 
   @Override
   @Nullable
   public ErlangTypedAttrVal getTypedAttrVal() {
-    return findChildByClass(ErlangTypedAttrVal.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangTypedAttrVal.class);
   }
 
   @Override
@@ -48,7 +52,7 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
   @Override
   @NotNull
   public PsiElement getAtomName() {
-    return findNotNullChildByType(ERL_ATOM_NAME);
+    return notNullChild(findChildByType(ERL_ATOM_NAME));
   }
 
   @NotNull

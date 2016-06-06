@@ -16,39 +16,43 @@ public class ErlangTypeImpl extends ErlangCompositeElementImpl implements Erlang
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitType(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitType(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangModuleRef getModuleRef() {
-    return findChildByClass(ErlangModuleRef.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangModuleRef.class);
   }
 
   @Override
   @Nullable
   public ErlangQVar getQVar() {
-    return findChildByClass(ErlangQVar.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangQVar.class);
   }
 
   @Override
   @Nullable
   public ErlangRecordRef getRecordRef() {
-    return findChildByClass(ErlangRecordRef.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangRecordRef.class);
   }
 
   @Override
   @Nullable
   public ErlangType getType() {
-    return findChildByClass(ErlangType.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangType.class);
   }
 
   @Override
   @Nullable
   public ErlangTypeRef getTypeRef() {
-    return findChildByClass(ErlangTypeRef.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangTypeRef.class);
   }
 
   @Override

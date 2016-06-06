@@ -16,27 +16,31 @@ public class ErlangCrClauseImpl extends ErlangCompositeElementImpl implements Er
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitCrClause(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitCrClause(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangArgumentDefinition getArgumentDefinition() {
-    return findChildByClass(ErlangArgumentDefinition.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangArgumentDefinition.class);
   }
 
   @Override
   @Nullable
   public ErlangClauseBody getClauseBody() {
-    return findChildByClass(ErlangClauseBody.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangClauseBody.class);
   }
 
   @Override
   @Nullable
   public ErlangClauseGuard getClauseGuard() {
-    return findChildByClass(ErlangClauseGuard.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangClauseGuard.class);
   }
 
 }

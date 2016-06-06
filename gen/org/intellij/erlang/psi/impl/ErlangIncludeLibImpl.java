@@ -22,21 +22,25 @@ public class ErlangIncludeLibImpl extends ErlangStubbedPsiElementBase<ErlangIncl
     super(stub, nodeType);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitIncludeLib(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitIncludeLib(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangIncludeString getIncludeString() {
-    return findChildByClass(ErlangIncludeString.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangIncludeString.class);
   }
 
   @Override
   @NotNull
   public PsiElement getOpMinus() {
-    return findNotNullChildByType(ERL_OP_MINUS);
+    return notNullChild(findChildByType(ERL_OP_MINUS));
   }
 
   @Override

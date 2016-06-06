@@ -16,15 +16,19 @@ public class ErlangExportTypeAttributeImpl extends ErlangCompositeElementImpl im
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitExportTypeAttribute(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitExportTypeAttribute(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangExportTypes getExportTypes() {
-    return findChildByClass(ErlangExportTypes.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangExportTypes.class);
   }
 
   @Override

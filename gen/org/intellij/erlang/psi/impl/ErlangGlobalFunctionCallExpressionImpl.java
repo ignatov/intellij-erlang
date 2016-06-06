@@ -16,27 +16,31 @@ public class ErlangGlobalFunctionCallExpressionImpl extends ErlangExpressionImpl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitGlobalFunctionCallExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitGlobalFunctionCallExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangFunctionCallExpression getFunctionCallExpression() {
-    return findNotNullChildByClass(ErlangFunctionCallExpression.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangFunctionCallExpression.class));
   }
 
   @Override
   @NotNull
   public ErlangModuleRef getModuleRef() {
-    return findNotNullChildByClass(ErlangModuleRef.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangModuleRef.class));
   }
 
   @Override
   @NotNull
   public PsiElement getColon() {
-    return findNotNullChildByType(ERL_COLON);
+    return notNullChild(findChildByType(ERL_COLON));
   }
 
 }

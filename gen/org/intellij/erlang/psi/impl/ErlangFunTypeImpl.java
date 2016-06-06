@@ -16,21 +16,25 @@ public class ErlangFunTypeImpl extends ErlangTypeImpl implements ErlangFunType {
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitFunType(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFunType(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangFunTypeArguments getFunTypeArguments() {
-    return findNotNullChildByClass(ErlangFunTypeArguments.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangFunTypeArguments.class));
   }
 
   @Override
   @Nullable
   public ErlangTopTypeClause getTopTypeClause() {
-    return findChildByClass(ErlangTopTypeClause.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangTopTypeClause.class);
   }
 
 }

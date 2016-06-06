@@ -16,8 +16,12 @@ public class ErlangMapTupleImpl extends ErlangCompositeElementImpl implements Er
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitMapTuple(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMapTuple(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangMapTupleImpl extends ErlangCompositeElementImpl implements Er
   @Override
   @NotNull
   public PsiElement getCurlyLeft() {
-    return findNotNullChildByType(ERL_CURLY_LEFT);
+    return notNullChild(findChildByType(ERL_CURLY_LEFT));
   }
 
   @Override
@@ -42,7 +46,7 @@ public class ErlangMapTupleImpl extends ErlangCompositeElementImpl implements Er
   @Override
   @NotNull
   public PsiElement getRadix() {
-    return findNotNullChildByType(ERL_RADIX);
+    return notNullChild(findChildByType(ERL_RADIX));
   }
 
 }

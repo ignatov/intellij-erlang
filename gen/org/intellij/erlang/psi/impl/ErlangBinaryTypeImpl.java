@@ -16,8 +16,12 @@ public class ErlangBinaryTypeImpl extends ErlangTypeImpl implements ErlangBinary
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitBinaryType(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitBinaryType(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -36,7 +40,7 @@ public class ErlangBinaryTypeImpl extends ErlangTypeImpl implements ErlangBinary
   @Override
   @NotNull
   public PsiElement getBinStart() {
-    return findNotNullChildByType(ERL_BIN_START);
+    return notNullChild(findChildByType(ERL_BIN_START));
   }
 
   @Override

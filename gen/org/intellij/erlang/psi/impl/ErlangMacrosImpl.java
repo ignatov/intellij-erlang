@@ -17,21 +17,25 @@ public class ErlangMacrosImpl extends ErlangCompositeElementImpl implements Erla
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitMacros(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMacros(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangMacrosName getMacrosName() {
-    return findChildByClass(ErlangMacrosName.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangMacrosName.class);
   }
 
   @Override
   @NotNull
   public PsiElement getQmark() {
-    return findNotNullChildByType(ERL_QMARK);
+    return notNullChild(findChildByType(ERL_QMARK));
   }
 
   @Nullable

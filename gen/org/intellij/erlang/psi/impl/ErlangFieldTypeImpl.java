@@ -17,21 +17,25 @@ public class ErlangFieldTypeImpl extends ErlangTypeImpl implements ErlangFieldTy
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitFieldType(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitFieldType(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangQAtom getQAtom() {
-    return findNotNullChildByClass(ErlangQAtom.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
   }
 
   @Override
   @Nullable
   public ErlangType getType() {
-    return findChildByClass(ErlangType.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangType.class);
   }
 
   @Override

@@ -16,8 +16,12 @@ public class ErlangClauseBodyImpl extends ErlangCompositeElementImpl implements 
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitClauseBody(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitClauseBody(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangClauseBodyImpl extends ErlangCompositeElementImpl implements 
   @Override
   @NotNull
   public PsiElement getArrow() {
-    return findNotNullChildByType(ERL_ARROW);
+    return notNullChild(findChildByType(ERL_ARROW));
   }
 
 }

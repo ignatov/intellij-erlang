@@ -16,15 +16,19 @@ public class ErlangOptionalCallbacksImpl extends ErlangCompositeElementImpl impl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitOptionalCallbacks(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitOptionalCallbacks(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangOptionalCallbackFunctions getOptionalCallbackFunctions() {
-    return findChildByClass(ErlangOptionalCallbackFunctions.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangOptionalCallbackFunctions.class);
   }
 
   @Override

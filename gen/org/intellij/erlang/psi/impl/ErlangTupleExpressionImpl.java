@@ -16,8 +16,12 @@ public class ErlangTupleExpressionImpl extends ErlangExpressionImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitTupleExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTupleExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -30,7 +34,7 @@ public class ErlangTupleExpressionImpl extends ErlangExpressionImpl implements E
   @Override
   @NotNull
   public PsiElement getCurlyLeft() {
-    return findNotNullChildByType(ERL_CURLY_LEFT);
+    return notNullChild(findChildByType(ERL_CURLY_LEFT));
   }
 
   @Override

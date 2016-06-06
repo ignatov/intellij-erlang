@@ -16,8 +16,12 @@ public class ErlangTypedRecordFieldsImpl extends ErlangCompositeElementImpl impl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitTypedRecordFields(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitTypedRecordFields(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
@@ -36,7 +40,7 @@ public class ErlangTypedRecordFieldsImpl extends ErlangCompositeElementImpl impl
   @Override
   @NotNull
   public PsiElement getCurlyLeft() {
-    return findNotNullChildByType(ERL_CURLY_LEFT);
+    return notNullChild(findChildByType(ERL_CURLY_LEFT));
   }
 
   @Override

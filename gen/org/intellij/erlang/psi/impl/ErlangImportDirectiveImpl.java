@@ -16,21 +16,25 @@ public class ErlangImportDirectiveImpl extends ErlangCompositeElementImpl implem
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitImportDirective(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitImportDirective(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangImportFunctions getImportFunctions() {
-    return findChildByClass(ErlangImportFunctions.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangImportFunctions.class);
   }
 
   @Override
   @Nullable
   public ErlangModuleRef getModuleRef() {
-    return findChildByClass(ErlangModuleRef.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangModuleRef.class);
   }
 
   @Override

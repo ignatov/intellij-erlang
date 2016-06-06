@@ -17,15 +17,19 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitStringLiteral(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitStringLiteral(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public PsiElement getString() {
-    return findNotNullChildByType(ERL_STRING);
+    return notNullChild(findChildByType(ERL_STRING));
   }
 
   public boolean isValidHost() {

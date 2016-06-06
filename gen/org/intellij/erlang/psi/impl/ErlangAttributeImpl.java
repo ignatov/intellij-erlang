@@ -16,69 +16,73 @@ public class ErlangAttributeImpl extends ErlangCompositeElementImpl implements E
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitAttribute(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitAttribute(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @Nullable
   public ErlangAtomAttribute getAtomAttribute() {
-    return findChildByClass(ErlangAtomAttribute.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangAtomAttribute.class);
   }
 
   @Override
   @Nullable
   public ErlangBehaviour getBehaviour() {
-    return findChildByClass(ErlangBehaviour.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangBehaviour.class);
   }
 
   @Override
   @Nullable
   public ErlangCallbackSpec getCallbackSpec() {
-    return findChildByClass(ErlangCallbackSpec.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangCallbackSpec.class);
   }
 
   @Override
   @Nullable
   public ErlangExport getExport() {
-    return findChildByClass(ErlangExport.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangExport.class);
   }
 
   @Override
   @Nullable
   public ErlangExportTypeAttribute getExportTypeAttribute() {
-    return findChildByClass(ErlangExportTypeAttribute.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangExportTypeAttribute.class);
   }
 
   @Override
   @Nullable
   public ErlangImportDirective getImportDirective() {
-    return findChildByClass(ErlangImportDirective.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangImportDirective.class);
   }
 
   @Override
   @Nullable
   public ErlangModule getModule() {
-    return findChildByClass(ErlangModule.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangModule.class);
   }
 
   @Override
   @Nullable
   public ErlangOptionalCallbacks getOptionalCallbacks() {
-    return findChildByClass(ErlangOptionalCallbacks.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangOptionalCallbacks.class);
   }
 
   @Override
   @Nullable
   public ErlangSpecification getSpecification() {
-    return findChildByClass(ErlangSpecification.class);
+    return PsiTreeUtil.getChildOfType(this, ErlangSpecification.class);
   }
 
   @Override
   @NotNull
   public PsiElement getOpMinus() {
-    return findNotNullChildByType(ERL_OP_MINUS);
+    return notNullChild(findChildByType(ERL_OP_MINUS));
   }
 
 }

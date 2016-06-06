@@ -16,21 +16,25 @@ public class ErlangMapExpressionImpl extends ErlangExpressionImpl implements Erl
     super(node);
   }
 
+  public void accept(@NotNull ErlangVisitor visitor) {
+    visitor.visitMapExpression(this);
+  }
+
   public void accept(@NotNull PsiElementVisitor visitor) {
-    if (visitor instanceof ErlangVisitor) ((ErlangVisitor)visitor).visitMapExpression(this);
+    if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
   }
 
   @Override
   @NotNull
   public ErlangExpression getExpression() {
-    return findNotNullChildByClass(ErlangExpression.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangExpression.class));
   }
 
   @Override
   @NotNull
   public ErlangMapTuple getMapTuple() {
-    return findNotNullChildByClass(ErlangMapTuple.class);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangMapTuple.class));
   }
 
 }
