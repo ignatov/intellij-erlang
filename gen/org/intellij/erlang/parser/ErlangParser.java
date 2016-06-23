@@ -3579,22 +3579,11 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // &<<isApplicationLanguage>>
   static boolean is_app(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "is_app")) return false;
+    if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
     r = isApplicationLanguage(b, l + 1);
     exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
-  // is_app 'xxx'
-  static boolean is_app_hack(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "is_app_hack")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = is_app(b, l + 1);
-    r = r && consumeToken(b, "xxx");
-    exit_section_(b, m, null, r);
     return r;
   }
 

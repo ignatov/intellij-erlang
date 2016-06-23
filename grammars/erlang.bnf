@@ -109,8 +109,6 @@ private is_app ::= &<<isApplicationLanguage>>
 private is_config ::= &<<isConfigLanguage>>
 private is_console ::= &<<isConsole>>
 
-private is_app_hack ::= is_app 'xxx' //TODO remove when Grammar-Kit won't generate a lookahead for '{' in is_app code
-
 atom ::= atom_name | (single_quote atom_name single_quote) {
   pin(".*") = 1
   methods = [getName setName getNameIdentifier]

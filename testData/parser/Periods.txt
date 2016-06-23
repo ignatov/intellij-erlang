@@ -1,5 +1,5 @@
 ERL_FILE
-  PsiErrorElement:'-', <function clause>, <q atom> or '?' expected, got '.'
+  PsiErrorElement:'-', <function clause>, <q atom>, '?' or '{' expected, got '.'
     PsiElement(ERROR_ELEMENT)('.')
   PsiElement(.)('.')
   PsiElement(.)('.')
