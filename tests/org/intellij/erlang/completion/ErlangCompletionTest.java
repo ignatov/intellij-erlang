@@ -416,7 +416,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariants("% <caret>", CompletionType.BASIC, 1, CheckType.EQUALS);
   }
 
-  public void testIncludeCompletion() throws Exception {
+  public void _testIncludeCompletion() throws Exception {
     localFileSystemSetUp();
     myFixture.configureByFiles("include/includeCompletion.erl", "include/include/header.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "include/");
