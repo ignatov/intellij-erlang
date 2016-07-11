@@ -15,7 +15,7 @@ ERL_FILE
         PsiElement(])(']')
       PsiElement())(')')
     PsiElement(.)('.')
-    PsiErrorElement:'#!/usr/bin/env escript' unexpected
+    PsiErrorElement:'#!/usr/bin/env escri...' unexpected
       PsiElement(ERROR_ELEMENT)('#!/usr/bin/env escript')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
