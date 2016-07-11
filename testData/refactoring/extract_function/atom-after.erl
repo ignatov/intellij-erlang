@@ -1,6 +1,6 @@
 foo() ->
-    ok(),
+  ok(),
     not.
 
 ok() ->
-ok.
+  ok.

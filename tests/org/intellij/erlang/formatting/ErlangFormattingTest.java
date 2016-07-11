@@ -17,6 +17,7 @@
 package org.intellij.erlang.formatting;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.LogicalPosition;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
@@ -52,7 +53,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     myFixture.configureByText(inputFile, inputText);
 
     if (format) {
-      ApplicationManager.getApplication().runWriteAction(new Runnable() {
+      WriteCommandAction.runWriteCommandAction(myFixture.getProject(), new Runnable() {
         @Override
         public void run() {
           CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
