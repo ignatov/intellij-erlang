@@ -45,16 +45,16 @@ public class ErlangAtomSearch extends QueryExecutorBase<PsiReference, References
     if (StringUtil.isEmpty(name)) return;
 
     SearchScope searchScope = parameters.getEffectiveSearchScope();
-    RubyCodeOccurenceProcessor processor = new RubyCodeOccurenceProcessor(element, consumer);
+    MyCodeOccurenceProcessor processor = new MyCodeOccurenceProcessor(element, consumer);
     short searchContext = UsageSearchContext.IN_CODE | UsageSearchContext.IN_STRINGS;
     PsiSearchHelper.SERVICE.getInstance(element.getProject()).processElementsWithWord(processor, searchScope, name, searchContext, true);
   }
 
-  public static class RubyCodeOccurenceProcessor implements TextOccurenceProcessor {
+  private static class MyCodeOccurenceProcessor implements TextOccurenceProcessor {
     private PsiElement myElement;
     private Processor<PsiReference> myPsiReferenceProcessor;
 
-    public RubyCodeOccurenceProcessor(@NotNull PsiElement element, @NotNull Processor<PsiReference> psiReferenceProcessor) {
+    public MyCodeOccurenceProcessor(@NotNull PsiElement element, @NotNull Processor<PsiReference> psiReferenceProcessor) {
       myElement = element;
       myPsiReferenceProcessor = psiReferenceProcessor;
     }
