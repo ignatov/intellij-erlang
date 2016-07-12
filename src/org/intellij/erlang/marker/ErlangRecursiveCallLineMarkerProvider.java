@@ -73,7 +73,7 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
       super(methodCall,
             methodCall.getTextRange(),
             ErlangIcons.RECURSIVE_CALL,
-            Pass.UPDATE_OVERRIDEN_MARKERS,
+            Pass.UPDATE_OVERRIDDEN_MARKERS,
             FunctionUtil.<PsiElement, String>constant("Recursive call"),
             null,
             GutterIconRenderer.Alignment.RIGHT
