@@ -37,13 +37,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ErlangFunctionReferenceImpl<T extends ErlangQAtom> extends PsiPolyVariantReferenceBase<T> implements ErlangFunctionReference {
+public class ErlangFunctionReferenceImpl extends PsiPolyVariantReferenceBase<ErlangQAtom> implements ErlangFunctionReference {
   @Nullable
   private final ErlangQAtom myModuleAtom;
   private final String myReferenceName;
   private final int myArity;
 
-  public ErlangFunctionReferenceImpl(@NotNull T element, @Nullable ErlangQAtom moduleAtom, int arity) {
+  public ErlangFunctionReferenceImpl(@NotNull ErlangQAtom element, @Nullable ErlangQAtom moduleAtom, int arity) {
     super(element, ErlangPsiImplUtil.getTextRangeForReference(element));
     myReferenceName = ErlangPsiImplUtil.getNameIdentifier(element).getText();
     myModuleAtom = moduleAtom;

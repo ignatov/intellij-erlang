@@ -29,10 +29,10 @@ import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangMacrosReferenceImpl<T extends ErlangMacrosName> extends PsiReferenceBase<T> {
+public class ErlangMacrosReferenceImpl extends PsiReferenceBase<ErlangMacrosName> {
   private final String myReferenceName;
 
-  public ErlangMacrosReferenceImpl(T element) {
+  public ErlangMacrosReferenceImpl(ErlangMacrosName element) {
     super(element, ErlangPsiImplUtil.getTextRangeForReference(element));
     myReferenceName = ErlangPsiImplUtil.getNameIdentifier(element).getText();
   }

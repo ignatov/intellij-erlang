@@ -26,8 +26,8 @@ import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangRecordReferenceImpl<T extends ErlangQAtom> extends ErlangQAtomBasedReferenceImpl<T> {
-  public ErlangRecordReferenceImpl(@NotNull T element) {
+public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
+  public ErlangRecordReferenceImpl(@NotNull ErlangQAtom element) {
     super(element, getTextRangeForRecordReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
   }
 

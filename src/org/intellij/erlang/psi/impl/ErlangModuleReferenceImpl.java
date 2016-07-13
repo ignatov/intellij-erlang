@@ -40,10 +40,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Comparator;
 import java.util.List;
 
-public class ErlangModuleReferenceImpl<T extends ErlangQAtom> extends ErlangQAtomBasedReferenceImpl<T> {
+public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   private static final int COMPARE_NO_RESULT = Integer.MIN_VALUE;
 
-  public ErlangModuleReferenceImpl(@NotNull T element) {
+  public ErlangModuleReferenceImpl(@NotNull ErlangQAtom element) {
     super(element, ErlangPsiImplUtil.getTextRangeForReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
   }
 
