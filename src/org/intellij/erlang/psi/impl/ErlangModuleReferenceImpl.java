@@ -48,7 +48,7 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   }
 
   @Override
-  public PsiElement resolve() {
+  public PsiElement resolveInner() {
     GlobalSearchScope scope = getSearchScope();
     List<ErlangModule> modules = ErlangModuleIndex.getModulesByName(myElement.getProject(), myReferenceName, scope);
     if (modules.size() > 1) {

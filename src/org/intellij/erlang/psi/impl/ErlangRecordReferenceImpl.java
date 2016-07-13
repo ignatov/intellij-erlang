@@ -32,7 +32,7 @@ public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   }
 
   @Override
-  public PsiElement resolve() {
+  public PsiElement resolveInner() {
     PsiFile containingFile = myElement.getContainingFile();
     if (containingFile instanceof ErlangFile) {
       ErlangRecordDefinition record = ((ErlangFile) containingFile).getRecord(myReferenceName);

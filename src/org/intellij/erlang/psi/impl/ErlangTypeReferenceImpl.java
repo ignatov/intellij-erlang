@@ -35,7 +35,7 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   }
 
   @Override
-  public PsiElement resolve() {
+  public PsiElement resolveInner() {
     PsiFile containingFile = getPsiFile();
     if (containingFile instanceof ErlangFile) {
       ErlangTypeDefinition type = ((ErlangFile) containingFile).getType(myReferenceName);
@@ -57,5 +57,19 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   public Object[] getVariants() {
     ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myElement, ErlangExportTypeAttribute.class);
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile(), myModuleRef == null && exportTypeAttribute == null, exportTypeAttribute != null));
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ErlangTypeReferenceImpl)) return false;
+    if (!super.equals(o)) return false;
+    return !(myModuleRef != null && !myModuleRef.equals(((ErlangTypeReferenceImpl) o).myModuleRef));
+  }
+
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    return myModuleRef != null ? 31 * result + myModuleRef.hashCode() : result;
   }
 }

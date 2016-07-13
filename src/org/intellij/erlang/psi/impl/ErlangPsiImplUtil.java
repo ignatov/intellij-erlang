@@ -257,7 +257,7 @@ public class ErlangPsiImplUtil {
     if (atom == null) return null;
     return new ErlangQAtomBasedReferenceImpl(atom, getTextRangeForReference(atom), getNameIdentifier(atom).getText()) {
       @Override
-      public PsiElement resolve() {
+      public PsiElement resolveInner() {
         Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(myElement);
         for (ErlangTypedExpr field : recordFields.first) {
           if (field.getName().equals(myReferenceName)) return field;
