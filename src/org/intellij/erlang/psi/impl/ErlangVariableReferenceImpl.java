@@ -30,14 +30,14 @@ import java.util.List;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.fromTheSameCaseExpression;
 
-public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<ErlangQVar> {
+public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingReferenceBase<ErlangQVar> {
   public ErlangVariableReferenceImpl(@NotNull ErlangQVar element, TextRange range) {
     super(element, range);
   }
 
   @NotNull
   @Override
-  public ResolveResult[] multiResolve(boolean b) {
+  public ResolveResult[] multiResolve(boolean incompleteCode) {
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
     ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);
     ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);
@@ -55,7 +55,7 @@ public class ErlangVariableReferenceImpl extends PsiPolyVariantReferenceBase<Erl
 
   @Nullable
   @Override
-  public PsiElement resolve() {
+  public PsiElement resolveInner() {
     ResolveResult[] resolveResults = multiResolve(false);
     return resolveResults.length > 0 ? resolveResults[0].getElement() : null;
   }

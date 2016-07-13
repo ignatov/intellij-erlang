@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ErlangFunctionReferenceImpl extends PsiPolyVariantReferenceBase<ErlangQAtom> implements ErlangFunctionReference {
+public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingReferenceBase<ErlangQAtom> implements ErlangFunctionReference {
   @Nullable
   private final ErlangQAtom myModuleAtom;
   private final String myReferenceName;
@@ -51,7 +51,7 @@ public class ErlangFunctionReferenceImpl extends PsiPolyVariantReferenceBase<Erl
   }
 
   @Override
-  public PsiElement resolve() {
+  public PsiElement resolveInner() {
     if (suppressResolve()) return null; // for #132
 
     if (myModuleAtom != null) {
@@ -70,8 +70,6 @@ public class ErlangFunctionReferenceImpl extends PsiPolyVariantReferenceBase<Erl
 
     ErlangFunction declaredFunction = file.getFunction(myReferenceName, myArity);
     if (declaredFunction != null) return declaredFunction;
-
-
 
     ErlangFunction fromImport = resolveImport(file.getImportedFunction(myReferenceName, myArity));
     if (fromImport != null) return fromImport;
@@ -196,5 +194,18 @@ public class ErlangFunctionReferenceImpl extends PsiPolyVariantReferenceBase<Erl
     PsiReference reference = importFunction != null ? importFunction.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
     return ObjectUtils.tryCast(resolve, ErlangFunction.class);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ErlangFunctionReferenceImpl)) return false;
+    if (!super.equals(o)) return false;
+    return !(myModuleAtom != null && !myModuleAtom.equals(((ErlangFunctionReferenceImpl) o).myModuleAtom));
+  }
+
+  @Override
+  public int hashCode() {
+    return myModuleAtom != null ? 31 * super.hashCode() + myModuleAtom.hashCode() : super.hashCode();
   }
 }
