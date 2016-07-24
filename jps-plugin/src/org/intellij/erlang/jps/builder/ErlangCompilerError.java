@@ -28,7 +28,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ErlangCompilerError {
-  private static final Pattern COMPILER_MESSAGE_PATTERN = Pattern.compile("^(.+?):(?:(\\d+):)?(\\s*Warning:)?\\s*(.+)$");
+  static final Pattern COMPILER_MESSAGE_PATTERN = Pattern.compile("^((?:[a-zA-Z]:)?.+?):(?:(\\d+):)?(\\s*Warning:)?\\s*(.+)$");
+  static final int PATH_MATCH_INDEX = 1;
+  static final int LINE_MATCH_INDEX = 2;
+  static final int WARNING_MATCH_INDEX = 3;
+  static final int DETAILS_MATCH_INDEX = 4;
+
   private final String myErrorMessage;
   private final String myUrl;
   private final int myLine;
@@ -68,13 +73,13 @@ public class ErlangCompilerError {
     Matcher matcher = COMPILER_MESSAGE_PATTERN.matcher(StringUtil.trimTrailing(erlcMessage));
     if (!matcher.matches()) return null;
 
-    String relativeFilePath = FileUtil.toSystemIndependentName(matcher.group(1));
+    String relativeFilePath = FileUtil.toSystemIndependentName(matcher.group(PATH_MATCH_INDEX));
     File path = StringUtil.isEmpty(rootPath) ? new File(relativeFilePath) : new File(FileUtil.toSystemIndependentName(rootPath), relativeFilePath);
     if(!path.exists()) return null;
 
-    String line = matcher.group(2);
-    String warning = matcher.group(3);
-    String details = matcher.group(4);
+    String line = matcher.group(LINE_MATCH_INDEX);
+    String warning = matcher.group(WARNING_MATCH_INDEX);
+    String details = matcher.group(DETAILS_MATCH_INDEX);
     return createCompilerError(path.getPath(), line, warning, details);
   }
 
