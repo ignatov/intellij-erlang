@@ -40,12 +40,14 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   private JPanel myContent;
   private JPanel myModulesNotToInterpretPanel;
   private JBCheckBox myAutoUpdateModulesNotToInterpretCheckBox;
+  private JCheckBox includeRebarDependenenciesFromCheckBox;
 
   private JBList myModulesNotToInterpretList;
   private CollectionListModel myModulesNotToInterpretListModel;
 
   public ErlangDebugOptionsEditorForm() {
     myAutoUpdateModulesNotToInterpretCheckBox.addActionListener(e -> setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected()));
+    includeRebarDependenenciesFromCheckBox.addActionListener(e -> setIncludeRebarDependenciesFromCheckBox(includeRebarDependenenciesFromCheckBox.isSelected()));
   }
 
   @Override
@@ -56,11 +58,13 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
       myModulesNotToInterpretListModel.add(module);
     }
     setAutoUpdateModulesNotToInterpret(erlangDebugOptions.isAutoUpdateModulesNotToInterpret());
+    setIncludeRebarDependenciesFromCheckBox(erlangDebugOptions.isIncludingRebarDependencies());
   }
 
   @Override
   protected void applyEditorTo(ErlangRunConfigurationBase.ErlangDebugOptions erlangDebugOptions) throws ConfigurationException {
     erlangDebugOptions.setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected());
+    erlangDebugOptions.setIncludeRebarDependencies(this.includeRebarDependenenciesFromCheckBox.isSelected());
     Set<String> modules = erlangDebugOptions.isAutoUpdateModulesNotToInterpret() ? Collections.<String>emptySet() :
       ContainerUtil.map2Set(myModulesNotToInterpretListModel.getItems(),
                             String::valueOf);
@@ -77,6 +81,10 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
     myAutoUpdateModulesNotToInterpretCheckBox.setSelected(autoUpdate);
     myModulesNotToInterpretPanel.setEnabled(!autoUpdate);
     myModulesNotToInterpretList.setEnabled(!autoUpdate);
+  }
+
+  private void setIncludeRebarDependenciesFromCheckBox(boolean includeDeps) {
+    includeRebarDependenenciesFromCheckBox.setSelected(includeDeps);
   }
 
   private void createUIComponents() {
