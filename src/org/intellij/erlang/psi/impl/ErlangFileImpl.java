@@ -17,6 +17,7 @@
 package org.intellij.erlang.psi.impl;
 
 import com.intellij.extapi.psi.PsiFileBase;
+import com.intellij.ide.scratch.ScratchFileType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.DumbService;
@@ -303,6 +304,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @Override
   public FileType getFileType() {
     FileType fileType = getViewProvider().getFileType();
+    if ((fileType instanceof ScratchFileType)) return fileType;
     if (!(fileType instanceof ErlangFileType)) {
       return getFileTypeForTests();
     }
