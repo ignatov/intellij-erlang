@@ -16,13 +16,19 @@
 
 package org.intellij.erlang.runconfig;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.execution.configurations.ConfigurationType;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.process.ProcessOutput;
+import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -31,20 +37,20 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiSearchHelper;
 import com.intellij.util.Processor;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends ErlangRunConfigurationBase> extends RunConfigurationProducer<RunConfig> {
   protected ErlangDebuggableRunConfigurationProducer(ConfigurationType configurationType) {
@@ -86,12 +92,6 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
     if (debugOptions.isAutoUpdateModulesNotToInterpret() && module != null) {
       debugOptions.setModulesNotToInterpret(getErlangModulesWithCallsToLoadNIF(module, runConfig.isUseTestCodePath()));
     }
-
-    if (debugOptions.isIncludingRebarDependencies()) {
-        debugOptions.setIncludeRebarDependencies(true);
-        debugOptions.getRebarDependencies().clear();
-        debugOptions.getRebarDependencies().addAll(getRebarDependencies(module));
-    }
   }
 
   @NotNull
@@ -101,21 +101,6 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
     debugOptions.setModulesNotToInterpret(getErlangModulesWithCallsToLoadNIF(module, includeTests));
 
     return debugOptions;
-  }
-
-  @NotNull
-  private static Set<String> getRebarDependencies(@Nullable final Module module) {
-    final Set<String> dependencies = new HashSet<String>();
-
-    ErlangFile rebarConfig=RebarConfigUtil.getRebarConfig(module.getProject(), module.getModuleFile().getParent());
-
-    List<String> dependencyAppNames=RebarConfigUtil.getDependencyAppNames(rebarConfig);
-
-    for (String appName : dependencyAppNames) {
-      dependencies.add(String.format("deps%s%s%sebin", File.separator, appName, File.separator));
-    }
-
-    return dependencies;
   }
 
   @NotNull

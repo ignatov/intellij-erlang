@@ -55,6 +55,7 @@ import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunningState;
 import org.intellij.erlang.debugger.xdebug.xvalue.ErlangXValueFactory;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.intellij.erlang.utils.ErlangModulesUtil;
@@ -340,6 +341,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       setUpErlangDebuggerCodePath(commandLine);
       myRunningState.setCodePath(commandLine);
       setupErlangRebarDependencies(commandLine);
+      setupErlangAppConfig(commandLine);
       commandLine.addParameters("-run", "debugnode", "main", String.valueOf(myDebuggerNode.getLocalDebuggerPort()));
       myRunningState.setErlangFlags(commandLine);
       myRunningState.setNoShellMode(commandLine);
@@ -379,12 +381,23 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     return erlangProcessHandler;
   }
 
-  private void setupErlangRebarDependencies(GeneralCommandLine commandLine) throws ExecutionException {
-    ErlangRunConfigurationBase<?> runConfiguration = getRunConfiguration();
-    Set<String> dependencies = runConfiguration.getDebugOptions().getRebarDependencies();
+  private void setupErlangAppConfig(GeneralCommandLine commandLine) throws ExecutionException {
+    ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
+    if (runConfig.getDebugOptions().isLoadingConfig()) {
+      commandLine.addParameters("-config", runConfig.getDebugOptions().getAppConfig());
+    }
+  }
 
-    for (String dep : dependencies)
-      commandLine.addParameters("-pa", dep);
+  private void setupErlangRebarDependencies(GeneralCommandLine commandLine) throws ExecutionException {
+    ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
+    if (runConfig.getDebugOptions().isIncludingRebarDependencies()) {
+      Set<String> dependencies = RebarConfigUtil.getRebarDependencies(
+              runConfig.getConfigurationModule().getModule(),
+              runConfig.getDebugOptions().isFetchingDependencies());
+
+      for (String dep : dependencies)
+        commandLine.addParameters("-pa", dep);
+    }
   }
 
   private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
