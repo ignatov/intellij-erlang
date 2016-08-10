@@ -340,8 +340,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       myRunningState.setWorkDirectory(commandLine);
       setUpErlangDebuggerCodePath(commandLine);
       myRunningState.setCodePath(commandLine);
-      setupErlangRebarDependencies(commandLine);
-      setupErlangAppConfig(commandLine);
+      myRunningState.setErlangRebarDependencies(commandLine);
+      myRunningState.setErlangAppConfig(commandLine);
       commandLine.addParameters("-run", "debugnode", "main", String.valueOf(myDebuggerNode.getLocalDebuggerPort()));
       myRunningState.setErlangFlags(commandLine);
       myRunningState.setNoShellMode(commandLine);
@@ -379,25 +379,6 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
     LOG.debug("Debug target should now be running.");
     return erlangProcessHandler;
-  }
-
-  private void setupErlangAppConfig(GeneralCommandLine commandLine) throws ExecutionException {
-    ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
-    if (runConfig.getDebugOptions().isLoadingConfig()) {
-      commandLine.addParameters("-config", runConfig.getDebugOptions().getAppConfig());
-    }
-  }
-
-  private void setupErlangRebarDependencies(GeneralCommandLine commandLine) throws ExecutionException {
-    ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
-    if (runConfig.getDebugOptions().isIncludingRebarDependencies()) {
-      Set<String> dependencies = RebarConfigUtil.getRebarDependencies(
-              runConfig.getConfigurationModule().getModule(),
-              runConfig.getDebugOptions().isFetchingDependencies());
-
-      for (String dep : dependencies)
-        commandLine.addParameters("-pa", dep);
-    }
   }
 
   private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {

@@ -35,11 +35,8 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 public class ErlangRemoteDebugRunningState extends ErlangRunningState {
-  private final ErlangRemoteDebugRunConfiguration myConfiguration;
-
   public ErlangRemoteDebugRunningState(ExecutionEnvironment env, Module module, ErlangRemoteDebugRunConfiguration configuration) {
-    super(env, module);
-    myConfiguration = configuration;
+    super(env, module, configuration);
   }
 
   @Override
@@ -78,16 +75,18 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
   @Override
   protected List<String> getErlFlags() {
     List<String> nodeNameArgs = getNodeNameArgs();
-    List<String> additionalArgs = ParametersListUtil.parse(myConfiguration.getDebugNodeArgs());
+    List<String> additionalArgs = ParametersListUtil.parse(
+            ((ErlangRemoteDebugRunConfiguration)getConfiguration()).getDebugNodeArgs());
     return ContainerUtil.concat(nodeNameArgs, additionalArgs);
   }
 
   @NotNull
   private List<String> getNodeNameArgs() {
-    if (myConfiguration.isUseShortNames()) {
+    ErlangRemoteDebugRunConfiguration debugConfig=(ErlangRemoteDebugRunConfiguration)getConfiguration();
+    if (debugConfig.isUseShortNames()) {
       return ContainerUtil.list("-sname", getNodeName());
     }
-    String host = StringUtil.nullize(myConfiguration.getHost(), true);
+    String host = StringUtil.nullize(debugConfig.getHost(), true);
     String qualifiedName = getNodeName() + "@" + (host == null ? getDefaultHost() : host);
     return ContainerUtil.list("-name", qualifiedName);
   }

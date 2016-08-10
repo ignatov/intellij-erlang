@@ -31,16 +31,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class ErlangApplicationRunningState extends ErlangRunningState {
-  private ErlangApplicationConfiguration myConfiguration;
 
-  public ErlangApplicationRunningState(ExecutionEnvironment env, Module module, ErlangApplicationConfiguration configuration) {
-    super(env, module);
-    myConfiguration = configuration;
+  public ErlangApplicationRunningState(ExecutionEnvironment env, Module module,
+                                       ErlangApplicationConfiguration configuration) {
+    super(env, module, configuration);
   }
 
   @Override
   protected boolean useTestCodePath() {
-    return myConfiguration.isUseTestCodePath();
+    return getConfiguration().isUseTestCodePath();
   }
 
   @Override
@@ -50,18 +49,20 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
 
   @Override
   protected boolean isStopErlang() {
-    return myConfiguration.stopErlang();
+    return ((ErlangApplicationConfiguration)getConfiguration()).stopErlang();
   }
 
   @Override
   protected List<String> getErlFlags() {
-    return StringUtil.split(myConfiguration.getErlFlags(), " ");
+    return StringUtil.split(((ErlangApplicationConfiguration)getConfiguration()).getErlFlags(), " ");
   }
 
   @Nullable
   @Override
   public ErlangEntryPoint getEntryPoint() throws ExecutionException {
-    ErlangEntryPoint entryPoint = ErlangEntryPoint.fromModuleAndFunction(myConfiguration.getModuleAndFunction(), myConfiguration.getParams());
+    ErlangEntryPoint entryPoint = ErlangEntryPoint.fromModuleAndFunction(
+            ((ErlangApplicationConfiguration)getConfiguration()).getModuleAndFunction(),
+            ((ErlangApplicationConfiguration)getConfiguration()).getParams());
     if (entryPoint == null) {
       throw new ExecutionException("Invalid entry point");
     }
@@ -71,13 +72,14 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
   @Nullable
   @Override
   public String getWorkDirectory() {
-    return myConfiguration.getWorkDirectory();
+    return getConfiguration().getWorkDirectory();
   }
 
   @NotNull
   @Override
   public ConsoleView createConsoleView(Executor executor) {
-    TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfiguration.getProject());
+    TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(
+            getConfiguration().getProject());
     return consoleBuilder.getConsole();
   }
 }

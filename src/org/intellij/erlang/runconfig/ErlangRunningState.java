@@ -33,19 +33,28 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class ErlangRunningState extends CommandLineState {
   private final Module myModule;
 
-  protected ErlangRunningState(ExecutionEnvironment env, Module module) {
+  private final ErlangRunConfigurationBase configuration;
+
+  protected ErlangRunningState(ExecutionEnvironment env, Module module, ErlangRunConfigurationBase configuration) {
     super(env);
     myModule = module;
+    this.configuration = configuration;
+  }
+
+  public ErlangRunConfigurationBase getConfiguration() {
+    return configuration;
   }
 
   @NotNull
@@ -56,11 +65,13 @@ public abstract class ErlangRunningState extends CommandLineState {
   }
 
   private GeneralCommandLine getCommand() throws ExecutionException {
-    GeneralCommandLine commandLine = new GeneralCommandLine();
+     GeneralCommandLine commandLine = new GeneralCommandLine();
     setExePath(commandLine);
     setWorkDirectory(commandLine);
     setCodePath(commandLine);
     setEntryPoint(commandLine);
+    setErlangRebarDependencies(commandLine);
+    setErlangAppConfig(commandLine);
     setStopErlang(commandLine);
     setNoShellMode(commandLine);
     setErlangFlags(commandLine);
@@ -135,6 +146,23 @@ public abstract class ErlangRunningState extends CommandLineState {
     commandLine.addParameters(getErlFlags());
   }
 
+  public void setErlangAppConfig(GeneralCommandLine commandLine) throws ExecutionException {
+    if (this.configuration.getDebugOptions().isLoadingConfig()) {
+      commandLine.addParameters("-config", this.configuration.getDebugOptions().getAppConfig());
+    }
+  }
+
+  public void setErlangRebarDependencies(GeneralCommandLine commandLine) throws ExecutionException {
+    if (this.configuration.getDebugOptions().isIncludingRebarDependencies()) {
+      Set<String> dependencies = RebarConfigUtil.getRebarDependencies(
+              this.configuration.getConfigurationModule().getModule(),
+              this.configuration.getDebugOptions().isFetchingDependencies());
+
+      for (String dep : dependencies)
+        commandLine.addParameters("-pa", dep);
+    }
+  }
+
   @NotNull
   public abstract ConsoleView createConsoleView(Executor executor);
 
@@ -174,7 +202,7 @@ public abstract class ErlangRunningState extends CommandLineState {
       while (m.find()) {
         args.add(m.group(1));
       }
-      
+
       return new ErlangEntryPoint(module, function, args);
     }
   }

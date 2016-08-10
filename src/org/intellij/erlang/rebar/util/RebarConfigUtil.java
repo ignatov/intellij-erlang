@@ -97,6 +97,8 @@ public final class RebarConfigUtil {
       dependencies.add(String.format("deps%s%s%sebin", File.separator, appName, File.separator));
     }
 
+    dependencies.add("ebin");
+
     return dependencies;
   }
 

@@ -36,6 +36,7 @@ import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,9 +48,8 @@ import java.util.*;
 public class ErlangUnitRunningState extends ErlangRunningState {
   private static int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
   private ErlangUnitRunConfiguration myConfiguration;
-
   public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
-    super(env, module);
+    super(env, module, configuration);
     myConfiguration = configuration;
   }
 
@@ -86,7 +86,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @Nullable
   @Override
   public String getWorkDirectory() {
-    return myConfiguration.getWorkDirectory();
+    return getConfiguration().getWorkDirectory();
   }
 
   @Override
@@ -101,7 +101,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     setConsoleBuilder(getConsoleBuilder());
 
     final ConsoleView consoleView = createConsoleView(executor);
-    ErlangConsoleUtil.attachFilters(myConfiguration.getProject(), consoleView);
+    ErlangConsoleUtil.attachFilters(getConfiguration().getProject(), consoleView);
     consoleView.attachToProcess(processHandler);
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
@@ -128,14 +128,15 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
   @NotNull
   private String getTestObjectsString(boolean debug) throws ExecutionException {
-    ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = myConfiguration.getConfigData().getKind();
+    ErlangUnitRunConfiguration config = (ErlangUnitRunConfiguration)getConfiguration();
+    ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = config.getConfigData().getKind();
     String tests;
     if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
-      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ", ");
+      tests = StringUtil.join(config.getConfigData().getModuleNames(), ", ");
     }
     else if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
       StringBuilder result = new StringBuilder();
-      Map<String, List<String>> modules = groupByModule(myConfiguration.getConfigData().getFunctionNames());
+      Map<String, List<String>> modules = groupByModule(config.getConfigData().getFunctionNames());
       for (Map.Entry<String, List<String>> e : modules.entrySet()) {
         String moduleName = e.getKey();
 
