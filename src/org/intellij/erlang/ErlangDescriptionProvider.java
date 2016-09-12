@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
+    if (!(o instanceof ErlangCompositeElement)) return null;
     if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom)) {
       return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
     }
