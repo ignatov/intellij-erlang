@@ -43,6 +43,7 @@ public final class RebarRunConfigurationFactory extends ConfigurationFactory {
     return ourInstance;
   }
 
+  @NotNull
   @Override
   public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
     return new RebarRunConfiguration("Erlang Rebar", project);

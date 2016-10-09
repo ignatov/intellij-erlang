@@ -22,6 +22,7 @@ import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.jetbrains.annotations.NotNull;
 
 
 //TODO create a RunConfigurationProducer for this configuration type
@@ -33,8 +34,9 @@ public class ErlangRemoteDebugRunConfigurationType extends ConfigurationTypeBase
       "Erlang remote node debug run configuration",
       ErlangIcons.REMOTE_NODE);
     addFactory(new ConfigurationFactory(this) {
+      @NotNull
       @Override
-      public RunConfiguration createTemplateConfiguration(Project project) {
+      public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
         return new ErlangRemoteDebugRunConfiguration(project, "Erlang remote node");
       }
     });

@@ -22,6 +22,7 @@ import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
   public static final String PROTOCOL = "eunit";
@@ -43,8 +44,9 @@ public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
       super(type);
     }
 
+    @NotNull
     @Override
-    public RunConfiguration createTemplateConfiguration(Project project) {
+    public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
       return new ErlangUnitRunConfiguration(project, "Erlang", getInstance());
     }
   }

@@ -44,6 +44,7 @@ final class ErlangConsoleRunConfigurationFactory extends ConfigurationFactory {
     return ourInstance;
   }
 
+  @NotNull
   @Override
   public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
     return new ErlangConsoleRunConfiguration("Erlang Shell", project);

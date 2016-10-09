@@ -23,6 +23,7 @@ import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.jetbrains.annotations.NotNull;
 
 public class ErlangApplicationRunConfigurationType extends ConfigurationTypeBase {
 
@@ -44,7 +45,8 @@ public class ErlangApplicationRunConfigurationType extends ConfigurationTypeBase
       super(type);
     }
 
-    public RunConfiguration createTemplateConfiguration(Project project) {
+    @NotNull
+    public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
       return new ErlangApplicationConfiguration(project, "Erlang", getInstance());
     }
   }
