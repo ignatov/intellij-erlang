@@ -606,13 +606,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static List<LookupElement> createFunctionLookupElements(@NotNull List<ErlangFunction> functions, final boolean withArity) {
-    return ContainerUtil.map(functions, new Function<ErlangFunction, LookupElement>() {
-      @NotNull
-      @Override
-      public LookupElement fun(@NotNull ErlangFunction function) {
-        return createFunctionsLookupElement(function, withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY);
-      }
-    });
+    return ContainerUtil.map(functions, function -> createFunctionsLookupElement(function, withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY));
   }
 
   @NotNull
@@ -689,13 +683,7 @@ public class ErlangPsiImplUtil {
       List<ErlangMacrosDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getMacroses(), getErlangMacrosFromIncludes((ErlangFile) containingFile, true, ""));
       List<LookupElement> fromFile = ContainerUtil.map(
         concat,
-        new Function<ErlangMacrosDefinition, LookupElement>() {
-          @NotNull
-          @Override
-          public LookupElement fun(@NotNull ErlangMacrosDefinition md) {
-            return LookupElementBuilder.create(md).withIcon(ErlangIcons.MACROS);
-          }
-        });
+        md -> LookupElementBuilder.create(md).withIcon(ErlangIcons.MACROS));
       List<LookupElement> stdMacros = ContainerUtil.newArrayList();
       for (String m : KNOWN_MACROS) {
         stdMacros.add(LookupElementBuilder.create(m).withIcon(ErlangIcons.MACROS));
@@ -711,13 +699,7 @@ public class ErlangPsiImplUtil {
       List<ErlangRecordDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getRecords(), getErlangRecordFromIncludes((ErlangFile) containingFile, true, ""));
       return ContainerUtil.map(
         concat,
-        new Function<ErlangRecordDefinition, LookupElement>() {
-          @NotNull
-          @Override
-          public LookupElement fun(@NotNull ErlangRecordDefinition rd) {
-            return LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD);
-          }
-        });
+        rd -> LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD));
     }
     return Collections.emptyList();
   }
@@ -735,27 +717,15 @@ public class ErlangPsiImplUtil {
         }
       };
 
-      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(BUILT_IN_TYPES, new Function<String, LookupElement>() {
-        @NotNull
-        @Override
-        public LookupElement fun(@NotNull String s) {
-          return PrioritizedLookupElement.withPriority(
-            LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler),
-            ErlangCompletionContributor.TYPE_PRIORITY);
-        }
-      }) : ContainerUtil.<LookupElement>emptyList();
+      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(BUILT_IN_TYPES, s -> PrioritizedLookupElement.withPriority(
+        LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler),
+        ErlangCompletionContributor.TYPE_PRIORITY)) : ContainerUtil.<LookupElement>emptyList();
 
       List<LookupElement> foundedTypes = ContainerUtil.map(
         types,
-        new Function<ErlangTypeDefinition, LookupElement>() {
-          @NotNull
-          @Override
-          public LookupElement fun(@NotNull ErlangTypeDefinition rd) {
-            return PrioritizedLookupElement.withPriority(
-              LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(rd.getName(), getArity(rd), withArity)),
-              ErlangCompletionContributor.TYPE_PRIORITY);
-          }
-        });
+        rd -> PrioritizedLookupElement.withPriority(
+          LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(rd.getName(), getArity(rd), withArity)),
+          ErlangCompletionContributor.TYPE_PRIORITY));
       return ContainerUtil.concat(foundedTypes, builtInTypes);
     }
     return Collections.emptyList();
@@ -1155,19 +1125,9 @@ public class ErlangPsiImplUtil {
   public static VirtualFile getContainingOtpAppRoot(@NotNull Project project, @Nullable final VirtualFile file) {
     if (file == null) return null;
     List<VirtualFile> allOtpAppRoots = ErlangApplicationIndex.getAllApplicationDirectories(project, GlobalSearchScope.allScope(project));
-    List<VirtualFile> containingOtpAppRoots = ContainerUtil.filter(allOtpAppRoots, new Condition<VirtualFile>() {
-      @Override
-      public boolean value(@NotNull VirtualFile appRoot) {
-        return VfsUtilCore.isAncestor(appRoot, file, true);
-      }
-    });
+    List<VirtualFile> containingOtpAppRoots = ContainerUtil.filter(allOtpAppRoots, appRoot -> VfsUtilCore.isAncestor(appRoot, file, true));
     //sort it in order to have longest path first
-    ContainerUtil.sort(containingOtpAppRoots, new Comparator<VirtualFile>() {
-      @Override
-      public int compare(@NotNull VirtualFile o1, @NotNull VirtualFile o2) {
-        return o2.getPath().length() - o1.getPath().length();
-      }
-    });
+    ContainerUtil.sort(containingOtpAppRoots, (o1, o2) -> o2.getPath().length() - o1.getPath().length());
     return ContainerUtil.getFirstItem(containingOtpAppRoots);
   }
 
@@ -1601,12 +1561,7 @@ public class ErlangPsiImplUtil {
 
   public static boolean isEunitImported(@NotNull ErlangFile file) {
     return isEunitDirectlyImported(file) ||
-      ContainerUtil.find(getIncludedFiles(file), new Condition<ErlangFile>() {
-        @Override
-        public boolean value(@NotNull ErlangFile includedFile) {
-          return isEunitDirectlyImported(includedFile);
-        }
-      }) != null;
+           ContainerUtil.find(getIncludedFiles(file), includedFile -> isEunitDirectlyImported(includedFile)) != null;
   }
 
   private static boolean isEunitDirectlyImported(@NotNull ErlangFile file) {

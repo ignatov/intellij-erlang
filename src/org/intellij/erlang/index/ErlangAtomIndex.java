@@ -51,22 +51,18 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
   @NotNull
   @Override
   public DataIndexer<String, Void, FileContent> getIndexer() {
-    return new DataIndexer<String, Void, FileContent>() {
-      @Override
-      @NotNull
-      public Map<String, Void> map(@NotNull final FileContent inputData) {
-        final Map<String, Void> result = new THashMap<String, Void>();
-        PsiFile file = inputData.getPsiFile();
-        if (file instanceof ErlangFile) {
-          file.accept(new ErlangRecursiveVisitor() {
-            @Override
-            public void visitQAtom(@NotNull ErlangQAtom o) {
-              if (ErlangPsiImplUtil.standaloneAtom(o)) result.put(o.getText(), null);
-            }
-          });
-        }
-        return result;
+    return inputData -> {
+      final Map<String, Void> result = new THashMap<String, Void>();
+      PsiFile file = inputData.getPsiFile();
+      if (file instanceof ErlangFile) {
+        file.accept(new ErlangRecursiveVisitor() {
+          @Override
+          public void visitQAtom(@NotNull ErlangQAtom o) {
+            if (ErlangPsiImplUtil.standaloneAtom(o)) result.put(o.getText(), null);
+          }
+        });
       }
+      return result;
     };
   }
 

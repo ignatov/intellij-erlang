@@ -57,12 +57,9 @@ public final class ErlangConsoleUtil {
     final Set<Module> codePathModules = new HashSet<Module>();
     if (module != null) {
       ModuleRootManager moduleRootMgr = ModuleRootManager.getInstance(module);
-      moduleRootMgr.orderEntries().recursively().forEachModule(new Processor<Module>() {
-        @Override
-        public boolean process(@NotNull Module dependencyModule) {
-          codePathModules.add(dependencyModule);
-          return true;
-        }
+      moduleRootMgr.orderEntries().recursively().forEachModule(dependencyModule -> {
+        codePathModules.add(dependencyModule);
+        return true;
       });
     }
     else {

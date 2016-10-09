@@ -113,21 +113,18 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   private static void appendEndAndMoveCaret(@NotNull final PsiFile file, @NotNull final Editor editor, final int offset, final boolean addComma) {
     final Project project = editor.getProject();
     if (project == null) return;
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        CaretModel caretModel = editor.getCaretModel();
-        caretModel.moveToOffset(offset);
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      CaretModel caretModel = editor.getCaretModel();
+      caretModel.moveToOffset(offset);
 
-        String endText = "\n\nend" + (addComma ? "," : "");
-        editor.getDocument().insertString(offset, endText);
+      String endText = "\n\nend" + (addComma ? "," : "");
+      editor.getDocument().insertString(offset, endText);
 
-        PsiDocumentManager.getInstance(project).commitDocument(editor.getDocument());
-        CodeStyleManager.getInstance(project).adjustLineIndent(file, TextRange.from(offset, endText.length()));
+      PsiDocumentManager.getInstance(project).commitDocument(editor.getDocument());
+      CodeStyleManager.getInstance(project).adjustLineIndent(file, TextRange.from(offset, endText.length()));
 
-        caretModel.moveCaretRelatively(0, 1, false, false, true);
-        CodeStyleManager.getInstance(project).adjustLineIndent(file, caretModel.getOffset());
-      }
+      caretModel.moveCaretRelatively(0, 1, false, false, true);
+      CodeStyleManager.getInstance(project).adjustLineIndent(file, caretModel.getOffset());
     });
   }
 

@@ -57,27 +57,17 @@ public final class ErlangModulesUtil {
   public static ErlangModule getErlangModule(@NotNull final Project project,
                                              @NotNull final String moduleName,
                                              @NotNull final GlobalSearchScope scope) {
-    return ApplicationManager.getApplication().runReadAction(new Computable<ErlangModule>() {
-      @Nullable
-      @Override
-      public ErlangModule compute() {
-        return doGetErlangModule(project, moduleName, scope);
-      }
-    });
+    return ApplicationManager.getApplication().runReadAction((Computable<ErlangModule>) () -> doGetErlangModule(project, moduleName, scope));
   }
 
   @Nullable
   public static ErlangFile getErlangModuleFile(@NotNull final Project project,
                                                @NotNull final String moduleName,
                                                @NotNull final GlobalSearchScope scope) {
-    return ApplicationManager.getApplication().runReadAction(new Computable<ErlangFile>() {
-      @Nullable
-      @Override
-      public ErlangFile compute() {
-        ErlangModule module = doGetErlangModule(project, moduleName, scope);
-        PsiFile containingFile = module != null ? module.getContainingFile() : null;
-        return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
-      }
+    return ApplicationManager.getApplication().runReadAction((Computable<ErlangFile>) () -> {
+      ErlangModule module = doGetErlangModule(project, moduleName, scope);
+      PsiFile containingFile = module != null ? module.getContainingFile() : null;
+      return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
     });
   }
 
@@ -128,14 +118,11 @@ public final class ErlangModulesUtil {
                                                   boolean onlyTest,
                                                   @NotNull final Collection<VirtualFile> files,
                                                   @NotNull final ErlangFileType type) {
-    Processor<VirtualFile> modulesCollector = new Processor<VirtualFile>() {
-      @Override
-      public boolean process(VirtualFile virtualFile) {
-        if (virtualFile.getFileType() == type) {
-          files.add(virtualFile);
-        }
-        return true;
+    Processor<VirtualFile> modulesCollector = virtualFile -> {
+      if (virtualFile.getFileType() == type) {
+        files.add(virtualFile);
       }
+      return true;
     };
     collectFiles(module, onlyTest, modulesCollector);
     return files;
@@ -155,39 +142,26 @@ public final class ErlangModulesUtil {
   }
   @NotNull
   private static Convertor<VirtualFile, Boolean> getSourceDirectoriesFilter(@NotNull final ModuleFileIndex moduleFileIndex) {
-    return new Convertor<VirtualFile, Boolean>() {
-      @Override
-      public Boolean convert(@NotNull VirtualFile dir) {
-        return moduleFileIndex.isInSourceContent(dir);
-      }
-    };
+    return dir -> moduleFileIndex.isInSourceContent(dir);
   }
 
   @NotNull
   private static Convertor<VirtualFile, Boolean> getTestDirectoriesFilter(@NotNull final ModuleFileIndex moduleFileIndex) {
-    return new Convertor<VirtualFile, Boolean>() {
-      @Override
-      public Boolean convert(@NotNull VirtualFile dir) {
-        return moduleFileIndex.isInTestSourceContent(dir);
-      }
-    };
+    return dir -> moduleFileIndex.isInTestSourceContent(dir);
   }
 
   @Nullable
   private static Processor<VirtualFile> getErlangModulesCollector(@NotNull final PsiManager psiManager,
                                                                   @NotNull final Collection<ErlangFile> erlangFiles,
                                                                   @NotNull final ErlangFileType type) {
-    return new Processor<VirtualFile>() {
-      @Override
-      public boolean process(@NotNull VirtualFile virtualFile) {
-        if (virtualFile.getFileType() == type) {
-          PsiFile psiFile = psiManager.findFile(virtualFile);
-          if (psiFile instanceof ErlangFile) {
-            erlangFiles.add((ErlangFile) psiFile);
-          }
+    return virtualFile -> {
+      if (virtualFile.getFileType() == type) {
+        PsiFile psiFile = psiManager.findFile(virtualFile);
+        if (psiFile instanceof ErlangFile) {
+          erlangFiles.add((ErlangFile) psiFile);
         }
-        return true;
       }
+      return true;
     };
   }
 }

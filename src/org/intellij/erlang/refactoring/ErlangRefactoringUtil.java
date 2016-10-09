@@ -117,11 +117,7 @@ public class ErlangRefactoringUtil {
             extractor.process(editor, expression);
           }
         },
-        new Function<ErlangExpression, String>() {
-          public String fun(@NotNull ErlangExpression expression) {
-            return expression.getText();
-          }
-        }
+                                         expression -> expression.getText()
       );
     }
   }

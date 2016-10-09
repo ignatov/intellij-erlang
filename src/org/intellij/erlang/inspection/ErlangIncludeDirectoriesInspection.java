@@ -57,12 +57,7 @@ public class ErlangIncludeDirectoriesInspection extends ErlangInspectionBase {
   private static List<VirtualFile> getIncludeFoldersNotMarkedAsIncludeDirectories(Module module) {
     final List<VirtualFile> includeDirectories = ErlangIncludeDirectoryUtil.getIncludeDirectories(module);
     List<VirtualFile> includeFolders = getIncludeFolders(module);
-    return ContainerUtil.filter(includeFolders, new Condition<VirtualFile>() {
-      @Override
-      public boolean value(VirtualFile includeFolderPath) {
-        return !includeDirectories.contains(includeFolderPath);
-      }
-    });
+    return ContainerUtil.filter(includeFolders, includeFolderPath -> !includeDirectories.contains(includeFolderPath));
   }
 
   private static List<VirtualFile> getIncludeFolders(Module module) {

@@ -37,49 +37,42 @@ public abstract class ErlangSdkForSmallIdes {
   }
 
   public static void setUpOrUpdateSdk(@NotNull final Project project, @NotNull final String path) {
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
-        Library get = table.getLibraryByName(LIBRARY_NAME);
-        Library lib = get != null ? get : table.createLibrary(LIBRARY_NAME);
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
+      Library get = table.getLibraryByName(LIBRARY_NAME);
+      Library lib = get != null ? get : table.createLibrary(LIBRARY_NAME);
 
-        Library.ModifiableModel libraryModel = lib.getModifiableModel();
-        String libUrl = ArrayUtil.getFirstElement(lib.getUrls(OrderRootType.CLASSES));
-        if (libUrl != null) {
-          libraryModel.removeRoot(libUrl, OrderRootType.CLASSES);
-        }
+      Library.ModifiableModel libraryModel = lib.getModifiableModel();
+      String libUrl = ArrayUtil.getFirstElement(lib.getUrls(OrderRootType.CLASSES));
+      if (libUrl != null) {
+        libraryModel.removeRoot(libUrl, OrderRootType.CLASSES);
+      }
 
-        String url = VfsUtilCore.pathToUrl(path);
-        libraryModel.addRoot(url, OrderRootType.CLASSES);
-        libraryModel.commit();
+      String url = VfsUtilCore.pathToUrl(path);
+      libraryModel.addRoot(url, OrderRootType.CLASSES);
+      libraryModel.commit();
 
-        boolean remove = path.isEmpty();
-        if (remove) {
-          updateModules(project, lib, true);
-          table.removeLibrary(lib);
-        }
+      boolean remove = path.isEmpty();
+      if (remove) {
+        updateModules(project, lib, true);
+        table.removeLibrary(lib);
+      }
 
-        table.getModifiableModel().commit();
+      table.getModifiableModel().commit();
 
-        if (!remove) {
-          updateModules(project, lib, false);
-        }
+      if (!remove) {
+        updateModules(project, lib, false);
       }
     });
   }
 
   @Nullable
   static String getSdkHome(@NotNull final Project project) {
-    return ApplicationManager.getApplication().runReadAction(new Computable<String>() {
-      @Nullable
-      @Override
-      public String compute() {
-        LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
-        Library lib = table.getLibraryByName(LIBRARY_NAME);
-        String[] urls = lib == null ? ArrayUtil.EMPTY_STRING_ARRAY : lib.getUrls(OrderRootType.CLASSES);
-        return VfsUtilCore.urlToPath(ArrayUtil.getFirstElement(urls));
-      }
+    return ApplicationManager.getApplication().runReadAction((Computable<String>) () -> {
+      LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);
+      Library lib = table.getLibraryByName(LIBRARY_NAME);
+      String[] urls = lib == null ? ArrayUtil.EMPTY_STRING_ARRAY : lib.getUrls(OrderRootType.CLASSES);
+      return VfsUtilCore.urlToPath(ArrayUtil.getFirstElement(urls));
     });
   }
 

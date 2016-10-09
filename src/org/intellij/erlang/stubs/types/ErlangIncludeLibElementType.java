@@ -32,13 +32,7 @@ import java.io.IOException;
 public class ErlangIncludeLibElementType extends ErlangStubElementType<ErlangIncludeLibStub, ErlangIncludeLib> {
   private static final ErlangIncludeLib[] EMPTY_ARRAY = new ErlangIncludeLib[0];
 
-  public static final ArrayFactory<ErlangIncludeLib> ARRAY_FACTORY = new ArrayFactory<ErlangIncludeLib>() {
-    @NotNull
-    @Override
-    public ErlangIncludeLib[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangIncludeLib[count];
-    }
-  };
+  public static final ArrayFactory<ErlangIncludeLib> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangIncludeLib[count];
 
   public ErlangIncludeLibElementType(String name) {
     super(name);

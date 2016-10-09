@@ -34,11 +34,9 @@ final class SelectImportedOtpAppsStep extends SelectImportedProjectsStep<Importe
 
   public SelectImportedOtpAppsStep(@NotNull WizardContext context) {
     super(context);
-    fileChooser.addElementsMarkListener(new ElementsChooser.ElementsMarkListener<ImportedOtpApp>() {
-      public void elementMarkChanged(@NotNull ImportedOtpApp importedOtpApp, boolean isMarked) {
-        evalDuplicates();
-        fileChooser.repaint();
-      }
+    fileChooser.addElementsMarkListener((ElementsChooser.ElementsMarkListener<ImportedOtpApp>) (importedOtpApp, isMarked) -> {
+      evalDuplicates();
+      fileChooser.repaint();
     });
   }
 

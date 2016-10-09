@@ -30,13 +30,7 @@ import java.io.IOException;
 public class ErlangRecordDefinitionElementType extends ErlangNamedStubElementType<ErlangRecordDefinitionStub, ErlangRecordDefinition> {
   private static final ErlangRecordDefinition[] EMPTY_ARRAY = new ErlangRecordDefinition[0];
 
-  public static final ArrayFactory<ErlangRecordDefinition> ARRAY_FACTORY = new ArrayFactory<ErlangRecordDefinition>() {
-    @NotNull
-    @Override
-    public ErlangRecordDefinition[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangRecordDefinition[count];
-    }
-  };
+  public static final ArrayFactory<ErlangRecordDefinition> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangRecordDefinition[count];
 
   public ErlangRecordDefinitionElementType(String name) {
     super(name);

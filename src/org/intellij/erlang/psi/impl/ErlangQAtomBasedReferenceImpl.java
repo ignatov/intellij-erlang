@@ -29,13 +29,7 @@ public abstract class ErlangQAtomBasedReferenceImpl extends PsiReferenceBase<Erl
   protected final String myReferenceName;
 
   private static final ResolveCache.AbstractResolver<ErlangQAtomBasedReferenceImpl, PsiElement> MY_RESOLVER =
-    new ResolveCache.AbstractResolver<ErlangQAtomBasedReferenceImpl, PsiElement>() {
-      @Nullable
-      @Override
-      public PsiElement resolve(@NotNull ErlangQAtomBasedReferenceImpl base, boolean b) {
-        return base.resolveInner();
-      }
-    };
+    (base, b) -> base.resolveInner();
 
   @Nullable
   protected abstract PsiElement resolveInner();

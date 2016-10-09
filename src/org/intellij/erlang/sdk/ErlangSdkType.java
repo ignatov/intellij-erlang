@@ -108,17 +108,14 @@ public class ErlangSdkType extends SdkType {
         File brewRoot = new File("/usr/local/Cellar/erlang" + version);
         if (brewRoot.exists()) {
           final Ref<String> ref = Ref.create();
-          FileUtil.processFilesRecursively(brewRoot, new Processor<File>() {
-            @Override
-            public boolean process(File file) {
-              if (!ref.isNull()) return false;
-              if (!file.isDirectory()) return true;
-              if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
-                ref.set(file.getAbsolutePath());
-                return false;
-              }
-              return true;
+          FileUtil.processFilesRecursively(brewRoot, file -> {
+            if (!ref.isNull()) return false;
+            if (!file.isDirectory()) return true;
+            if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
+              ref.set(file.getAbsolutePath());
+              return false;
             }
+            return true;
           });
           if (!ref.isNull()) return ref.get();
         }

@@ -68,28 +68,15 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
 
   private static void runSpecTemplateEditor(final Editor editor, final ErlangAttribute attr) {
     if (ApplicationManager.getApplication().isUnitTestMode()) return;
-    ApplicationManager.getApplication().invokeLater(new Runnable() {
-      @Override
-      public void run() {
-        CommandProcessor.getInstance().executeCommand(editor.getProject(), new Runnable() {
-          @Override
-          public void run() {
-            ApplicationManager.getApplication().runWriteAction(new Runnable() {
-              @Override
-              public void run() {
-                TemplateBuilder templateBuilder = TemplateBuilderFactory.getInstance().createTemplateBuilder(attr);
-                ErlangFunType funType = PsiTreeUtil.findChildOfType(attr, ErlangFunType.class);
-                Collection<ErlangType> types = PsiTreeUtil.findChildrenOfType(funType, ErlangType.class);
-                for (ErlangType type : types) {
-                  templateBuilder.replaceElement(type, type.getText());
-                }
-                templateBuilder.run(editor, false);
-              }
-            });
-          }
-        }, "Generate spec template editor", null);
+    ApplicationManager.getApplication().invokeLater(() -> CommandProcessor.getInstance().executeCommand(editor.getProject(), () -> ApplicationManager.getApplication().runWriteAction(() -> {
+      TemplateBuilder templateBuilder = TemplateBuilderFactory.getInstance().createTemplateBuilder(attr);
+      ErlangFunType funType = PsiTreeUtil.findChildOfType(attr, ErlangFunType.class);
+      Collection<ErlangType> types = PsiTreeUtil.findChildrenOfType(funType, ErlangType.class);
+      for (ErlangType type : types) {
+        templateBuilder.replaceElement(type, type.getText());
       }
-    });
+      templateBuilder.run(editor, false);
+    }), "Generate spec template editor", null));
   }
 
   private static ErlangAttribute createSpecTemplate(ErlangFunction function, ErlangFile file, Project project) {
@@ -147,12 +134,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   }
 
   private static ErlangExpressionType computeCommonType(List<ErlangExpression> expressions) {
-    List<ErlangExpressionType> types = ContainerUtil.map(expressions, new Function<ErlangExpression, ErlangExpressionType>() {
-      @Override
-      public ErlangExpressionType fun(ErlangExpression e) {
-        return ErlangExpressionType.create(e);
-      }
-    });
+    List<ErlangExpressionType> types = ContainerUtil.map(expressions, e -> ErlangExpressionType.create(e));
     //TODO compute common type
     return types.isEmpty() ? ErlangExpressionType.UNKNOWN : types.get(0);
   }

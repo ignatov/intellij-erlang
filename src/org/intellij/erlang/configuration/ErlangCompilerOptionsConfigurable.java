@@ -59,15 +59,12 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   }
 
   private void setupUiListeners() {
-    myConfigureRebarButton.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(@NotNull ActionEvent e) {
-        DataContext context = DataManager.getInstance().getDataContext(myConfigureRebarButton);
-        Settings settings = ObjectUtils.assertNotNull(Settings.KEY.getData(context));
-        Configurable configurable = settings.find(ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
-        if (configurable != null) {
-          settings.select(configurable);
-        }
+    myConfigureRebarButton.addActionListener(e -> {
+      DataContext context = DataManager.getInstance().getDataContext(myConfigureRebarButton);
+      Settings settings = ObjectUtils.assertNotNull(Settings.KEY.getData(context));
+      Configurable configurable = settings.find(ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
+      if (configurable != null) {
+        settings.select(configurable);
       }
     });
     myRootPanel.addAncestorListener(new AncestorAdapter() {
@@ -76,12 +73,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
         reset();
       }
     });
-    myUseRebarCompilerCheckBox.addItemListener(new ItemListener() {
-      @Override
-      public void itemStateChanged(ItemEvent e) {
-        setUseRebarCompiler(myUseRebarCompilerCheckBox.isSelected());
-      }
-    });
+    myUseRebarCompilerCheckBox.addItemListener(e -> setUseRebarCompiler(myUseRebarCompilerCheckBox.isSelected()));
   }
 
   @NotNull

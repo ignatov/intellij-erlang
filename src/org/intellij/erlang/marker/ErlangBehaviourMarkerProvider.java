@@ -69,21 +69,13 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
       function.getTextRange(),
       AllIcons.Gutter.ImplementingMethod,
       Pass.UPDATE_ALL,
-      new Function<PsiElement, String>() {
-        @Override
-        public String fun(PsiElement element) {
-          return "Implements callback '" + presentation + "'";
-        }
-      },
-      new GutterIconNavigationHandler<PsiElement>() {
-        @Override
-        public void navigate(MouseEvent e, PsiElement elt) {
-          String title = MessageFormat.format("<html><body>Choose Overriding Callback of <b>{0}</b> ({1} callbacks found)</body></html>", presentation, callbackSpecs.size());
-          PsiElementListNavigator.openTargets(
-            e, navigatables.toArray(new NavigatablePsiElement[navigatables.size()]),
-            title, title, new DefaultPsiElementCellRenderer()
-          );
-        }
+      element -> "Implements callback '" + presentation + "'",
+      (e, elt) -> {
+        String title = MessageFormat.format("<html><body>Choose Overriding Callback of <b>{0}</b> ({1} callbacks found)</body></html>", presentation, callbackSpecs.size());
+        PsiElementListNavigator.openTargets(
+          e, navigatables.toArray(new NavigatablePsiElement[navigatables.size()]),
+          title, title, new DefaultPsiElementCellRenderer()
+        );
       },
       GutterIconRenderer.Alignment.RIGHT
     );

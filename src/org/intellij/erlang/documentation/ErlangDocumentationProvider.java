@@ -96,13 +96,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Override
   public String fetchExternalDocumentation(Project project, final PsiElement element, List<String> docUrls) {
     ErlangSdkDocProviderBase externalDocProvider =
-      ApplicationManager.getApplication().runReadAction(new Computable<ErlangSdkDocProviderBase>() {
-        @Nullable
-        @Override
-        public ErlangSdkDocProviderBase compute() {
-          return ObjectUtils.tryCast(ElementDocProviderFactory.create(element), ErlangSdkDocProviderBase.class);
-        }
-      });
+      ApplicationManager.getApplication().runReadAction((Computable<ErlangSdkDocProviderBase>) () -> ObjectUtils.tryCast(ElementDocProviderFactory.create(element), ErlangSdkDocProviderBase.class));
     return externalDocProvider != null ? externalDocProvider.getDocText() : null;
   }
 

@@ -37,37 +37,26 @@ public final class RebarConfigUtil {
   @NotNull
   public static List<String> getIncludePaths(@NotNull ErlangFile rebarConfig) {
     final List<String> includePaths = ContainerUtil.newArrayList();
-    ErlangTermFileUtil.processConfigSection(rebarConfig, "erl_opts", new Consumer<ErlangExpression>() {
-      @Override
-      public void consume(ErlangExpression section) {
-        ErlangTermFileUtil.processConfigSection(section, "i", new Consumer<ErlangExpression>() {
-          @Override
-          public void consume(ErlangExpression includeOptionValue) {
-            if (includeOptionValue instanceof ErlangStringLiteral) {
-              includePaths.add(getStringLiteralText((ErlangStringLiteral) includeOptionValue));
-            }
-            else {
-              for (ErlangStringLiteral includePath : PsiTreeUtil.findChildrenOfType(includeOptionValue, ErlangStringLiteral.class)) {
-                includePaths.add(getStringLiteralText(includePath));
-              }
-            }
-          }
-        });
+    ErlangTermFileUtil.processConfigSection(rebarConfig, "erl_opts", section -> ErlangTermFileUtil.processConfigSection(section, "i", includeOptionValue -> {
+      if (includeOptionValue instanceof ErlangStringLiteral) {
+        includePaths.add(getStringLiteralText((ErlangStringLiteral) includeOptionValue));
       }
-    });
+      else {
+        for (ErlangStringLiteral includePath : PsiTreeUtil.findChildrenOfType(includeOptionValue, ErlangStringLiteral.class)) {
+          includePaths.add(getStringLiteralText(includePath));
+        }
+      }
+    }));
     return includePaths;
   }
 
   @NotNull
   public static List<String> getDependencyAppNames(@NotNull ErlangFile rebarConfig) {
     final List<String> dependencyAppNames = ContainerUtil.newArrayList();
-    ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", new Consumer<ErlangExpression>() {
-      @Override
-      public void consume(ErlangExpression tuplesList) {
-        List<ErlangTupleExpression> dependencyTuples = ErlangTermFileUtil.findNamedTuples(tuplesList);
-        for (ErlangTupleExpression namedTuple : dependencyTuples) {
-          dependencyAppNames.add(ErlangTermFileUtil.getNameOfNamedTuple(namedTuple));
-        }
+    ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", tuplesList -> {
+      List<ErlangTupleExpression> dependencyTuples = ErlangTermFileUtil.findNamedTuples(tuplesList);
+      for (ErlangTupleExpression namedTuple : dependencyTuples) {
+        dependencyAppNames.add(ErlangTermFileUtil.getNameOfNamedTuple(namedTuple));
       }
     });
     return dependencyAppNames;
@@ -76,21 +65,13 @@ public final class RebarConfigUtil {
   @NotNull
   public static List<String> getParseTransforms(@Nullable ErlangFile rebarConfig) {
     final List<String> parseTransforms = ContainerUtil.newArrayList();
-    ErlangTermFileUtil.processConfigSection(rebarConfig, "erl_opts", new Consumer<ErlangExpression>() {
-      @Override
-      public void consume(ErlangExpression section) {
-        ErlangTermFileUtil.processConfigSection(section, "parse_transform", new Consumer<ErlangExpression>() {
-          @Override
-          public void consume(ErlangExpression configExpression) {
-            ErlangQAtom parseTransform = PsiTreeUtil.getChildOfType(configExpression, ErlangQAtom.class);
-            ErlangAtom parseTransformAtom = parseTransform != null ? parseTransform.getAtom() : null;
-            if (parseTransformAtom != null) {
-              parseTransforms.add(parseTransformAtom.getName());
-            }
-          }
-        });
+    ErlangTermFileUtil.processConfigSection(rebarConfig, "erl_opts", section -> ErlangTermFileUtil.processConfigSection(section, "parse_transform", configExpression -> {
+      ErlangQAtom parseTransform = PsiTreeUtil.getChildOfType(configExpression, ErlangQAtom.class);
+      ErlangAtom parseTransformAtom = parseTransform != null ? parseTransform.getAtom() : null;
+      if (parseTransformAtom != null) {
+        parseTransforms.add(parseTransformAtom.getName());
       }
-    });
+    }));
     return parseTransforms;
   }
 

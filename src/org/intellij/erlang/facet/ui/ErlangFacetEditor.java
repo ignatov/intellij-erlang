@@ -91,13 +91,9 @@ public class ErlangFacetEditor extends FacetEditorTab {
   private List<String> getUiParseTransforms() {
     String parseTransformsString = myParseTransformsEditorField.getText();
     List<String> split = StringUtil.split(parseTransformsString, ",");
-    return ContainerUtil.mapNotNull(split, new Function<String, String>() {
-      @Nullable
-      @Override
-      public String fun(String s) {
-        String strippedModuleName = StringUtil.strip(s, CharFilter.NOT_WHITESPACE_FILTER);
-        return StringUtil.isEmpty(strippedModuleName) ? null : strippedModuleName;
-      }
+    return ContainerUtil.mapNotNull(split, s -> {
+      String strippedModuleName = StringUtil.strip(s, CharFilter.NOT_WHITESPACE_FILTER);
+      return StringUtil.isEmpty(strippedModuleName) ? null : strippedModuleName;
     });
   }
 }

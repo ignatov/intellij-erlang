@@ -60,21 +60,13 @@ public final class ErlangDocUtil {
   public static String getCommentsText(@NotNull List<PsiComment> comments,
                                        @NotNull final String commentStartsWith,
                                        @NotNull final Set<String> contextTags) {
-    List<String> lines = ContainerUtil.map(comments, new Function<PsiComment, String>() {
-      @Override
-      public String fun(PsiComment psiComment) {
-        return psiComment.getText();
+    List<String> lines = ContainerUtil.map(comments, psiComment -> psiComment.getText());
+    return StringUtil.join(ContainerUtil.map(lines, s -> {
+      String replace = StringUtil.replace(s, commentStartsWith, "");
+      for (String tag : contextTags) {
+        replace = replace.replaceAll(tag, "<b>" + tag + "</b>");
       }
-    });
-    return StringUtil.join(ContainerUtil.map(lines, new Function<String, String>() {
-      @Override
-      public String fun(String s) {
-        String replace = StringUtil.replace(s, commentStartsWith, "");
-        for (String tag : contextTags) {
-          replace = replace.replaceAll(tag, "<b>" + tag + "</b>");
-        }
-        return replace;
-      }
+      return replace;
     }), "<br/>");
   }
 

@@ -40,12 +40,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   private JTextField myDebugNodeArgsTextField;
 
   public ErlangRemoteDebugConfigurationEditorForm() {
-    myUseShortNamesCheckBox.addItemListener(new ItemListener() {
-      @Override
-      public void itemStateChanged(@NotNull ItemEvent e) {
-        setUseShortNames(myUseShortNamesCheckBox.isSelected());
-      }
-    });
+    myUseShortNamesCheckBox.addItemListener(e -> setUseShortNames(myUseShortNamesCheckBox.isSelected()));
   }
 
   @Override

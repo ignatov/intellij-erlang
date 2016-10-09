@@ -564,13 +564,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private Set<ErlangFunction> calcExportedFunctions() {
-    return ContainerUtil.map2SetNotNull(getFunctions(), new Function<ErlangFunction, ErlangFunction>() {
-      @Nullable
-      @Override
-      public ErlangFunction fun(ErlangFunction f) {
-        return f.isExported() ? f : null;
-      }
-    });
+    return ContainerUtil.map2SetNotNull(getFunctions(), f -> f.isExported() ? f : null);
   }
 
   @Nullable
@@ -590,12 +584,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   private static ErlangFunction getFunctionFromMap(MultiMap<String, ErlangFunction> value, String name, final int argsCount) {
     Collection<ErlangFunction> candidates = value.get(name);
 
-    return ContainerUtil.getFirstItem(ContainerUtil.filter(candidates, new Condition<ErlangFunction>() {
-      @Override
-      public boolean value(ErlangFunction erlangFunction) {
-        return erlangFunction.getArity() == argsCount;
-      }
-    }));
+    return ContainerUtil.getFirstItem(ContainerUtil.filter(candidates, erlangFunction -> erlangFunction.getArity() == argsCount));
   }
 
   @NotNull
@@ -680,13 +669,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       return getChildrenByType(stub, ErlangTypes.ERL_BEHAVIOUR, ErlangBehaviourStubElementType.ARRAY_FACTORY);
     }
 
-    return ContainerUtil.mapNotNull(getAttributes(), new Function<ErlangAttribute, ErlangBehaviour>() {
-      @Nullable
-      @Override
-      public ErlangBehaviour fun(ErlangAttribute attribute) {
-        return attribute.getBehaviour();
-      }
-    });
+    return ContainerUtil.mapNotNull(getAttributes(), attribute -> attribute.getBehaviour());
   }
 
   @NotNull
@@ -724,13 +707,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       return getChildrenByType(stub, ErlangTypes.ERL_SPECIFICATION, ErlangSpecificationElementType.ARRAY_FACTORY);
     }
 
-    return ContainerUtil.mapNotNull(getAttributes(), new Function<ErlangAttribute, ErlangSpecification>() {
-      @Nullable
-      @Override
-      public ErlangSpecification fun(ErlangAttribute attribute) {
-        return attribute.getSpecification();
-      }
-    });
+    return ContainerUtil.mapNotNull(getAttributes(), attribute -> attribute.getSpecification());
   }
 
   @Override
@@ -742,12 +719,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   public ErlangImportFunction getImportedFunction(String name, final int arity) {
     MultiMap<String, ErlangImportFunction> importsMap = myImportsMap.getValue();
     Collection<ErlangImportFunction> importFunctions = importsMap.get(name);
-    return ContainerUtil.find(importFunctions, new Condition<ErlangImportFunction>() {
-      @Override
-      public boolean value(ErlangImportFunction importFunction) {
-        return arity == ErlangPsiImplUtil.getArity(importFunction);
-      }
-    });
+    return ContainerUtil.find(importFunctions, importFunction -> arity == ErlangPsiImplUtil.getArity(importFunction));
   }
 
   @NotNull
@@ -829,15 +801,12 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @NotNull
   private <T extends PsiElement> List<T> collectChildrenDummyAware(@NotNull final Class<T> clazz) {
     final List<T> result = ContainerUtil.newArrayList();
-    processChildrenDummyAware(this, new Processor<PsiElement>() {
-      @Override
-      public boolean process(PsiElement element) {
-        if (clazz.isInstance(element)) {
-          //noinspection unchecked
-          result.add((T)element);
-        }
-        return true;
+    processChildrenDummyAware(this, element -> {
+      if (clazz.isInstance(element)) {
+        //noinspection unchecked
+        result.add((T)element);
       }
+      return true;
     });
     return result;
   }

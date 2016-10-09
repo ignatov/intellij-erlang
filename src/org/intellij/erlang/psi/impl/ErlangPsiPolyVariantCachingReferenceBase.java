@@ -31,13 +31,7 @@ public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElem
   }
 
   private static final ResolveCache.AbstractResolver<ErlangPsiPolyVariantCachingReferenceBase, PsiElement> MY_RESOLVER =
-    new ResolveCache.AbstractResolver<ErlangPsiPolyVariantCachingReferenceBase, PsiElement>() {
-      @Nullable
-      @Override
-      public PsiElement resolve(@NotNull ErlangPsiPolyVariantCachingReferenceBase base, boolean incompleteCode) {
-        return base.resolveInner();
-      }
-    };
+    (base, incompleteCode) -> base.resolveInner();
 
   @Nullable
   @Override

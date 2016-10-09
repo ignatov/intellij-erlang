@@ -37,24 +37,21 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @Override
   public WordsScanner getWordsScanner() {
-    return new WordsScanner() {
-      @Override
-      public void processWords(CharSequence fileText, Processor<WordOccurrence> processor) {
-        ErlangLexer lexer = new ErlangLexer();
-        lexer.start(fileText);
-        IElementType tokenType;
-        while ((tokenType = lexer.getTokenType()) != null) {
-          //TODO process occurrences in string literals and comments
-          if (tokenType == ErlangTypes.ERL_ATOM_NAME || tokenType == ErlangTypes.ERL_VAR) {
-            int tokenStart = lexer.getTokenStart();
-            for (TextRange wordRange : StringUtil.getWordIndicesIn(lexer.getTokenText())) {
-              int start = tokenStart + wordRange.getStartOffset();
-              int end = tokenStart + wordRange.getEndOffset();
-              processor.process(new WordOccurrence(fileText, start, end, WordOccurrence.Kind.CODE));
-            }
+    return (fileText, processor) -> {
+      ErlangLexer lexer = new ErlangLexer();
+      lexer.start(fileText);
+      IElementType tokenType;
+      while ((tokenType = lexer.getTokenType()) != null) {
+        //TODO process occurrences in string literals and comments
+        if (tokenType == ErlangTypes.ERL_ATOM_NAME || tokenType == ErlangTypes.ERL_VAR) {
+          int tokenStart = lexer.getTokenStart();
+          for (TextRange wordRange : StringUtil.getWordIndicesIn(lexer.getTokenText())) {
+            int start = tokenStart + wordRange.getStartOffset();
+            int end = tokenStart + wordRange.getEndOffset();
+            processor.process(new WordOccurrence(fileText, start, end, WordOccurrence.Kind.CODE));
           }
-          lexer.advance();
         }
+        lexer.advance();
       }
     };
   }

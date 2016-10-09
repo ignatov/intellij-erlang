@@ -77,46 +77,39 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
     Query<PsiReference> search = ReferencesSearch.search(element);
     final Collection<PsiReference> all = search.findAll();
 
-    CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-      public void run() {
-        ApplicationManager.getApplication().runWriteAction(new Runnable() {
-          @Override
-          public void run() {
-            for (PsiReference psiReference : all) {
-              PsiElement host = psiReference.getElement();
-              PsiElement expr = host.getParent();
-              ASTNode replacementNode = null;
+    CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
+      for (PsiReference psiReference : all) {
+        PsiElement host = psiReference.getElement();
+        PsiElement expr = host.getParent();
+        ASTNode replacementNode = null;
 
-              if (expr instanceof ErlangMaxExpression) {
-                if (ErlangPsiImplUtil.getExpressionPrecedence(expr.getParent()) > ErlangPsiImplUtil.getExpressionPrecedence(rightWithoutParentheses)) {
-                  replacementNode = expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses)).getNode();
-                }
-                else {
-                  replacementNode = expr.replace(rightWithoutParentheses).getNode();
-                }
-              }
-              else if (expr instanceof ErlangFunExpression) {
-                replacementNode = host.replace(rightWithoutParentheses).getNode();
-              }
-              else if (expr instanceof ErlangGenericFunctionCallExpression) {
-                replacementNode = substituteFunctionCall(project, host, rightWithoutParentheses).getNode();
-              }
-
-              if (replacementNode != null) {
-                CodeEditUtil.markToReformat(replacementNode, true);
-              }
-            }
-
-            PsiElement comma = PsiTreeUtil.getNextSiblingOfType(assignment, LeafPsiElement.class);
-            if (comma != null && comma.getNode().getElementType() == ErlangTypes.ERL_COMMA) {
-              comma.delete();
-            }
-
-            assignment.delete();
+        if (expr instanceof ErlangMaxExpression) {
+          if (ErlangPsiImplUtil.getExpressionPrecedence(expr.getParent()) > ErlangPsiImplUtil.getExpressionPrecedence(rightWithoutParentheses)) {
+            replacementNode = expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses)).getNode();
           }
-        });
+          else {
+            replacementNode = expr.replace(rightWithoutParentheses).getNode();
+          }
+        }
+        else if (expr instanceof ErlangFunExpression) {
+          replacementNode = host.replace(rightWithoutParentheses).getNode();
+        }
+        else if (expr instanceof ErlangGenericFunctionCallExpression) {
+          replacementNode = substituteFunctionCall(project, host, rightWithoutParentheses).getNode();
+        }
+
+        if (replacementNode != null) {
+          CodeEditUtil.markToReformat(replacementNode, true);
+        }
       }
-    }, "Inline variable", null);
+
+      PsiElement comma = PsiTreeUtil.getNextSiblingOfType(assignment, LeafPsiElement.class);
+      if (comma != null && comma.getNode().getElementType() == ErlangTypes.ERL_COMMA) {
+        comma.delete();
+      }
+
+      assignment.delete();
+    }), "Inline variable", null);
   }
 
   private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {

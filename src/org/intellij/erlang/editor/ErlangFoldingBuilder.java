@@ -48,14 +48,11 @@ public class ErlangFoldingBuilder extends FoldingBuilderEx implements DumbAware 
     }
 
     if (!quick) {
-      PsiTreeUtil.processElements(file, new PsiElementProcessor() {
-        @Override
-        public boolean execute(@NotNull PsiElement element) {
-          if (ErlangParserDefinition.COMMENTS.contains(element.getNode().getElementType()) && element.getTextRange().getLength() > 2) {
-            result.add(new FoldingDescriptor(element, element.getTextRange()));
-          }
-          return true;
+      PsiTreeUtil.processElements(file, element -> {
+        if (ErlangParserDefinition.COMMENTS.contains(element.getNode().getElementType()) && element.getTextRange().getLength() > 2) {
+          result.add(new FoldingDescriptor(element, element.getTextRange()));
         }
+        return true;
       });
     }
 

@@ -31,13 +31,7 @@ import java.io.IOException;
 public class ErlangCallbackFunctionStubElementType extends ErlangStubElementType<ErlangCallbackFunctionStub, ErlangCallbackFunction> {
   private static final ErlangCallbackFunction[] EMPTY_ARRAY = new ErlangCallbackFunction[0];
 
-  public static final ArrayFactory<ErlangCallbackFunction> ARRAY_FACTORY = new ArrayFactory<ErlangCallbackFunction>() {
-    @NotNull
-    @Override
-    public ErlangCallbackFunction[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangCallbackFunction[count];
-    }
-  };
+  public static final ArrayFactory<ErlangCallbackFunction> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangCallbackFunction[count];
 
   public ErlangCallbackFunctionStubElementType(@NotNull String name) {
     super(name);

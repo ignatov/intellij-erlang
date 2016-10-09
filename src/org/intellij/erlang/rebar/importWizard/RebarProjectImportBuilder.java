@@ -163,15 +163,12 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       }
     });
 
-    Collections.sort(myFoundOtpApps, new Comparator<ImportedOtpApp>() {
-      @Override
-      public int compare(@NotNull ImportedOtpApp o1, @NotNull ImportedOtpApp o2) {
-        int nameCompareResult = String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
-        if (nameCompareResult == 0) {
-          return String.CASE_INSENSITIVE_ORDER.compare(o1.getRoot().getPath(), o2.getRoot().getPath());
-        }
-        return nameCompareResult;
+    Collections.sort(myFoundOtpApps, (o1, o2) -> {
+      int nameCompareResult = String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+      if (nameCompareResult == 0) {
+        return String.CASE_INSENSITIVE_ORDER.compare(o1.getRoot().getPath(), o2.getRoot().getPath());
       }
+      return nameCompareResult;
     });
 
     mySelectedOtpApps = myFoundOtpApps;
@@ -190,13 +187,11 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     }
     int resultCode = Messages.showYesNoCancelDialog(
       ApplicationInfoEx.getInstanceEx().getFullApplicationName() + " module files found:\n\n" +
-        StringUtil.join(mySelectedOtpApps, new Function<ImportedOtpApp, String>() {
-          public String fun(ImportedOtpApp importedOtpApp) {
-            VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
-            return ideaModuleFile != null ? "    " + ideaModuleFile.getPath() + "\n" : "";
-          }
-        }, "") +
-        "\nWould you like to reuse them?", "Module files found",
+      StringUtil.join(mySelectedOtpApps, importedOtpApp -> {
+        VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
+        return ideaModuleFile != null ? "    " + ideaModuleFile.getPath() + "\n" : "";
+      }, "") +
+      "\nWould you like to reuse them?", "Module files found",
       Messages.getQuestionIcon());
     if (resultCode == DialogWrapper.OK_EXIT_CODE) {
       return true;
@@ -258,13 +253,11 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     }
     // Commit project structure.
     LOG.info("Commit project structure");
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      public void run() {
-        for (ModifiableRootModel rootModel : createdRootModels) {
-          rootModel.commit();
-        }
-        obtainedModuleModel.commit();
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      for (ModifiableRootModel rootModel : createdRootModels) {
+        rootModel.commit();
       }
+      obtainedModuleModel.commit();
     });
 
     addErlangFacets(mySelectedOtpApps);
@@ -278,21 +271,18 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   }
 
   private static void addErlangFacets(final List<ImportedOtpApp> apps) {
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        for (ImportedOtpApp app : apps) {
-          Module module = app.getModule();
-          if (module == null) continue;
-          ErlangFacet facet = ErlangFacet.getFacet(module);
-          if (facet == null) {
-            ErlangFacet.createFacet(module);
-            facet = ErlangFacet.getFacet(module);
-          }
-          if (facet != null) {
-            ErlangFacetConfiguration configuration = facet.getConfiguration();
-            configuration.addParseTransforms(app.getParseTransforms());
-          }
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      for (ImportedOtpApp app : apps) {
+        Module module = app.getModule();
+        if (module == null) continue;
+        ErlangFacet facet = ErlangFacet.getFacet(module);
+        if (facet == null) {
+          ErlangFacet.createFacet(module);
+          facet = ErlangFacet.getFacet(module);
+        }
+        if (facet != null) {
+          ErlangFacetConfiguration configuration = facet.getConfiguration();
+          configuration.addParseTransforms(app.getParseTransforms());
         }
       }
     });
@@ -304,12 +294,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     Sdk selectedSdk = projectRootMgr.getProjectSdk();
     if (selectedSdk == null || selectedSdk.getSdkType() != ErlangSdkType.getInstance()) {
       final Sdk moreSuitableSdk = ProjectJdkTable.getInstance().findMostRecentSdkOfType(ErlangSdkType.getInstance());
-      ApplicationManager.getApplication().runWriteAction(new Runnable() {
-        @Override
-        public void run() {
-          projectRootMgr.setProjectSdk(moreSuitableSdk);
-        }
-      });
+      ApplicationManager.getApplication().runWriteAction(() -> projectRootMgr.setProjectSdk(moreSuitableSdk));
       return moreSuitableSdk;
     }
     return selectedSdk;

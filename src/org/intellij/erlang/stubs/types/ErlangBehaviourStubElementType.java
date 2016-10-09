@@ -30,13 +30,7 @@ import java.io.IOException;
 public class ErlangBehaviourStubElementType extends ErlangStubElementType<ErlangBehaviourStub, ErlangBehaviour> {
   private static final ErlangBehaviour[] EMPTY_ARRAY = new ErlangBehaviour[0];
 
-  public static final ArrayFactory<ErlangBehaviour> ARRAY_FACTORY = new ArrayFactory<ErlangBehaviour>() {
-    @NotNull
-    @Override
-    public ErlangBehaviour[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangBehaviour[count];
-    }
-  };
+  public static final ArrayFactory<ErlangBehaviour> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangBehaviour[count];
 
   public ErlangBehaviourStubElementType(String name) {
     super(name);

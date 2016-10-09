@@ -86,36 +86,21 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
 
   @NotNull
   public static List<ErlangModule> getModulesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
-    return getByName(project, name, searchScope, new Function<ErlangFile, ErlangModule>() {
-      @Nullable
-      @Override
-      public ErlangModule fun(@NotNull ErlangFile erlangFile) {
-        return erlangFile.getModule();
-      }
-    });
+    return getByName(project, name, searchScope, erlangFile -> erlangFile.getModule());
   }
 
   @NotNull
   public static List<ErlangFile> getFilesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
-    return getByName(project, name, searchScope, new Function<ErlangFile, ErlangFile>() {
-      @Override
-      public ErlangFile fun(ErlangFile erlangFile) {
-        return erlangFile;
-      }
-    });
+    return getByName(project, name, searchScope, erlangFile -> erlangFile);
   }
 
   @NotNull
   private static <T> List<T> getByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope, @NotNull final Function<ErlangFile, T> psiMapper) {
     final PsiManager psiManager = PsiManager.getInstance(project);
     List<VirtualFile> virtualFiles = getVirtualFilesByName(project, name, searchScope);
-    return ContainerUtil.mapNotNull(virtualFiles, new Function<VirtualFile, T>() {
-      @Nullable
-      @Override
-      public T fun(@NotNull VirtualFile virtualFile) {
-        PsiFile psiFile = psiManager.findFile(virtualFile);
-        return psiFile instanceof ErlangFile ? psiMapper.fun((ErlangFile)psiFile) : null;
-      }
+    return ContainerUtil.mapNotNull(virtualFiles, virtualFile -> {
+      PsiFile psiFile = psiManager.findFile(virtualFile);
+      return psiFile instanceof ErlangFile ? psiMapper.fun((ErlangFile)psiFile) : null;
     });
   }
 

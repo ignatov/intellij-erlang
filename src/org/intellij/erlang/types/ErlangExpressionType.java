@@ -83,12 +83,7 @@ public abstract class ErlangExpressionType {
   public static final Map<String , ErlangExpressionType> TYPE_MAP = ContainerUtil.newMapFromValues(
     ContainerUtil.list(
       FLOAT, FUN, INTEGER, LIST, IOLIST, TUPLE, ATOM, BINARY, BITSTRING, STRING, PID, PORT, REF, TERM, BOOLEAN
-    ).iterator(), new Convertor<ErlangExpressionType, String>() {
-      @Override
-      public String convert(ErlangExpressionType erlangExpressionType) {
-        return erlangExpressionType.myName.toLowerCase();
-      }
-    });
+    ).iterator(), erlangExpressionType -> erlangExpressionType.myName.toLowerCase());
 
   @NotNull
   public static ErlangExpressionType create(@Nullable ErlangExpression e) {

@@ -164,19 +164,11 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       @Override
       public PopupStep onChosen(Object o, boolean b) {
         final PsiFile f = (PsiFile) o;
-        CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-          @Override
-          public void run() {
-            ApplicationManager.getApplication().runWriteAction(new Runnable() {
-              @Override
-              public void run() {
-                fixUsingIncludeFile(problem, f);
-                renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
-                FileContentUtilCore.reparseFiles(Arrays.asList(problem.getContainingFile().getVirtualFile()));
-              }
-            });
-          }
-        }, "add facet action(find include quick fix)", null, problemEditor.getDocument());
+        CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
+          fixUsingIncludeFile(problem, f);
+          renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
+          FileContentUtilCore.reparseFiles(Arrays.asList(problem.getContainingFile().getVirtualFile()));
+        }), "add facet action(find include quick fix)", null, problemEditor.getDocument());
 
         return null;
       }

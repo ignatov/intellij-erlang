@@ -36,12 +36,7 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   private JCheckBox mySkipDependenciesCheckBox;
 
   RebarRunConfigurationEditorForm() {
-    myRunInModuleCheckBox.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(@NotNull ActionEvent e) {
-        myModulesComboBox.setEnabled(myRunInModuleCheckBox.isSelected());
-      }
-    });
+    myRunInModuleCheckBox.addActionListener(e -> myModulesComboBox.setEnabled(myRunInModuleCheckBox.isSelected()));
     myModulesComboBox.setVisible(!ErlangSystemUtil.isSmallIde());
     myRunInModuleCheckBox.setVisible(!ErlangSystemUtil.isSmallIde());
   }

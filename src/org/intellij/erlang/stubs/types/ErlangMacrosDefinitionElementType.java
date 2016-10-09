@@ -30,13 +30,7 @@ import java.io.IOException;
 public class ErlangMacrosDefinitionElementType extends ErlangNamedStubElementType<ErlangMacrosDefinitionStub, ErlangMacrosDefinition> {
   private static final ErlangMacrosDefinition[] EMPTY_ARRAY = new ErlangMacrosDefinition[0];
 
-  public static final ArrayFactory<ErlangMacrosDefinition> ARRAY_FACTORY = new ArrayFactory<ErlangMacrosDefinition>() {
-    @NotNull
-    @Override
-    public ErlangMacrosDefinition[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangMacrosDefinition[count];
-    }
-  };
+  public static final ArrayFactory<ErlangMacrosDefinition> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangMacrosDefinition[count];
 
   public ErlangMacrosDefinitionElementType(String name) {
     super(name);

@@ -45,12 +45,7 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   private CollectionListModel myModulesNotToInterpretListModel;
 
   public ErlangDebugOptionsEditorForm() {
-    myAutoUpdateModulesNotToInterpretCheckBox.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(@NotNull ActionEvent e) {
-        setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected());
-      }
-    });
+    myAutoUpdateModulesNotToInterpretCheckBox.addActionListener(e -> setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected()));
   }
 
   @Override
@@ -68,12 +63,7 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
     erlangDebugOptions.setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected());
     Set<String> modules = erlangDebugOptions.isAutoUpdateModulesNotToInterpret() ? Collections.<String>emptySet() :
       ContainerUtil.map2Set(myModulesNotToInterpretListModel.getItems(),
-        new Function<Object, String>() {
-          @Override
-          public String fun(Object o) {
-            return String.valueOf(o);
-          }
-        });
+                            o -> String.valueOf(o));
     erlangDebugOptions.setModulesNotToInterpret(modules);
   }
 
@@ -96,35 +86,27 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
     myModulesNotToInterpretList.setCellRenderer(new JBList.StripedListCellRenderer());
     myModulesNotToInterpretList.setEmptyText("Add non-debuggable modules here (e.g. NIF modules)");
     myModulesNotToInterpretPanel = ToolbarDecorator.createDecorator(myModulesNotToInterpretList, myModulesNotToInterpretListModel)
-      .setAddAction(new AnActionButtonRunnable() {
-        @Override
-        public void run(AnActionButton anActionButton) {
-          InputValidator inputValidator = new InputValidator() {
-            @Override
-            public boolean checkInput(String moduleName) {
-              return !StringUtil.isEmptyOrSpaces(moduleName) &&
-                !myModulesNotToInterpretListModel.getItems().contains(StringUtil.trim(moduleName));
-            }
-
-            @Override
-            public boolean canClose(String s) {
-              return true;
-            }
-          };
-          String module = Messages.showInputDialog(myModulesNotToInterpretList,
-            "Module name", "Add a Non-Debuggable Module", ErlangIcons.FILE, null, inputValidator);
-          if (module != null) {
-            //noinspection unchecked
-            myModulesNotToInterpretListModel.add(StringUtil.trim(module));
+      .setAddAction(anActionButton -> {
+        InputValidator inputValidator = new InputValidator() {
+          @Override
+          public boolean checkInput(String moduleName) {
+            return !StringUtil.isEmptyOrSpaces(moduleName) &&
+              !myModulesNotToInterpretListModel.getItems().contains(StringUtil.trim(moduleName));
           }
+
+          @Override
+          public boolean canClose(String s) {
+            return true;
+          }
+        };
+        String module = Messages.showInputDialog(myModulesNotToInterpretList,
+          "Module name", "Add a Non-Debuggable Module", ErlangIcons.FILE, null, inputValidator);
+        if (module != null) {
+          //noinspection unchecked
+          myModulesNotToInterpretListModel.add(StringUtil.trim(module));
         }
       })
-      .setRemoveAction(new AnActionButtonRunnable() {
-        @Override
-        public void run(AnActionButton anActionButton) {
-          ListUtil.removeSelectedItems(myModulesNotToInterpretList);
-        }
-      })
+      .setRemoveAction(anActionButton -> ListUtil.removeSelectedItems(myModulesNotToInterpretList))
       .setMoveUpAction(null)
       .setMoveDownAction(null)
       .createPanel();

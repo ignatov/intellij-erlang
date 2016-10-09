@@ -76,43 +76,36 @@ public class UpdateComponent implements ApplicationComponent, Disposable {
     PropertiesComponent propertiesComponent = PropertiesComponent.getInstance();
     long lastUpdate = propertiesComponent.getOrInitLong(KEY, 0);
     if (lastUpdate == 0 || System.currentTimeMillis() - lastUpdate > TimeUnit.DAYS.toMillis(1)) {
-      ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            String buildNumber = ApplicationInfo.getInstance().getBuild().asString();
-            String pluginVersion = getPlugin().getVersion();
-            String pluginId = getPlugin().getPluginId().getIdString();
-            String os = URLEncoder.encode(SystemInfo.OS_NAME + " " + SystemInfo.OS_VERSION, CharsetToolkit.UTF8);
-            String uid = UpdateChecker.getInstallationUID(PropertiesComponent.getInstance());
-            final String url =
-              "https://plugins.jetbrains.com/plugins/list" +
-              "?pluginId=" + pluginId +
-              "&build=" + buildNumber +
-              "&pluginVersion=" + pluginVersion +
-              "&os=" + os +
-              "&uuid=" + uid;
-            PropertiesComponent.getInstance().setValue(KEY, String.valueOf(System.currentTimeMillis()));
-            HttpRequests.request(url).connect(
-              new HttpRequests.RequestProcessor<Object>() {
-                @Nullable
-                @Override
-                public Object process(@NotNull HttpRequests.Request request) throws IOException {
-                  try {
-                    JDOMUtil.load(request.getReader());
-                    LOG.info((request.isSuccessful() ? "Successful" : "Unsuccessful") + " update: " + url);
-                  }
-                  catch (JDOMException e) {
-                    LOG.warn(e);
-                  }
-                  return null;
-                }
+      ApplicationManager.getApplication().executeOnPooledThread(() -> {
+        try {
+          String buildNumber = ApplicationInfo.getInstance().getBuild().asString();
+          String pluginVersion = getPlugin().getVersion();
+          String pluginId = getPlugin().getPluginId().getIdString();
+          String os = URLEncoder.encode(SystemInfo.OS_NAME + " " + SystemInfo.OS_VERSION, CharsetToolkit.UTF8);
+          String uid = UpdateChecker.getInstallationUID(PropertiesComponent.getInstance());
+          final String url =
+            "https://plugins.jetbrains.com/plugins/list" +
+            "?pluginId=" + pluginId +
+            "&build=" + buildNumber +
+            "&pluginVersion=" + pluginVersion +
+            "&os=" + os +
+            "&uuid=" + uid;
+          PropertiesComponent.getInstance().setValue(KEY, String.valueOf(System.currentTimeMillis()));
+          HttpRequests.request(url).connect(
+            request -> {
+              try {
+                JDOMUtil.load(request.getReader());
+                LOG.info((request.isSuccessful() ? "Successful" : "Unsuccessful") + " update: " + url);
               }
-            );
-          }
-          catch (IOException e) {
-            LOG.warn(e);
-          }
+              catch (JDOMException e) {
+                LOG.warn(e);
+              }
+              return null;
+            }
+          );
+        }
+        catch (IOException e) {
+          LOG.warn(e);
         }
       });
     }

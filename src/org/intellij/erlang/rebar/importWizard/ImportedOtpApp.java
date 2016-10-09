@@ -46,13 +46,10 @@ final class ImportedOtpApp {
     myName = StringUtil.trimEnd(StringUtil.trimEnd(appConfig.getName(), ".src"), ".app");
     myRoot = root;
 
-    ApplicationManager.getApplication().runReadAction(new Runnable() {
-      @Override
-      public void run() {
-        addDependenciesFromAppFile(appConfig);
-        addInfoFromRebarConfig();
-        addIncludePath("include");
-      }
+    ApplicationManager.getApplication().runReadAction(() -> {
+      addDependenciesFromAppFile(appConfig);
+      addInfoFromRebarConfig();
+      addIncludePath("include");
     });
   }
 
@@ -134,17 +131,14 @@ final class ImportedOtpApp {
     ErlangFile appConfigPsi = ErlangTermFileUtil.createPsi(appFile);
     List<ErlangTupleExpression> applicationDescriptors = ErlangTermFileUtil.getConfigSections(appConfigPsi, "application");
     ErlangListExpression appAttributes = PsiTreeUtil.getChildOfType(ContainerUtil.getFirstItem(applicationDescriptors), ErlangListExpression.class);
-    ErlangTermFileUtil.processConfigSection(appAttributes, "applications", new Consumer<ErlangExpression>() {
-      @Override
-      public void consume(ErlangExpression deps) {
-        ErlangListExpression dependencyAppsList = deps instanceof ErlangListExpression ? (ErlangListExpression) deps : null;
-        if (dependencyAppsList != null) {
-          for (ErlangExpression depExpression : dependencyAppsList.getExpressionList()) {
-            ErlangQAtom depApp = PsiTreeUtil.getChildOfType(depExpression, ErlangQAtom.class);
-            ErlangAtom appNameAtom = depApp != null ? depApp.getAtom() : null;
-            if (appNameAtom != null) {
-              myDeps.add(appNameAtom.getName());
-            }
+    ErlangTermFileUtil.processConfigSection(appAttributes, "applications", deps -> {
+      ErlangListExpression dependencyAppsList = deps instanceof ErlangListExpression ? (ErlangListExpression) deps : null;
+      if (dependencyAppsList != null) {
+        for (ErlangExpression depExpression : dependencyAppsList.getExpressionList()) {
+          ErlangQAtom depApp = PsiTreeUtil.getChildOfType(depExpression, ErlangQAtom.class);
+          ErlangAtom appNameAtom = depApp != null ? depApp.getAtom() : null;
+          if (appNameAtom != null) {
+            myDeps.add(appNameAtom.getName());
           }
         }
       }

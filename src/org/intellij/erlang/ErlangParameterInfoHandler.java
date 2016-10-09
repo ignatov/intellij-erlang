@@ -92,13 +92,10 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
       }
       if (clauses.size() > 0) {
-        Collections.sort(clauses, new Comparator<ErlangFunctionClause>() {
-          @Override
-          public int compare(@NotNull ErlangFunctionClause lhs, @NotNull ErlangFunctionClause rhs) {
-            int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
-            int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
-            return Integer.signum(lhsSize - rhsSize);
-          }
+        Collections.sort(clauses, (lhs, rhs) -> {
+          int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+          int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+          return Integer.signum(lhsSize - rhsSize);
         });
         context.setItemsToShow(ArrayUtil.toObjectArray(clauses));
         context.showHint(args, args.getTextRange().getStartOffset(), this);

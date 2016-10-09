@@ -87,12 +87,7 @@ public class RebarEunitRunningState extends CommandLineState {
 
     RebarEunitRerunFailedTestsAction rerunAction = new RebarEunitRerunFailedTestsAction(consoleView);
     rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties());
-    rerunAction.setModelProvider(new Getter<TestFrameworkRunningModel>() {
-      @Override
-      public TestFrameworkRunningModel get() {
-        return ((SMTRunnerConsoleView) consoleView).getResultsViewer();
-      }
-    });
+    rerunAction.setModelProvider(() -> ((SMTRunnerConsoleView) consoleView).getResultsViewer());
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
     executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());
@@ -151,12 +146,9 @@ public class RebarEunitRunningState extends CommandLineState {
     if (psiDirectory == null) {
       throw new IOException("Failed to save modified rebar.config");
     }
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        configPsi.setName(newConfig.getName());
-        psiDirectory.add(configPsi);
-      }
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      configPsi.setName(newConfig.getName());
+      psiDirectory.add(configPsi);
     });
   }
 
@@ -177,12 +169,9 @@ public class RebarEunitRunningState extends CommandLineState {
   }
 
   private static void removeReportOptions(List<ErlangTupleExpression> eunitOptsSections) {
-    Processor<ErlangTupleExpression> deletingProcessor = new Processor<ErlangTupleExpression>() {
-      @Override
-      public boolean process(ErlangTupleExpression erlangTupleExpression) {
-        ErlangTermFileUtil.deleteListExpressionItem(erlangTupleExpression);
-        return true;
-      }
+    Processor<ErlangTupleExpression> deletingProcessor = erlangTupleExpression -> {
+      ErlangTermFileUtil.deleteListExpressionItem(erlangTupleExpression);
+      return true;
     };
     for (ErlangTupleExpression eunitOptsSection : eunitOptsSections) {
       ErlangExpression eunitOptsList = eunitOptsSection.getExpressionList().get(1);

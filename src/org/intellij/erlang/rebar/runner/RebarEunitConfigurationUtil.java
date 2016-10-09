@@ -55,12 +55,7 @@ class RebarEunitConfigurationUtil {
   private static void appendTestsOption(StringBuilder commandBuilder, Collection<ErlangFunction> functions) {
     if (functions.isEmpty()) return;
 
-    Set<String> distinctFunctionNames = ContainerUtil.map2Set(functions, new Function<ErlangFunction, String>() {
-      @Override
-      public String fun(ErlangFunction function) {
-        return function.getName();
-      }
-    });
+    Set<String> distinctFunctionNames = ContainerUtil.map2Set(functions, function -> function.getName());
 
     commandBuilder.append("tests=");
     commandBuilder.append(StringUtil.join(distinctFunctionNames, ","));

@@ -124,42 +124,29 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       handler.addProcessListener(new ProcessAdapter() {
         @Override
         public void processTerminated(ProcessEvent event) {
-          ApplicationManager.getApplication().invokeLater(new Runnable() {
-            @Override
-            public void run() {
-              try {
-                final String emacsText = FileUtilRt.loadFile(tmpFile, true);
-                if (StringUtil.isEmptyOrSpaces(emacsText)) {
-                  Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
-                    "Emacs returned an empty file",
-                    NotificationType.WARNING), project);
-                  LOG.warn("Emacs returned an empty file:\n" + commandLineString);
-                  return;
-                }
-                final Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
-                if (document == null) return;
-                CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-                  @Override
-                  public void run() {
-                    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                      @Override
-                      public void run() {
-                        document.setText(emacsText);
-                      }
-                    });
-                  }
-                }, NOTIFICATION_TITLE, "", document);
-
+          ApplicationManager.getApplication().invokeLater(() -> {
+            try {
+              final String emacsText = FileUtilRt.loadFile(tmpFile, true);
+              if (StringUtil.isEmptyOrSpaces(emacsText)) {
                 Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
-                  psiFile.getName() + " formatted with Emacs",
-                  NotificationType.INFORMATION), project);
-
-              } catch (Exception ex) {
-                Notifications.Bus.notify(new Notification(groupId,
-                  psiFile.getName() + " formatting with Emacs failed", ExceptionUtil.getUserStackTrace(ex, LOG),
-                  NotificationType.ERROR), project);
-                LOG.error(ex);
+                  "Emacs returned an empty file",
+                  NotificationType.WARNING), project);
+                LOG.warn("Emacs returned an empty file:\n" + commandLineString);
+                return;
               }
+              final Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
+              if (document == null) return;
+              CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> document.setText(emacsText)), NOTIFICATION_TITLE, "", document);
+
+              Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
+                psiFile.getName() + " formatted with Emacs",
+                NotificationType.INFORMATION), project);
+
+            } catch (Exception ex) {
+              Notifications.Bus.notify(new Notification(groupId,
+                psiFile.getName() + " formatting with Emacs failed", ExceptionUtil.getUserStackTrace(ex, LOG),
+                NotificationType.ERROR), project);
+              LOG.error(ex);
             }
           });
         }

@@ -30,13 +30,7 @@ import java.io.IOException;
 public class ErlangTypeDefinitionElementType extends ErlangNamedStubElementType<ErlangTypeDefinitionStub, ErlangTypeDefinition> {
   private static final ErlangTypeDefinition[] EMPTY_ARRAY = new ErlangTypeDefinition[0];
 
-  public static final ArrayFactory<ErlangTypeDefinition> ARRAY_FACTORY = new ArrayFactory<ErlangTypeDefinition>() {
-    @NotNull
-    @Override
-    public ErlangTypeDefinition[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangTypeDefinition[count];
-    }
-  };
+  public static final ArrayFactory<ErlangTypeDefinition> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangTypeDefinition[count];
 
   public ErlangTypeDefinitionElementType(String name) {
     super(name);

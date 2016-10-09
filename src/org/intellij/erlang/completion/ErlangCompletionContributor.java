@@ -172,20 +172,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
           else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordTuple) {
             Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> recordFields = getRecordFields(grandPa);
             final boolean withoutEq = is(grandPa.getFirstChild(), ErlangTypes.ERL_DOT);
-            result.addAllElements(ContainerUtil.map(recordFields.first, new Function<ErlangTypedExpr, LookupElement>() {
-              @NotNull
-              @Override
-              public LookupElement fun(@NotNull ErlangTypedExpr e) {
-                return createFieldLookupElement(e.getProject(), e.getName(), withoutEq);
-              }
-            }));
-            result.addAllElements(ContainerUtil.map(recordFields.second, new Function<ErlangQAtom, LookupElement>() {
-              @NotNull
-              @Override
-              public LookupElement fun(@NotNull ErlangQAtom a) {
-                return createFieldLookupElement(a.getProject(), a.getText(), withoutEq);
-              }
-            }));
+            result.addAllElements(ContainerUtil.map(recordFields.first, e -> createFieldLookupElement(e.getProject(), e.getName(), withoutEq)));
+            result.addAllElements(ContainerUtil.map(recordFields.second, a -> createFieldLookupElement(a.getProject(), a.getText(), withoutEq)));
             return;
           }
           else if (grandPa instanceof ErlangMacros) {
@@ -303,13 +291,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         continue;
       }
       addMatchingFiles(appRoot, libRelativePath, matchingFiles);
-      result.addAll(ContainerUtil.mapNotNull(matchingFiles, new Function<VirtualFile, LookupElement>() {
-        @Nullable
-        @Override
-        public LookupElement fun(@NotNull VirtualFile f) {
-          return f.equals(virtualFile) ? null : getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true);
-        }
-      }));
+      result.addAll(ContainerUtil.mapNotNull(matchingFiles, (Function<VirtualFile, LookupElement>) f -> f.equals(virtualFile) ? null : getDefaultPathLookupElementBuilder(includeText, f, null).withTypeText("in " + appFullName, true)));
       matchingFiles.clear();
     }
     result.addAll(getModulePathLookupElements(file, includeText));
@@ -322,12 +304,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     if (nameIsComplete) {
       return ContainerUtil.createMaybeSingletonList(ErlangApplicationIndex.getApplicationDirectoryByName(appName, searchScope));
     }
-    return ContainerUtil.filter(ErlangApplicationIndex.getAllApplicationDirectories(project, searchScope), new Condition<VirtualFile>() {
-      @Override
-      public boolean value(@Nullable VirtualFile virtualFile) {
-        return virtualFile != null && virtualFile.getName().startsWith(appName);
-      }
-    });
+    return ContainerUtil.filter(ErlangApplicationIndex.getAllApplicationDirectories(project, searchScope), virtualFile -> virtualFile != null && virtualFile.getName().startsWith(appName));
   }
 
   @NotNull
@@ -369,13 +346,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     if (includeDir == null || !includeDir.isDirectory()) return ContainerUtil.emptyList();
     List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
     addMatchingFiles(includeDir, includeText, matchingFiles);
-    return ContainerUtil.mapNotNull(matchingFiles, new Function<VirtualFile, LookupElement>() {
-      @Nullable
-      @Override
-      public LookupElement fun(@NotNull VirtualFile f) {
-        return f.equals(includeOwner) ? null : getDefaultPathLookupElementBuilder(includeText, f, null);
-      }
-    });
+    return ContainerUtil.mapNotNull(matchingFiles, f -> f.equals(includeOwner) ? null : getDefaultPathLookupElementBuilder(includeText, f, null));
   }
 
   private static LookupElementBuilder getDefaultPathLookupElementBuilder(@NotNull String includeText, @NotNull VirtualFile lookedUpFile, @Nullable String appName) {
@@ -462,12 +433,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     @Override
     public void handleInsert(@NotNull final InsertionContext context, @NotNull LookupElement item) {
       if (item.getLookupString().endsWith("/"))
-        context.setLaterRunnable(new Runnable() {
-          @Override
-          public void run() {
-            new CodeCompletionHandlerBase(CompletionType.BASIC).invokeCompletion(context.getProject(), context.getEditor());
-          }
-        });
+        context.setLaterRunnable(() -> new CodeCompletionHandlerBase(CompletionType.BASIC).invokeCompletion(context.getProject(), context.getEditor()));
     }
   }
 }

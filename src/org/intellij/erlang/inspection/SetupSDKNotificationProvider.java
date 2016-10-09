@@ -82,26 +82,20 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
   private static EditorNotificationPanel createPanel(@NotNull final Project project, @NotNull final PsiFile file) {
     EditorNotificationPanel panel = new EditorNotificationPanel();
     panel.setText(ProjectBundle.message("project.sdk.not.defined"));
-    panel.createActionLabel(ProjectBundle.message("project.sdk.setup"), new Runnable() {
-      @Override
-      public void run() {
-        if (ErlangSystemUtil.isSmallIde()) {
-          ShowSettingsUtil.getInstance().showSettingsDialog(project, ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
-          return;
-        }
-
-        Sdk projectSdk = ProjectSettingsService.getInstance(project).chooseAndSetSdk();
-        if (projectSdk == null) return;
-        ApplicationManager.getApplication().runWriteAction(new Runnable() {
-          @Override
-          public void run() {
-            Module module = ModuleUtilCore.findModuleForPsiElement(file);
-            if (module != null) {
-              ModuleRootModificationUtil.setSdkInherited(module);
-            }
-          }
-        });
+    panel.createActionLabel(ProjectBundle.message("project.sdk.setup"), () -> {
+      if (ErlangSystemUtil.isSmallIde()) {
+        ShowSettingsUtil.getInstance().showSettingsDialog(project, ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
+        return;
       }
+
+      Sdk projectSdk = ProjectSettingsService.getInstance(project).chooseAndSetSdk();
+      if (projectSdk == null) return;
+      ApplicationManager.getApplication().runWriteAction(() -> {
+        Module module = ModuleUtilCore.findModuleForPsiElement(file);
+        if (module != null) {
+          ModuleRootModificationUtil.setSdkInherited(module);
+        }
+      });
     });
     return panel;
   }

@@ -127,23 +127,10 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
           dropHighlighters();
         }
       })
-      .setItemChoosenCallback(new Runnable() {
-        @Override
-        public void run() {
-          CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-            @Override
-            public void run() {
-              ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                @Override
-                public void run() {
-                  PsiDocumentManager.getInstance(project).commitAllDocuments();
-                  updateExport(project, function, (ErlangExport) exportPopupList.getSelectedValue());
-                }
-              });
-            }
-          }, "Export function", null);
-        }
-      })
+      .setItemChoosenCallback(() -> CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
+        PsiDocumentManager.getInstance(project).commitAllDocuments();
+        updateExport(project, function, (ErlangExport) exportPopupList.getSelectedValue());
+      }), "Export function", null))
       .setRequestFocus(true)
       .createPopup().showInBestPositionFor(editor);
   }
@@ -196,12 +183,9 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   @NotNull
   public static List<ErlangExport> getNotEmptyExports(@NotNull List<ErlangExport> exports) {
-    return ContainerUtil.filter(exports, new Condition<ErlangExport>() {
-      @Override
-      public boolean value(@NotNull ErlangExport export) {
-        ErlangExportFunctions functions = export.getExportFunctions();
-        return functions != null && !functions.getExportFunctionList().isEmpty();
-      }
+    return ContainerUtil.filter(exports, export -> {
+      ErlangExportFunctions functions = export.getExportFunctions();
+      return functions != null && !functions.getExportFunctionList().isEmpty();
     });
   }
 
@@ -237,23 +221,20 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
         return s;
       }
     });
-    exportPopupList.addListSelectionListener(new ListSelectionListener() {
-      @Override
-      public void valueChanged(@NotNull ListSelectionEvent e) {
-        ErlangExport export = (ErlangExport) exportPopupList.getSelectedValue();
-        if (export == null) return;
-        dropHighlighters();
-        MarkupModel markupModel = editor.getMarkupModel();
-        TextAttributes attributes = EditorColorsManager.getInstance().getGlobalScheme().getAttributes(EditorColors.IDENTIFIER_UNDER_CARET_ATTRIBUTES);
-        ErlangExport selectedExport = (ErlangExport) exportPopupList.getSelectedValue();
-        myExportHighlighters.add(
-          markupModel.addRangeHighlighter(
-            selectedExport.getTextRange().getStartOffset(),
-            selectedExport.getTextRange().getEndOffset(),
-            HighlighterLayer.SELECTION - 1,
-            attributes,
-            HighlighterTargetArea.EXACT_RANGE));
-      }
+    exportPopupList.addListSelectionListener(e -> {
+      ErlangExport export = (ErlangExport) exportPopupList.getSelectedValue();
+      if (export == null) return;
+      dropHighlighters();
+      MarkupModel markupModel = editor.getMarkupModel();
+      TextAttributes attributes = EditorColorsManager.getInstance().getGlobalScheme().getAttributes(EditorColors.IDENTIFIER_UNDER_CARET_ATTRIBUTES);
+      ErlangExport selectedExport = (ErlangExport) exportPopupList.getSelectedValue();
+      myExportHighlighters.add(
+        markupModel.addRangeHighlighter(
+          selectedExport.getTextRange().getStartOffset(),
+          selectedExport.getTextRange().getEndOffset(),
+          HighlighterLayer.SELECTION - 1,
+          attributes,
+          HighlighterTargetArea.EXACT_RANGE));
     });
     return exportPopupList;
   }

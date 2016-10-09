@@ -82,12 +82,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     public CreateAndExportFunctionsFix(@NotNull List<ErlangCallbackSpec> callbackSpecs, @NotNull Project project) {
       super(FIX_MESSAGE);
       final SmartPointerManager manager = SmartPointerManager.getInstance(project);
-      myCallbackSpecs = ContainerUtil.map(callbackSpecs, new Function<ErlangCallbackSpec, SmartPsiElementPointer<ErlangCallbackSpec>>() {
-        @Override
-        public SmartPsiElementPointer<ErlangCallbackSpec> fun(ErlangCallbackSpec callbackSpec) {
-          return manager.createSmartPsiElementPointer(callbackSpec);
-        }
-      });
+      myCallbackSpecs = ContainerUtil.map(callbackSpecs, callbackSpec -> manager.createSmartPsiElementPointer(callbackSpec));
     }
 
     @Override

@@ -112,26 +112,18 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         final Project project = getProject();
         RebarEunitRunConfiguration configuration = new RebarEunitRunConfiguration(project, "");
         final List<ErlangFunction> failedGeneratedTests = new ArrayList<ErlangFunction>();
-        List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(getFailedTests(project), new Function<AbstractTestProxy, ErlangFunction>() {
-          @Nullable
-          @Override
-          public ErlangFunction fun(AbstractTestProxy testProxy) {
-            Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
-            PsiElement psiElement = location != null ? location.getPsiElement() : null;
-            ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
-            if (function != null && function.getArity() != 0) {
-              failedGeneratedTests.add(function);
-            }
-            return function;
+        List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(getFailedTests(project), testProxy -> {
+          Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
+          PsiElement psiElement = location != null ? location.getPsiElement() : null;
+          ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
+          if (function != null && function.getArity() != 0) {
+            failedGeneratedTests.add(function);
           }
+          return function;
         });
-        Set<ErlangFile> suites = ContainerUtil.map2Set(failedTests, new Function<ErlangFunction, ErlangFile>() {
-          @Nullable
-          @Override
-          public ErlangFile fun(ErlangFunction function) {
-            PsiFile containingFile = function.getContainingFile();
-            return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
-          }
+        Set<ErlangFile> suites = ContainerUtil.map2Set(failedTests, function -> {
+          PsiFile containingFile = function.getContainingFile();
+          return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
         });
         suites.remove(null);
 
@@ -155,15 +147,11 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       }
 
       private void notifyGeneratedTestsFailed(final List<ErlangFunction> failedGeneratedTests) {
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-          public void run() {
-            Notifications.Bus.notify(
-              new Notification("TestRunner", "Some tests cannot be rerun directly",
-                "Some of failed tests were obtained via generator functions and cannot be rerun directly.\n" +
-                createFailedTestsListMessage(failedGeneratedTests),
-                NotificationType.WARNING));
-          }
-        });
+        ApplicationManager.getApplication().invokeLater(() -> Notifications.Bus.notify(
+          new Notification("TestRunner", "Some tests cannot be rerun directly",
+            "Some of failed tests were obtained via generator functions and cannot be rerun directly.\n" +
+            createFailedTestsListMessage(failedGeneratedTests),
+            NotificationType.WARNING)));
       }
 
       private String createFailedTestsListMessage(List<ErlangFunction> failedTests) {

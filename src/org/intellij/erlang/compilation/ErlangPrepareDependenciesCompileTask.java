@@ -78,13 +78,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       addPrepareDependenciesFailedMessage(context);
       return true;
     }
-    ErlangProjectBuildOrder projectBuildOrder = ApplicationManager.getApplication().runReadAction(new Computable<ErlangProjectBuildOrder>() {
-      @Nullable
-      @Override
-      public ErlangProjectBuildOrder compute() {
-        return getProjectBuildOrder(context);
-      }
-    });
+    ErlangProjectBuildOrder projectBuildOrder = ApplicationManager.getApplication().runReadAction((Computable<ErlangProjectBuildOrder>) () -> getProjectBuildOrder(context));
     if (projectBuildOrder == null) {
       return false; // errors are reported to context.
     }
@@ -154,12 +148,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     if (!builder.isAcyclic()) {
       throw new CyclicDependencyFoundException(builder.getCircularDependency());
     }
-    return ContainerUtil.map(builder.getSortedNodes(), new Function<String, ErlangFileDescriptor>() {
-      @Override
-      public ErlangFileDescriptor fun(String filePath) {
-        return new ErlangFileDescriptor(filePath, semiGraph.getDependencies(filePath));
-      }
-    });
+    return ContainerUtil.map(builder.getSortedNodes(), filePath -> new ErlangFileDescriptor(filePath, semiGraph.getDependencies(filePath)));
   }
 
   @NotNull
@@ -201,12 +190,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     @NotNull
     private static List<String> getHeaders(Module module, boolean onlyTestModules) {
-      return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), new Function<VirtualFile, String>() {
-        @Override
-        public String fun(VirtualFile virtualFile) {
-          return getPath(virtualFile);
-        }
-      });
+      return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), virtualFile -> getPath(virtualFile));
     }
 
     @Override
@@ -283,14 +267,10 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     @NotNull
     private List<String> getDeclaredIncludePaths(@NotNull ErlangFile file) {
-      return ContainerUtil.mapNotNull(ErlangPsiImplUtil.getDirectlyIncludedFiles(file), new Function<ErlangFile, String>() {
-        @Nullable
-        @Override
-        public String fun(ErlangFile erlangFile) {
-          VirtualFile file = erlangFile.getVirtualFile();
-          String path = file != null ? getPath(file) : null;
-          return path != null && myHeaders.contains(path) ? path : null;
-        }
+      return ContainerUtil.mapNotNull(ErlangPsiImplUtil.getDirectlyIncludedFiles(file), erlangFile -> {
+        VirtualFile file1 = erlangFile.getVirtualFile();
+        String path = file1 != null ? getPath(file1) : null;
+        return path != null && myHeaders.contains(path) ? path : null;
       });
     }
 
@@ -299,13 +279,9 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       List<ErlangFile> filesByName = ErlangModuleIndex.getFilesByName(myProject,
                                                                       erlangModuleName,
                                                                       GlobalSearchScope.moduleWithDependenciesScope(module));
-      return ContainerUtil.mapNotNull(filesByName, new Function<ErlangFile, String>() {
-        @Nullable
-        @Override
-        public String fun(ErlangFile erlangFile) {
-          VirtualFile virtualFile = erlangFile.getVirtualFile();
-          return virtualFile != null ? getPath(virtualFile) : null;
-        }
+      return ContainerUtil.mapNotNull(filesByName, erlangFile -> {
+        VirtualFile virtualFile = erlangFile.getVirtualFile();
+        return virtualFile != null ? getPath(virtualFile) : null;
       });
     }
   }

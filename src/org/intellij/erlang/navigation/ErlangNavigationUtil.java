@@ -40,13 +40,10 @@ public class ErlangNavigationUtil {
   @NotNull
   public static List<ErlangCallbackSpec> getCallbackSpecs(@NotNull ErlangFunction function) {
     final String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(function);
-    return ContainerUtil.mapNotNull(((ErlangFile)function.getContainingFile()).getBehaviours(), new Function<ErlangBehaviour, ErlangCallbackSpec>() {
-      @Override
-      public ErlangCallbackSpec fun(ErlangBehaviour behaviour) {
-        ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviour.getModuleRef());
-        //noinspection ConstantConditions
-        return behaviourModule != null ? behaviourModule.getCallbackByName(functionPresentation) : null;
-      }
+    return ContainerUtil.mapNotNull(((ErlangFile)function.getContainingFile()).getBehaviours(), behaviour -> {
+      ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviour.getModuleRef());
+      //noinspection ConstantConditions
+      return behaviourModule != null ? behaviourModule.getCallbackByName(functionPresentation) : null;
     });
   }
 

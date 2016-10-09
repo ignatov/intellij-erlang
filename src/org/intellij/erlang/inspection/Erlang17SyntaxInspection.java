@@ -43,15 +43,12 @@ public class Erlang17SyntaxInspection extends ErlangInspectionBase {
         ErlangFunClauses funClauses = funExpression.getFunClauses();
         List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : null;
         if (ContainerUtil.isEmpty(funClauseList)) return;
-        ContainerUtil.process(funClauseList, new Processor<ErlangFunClause>() {
-          @Override
-          public boolean process(ErlangFunClause funClause) {
-            ErlangArgumentDefinition funName = funClause.getArgumentDefinition();
-            if (funName != null) {
-              registerProblem(holder, funName, "Named funs require Erlang/OTP 17.0");
-            }
-            return true;
+        ContainerUtil.process(funClauseList, funClause -> {
+          ErlangArgumentDefinition funName = funClause.getArgumentDefinition();
+          if (funName != null) {
+            registerProblem(holder, funName, "Named funs require Erlang/OTP 17.0");
           }
+          return true;
         });
       }
 

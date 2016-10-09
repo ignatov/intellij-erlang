@@ -443,12 +443,7 @@ public final class ErlangBifTable {
 
   @NotNull
   public static Collection<ErlangBifDescriptor> getAutoimportedBifs(@NotNull String moduleName) {
-    return ContainerUtil.filter(bifMap.get(moduleName), new Condition<ErlangBifDescriptor>() {
-      @Override
-      public boolean value(ErlangBifDescriptor erlangBifDescriptor) {
-        return erlangBifDescriptor.isAutoImported();
-      }
-    });
+    return ContainerUtil.filter(bifMap.get(moduleName), erlangBifDescriptor -> erlangBifDescriptor.isAutoImported());
   }
 
   @NotNull

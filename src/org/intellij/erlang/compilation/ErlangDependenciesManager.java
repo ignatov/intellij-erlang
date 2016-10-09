@@ -28,11 +28,6 @@ public class ErlangDependenciesManager extends AbstractProjectComponent {
 
   @Override
   public void initComponent() {
-    StartupManager.getInstance(myProject).registerPostStartupActivity(new Runnable() {
-      @Override
-      public void run() {
-        CompilerManager.getInstance(myProject).addBeforeTask(new ErlangPrepareDependenciesCompileTask());
-      }
-    });
+    StartupManager.getInstance(myProject).registerPostStartupActivity(() -> CompilerManager.getInstance(myProject).addBeforeTask(new ErlangPrepareDependenciesCompileTask()));
   }
 }

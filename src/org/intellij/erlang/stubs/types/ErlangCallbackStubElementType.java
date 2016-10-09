@@ -31,13 +31,7 @@ import java.io.IOException;
 public class ErlangCallbackStubElementType extends ErlangStubElementType<ErlangCallbackSpecStub, ErlangCallbackSpec> {
   private static final ErlangCallbackSpec[] EMPTY_ARRAY = new ErlangCallbackSpec[0];
 
-  public static final ArrayFactory<ErlangCallbackSpec> ARRAY_FACTORY = new ArrayFactory<ErlangCallbackSpec>() {
-    @NotNull
-    @Override
-    public ErlangCallbackSpec[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangCallbackSpec[count];
-    }
-  };
+  public static final ArrayFactory<ErlangCallbackSpec> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangCallbackSpec[count];
 
   public ErlangCallbackStubElementType(@NotNull String name) {
     super(name);

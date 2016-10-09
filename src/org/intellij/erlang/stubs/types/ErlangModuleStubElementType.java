@@ -33,13 +33,7 @@ import java.io.IOException;
 public class ErlangModuleStubElementType extends ErlangNamedStubElementType<ErlangModuleStub, ErlangModule> {
   private static final ErlangModule[] EMPTY_ARRAY = new ErlangModule[0];
 
-  public static final ArrayFactory<ErlangModule> ARRAY_FACTORY = new ArrayFactory<ErlangModule>() {
-    @NotNull
-    @Override
-    public ErlangModule[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangModule[count];
-    }
-  };
+  public static final ArrayFactory<ErlangModule> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangModule[count];
 
   public ErlangModuleStubElementType(String name) {
     super(name);

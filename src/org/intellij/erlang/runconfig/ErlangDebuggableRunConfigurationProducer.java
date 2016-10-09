@@ -101,15 +101,12 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
     scope = GlobalSearchScope.getScopeRestrictedByFileTypes(scope, ErlangFileType.MODULE);
 
     final HashSet<String> modules = new HashSet<String>();
-    Processor<PsiFile> collector = new Processor<PsiFile>() {
-      @Override
-      public boolean process(PsiFile psiFile) {
-        String moduleName = psiFile.getVirtualFile().getNameWithoutExtension();
-        if (!modules.contains(moduleName) && containsErlangLoadNifCall(psiFile)) {
-          modules.add(moduleName);
-        }
-        return true;
+    Processor<PsiFile> collector = psiFile -> {
+      String moduleName = psiFile.getVirtualFile().getNameWithoutExtension();
+      if (!modules.contains(moduleName) && containsErlangLoadNifCall(psiFile)) {
+        modules.add(moduleName);
       }
+      return true;
     };
     PsiSearchHelper.SERVICE.getInstance(module.getProject()).processAllFilesWithWord("load_nif", scope, collector, true);
 

@@ -90,14 +90,11 @@ public class ErlangConflictingBehavioursInspection extends ErlangInspectionBase 
       }
     }
 
-    return ContainerUtil.mapNotNull(orderedCallbacks, new Function<String, Pair<String, List<String>>>() {
-      @Override
-      public Pair<String, List<String>> fun(String callback) {
-        Collection<String> callbackOwners = callbacksToOwners.get(callback);
-        //noinspection ConstantConditions
-        return callbackOwners.size() < 2 ? null :
-               Pair.<String, List<String>>create(callback, ContainerUtil.newArrayList(callbackOwners));
-      }
+    return ContainerUtil.mapNotNull(orderedCallbacks, callback -> {
+      Collection<String> callbackOwners = callbacksToOwners.get(callback);
+      //noinspection ConstantConditions
+      return callbackOwners.size() < 2 ? null :
+             Pair.<String, List<String>>create(callback, ContainerUtil.newArrayList(callbackOwners));
     });
   }
 }

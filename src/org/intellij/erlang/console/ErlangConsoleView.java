@@ -76,11 +76,9 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
   }
 
   public void append(@NotNull final String text) {
-    WriteCommandAction.runWriteCommandAction(getProject(), new Runnable() {
-      public void run() {
-        Document document = getCurrentEditor().getDocument();
-        document.insertString(document.getTextLength(), text);
-      }
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> {
+      Document document = getCurrentEditor().getDocument();
+      document.insertString(document.getTextLength(), text);
     });
   }
 

@@ -63,14 +63,10 @@ public final class ErlangTermFileUtil {
   @NotNull
   private static List<ErlangTupleExpression> findNamedTuples(@NotNull List<ErlangExpression> configExpressions,
                                                              @Nullable final String name) {
-    return ContainerUtil.mapNotNull(configExpressions, new Function<ErlangExpression, ErlangTupleExpression>() {
-      @Nullable
-      @Override
-      public ErlangTupleExpression fun(ErlangExpression expression) {
-        String tupleName = getNameOfNamedTuple(expression);
-        boolean isValidName = name == null && tupleName != null || name != null && name.equals(tupleName);
-        return isValidName ? (ErlangTupleExpression) expression : null;
-      }
+    return ContainerUtil.mapNotNull(configExpressions, expression -> {
+      String tupleName = getNameOfNamedTuple(expression);
+      boolean isValidName = name == null && tupleName != null || name != null && name.equals(tupleName);
+      return isValidName ? (ErlangTupleExpression) expression : null;
     });
   }
 

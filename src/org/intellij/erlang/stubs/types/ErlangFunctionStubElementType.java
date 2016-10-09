@@ -30,13 +30,7 @@ import java.io.IOException;
 public class ErlangFunctionStubElementType extends ErlangNamedStubElementType<ErlangFunctionStub, ErlangFunction> {
   private static final ErlangFunction[] EMPTY_ARRAY = new ErlangFunction[0];
 
-  public static final ArrayFactory<ErlangFunction> ARRAY_FACTORY = new ArrayFactory<ErlangFunction>() {
-    @NotNull
-    @Override
-    public ErlangFunction[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangFunction[count];
-    }
-  };
+  public static final ArrayFactory<ErlangFunction> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangFunction[count];
 
   public ErlangFunctionStubElementType(String name) {
     super(name);

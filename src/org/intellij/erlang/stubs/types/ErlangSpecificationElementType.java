@@ -32,13 +32,7 @@ import java.io.IOException;
 public class ErlangSpecificationElementType extends ErlangStubElementType<ErlangSpecificationStub, ErlangSpecification> {
   private static final ErlangSpecification[] EMPTY_ARRAY = new ErlangSpecification[0];
 
-  public static final ArrayFactory<ErlangSpecification> ARRAY_FACTORY = new ArrayFactory<ErlangSpecification>() {
-    @NotNull
-    @Override
-    public ErlangSpecification[] create(int count) {
-      return count == 0 ? EMPTY_ARRAY : new ErlangSpecification[count];
-    }
-  };
+  public static final ArrayFactory<ErlangSpecification> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangSpecification[count];
 
   public ErlangSpecificationElementType(@NonNls @NotNull String debugName) {
     super(debugName);

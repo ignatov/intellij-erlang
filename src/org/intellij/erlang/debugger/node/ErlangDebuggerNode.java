@@ -126,12 +126,7 @@ public class ErlangDebuggerNode {
   @NotNull
   private Future<Integer> runDebuggerServer() {
     final AsyncFutureResult<Integer> portFuture = AsyncFutureFactory.getInstance().createAsyncFutureResult();
-    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-      @Override
-      public void run() {
-        runDebuggerServerImpl(portFuture);
-      }
-    });
+    ApplicationManager.getApplication().executeOnPooledThread(() -> runDebuggerServerImpl(portFuture));
     return portFuture;
   }
 

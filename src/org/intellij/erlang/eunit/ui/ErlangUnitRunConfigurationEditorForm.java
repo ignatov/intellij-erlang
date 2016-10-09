@@ -49,12 +49,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
 
   public ErlangUnitRunConfigurationEditorForm() {
-    myTestKindComboBox.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(@NotNull ActionEvent e) {
-        onTestKindSwitch();
-      }
-    });
+    myTestKindComboBox.addActionListener(e -> onTestKindSwitch());
     ErlangUiUtil.installWorkingDirectoryChooser(myWorkingDirectoryComponent, null);
   }
 

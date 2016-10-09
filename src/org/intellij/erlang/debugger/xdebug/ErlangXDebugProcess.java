@@ -153,12 +153,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void breakpointReached(final OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) {
-    ErlangProcessSnapshot processInBreakpoint = ContainerUtil.find(snapshots, new Condition<ErlangProcessSnapshot>() {
-      @Override
-      public boolean value(ErlangProcessSnapshot erlangProcessSnapshot) {
-        return erlangProcessSnapshot.getPid().equals(pid);
-      }
-    });
+    ErlangProcessSnapshot processInBreakpoint = ContainerUtil.find(snapshots, erlangProcessSnapshot -> erlangProcessSnapshot.getPid().equals(pid));
     assert processInBreakpoint != null;
     ErlangSourcePosition breakPosition = ErlangSourcePosition.create(myLocationResolver, processInBreakpoint);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);

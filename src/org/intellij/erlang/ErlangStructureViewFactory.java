@@ -127,13 +127,10 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         }
       }
       else if (myElement instanceof ErlangFile) {
-        Comparator<ErlangNamedElement> comparator = new Comparator<ErlangNamedElement>() {
-          @Override
-          public int compare(@NotNull ErlangNamedElement o1, @NotNull ErlangNamedElement o2) {
-            String name = o1.getName();
-            if (name == null) return -1;
-            return name.compareToIgnoreCase(o2.getName());
-          }
+        Comparator<ErlangNamedElement> comparator = (o1, o2) -> {
+          String name = o1.getName();
+          if (name == null) return -1;
+          return name.compareToIgnoreCase(o2.getName());
         };
         ErlangFile file = (ErlangFile) myElement;
         //noinspection unchecked
@@ -152,12 +149,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       if (myElement instanceof ErlangFunctionClause) {
         List<ErlangArgumentDefinition> exprs = ((ErlangFunctionClause) myElement).getArgumentDefinitionList().getArgumentDefinitionList();
         String name = ((ErlangFunctionClause) myElement).getQAtom().getText();
-        List<String> expressionStrings = ContainerUtil.map(exprs, new Function<ErlangArgumentDefinition, String>() {
-          @Override
-          public String fun(@NotNull ErlangArgumentDefinition o) {
-            return o.getText();
-          }
-        });
+        List<String> expressionStrings = ContainerUtil.map(exprs, o -> o.getText());
 
         ErlangClauseGuard guard = ((ErlangFunctionClause) myElement).getClauseGuard();
         String guardText = guard != null ? " " + guard.getText() : "";

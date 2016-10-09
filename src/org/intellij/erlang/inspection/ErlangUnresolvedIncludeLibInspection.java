@@ -63,14 +63,10 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
       }
     }
     else if (files.size() > 1) {
-      String resolvedFilesList = StringUtil.join(files, new Function<ErlangFile, String>() {
-        @NotNull
-        @Override
-        public String fun(@NotNull ErlangFile erlangFile) {
-          PsiFile originalFile = erlangFile.getOriginalFile();
-          VirtualFile virtualFile = originalFile.getVirtualFile();
-          return virtualFile == null ? "null" : virtualFile.getPath();
-        }
+      String resolvedFilesList = StringUtil.join(files, erlangFile -> {
+        PsiFile originalFile = erlangFile.getOriginalFile();
+        VirtualFile virtualFile = originalFile.getVirtualFile();
+        return virtualFile == null ? "null" : virtualFile.getPath();
       }, ", ");
       LOG.debug(what + ": " + string.getText() + " resolved to: " + resolvedFilesList);
       problemsHolder.registerProblem(string, range, "Unresolved " + what + ": ambiguous file reference");

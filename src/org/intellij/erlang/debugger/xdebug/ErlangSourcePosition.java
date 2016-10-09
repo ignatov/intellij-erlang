@@ -143,13 +143,7 @@ public final class ErlangSourcePosition {
 
   @Nullable
   public static ErlangSourcePosition create(@NotNull final ErlangDebugLocationResolver resolver, @NotNull final String module, int line) {
-    VirtualFile file = ApplicationManager.getApplication().runReadAction(new Computable<VirtualFile>() {
-      @Nullable
-      @Override
-      public VirtualFile compute() {
-        return resolver.resolveModuleFile(module);
-      }
-    });
+    VirtualFile file = ApplicationManager.getApplication().runReadAction((Computable<VirtualFile>) () -> resolver.resolveModuleFile(module));
     XSourcePosition sourcePosition = XDebuggerUtil.getInstance().createPosition(file, line);
     return sourcePosition != null ? new ErlangSourcePosition(sourcePosition) : null;
   }
@@ -176,23 +170,19 @@ public final class ErlangSourcePosition {
       funExpressionArity = -1;
     }
 
-    XSourcePosition position = ApplicationManager.getApplication().runReadAction(new Computable<XSourcePosition>() {
-      @Nullable
-      @Override
-      public XSourcePosition compute() {
-        ErlangFile erlangModule = resolver.resolveModule(module);
-        if (erlangModule == null) return null;
+    XSourcePosition position = ApplicationManager.getApplication().runReadAction((Computable<XSourcePosition>) () -> {
+      ErlangFile erlangModule = resolver.resolveModule(module);
+      if (erlangModule == null) return null;
 
-        //TODO use fun expression name to improve resolution (?)
-        ErlangFunction function = erlangModule.getFunction(functionName, functionArity);
-        ErlangCompositeElement clarifyingElement = inFunExpression && function != null ?
-          ErlangPsiImplUtil.findFunExpression(function, funExpressionArity) : function;
+      //TODO use fun expression name to improve resolution (?)
+      ErlangFunction function = erlangModule.getFunction(functionName, functionArity);
+      ErlangCompositeElement clarifyingElement = inFunExpression && function != null ?
+        ErlangPsiImplUtil.findFunExpression(function, funExpressionArity) : function;
 
-        VirtualFile virtualFile = erlangModule.getVirtualFile();
-        int offset = clarifyingElement != null ? clarifyingElement.getTextOffset() : 0;
+      VirtualFile virtualFile = erlangModule.getVirtualFile();
+      int offset = clarifyingElement != null ? clarifyingElement.getTextOffset() : 0;
 
-        return XDebuggerUtil.getInstance().createPositionByOffset(virtualFile, offset);
-      }
+      return XDebuggerUtil.getInstance().createPositionByOffset(virtualFile, offset);
     });
 
     return position != null ?

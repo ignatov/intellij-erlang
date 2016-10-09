@@ -98,19 +98,16 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     final FileBasedIndex index = FileBasedIndex.getInstance();
     final List<VirtualFile> appFilesFromEbinDirectories = getAppFilesFromEbinDirectories(project, null);
 
-    index.processAllKeys(ERLANG_APPLICATION_INDEX, new Processor<String>() {
-      @Override
-      public boolean process(String appName) {
-        ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
-        index.processValues(ERLANG_APPLICATION_INDEX, appName, null, processor, searchScope);
-        processAppFiles(appFilesFromEbinDirectories, appName, processor);
-        //TODO examine: processor does not get called for some appNames when running
-        //              ErlangSmallIdeHighlightingTest.testIncludeFromOtpIncludeDirResolve()
-        //              it seems, that index is reused for different tests, thus we obtain keys (appNames)
-        //              which are not valid anymore...
-        ContainerUtil.addIfNotNull(processor.getApplicationPath(), result);
-        return true;
-      }
+    index.processAllKeys(ERLANG_APPLICATION_INDEX, appName -> {
+      ApplicationPathExtractingProcessor processor = new ApplicationPathExtractingProcessor();
+      index.processValues(ERLANG_APPLICATION_INDEX, appName, null, processor, searchScope);
+      processAppFiles(appFilesFromEbinDirectories, appName, processor);
+      //TODO examine: processor does not get called for some appNames when running
+      //              ErlangSmallIdeHighlightingTest.testIncludeFromOtpIncludeDirResolve()
+      //              it seems, that index is reused for different tests, thus we obtain keys (appNames)
+      //              which are not valid anymore...
+      ContainerUtil.addIfNotNull(processor.getApplicationPath(), result);
+      return true;
     }, project);
 
     return result;

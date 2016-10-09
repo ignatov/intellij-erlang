@@ -25,10 +25,5 @@ public final class ErlangIndexUtil {
   private ErlangIndexUtil() {
   }
 
-  public static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = new FileBasedIndex.InputFilter() {
-    @Override
-    public boolean acceptInput(@NotNull VirtualFile file) {
-      return file.getFileType() == ErlangFileType.MODULE;
-    }
-  };
+  public static final FileBasedIndex.InputFilter ERLANG_MODULE_FILTER = file -> file.getFileType() == ErlangFileType.MODULE;
 }
