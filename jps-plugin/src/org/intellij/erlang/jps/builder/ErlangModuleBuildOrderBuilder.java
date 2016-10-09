@@ -17,7 +17,6 @@
 package org.intellij.erlang.jps.builder;
 
 import com.intellij.openapi.util.Conditions;
-import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.graph.Graph;
 import com.intellij.util.graph.GraphGenerator;
