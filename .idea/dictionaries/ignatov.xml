@@ -4,6 +4,7 @@
       <w>autoimported</w>
       <w>dialyzer</w>
       <w>erlang</w>
+      <w>eunit</w>
       <w>rebar</w>
     </words>
   </dictionary>
