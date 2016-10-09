@@ -52,7 +52,7 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     assert document != null;
     ApplicationManager.getApplication().runWriteAction(() -> WriteCommandAction.runWriteCommandAction(getProject(), () -> document.insertString(0, "C = A + B + <error>D</error>.")));
     instance.commitDocument(document);
-    HashMap<String, ErlangQVar> map = new HashMap<String, ErlangQVar>();
+    HashMap<String, ErlangQVar> map = new HashMap<>();
     map.put("A", (ErlangQVar) ErlangElementFactory.createQVarFromText(getProject(), "A"));
     map.put("B", (ErlangQVar) ErlangElementFactory.createQVarFromText(getProject(), "B"));
     file.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, map);

@@ -108,7 +108,7 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
       "File after:\n" +
       myFixture.getFile().getText(),
       stringList);
-    Collection<String> varList = new ArrayList<String>(Arrays.asList(variants));
+    Collection<String> varList = new ArrayList<>(Arrays.asList(variants));
     if (checkType == CheckType.EQUALS) {
       UsefulTestCase.assertSameElements(stringList, variants);
     }
