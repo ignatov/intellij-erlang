@@ -63,7 +63,7 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
     erlangDebugOptions.setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected());
     Set<String> modules = erlangDebugOptions.isAutoUpdateModulesNotToInterpret() ? Collections.<String>emptySet() :
       ContainerUtil.map2Set(myModulesNotToInterpretListModel.getItems(),
-                            o -> String.valueOf(o));
+                            String::valueOf);
     erlangDebugOptions.setModulesNotToInterpret(modules);
   }
 

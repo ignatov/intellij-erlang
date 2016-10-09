@@ -142,12 +142,12 @@ public final class ErlangModulesUtil {
   }
   @NotNull
   private static Convertor<VirtualFile, Boolean> getSourceDirectoriesFilter(@NotNull final ModuleFileIndex moduleFileIndex) {
-    return dir -> moduleFileIndex.isInSourceContent(dir);
+    return moduleFileIndex::isInSourceContent;
   }
 
   @NotNull
   private static Convertor<VirtualFile, Boolean> getTestDirectoriesFilter(@NotNull final ModuleFileIndex moduleFileIndex) {
-    return dir -> moduleFileIndex.isInTestSourceContent(dir);
+    return moduleFileIndex::isInTestSourceContent;
   }
 
   @Nullable

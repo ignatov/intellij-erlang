@@ -86,7 +86,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
 
   @NotNull
   public static List<ErlangModule> getModulesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
-    return getByName(project, name, searchScope, erlangFile -> erlangFile.getModule());
+    return getByName(project, name, searchScope, ErlangFile::getModule);
   }
 
   @NotNull

@@ -87,7 +87,7 @@ public class RebarEunitRunningState extends CommandLineState {
 
     RebarEunitRerunFailedTestsAction rerunAction = new RebarEunitRerunFailedTestsAction(consoleView);
     rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties());
-    rerunAction.setModelProvider(() -> ((SMTRunnerConsoleView) consoleView).getResultsViewer());
+    rerunAction.setModelProvider(((SMTRunnerConsoleView) consoleView)::getResultsViewer);
 
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
     executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());

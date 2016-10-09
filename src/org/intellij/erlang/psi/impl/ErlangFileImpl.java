@@ -669,7 +669,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       return getChildrenByType(stub, ErlangTypes.ERL_BEHAVIOUR, ErlangBehaviourStubElementType.ARRAY_FACTORY);
     }
 
-    return ContainerUtil.mapNotNull(getAttributes(), attribute -> attribute.getBehaviour());
+    return ContainerUtil.mapNotNull(getAttributes(), ErlangAttribute::getBehaviour);
   }
 
   @NotNull
@@ -707,7 +707,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       return getChildrenByType(stub, ErlangTypes.ERL_SPECIFICATION, ErlangSpecificationElementType.ARRAY_FACTORY);
     }
 
-    return ContainerUtil.mapNotNull(getAttributes(), attribute -> attribute.getSpecification());
+    return ContainerUtil.mapNotNull(getAttributes(), ErlangAttribute::getSpecification);
   }
 
   @Override

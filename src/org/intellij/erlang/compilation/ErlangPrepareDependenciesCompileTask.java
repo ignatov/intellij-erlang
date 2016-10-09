@@ -190,7 +190,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     @NotNull
     private static List<String> getHeaders(Module module, boolean onlyTestModules) {
-      return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), virtualFile -> getPath(virtualFile));
+      return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), ErlangPrepareDependenciesCompileTask::getPath);
     }
 
     @Override

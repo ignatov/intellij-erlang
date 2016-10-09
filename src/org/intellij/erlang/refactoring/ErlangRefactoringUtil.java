@@ -117,7 +117,7 @@ public class ErlangRefactoringUtil {
             extractor.process(editor, expression);
           }
         },
-                                         expression -> expression.getText()
+                                         PsiElement::getText
       );
     }
   }

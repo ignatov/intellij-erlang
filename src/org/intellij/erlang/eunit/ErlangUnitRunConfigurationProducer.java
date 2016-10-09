@@ -93,7 +93,7 @@ public class ErlangUnitRunConfigurationProducer extends ErlangDebuggableRunConfi
   @NotNull
   private static LinkedHashSet<String> findTestFunctionNames(@NotNull PsiElement context) {
     Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(context);
-    functions = ContainerUtil.filter(functions, erlangFunction -> ErlangPsiImplUtil.isEunitTestFunction(erlangFunction));
+    functions = ContainerUtil.filter(functions, ErlangPsiImplUtil::isEunitTestFunction);
     LinkedHashSet<String> functionNames = new LinkedHashSet<>();
     for (ErlangFunction f : functions) {
       functionNames.add(ErlangPsiImplUtil.getQualifiedFunctionName(f));

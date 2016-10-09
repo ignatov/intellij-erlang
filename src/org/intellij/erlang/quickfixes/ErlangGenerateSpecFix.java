@@ -134,7 +134,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   }
 
   private static ErlangExpressionType computeCommonType(List<ErlangExpression> expressions) {
-    List<ErlangExpressionType> types = ContainerUtil.map(expressions, e -> ErlangExpressionType.create(e));
+    List<ErlangExpressionType> types = ContainerUtil.map(expressions, ErlangExpressionType::create);
     //TODO compute common type
     return types.isEmpty() ? ErlangExpressionType.UNKNOWN : types.get(0);
   }

@@ -1561,7 +1561,7 @@ public class ErlangPsiImplUtil {
 
   public static boolean isEunitImported(@NotNull ErlangFile file) {
     return isEunitDirectlyImported(file) ||
-           ContainerUtil.find(getIncludedFiles(file), includedFile -> isEunitDirectlyImported(includedFile)) != null;
+           ContainerUtil.find(getIncludedFiles(file), ErlangPsiImplUtil::isEunitDirectlyImported) != null;
   }
 
   private static boolean isEunitDirectlyImported(@NotNull ErlangFile file) {

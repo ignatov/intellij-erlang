@@ -167,7 +167,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
       final String signature = generateSignature(functionName, inParams);
       final String functionText = signature + " ->\n" +
-                                  StringUtil.join(selection, erlangExpression -> erlangExpression.getText(), ",\n") + bindingsEx + ".";
+                                  StringUtil.join(selection, PsiElement::getText, ",\n") + bindingsEx + ".";
 
       try {
         PsiFile file = first.getContainingFile();

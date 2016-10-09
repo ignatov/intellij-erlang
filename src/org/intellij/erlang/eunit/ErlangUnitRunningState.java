@@ -110,7 +110,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
     ErlangUnitRerunFailedTestsAction rerunAction = new ErlangUnitRerunFailedTestsAction(consoleView);
     rerunAction.init(((BaseTestsOutputConsoleView) consoleView).getProperties());
-    rerunAction.setModelProvider(() -> ((SMTRunnerConsoleView) consoleView).getResultsViewer());
+    rerunAction.setModelProvider(((SMTRunnerConsoleView) consoleView)::getResultsViewer);
 
     executionResult.setRestartActions(rerunAction, new ToggleAutoTestAction());
     return executionResult;

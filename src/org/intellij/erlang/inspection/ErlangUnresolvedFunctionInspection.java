@@ -117,7 +117,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         ErlangFunctionCallExpression call = myPointer.getElement();
         assert call != null;
         List<ErlangExpression> expressions = call.getArgumentList().getExpressionList();
-        return ContainerUtil.map(expressions, expression -> ErlangRefactoringUtil.shorten(expression));
+        return ContainerUtil.map(expressions, ErlangRefactoringUtil::shorten);
       }
     });
   }
