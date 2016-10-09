@@ -61,11 +61,6 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
   }
 
   @Override
-  protected ModuleBasedConfiguration createInstance() {
-    return new ErlangConsoleRunConfiguration(getName(), getProject());
-  }
-
-  @Override
   public Collection<Module> getValidModules() {
     return Arrays.asList(ModuleManager.getInstance(getProject()).getModules());
   }

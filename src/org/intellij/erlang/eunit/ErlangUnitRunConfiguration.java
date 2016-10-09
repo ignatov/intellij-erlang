@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.eunit;
 
-import com.intellij.execution.configurations.ModuleBasedConfiguration;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
@@ -39,12 +38,6 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
 
   public ErlangUnitRunConfiguration(Project project, String name, @NotNull ErlangUnitRunConfigurationType configurationType) {
     super(name, new ErlangModuleBasedConfiguration(project), configurationType.getConfigurationFactories()[0]);
-  }
-
-  @NotNull
-  @Override
-  protected ModuleBasedConfiguration createInstance() {
-    return new ErlangUnitRunConfiguration(getProject(), getName(), ErlangUnitRunConfigurationType.getInstance());
   }
 
   @NotNull

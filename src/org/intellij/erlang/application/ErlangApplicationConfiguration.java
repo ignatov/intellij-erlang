@@ -16,7 +16,10 @@
 
 package org.intellij.erlang.application;
 
-import com.intellij.execution.configurations.*;
+import com.intellij.execution.configurations.ConfigurationType;
+import com.intellij.execution.configurations.RunConfiguration;
+import com.intellij.execution.configurations.RuntimeConfigurationError;
+import com.intellij.execution.configurations.RuntimeConfigurationException;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
@@ -43,11 +46,6 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
 
   public ErlangApplicationConfiguration(Project project, String name, ConfigurationType configurationType) {
     super(name, new ErlangModuleBasedConfiguration(project), configurationType.getConfigurationFactories()[0]);
-  }
-
-  @Override
-  protected ModuleBasedConfiguration createInstance() {
-    return new ErlangApplicationConfiguration(getProject(), getName(), ErlangApplicationRunConfigurationType.getInstance());
   }
 
   @NotNull
