@@ -81,7 +81,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
         configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
 
-        LinkedHashSet<String> testsToRerun = new LinkedHashSet<String>();
+        LinkedHashSet<String> testsToRerun = new LinkedHashSet<>();
         for (AbstractTestProxy testProxy : getFailedTests(project)) {
           Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
           PsiElement psiElement = location != null ? location.getPsiElement() : null;

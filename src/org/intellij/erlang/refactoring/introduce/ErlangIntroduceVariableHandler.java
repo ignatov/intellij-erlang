@@ -160,7 +160,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
 
     editor.getCaretModel().moveToOffset(target.getTextRange().getStartOffset());
     InplaceVariableIntroducer<PsiElement> introducer = new ErlangInplaceVariableIntroducer(target, editor, expression.getProject(), occurrences);
-    introducer.performInplaceRefactoring(new LinkedHashSet<String>());
+    introducer.performInplaceRefactoring(new LinkedHashSet<>());
   }
 
   @Nullable

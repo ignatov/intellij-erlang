@@ -81,7 +81,7 @@ public final class ErlangModulesUtil {
 
   @NotNull
   public static Collection<ErlangFile> getErlangModules(@NotNull Project project) {
-    HashSet<ErlangFile> erlangModules = new HashSet<ErlangFile>();
+    HashSet<ErlangFile> erlangModules = new HashSet<>();
     for (Module module : ModuleManager.getInstance(project).getModules()) {
       addErlangFiles(module, false, erlangModules, ErlangFileType.MODULE);
     }
@@ -90,7 +90,7 @@ public final class ErlangModulesUtil {
 
   @NotNull
   public static Collection<ErlangFile> getErlangModules(@NotNull Module module, boolean onlyTestModules) {
-    return addErlangFiles(module, onlyTestModules, new HashSet<ErlangFile>(), ErlangFileType.MODULE);
+    return addErlangFiles(module, onlyTestModules, new HashSet<>(), ErlangFileType.MODULE);
   }
 
   @NotNull

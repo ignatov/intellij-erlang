@@ -158,7 +158,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
   }
 
   public static class State {
-    public final List<Problem> problems = new ArrayList<Problem>();
+    public final List<Problem> problems = new ArrayList<>();
     private final String myDialyzerPath;
     private final String myCurrentPltPath;
     private final String myFilePath;

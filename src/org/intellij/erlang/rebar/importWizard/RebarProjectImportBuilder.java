@@ -93,7 +93,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
   @Override
   public List<ImportedOtpApp> getList() {
-    return new ArrayList<ImportedOtpApp>(myFoundOtpApps);
+    return new ArrayList<>(myFoundOtpApps);
   }
 
   @Override
@@ -142,7 +142,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       public void run(@NotNull final ProgressIndicator indicator) {
 
         List<VirtualFile> rebarConfigFiles = findRebarConfigs(myProjectRoot, indicator);
-        final LinkedHashSet<ImportedOtpApp> importedOtpApps = new LinkedHashSet<ImportedOtpApp>(rebarConfigFiles.size());
+        final LinkedHashSet<ImportedOtpApp> importedOtpApps = new LinkedHashSet<>(rebarConfigFiles.size());
 
         VfsUtilCore.visitChildrenRecursively(projectRoot, new VirtualFileVisitor() {
           @Override
@@ -220,8 +220,8 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       selectedAppNames.add(importedOtpApp.getName());
     }
     Sdk projectSdk = fixProjectSdk(project);
-    List<Module> createdModules = new ArrayList<Module>();
-    final List<ModifiableRootModel> createdRootModels = new ArrayList<ModifiableRootModel>();
+    List<Module> createdModules = new ArrayList<>();
+    final List<ModifiableRootModel> createdRootModels = new ArrayList<>();
     final ModifiableModuleModel obtainedModuleModel =
       moduleModel != null ? moduleModel : ModuleManager.getInstance(project).getModifiableModel();
     for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
@@ -326,7 +326,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   @NotNull
   private List<VirtualFile> findRebarConfigs(@NotNull final VirtualFile root, @NotNull final ProgressIndicator indicator) {
     root.refresh(false, true);
-    final List<VirtualFile> foundRebarConfigs = new ArrayList<VirtualFile>();
+    final List<VirtualFile> foundRebarConfigs = new ArrayList<>();
     VfsUtilCore.visitChildrenRecursively(root, new VirtualFileVisitor() {
       @Override
       public boolean visitFile(@NotNull VirtualFile file) {

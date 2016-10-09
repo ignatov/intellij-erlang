@@ -57,7 +57,7 @@ public class ErlangUnitTestElementUtil {
 
     if (selectedFiles == null) return Collections.emptyList();
 
-    List<ErlangFile> testFiles = new ArrayList<ErlangFile>(selectedFiles.length);
+    List<ErlangFile> testFiles = new ArrayList<>(selectedFiles.length);
     PsiManager psiManager = PsiManager.getInstance(project);
     for (VirtualFile file : selectedFiles) {
       if (!file.isDirectory()) {

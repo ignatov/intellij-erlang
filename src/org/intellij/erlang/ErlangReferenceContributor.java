@@ -50,7 +50,7 @@ public class ErlangReferenceContributor extends PsiReferenceContributor {
 
   @NotNull
   private static ErlangFunctionCallArgument<ErlangQAtom> isRecordArgument(int position) {
-    return new ErlangFunctionCallArgument<ErlangQAtom>("erlang", "is_record", position, 1);
+    return new ErlangFunctionCallArgument<>("erlang", "is_record", position, 1);
   }
 
   private static abstract class ReferenceProvider extends PsiReferenceProvider {

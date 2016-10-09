@@ -90,10 +90,10 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
     private ErlangUnitRunConfigurationKind myKind = ErlangUnitRunConfigurationKind.MODULE;
 
     @NotNull
-    private Set<String> myModuleNames = new LinkedHashSet<String>();
+    private Set<String> myModuleNames = new LinkedHashSet<>();
 
     @NotNull
-    private Set<String> myFunctionNames = new LinkedHashSet<String>();
+    private Set<String> myFunctionNames = new LinkedHashSet<>();
 
     @NotNull
     public ErlangUnitRunConfigurationKind getKind() {

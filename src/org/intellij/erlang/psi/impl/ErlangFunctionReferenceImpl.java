@@ -114,7 +114,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
       PsiFile containingFile = getElement().getContainingFile();
       if (containingFile instanceof ErlangFile) {
         ErlangFile erlangFile = (ErlangFile) containingFile;
-        result = new ArrayList<ErlangFunction>();
+        result = new ArrayList<>();
 
         for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
           if (myReferenceName.equals(ErlangPsiImplUtil.getName(importFunction))) {
@@ -134,7 +134,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   private Collection<ErlangFunction> getErlangFunctionsFromModule(String moduleFileName) {
     Project project = getElement().getProject();
-    Collection<ErlangFunction> result = new ArrayList<ErlangFunction>();
+    Collection<ErlangFunction> result = new ArrayList<>();
     for (ErlangFile file : ErlangModuleIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project))) {
       result.addAll(file.getFunctionsByName(myReferenceName));
     }
@@ -153,7 +153,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @Nullable
   private ErlangFunction getExternalFunction(@NotNull String moduleFileName) {
     Project project = getElement().getProject();
-    List<ErlangFunction> result = new ArrayList<ErlangFunction>();
+    List<ErlangFunction> result = new ArrayList<>();
     for (ErlangFile file : ErlangModuleIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project))) {
       ContainerUtil.addAllNotNull(result, file.getFunction(myReferenceName, myArity));
       ContainerUtil.addAllNotNull(result, ErlangPsiImplUtil.getErlangFunctionsFromIncludes(file, false, myReferenceName, myArity));

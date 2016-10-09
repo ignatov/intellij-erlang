@@ -80,7 +80,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   private XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
-    new ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>>();
+    new ConcurrentHashMap<>();
 
   public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
@@ -185,7 +185,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     Collection<ErlangFile> erlangModules = ErlangModulesUtil.getErlangModules(project);
     ErlangRunConfigurationBase<?> runConfiguration = getRunConfiguration();
     if (runConfiguration.isUseTestCodePath()) {
-      HashSet<ErlangFile> erlangTestModules = new HashSet<ErlangFile>();
+      HashSet<ErlangFile> erlangTestModules = new HashSet<>();
       for (Module module : runConfiguration.getModules()) {
         erlangTestModules.addAll(ErlangModulesUtil.getErlangModules(module, true));
       }

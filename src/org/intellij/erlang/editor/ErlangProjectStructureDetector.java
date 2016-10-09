@@ -61,7 +61,7 @@ public class ErlangProjectStructureDetector extends ProjectStructureDetector {
     if (!roots.isEmpty() && !builder.hasRootsFromOtherDetectors(this)) {
       List<ModuleDescriptor> modules = projectDescriptor.getModules();
       if (modules.isEmpty()) {
-        modules = new ArrayList<ModuleDescriptor>();
+        modules = new ArrayList<>();
         for (DetectedProjectRoot root : roots) {
           modules.add(new ModuleDescriptor(root.getDirectory(), ErlangModuleType.getInstance(), ContainerUtil.<DetectedSourceRoot>emptyList()));
         }

@@ -50,7 +50,7 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
     setPrompt(">");
     PsiFile originalFile = getFile().getOriginalFile();
     originalFile.putUserData(ErlangPsiImplUtil.ERLANG_CONSOLE, this);
-    originalFile.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, new HashMap<String, ErlangQVar>());
+    originalFile.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, new HashMap<>());
   }
 
   @Override

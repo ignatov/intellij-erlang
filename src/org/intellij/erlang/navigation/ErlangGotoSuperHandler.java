@@ -61,7 +61,7 @@ public class ErlangGotoSuperHandler implements LanguageCodeInsightActionHandler 
   }
 
   private static NavigatablePsiElement[] getNavigatables(String targetPresentation, List<ErlangCallbackSpec> callbackSpecs) {
-    ArrayList<NavigatablePsiElement> navigatables = new ArrayList<NavigatablePsiElement>(callbackSpecs.size());
+    ArrayList<NavigatablePsiElement> navigatables = new ArrayList<>(callbackSpecs.size());
 
     for (ErlangCallbackSpec specFun : callbackSpecs) {
       ContainerUtil.addIfNotNull(navigatables, ErlangNavigationUtil.getNavigatableSpecFun(targetPresentation, specFun));

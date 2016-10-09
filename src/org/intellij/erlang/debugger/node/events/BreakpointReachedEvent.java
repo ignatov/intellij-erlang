@@ -43,7 +43,7 @@ class BreakpointReachedEvent extends ErlangDebuggerEvent {
     if (activePid == null || snapshots == null) throw new DebuggerEventFormatException();
 
     myActivePid = activePid;
-    mySnapshots = new ArrayList<ErlangProcessSnapshot>(snapshots.arity());
+    mySnapshots = new ArrayList<>(snapshots.arity());
     for (OtpErlangObject snapshot : snapshots) {
       OtpErlangTuple snapshotTuple = getTupleValue(snapshot); // {Pid, Function, Status, Info, Stack}
 
@@ -83,7 +83,7 @@ class BreakpointReachedEvent extends ErlangDebuggerEvent {
   @Nullable
   private static List<ErlangTraceElement> getStack(@Nullable OtpErlangList traceElementsList) {
     if (traceElementsList == null) return null;
-    List<ErlangTraceElement> stack = new ArrayList<ErlangTraceElement>(traceElementsList.arity());
+    List<ErlangTraceElement> stack = new ArrayList<>(traceElementsList.arity());
     for (OtpErlangObject traceElementObject : traceElementsList) {
       OtpErlangTuple traceElementTuple = getTupleValue(traceElementObject);
       // ignoring SP at 0
@@ -110,7 +110,7 @@ class BreakpointReachedEvent extends ErlangDebuggerEvent {
   @NotNull
   private static Collection<ErlangVariableBinding> getBindings(@Nullable OtpErlangList bindingsList) {
     if (bindingsList == null) return ContainerUtil.emptyList();
-    Collection<ErlangVariableBinding> bindings = new ArrayList<ErlangVariableBinding>(bindingsList.arity());
+    Collection<ErlangVariableBinding> bindings = new ArrayList<>(bindingsList.arity());
     for (OtpErlangObject bindingObject : bindingsList) {
       OtpErlangTuple bindingTuple = getTupleValue(bindingObject);
       String variableName = getAtomText(elementAt(bindingTuple, 0));

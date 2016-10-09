@@ -58,7 +58,7 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
 
   private static List<String> getFieldNames(@NotNull ErlangRecordRef recordRef) {
     ErlangRecordTuple tuple = PsiTreeUtil.getNextSiblingOfType(recordRef, ErlangRecordTuple.class);
-    final List<String> fieldNames = new ArrayList<String>();
+    final List<String> fieldNames = new ArrayList<>();
 
     if (tuple != null) {
       tuple.accept(new ErlangRecursiveVisitor() {

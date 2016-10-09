@@ -54,7 +54,7 @@ public final class ErlangConsoleUtil {
 
   @NotNull
   public static List<String> getCodePath(@NotNull Project project, @Nullable Module module, boolean useTestOutputPath) {
-    final Set<Module> codePathModules = new HashSet<Module>();
+    final Set<Module> codePathModules = new HashSet<>();
     if (module != null) {
       ModuleRootManager moduleRootMgr = ModuleRootManager.getInstance(module);
       moduleRootMgr.orderEntries().recursively().forEachModule(dependencyModule -> {
@@ -66,7 +66,7 @@ public final class ErlangConsoleUtil {
       codePathModules.addAll(Arrays.asList(ModuleManager.getInstance(project).getModules()));
     }
 
-    List<String> codePath = new ArrayList<String>(codePathModules.size() * 2);
+    List<String> codePath = new ArrayList<>(codePathModules.size() * 2);
     for (Module codePathModule : codePathModules) {
       ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(codePathModule);
       CompilerModuleExtension compilerModuleExt =

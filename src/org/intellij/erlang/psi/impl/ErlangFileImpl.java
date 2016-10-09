@@ -130,7 +130,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       @NotNull
       @Override
       public MultiMap<String, ErlangFunction> computeValue() {
-        MultiMap<String, ErlangFunction> map = new MultiMap<String, ErlangFunction>();
+        MultiMap<String, ErlangFunction> map = new MultiMap<>();
         for (ErlangFunction function : getFunctions()) {
           map.putValue(function.getName(), function);
         }
@@ -142,7 +142,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       @NotNull
       @Override
       public MultiMap<String, ErlangImportFunction> computeValue() {
-        MultiMap<String, ErlangImportFunction> map = new MultiMap<String, ErlangImportFunction>();
+        MultiMap<String, ErlangImportFunction> map = new MultiMap<>();
         for (ErlangImportFunction importFunction : getImportedFunctions()) {
           map.putValue(ErlangPsiImplUtil.getName(importFunction), importFunction);
         }
@@ -154,7 +154,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       @NotNull
       @Override
       public Map<String, ErlangRecordDefinition> computeValue() {
-        Map<String, ErlangRecordDefinition> map = new THashMap<String, ErlangRecordDefinition>();
+        Map<String, ErlangRecordDefinition> map = new THashMap<>();
         for (ErlangRecordDefinition record : getRecords()) {
           String recordName = record.getName();
           if (!map.containsKey(recordName)) {
@@ -177,7 +177,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       @NotNull
       @Override
       public Map<String, ErlangMacrosDefinition> computeValue() {
-        Map<String, ErlangMacrosDefinition> map = new THashMap<String, ErlangMacrosDefinition>();
+        Map<String, ErlangMacrosDefinition> map = new THashMap<>();
         for (ErlangMacrosDefinition macros : getMacroses()) {
           String macrosName = ErlangPsiImplUtil.getName(macros);
           if (!map.containsKey(macrosName)) {
@@ -200,7 +200,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       @NotNull
       @Override
       public Map<String, ErlangTypeDefinition> computeValue() {
-        Map<String, ErlangTypeDefinition> map = new THashMap<String, ErlangTypeDefinition>();
+        Map<String, ErlangTypeDefinition> map = new THashMap<>();
         for (ErlangTypeDefinition type : getTypes()) {
           String mName = type.getName();
           if (!map.containsKey(mName)) {
@@ -522,7 +522,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     //TODO do we use stubs?
     ErlangFileStub stub = getStub();
     if (stub != null) {
-      Map<String, ErlangCallbackSpec> callbacksMap = new LinkedHashMap<String, ErlangCallbackSpec>();
+      Map<String, ErlangCallbackSpec> callbacksMap = new LinkedHashMap<>();
       for (StubElement child : stub.getChildrenStubs()) {
         if (child instanceof ErlangCallbackSpecStub) {
           String name = ((ErlangCallbackSpecStub) child).getName();
@@ -538,7 +538,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   private Map<String, ErlangCallbackSpec> calcCallbacks() {
-    Map<String, ErlangCallbackSpec> callbacksMap = new LinkedHashMap<String, ErlangCallbackSpec>();
+    Map<String, ErlangCallbackSpec> callbacksMap = new LinkedHashMap<>();
 
     for (ErlangAttribute a : getAttributes()) {
       ErlangCallbackSpec spec = a.getCallbackSpec();
@@ -729,7 +729,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   }
 
   private List<ErlangImportFunction> calcImports() {
-    ArrayList<ErlangImportFunction> result = new ArrayList<ErlangImportFunction>();
+    ArrayList<ErlangImportFunction> result = new ArrayList<>();
     for (ErlangAttribute attribute : getAttributes()) {
       ErlangImportDirective importDirective = attribute.getImportDirective();
       ErlangImportFunctions importFunctions = importDirective != null ? importDirective.getImportFunctions() : null;

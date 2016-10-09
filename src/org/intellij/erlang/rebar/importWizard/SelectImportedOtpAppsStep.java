@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Set;
 
 final class SelectImportedOtpAppsStep extends SelectImportedProjectsStep<ImportedOtpApp> {
-  private final Set<String> myDuplicateModuleNames = new HashSet<String>();
+  private final Set<String> myDuplicateModuleNames = new HashSet<>();
 
   public SelectImportedOtpAppsStep(@NotNull WizardContext context) {
     super(context);
@@ -78,7 +78,7 @@ final class SelectImportedOtpAppsStep extends SelectImportedProjectsStep<Importe
 
   private void evalDuplicates() {
     List<ImportedOtpApp> selectedOtpApps = fileChooser.getMarkedElements();
-    Set<String> contains = new HashSet<String>(selectedOtpApps.size());
+    Set<String> contains = new HashSet<>(selectedOtpApps.size());
     myDuplicateModuleNames.clear();
     for (ImportedOtpApp importedOtpApp : selectedOtpApps) {
       if (!contains.add(importedOtpApp.getName())) {

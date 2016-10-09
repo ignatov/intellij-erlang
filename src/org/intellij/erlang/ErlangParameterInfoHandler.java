@@ -74,7 +74,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
     if (erlFunctionCall != null) {
       PsiReference reference = erlFunctionCall.getReference();
-      List<ErlangFunctionClause> clauses = new ArrayList<ErlangFunctionClause>();
+      List<ErlangFunctionClause> clauses = new ArrayList<>();
       if (reference instanceof PsiPolyVariantReference) {
         ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
         for (ResolveResult result : resolveResults) {

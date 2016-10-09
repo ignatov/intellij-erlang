@@ -1005,7 +1005,7 @@ public class ErlangPsiImplUtil {
   }
 
   private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state) {
-    Queue<ErlangCompositeElement> queue = new LinkedList<ErlangCompositeElement>();
+    Queue<ErlangCompositeElement> queue = new LinkedList<>();
     queue.add(o);
     while (!queue.isEmpty()) {
       ErlangCompositeElement top = queue.remove();
@@ -1021,7 +1021,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   private static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
-    HashSet<ErlangFile> includedFiles = new HashSet<ErlangFile>();
+    HashSet<ErlangFile> includedFiles = new HashSet<>();
     addIncludedFiles(file, includedFiles);
     return includedFiles;
   }
@@ -1740,8 +1740,8 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static ErlangFunExpression findFunExpression(@NotNull ErlangFunction function, final int funExpressionNumber) {
-    final Ref<ErlangFunExpression> result = new Ref<ErlangFunExpression>();
-    final Ref<Integer> currentFunExpressionNumber = new Ref<Integer>(0);
+    final Ref<ErlangFunExpression> result = new Ref<>();
+    final Ref<Integer> currentFunExpressionNumber = new Ref<>(0);
     function.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitFunExpression(@NotNull ErlangFunExpression funExpression) {
@@ -1761,7 +1761,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static <T extends PsiElement >ErlangFunctionCallArgument<T> inIsRecord(int position) {
-    return new ErlangFunctionCallArgument<T>("erlang", "is_record", 2, position);
+    return new ErlangFunctionCallArgument<>("erlang", "is_record", 2, position);
   }
 
   public static boolean isExported(@NotNull ErlangFunction o) {

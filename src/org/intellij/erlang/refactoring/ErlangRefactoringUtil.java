@@ -46,7 +46,7 @@ public class ErlangRefactoringUtil {
     if (context == null) {
       return Collections.emptyList();
     }
-    final List<PsiElement> occurrences = new ArrayList<PsiElement>();
+    final List<PsiElement> occurrences = new ArrayList<>();
     PsiRecursiveElementVisitor visitor = new PsiRecursiveElementVisitor() {
       public void visitElement(@NotNull PsiElement element) {
         if (PsiEquivalenceUtil.areElementsEquivalent(element, pattern)) {
@@ -92,7 +92,7 @@ public class ErlangRefactoringUtil {
     int offset = editor.getCaretModel().getOffset();
     PsiElement element = file.findElementAt(offset);
     if (!extractor.checkContext(file, editor, element)) return;
-    List<ErlangExpression> expressions = new ArrayList<ErlangExpression>();
+    List<ErlangExpression> expressions = new ArrayList<>();
     while (element != null) {
       if (element instanceof ErlangClauseBody) {
         break;

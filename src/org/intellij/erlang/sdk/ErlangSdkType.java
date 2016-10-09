@@ -68,7 +68,7 @@ public class ErlangSdkType extends SdkType {
   private static final Logger LOG = Logger.getInstance(ErlangSdkType.class);
 
   private final Map<String, ErlangSdkRelease> mySdkHomeToReleaseCache = ApplicationManager.getApplication().isUnitTestMode() ?
-    new HashMap<String, ErlangSdkRelease>() : new WeakHashMap<String, ErlangSdkRelease>();
+                                                                        new HashMap<>() : new WeakHashMap<>();
 
   @NotNull
   public static ErlangSdkType getInstance() {

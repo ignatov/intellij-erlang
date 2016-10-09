@@ -267,7 +267,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     if (FileUtil.isAbsolute(includeText)) return Collections.emptyList();
 
     final VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
-    List<LookupElement> result = new ArrayList<LookupElement>();
+    List<LookupElement> result = new ArrayList<>();
     List<String> split = StringUtil.split(includeText, "/");
     if (split.isEmpty()) {
       split = Collections.singletonList("");
@@ -278,7 +278,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     String libRelativePath = split.size() > 1 ? StringUtil.join(split.subList(1, split.size()), "/") + pathSeparator : "";
     boolean completingAppName = split.size() == 1 && !includeText.endsWith("/");
     List<VirtualFile> appDirs = getApplicationDirectories(file.getProject(), appName, !completingAppName);
-    List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
+    List<VirtualFile> matchingFiles = new ArrayList<>();
 
     for (VirtualFile appRoot : appDirs) {
       final String appFullName = appRoot != null ? appRoot.getName() : null;
@@ -317,7 +317,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static List<LookupElement> getModulePathLookupElements(@NotNull PsiFile file, @NotNull String includeText) {
     VirtualFile includeOwner = file.getOriginalFile().getVirtualFile();
     VirtualFile parentFile = includeOwner != null ? includeOwner.getParent() : null;
-    List<LookupElement> result = new ArrayList<LookupElement>();
+    List<LookupElement> result = new ArrayList<>();
     if (FileUtil.isAbsolute(includeText)) return result;
     //search in this module's directory
     result.addAll(getModulePathLookupElements(parentFile, includeOwner, includeText));
@@ -344,7 +344,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
   @NotNull
   private static List<LookupElement> getModulePathLookupElements(@Nullable VirtualFile includeDir, @Nullable final VirtualFile includeOwner, @NotNull final String includeText) {
     if (includeDir == null || !includeDir.isDirectory()) return ContainerUtil.emptyList();
-    List<VirtualFile> matchingFiles = new ArrayList<VirtualFile>();
+    List<VirtualFile> matchingFiles = new ArrayList<>();
     addMatchingFiles(includeDir, includeText, matchingFiles);
     return ContainerUtil.mapNotNull(matchingFiles, f -> f.equals(includeOwner) ? null : getDefaultPathLookupElementBuilder(includeText, f, null));
   }

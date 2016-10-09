@@ -111,7 +111,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       private RebarEunitRunConfiguration createRerunFailedTestsRunConfiguration() {
         final Project project = getProject();
         RebarEunitRunConfiguration configuration = new RebarEunitRunConfiguration(project, "");
-        final List<ErlangFunction> failedGeneratedTests = new ArrayList<ErlangFunction>();
+        final List<ErlangFunction> failedGeneratedTests = new ArrayList<>();
         List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(getFailedTests(project), testProxy -> {
           Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
           PsiElement psiElement = location != null ? location.getPsiElement() : null;
@@ -163,7 +163,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       }
 
       private List<String> takeFunctionNames(List<ErlangFunction> failedFunctions, int n) {
-        ArrayList<String> result = new ArrayList<String>(n);
+        ArrayList<String> result = new ArrayList<>(n);
         Iterator<ErlangFunction> iterator = failedFunctions.iterator();
         while (iterator.hasNext() && n > 0) {
           result.add(ErlangPsiImplUtil.getQualifiedFunctionName(iterator.next()));

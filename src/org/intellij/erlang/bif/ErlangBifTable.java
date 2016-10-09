@@ -32,7 +32,7 @@ public final class ErlangBifTable {
     @NotNull
     @Override
     protected Collection<ErlangBifDescriptor> createCollection() {
-      return new TreeSet<ErlangBifDescriptor>();
+      return new TreeSet<>();
     }
   };
 
@@ -448,7 +448,7 @@ public final class ErlangBifTable {
 
   @NotNull
   public static List<ErlangBifDescriptor> getBifs(@NotNull String moduleName, @NotNull String functionName) {
-    List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();
+    List<ErlangBifDescriptor> bifDescriptors = new ArrayList<>();
     for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {
       if (functionName.equals(bifDescriptor.getName())) {
         bifDescriptors.add(bifDescriptor);

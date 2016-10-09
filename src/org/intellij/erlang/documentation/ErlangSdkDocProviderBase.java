@@ -86,7 +86,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   public String getDocText() {
     List<String> fileUrls = getFileUrls(getOrderEntries(), myVirtualFile);
     List<String> httpUrls = getExternalDocUrls();
-    List<String> urls = new ArrayList<String>(fileUrls.size() + httpUrls.size());
+    List<String> urls = new ArrayList<>(fileUrls.size() + httpUrls.size());
     urls.addAll(fileUrls);
     urls.addAll(httpUrls);
     for (String urlString : urls) {
@@ -200,7 +200,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
       for (VirtualFile docRootFile : docRootFiles) {
         if (docRootFile.isInLocalFileSystem()) {
           if (fileUrls == null) {
-            fileUrls = new ArrayList<String>();
+            fileUrls = new ArrayList<>();
           }
           fileUrls.add(docRootFile.getUrl() + "/" + sdkHttpDocRelPath);
         }

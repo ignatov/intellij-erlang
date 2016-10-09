@@ -47,7 +47,7 @@ public class ErlangDebuggerNode {
 
   private OtpErlangPid myLastSuspendedPid;
 
-  private final Queue<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand> myCommandsQueue = new LinkedList<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand>();
+  private final Queue<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand> myCommandsQueue = new LinkedList<>();
   private int myLocalDebuggerPort = -1;
   @NotNull
   private final ErlangDebuggerEventListener myEventListener;

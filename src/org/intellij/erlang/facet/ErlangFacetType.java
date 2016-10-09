@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangFacetType extends FacetType<ErlangFacet, ErlangFacetConfiguration> {
-  public static final FacetTypeId<ErlangFacet> TYPE_ID = new FacetTypeId<ErlangFacet>(ErlangFacetConstants.ID);
+  public static final FacetTypeId<ErlangFacet> TYPE_ID = new FacetTypeId<>(ErlangFacetConstants.ID);
 
   public ErlangFacetType() {
     super(TYPE_ID, ErlangFacetConstants.ID, ErlangFacetConstants.NAME);

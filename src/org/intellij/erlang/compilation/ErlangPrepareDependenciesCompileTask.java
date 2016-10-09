@@ -144,7 +144,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   @NotNull
   private static List<ErlangFileDescriptor> getTopologicallySortedFileDescriptors(@NotNull Module... modulesToCompile) throws CyclicDependencyFoundException {
     final ErlangFilesDependencyGraph semiGraph = ErlangFilesDependencyGraph.createSemiGraph(modulesToCompile);
-    DFSTBuilder<String> builder = new DFSTBuilder<String>(GraphGenerator.create(semiGraph));
+    DFSTBuilder<String> builder = new DFSTBuilder<>(GraphGenerator.create(semiGraph));
     if (!builder.isAcyclic()) {
       throw new CyclicDependencyFoundException(builder.getCircularDependency());
     }

@@ -35,7 +35,7 @@ public class ErlangExecutionStack extends XExecutionStack {
     super(snapshot.getPidString());
     myResolver = resolver;
     myProcessSnapshot = snapshot;
-    myStack = new ArrayList<ErlangStackFrame>(snapshot.getStack().size());
+    myStack = new ArrayList<>(snapshot.getStack().size());
   }
 
   @Nullable

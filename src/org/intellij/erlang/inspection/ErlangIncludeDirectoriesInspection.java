@@ -61,7 +61,7 @@ public class ErlangIncludeDirectoriesInspection extends ErlangInspectionBase {
   }
 
   private static List<VirtualFile> getIncludeFolders(Module module) {
-    List<VirtualFile> includeFolders = new ArrayList<VirtualFile>();
+    List<VirtualFile> includeFolders = new ArrayList<>();
     VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
     for (VirtualFile contentRoot : contentRoots) {
       VirtualFile includeDirectory = VfsUtil.findRelativeFile(contentRoot, "include");

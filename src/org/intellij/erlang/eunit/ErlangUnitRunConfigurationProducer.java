@@ -80,7 +80,7 @@ public class ErlangUnitRunConfigurationProducer extends ErlangDebuggableRunConfi
 
   @NotNull
   private static LinkedHashSet<String> findTestModuleNames(@NotNull ConfigurationContext context) {
-    LinkedHashSet<String> moduleNames = new LinkedHashSet<String>();
+    LinkedHashSet<String> moduleNames = new LinkedHashSet<>();
     for (ErlangFile f : ErlangUnitTestElementUtil.findFileTestElements(context.getProject(), context.getDataContext())) {
       VirtualFile virtualFile = f.getVirtualFile();
       if (virtualFile != null) {
@@ -94,7 +94,7 @@ public class ErlangUnitRunConfigurationProducer extends ErlangDebuggableRunConfi
   private static LinkedHashSet<String> findTestFunctionNames(@NotNull PsiElement context) {
     Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(context);
     functions = ContainerUtil.filter(functions, erlangFunction -> ErlangPsiImplUtil.isEunitTestFunction(erlangFunction));
-    LinkedHashSet<String> functionNames = new LinkedHashSet<String>();
+    LinkedHashSet<String> functionNames = new LinkedHashSet<>();
     for (ErlangFunction f : functions) {
       functionNames.add(ErlangPsiImplUtil.getQualifiedFunctionName(f));
     }

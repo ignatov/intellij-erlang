@@ -126,7 +126,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
 
   public static final class ErlangDebugOptions implements Serializable {
     private boolean myAutoUpdateModulesNotToInterpret = true;
-    private Set<String> myModulesNotToInterpret = new HashSet<String>();
+    private Set<String> myModulesNotToInterpret = new HashSet<>();
 
     public boolean isAutoUpdateModulesNotToInterpret() {
       return myAutoUpdateModulesNotToInterpret;

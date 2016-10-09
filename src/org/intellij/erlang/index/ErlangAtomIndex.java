@@ -52,7 +52,7 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
   @Override
   public DataIndexer<String, Void, FileContent> getIndexer() {
     return inputData -> {
-      final Map<String, Void> result = new THashMap<String, Void>();
+      final Map<String, Void> result = new THashMap<>();
       PsiFile file = inputData.getPsiFile();
       if (file instanceof ErlangFile) {
         file.accept(new ErlangRecursiveVisitor() {
@@ -90,7 +90,7 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
 
   @NotNull
   public static Collection<String> getNames(@NotNull Project project, @NotNull GlobalSearchScope searchScope) {
-    CommonProcessors.CollectUniquesProcessor<String> processor = new CommonProcessors.CollectUniquesProcessor<String>();
+    CommonProcessors.CollectUniquesProcessor<String> processor = new CommonProcessors.CollectUniquesProcessor<>();
     FileBasedIndex.getInstance().processAllKeys(ERLANG_ATOM_INDEX, processor, searchScope, IdFilter.getProjectIdFilter(project, false));
     return processor.getResults();
   }

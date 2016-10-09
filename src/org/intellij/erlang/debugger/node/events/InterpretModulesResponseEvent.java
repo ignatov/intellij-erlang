@@ -30,7 +30,7 @@ import java.util.List;
 class InterpretModulesResponseEvent extends ErlangDebuggerEvent {
   public static final String NAME = "interpret_modules_response";
   private final String myNodeName;
-  private final List<String> myFailedToInterpretModules = new ArrayList<String>();
+  private final List<String> myFailedToInterpretModules = new ArrayList<>();
 
   public InterpretModulesResponseEvent(OtpErlangTuple receivedMessage) throws DebuggerEventFormatException {
     myNodeName = OtpErlangTermUtil.getAtomText(receivedMessage.elementAt(1));

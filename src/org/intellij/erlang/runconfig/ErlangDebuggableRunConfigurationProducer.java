@@ -100,7 +100,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
       .intersectWith(GlobalSearchScope.moduleWithDependenciesScope(module));
     scope = GlobalSearchScope.getScopeRestrictedByFileTypes(scope, ErlangFileType.MODULE);
 
-    final HashSet<String> modules = new HashSet<String>();
+    final HashSet<String> modules = new HashSet<>();
     Processor<PsiFile> collector = psiFile -> {
       String moduleName = psiFile.getVirtualFile().getNameWithoutExtension();
       if (!modules.contains(moduleName) && containsErlangLoadNifCall(psiFile)) {
@@ -114,7 +114,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
   }
 
   private static boolean containsErlangLoadNifCall(PsiFile psiFile) {
-    final Ref<Boolean> result = new Ref<Boolean>();
+    final Ref<Boolean> result = new Ref<>();
     psiFile.accept(new ErlangRecursiveVisitor() {
       @Override
       public void visitCompositeElement(@NotNull ErlangCompositeElement o) {

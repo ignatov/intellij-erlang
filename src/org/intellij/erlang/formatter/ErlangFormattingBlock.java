@@ -106,15 +106,15 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (mySubBlocks == null) {
       mySubBlocks = buildSubBlocks();
     }
-    return new ArrayList<Block>(mySubBlocks);
+    return new ArrayList<>(mySubBlocks);
   }
 
   private List<Block> buildSubBlocks() {
-    final List<Block> blocks = new ArrayList<Block>();
+    final List<Block> blocks = new ArrayList<>();
     final Alignment baseAlignment = Alignment.createAlignment(true);
     final Alignment baseAlignment2 = Alignment.createAlignment(true);
     final AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
-    final Ref<Wrap> chopDownIfLongWrap = new Ref<Wrap>();
+    final Ref<Wrap> chopDownIfLongWrap = new Ref<>();
 
     // if uniform binary expressions option is enabled, blocks for binary expression sequences are built flat, that is
     // for an expression like 1 + 1 + 1 a single parent block with 5 children in it is constructed.

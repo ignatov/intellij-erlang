@@ -40,7 +40,7 @@ public class ErlangModuleContributor implements ChooseByNameContributor {
   public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
     GlobalSearchScope scope = includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
     List<ErlangModule> result = ErlangModuleIndex.getModulesByName(project, name, scope);
-    ArrayList<NavigationItem> items = new ArrayList<NavigationItem>(result.size());
+    ArrayList<NavigationItem> items = new ArrayList<>(result.size());
     for (ErlangNamedElement element : result) {
       PsiFile containingFile = element.getContainingFile();
       VirtualFile virtualFile = containingFile != null ? containingFile.getVirtualFile() : null;

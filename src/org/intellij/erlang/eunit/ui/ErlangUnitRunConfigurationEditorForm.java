@@ -128,7 +128,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
     if (names == null) return Collections.emptySet();
 
     List<String> split = StringUtil.split(names, ",", true, true);
-    Set<String> result = new LinkedHashSet<String>(split.size());
+    Set<String> result = new LinkedHashSet<>(split.size());
 
     for (String name : split) {
       result.add(name.trim());

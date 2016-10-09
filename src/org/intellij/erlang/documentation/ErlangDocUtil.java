@@ -76,7 +76,7 @@ public final class ErlangDocUtil {
 
   @NotNull
   static List<PsiComment> collectPrevComments(@NotNull PsiComment comment) {
-    ArrayList<PsiComment> result = new ArrayList<PsiComment>();
+    ArrayList<PsiComment> result = new ArrayList<>();
     PsiElement current = comment;
     while (current instanceof PsiComment) {
       result.add((PsiComment) current);

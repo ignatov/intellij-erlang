@@ -64,7 +64,7 @@ public final class FileReferenceFilter implements Filter {
     if (filePathIndex == -1) {
       throw new InvalidExpressionException("Expression must contain " + PATH_MACROS + " macros.");
     }
-    TreeMap<Integer,String> map = new TreeMap<Integer, String>();
+    TreeMap<Integer,String> map = new TreeMap<>();
     map.put(filePathIndex, PATH_MACROS);
     expression = StringUtil.replace(expression, PATH_MACROS, FILE_PATH_REGEXP);
 

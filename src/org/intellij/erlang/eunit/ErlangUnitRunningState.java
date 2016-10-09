@@ -164,7 +164,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {
-    Map<String, List<String>> result = new HashMap<String, List<String>>(qualifiedFunctionNames.size());
+    Map<String, List<String>> result = new HashMap<>(qualifiedFunctionNames.size());
     for (String qualifiedFunctionName : qualifiedFunctionNames) {
       String[] moduleAndFunction = qualifiedFunctionName.split(":");
       String module = moduleAndFunction[0];
@@ -174,7 +174,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
       List<String> functions = result.get(module);
       if (functions == null) {
-        functions = new ArrayList<String>();
+        functions = new ArrayList<>();
         result.put(module, functions);
       }
       functions.add(function);

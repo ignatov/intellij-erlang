@@ -53,7 +53,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
     String module = matcher.group(1);
     String function = matcher.group(2);
     String line = matcher.group(3);
-    List<Location> locations = new SmartList<Location>();
+    List<Location> locations = new SmartList<>();
     Collection<ErlangFile> erlangFiles = getErlangFiles(project, module);
 
     if (function != null) {
@@ -82,7 +82,7 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
       if (lineNumber != StringUtil.offsetToLineNumber(fileText, f.getTextOffset())) {
         PsiElement testElement = findTestElementInLine(file, fileText, lineNumber);
         if (testElement != null) {
-          return new PsiLocation<PsiElement>(project, testElement);
+          return new PsiLocation<>(project, testElement);
         }
       }
     }

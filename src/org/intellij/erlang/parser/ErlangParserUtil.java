@@ -65,7 +65,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   private static TObjectLongHashMap<String> getParsingModes(PsiBuilder builder_) {
     TObjectLongHashMap<String> flags = builder_.getUserDataUnprotected(MODES_KEY);
-    if (flags == null) builder_.putUserDataUnprotected(MODES_KEY, flags = new TObjectLongHashMap<String>());
+    if (flags == null) builder_.putUserDataUnprotected(MODES_KEY, flags = new TObjectLongHashMap<>());
     return flags;
   }
 

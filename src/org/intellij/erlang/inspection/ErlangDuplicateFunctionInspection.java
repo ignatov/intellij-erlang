@@ -28,7 +28,7 @@ import java.util.Collection;
 public class ErlangDuplicateFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
-    MultiMap<Pair<String, Integer>, ErlangFunction> map = new MultiMap<Pair<String, Integer>, ErlangFunction>();
+    MultiMap<Pair<String, Integer>, ErlangFunction> map = new MultiMap<>();
     for (ErlangFunction fun : file.getFunctions()) {
       map.putValue(Pair.create(fun.getName(), fun.getArity()), fun);
     }
