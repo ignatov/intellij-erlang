@@ -23,7 +23,6 @@ import com.intellij.execution.Executor;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.execution.testframework.TestFrameworkRunningModel;
 import com.intellij.execution.testframework.autotest.ToggleAutoTestAction;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
@@ -31,7 +30,6 @@ import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.util.Getter;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.PathUtil;
@@ -172,11 +170,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
 
       if (moduleAndFunction.length != 2) continue;
 
-      List<String> functions = result.get(module);
-      if (functions == null) {
-        functions = new ArrayList<>();
-        result.put(module, functions);
-      }
+      List<String> functions = result.computeIfAbsent(module, k -> new ArrayList<>());
       functions.add(function);
     }
     return result;
