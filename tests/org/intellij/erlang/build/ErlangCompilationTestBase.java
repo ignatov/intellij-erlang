@@ -188,7 +188,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
   protected static void assertSourcesCompiled(@NotNull Module module, boolean tests) {
     String[] sources = getSourceFiles(module, tests);
-    assertContains(getOutputDirectory(module, tests), ContainerUtil.mapNotNull(sources, source -> getExpectedOutputFileName(source)));
+    assertContains(getOutputDirectory(module, tests), ContainerUtil.mapNotNull(sources, ErlangCompilationTestBase::getExpectedOutputFileName));
   }
 
   private static void assertContains(@Nullable VirtualFile parentPath, List<String> fileNames) {
@@ -252,7 +252,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
       List<VirtualFile> testRoots = ModuleRootManager.getInstance(module).getSourceRoots(JavaSourceRootType.TEST_SOURCE);
       sourceRoots = ContainerUtil.concat(sourceRoots, testRoots);
     }
-    List<String> result = ContainerUtil.concat(ContainerUtil.mapNotNull(sourceRoots, (Function<VirtualFile, List<String>>) root -> getChildrenNames(root)));
+    List<String> result = ContainerUtil.concat(ContainerUtil.mapNotNull(sourceRoots, (Function<VirtualFile, List<String>>) ErlangCompilationTestBase::getChildrenNames));
     return ArrayUtil.toStringArray(result);
   }
 
@@ -279,7 +279,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
   @NotNull
   private static List<String> getChildrenNames(VirtualFile root) {
-    return ContainerUtil.mapNotNull(root.getChildren(), virtualFile -> virtualFile.getName());
+    return ContainerUtil.mapNotNull(root.getChildren(), VirtualFile::getName);
   }
 
   protected class CompilationRunner {
