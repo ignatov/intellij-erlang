@@ -79,7 +79,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
   @NotNull
   @Override
-  protected Filter getFilter(Project project, GlobalSearchScope globalSearchScope) {
+  protected Filter getFilter(@NotNull Project project, @NotNull GlobalSearchScope globalSearchScope) {
     return new Filter() {
       @Override
       public boolean shouldAccept(AbstractTestProxy test) {
@@ -90,7 +90,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
   @Nullable
   @Override
-  public MyRunProfile getRunProfile() {
+  public MyRunProfile getRunProfile(@NotNull ExecutionEnvironment environment) {
     TestFrameworkRunningModel model = getModel();
     if (model == null) return null;
     return new MyRunProfile((RunConfigurationBase) model.getProperties().getConfiguration()) {
