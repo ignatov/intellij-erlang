@@ -22,7 +22,6 @@ import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangQAtom;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class ErlangQAtomBasedReferenceImpl extends PsiReferenceBase<ErlangQAtom> {

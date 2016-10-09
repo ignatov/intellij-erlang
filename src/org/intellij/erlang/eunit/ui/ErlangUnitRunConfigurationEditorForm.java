@@ -29,8 +29,6 @@ import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;

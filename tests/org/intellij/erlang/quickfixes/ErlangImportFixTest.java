@@ -17,8 +17,8 @@
 package org.intellij.erlang.quickfixes;
 
 import org.intellij.erlang.inspection.ErlangDefiningImportedFunctionInspection;
-import org.intellij.erlang.inspection.ErlangImportDirectiveOverridesAutoImportedBifInspection;
 import org.intellij.erlang.inspection.ErlangFunctionAlreadyImportedInspection;
+import org.intellij.erlang.inspection.ErlangImportDirectiveOverridesAutoImportedBifInspection;
 
 public class ErlangImportFixTest extends ErlangQuickFixTestBase {
   @Override

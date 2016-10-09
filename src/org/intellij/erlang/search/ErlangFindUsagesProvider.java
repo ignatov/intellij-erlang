@@ -28,7 +28,6 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
-import com.intellij.util.Processor;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.*;

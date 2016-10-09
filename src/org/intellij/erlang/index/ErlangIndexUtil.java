@@ -16,10 +16,8 @@
 
 package org.intellij.erlang.index;
 
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.indexing.FileBasedIndex;
 import org.intellij.erlang.ErlangFileType;
-import org.jetbrains.annotations.NotNull;
 
 public final class ErlangIndexUtil {
   private ErlangIndexUtil() {

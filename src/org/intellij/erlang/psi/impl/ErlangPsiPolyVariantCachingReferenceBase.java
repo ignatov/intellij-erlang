@@ -19,10 +19,7 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPolyVariantReferenceBase;
-import com.intellij.psi.ResolveResult;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
-import com.intellij.util.ObjectUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElement> extends PsiPolyVariantReferenceBase<T> {

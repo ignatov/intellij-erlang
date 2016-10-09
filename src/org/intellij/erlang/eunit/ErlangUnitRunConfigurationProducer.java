@@ -17,7 +17,6 @@
 package org.intellij.erlang.eunit;
 
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.containers.ContainerUtil;

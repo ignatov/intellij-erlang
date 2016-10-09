@@ -25,8 +25,6 @@ import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfigurationBase> {
   private JPanel myComponent;

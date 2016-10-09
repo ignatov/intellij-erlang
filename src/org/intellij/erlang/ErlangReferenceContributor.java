@@ -26,8 +26,8 @@ import org.intellij.erlang.psi.ErlangMaxExpression;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil.ErlangFunctionCallArgument;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil.ErlangFunctionCallModuleArgument;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil.ErlangFunctionCallFunctionArgument;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil.ErlangFunctionCallModuleArgument;
 import org.jetbrains.annotations.NotNull;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;

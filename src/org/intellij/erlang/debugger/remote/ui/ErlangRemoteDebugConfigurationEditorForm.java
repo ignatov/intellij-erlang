@@ -25,8 +25,6 @@ import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 
 public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRunConfigurationEditor<ErlangRemoteDebugRunConfiguration> {
   private JPanel myComponent;
