@@ -39,7 +39,7 @@ public class ErlangTargetType extends ModuleBasedBuildTargetType<ErlangTarget> {
   @NotNull
   @Override
   public List<ErlangTarget> computeAllTargets(@NotNull JpsModel model) {
-    List<ErlangTarget> targets = new ArrayList<ErlangTarget>();
+    List<ErlangTarget> targets = new ArrayList<>();
     for (JpsTypedModule<JpsDummyElement> module : model.getProject().getModules(JpsErlangModuleType.INSTANCE)) {
       targets.add(new ErlangTarget(module, this));
     }
