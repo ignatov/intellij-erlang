@@ -16,11 +16,6 @@
 
 package org.intellij.erlang.quickfixes;
 
-import com.intellij.codeInsight.intention.IntentionAction;
-import com.intellij.util.containers.ContainerUtil;
-
-import java.util.List;
-
 public class ErlangGenerateSpecFixTest extends ErlangQuickFixTestBase {
   @Override
   protected void setUp() throws Exception {

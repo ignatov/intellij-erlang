@@ -17,7 +17,6 @@
 package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
-import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageManagerImpl;
 import com.intellij.testFramework.UsefulTestCase;

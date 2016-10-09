@@ -22,7 +22,6 @@ import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.copy.CopyFilesOrDirectoriesHandler;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
-import org.jetbrains.annotations.Nullable;
 
 public class ErlangCopyFileTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testSimple() throws Throwable {
