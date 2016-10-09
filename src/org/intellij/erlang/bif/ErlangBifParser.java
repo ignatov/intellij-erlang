@@ -57,7 +57,7 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
 
   private ErlangDocumentationProvider myDocProvider;
 
-  private Set<String> getAutoimportedFunctions() throws IOException {
+  private static Set<String> getAutoimportedFunctions() throws IOException {
     File bifAutoimportTableFile = new File(BIF_AUTOIMPORT_TABLE_PATH);
     String[] bifAutoimportTableText = StringUtil.splitByLines(FileUtilRt.loadFile(bifAutoimportTableFile));
     return new HashSet<>(ContainerUtil.set(bifAutoimportTableText));
