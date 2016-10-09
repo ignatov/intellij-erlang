@@ -67,29 +67,28 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
     File bifTableFile = new File(BIF_TABLE_PATH);
     String[] bifTableText = StringUtil.splitByLines(FileUtilRt.loadFile(bifTableFile));
 
-    PrintStream bifTableJavaBuilder = new PrintStream(new File(GENERATED_FILE));
-    try {
+    try (PrintStream bifTableJavaBuilder = new PrintStream(new File(GENERATED_FILE))) {
       Set<String> autoimported = getAutoimportedFunctions();
       bifTableJavaBuilder.append("package org.intellij.erlang.bif;\n" +
-        "\n" +
-        "import org.jetbrains.annotations.NotNull;\n" +
-        "import org.jetbrains.annotations.Nullable;\n" +
-        "import com.intellij.util.containers.MultiMap;\n" +
-        "\n" +
-        "import java.util.ArrayList;\n" +
-        "import java.util.Collection;\n" +
-        "import java.util.TreeSet;\n" +
-        "import java.util.List;\n" +
-        "\n" +
-        "public final class ErlangBifTable {\n" +
-        "  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {\n" +
-        "    @Override\n" +
-        "    protected Collection<ErlangBifDescriptor> createCollection() {\n" +
-        "      return new TreeSet<ErlangBifDescriptor>();\n" +
-        "    }\n" +
-        "  };\n" +
-        "\n" +
-        "  static {\n");
+                                 "\n" +
+                                 "import org.jetbrains.annotations.NotNull;\n" +
+                                 "import org.jetbrains.annotations.Nullable;\n" +
+                                 "import com.intellij.util.containers.MultiMap;\n" +
+                                 "\n" +
+                                 "import java.util.ArrayList;\n" +
+                                 "import java.util.Collection;\n" +
+                                 "import java.util.TreeSet;\n" +
+                                 "import java.util.List;\n" +
+                                 "\n" +
+                                 "public final class ErlangBifTable {\n" +
+                                 "  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {\n" +
+                                 "    @Override\n" +
+                                 "    protected Collection<ErlangBifDescriptor> createCollection() {\n" +
+                                 "      return new TreeSet<ErlangBifDescriptor>();\n" +
+                                 "    }\n" +
+                                 "  };\n" +
+                                 "\n" +
+                                 "  static {\n");
       for (String s : bifTableText) {
         Matcher matcher;
         if ((matcher = BIF_DECLARATION.matcher(s)).find()) {
@@ -98,9 +97,9 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
           String arity = matcher.group(3);
           String isAuroimport = autoimported.contains(name + "/" + arity) ? ", true" : "";
           bifTableJavaBuilder.append("    bifMap.putValue(\"").append(module)
-            .append("\", new ErlangBifDescriptor(\"")
-            .append(module).append("\", \"").append(name).append("\", ").append(arity)
-            .append(", \"").append(fetchSpec(module, name, Integer.valueOf(arity))).append("\"").append(isAuroimport).append("));\n");
+                             .append("\", new ErlangBifDescriptor(\"")
+                             .append(module).append("\", \"").append(name).append("\", ").append(arity)
+                             .append(", \"").append(fetchSpec(module, name, Integer.valueOf(arity))).append("\"").append(isAuroimport).append("));\n");
         }
         else if ((matcher = BIF_SEPARATOR.matcher(s)).find()) {
           String version = matcher.group(1).replaceAll("\\.", "");
@@ -108,41 +107,39 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
         }
       }
       bifTableJavaBuilder.append("  }\n" +
-        "\n" +
-        "  private ErlangBifTable() {\n" +
-        "  }\n" +
-        "\n" +
-        "  @NotNull\n" +
-        "  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName) {\n" +
-        "    return bifMap.get(moduleName);\n" +
-        "  }\n" +
-        "\n" +
-        "  @NotNull\n" +
-        "  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName,\n" +
-        "                                                        @NotNull String functionName) {\n" +
-        "    final List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();\n" +
-        "    for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {\n" +
-        "      if (functionName.equals(bifDescriptor.getName())) {\n" +
-        "        bifDescriptors.add(bifDescriptor);\n" +
-        "      }\n" +
-        "    }\n" +
-        "    return bifDescriptors;\n" +
-        "  }\n" +
-        "\n" +
-        "\n" +
-        "  public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {\n" +
-        "    final Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);\n" +
-        "    for (ErlangBifDescriptor bifDescriptor : erlangBifDescriptors) {\n" +
-        "      if (bifDescriptor.getModule().equals(moduleName) && bifDescriptor.getName().equals(functionName) &&\n" +
-        "        bifDescriptor.getArity() == arity) {\n" +
-        "        return true;\n" +
-        "      }\n" +
-        "    }\n" +
-        "    return false;\n" +
-        "  }\n" +
-        "}\n");
-    } finally {
-      bifTableJavaBuilder.close();
+                                 "\n" +
+                                 "  private ErlangBifTable() {\n" +
+                                 "  }\n" +
+                                 "\n" +
+                                 "  @NotNull\n" +
+                                 "  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName) {\n" +
+                                 "    return bifMap.get(moduleName);\n" +
+                                 "  }\n" +
+                                 "\n" +
+                                 "  @NotNull\n" +
+                                 "  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName,\n" +
+                                 "                                                        @NotNull String functionName) {\n" +
+                                 "    final List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();\n" +
+                                 "    for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {\n" +
+                                 "      if (functionName.equals(bifDescriptor.getName())) {\n" +
+                                 "        bifDescriptors.add(bifDescriptor);\n" +
+                                 "      }\n" +
+                                 "    }\n" +
+                                 "    return bifDescriptors;\n" +
+                                 "  }\n" +
+                                 "\n" +
+                                 "\n" +
+                                 "  public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {\n" +
+                                 "    final Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);\n" +
+                                 "    for (ErlangBifDescriptor bifDescriptor : erlangBifDescriptors) {\n" +
+                                 "      if (bifDescriptor.getModule().equals(moduleName) && bifDescriptor.getName().equals(functionName) &&\n" +
+                                 "        bifDescriptor.getArity() == arity) {\n" +
+                                 "        return true;\n" +
+                                 "      }\n" +
+                                 "    }\n" +
+                                 "    return false;\n" +
+                                 "  }\n" +
+                                 "}\n");
     }
   }
 

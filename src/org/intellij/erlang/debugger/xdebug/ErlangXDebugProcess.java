@@ -375,18 +375,10 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     if (beamUrl == null) {
       throw new IOException("Failed to locate debugger module: " + beamName);
     }
-    BufferedInputStream inputStream = new BufferedInputStream(URLUtil.openStream(beamUrl));
-    try {
-      BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(directory, beamName)));
-      try {
+    try (BufferedInputStream inputStream = new BufferedInputStream(URLUtil.openStream(beamUrl))) {
+      try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(directory, beamName)))) {
         FileUtil.copy(inputStream, outputStream);
       }
-      finally {
-        outputStream.close();
-      }
-    }
-    finally {
-      inputStream.close();
     }
   }
 }

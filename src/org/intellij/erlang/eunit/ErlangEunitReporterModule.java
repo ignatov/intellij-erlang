@@ -37,16 +37,10 @@ public class ErlangEunitReporterModule {
       throw new IOException("Failed to locate eunit reporter module.");
     }
 
-    BufferedInputStream inputStream = new BufferedInputStream(URLUtil.openStream(moduleUrl));
-    try {
-      BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(directory, MODULE_BEAM)));
-      try {
+    try (BufferedInputStream inputStream = new BufferedInputStream(URLUtil.openStream(moduleUrl))) {
+      try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(directory, MODULE_BEAM)))) {
         FileUtil.copy(inputStream, outputStream);
-      } finally {
-        outputStream.close();
       }
-    } finally {
-      inputStream.close();
     }
   }
 }

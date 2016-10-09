@@ -134,14 +134,12 @@ public class ErlangDebuggerNode {
     try {
       Exception cachedException = null;
       LOG.debug("Opening a server socket.");
-      ServerSocket serverSocket = new ServerSocket(0);
-      try {
+      try (ServerSocket serverSocket = new ServerSocket(0)) {
         portFuture.set(serverSocket.getLocalPort());
 
         LOG.debug("Listening on port " + serverSocket.getLocalPort() + ".");
 
-        Socket debuggerSocket = serverSocket.accept();
-        try {
+        try (Socket debuggerSocket = serverSocket.accept()) {
           LOG.debug("Debugger connected, closing the server socket.");
           serverSocket.close();
           myEventListener.debuggerStarted();
@@ -155,7 +153,7 @@ public class ErlangDebuggerNode {
         finally {
           myStopped.set(true);
           myEventListener.debuggerStopped();
-          debuggerSocket.close();
+
         }
       }
       catch (Exception e) {
@@ -168,9 +166,6 @@ public class ErlangDebuggerNode {
           }
         }
         throw e;
-      }
-      finally {
-        serverSocket.close();
       }
     }
     catch (Exception th) {
