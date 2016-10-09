@@ -57,14 +57,11 @@ public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
   @NotNull
   @Override
   public FileFilter createFileFilter() {
-    return new FileFilter() {
-      @Override
-      public boolean accept(@NotNull File file) {
-        String name = file.getName();
-        return ErlangBuilderUtil.isSource(name) ||
-               ErlangBuilderUtil.isHeader(name) ||
-               ErlangBuilderUtil.isAppConfigFileName(name);
-      }
+    return file -> {
+      String name = file.getName();
+      return ErlangBuilderUtil.isSource(name) ||
+             ErlangBuilderUtil.isHeader(name) ||
+             ErlangBuilderUtil.isAppConfigFileName(name);
     };
   }
 

@@ -65,12 +65,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
     //TODO provide a way to copy erlang resources
     //disables java resource builder for erlang modules
-    ResourcesBuilder.registerEnabler(new StandardResourceBuilderEnabler() {
-      @Override
-      public boolean isResourceProcessingEnabled(@NotNull JpsModule module) {
-        return !(module.getModuleType() instanceof JpsErlangModuleType);
-      }
-    });
+    ResourcesBuilder.registerEnabler(module -> !(module.getModuleType() instanceof JpsErlangModuleType));
   }
 
   @Override
@@ -285,13 +280,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     for (JpsModuleSourceRoot root : sourceRoots) {
       FileUtil.processFilesRecursively(root.getFile(), erlFilesCollector);
     }
-    return ContainerUtil.map(erlFilesCollector.getResults(), new Function<File, String>() {
-      @NotNull
-      @Override
-      public String fun(@NotNull File file) {
-        return ErlangBuilderUtil.getPath(file);
-      }
-    });
+    return ContainerUtil.map(erlFilesCollector.getResults(), file -> ErlangBuilderUtil.getPath(file));
   }
 
   private static void addParseTransforms(@NotNull GeneralCommandLine commandLine,

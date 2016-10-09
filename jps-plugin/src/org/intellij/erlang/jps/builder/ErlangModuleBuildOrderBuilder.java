@@ -142,13 +142,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
   @NotNull
   private static List<String> getSortedDirtyModules(@NotNull List<ErlangFileDescriptor> sortedFiles,
                                                     @NotNull final Set<String> allDirtyFiles) {
-    return ContainerUtil.mapNotNull(sortedFiles, new Function<ErlangFileDescriptor, String>() {
-      @Nullable
-      @Override
-      public String fun(ErlangFileDescriptor node) {
-        return isSource(node.myPath) && allDirtyFiles.contains(node.myPath) ? node.myPath : null;
-      }
-    });
+    return ContainerUtil.mapNotNull(sortedFiles, node -> isSource(node.myPath) && allDirtyFiles.contains(node.myPath) ? node.myPath : null);
   }
 
   private static void addFilesToBuildTarget(@NotNull CompileContext context,
