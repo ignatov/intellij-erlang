@@ -50,15 +50,12 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
 
   protected void localFileSystemSetUp() throws Exception {
     final CodeInsightTestFixture oldFixture = myFixture;
-    Disposer.register(getTestRootDisposable(), new Disposable() {
-      @Override
-      public void dispose() {
-        try {
-          oldFixture.tearDown();
-        }
-        catch (Exception e) {
-          throw new RuntimeException(e);
-        }
+    Disposer.register(getTestRootDisposable(), () -> {
+      try {
+        oldFixture.tearDown();
+      }
+      catch (Exception e) {
+        throw new RuntimeException(e);
       }
     });
 

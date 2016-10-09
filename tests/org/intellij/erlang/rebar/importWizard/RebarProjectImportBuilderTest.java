@@ -73,12 +73,10 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   public void testDepsOnMissingApps() throws Exception { doTest(null); }
   
   public void testModuleNameConflict() throws Exception { 
-    doTest(new Consumer<ModuleWizardStep>() { 
-      @Override public void consume(@NotNull ModuleWizardStep moduleWizardStep) {
-        if (moduleWizardStep instanceof SelectImportedOtpAppsStep) {
-          SelectImportedOtpAppsStep theStep = (SelectImportedOtpAppsStep) moduleWizardStep;
-          theStep.autoResolveConflicts();
-        }
+    doTest(moduleWizardStep -> {
+      if (moduleWizardStep instanceof SelectImportedOtpAppsStep) {
+        SelectImportedOtpAppsStep theStep = (SelectImportedOtpAppsStep) moduleWizardStep;
+        theStep.autoResolveConflicts();
       }
     });
   }
@@ -106,12 +104,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
   private static void createMockSdk() {
     final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR, ErlangSdkRelease.V_R15B02);
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        ProjectJdkTable.getInstance().addJdk(mockSdk);
-      }
-    });
+    ApplicationManager.getApplication().runWriteAction(() -> ProjectJdkTable.getInstance().addJdk(mockSdk));
   }
 
   private Project doTest(@Nullable Consumer<ModuleWizardStep> adjuster) throws Exception {

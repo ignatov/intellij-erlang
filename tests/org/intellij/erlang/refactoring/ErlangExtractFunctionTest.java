@@ -32,12 +32,7 @@ public class ErlangExtractFunctionTest extends ErlangLightPlatformCodeInsightFix
 
   private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        new ErlangExtractFunctionHandler().invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
-      }
-    });
+    ApplicationManager.getApplication().runWriteAction(() -> new ErlangExtractFunctionHandler().invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null));
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");
   }
 

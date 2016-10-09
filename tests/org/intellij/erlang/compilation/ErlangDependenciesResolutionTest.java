@@ -66,14 +66,11 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
     final String sourceDirectoryName = isTestSource ? "test" : "src";
     final VirtualFile moduleFile = myModule.getModuleFile();
     assertNotNull(moduleFile);
-    VirtualFile moduleSourceDir = ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
-      @Override
-      public VirtualFile compute() throws IOException {
-        VirtualFile moduleSourceDir = VfsUtil.createDirectoryIfMissing(moduleFile.getParent(), sourceDirectoryName);
-        FileUtil.copyDirContent(new File(sourcePath), new File(moduleSourceDir.getPath()));
-        VfsUtil.markDirtyAndRefresh(false, true, true, moduleSourceDir);
-        return moduleSourceDir;
-      }
+    VirtualFile moduleSourceDir = ApplicationManager.getApplication().runWriteAction((ThrowableComputable<VirtualFile, IOException>) () -> {
+      VirtualFile moduleSourceDir1 = VfsUtil.createDirectoryIfMissing(moduleFile.getParent(), sourceDirectoryName);
+      FileUtil.copyDirContent(new File(sourcePath), new File(moduleSourceDir1.getPath()));
+      VfsUtil.markDirtyAndRefresh(false, true, true, moduleSourceDir1);
+      return moduleSourceDir1;
     });
     PsiTestUtil.addSourceRoot(myModule, moduleSourceDir, isTestSource);
   }
@@ -121,22 +118,12 @@ public class ErlangDependenciesResolutionTest extends ModuleTestCase {
 
   private static void assertSameErlangFiles(List<ErlangFileDescriptor> moduleBuildOrder,
                                             String... expectedModules) {
-    List<String> actualModules = ContainerUtil.map(getModulePaths(moduleBuildOrder), new Function<String, String>() {
-      @Override
-      public String fun(String path) {
-        return FileUtil.getNameWithoutExtension(new File(path));
-      }
-    });
+    List<String> actualModules = ContainerUtil.map(getModulePaths(moduleBuildOrder), path -> FileUtil.getNameWithoutExtension(new File(path)));
     assertOrderedEquals(actualModules, expectedModules);
   }
 
   @NotNull
   private static List<String> getModulePaths(List<ErlangFileDescriptor> buildOrder) {
-    return ContainerUtil.mapNotNull(buildOrder, new Function<ErlangFileDescriptor, String>() {
-      @Override
-      public String fun(ErlangFileDescriptor erlangFileDescriptor) {
-        return erlangFileDescriptor.myPath;
-      }
-    });
+    return ContainerUtil.mapNotNull(buildOrder, erlangFileDescriptor -> erlangFileDescriptor.myPath);
   }
 }

@@ -89,23 +89,13 @@ public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
 
   private void markAsIncludeDirectory(@Nullable final PsiDirectory dir) {
     assertNotNull(dir);
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        ErlangIncludeDirectoryUtil.markAsIncludeDirectory(myModule, dir.getVirtualFile());
-      }
-    });
+    ApplicationManager.getApplication().runWriteAction(() -> ErlangIncludeDirectoryUtil.markAsIncludeDirectory(myModule, dir.getVirtualFile()));
   }
 
   @NotNull
   private static PsiDirectory createSubdirectory(@Nullable final PsiDirectory dir, @Nullable final String name) {
     assertNotNull(dir);
     assertNotNull(name);
-    return ApplicationManager.getApplication().runWriteAction(new Computable<PsiDirectory>() {
-      @Override
-      public PsiDirectory compute() {
-        return dir.createSubdirectory(name);
-      }
-    });
+    return ApplicationManager.getApplication().runWriteAction((Computable<PsiDirectory>) () -> dir.createSubdirectory(name));
   }
 }

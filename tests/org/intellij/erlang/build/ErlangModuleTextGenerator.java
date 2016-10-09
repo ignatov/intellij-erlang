@@ -129,13 +129,7 @@ class ErlangModuleTextGenerator {
       if (myExports.isEmpty()) return;
 
       builder.append("-export([");
-      commaSeparated(builder, myExports, new ItemFormatter<Pair<String, Integer>>() {
-        @NotNull
-        @Override
-        public StringBuilder format(@NotNull StringBuilder sb, @NotNull Pair<String, Integer> export) {
-          return sb.append(export.first).append("/").append(export.second);
-        }
-      });
+      commaSeparated(builder, myExports, (sb, export) -> sb.append(export.first).append("/").append(export.second));
       builder.append("]).\n");
     }
 
@@ -156,13 +150,7 @@ class ErlangModuleTextGenerator {
       }
 
       builder.append(functionName).append("(");
-      commaSeparated(builder, argumentIndices, new ItemFormatter<Integer>() {
-        @NotNull
-        @Override
-        public StringBuilder format(@NotNull StringBuilder sb, @NotNull Integer argumentIdx) {
-          return sb.append("_Arg").append(argumentIdx);
-        }
-      });
+      commaSeparated(builder, argumentIndices, (sb, argumentIdx) -> sb.append("_Arg").append(argumentIdx));
       builder.append(") -> ok.\n");
     }
 
@@ -170,13 +158,7 @@ class ErlangModuleTextGenerator {
       if (myParseTransforms.isEmpty()) return;
 
       builder.append("-compile([");
-      commaSeparated(builder, myParseTransforms, new ItemFormatter<String>() {
-        @NotNull
-        @Override
-        public StringBuilder format(@NotNull StringBuilder sb, @NotNull String pt) {
-          return sb.append("{parse_transform, ").append(pt).append("}");
-        }
-      });
+      commaSeparated(builder, myParseTransforms, (sb, pt) -> sb.append("{parse_transform, ").append(pt).append("}"));
       builder.append("]).\n");
     }
 
@@ -219,13 +201,7 @@ class ErlangModuleTextGenerator {
     protected void build(@NotNull StringBuilder builder) {
       builder.append("-export([behaviour_info/1]).\n");
       builder.append("behaviour_info(callbacks) ->[");
-      commaSeparated(builder, myCallbacks, new ItemFormatter<Pair<String, Integer>>() {
-        @NotNull
-        @Override
-        public StringBuilder format(@NotNull StringBuilder sb, @NotNull Pair<String, Integer> callback) {
-          return sb.append("{").append(callback.first).append(", ").append(callback.second).append("}");
-        }
-      });
+      commaSeparated(builder, myCallbacks, (sb, callback) -> sb.append("{").append(callback.first).append(", ").append(callback.second).append("}"));
       builder.append("].\n");
       super.build(builder);
     }

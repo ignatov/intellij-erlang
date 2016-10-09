@@ -65,14 +65,10 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     myCompilationRunner = new CompilationRunner(myModule);
-    ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<Object, Exception>() {
-      @Nullable
-      @Override
-      public Object compute() throws Exception {
-        createSdk();
-        setupSourceRootsFacetAndSdk(myModule);
-        return null;
-      }
+    ApplicationManager.getApplication().runWriteAction((ThrowableComputable<Object, Exception>) () -> {
+      createSdk();
+      setupSourceRootsFacetAndSdk(myModule);
+      return null;
     });
   }
 
@@ -113,13 +109,10 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
   @NotNull
   protected Module createModuleInOwnDirectoryWithSourceAndTestRoot(final String moduleName) throws Exception {
-    return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<Module, IOException>() {
-      @Override
-      public Module compute() throws IOException {
-        Module module = createModuleInDirectory(moduleName);
-        setupSourceRootsFacetAndSdk(module);
-        return module;
-      }
+    return ApplicationManager.getApplication().runWriteAction((ThrowableComputable<Module, IOException>) () -> {
+      Module module = createModuleInDirectory(moduleName);
+      setupSourceRootsFacetAndSdk(module);
+      return module;
     });
   }
 
@@ -165,59 +158,37 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
                                      final @NotNull String relativePath,
                                      final @NotNull String content,
                                      final boolean toTests) throws IOException {
-    return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
-      @Override
-      public VirtualFile compute() throws IOException {
-        JavaSourceRootType rootType = toTests ? JavaSourceRootType.TEST_SOURCE : JavaSourceRootType.SOURCE;
-        List<VirtualFile> sourceRoots = ModuleRootManager.getInstance(module).getSourceRoots(rootType);
-        VirtualFile sourceDir = ContainerUtil.getFirstItem(sourceRoots);
-        assertNotNull(sourceDir);
-        return addFile(sourceDir, relativePath, content);
-      }
+    return ApplicationManager.getApplication().runWriteAction((ThrowableComputable<VirtualFile, IOException>) () -> {
+      JavaSourceRootType rootType = toTests ? JavaSourceRootType.TEST_SOURCE : JavaSourceRootType.SOURCE;
+      List<VirtualFile> sourceRoots = ModuleRootManager.getInstance(module).getSourceRoots(rootType);
+      VirtualFile sourceDir = ContainerUtil.getFirstItem(sourceRoots);
+      assertNotNull(sourceDir);
+      return addFile(sourceDir, relativePath, content);
     });
   }
   protected static VirtualFile addFileToDirectory(final @NotNull VirtualFile sourceDir,
                                                   final @NotNull String relativePath,
                                                   final @NotNull String content) throws IOException {
-    return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
-      @Override
-      public VirtualFile compute() throws IOException {
-        return addFile(sourceDir, relativePath, content);
-      }
-    });
+    return ApplicationManager.getApplication().runWriteAction((ThrowableComputable<VirtualFile, IOException>) () -> addFile(sourceDir, relativePath, content));
   }
 
   protected static VirtualFile addIncludeRoot(@NotNull final Module module,
                                               @NotNull final String sourceRootName) throws IOException {
-    return ApplicationManager.getApplication().runWriteAction(new ThrowableComputable<VirtualFile, IOException>() {
-      @Override
-      public VirtualFile compute() throws IOException {
-        return addSourceRoot(module, sourceRootName, ErlangIncludeSourceRootType.INSTANCE);
-      }
-    });
+    return ApplicationManager.getApplication().runWriteAction((ThrowableComputable<VirtualFile, IOException>) () -> addSourceRoot(module, sourceRootName, ErlangIncludeSourceRootType.INSTANCE));
 
   }
 
   protected static void addGlobalParseTransform(final Module module, final Collection<String> parseTransform) {
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        ErlangFacet erlangFacet = ErlangFacet.getFacet(module);
-        assertNotNull(erlangFacet);
-        erlangFacet.getConfiguration().addParseTransforms(parseTransform);
-      }
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      ErlangFacet erlangFacet = ErlangFacet.getFacet(module);
+      assertNotNull(erlangFacet);
+      erlangFacet.getConfiguration().addParseTransforms(parseTransform);
     });
   }
 
   protected static void assertSourcesCompiled(@NotNull Module module, boolean tests) {
     String[] sources = getSourceFiles(module, tests);
-    assertContains(getOutputDirectory(module, tests), ContainerUtil.mapNotNull(sources, new Function<String, String>() {
-      @Nullable
-      @Override
-      public String fun(String source) {
-        return getExpectedOutputFileName(source);
-      }
-    }));
+    assertContains(getOutputDirectory(module, tests), ContainerUtil.mapNotNull(sources, source -> getExpectedOutputFileName(source)));
   }
 
   private static void assertContains(@Nullable VirtualFile parentPath, List<String> fileNames) {
@@ -281,12 +252,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
       List<VirtualFile> testRoots = ModuleRootManager.getInstance(module).getSourceRoots(JavaSourceRootType.TEST_SOURCE);
       sourceRoots = ContainerUtil.concat(sourceRoots, testRoots);
     }
-    List<String> result = ContainerUtil.concat(ContainerUtil.mapNotNull(sourceRoots, new Function<VirtualFile, List<String>>() {
-      @Override
-      public List<String> fun(VirtualFile root) {
-        return getChildrenNames(root);
-      }
-    }));
+    List<String> result = ContainerUtil.concat(ContainerUtil.mapNotNull(sourceRoots, (Function<VirtualFile, List<String>>) root -> getChildrenNames(root)));
     return ArrayUtil.toStringArray(result);
   }
 
@@ -313,12 +279,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
   @NotNull
   private static List<String> getChildrenNames(VirtualFile root) {
-    return ContainerUtil.mapNotNull(root.getChildren(), new Function<VirtualFile, String>() {
-      @Override
-      public String fun(VirtualFile virtualFile) {
-        return virtualFile.getName();
-      }
-    });
+    return ContainerUtil.mapNotNull(root.getChildren(), virtualFile -> virtualFile.getName());
   }
 
   protected class CompilationRunner {

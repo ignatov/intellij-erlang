@@ -53,11 +53,8 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     myFixture.configureByText(inputFile, inputText);
 
     if (format) {
-      WriteCommandAction.runWriteCommandAction(myFixture.getProject(), new Runnable() {
-        @Override
-        public void run() {
-          CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
-        }
+      WriteCommandAction.runWriteCommandAction(myFixture.getProject(), () -> {
+        CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
       });
     }
     else {

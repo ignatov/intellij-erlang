@@ -145,15 +145,12 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     assertNotNull(beam);
     assertTrue(beam.exists());
 
-    WriteCommandAction.runWriteCommandAction(null, new Runnable() {
-      @Override
-      public void run() {
-        try {
-          erl.delete(null);
-        }
-        catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+    WriteCommandAction.runWriteCommandAction(null, () -> {
+      try {
+        erl.delete(null);
+      }
+      catch (IOException e) {
+        throw new RuntimeException(e);
       }
     });
     compileAndAssertOutput(false);

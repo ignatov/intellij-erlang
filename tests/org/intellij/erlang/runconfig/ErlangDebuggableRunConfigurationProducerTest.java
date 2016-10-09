@@ -173,18 +173,15 @@ public class ErlangDebuggableRunConfigurationProducerTest extends ModuleTestCase
 
   private static void addDependency(final Module to, final Module what) throws Exception {
     final Ref<Exception> ex = Ref.create();
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        ModifiableRootModel modifiableModel = ModuleRootManager.getInstance(to).getModifiableModel();
-        try {
-          modifiableModel.addModuleOrderEntry(what);
-          modifiableModel.commit();
-        }
-        catch (Exception e) {
-          modifiableModel.dispose();
-          ex.set(e);
-        }
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      ModifiableRootModel modifiableModel = ModuleRootManager.getInstance(to).getModifiableModel();
+      try {
+        modifiableModel.addModuleOrderEntry(what);
+        modifiableModel.commit();
+      }
+      catch (Exception e) {
+        modifiableModel.dispose();
+        ex.set(e);
       }
     });
 

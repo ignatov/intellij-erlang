@@ -50,17 +50,7 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     PsiDocumentManager instance = PsiDocumentManager.getInstance(getProject());
     final Document document = instance.getDocument(file);
     assert document != null;
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        WriteCommandAction.runWriteCommandAction(getProject(), new Runnable() {
-          @Override
-          public void run() {
-            document.insertString(0, "C = A + B + <error>D</error>.");
-          }
-        });
-      }
-    });
+    ApplicationManager.getApplication().runWriteAction(() -> WriteCommandAction.runWriteCommandAction(getProject(), () -> document.insertString(0, "C = A + B + <error>D</error>.")));
     instance.commitDocument(document);
     HashMap<String, ErlangQVar> map = new HashMap<String, ErlangQVar>();
     map.put("A", (ErlangQVar) ErlangElementFactory.createQVarFromText(getProject(), "A"));

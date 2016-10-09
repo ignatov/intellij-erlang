@@ -42,12 +42,7 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
     super.setUp();
     //noinspection unchecked
     myFixture.enableInspections(ErlangUnresolvedIncludeInspection.class, ErlangUnresolvedIncludeLibInspection.class);
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        ErlangFacet.createFacet(myFixture.getModule());
-      }
-    });
+    ApplicationManager.getApplication().runWriteAction(() -> ErlangFacet.createFacet(myFixture.getModule()));
   }
 
   public void testSimple() {

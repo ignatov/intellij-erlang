@@ -169,12 +169,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.complete(CompletionType.BASIC, 1);
     List<String> stringList = myFixture.getLookupElementStrings();
     assertNotNull(stringList);
-    List<String> vars = ContainerUtil.filter(stringList, new Condition<String>() {
-      @Override
-      public boolean value(String s) {
-        return s.equals("A");
-      }
-    });
+    List<String> vars = ContainerUtil.filter(stringList, s -> s.equals("A"));
     assertSize(1, vars);
   }
 

@@ -30,13 +30,7 @@ public class ErlangCopyFileTest extends ErlangLightPlatformCodeInsightFixtureTes
     final PsiDirectory containingDirectory = file.getContainingDirectory();
     assert containingDirectory != null;
     final String newName = "bbb.erl";
-    WriteCommandAction.runWriteCommandAction(myFixture.getProject(), new ThrowableComputable<Object, Throwable>() {
-      @Nullable
-      @Override
-      public Object compute() throws Throwable {
-        return CopyFilesOrDirectoriesHandler.copyToDirectory(file, newName, containingDirectory);
-      }
-    });
+    WriteCommandAction.runWriteCommandAction(myFixture.getProject(), (ThrowableComputable<Object, Throwable>) () -> CopyFilesOrDirectoriesHandler.copyToDirectory(file, newName, containingDirectory));
     PsiFile copiedFile = containingDirectory.findFile(newName);
     assert copiedFile != null;
     assertEquals(copiedFile.getText(), "-module(bbb).\nfoo() -> ok.");

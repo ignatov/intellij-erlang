@@ -56,12 +56,9 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
   }
 
   private void doTest(int expectedMs) {
-    PlatformTestUtil.startPerformanceTest("erlang highlighting is slow", expectedMs, new ThrowableRunnable() {
-      @Override
-      public void run() {
-        myFixture.configureByFile(getTestName(false) + ".erl");
-        myFixture.doHighlighting();
-      }
+    PlatformTestUtil.startPerformanceTest("erlang highlighting is slow", expectedMs, () -> {
+      myFixture.configureByFile(getTestName(false) + ".erl");
+      myFixture.doHighlighting();
     }).attempts(100).cpuBound().usesAllCPUCores().assertTiming();
   }
 
