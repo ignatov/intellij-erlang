@@ -26,18 +26,19 @@ public class ErlangElementTypeFactory {
 
   @NotNull
   public static IElementType factory(@NotNull String name) {
-    if (name.equals("ERL_FUNCTION"))                return new ErlangFunctionStubElementType(name);
-    else if (name.equals("ERL_BEHAVIOUR"))          return new ErlangBehaviourStubElementType(name);
-    else if (name.equals("ERL_MODULE"))             return new ErlangModuleStubElementType(name);
-    else if (name.equals("ERL_TYPE_DEFINITION"))    return new ErlangTypeDefinitionElementType(name);
-    else if (name.equals("ERL_MACROS_DEFINITION"))  return new ErlangMacrosDefinitionElementType(name);
-    else if (name.equals("ERL_RECORD_DEFINITION"))  return new ErlangRecordDefinitionElementType(name);
-    else if (name.equals("ERL_INCLUDE"))            return new ErlangIncludeElementType(name);
-    else if (name.equals("ERL_INCLUDE_LIB"))        return new ErlangIncludeLibElementType(name);
-    else if (name.equals("ERL_CALLBACK_SPEC"))      return new ErlangCallbackStubElementType(name);
-    else if (name.equals("ERL_CALLBACK_FUNCTION"))  return new ErlangCallbackFunctionStubElementType(name);
-    else if (name.equals("ERL_SPECIFICATION"))      return new ErlangSpecificationElementType(name);
-
+    switch (name) {
+      case "ERL_FUNCTION":          return new ErlangFunctionStubElementType(name);
+      case "ERL_BEHAVIOUR":         return new ErlangBehaviourStubElementType(name);
+      case "ERL_MODULE":            return new ErlangModuleStubElementType(name);
+      case "ERL_TYPE_DEFINITION":   return new ErlangTypeDefinitionElementType(name);
+      case "ERL_MACROS_DEFINITION": return new ErlangMacrosDefinitionElementType(name);
+      case "ERL_RECORD_DEFINITION": return new ErlangRecordDefinitionElementType(name);
+      case "ERL_INCLUDE":           return new ErlangIncludeElementType(name);
+      case "ERL_INCLUDE_LIB":       return new ErlangIncludeLibElementType(name);
+      case "ERL_CALLBACK_SPEC":     return new ErlangCallbackStubElementType(name);
+      case "ERL_CALLBACK_FUNCTION": return new ErlangCallbackFunctionStubElementType(name);
+      case "ERL_SPECIFICATION":     return new ErlangSpecificationElementType(name);
+    }
     throw new RuntimeException("Unknown element type: " + name);
   }
 }
