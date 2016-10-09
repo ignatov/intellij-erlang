@@ -46,6 +46,7 @@ import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
 import com.intellij.xdebugger.evaluation.EvaluationMode;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
+import com.intellij.xdebugger.frame.XSuspendContext;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
@@ -163,7 +164,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     else {
       boolean shouldSuspend = getSession().breakpointReached(breakpoint, null, suspendContext);
       if (!shouldSuspend) {
-        resume();
+        resume(suspendContext);
       }
     }
   }
@@ -241,17 +242,17 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   @Override
-  public void startStepOver() {
+  public void startStepOver(@Nullable XSuspendContext context) {
     myDebuggerNode.stepOver();
   }
 
   @Override
-  public void startStepInto() {
+  public void startStepInto(@Nullable XSuspendContext context) {
     myDebuggerNode.stepInto();
   }
 
   @Override
-  public void startStepOut() {
+  public void startStepOut(@Nullable XSuspendContext context) {
     myDebuggerNode.stepOut();
   }
 
@@ -261,12 +262,12 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   @Override
-  public void resume() {
+  public void resume(@Nullable XSuspendContext context) {
     myDebuggerNode.resume();
   }
 
   @Override
-  public void runToPosition(@NotNull XSourcePosition position) {
+  public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
     //TODO implement me
   }
 
