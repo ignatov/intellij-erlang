@@ -280,7 +280,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     for (JpsModuleSourceRoot root : sourceRoots) {
       FileUtil.processFilesRecursively(root.getFile(), erlFilesCollector);
     }
-    return ContainerUtil.map(erlFilesCollector.getResults(), file -> ErlangBuilderUtil.getPath(file));
+    return ContainerUtil.map(erlFilesCollector.getResults(), ErlangBuilderUtil::getPath);
   }
 
   private static void addParseTransforms(@NotNull GeneralCommandLine commandLine,
