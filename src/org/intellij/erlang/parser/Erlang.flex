@@ -20,8 +20,6 @@ import static org.intellij.erlang.ErlangParserDefinition.*;
 %function advance
 %type IElementType
 
-%table
-
 /* This hex range is the same as octal \O00 - \O37 */
 ControlCharacter = [\000 - \037]
 
@@ -48,7 +46,6 @@ IntegerLiteral = {DecimalLiteral} | {ExplicitRadixLiteral}
 
 ExponentPart = [Ee] [+-]? {DecimalLiteral}
 FloatLiteral = {DecimalLiteral} "." {DecimalLiteral} {ExponentPart}?
-
 
 OctalEscape = \\ [0-7]{1,3}
 ControlName = [@A-Z\[\\\]\^_] /* this is the octal range \100 - \137 */ 
@@ -165,4 +162,4 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL>  "->"                          { return ERL_ARROW; }
 <YYINITIAL>  "#"                           { return ERL_RADIX; }
 
-<YYINITIAL> .                              { return com.intellij.psi.TokenType.BAD_CHARACTER; }
+[^]                                        {yybegin(YYINITIAL); return com.intellij.psi.TokenType.BAD_CHARACTER; }
