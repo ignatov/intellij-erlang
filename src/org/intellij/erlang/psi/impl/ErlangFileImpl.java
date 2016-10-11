@@ -304,7 +304,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   public FileType getFileType() {
     FileType fileType = getViewProvider().getFileType();
     if ((fileType instanceof ScratchFileType)) return fileType;
-    if (!(fileType instanceof ErlangFileType)) {
+    if (!(fileType instanceof ErlangFileType) && ApplicationManager.getApplication().isUnitTestMode()) {
       return getFileTypeForTests();
     }
     return fileType;
