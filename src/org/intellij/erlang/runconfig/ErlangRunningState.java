@@ -37,6 +37,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class ErlangRunningState extends CommandLineState {
   private final Module myModule;
@@ -137,6 +139,7 @@ public abstract class ErlangRunningState extends CommandLineState {
   public abstract ConsoleView createConsoleView(Executor executor);
 
   public static class ErlangEntryPoint {
+    protected static final Pattern PATTERN = Pattern.compile("([^\"']\\S*|\".+?\"|'.+?')\\s*");
     private final String myModuleName;
     private final String myFunctionName;
     private final List<String> myArgsList;
@@ -165,7 +168,13 @@ public abstract class ErlangRunningState extends CommandLineState {
       if (split.size() != 2) return null;
       String module = split.get(0);
       String function = split.get(1);
-      List<String> args = StringUtil.split(params, " ");
+
+      List<String> args = ContainerUtil.newSmartList();
+      Matcher m = PATTERN.matcher(params);
+      while (m.find()) {
+        args.add(m.group(1));
+      }
+      
       return new ErlangEntryPoint(module, function, args);
     }
   }
