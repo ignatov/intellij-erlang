@@ -25,6 +25,7 @@ allprojects {
     plugins 'copyright'
     downloadSources Boolean.valueOf(sources)
     sameSinceUntilBuild Boolean.valueOf(isEAP)
+    alternativeIdePath localIdePath
   }
   
   def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
