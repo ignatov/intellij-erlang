@@ -80,14 +80,15 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
     String customRebarConfig = StringUtil.isEmptyOrSpaces(compilerOptions.myCustomRebarConfig) ? null : compilerOptions.myCustomRebarConfig;
     String customEunitRebarConfig = StringUtil.isEmptyOrSpaces(compilerOptions.myCustomEunitRebarConfig) ? customRebarConfig : compilerOptions.myCustomEunitRebarConfig;
+    boolean isForcedBuild = context.getScope().isBuildForced(target);
     boolean isRebarRun = false;
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
       String contentRootPath = getPathFromURL(contentRootUrl);
       if (customRebarConfig == null) {
         if (!isRebarConfigExists(contentRootPath, REBAR_CONFIG_FILE_NAME)) continue;
       }
-      runRebar(escriptPath, rebarPath, contentRootPath, customRebarConfig, false, compilerOptions.myAddDebugInfoEnabled, context);
-      runRebar(escriptPath, rebarPath, contentRootPath, customEunitRebarConfig, true, true, context);
+      runRebar(escriptPath, rebarPath, contentRootPath, customRebarConfig, false, compilerOptions.myAddDebugInfoEnabled, isForcedBuild, context);
+      runRebar(escriptPath, rebarPath, contentRootPath, customEunitRebarConfig, true, true, isForcedBuild, context);
       isRebarRun = true;
     }
     if (!isRebarRun) {
@@ -108,11 +109,16 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
                                @Nullable String customRebarConfig,
                                boolean isTest,
                                boolean addDebugInfo,
+                               boolean isForcedBuild,
                                @NotNull CompileContext context) throws ProjectBuildException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.withWorkDirectory(contentRootPath);
     commandLine.setExePath(escriptPath);
     commandLine.addParameter(rebarPath);
+
+    if (isForcedBuild) {
+      commandLine.addParameter("clean");
+    }
 
     if (isTest) {
       commandLine.addParameter("eunit");
