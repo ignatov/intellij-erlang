@@ -47,12 +47,13 @@ public final class ErlangConsoleUtil {
   }
 
   @NotNull
-  public static List<String> getCodePath(@NotNull Module module, boolean forTests) {
-    return getCodePath(module.getProject(), module, forTests);
+  public static List<String> getCodePath(@NotNull Module module, boolean forTests, boolean useRebarPaths) {
+    return getCodePath(module.getProject(), module, forTests, useRebarPaths);
   }
 
   @NotNull
-  public static List<String> getCodePath(@NotNull Project project, @Nullable Module module, boolean useTestOutputPath) {
+  public static List<String> getCodePath(@NotNull Project project, @Nullable Module module, boolean useTestOutputPath,
+                                         boolean useRebarPaths) {
     final Set<Module> codePathModules = new HashSet<>();
     if (module != null) {
       ModuleRootManager moduleRootMgr = ModuleRootManager.getInstance(module);
@@ -66,20 +67,35 @@ public final class ErlangConsoleUtil {
     }
 
     List<String> codePath = new ArrayList<>(codePathModules.size() * 2);
-    for (Module codePathModule : codePathModules) {
-      ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(codePathModule);
-      CompilerModuleExtension compilerModuleExt =
-        moduleRootManager.getModuleExtension(CompilerModuleExtension.class);
-      VirtualFile buildOutput = useTestOutputPath && codePathModule == module ?
-        getCompilerOutputPathForTests(compilerModuleExt) : 
-        compilerModuleExt.getCompilerOutputPath();
-      if (buildOutput != null) {
+
+    if (module != null) {
+      for (VirtualFile contentRoot : ModuleRootManager.getInstance(module).getContentRoots()) {
         codePath.add("-pa");
-        codePath.add(buildOutput.getCanonicalPath());
+        codePath.add(new File(contentRoot.getPath(), ".eunit").toString());
       }
-      for (VirtualFile contentRoot : ModuleRootManager.getInstance(codePathModule).getContentRoots()) {
-        codePath.add("-pa");
-        codePath.add(contentRoot.getPath());
+    }
+
+    for (Module codePathModule : codePathModules) {
+      if (useRebarPaths) {
+        for (VirtualFile contentRoot : ModuleRootManager.getInstance(codePathModule).getContentRoots()) {
+          codePath.add("-pa");
+          codePath.add(new File(contentRoot.getPath(), "ebin").toString());
+        }
+      } else {
+        ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(codePathModule);
+        CompilerModuleExtension compilerModuleExt =
+          moduleRootManager.getModuleExtension(CompilerModuleExtension.class);
+        VirtualFile buildOutput = useTestOutputPath && codePathModule == module ?
+          getCompilerOutputPathForTests(compilerModuleExt) :
+          compilerModuleExt.getCompilerOutputPath();
+        if (buildOutput != null) {
+          codePath.add("-pa");
+          codePath.add(buildOutput.getCanonicalPath());
+        }
+        for (VirtualFile contentRoot : ModuleRootManager.getInstance(codePathModule).getContentRoots()) {
+          codePath.add("-pa");
+          codePath.add(contentRoot.getPath());
+        }
       }
     }
 

@@ -57,6 +57,11 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
     return true;
   }
 
+  @Override
+  public boolean isUseRebarPaths() {
+    return myConfigData.isUseRebarPaths();
+  }
+
   @NotNull
   public ErlangUnitConfigData getConfigData() {
     return myConfigData;
@@ -88,6 +93,8 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
     @NotNull
     private Set<String> myFunctionNames = new LinkedHashSet<>();
 
+    private boolean myUseRebarPaths;
+
     @NotNull
     public ErlangUnitRunConfigurationKind getKind() {
       return myKind;
@@ -113,6 +120,14 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
 
     public void setFunctionNames(@NotNull Set<String> functionNames) {
       myFunctionNames = functionNames;
+    }
+
+    public boolean isUseRebarPaths() {
+      return myUseRebarPaths;
+    }
+
+    public void setUseRebarPaths(boolean useRebarPaths) {
+      myUseRebarPaths = useRebarPaths;
     }
   }
 }

@@ -48,6 +48,11 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
   }
 
   @Override
+  protected boolean useRebarOutputPaths() {
+    return false;
+  }
+
+  @Override
   protected boolean isNoShellMode() {
     return true;
   }

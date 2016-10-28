@@ -45,6 +45,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   @SuppressWarnings("unused")
   private HideableTitledPanel myDebugOptionsHideablePanel;
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
+  private JCheckBox myUseRebarOutputPathsCheckbox;
 
   public ErlangUnitRunConfigurationEditorForm() {
     myTestKindComboBox.addActionListener(e -> onTestKindSwitch());
@@ -71,6 +72,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
     myErlangModulesField.setText(getCommaSeparatedNamesString(configData.getModuleNames()));
     myErlangFunctionsField.setText(getCommaSeparatedNamesString(configData.getFunctionNames()));
     myWorkingDirectoryComponent.setText(StringUtil.notNullize(configuration.getWorkDirectory()));
+    myUseRebarOutputPathsCheckbox.setSelected(configData.isUseRebarPaths());
   }
 
   @Override
@@ -82,6 +84,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
     configData.setFunctionNames(parseCommaSeparatedNames(myErlangFunctionsField.getText()));
     configData.setModuleNames(parseCommaSeparatedNames(myErlangModulesField.getText()));
     configData.setKind((ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind) myTestKindComboBox.getSelectedItem());
+    configData.setUseRebarPaths(myUseRebarOutputPathsCheckbox.isSelected());
   }
 
   @NotNull
