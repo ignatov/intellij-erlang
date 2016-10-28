@@ -40,13 +40,18 @@ import org.jetbrains.jps.model.module.JpsModule;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.Collections;
 
 public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   private static final String NAME = "rebar";
   private static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
+  private static final String REBAR_CONFIG_SCRIPT_SUFFIX = ".script";
 
   public RebarBuilder() {
     super(Collections.singleton(ErlangTargetType.INSTANCE));
@@ -73,13 +78,16 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
 
     JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
     String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
+    String customRebarConfig = StringUtil.isEmptyOrSpaces(compilerOptions.myCustomRebarConfig) ? null : compilerOptions.myCustomRebarConfig;
+    String customEunitRebarConfig = StringUtil.isEmptyOrSpaces(compilerOptions.myCustomEunitRebarConfig) ? customRebarConfig : compilerOptions.myCustomEunitRebarConfig;
     boolean isRebarRun = false;
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
-      String contentRootPath = new URL(contentRootUrl).getPath();
-      File contentRootDir = new File(contentRootPath);
-      File rebarConfigFile = new File(contentRootDir, REBAR_CONFIG_FILE_NAME);
-      if (!rebarConfigFile.exists()) continue;
-      runRebar(escriptPath, rebarPath, contentRootPath, compilerOptions.myAddDebugInfoEnabled, context);
+      String contentRootPath = getPathFromURL(contentRootUrl);
+      if (customRebarConfig == null) {
+        if (!isRebarConfigExists(contentRootPath, REBAR_CONFIG_FILE_NAME)) continue;
+      }
+      runRebar(escriptPath, rebarPath, contentRootPath, customRebarConfig, false, compilerOptions.myAddDebugInfoEnabled, context);
+      runRebar(escriptPath, rebarPath, contentRootPath, customEunitRebarConfig, true, true, context);
       isRebarRun = true;
     }
     if (!isRebarRun) {
@@ -97,13 +105,30 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
   private static void runRebar(@NotNull String escriptPath,
                                @NotNull String rebarPath,
                                @Nullable String contentRootPath,
+                               @Nullable String customRebarConfig,
+                               boolean isTest,
                                boolean addDebugInfo,
                                @NotNull CompileContext context) throws ProjectBuildException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.withWorkDirectory(contentRootPath);
     commandLine.setExePath(escriptPath);
     commandLine.addParameter(rebarPath);
-    commandLine.addParameter("compile");
+
+    if (isTest) {
+      commandLine.addParameter("eunit");
+      commandLine.addParameter("compile_only=true");
+    } else {
+      commandLine.addParameter("compile");
+    }
+
+    if (customRebarConfig != null) {
+      if (!isRebarConfigExists(contentRootPath, customRebarConfig)) {
+        throw new ProjectBuildException("Custom rebar config file is not found: '" + customRebarConfig + "'");
+      }
+
+      commandLine.addParameter("-C");
+      commandLine.addParameter(customRebarConfig);
+    }
 
     if (addDebugInfo) {
       commandLine.getEnvironment().put("ERL_FLAGS", "+debug_info");
@@ -123,6 +148,38 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     handler.waitFor();
     if (process.exitValue() != 0) {
       throw new ProjectBuildException("Rebar process finished with exit code " + process.exitValue());
+    }
+  }
+
+  private static boolean isRebarConfigExists(@Nullable String contentRootDir, String rebarConfigPath) {
+    return isFileExists(contentRootDir, rebarConfigPath) ||
+            isFileExists(contentRootDir, rebarConfigPath + REBAR_CONFIG_SCRIPT_SUFFIX);
+  }
+
+  private static boolean isFileExists(@Nullable String baseDir, String filePath) {
+    File file = new File(filePath);
+    File absoluteFile;
+    if (baseDir == null || file.isAbsolute()) {
+      absoluteFile = file;
+    } else {
+      absoluteFile = new File(baseDir, filePath);
+    }
+
+    return absoluteFile.exists();
+  }
+
+  @Nullable
+  private static String getPathFromURL(String url) {
+    try {
+      URI uri = new URL(url).toURI();
+      String authority = uri.getAuthority();
+      if (!authority.isEmpty()) {
+        // Workaround for Windows UNC urls like file://C:/...
+        uri = new URI("file:///" + authority + uri.getPath());
+      }
+      return Paths.get(uri).toString();
+    } catch (URISyntaxException | MalformedURLException ignored) {
+      return null;
     }
   }
 

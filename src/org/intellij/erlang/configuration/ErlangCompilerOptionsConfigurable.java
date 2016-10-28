@@ -44,7 +44,11 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   private JCheckBox myAddDebugInfoCheckBox;
   private RawCommandLineEditor myAdditionalErlcArgumentsEditor;
   private JLabel myAdditionalErlcArgumentsLabel;
-  private final ErlangCompilerSettings mySettings;
+  private JLabel myCustomRebarConfigLabel;
+  private RawCommandLineEditor myCustomRebarConfigEditor;
+    private RawCommandLineEditor myCustomEunitRebarConfigEditor;
+    private JLabel myCustomEunitRebarConfigLabel;
+    private final ErlangCompilerSettings mySettings;
   private final Project myProject;
 
   public ErlangCompilerOptionsConfigurable(Project project) {
@@ -95,6 +99,8 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
     myConfigureRebarButton.setVisible(!rebarPathIsSet);
     setUseRebarCompiler(rebarPathIsSet && mySettings.isUseRebarCompilerEnabled());
     myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
+    myCustomRebarConfigEditor.setText(mySettings.getCustomRebarConfig());
+    myCustomEunitRebarConfigEditor.setText(mySettings.getCustomEunitRebarConfig());
     myAdditionalErlcArgumentsEditor.setText(argumentsString(mySettings.getAdditionalErlcArguments()));
   }
 
@@ -102,6 +108,8 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   public void apply() throws ConfigurationException {
     mySettings.setUseRebarCompilerEnabled(myUseRebarCompilerCheckBox.isSelected());
     mySettings.setAddDebugInfoEnabled(myAddDebugInfoCheckBox.isSelected());
+    mySettings.setCustomRebarConfig(myCustomRebarConfigEditor.getText());
+    mySettings.setCustomEunitRebarConfig(myCustomEunitRebarConfigEditor.getText());
     mySettings.setAdditionalErlcArguments(arguments(myAdditionalErlcArgumentsEditor.getText()));
   }
 
@@ -109,6 +117,8 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   public boolean isModified() {
     return myUseRebarCompilerCheckBox.isSelected() != mySettings.isUseRebarCompilerEnabled() ||
            myAddDebugInfoCheckBox.isSelected() != mySettings.isAddDebugInfoEnabled() ||
+           !StringUtil.equals(myCustomRebarConfigEditor.getText(), mySettings.getCustomRebarConfig()) ||
+           !StringUtil.equals(myCustomEunitRebarConfigEditor.getText(), mySettings.getCustomEunitRebarConfig()) ||
            !StringUtil.equals(myAdditionalErlcArgumentsEditor.getText(),
                               argumentsString(mySettings.getAdditionalErlcArguments()));
   }
@@ -116,6 +126,10 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   private void setUseRebarCompiler(boolean useRebarCompiler) {
     myUseRebarCompilerCheckBox.setSelected(useRebarCompiler);
 
+    myCustomRebarConfigLabel.setVisible(useRebarCompiler);
+    myCustomRebarConfigEditor.setVisible(useRebarCompiler);
+    myCustomEunitRebarConfigLabel.setVisible(useRebarCompiler);
+    myCustomEunitRebarConfigEditor.setVisible(useRebarCompiler);
     myAdditionalErlcArgumentsLabel.setVisible(!useRebarCompiler);
     myAdditionalErlcArgumentsEditor.setVisible(!useRebarCompiler);
   }
