@@ -122,11 +122,20 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
 
   public abstract boolean isUseTestCodePath();
 
+  public abstract boolean isUseRebarPaths();
+
   protected abstract RunningState newRunningState(ExecutionEnvironment env, Module module);
 
   public static final class ErlangDebugOptions implements Serializable {
+    public enum InterpretModulesLevel {
+      PROJECT,
+      DEPENDENCIES,
+      MODULE
+    };
+
     private boolean myAutoUpdateModulesNotToInterpret = true;
     private Set<String> myModulesNotToInterpret = new HashSet<>();
+    private InterpretModulesLevel myInterpretModulesLevel = InterpretModulesLevel.PROJECT;
 
     public boolean isAutoUpdateModulesNotToInterpret() {
       return myAutoUpdateModulesNotToInterpret;
@@ -145,6 +154,15 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
       myModulesNotToInterpret = modulesNotToInterpret;
     }
 
+    @NotNull
+    public InterpretModulesLevel getInterpretModulesLevel() {
+      return myInterpretModulesLevel;
+    }
+
+    public void setInterpretModulesLevel(@NotNull InterpretModulesLevel myInterpretModulesLevel) {
+      this.myInterpretModulesLevel = myInterpretModulesLevel;
+    }
+
     @Override
     public boolean equals(Object o) {
       if (this == o) return true;
@@ -154,6 +172,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
 
       if (myAutoUpdateModulesNotToInterpret != that.myAutoUpdateModulesNotToInterpret) return false;
       if (!myModulesNotToInterpret.equals(that.myModulesNotToInterpret)) return false;
+      if (myInterpretModulesLevel.equals(that.myInterpretModulesLevel)) return false;
 
       return true;
     }
@@ -161,7 +180,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
     @Override
     public int hashCode() {
       int result = (myAutoUpdateModulesNotToInterpret ? 1 : 0);
-      result = 31 * result + myModulesNotToInterpret.hashCode();
+      result = 31 * result + (myModulesNotToInterpret.hashCode() ^ myInterpretModulesLevel.hashCode());
       return result;
     }
   }

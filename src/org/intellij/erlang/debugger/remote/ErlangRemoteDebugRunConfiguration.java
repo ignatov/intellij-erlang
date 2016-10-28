@@ -44,6 +44,11 @@ public class ErlangRemoteDebugRunConfiguration extends ErlangRunConfigurationBas
   }
 
   @Override
+  public boolean isUseRebarPaths() {
+    return false;
+  }
+
+  @Override
   protected ErlangRemoteDebugRunningState newRunningState(ExecutionEnvironment env, Module module) {
     return new ErlangRemoteDebugRunningState(env, module, this);
   }
