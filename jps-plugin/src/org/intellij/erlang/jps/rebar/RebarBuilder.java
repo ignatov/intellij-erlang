@@ -62,7 +62,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
                     @NotNull DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder,
                     @NotNull BuildOutputConsumer outputConsumer,
                     @NotNull CompileContext context) throws ProjectBuildException, IOException {
-    if (!holder.hasDirtyFiles() && !holder.hasRemovedFiles()) return;
+    // Do not check for dirty files, delegate it to rebar
 
     JpsModule module = target.getModule();
     JpsProject project = module.getProject();
