@@ -34,6 +34,9 @@
             <ul>
               <li>Fix Erlang scratch file creation, <a href="https://github.com/ignatov/intellij-erlang/issues/765">#765</a></li>
               <li>Allow arguments with spaces in run configurations, <a href="https://github.com/ignatov/intellij-erlang/issues/764">#764</a></li>
+              <li>Support for the new dialyzer map syntax, <a href="https://github.com/ignatov/intellij-erlang/issues/741">#741</a></li>
+              <li>Improve formatter, fix <a href="https://github.com/ignatov/intellij-erlang/issues/738">#738</a></li>
+              <li>Fix infinite reindexing, <a href="https://github.com/ignatov/intellij-erlang/issues/732">#732</a></li>
             </ul>
         ]]>
     </change-notes>
