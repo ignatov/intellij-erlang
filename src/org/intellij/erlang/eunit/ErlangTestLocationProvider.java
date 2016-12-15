@@ -18,13 +18,13 @@ package org.intellij.erlang.eunit;
 
 import com.intellij.execution.Location;
 import com.intellij.execution.PsiLocation;
+import com.intellij.execution.testframework.sm.runner.SMTestLocator;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.testIntegration.TestLocationProvider;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
@@ -40,14 +40,20 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ErlangTestLocationProvider implements TestLocationProvider {
+public class ErlangTestLocationProvider implements SMTestLocator {
+  public static final ErlangTestLocationProvider INSTANCE = new ErlangTestLocationProvider();
+
   private static final Pattern LOCATION_PATTERN = Pattern.compile("^(\\w+)(?::(\\w+)(?::(-?\\d+))?)?$");
 
   @NotNull
-  public List<Location> getLocation(@NotNull String protocolId, @NotNull String locationData, Project project) {
-    if (!ErlangUnitRunConfigurationType.PROTOCOL.equals(protocolId)) return ContainerUtil.emptyList();
+  @Override
+  public List<Location> getLocation(@NotNull String protocol,
+                                    @NotNull String path,
+                                    @NotNull Project project,
+                                    @NotNull GlobalSearchScope scope) {
+    if (!ErlangUnitRunConfigurationType.PROTOCOL.equals(protocol)) return ContainerUtil.emptyList();
 
-    Matcher matcher = LOCATION_PATTERN.matcher(locationData);
+    Matcher matcher = LOCATION_PATTERN.matcher(path);
     if (!matcher.matches()) return ContainerUtil.emptyList();
 
     String module = matcher.group(1);
@@ -59,13 +65,13 @@ public class ErlangTestLocationProvider implements TestLocationProvider {
     if (function != null) {
       for (ErlangFile file : erlangFiles) {
         Location testLocation = getTestLocation(project, file, function, line);
-        ContainerUtil.addIfNotNull(testLocation, locations);
+        ContainerUtil.addIfNotNull(locations, testLocation);
       }
     }
     if (locations.isEmpty()) {
       for (ErlangFile file : erlangFiles) {
         Location moduleLocation = getModuleLocation(project, file);
-        ContainerUtil.addIfNotNull(moduleLocation, locations);
+        ContainerUtil.addIfNotNull(locations, moduleLocation);
       }
     }
     return locations;

@@ -117,8 +117,8 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @Override
   @NotNull
   public ConsoleView createConsoleView(Executor executor) {
-    SMTRunnerConsoleProperties consoleProperties = new SMTRunnerConsoleProperties(myConfiguration, "Erlang", executor);
-    return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator("Erlang", consoleProperties, getEnvironment(), new ErlangTestLocationProvider());
+    SMTRunnerConsoleProperties consoleProperties = new ErlangTestConsoleProperties(myConfiguration, executor);
+    return SMTestRunnerConnectionUtil.createConsole("Erlang", consoleProperties);
   }
 
   private ErlangEntryPoint getEntryPointInternal(boolean debug) throws ExecutionException {

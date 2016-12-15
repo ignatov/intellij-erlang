@@ -47,7 +47,7 @@ import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.console.FileReferenceFilter;
 import org.intellij.erlang.eunit.ErlangEunitReporterModule;
-import org.intellij.erlang.eunit.ErlangTestLocationProvider;
+import org.intellij.erlang.eunit.ErlangTestConsoleProperties;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangListExpression;
@@ -94,11 +94,11 @@ public class RebarEunitRunningState extends CommandLineState {
 
   @NotNull
   private ConsoleView createConsoleView(Executor executor) {
-    SMTRunnerConsoleProperties consoleProperties = new SMTRunnerConsoleProperties(myConfiguration, "Erlang", executor);
+    SMTRunnerConsoleProperties consoleProperties = new ErlangTestConsoleProperties(myConfiguration, executor);
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH));
     consoleProperties.addStackTraceFilter(new FileReferenceFilter(myConfiguration.getProject(), ErlangConsoleUtil.EUNIT_FAILURE_PATH));
-    return SMTestRunnerConnectionUtil.createConsoleWithCustomLocator("Rebar", consoleProperties, getEnvironment(), new ErlangTestLocationProvider());
+    return SMTestRunnerConnectionUtil.createConsole("Rebar", consoleProperties);
   }
 
   @NotNull
