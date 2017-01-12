@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 
 // todo: extract the common one
 public class SetupSDKNotificationProvider extends EditorNotifications.Provider<EditorNotificationPanel> {
-  private static final Key<EditorNotificationPanel> KEY = Key.create("Setup Go SDK");
+  private static final Key<EditorNotificationPanel> KEY = Key.create("Setup Erlang SDK");
 
   private final Project myProject;
 
