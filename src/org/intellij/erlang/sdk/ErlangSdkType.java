@@ -71,9 +71,7 @@ public class ErlangSdkType extends SdkType {
 
   @NotNull
   public static ErlangSdkType getInstance() {
-    ErlangSdkType instance = SdkType.findInstance(ErlangSdkType.class);
-    assert instance != null : "Make sure ErlangSdkType is registered in plugin.xml";
-    return instance;
+    return SdkType.findInstance(ErlangSdkType.class);
   }
 
   private ErlangSdkType() {
@@ -162,6 +160,7 @@ public class ErlangSdkType extends SdkType {
   public void saveAdditionalData(@NotNull SdkAdditionalData additionalData, @NotNull Element additional) {
   }
 
+  @NotNull
   @NonNls
   @Override
   public String getPresentableName() {
@@ -251,7 +250,7 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Nullable
-  private ErlangSdkRelease ensureReleaseDetected(@Nullable ErlangSdkRelease release) {
+  private static ErlangSdkRelease ensureReleaseDetected(@Nullable ErlangSdkRelease release) {
     if (ApplicationManager.getApplication().isUnitTestMode() && release == null) {
       throw new AssertionError("SDK version detection failed. If you're using a mock SDK, make sure you have your SDK version pre-cached");
     }
