@@ -83,7 +83,7 @@ import java.util.regex.Pattern;
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangPsiImplUtil {
-  public static final Set<String> KNOWN_MACROS = ContainerUtil.set("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE");
+  public static final Set<String> KNOWN_MACROS = ContainerUtil.set("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
   public static final Set<String> BUILT_IN_TYPES = ContainerUtil.set(
     "any", "atom", "boolean", "byte", "char", "float", "integer", "iolist", "list", "maybe_improper_list", "mfa",
     "module", "neg_integer", "no_return", "node", "non_neg_integer", "none", "nonempty_string", "number", "pid", "port",

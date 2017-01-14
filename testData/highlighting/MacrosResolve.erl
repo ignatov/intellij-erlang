@@ -4,4 +4,6 @@ set(_, _) -> ok.
 
 construct(Values) ->
   S = ?MODULE_STRING,
-  set(#?MODULE{}, Values ++ S).
+  F = ?FUNCTION_NAME,
+  A = ?FUNCTION_ARITY ,
+  set(#?MODULE{}, Values ++ S ++ F ++ A).
