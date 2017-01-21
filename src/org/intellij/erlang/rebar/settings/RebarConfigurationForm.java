@@ -50,8 +50,8 @@ public class RebarConfigurationForm {
   private boolean myRebarPathValid;
 
   public RebarConfigurationForm() {
-    myRebarPathSelector.addBrowseFolderListener("Select Rebar executable", "", null,
-      FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
+    myRebarPathSelector.addBrowseFolderListener("Select Rebar Executable", "", null,
+                                                FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     myRebarPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
       protected void textChanged(DocumentEvent documentEvent) {
