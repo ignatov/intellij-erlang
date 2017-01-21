@@ -379,12 +379,9 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   @Nullable
   private static VirtualFile findFileByExtension(@NotNull VirtualFile dir, @NotNull String extension) {
     for (VirtualFile file : dir.getChildren()) {
-      String fileName = file.getName();
-      if (!file.isDirectory() && fileName.endsWith(extension)) {
-        return file;
-      }
+      if (!file.isDirectory() && file.getName().endsWith(extension)) return file;
     }
-    return null;  //To change body of created methods use File | Settings | File Templates.
+    return null;
   }
 
   private static void deleteIdeaModuleFiles(@NotNull final List<ImportedOtpApp> importedOtpApps) throws IOException {
