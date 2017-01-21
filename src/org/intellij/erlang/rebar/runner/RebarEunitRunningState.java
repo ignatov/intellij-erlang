@@ -145,7 +145,10 @@ public class RebarEunitRunningState extends CommandLineState {
       throw new IOException("Failed to save modified rebar.config");
     }
     ApplicationManager.getApplication().runWriteAction(() -> {
-      configPsi.setName(newConfig.getName());
+      String name = newConfig.getName();
+      PsiFile prev = psiDirectory.findFile(name);
+      if (prev != null) prev.delete();
+      configPsi.setName(name);
       psiDirectory.add(configPsi);
     });
   }
