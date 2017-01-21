@@ -58,8 +58,8 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
   public RebarProjectRootStep(WizardContext context) {
     super(context);
     String projectFileDirectory = context.getProjectFileDirectory();
-    myProjectRootComponent.addBrowseFolderListener("Select rebar.config of a rebar project to import", "", null,
-      FileChooserDescriptorFactory.createSingleFolderDescriptor());
+    myProjectRootComponent.addBrowseFolderListener("Select rebar.config of a Rebar Project to Import", "", null,
+                                                   FileChooserDescriptorFactory.createSingleFolderDescriptor());
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
 
     myGetDepsCheckbox.setVisible(ourEnabled);
@@ -122,7 +122,7 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
                                ? JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath()
                                : RebarRunningStateUtil.findEscriptExecutable();
 
-    ProgressManager.getInstance().run(new Task.Modal(project, "Fetching dependencies", true) {
+    ProgressManager.getInstance().run(new Task.Modal(project, "Fetching Dependencies", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
         indicator.setIndeterminate(true);
         GeneralCommandLine commandLine = new GeneralCommandLine();
