@@ -48,6 +48,7 @@ import java.io.File;
 
 final class RebarProjectRootStep extends ProjectImportWizardStep {
   private static final Logger LOG = Logger.getInstance(RebarProjectImportBuilder.class);
+  private static final String REBAR = "rebar3";
 
   private JPanel myPanel;
   private TextFieldWithBrowseButton myProjectRootComponent;
@@ -120,7 +121,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
   @NotNull
   private static String getRebarPath(@Nullable String directory) {
     if (directory != null) {
-      File rebar = new File(directory, "rebar");
+      File rebar = new File(directory, REBAR);
       if (rebar.exists() && rebar.canExecute()) {
         return rebar.getPath();
       }
@@ -132,7 +133,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
     String output = "";
     try {
       GeneralCommandLine which = new GeneralCommandLine("which");
-      which.addParameter("rebar");
+      which.addParameter(REBAR);
       output = ScriptRunnerUtil.getProcessOutput(which);
     } catch (Exception ignored) {
     }
