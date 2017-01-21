@@ -38,17 +38,15 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.projectImport.ProjectImportWizardStep;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.io.File;
 
-final class RebarProjectRootStep extends ProjectImportWizardStep {
+public class RebarProjectRootStep extends ProjectImportWizardStep {
   private static final Logger LOG = Logger.getInstance(RebarProjectImportBuilder.class);
-  private static final String REBAR = "rebar3";
 
   private JPanel myPanel;
   private TextFieldWithBrowseButton myProjectRootComponent;
@@ -65,7 +63,7 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
 
     myGetDepsCheckbox.setVisible(ourEnabled);
-    myRebarConfigurationForm.setPath(getRebarPath(projectFileDirectory));
+    myRebarConfigurationForm.setPath(RebarRunningStateUtil.getRebarPath(projectFileDirectory));
   }
 
   @Override
@@ -118,34 +116,12 @@ final class RebarProjectRootStep extends ProjectImportWizardStep {
     return (RebarProjectImportBuilder) super.getBuilder();
   }
 
-  @NotNull
-  private static String getRebarPath(@Nullable String directory) {
-    if (directory != null) {
-      File rebar = new File(directory, REBAR);
-      if (rebar.exists() && rebar.canExecute()) {
-        return rebar.getPath();
-      }
-    }
-
-    boolean isPosix = SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix;
-    if (!isPosix) return "";
-
-    String output = "";
-    try {
-      GeneralCommandLine which = new GeneralCommandLine("which");
-      which.addParameter(REBAR);
-      output = ScriptRunnerUtil.getProcessOutput(which);
-    } catch (Exception ignored) {
-    }
-    return output.trim();
-  }
-
   private static void fetchDependencies(@NotNull final VirtualFile projectRoot, @NotNull final String rebarPath) {
     Project project = ProjectImportBuilder.getCurrentProject();
     String sdkPath = project != null ? ErlangSdkType.getSdkPath(project) : null;
-    final String escriptPath = sdkPath != null ?
-      JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
-      JpsErlangSdkType.getExecutableFileName(JpsErlangSdkType.SCRIPT_INTERPRETER);
+    final String escriptPath = sdkPath != null 
+                               ? JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath()
+                               : RebarRunningStateUtil.findEscriptExecutable();
 
     ProgressManager.getInstance().run(new Task.Modal(project, "Fetching dependencies", true) {
       public void run(@NotNull final ProgressIndicator indicator) {

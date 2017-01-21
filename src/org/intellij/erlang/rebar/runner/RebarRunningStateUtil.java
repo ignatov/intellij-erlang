@@ -19,12 +19,15 @@ package org.intellij.erlang.rebar.runner;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
+import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
@@ -33,10 +36,14 @@ import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.List;
 
 public class RebarRunningStateUtil {
+  private static final String REBAR = "rebar3";
+
   private RebarRunningStateUtil() {
   }
 
@@ -47,7 +54,7 @@ public class RebarRunningStateUtil {
     String sdkPath = ErlangSdkType.getSdkPath(project);
     String escriptPath = sdkPath != null ?
       JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
-      JpsErlangSdkType.getExecutableFileName(JpsErlangSdkType.SCRIPT_INTERPRETER);
+                         findEscriptExecutable();
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
     commandLine.withWorkDirectory(getWorkingDirectory(configuration));
@@ -92,5 +99,38 @@ public class RebarRunningStateUtil {
       }
     }
     return ObjectUtils.assertNotNull(configuration.getProject().getBasePath());
+  }
+
+  @NotNull
+  public static String getRebarPath(@Nullable String directory) {
+    if (directory != null) {
+      File rebar = new File(directory, REBAR);
+      if (rebar.exists() && rebar.canExecute()) {
+        return rebar.getPath();
+      }
+    }
+    return which(REBAR);
+  }
+
+  @NotNull
+  public static String findEscriptExecutable() {
+    String which = which(JpsErlangSdkType.SCRIPT_INTERPRETER);
+    if (StringUtil.isNotEmpty(which)) return which;
+    return JpsErlangSdkType.getExecutableFileName(JpsErlangSdkType.SCRIPT_INTERPRETER);
+  }
+
+  @NotNull
+  private static String which(@NotNull String name) {
+    boolean isPosix = SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix;
+    if (!isPosix) return "";
+
+    String output = "";
+    try {
+      GeneralCommandLine which = new GeneralCommandLine("which");
+      which.addParameter(name);
+      output = ScriptRunnerUtil.getProcessOutput(which);
+    } catch (Exception ignored) {
+    }
+    return output.trim();
   }
 }
