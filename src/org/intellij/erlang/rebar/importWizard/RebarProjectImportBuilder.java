@@ -138,7 +138,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("_build");
     }
 
-    ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Scanning Rebar projects", true) {
+    ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Scanning Rebar Projects", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
 
         List<VirtualFile> rebarConfigFiles = findRebarConfigs(myProjectRoot, indicator);
@@ -166,11 +166,11 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     });
 
     Collections.sort(myFoundOtpApps, (o1, o2) -> {
-      int nameCompareResult = String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
-      if (nameCompareResult == 0) {
-        return String.CASE_INSENSITIVE_ORDER.compare(o1.getRoot().getPath(), o2.getRoot().getPath());
+      int compareByParentPath = String.CASE_INSENSITIVE_ORDER.compare(o1.getRoot().getParent().getPath(), o2.getRoot().getParent().getPath());
+      if (compareByParentPath == 0) {
+        return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
       }
-      return nameCompareResult;
+      return compareByParentPath;
     });
 
     mySelectedOtpApps = myFoundOtpApps;

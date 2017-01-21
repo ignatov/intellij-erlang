@@ -94,7 +94,7 @@ final class ImportedOtpApp {
 
   @Override
   public String toString() {
-    return myName + " (" + myRoot + ')';
+    return myName + " (" + myRoot.getPath() + ')';
   }
 
   @Override
