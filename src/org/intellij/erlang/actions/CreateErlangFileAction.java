@@ -45,6 +45,7 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
       addKind("OTP application resource file", ErlangIcons.OTP_APP_RESOURCE, "Erlang Application Resource File").
       addKind("OTP supervisor", ErlangIcons.OTP_SUPERVISOR, "Erlang Supervisor").
       addKind("OTP gen_server", ErlangIcons.OTP_GEN_SERVER, "Erlang Gen Server").
+      addKind("OTP gen_statem", ErlangIcons.OTP_GEN_STATEM, "Erlang Gen Statem").
       addKind("OTP gen_fsm", ErlangIcons.OTP_GEN_FSM, "Erlang Gen FSM").
       addKind("OTP gen_event", ErlangIcons.OTP_GEN_EVENT, "Erlang Gen Event").
       setValidator(new InputValidatorEx() {

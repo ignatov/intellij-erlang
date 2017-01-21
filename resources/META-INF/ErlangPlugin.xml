@@ -34,6 +34,7 @@
         <internalFileTemplate name="Erlang Application Resource File"/>
         <internalFileTemplate name="Erlang Supervisor"/>
         <internalFileTemplate name="Erlang Gen Server"/>
+        <internalFileTemplate name="Erlang Gen Statem"/>
         <internalFileTemplate name="Erlang Gen FSM"/>
         <internalFileTemplate name="Erlang Gen Event"/>
 

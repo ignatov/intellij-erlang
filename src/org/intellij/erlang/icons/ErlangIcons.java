@@ -48,6 +48,7 @@ public interface ErlangIcons {
   Icon OTP_GEN_EVENT = IconLoader.getIcon("/icons/otp-gen-event-16.png");
   Icon OTP_GEN_SERVER = IconLoader.getIcon("/icons/otp-gen-server-16.png");
   Icon OTP_GEN_FSM = IconLoader.getIcon("/icons/otp-gen-fsm-16.png");
+  Icon OTP_GEN_STATEM = FILE; // todo: add a new icon
   Icon OTP_APP_RESOURCE = IconLoader.getIcon("/icons/otp-app-16.png");
   Icon EUNIT = new LayeredIcon(FILE, AllIcons.Nodes.JunitTestMark);
   Icon HEADER = IconLoader.getIcon("/icons/erlang-header-16.png");
