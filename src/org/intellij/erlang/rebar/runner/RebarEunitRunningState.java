@@ -53,6 +53,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangListExpression;
 import org.intellij.erlang.psi.ErlangTupleExpression;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.rebar.util.ErlangTermFileUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -107,18 +108,17 @@ public class RebarEunitRunningState extends CommandLineState {
     GeneralCommandLine commandLine = RebarRunningStateUtil.getRebarCommandLine(myConfiguration);
     File reportsRoot = createEunitReportsEnvironment();
 
-    addEnvParams(commandLine, reportsRoot);
-    addConfigFileArgument(commandLine, reportsRoot);
+    commandLine.getEnvironment().put("ERL_FLAGS", "-pa " + PathUtil.toSystemIndependentName(reportsRoot.getPath()));
+    
+    boolean rebar3 = RebarSettings.getInstance(myConfiguration.getProject()).isRebar3();
+    if (rebar3) {
+      commandLine.getEnvironment().put("REBAR_CONFIG", new File(reportsRoot, CONFIG_FILE_NAME).getPath());
+    }
+    else {
+      commandLine.addParameters("-C", new File(reportsRoot, CONFIG_FILE_NAME).getPath());
+    }
 
     return RebarRunningStateUtil.runRebar(myConfiguration.getProject(), commandLine);
-  }
-
-  private static void addConfigFileArgument(GeneralCommandLine commandLine, File reportsRoot) {
-    commandLine.addParameters("-C", new File(reportsRoot, CONFIG_FILE_NAME).getPath());
-  }
-
-  private static void addEnvParams(GeneralCommandLine commandLine, File reportsRoot) {
-    commandLine.getEnvironment().put("ERL_FLAGS", "-pa " + PathUtil.toSystemIndependentName(reportsRoot.getPath()));
   }
 
   private File createEunitReportsEnvironment() throws ExecutionException {

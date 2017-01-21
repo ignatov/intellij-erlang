@@ -63,4 +63,8 @@ public final class RebarSettings implements PersistentStateComponent<RebarSettin
   public String toString() {
     return "RebarSettings(state='" + myRebarSettingsState.toString() + "')";
   }
+
+  public boolean isRebar3() {
+    return getRebarPath().endsWith("rebar3");
+  }
 }
