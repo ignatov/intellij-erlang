@@ -100,7 +100,8 @@ public class ErlangIndentProcessor {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_CASE_EXPRESSION || parentType == ERL_RECEIVE_EXPRESSION || parentType == ERL_TRY_EXPRESSION ||
-        parentType == ERL_BEGIN_END_EXPRESSION || parentType == ERL_IF_EXPRESSION || parentType == ERL_FUN_EXPRESSION) {
+        parentType == ERL_BEGIN_END_EXPRESSION || parentType == ERL_IF_EXPRESSION || parentType == ERL_FUN_EXPRESSION || 
+        parentType == ERL_CATCH_EXPRESSION) {
       if (elementType == ERL_CR_CLAUSE || elementType == ERL_IF_CLAUSE || elementType == ERL_BEGIN_END_BODY ||
         elementType == ERL_TRY_EXPRESSIONS_CLAUSE || elementType == ERL_AFTER_CLAUSE_BODY) {
         return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
