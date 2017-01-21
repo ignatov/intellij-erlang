@@ -135,6 +135,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     myProjectRoot = projectRoot;
     if (!unitTestMode && projectRoot instanceof VirtualDirectoryImpl) {
       ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("deps");
+      ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("_build");
     }
 
     ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Scanning Rebar projects", true) {
