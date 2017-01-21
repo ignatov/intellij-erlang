@@ -84,11 +84,17 @@ public class RebarConfigurationForm {
 
   private boolean validateRebarPath() {
     String rebarPath = myRebarPathSelector.getText();
-    if (!new File(rebarPath).exists()) return false;
+    File rebarFile = new File(rebarPath);
+    if (!rebarFile.exists()) return false;
 
     String escript = JpsErlangSdkType.getExecutableFileName(JpsErlangSdkType.SCRIPT_INTERPRETER);
     ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(3000, escript, rebarPath, "--version");
     String version = output.getStdOut();
+    if (StringUtil.isEmpty(version) && rebarFile.canExecute()) {
+      output = ExtProcessUtil.execAndGetFirstLine(3000, rebarPath, "--version");
+      version = output.getStdOut();
+    }
+
     if (version.startsWith("rebar")) {
       myRebarVersionText.setText(version);
       return true;
@@ -101,12 +107,18 @@ public class RebarConfigurationForm {
 
   private void createUIComponents() {
     myLinkContainer = new JPanel(new BorderLayout());
-    ActionLink link = new ActionLink("Download the latest Rebar version", new AnAction() {
+    myLinkContainer.add(createLink("Download the latest Rebar 3", "https://s3.amazonaws.com/rebar3/rebar3", "rebar3"), BorderLayout.NORTH);
+    myLinkContainer.add(createLink("Download the latest Rebar", "https://github.com/rebar/rebar/wiki/rebar", "rebar"), BorderLayout.CENTER);
+  }
+
+  @NotNull
+  private ActionLink createLink(@NotNull String title, final @NotNull String url, final @NotNull String fileName) {
+    return new ActionLink(title, new AnAction() {
       @Override
       public void actionPerformed(AnActionEvent e) {
         DownloadableFileService service = DownloadableFileService.getInstance();
-        DownloadableFileDescription rebar = service.createFileDescription("https://github.com/rebar/rebar/wiki/rebar", "rebar");
-        FileDownloader downloader = service.createDownloader(ContainerUtil.list(rebar), "rebar");
+        DownloadableFileDescription rebar = service.createFileDescription(url, fileName);
+        FileDownloader downloader = service.createDownloader(ContainerUtil.list(rebar), fileName);
         List<Pair<VirtualFile, DownloadableFileDescription>> pairs = downloader.downloadWithProgress(null, getEventProject(e), myLinkContainer);
         if (pairs != null) {
           for (Pair<VirtualFile, DownloadableFileDescription> pair : pairs) {
@@ -117,12 +129,12 @@ public class RebarConfigurationForm {
                 myRebarPathSelector.setText(path);
                 validateRebarPath();
               }
-            } catch (Exception e1) { // Ignore
+            }
+            catch (Exception ignore) {
             }
           }
         }
       }
     });
-    myLinkContainer.add(link, BorderLayout.NORTH);
   }
 }
