@@ -92,7 +92,6 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
   @Override
   @NotNull
   public JComponent getComponent() {
-    myRebarConfigurationForm.createComponent();
     return myPanel;
   }
 

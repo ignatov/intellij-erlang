@@ -77,11 +77,6 @@ public class RebarConfigurationForm {
     return myRebarPathValid;
   }
 
-  @Nullable
-  public JComponent createComponent() {
-    return myPanel;
-  }
-
   private boolean validateRebarPath() {
     String rebarPath = myRebarPathSelector.getText();
     File rebarFile = new File(rebarPath);

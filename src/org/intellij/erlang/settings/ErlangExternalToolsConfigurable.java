@@ -126,7 +126,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   @Nullable
   @Override
   public JComponent createComponent() {
-    myRebarConfigurationForm.createComponent();
     return myPanel;
   }
 
