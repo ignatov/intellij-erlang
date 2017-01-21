@@ -152,6 +152,8 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
             if (file.isDirectory()) {
               indicator.setText2(file.getPath());
               if (isExamplesDirectory(file) || isRelDirectory(projectRoot.getPath(), file.getPath())) return false;
+              String relativePath = VfsUtilCore.getRelativePath(file, projectRoot);
+              if ("_build/test".equals(relativePath)) return false;
             }
 
             ContainerUtil.addAllNotNull(importedOtpApps, createImportedOtpApp(file));
