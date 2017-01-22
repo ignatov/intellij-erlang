@@ -39,11 +39,13 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileVisitor;
 import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl;
 import com.intellij.packaging.artifacts.ModifiableArtifactModel;
 import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.io.URLUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetConfiguration;
@@ -228,7 +230,8 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
       moduleModel != null ? moduleModel : ModuleManager.getInstance(project).getModifiableModel();
     for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
       VirtualFile ideaModuleDir = importedOtpApp.getRoot();
-      String ideaModuleFile = ideaModuleDir.getCanonicalPath() + File.separator + importedOtpApp.getName() + ".iml";
+      String ideaModuleDirPath = ideaModuleDir.getCanonicalPath();
+      String ideaModuleFile = ideaModuleDirPath + File.separator + importedOtpApp.getName() + ".iml";
       Module module = obtainedModuleModel.newModule(ideaModuleFile, ErlangModuleType.getInstance().getId());
       createdModules.add(module);
       importedOtpApp.setModule(module);
@@ -243,6 +246,8 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         addIncludeDirectories(content, importedOtpApp);
         // Exclude standard folders
         excludeDirFromContent(content, ideaModuleDir, "doc");
+        content.addExcludeFolder(VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, ideaModuleDirPath + File.separator + "_build") );
+        content.addExcludeFolder(VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, ideaModuleDirPath + File.separator + ".rebar3") );
         // Initialize output paths according to Rebar conventions.
         CompilerModuleExtension compilerModuleExt = rootModel.getModuleExtension(CompilerModuleExtension.class);
         compilerModuleExt.inheritCompilerOutputPath(false);
