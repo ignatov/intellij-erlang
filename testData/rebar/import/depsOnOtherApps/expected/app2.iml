@@ -3,8 +3,12 @@
   <output url="file://$MODULE_DIR$/ebin" />
   <output-test url="file://$MODULE_DIR$/.eunit" />
   <exclude-output />
-  <content url="file://$MODULE_DIR$" />
+  <content url="file://$MODULE_DIR$">
+    <excludeFolder url="file://$MODULE_DIR$/.rebar3" />
+    <excludeFolder url="file://$MODULE_DIR$/_build" />
+  </content>
   <orderEntry type="inheritedJdk" />
   <orderEntry type="sourceFolder" forTests="false" />
   <orderEntry type="module" module-name="app3" />
 </root>
+

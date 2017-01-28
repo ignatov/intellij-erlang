@@ -7,8 +7,11 @@
     <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
     <sourceFolder url="file://$MODULE_DIR$/include" type="erlang-include" />
+    <excludeFolder url="file://$MODULE_DIR$/.rebar3" />
+    <excludeFolder url="file://$MODULE_DIR$/_build" />
     <excludeFolder url="file://$MODULE_DIR$/doc" />
   </content>
   <orderEntry type="inheritedJdk" />
   <orderEntry type="sourceFolder" forTests="false" />
 </root>
+

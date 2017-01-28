@@ -4,8 +4,11 @@
   <output-test url="file://$MODULE_DIR$/.eunit" />
   <exclude-output />
   <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/include" type="erlang-include" />
+    <excludeFolder url="file://$MODULE_DIR$/.rebar3" />
+    <excludeFolder url="file://$MODULE_DIR$/_build" />
+    <excludeFolder url="file://$MODULE_DIR$/doc" />
   </content>
   <orderEntry type="inheritedJdk" />
   <orderEntry type="sourceFolder" forTests="false" />
 </root>
+
