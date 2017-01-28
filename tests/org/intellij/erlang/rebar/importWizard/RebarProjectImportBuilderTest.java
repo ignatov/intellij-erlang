@@ -139,15 +139,22 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     PathMacros.getInstance().removeMacro(MODULE_DIR);
 
     String projectPath = getProject().getBaseDir().getPath();
-    File expectedImlFile = new File(projectPath + "/expected/" + module.getName() + ".iml");
+    String expectedImlPath = "/expected/" + module.getName() + ".iml";
+    File expectedImlFile = new File(projectPath + expectedImlPath);
     Document expectedIml = JDOMUtil.loadDocument(expectedImlFile);
     Element expectedImlElement = expectedIml.getRootElement();
 
+    String actualString = new String(JDOMUtil.printDocument(new Document(actualImlElement), "\n"));
     String errorMsg = "Configuration of module " + module.getName() +
-      " does not meet expectations.\nExpected:\n" +
-      new String(JDOMUtil.printDocument(expectedIml, "\n")) +
-      "\nBut got:\n" +
-      new String(JDOMUtil.printDocument(new Document(actualImlElement), "\n"));
+                      " does not meet expectations.\nExpected:\n" +
+                      new String(JDOMUtil.printDocument(expectedIml, "\n")) +
+                      "\nBut got:\n" +
+                      actualString;
+
+    if (OVERWRITE_TESTDATA) {
+      FileUtil.writeToFile(new File(TEST_DATA_IMPORT, getTestName(true) + expectedImlPath), actualString);
+    }
+    
     assertTrue(errorMsg, JDOMUtil.areElementsEqual(expectedImlElement, actualImlElement));
     validateFacet(module);
   }
