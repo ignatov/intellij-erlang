@@ -20,7 +20,7 @@
     <depends>com.intellij.modules.lang</depends>
     <name>Erlang</name>
     <description><![CDATA[
-    <p>Erlang support for IntelliJ IDEA, RubyMine, WesStorm, etc.</p>
+    <p>Erlang support for IntelliJ IDEA, RubyMine, WebStorm, etc.</p>
     <p>
     Feel free to file new feature requests as an issue on <a href="https://github.com/ignatov/intellij-erlang/issues">GitHub</a>, just like a bug.
     </p>
