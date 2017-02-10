@@ -38,7 +38,10 @@ public class ErlangFacet extends Facet<ErlangFacetConfiguration> {
   //should only be called from write action
   public static void createFacet(@NotNull Module module) {
     FacetManager facetManager = FacetManager.getInstance(module);
-    ErlangFacet facet = facetManager.createFacet(FacetType.findInstance(ErlangFacetType.class), ErlangFacetConstants.NAME, null);
+    ErlangFacetType ft = FacetType.findInstance(ErlangFacetType.class);
+    ErlangFacet prev = facetManager.getFacetByType(ft.getId());
+    if (prev != null) return;
+    ErlangFacet facet = facetManager.createFacet(ft, ErlangFacetConstants.NAME, null);
     ModifiableFacetModel facetModel = facetManager.createModifiableModel();
     facetModel.addFacet(facet);
     facetModel.commit();
