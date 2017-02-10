@@ -457,6 +457,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   private static boolean isSdkOtpApp(@NotNull String otpAppName, @NotNull Sdk sdk) {
     Pattern appDirNamePattern = Pattern.compile(otpAppName + "-.*");
     for (VirtualFile srcSdkDir : sdk.getRootProvider().getFiles(OrderRootType.SOURCES)) {
+      if (!srcSdkDir.isValid()) continue;
       for (VirtualFile child : srcSdkDir.getChildren()) {
         if (child.isDirectory() && appDirNamePattern.matcher(child.getName()).find()) {
           return true;
