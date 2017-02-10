@@ -144,7 +144,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     Document expectedIml = JDOMUtil.loadDocument(expectedImlFile);
     Element expectedImlElement = expectedIml.getRootElement();
 
-    String actualString = new String(JDOMUtil.printDocument(new Document(actualImlElement), "\n"));
+    String actualString = new String(JDOMUtil.printDocument(new Document(actualImlElement), "\n")).trim();
     String errorMsg = "Configuration of module " + module.getName() +
                       " does not meet expectations.\nExpected:\n" +
                       new String(JDOMUtil.printDocument(expectedIml, "\n")) +
