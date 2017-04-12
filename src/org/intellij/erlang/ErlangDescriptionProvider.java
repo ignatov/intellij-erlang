@@ -41,6 +41,10 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
     if (location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) {
       if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
       if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
+      if (o instanceof ErlangAttribute) {
+        ErlangSpecification spec = ((ErlangAttribute) o).getSpecification();
+        if (spec != null) return spec.getName();
+      }
     }
     if (location == HighlightUsagesDescriptionLocation.INSTANCE) {
       return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
