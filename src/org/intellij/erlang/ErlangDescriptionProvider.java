@@ -17,6 +17,7 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionProvider;
 import com.intellij.psi.PsiElement;
@@ -29,6 +30,8 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangDescriptionProvider implements ElementDescriptionProvider {
+  private final static Logger LOG = Logger.getInstance(ErlangDescriptionProvider.class);
+
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
     if (!(o instanceof ErlangCompositeElement)) return null;
@@ -53,6 +56,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       else if (o instanceof ErlangAttribute) return "attribute";
       else if (o instanceof ErlangQAtom) return "atom";
     }
-    return null;
+    LOG.error("Unexpected element " + o.getText() + ", class: " + o.getClass() + ", location: " + location.getClass());
+    return "<unknown>";
   }
 }
