@@ -23,6 +23,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.testFramework.utils.parameterInfo.MockUpdateParameterInfoContext;
 import com.intellij.util.ArrayUtil;
 import org.intellij.erlang.ErlangParameterInfoHandler;
 import org.intellij.erlang.psi.ErlangArgumentList;
@@ -119,69 +120,6 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     }
 
     @Override
-    @NotNull
-    public Editor getEditor() {
-      return myEditor;
-    }
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public static class MockUpdateParameterInfoContext implements UpdateParameterInfoContext {
-    private final Editor myEditor;
-    private final PsiFile myFile;
-    private PsiElement myParameterOwner;
-    private Object myHighlightedParameter;
-    private int myCurrentParameter;
-
-    public MockUpdateParameterInfoContext(@NotNull Editor editor, @NotNull PsiFile file) {
-      myEditor = editor;
-      myFile = file;
-    }
-
-    public void removeHint() {}
-
-    public void setParameterOwner(PsiElement o) {
-      myParameterOwner = o;
-    }
-
-    public PsiElement getParameterOwner() { return myParameterOwner; }
-
-    public void setHighlightedParameter(Object parameter) {
-      myHighlightedParameter = parameter;
-    }
-
-    public void setCurrentParameter(int index) {
-      myCurrentParameter = index;
-    }
-
-    public int getCurrentParameter() {
-      return myCurrentParameter;
-    }
-
-    public boolean isUIComponentEnabled(int index) { return false; }
-
-    public void setUIComponentEnabled(int index, boolean b) {}
-
-    public int getParameterListStart() {
-      return myEditor.getCaretModel().getOffset();
-    }
-
-    public Object[] getObjectsToView() {
-      return ArrayUtil.EMPTY_OBJECT_ARRAY;
-    }
-
-    public Project getProject() {
-      return myFile.getProject();
-    }
-
-    public PsiFile getFile() {
-      return myFile;
-    }
-
-    public int getOffset() {
-      return myEditor.getCaretModel().getOffset();
-    }
-
     @NotNull
     public Editor getEditor() {
       return myEditor;
