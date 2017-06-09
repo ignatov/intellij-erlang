@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.debugger.node;
 
+import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 
 import java.util.List;
@@ -29,4 +30,5 @@ public interface ErlangDebuggerEventListener {
   void breakpointIsSet(String module, int line);
   void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots);
   void debuggerStopped();
+  void handleEvaluationResponse(OtpErlangObject response);
 }

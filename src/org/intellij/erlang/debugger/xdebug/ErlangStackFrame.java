@@ -22,6 +22,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.ColoredTextContainer;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.xdebugger.XSourcePosition;
+import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
 import com.intellij.xdebugger.frame.XValue;
@@ -37,21 +38,34 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangStackFrame extends XStackFrame {
-  private final ErlangDebugLocationResolver myResolver;
+  private final ErlangXDebugProcess myDebugProcess;
   private final ErlangTraceElement myTraceElement;
   private final ErlangSourcePosition mySourcePosition;
 
-  public ErlangStackFrame(@NotNull ErlangDebugLocationResolver resolver,
+  public ErlangStackFrame(@NotNull ErlangXDebugProcess debugProcess,
                           @NotNull ErlangTraceElement traceElement) {
-    this(resolver, traceElement, ErlangSourcePosition.create(resolver, traceElement));
+    this(debugProcess, traceElement, ErlangSourcePosition.create(debugProcess.getLocationResolver(), traceElement));
   }
 
-  public ErlangStackFrame(@NotNull ErlangDebugLocationResolver resolver,
+  public ErlangStackFrame(@NotNull ErlangXDebugProcess debugProcess,
                           @NotNull ErlangTraceElement traceElement,
                           @Nullable ErlangSourcePosition sourcePosition) {
-    myResolver = resolver;
+    myDebugProcess = debugProcess;
     myTraceElement = traceElement;
     mySourcePosition = sourcePosition;
+  }
+
+  @Nullable
+  @Override
+  public XDebuggerEvaluator getEvaluator() {
+    return new XDebuggerEvaluator() {
+      @Override
+      public void evaluate(@NotNull String expression,
+                           @NotNull XEvaluationCallback callback,
+                           @Nullable XSourcePosition expressionPosition) {
+        myDebugProcess.evaluateExpression(expression, callback, myTraceElement);
+      }
+    };
   }
 
   @Nullable
@@ -65,7 +79,7 @@ public class ErlangStackFrame extends XStackFrame {
   public void customizePresentation(@NotNull ColoredTextContainer component) {
     String functionName = mySourcePosition != null ? mySourcePosition.getFunctionName() : null;
     if (functionName != null) {
-      ErlangFile module = myResolver.findPsi(mySourcePosition.getSourcePosition().getFile());
+      ErlangFile module = myDebugProcess.getLocationResolver().findPsi(mySourcePosition.getSourcePosition().getFile());
       ErlangFunction function = module != null ? module.getFunction(functionName, mySourcePosition.getFunctionArity()) : null;
       if (function != null) {
         String title = ErlangPsiImplUtil.getQualifiedFunctionName(function);

@@ -48,7 +48,7 @@ class BreakpointReachedEvent extends ErlangDebuggerEvent {
       OtpErlangTuple snapshotTuple = getTupleValue(snapshot); // {Pid, Function, Status, Info, Stack}
 
       OtpErlangPid pid = getPidValue(elementAt(snapshotTuple, 0));
-      ErlangTraceElement init = getTraceElement(getTupleValue(elementAt(snapshotTuple, 1)), null);
+      ErlangTraceElement init = getTraceElement(getTupleValue(elementAt(snapshotTuple, 1)), null, null);
       String status = getAtomText(elementAt(snapshotTuple, 2));
       OtpErlangObject info = elementAt(snapshotTuple, 3);
       List<ErlangTraceElement> stack = getStack(getListValue(elementAt(snapshotTuple, 4)));
@@ -86,10 +86,10 @@ class BreakpointReachedEvent extends ErlangDebuggerEvent {
     List<ErlangTraceElement> stack = new ArrayList<>(traceElementsList.arity());
     for (OtpErlangObject traceElementObject : traceElementsList) {
       OtpErlangTuple traceElementTuple = getTupleValue(traceElementObject);
-      // ignoring SP at 0
+      OtpErlangObject stackPointer = getTupleValue(elementAt(traceElementTuple, 0));
       OtpErlangTuple moduleFunctionArgsTuple = getTupleValue(elementAt(traceElementTuple, 1));
       OtpErlangList bindingsList = getListValue(elementAt(traceElementTuple, 2));
-      ErlangTraceElement traceElement = getTraceElement(moduleFunctionArgsTuple, bindingsList);
+      ErlangTraceElement traceElement = getTraceElement(moduleFunctionArgsTuple, stackPointer, bindingsList);
       if (traceElement == null) return null;
       stack.add(traceElement);
     }
@@ -98,13 +98,14 @@ class BreakpointReachedEvent extends ErlangDebuggerEvent {
 
   @Nullable
   private static ErlangTraceElement getTraceElement(@Nullable OtpErlangTuple moduleFunctionArgsTuple,
+                                                    @Nullable OtpErlangObject stackPointer,
                                                     @Nullable OtpErlangList bindingsList) {
     String moduleName = getAtomText(elementAt(moduleFunctionArgsTuple, 0));
     String functionName = getAtomText(elementAt(moduleFunctionArgsTuple, 1));
     OtpErlangList args = getListValue(elementAt(moduleFunctionArgsTuple, 2));
     Collection<ErlangVariableBinding> bindings = getBindings(bindingsList);
     if (moduleName == null || functionName == null || args == null) return null; // bindings are not necessarily present
-    return new ErlangTraceElement(moduleName, functionName, args, bindings);
+    return new ErlangTraceElement(stackPointer, moduleName, functionName, args, bindings);
   }
 
   @NotNull

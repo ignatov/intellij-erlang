@@ -34,10 +34,18 @@ public abstract class ErlangDebuggerEvent {
     if (messageName == null) return null;
 
     try {
-      if (InterpretModulesResponseEvent.NAME.equals(messageName)) return new InterpretModulesResponseEvent(messageTuple);
-      if (SetBreakpointResponseEvent.NAME.equals(messageName)) return new SetBreakpointResponseEvent(messageTuple);
-      if (BreakpointReachedEvent.NAME.equals(messageName)) return new BreakpointReachedEvent(messageTuple);
-      if (DebugRemoteNodeResponseEvent.NAME.equals(messageName)) return new DebugRemoteNodeResponseEvent(messageTuple);
+      switch (messageName) {
+        case InterpretModulesResponseEvent.NAME:
+          return new InterpretModulesResponseEvent(messageTuple);
+        case SetBreakpointResponseEvent.NAME:
+          return new SetBreakpointResponseEvent(messageTuple);
+        case BreakpointReachedEvent.NAME:
+          return new BreakpointReachedEvent(messageTuple);
+        case DebugRemoteNodeResponseEvent.NAME:
+          return new DebugRemoteNodeResponseEvent(messageTuple);
+        case EvaluateResponseEvent.NAME:
+          return new EvaluateResponseEvent(messageTuple);
+      }
     } catch (DebuggerEventFormatException e) {
       return new UnknownMessageEvent(messageTuple);
     }

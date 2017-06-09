@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.debugger.xdebug;
 
+import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
@@ -46,14 +47,13 @@ import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
 import com.intellij.xdebugger.evaluation.EvaluationMode;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
+import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import org.intellij.erlang.ErlangFileType;
-import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
-import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
-import org.intellij.erlang.debugger.node.ErlangDebuggerNodeException;
-import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
+import org.intellij.erlang.debugger.node.*;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunningState;
+import org.intellij.erlang.debugger.xdebug.xvalue.ErlangXValueFactory;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
@@ -72,6 +72,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 
 public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebuggerEventListener {
+  private final XDebugSession mySession;
   private final ExecutionEnvironment myExecutionEnvironment;
   private final ErlangRunningState myRunningState;
   private final ErlangDebuggerNode myDebuggerNode;
@@ -81,10 +82,12 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
+  private XDebuggerEvaluator.XEvaluationCallback myEvalCallback = null;
 
   public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
     super(session);
+    mySession = session;
 
     session.setPauseActionSupported(false);
 
@@ -111,6 +114,28 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
                                                          runConfig.getConfigurationModule().getModule(),
                                                          runConfig.isUseTestCodePath());
+  }
+
+  @NotNull
+  public ErlangDebugLocationResolver getLocationResolver() {
+    return myLocationResolver;
+  }
+
+  public synchronized void evaluateExpression(@NotNull String expression,
+                                              @NotNull XDebuggerEvaluator.XEvaluationCallback callback,
+                                              @NotNull ErlangTraceElement traceElement) {
+    // need to pause the debugging session otherwise the callback might get invalidated
+    mySession.pause();
+    myEvalCallback = callback;
+    myDebuggerNode.evaluate(expression, traceElement);
+  }
+
+  @Override
+  public synchronized void handleEvaluationResponse(OtpErlangObject response) {
+    if (myEvalCallback != null) {
+      myEvalCallback.evaluated(ErlangXValueFactory.create(response));
+      mySession.resume();
+    }
   }
 
   @Override
@@ -157,7 +182,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     assert processInBreakpoint != null;
     ErlangSourcePosition breakPosition = ErlangSourcePosition.create(myLocationResolver, processInBreakpoint);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);
-    ErlangSuspendContext suspendContext = new ErlangSuspendContext(myLocationResolver, pid, snapshots);
+    ErlangSuspendContext suspendContext = new ErlangSuspendContext(this, pid, snapshots);
     if (breakpoint == null) {
       getSession().positionReached(suspendContext);
     }
