@@ -17,23 +17,30 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangObject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
 public class ErlangTraceElement {
+  private final OtpErlangObject myStackPointer;
   private final String myModule;
   private final String myFunction;
   private final OtpErlangList myFunctionArgs;
   private final Collection<ErlangVariableBinding> myBindings;
 
-  public ErlangTraceElement(@NotNull String module, @NotNull String function, @NotNull OtpErlangList functionArgs,
-                            @NotNull Collection<ErlangVariableBinding> bindings) {
+  public ErlangTraceElement(@Nullable OtpErlangObject stackPointer, @NotNull String module, @NotNull String function,
+                            @NotNull OtpErlangList functionArgs, @NotNull Collection<ErlangVariableBinding> bindings) {
+    myStackPointer = stackPointer;
     myModule = module;
     myFunction = function;
     myFunctionArgs = functionArgs;
     myBindings = bindings;
   }
+
+  @Nullable
+  public OtpErlangObject getStackPointer() { return myStackPointer; }
 
   @NotNull
   public String getModule() {

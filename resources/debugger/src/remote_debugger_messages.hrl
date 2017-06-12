@@ -9,7 +9,7 @@
 -record(step_over, {pid}).
 -record(step_out, {pid}).
 -record(continue, {pid}).
--record(evaluate, {pid, expression}). % TODO consider adding a stack pointer as third param
+-record(evaluate, {pid, expression, maybeStackPointer}).
 
 % Messages which can be sent to remote debugger.
 % Debugger implementation should handle all messages listed here.

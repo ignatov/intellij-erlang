@@ -8,7 +8,7 @@
 -include("remote_debugger_messages.hrl").
 -include("trace_utils.hrl").
 
--record(state, {interpreted_modules = []}).
+-record(state, {interpreted_modules = [] :: [module()]}).
 
 run(Debugger) ->
   register(?RDEBUG_LISTENER, self()),
@@ -60,9 +60,9 @@ process_message({step_out, Pid}) when is_pid(Pid) ->
   step_out(Pid);
 process_message({continue, Pid}) when is_pid(Pid) ->
   continue(Pid);
-process_message({evaluate, Pid, Expression}) when is_pid(Pid),
-                                                  is_list(Expression) ->
-  evaluate(Pid, Expression);
+process_message({evaluate, Pid, Expression, MaybeStackPointer}) when is_pid(Pid),
+                                                                     is_list(Expression) ->
+  evaluate(Pid, Expression, MaybeStackPointer);
 % responses from interpreter
 process_message({_Meta, {eval_rsp, EvalResponse}}) ->
   evaluate_response(EvalResponse);
@@ -108,12 +108,17 @@ step_out(Pid) ->
 continue(Pid) ->
   int:continue(Pid).
 
-evaluate(Pid, Expression) ->
+evaluate(Pid, Expression, MaybeStackPointer) ->
   {ok, Meta} = dbg_iserver:call({get_meta, Pid}),
-  int:meta(Meta, eval, {undefined, Expression}). % Current module should be passed instead of 'undefined'
+  MetaArgsList = [?MODULE, Expression],
+  MetaArgsListWithSP = case MaybeStackPointer =:= undefined of
+    true -> MetaArgsList;
+    false -> MetaArgsList ++ [MaybeStackPointer]
+  end,
+  int:meta(Meta, eval, list_to_tuple(MetaArgsListWithSP)).
 
-evaluate_response(Response) ->
-  ?RDEBUG_NOTIFIER ! #evaluate_response{result = Response}.
+evaluate_response(EvalResponse) ->
+  ?RDEBUG_NOTIFIER ! #evaluate_response{result = EvalResponse}.
 
 parse_args(ArgsString) ->
   case erl_scan:string(ArgsString ++ ".") of

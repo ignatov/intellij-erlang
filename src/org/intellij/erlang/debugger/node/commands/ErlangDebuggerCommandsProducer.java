@@ -18,6 +18,7 @@ package org.intellij.erlang.debugger.node.commands;
 
 import com.ericsson.otp.erlang.*;
 import com.intellij.openapi.util.text.StringUtil;
+import org.intellij.erlang.debugger.node.ErlangTraceElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -70,6 +71,11 @@ public final class ErlangDebuggerCommandsProducer {
   @NotNull
   public static ErlangDebuggerCommand getContinueCommand(@NotNull OtpErlangPid pid) {
     return new ContinueCommand(pid);
+  }
+
+  @NotNull
+  public static ErlangDebuggerCommand getEvaluateCommand(@NotNull OtpErlangPid pid, @NotNull String expression, @NotNull ErlangTraceElement traceElement) {
+    return new EvaluateCommand(pid, expression, traceElement);
   }
 
   private static class StepOverCommand extends AbstractPidCommand {
@@ -212,6 +218,34 @@ public final class ErlangDebuggerCommandsProducer {
         new OtpErlangAtom("remove_breakpoint"),
         new OtpErlangAtom(myModule),
         new OtpErlangInt(myLine)
+      });
+    }
+  }
+
+  private static class EvaluateCommand implements ErlangDebuggerCommand {
+    private final OtpErlangPid myPid;
+    private final String myExpression;
+    private final ErlangTraceElement myTraceElement;
+
+    public EvaluateCommand(@NotNull OtpErlangPid pid, @NotNull String expression, @NotNull ErlangTraceElement traceElement) {
+      myPid = pid;
+      myExpression = expression;
+      myTraceElement = traceElement;
+    }
+
+    @NotNull
+    @Override
+    public OtpErlangTuple toMessage() {
+      OtpErlangObject stackPointer = myTraceElement.getStackPointer();
+      if (stackPointer == null) {
+        stackPointer = new OtpErlangAtom("undefined");
+      }
+
+      return new OtpErlangTuple(new OtpErlangObject[] {
+        new OtpErlangAtom("evaluate"),
+        myPid,
+        new OtpErlangList(myExpression),
+        stackPointer
       });
     }
   }

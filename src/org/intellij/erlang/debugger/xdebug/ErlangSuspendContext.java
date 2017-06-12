@@ -29,7 +29,7 @@ public class ErlangSuspendContext extends XSuspendContext {
   private final XExecutionStack[] myExecutionStacks;
   private final int myActiveStackIdx;
 
-  public ErlangSuspendContext(@NotNull ErlangDebugLocationResolver resolver,
+  public ErlangSuspendContext(@NotNull ErlangXDebugProcess debugProcess,
                               @NotNull OtpErlangPid activePid,
                               @NotNull List<ErlangProcessSnapshot> snapshots) {
     myExecutionStacks = new XExecutionStack[snapshots.size()];
@@ -39,7 +39,7 @@ public class ErlangSuspendContext extends XSuspendContext {
       if (snapshot.getPid().equals(activePid)) {
         activeStackIdx = i;
       }
-      myExecutionStacks[i] = new ErlangExecutionStack(resolver, snapshot);
+      myExecutionStacks[i] = new ErlangExecutionStack(debugProcess, snapshot);
     }
     myActiveStackIdx = activeStackIdx;
   }
