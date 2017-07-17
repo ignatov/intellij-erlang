@@ -40,6 +40,7 @@ import com.intellij.projectImport.ProjectImportWizardStep;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
+import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
@@ -118,7 +119,7 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
   private static void fetchDependencies(@NotNull final VirtualFile projectRoot, @NotNull final String rebarPath) {
     Project project = ProjectImportBuilder.getCurrentProject();
     String sdkPath = project != null ? ErlangSdkType.getSdkPath(project) : null;
-    final String escriptPath = sdkPath != null 
+    final String escriptPath = sdkPath != null
                                ? JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath()
                                : RebarRunningStateUtil.findEscriptExecutable();
 

@@ -16,29 +16,41 @@
 
 package org.intellij.erlang.runconfig;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.execution.configurations.ConfigurationType;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.process.ProcessOutput;
+import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiSearchHelper;
 import com.intellij.util.Processor;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.psi.ErlangCompositeElement;
+import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.rebar.util.RebarConfigUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.io.File;
+import java.util.*;
 
 public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends ErlangRunConfigurationBase> extends RunConfigurationProducer<RunConfig> {
   protected ErlangDebuggableRunConfigurationProducer(ConfigurationType configurationType) {
@@ -87,6 +99,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
                                                                                          boolean includeTests) {
     ErlangRunConfigurationBase.ErlangDebugOptions debugOptions = new ErlangRunConfigurationBase.ErlangDebugOptions();
     debugOptions.setModulesNotToInterpret(getErlangModulesWithCallsToLoadNIF(module, includeTests));
+
     return debugOptions;
   }
 

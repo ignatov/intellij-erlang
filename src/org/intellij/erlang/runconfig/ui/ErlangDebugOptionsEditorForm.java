@@ -27,6 +27,8 @@ import com.intellij.ui.ListUtil;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBList;
+import com.intellij.ui.components.JBTextField;
+import com.intellij.util.Function;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
@@ -37,15 +39,26 @@ import java.util.Collections;
 import java.util.Set;
 
 public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfigurationBase.ErlangDebugOptions> {
+
+
   private JPanel myContent;
   private JPanel myModulesNotToInterpretPanel;
   private JBCheckBox myAutoUpdateModulesNotToInterpretCheckBox;
+  private JBCheckBox includeRebarDependenenciesFromJBCheckBox;
+  private JBCheckBox fetchDependencies;
+  private JBCheckBox loadConfig;
+  private JBTextField defaultModuleConfigJBTextField;
 
   private JBList myModulesNotToInterpretList;
   private CollectionListModel myModulesNotToInterpretListModel;
 
   public ErlangDebugOptionsEditorForm() {
     myAutoUpdateModulesNotToInterpretCheckBox.addActionListener(e -> setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected()));
+    includeRebarDependenenciesFromJBCheckBox.addActionListener(e -> setIncludeRebarDependenciesFromCheckBox(includeRebarDependenenciesFromJBCheckBox.isSelected()));
+    fetchDependencies.addActionListener(e->setFetchDependenciesFromCheckBox(fetchDependencies.isSelected()));
+    loadConfig.addActionListener(e->setloadConfig(loadConfig.isSelected()));
+
+    setAppConfig(ErlangRunConfigurationBase.DEFAULT_CONFIG);
   }
 
   @Override
@@ -55,12 +68,20 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
       //noinspection unchecked
       myModulesNotToInterpretListModel.add(module);
     }
+    setloadConfig(erlangDebugOptions.isLoadingConfig());
+    setAppConfig(erlangDebugOptions.getAppConfig());
     setAutoUpdateModulesNotToInterpret(erlangDebugOptions.isAutoUpdateModulesNotToInterpret());
+    setIncludeRebarDependenciesFromCheckBox(erlangDebugOptions.isIncludingRebarDependencies());
+    setFetchDependenciesFromCheckBox(erlangDebugOptions.isFetchingDependencies());
   }
 
   @Override
   protected void applyEditorTo(ErlangRunConfigurationBase.ErlangDebugOptions erlangDebugOptions) throws ConfigurationException {
+    erlangDebugOptions.setLoadingConfig(loadConfig.isSelected());
+    erlangDebugOptions.setAppConfig(this.getAppConfig());
     erlangDebugOptions.setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected());
+    erlangDebugOptions.setIncludeRebarDependencies(this.includeRebarDependenenciesFromJBCheckBox.isSelected());
+    erlangDebugOptions.setFetchingDependencies(this.fetchDependencies.isSelected());
     Set<String> modules = erlangDebugOptions.isAutoUpdateModulesNotToInterpret() ? Collections.<String>emptySet() :
       ContainerUtil.map2Set(myModulesNotToInterpretListModel.getItems(),
                             String::valueOf);
@@ -77,6 +98,32 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
     myAutoUpdateModulesNotToInterpretCheckBox.setSelected(autoUpdate);
     myModulesNotToInterpretPanel.setEnabled(!autoUpdate);
     myModulesNotToInterpretList.setEnabled(!autoUpdate);
+  }
+
+  private void setIncludeRebarDependenciesFromCheckBox(boolean includeDeps) {
+    includeRebarDependenenciesFromJBCheckBox.setSelected(includeDeps);
+    fetchDependencies.setEnabled(includeRebarDependenenciesFromJBCheckBox.isSelected());
+    if (!includeRebarDependenenciesFromJBCheckBox.isSelected())
+      fetchDependencies.setSelected(false);
+  }
+
+  private void setFetchDependenciesFromCheckBox(boolean includeDeps) {
+    fetchDependencies.setSelected(includeDeps);
+  }
+
+  private void setloadConfig(boolean includeConfig) {
+    loadConfig.setSelected(includeConfig);
+    defaultModuleConfigJBTextField.setEnabled(includeConfig);
+    if (!includeConfig)
+      setAppConfig(ErlangRunConfigurationBase.DEFAULT_CONFIG);
+  }
+
+  private String getAppConfig() {
+    return defaultModuleConfigJBTextField.getText();
+  }
+
+  private void setAppConfig(String text) {
+    defaultModuleConfigJBTextField.setText(text);
   }
 
   private void createUIComponents() {

@@ -43,6 +43,7 @@ import java.util.Set;
 
 public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunningState> extends ModuleBasedConfiguration<ErlangModuleBasedConfiguration>
   implements RunConfigurationWithSuppressedDefaultRunAction {
+  public static final String DEFAULT_CONFIG="Default: <module>.config";
   private ErlangDebugOptions myDebugOptions = new ErlangDebugOptions();
   private String myWorkDirectory;
 
@@ -102,8 +103,8 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   }
 
   @Override
-  public void checkSettingsBeforeRun() throws RuntimeConfigurationException {
-    ErlangDebuggableRunConfigurationProducer.updateDebugOptions(this);
+  public void checkSettingsBeforeRun() throws  RuntimeConfigurationException {
+      ErlangDebuggableRunConfigurationProducer.updateDebugOptions(this);
   }
 
   @Override
@@ -125,8 +126,48 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   protected abstract RunningState newRunningState(ExecutionEnvironment env, Module module);
 
   public static final class ErlangDebugOptions implements Serializable {
+    private boolean includeRebarDependencies = false;
+    private boolean fetchingDependencies = false;
     private boolean myAutoUpdateModulesNotToInterpret = true;
+
+    private Set<String> rebarDependencies = new HashSet<>();
     private Set<String> myModulesNotToInterpret = new HashSet<>();
+
+    private boolean loadingConfig = false;
+    private String appConfig = DEFAULT_CONFIG;
+
+    public void setLoadingConfig(boolean loadingConfig) {
+      this.loadingConfig=loadingConfig;
+    }
+
+    public boolean isLoadingConfig() {
+      return loadingConfig;
+    }
+
+    public void setAppConfig(String appConfig) {
+      if (appConfig!=null)
+        this.appConfig = appConfig;
+    }
+
+    public String getAppConfig() {
+      return appConfig;
+    }
+
+    public boolean isIncludingRebarDependencies() {
+      return this.includeRebarDependencies;
+    }
+
+    public void setIncludeRebarDependencies(boolean includeRebarDependencies) {
+      this.includeRebarDependencies=includeRebarDependencies;
+    }
+
+    public boolean isFetchingDependencies() {
+      return this.fetchingDependencies;
+    }
+
+    public void setFetchingDependencies(boolean fetchingDependencies) {
+      this.fetchingDependencies=fetchingDependencies;
+    }
 
     public boolean isAutoUpdateModulesNotToInterpret() {
       return myAutoUpdateModulesNotToInterpret;
@@ -154,6 +195,8 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
 
       if (myAutoUpdateModulesNotToInterpret != that.myAutoUpdateModulesNotToInterpret) return false;
       if (!myModulesNotToInterpret.equals(that.myModulesNotToInterpret)) return false;
+      if (includeRebarDependencies!=that.includeRebarDependencies) return false;
+      if (fetchingDependencies!=that.fetchingDependencies) return false;
 
       return true;
     }
