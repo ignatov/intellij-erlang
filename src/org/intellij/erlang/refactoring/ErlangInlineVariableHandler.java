@@ -74,11 +74,8 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
       return;
     }
 
-    Query<PsiReference> search = ReferencesSearch.search(element);
-    final Collection<PsiReference> all = search.findAll();
-
     CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
-      for (PsiReference psiReference : all) {
+      for (PsiReference psiReference : ReferencesSearch.search(element).findAll()) {
         PsiElement host = psiReference.getElement();
         PsiElement expr = host.getParent();
         ASTNode replacementNode = null;
