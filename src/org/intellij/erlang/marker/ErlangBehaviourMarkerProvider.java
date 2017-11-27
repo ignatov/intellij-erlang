@@ -27,8 +27,7 @@ import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.navigation.ErlangNavigationUtil;
-import org.intellij.erlang.psi.ErlangCallbackSpec;
-import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,31 +38,40 @@ import java.util.List;
 public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
   @Override
   public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
-    if (element instanceof ErlangFunction) {
-      List<ErlangCallbackSpec> prototypes = ErlangNavigationUtil.getCallbackSpecs((ErlangFunction) element);
-      if (!prototypes.isEmpty()) {
-        return createImplementationMarker((ErlangFunction) element, prototypes);
-      }
-    }
     return null;
   }
 
   @Override
   public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
+    for (PsiElement element : elements) {
+      if (!(element instanceof ErlangAtom)) continue;
+      PsiElement parent = element.getParent();
+      if (!(parent instanceof ErlangQAtom)) continue;
+      PsiElement clause = parent.getParent();
+      if (!(clause instanceof ErlangFunctionClause)) continue;
+      PsiElement function = clause.getParent();
+      if (function instanceof ErlangFunction && ContainerUtil.getFirstItem(((ErlangFunction) function).getFunctionClauseList()) == clause) {
+        List<ErlangCallbackSpec> prototypes = ErlangNavigationUtil.getCallbackSpecs((ErlangFunction) function);
+        if (!prototypes.isEmpty()) {
+          result.add(createImplementationMarker(element, (ErlangFunction) function, prototypes));
+        }
+      }
+    }
   }
 
-  private static LineMarkerInfo createImplementationMarker(ErlangFunction function,
-                                                           final Collection<ErlangCallbackSpec> callbackSpecs) {
-    final String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
+  private static LineMarkerInfo createImplementationMarker(PsiElement atom,
+                                                           ErlangFunction function,
+                                                           Collection<ErlangCallbackSpec> callbackSpecs) {
+    String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
 
-    final List<NavigatablePsiElement> navigatables = ContainerUtil.newArrayList();
+    List<NavigatablePsiElement> navigatables = ContainerUtil.newArrayList();
     for (ErlangCallbackSpec callbackSpec : callbackSpecs) {
       navigatables.add(ErlangNavigationUtil.getNavigatableSpecFun(presentation, callbackSpec));
     }
 
-    return new LineMarkerInfo<PsiElement>(
-      function,
-      function.getTextRange(),
+    return new LineMarkerInfo<>(
+      atom,
+      atom.getTextRange(),
       AllIcons.Gutter.ImplementingMethod,
       Pass.UPDATE_ALL,
       element -> "Implements callback '" + presentation + "'",
