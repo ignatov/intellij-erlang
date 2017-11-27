@@ -25,7 +25,9 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -38,17 +40,34 @@ public class ErlangMethodSeparatorProvider implements LineMarkerProvider {
   @Nullable
   @Override
   public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement function) {
-    if (DaemonCodeAnalyzerSettings.getInstance().SHOW_METHOD_SEPARATORS && function instanceof ErlangFunction) {
-      PsiElement anchor = findAnchorElementForMethodSeparator((ErlangFunction) function);
-      return LineMarkersPass.createMethodSeparatorLineMarker(anchor, EditorColorsManager.getInstance());
-    }
     return null;
   }
 
   @Override
   public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
+    if (!DaemonCodeAnalyzerSettings.getInstance().SHOW_METHOD_SEPARATORS) {
+      return;
+    }
+
+    for (PsiElement element : elements) {
+      if (!(element instanceof LeafPsiElement)) continue;
+      PsiElement atom = element.getParent();
+      if (!(atom instanceof ErlangAtom)) continue;
+      PsiElement parent = atom.getParent();
+      if (!(parent instanceof ErlangQAtom)) continue;
+      PsiElement clause = parent.getParent();
+      if (!(clause instanceof ErlangFunctionClause)) continue;
+      PsiElement function = clause.getParent();
+      if (!(function instanceof ErlangFunction)) continue;
+
+      PsiElement anchor = findAnchorElementForMethodSeparator((ErlangFunction) function);
+      result.add(LineMarkersPass.createMethodSeparatorLineMarker(
+        ObjectUtils.chooseNotNull(PsiTreeUtil.findChildOfAnyType(anchor, LeafPsiElement.class), anchor)
+        , EditorColorsManager.getInstance()));
+    }
   }
 
+  @NotNull
   private static PsiElement findAnchorElementForMethodSeparator(@NotNull ErlangFunction function) {
     ErlangAttribute specAttribute = getSpecAttributeForFunction(function);
     PsiElement leftmostPossibleAnchor = function;
