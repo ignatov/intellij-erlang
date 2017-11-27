@@ -28,9 +28,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.util.FunctionUtil;
 import com.intellij.util.containers.HashSet;
 import org.intellij.erlang.icons.ErlangIcons;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangFunctionCallExpression;
-import org.intellij.erlang.psi.ErlangFunctionWithArity;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,15 +46,21 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
   public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
     Set<Integer> lines = new HashSet<>();
     for (PsiElement element : elements) {
-      if (element instanceof ErlangFunctionCallExpression || element instanceof ErlangFunctionWithArity) {
-        PsiReference reference = element.getReference();
+      PsiDocumentManager instance = PsiDocumentManager.getInstance(element.getProject());
+      Document document = instance.getDocument(element.getContainingFile());
+      if (document == null) continue;
+
+      if (!(element instanceof ErlangAtom)) continue;
+      PsiElement parent = element.getParent();
+      if (!(parent instanceof ErlangQAtom)) continue;
+      PsiElement function = parent.getParent();
+      
+      if (function instanceof ErlangFunctionCallExpression || function instanceof ErlangFunctionWithArity) {
+        PsiReference reference = function.getReference();
         PsiElement resolve = reference != null ? reference.resolve() : null;
         if (resolve instanceof ErlangFunction) {
-          if (ErlangPsiImplUtil.isRecursiveCall(element, (ErlangFunction) resolve)) {
-            PsiDocumentManager instance = PsiDocumentManager.getInstance(element.getProject());
-            Document document = instance.getDocument(element.getContainingFile());
-            int textOffset = element.getTextOffset();
-            if (document == null) continue;
+          if (ErlangPsiImplUtil.isRecursiveCall(function, (ErlangFunction) resolve)) {
+            int textOffset = function.getTextOffset();
             int lineNumber = document.getLineNumber(textOffset);
             if (!lines.contains(lineNumber)) {
               result.add(new RecursiveMethodCallMarkerInfo(element));
@@ -69,9 +73,9 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
   }
 
   private static class RecursiveMethodCallMarkerInfo extends LineMarkerInfo<PsiElement> {
-    private RecursiveMethodCallMarkerInfo(@NotNull PsiElement methodCall) {
-      super(methodCall,
-            methodCall.getTextRange(),
+    private RecursiveMethodCallMarkerInfo(@NotNull PsiElement e) {
+      super(e,
+            e.getTextRange(),
             ErlangIcons.RECURSIVE_CALL,
             Pass.LINE_MARKERS,
             FunctionUtil.constant("Recursive call"),
