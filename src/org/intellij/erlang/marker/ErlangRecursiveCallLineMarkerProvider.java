@@ -25,6 +25,7 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.FunctionUtil;
 import com.intellij.util.containers.HashSet;
 import org.intellij.erlang.icons.ErlangIcons;
@@ -50,11 +51,13 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
       Document document = instance.getDocument(element.getContainingFile());
       if (document == null) continue;
 
-      if (!(element instanceof ErlangAtom)) continue;
-      PsiElement parent = element.getParent();
+      if (!(element instanceof LeafPsiElement)) continue;
+      PsiElement atom = element.getParent();
+      if (!(atom instanceof ErlangAtom)) continue;
+      PsiElement parent = atom.getParent();
       if (!(parent instanceof ErlangQAtom)) continue;
       PsiElement function = parent.getParent();
-      
+
       if (function instanceof ErlangFunctionCallExpression || function instanceof ErlangFunctionWithArity) {
         PsiReference reference = function.getReference();
         PsiElement resolve = reference != null ? reference.resolve() : null;

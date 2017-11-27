@@ -25,6 +25,7 @@ import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.navigation.ErlangNavigationUtil;
 import org.intellij.erlang.psi.*;
@@ -44,8 +45,10 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
   @Override
   public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
     for (PsiElement element : elements) {
-      if (!(element instanceof ErlangAtom)) continue;
-      PsiElement parent = element.getParent();
+      if (!(element instanceof LeafPsiElement)) continue;
+      PsiElement atom = element.getParent();
+      if (!(atom instanceof ErlangAtom)) continue;
+      PsiElement parent = atom.getParent();
       if (!(parent instanceof ErlangQAtom)) continue;
       PsiElement clause = parent.getParent();
       if (!(clause instanceof ErlangFunctionClause)) continue;
