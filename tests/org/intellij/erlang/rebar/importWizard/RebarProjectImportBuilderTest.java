@@ -46,6 +46,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.List;
 
 public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   private static final String MODULE_DIR = "MODULE_DIR";
@@ -59,6 +60,18 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     createMockSdk();
     File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
     FileUtil.copyDir(currentTestRoot, new File(getProject().getBaseDir().getPath()));
+  }
+
+  @Override
+  public void tearDown() throws Exception {
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      ProjectJdkTable table = ProjectJdkTable.getInstance();
+      List<Sdk> sdksOfType = table.getSdksOfType(ErlangSdkType.getInstance());
+      for (Sdk sdk : sdksOfType) {
+        table.removeJdk(sdk);
+      }
+    });
+    super.tearDown();
   }
 
   public void testFromEbinAppFile() throws Exception { doTest(null); } 
