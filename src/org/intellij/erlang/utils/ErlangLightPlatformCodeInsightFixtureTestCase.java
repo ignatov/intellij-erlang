@@ -23,10 +23,12 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.PlatformUtils;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,14 +60,29 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Ligh
     if (myIsSmallIde) {
       System.setProperty(PlatformUtils.PLATFORM_PREFIX_KEY, myBackedUpPlatformPrefix);
     }
+
+    releaseErlangSdks();
+
     super.tearDown();
+  }
+
+  protected static void releaseErlangSdks() {
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      ProjectJdkTable table = ProjectJdkTable.getInstance();
+      List<Sdk> sdksOfType = table.getSdksOfType(ErlangSdkType.getInstance());
+      for (Sdk sdk : sdksOfType) {
+        table.removeJdk(sdk);
+      }
+    });
   }
 
   protected void setUpProjectSdk() {
     ApplicationManager.getApplication().runWriteAction(() -> {
       Sdk sdk = getProjectDescriptor().getSdk();
-      ProjectJdkTable.getInstance().addJdk(sdk);
-      ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
+      if (sdk != null) {
+        ProjectJdkTable.getInstance().addJdk(sdk);
+        ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
+      }
     });
   }
 
