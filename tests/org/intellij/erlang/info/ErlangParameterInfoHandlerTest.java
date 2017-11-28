@@ -132,6 +132,7 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     private PsiElement myParameterOwner;
     private Object myHighlightedParameter;
     private int myCurrentParameter;
+    private boolean myPreservedOnHintHidden;
 
     public MockUpdateParameterInfoContext(@NotNull Editor editor, @NotNull PsiFile file) {
       myEditor = editor;
@@ -148,6 +149,11 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
 
     public void setHighlightedParameter(Object parameter) {
       myHighlightedParameter = parameter;
+    }
+
+    @Override
+    public Object getHighlightedParameter() {
+      return myHighlightedParameter;
     }
 
     public void setCurrentParameter(int index) {
@@ -168,6 +174,21 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
 
     public Object[] getObjectsToView() {
       return ArrayUtil.EMPTY_OBJECT_ARRAY;
+    }
+
+    @Override
+    public boolean isPreservedOnHintHidden() {
+      return myPreservedOnHintHidden;
+    }
+
+    @Override
+    public void setPreservedOnHintHidden(boolean value) {
+      myPreservedOnHintHidden = value;
+    }
+
+    @Override
+    public boolean isInnermostContext() {
+      return false;
     }
 
     public Project getProject() {
