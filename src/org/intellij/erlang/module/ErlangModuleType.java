@@ -58,11 +58,6 @@ public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
   }
 
   @Override
-  public Icon getBigIcon() {
-    return ErlangIcons.ERLANG_BIG;
-  }
-
-  @Override
   public Icon getNodeIcon(boolean isOpened) {
     return ErlangIcons.ERLANG_MODULE_NODE;
   }
