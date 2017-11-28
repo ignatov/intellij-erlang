@@ -19,9 +19,12 @@ package org.intellij.erlang.refactoring;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor;
 import com.intellij.testFramework.fixtures.CodeInsightFixtureTestCase;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
@@ -38,7 +41,7 @@ public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
     PsiFile moduleFile = myFixture.configureByText("a.erl", moduleText);
     PsiDirectory moduleDir = moduleFile.getParent();
 
-    move(includeFile, moduleDir);
+    move(includeFile.getVirtualFile(), moduleDir);
 
     assertEquals(moduleText, moduleFile.getText());
   }
@@ -51,7 +54,7 @@ public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
 
     PsiFile moduleFile = myFixture.configureByText("a.erl", "-module(a).\n-include(\"a.hrl\").");
 
-    move(includeFile, includeDirChild);
+    move(includeFile.getVirtualFile(), includeDirChild);
 
     assertEquals("-module(a).\n-include(\"child/a.hrl\").", moduleFile.getText());
   }
@@ -65,7 +68,7 @@ public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
     PsiDirectory includeDir = createSubdirectory(moduleFile.getParent(), "include");
     markAsIncludeDirectory(includeDir);
 
-    move(includeFile, includeDir);
+    move(includeFile.getVirtualFile(), includeDir);
 
     assertEquals(moduleText, moduleFile.getText());
   }
@@ -74,16 +77,17 @@ public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
     PsiFile includeFile = myFixture.addFileToProject("a.hrl", "");
     PsiFile moduleFile = myFixture.configureByText("a.erl", "-module(a).\n-include(\"a.hrl\").");
     PsiDirectory childDir = createSubdirectory(moduleFile.getParent(), "child");
-    move(includeFile, childDir);
+    move(includeFile.getVirtualFile(), childDir);
     assertEquals("-module(a).\n-include(\"child/a.hrl\").", moduleFile.getText());
   }
 
-  private void move(@Nullable PsiFile what, @Nullable PsiDirectory where) {
+  private void move(@NotNull VirtualFile what, @Nullable PsiDirectory where) {
     assertNotNull(what);
     assertNotNull(where);
 
     Project project = getProject();
-    PsiElement[] files = {what};
+    PsiElement[] files = {PsiManager.getInstance(project).findFile(what)};
+    PsiUtilCore.ensureValid(files[0]);
     new MoveFilesOrDirectoriesProcessor(project, files, where, true, false, false, null, null).run();
   }
 
