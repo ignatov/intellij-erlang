@@ -67,6 +67,6 @@ public class ErlangSystemUtil {
   }
 
   public static boolean isSmallIde() {
-    return PlatformUtils.isRubyMine() || PlatformUtils.isPyCharm() || PlatformUtils.isPhpStorm() || PlatformUtils.isWebStorm();
+    return !PlatformUtils.isIntelliJ();
   }
 }
