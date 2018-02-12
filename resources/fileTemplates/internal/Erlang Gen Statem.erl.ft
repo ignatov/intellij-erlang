@@ -14,7 +14,8 @@
          state_name/3,
          handle_event/4,
          terminate/3,
-         code_change/4
+         code_change/4,
+         callback_mode/0
         ]).
 
 -define(SERVER, ?MODULE).
@@ -56,6 +57,20 @@ start_link() ->
 %%--------------------------------------------------------------------
 init([]) ->
     {ok, state_name, #state{}}.
+
+
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% This function is called by a gen_statem when it needs to find out 
+%% the callback mode of the callback module.
+%%
+%% @spec callback_mode() -> atom().
+%% @end
+%%--------------------------------------------------------------------
+callback_mode() ->
+    handle_event_function.    
 
 %%--------------------------------------------------------------------
 %% @private
