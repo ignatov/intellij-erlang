@@ -18,12 +18,11 @@ package org.intellij.erlang.info;
 
 import com.intellij.lang.parameterInfo.CreateParameterInfoContext;
 import com.intellij.lang.parameterInfo.ParameterInfoHandler;
-import com.intellij.lang.parameterInfo.UpdateParameterInfoContext;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.ArrayUtil;
+import com.intellij.testFramework.utils.parameterInfo.MockUpdateParameterInfoContext;
 import org.intellij.erlang.ErlangParameterInfoHandler;
 import org.intellij.erlang.psi.ErlangArgumentList;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -119,90 +118,6 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     }
 
     @Override
-    @NotNull
-    public Editor getEditor() {
-      return myEditor;
-    }
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public static class MockUpdateParameterInfoContext implements UpdateParameterInfoContext {
-    private final Editor myEditor;
-    private final PsiFile myFile;
-    private PsiElement myParameterOwner;
-    private Object myHighlightedParameter;
-    private int myCurrentParameter;
-    private boolean myPreservedOnHintHidden;
-
-    public MockUpdateParameterInfoContext(@NotNull Editor editor, @NotNull PsiFile file) {
-      myEditor = editor;
-      myFile = file;
-    }
-
-    public void removeHint() {}
-
-    public void setParameterOwner(PsiElement o) {
-      myParameterOwner = o;
-    }
-
-    public PsiElement getParameterOwner() { return myParameterOwner; }
-
-    public void setHighlightedParameter(Object parameter) {
-      myHighlightedParameter = parameter;
-    }
-
-    @Override
-    public Object getHighlightedParameter() {
-      return myHighlightedParameter;
-    }
-
-    public void setCurrentParameter(int index) {
-      myCurrentParameter = index;
-    }
-
-    public int getCurrentParameter() {
-      return myCurrentParameter;
-    }
-
-    public boolean isUIComponentEnabled(int index) { return false; }
-
-    public void setUIComponentEnabled(int index, boolean b) {}
-
-    public int getParameterListStart() {
-      return myEditor.getCaretModel().getOffset();
-    }
-
-    public Object[] getObjectsToView() {
-      return ArrayUtil.EMPTY_OBJECT_ARRAY;
-    }
-
-    @Override
-    public boolean isPreservedOnHintHidden() {
-      return myPreservedOnHintHidden;
-    }
-
-    @Override
-    public void setPreservedOnHintHidden(boolean value) {
-      myPreservedOnHintHidden = value;
-    }
-
-    @Override
-    public boolean isInnermostContext() {
-      return false;
-    }
-
-    public Project getProject() {
-      return myFile.getProject();
-    }
-
-    public PsiFile getFile() {
-      return myFile;
-    }
-
-    public int getOffset() {
-      return myEditor.getCaretModel().getOffset();
-    }
-
     @NotNull
     public Editor getEditor() {
       return myEditor;
