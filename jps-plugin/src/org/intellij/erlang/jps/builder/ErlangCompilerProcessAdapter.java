@@ -32,7 +32,7 @@ public class ErlangCompilerProcessAdapter extends BuilderProcessAdapter {
   }
 
   @Override
-  public void onTextAvailable(@NotNull ProcessEvent event, Key outputType) {
+  public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
     showMessage(createCompilerMessage(myBuilderName, myCompileTargetRootPath, event.getText()));
   }
 

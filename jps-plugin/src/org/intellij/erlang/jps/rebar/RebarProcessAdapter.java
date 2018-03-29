@@ -34,12 +34,12 @@ public class RebarProcessAdapter extends BuilderProcessAdapter {
   }
 
   @Override
-  public void onTextAvailable(@NotNull ProcessEvent event, Key outputType) {
+  public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
     addToProcessing(event.getText());
   }
 
   @Override
-  public void processTerminated(ProcessEvent event) {
+  public void processTerminated(@NotNull ProcessEvent event) {
     super.processTerminated(event);
     if (myMessageBuilder.length() > 0) {
       processMessage(myMessageBuilder.toString());
