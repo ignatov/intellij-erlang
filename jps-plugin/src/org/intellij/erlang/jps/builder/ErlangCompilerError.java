@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.openapi.compiler.CompilerMessageCategory;
+import org.jetbrains.jps.incremental.messages.BuildMessage;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -37,16 +37,16 @@ public class ErlangCompilerError {
   private final String myErrorMessage;
   private final String myUrl;
   private final int myLine;
-  private final CompilerMessageCategory myCategory;
+  private final BuildMessage.Kind myKind;
 
   private ErlangCompilerError(@NotNull String errorMessage,
                               @NotNull String url,
                               int line,
-                              @NotNull CompilerMessageCategory category) {
+                              @NotNull BuildMessage.Kind category) {
     this.myErrorMessage = errorMessage;
     this.myUrl = url;
     this.myLine = line;
-    this.myCategory = category;
+    this.myKind = category;
   }
 
   @NotNull
@@ -64,8 +64,8 @@ public class ErlangCompilerError {
   }
 
   @NotNull
-  public CompilerMessageCategory getCategory() {
-    return myCategory;
+  public BuildMessage.Kind getKind() {
+    return myKind;
   }
 
   @Nullable
@@ -89,7 +89,7 @@ public class ErlangCompilerError {
                                                          @Nullable String warning,
                                                          @NotNull String details) {
     int lineNumber = StringUtil.parseInt(line, -1);
-    CompilerMessageCategory category = warning != null ? CompilerMessageCategory.WARNING : CompilerMessageCategory.ERROR;
+    BuildMessage.Kind category = warning != null ? BuildMessage.Kind.WARNING : BuildMessage.Kind.ERROR;
     return new ErlangCompilerError(details, VfsUtilCore.pathToUrl(filePath), lineNumber, category);
   }
 }

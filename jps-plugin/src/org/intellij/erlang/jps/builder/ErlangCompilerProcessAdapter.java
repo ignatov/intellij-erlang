@@ -17,7 +17,6 @@
 package org.intellij.erlang.jps.builder;
 
 import com.intellij.execution.process.ProcessEvent;
-import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import org.jetbrains.annotations.NotNull;
@@ -48,8 +47,7 @@ public class ErlangCompilerProcessAdapter extends BuilderProcessAdapter {
 
     ErlangCompilerError error = ErlangCompilerError.create(compileTargetRootPath, text);
     if (error != null) {
-      boolean isError = error.getCategory() == CompilerMessageCategory.ERROR;
-      kind = isError ? BuildMessage.Kind.ERROR : BuildMessage.Kind.WARNING;
+      kind = error.getKind();
       messageText = error.getErrorMessage();
       sourcePath = VirtualFileManager.extractPath(error.getUrl());
       line = error.getLine();
