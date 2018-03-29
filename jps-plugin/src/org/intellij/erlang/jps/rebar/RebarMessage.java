@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.jps.rebar;
 
-import com.intellij.openapi.compiler.CompilerMessageCategory;
+import org.jetbrains.jps.incremental.messages.BuildMessage;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,11 +26,11 @@ import java.util.regex.Pattern;
 
 public class RebarMessage {
   private static final Pattern LOG_MESSAGE_PATTERN = Pattern.compile("(ERROR|WARN|INFO|DEBUG):(.+)");
-  private final CompilerMessageCategory myCategory;
+  private final BuildMessage.Kind myKind;
   private final String myDetails;
 
-  private RebarMessage(@NotNull CompilerMessageCategory category, @NotNull String details) {
-    this.myCategory = category;
+  private RebarMessage(@NotNull BuildMessage.Kind category, @NotNull String details) {
+    this.myKind = category;
     this.myDetails = details;
   }
 
@@ -41,12 +41,12 @@ public class RebarMessage {
 
     String type = matcher.group(1);
     String details = matcher.group(2);
-    return new RebarMessage(findCategory(type), details);
+    return new RebarMessage(findKind(type), details);
   }
 
   @NotNull
-  public CompilerMessageCategory getCategory() {
-    return myCategory;
+  public BuildMessage.Kind getKind() {
+    return myKind;
   }
 
   @NotNull
@@ -55,13 +55,13 @@ public class RebarMessage {
   }
 
   @NotNull
-  private static CompilerMessageCategory findCategory(@NotNull String type) {
+  private static BuildMessage.Kind findKind(@NotNull String type) {
     if ("ERROR".equals(type)) {
-      return CompilerMessageCategory.ERROR;
+      return BuildMessage.Kind.ERROR;
     }
     if ("WARN".equals(type)) {
-      return CompilerMessageCategory.WARNING;
+      return BuildMessage.Kind.WARNING;
     }
-    return CompilerMessageCategory.INFORMATION;
+    return BuildMessage.Kind.INFO;
   }
 }

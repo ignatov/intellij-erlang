@@ -17,13 +17,11 @@
 package org.intellij.erlang.jps.rebar;
 
 import com.intellij.execution.process.ProcessEvent;
-import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.util.Key;
 import org.intellij.erlang.jps.builder.BuilderProcessAdapter;
 import org.intellij.erlang.jps.builder.ErlangCompilerProcessAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.incremental.CompileContext;
-import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
 
 public class RebarProcessAdapter extends BuilderProcessAdapter {
@@ -55,7 +53,7 @@ public class RebarProcessAdapter extends BuilderProcessAdapter {
   @NotNull
   private CompilerMessage createCompilerMessage(@NotNull String messageText) {
     RebarMessage message = RebarMessage.create(messageText);
-    return message != null ? new CompilerMessage(myBuilderName, getKind(message.getCategory()), message.getDetails())
+    return message != null ? new CompilerMessage(myBuilderName, message.getKind(), message.getDetails())
                            : getDefaultCompilerMessage(messageText);
   }
 
@@ -72,21 +70,6 @@ public class RebarProcessAdapter extends BuilderProcessAdapter {
     myMessageBuilder.append(messagePart.trim());
   }
 
-  @NotNull
-  private static BuildMessage.Kind getKind(@NotNull CompilerMessageCategory category) {
-    switch (category) {
-      case ERROR:
-        return BuildMessage.Kind.ERROR;
-      case WARNING:
-        return BuildMessage.Kind.WARNING;
-      case INFORMATION:
-        return BuildMessage.Kind.INFO;
-      case STATISTICS:
-        return BuildMessage.Kind.PROGRESS;
-      default:
-        throw new AssertionError();
-    }
-  }
 
   private static boolean isMessageContinue(@NotNull String messagePart) {
     return messagePart.isEmpty() || Character.isWhitespace(messagePart.charAt(0));
