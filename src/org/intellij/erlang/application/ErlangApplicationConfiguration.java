@@ -64,6 +64,11 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
     return myUseTestCodePath;
   }
 
+  @Override
+  public boolean isUseRebarPaths() {
+    return false;
+  }
+
   public void setUseTestCodePath(boolean useTestCodePath) {
     myUseTestCodePath = useTestCodePath;
   }

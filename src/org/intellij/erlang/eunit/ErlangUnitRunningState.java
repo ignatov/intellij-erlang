@@ -69,6 +69,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @Override
+  protected boolean useRebarOutputPaths() {
+    return myConfiguration.getConfigData().isUseRebarPaths();
+  }
+
+  @Override
   protected boolean isNoShellMode() {
     return true;
   }

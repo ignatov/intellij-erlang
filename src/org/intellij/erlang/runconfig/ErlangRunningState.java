@@ -70,7 +70,7 @@ public abstract class ErlangRunningState extends CommandLineState {
   }
 
   protected List<String> getCodePath() throws ExecutionException {
-    return ErlangConsoleUtil.getCodePath(myModule, useTestCodePath());
+    return ErlangConsoleUtil.getCodePath(myModule, useTestCodePath(), useRebarOutputPaths());
   }
 
   public Module getModule() {
@@ -78,6 +78,8 @@ public abstract class ErlangRunningState extends CommandLineState {
   }
 
   protected abstract boolean useTestCodePath();
+
+  protected abstract boolean useRebarOutputPaths();
 
   protected abstract boolean isNoShellMode();
 

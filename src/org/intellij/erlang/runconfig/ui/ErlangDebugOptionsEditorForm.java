@@ -21,10 +21,7 @@ import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.ui.InputValidator;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.ui.CollectionListModel;
-import com.intellij.ui.IdeBorderFactory;
-import com.intellij.ui.ListUtil;
-import com.intellij.ui.ToolbarDecorator;
+import com.intellij.ui.*;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBList;
 import com.intellij.util.containers.ContainerUtil;
@@ -40,6 +37,9 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   private JPanel myContent;
   private JPanel myModulesNotToInterpretPanel;
   private JBCheckBox myAutoUpdateModulesNotToInterpretCheckBox;
+  private JComboBox myInterpretModulesLevelComboBox;
+  @SuppressWarnings("unused")
+  private JLabel myInterpretModulesPolicyLabel;
 
   private JBList myModulesNotToInterpretList;
   private CollectionListModel myModulesNotToInterpretListModel;
@@ -50,6 +50,15 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
 
   @Override
   protected void resetEditorFrom(ErlangRunConfigurationBase.ErlangDebugOptions erlangDebugOptions) {
+    myInterpretModulesLevelComboBox.removeAllItems();
+    ErlangRunConfigurationBase.ErlangDebugOptions.InterpretModulesLevel[] levels = ErlangRunConfigurationBase.ErlangDebugOptions.InterpretModulesLevel.values();
+    for (ErlangRunConfigurationBase.ErlangDebugOptions.InterpretModulesLevel level : levels) {
+      //noinspection unchecked
+      myInterpretModulesLevelComboBox.addItem(level);
+    }
+    //noinspection unchecked
+    myInterpretModulesLevelComboBox.setRenderer(getInterpretModulesLevelListCellRendererWrapper());
+    myInterpretModulesLevelComboBox.setSelectedItem(erlangDebugOptions.getInterpretModulesLevel());
     myModulesNotToInterpretListModel.removeAll();
     for (String module : erlangDebugOptions.getModulesNotToInterpret()) {
       //noinspection unchecked
@@ -60,6 +69,8 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
 
   @Override
   protected void applyEditorTo(ErlangRunConfigurationBase.ErlangDebugOptions erlangDebugOptions) throws ConfigurationException {
+    erlangDebugOptions.setInterpretModulesLevel(
+      (ErlangRunConfigurationBase.ErlangDebugOptions.InterpretModulesLevel) myInterpretModulesLevelComboBox.getSelectedItem());
     erlangDebugOptions.setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected());
     Set<String> modules = erlangDebugOptions.isAutoUpdateModulesNotToInterpret() ? Collections.<String>emptySet() :
       ContainerUtil.map2Set(myModulesNotToInterpretListModel.getItems(),
@@ -111,5 +122,27 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
       .setMoveDownAction(null)
       .createPanel();
     myModulesNotToInterpretPanel.setBorder(IdeBorderFactory.createTitledBorder("Modules not to interpret", true));
+  }
+
+  private static ListCellRendererWrapper<ErlangRunConfigurationBase.ErlangDebugOptions.InterpretModulesLevel> getInterpretModulesLevelListCellRendererWrapper() {
+    return new ListCellRendererWrapper<ErlangRunConfigurationBase.ErlangDebugOptions.InterpretModulesLevel>() {
+      @Override
+      public void customize(JList list, ErlangRunConfigurationBase.ErlangDebugOptions.InterpretModulesLevel level, int index, boolean selected, boolean hasFocus) {
+        if (level == null) {
+          return;
+        }
+        switch (level) {
+          case PROJECT:
+            setText("All project");
+            break;
+          case DEPENDENCIES:
+            setText("Dependencies");
+            break;
+          case MODULE:
+            setText("Current module");
+            break;
+        }
+      }
+    };
   }
 }

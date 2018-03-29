@@ -29,6 +29,7 @@ public class ErlangCompilerOptions {
   public ErlangCompilerOptions(ErlangCompilerOptions options) {
     myUseRebarCompiler = options.myUseRebarCompiler;
     myAddDebugInfoEnabled = options.myAddDebugInfoEnabled;
+    myCustomRebarConfig = options.myCustomRebarConfig;
   }
 
   @Tag("useRebarCompiler")
@@ -36,6 +37,12 @@ public class ErlangCompilerOptions {
 
   @Tag("useDebugInfo")
   public boolean myAddDebugInfoEnabled = true;
+
+  @Tag("customRebarConfig")
+  public String myCustomRebarConfig = "";
+
+  @Tag("customEunitRebarConfig")
+  public String myCustomEunitRebarConfig = "";
 
   @Tag("additionalErlcArguments")
   @AbstractCollection(elementTag = "arg", elementTypes = String.class)

@@ -55,6 +55,24 @@ public class ErlangCompilerSettings implements PersistentStateComponent<ErlangCo
     myCompilerOptions.myUseRebarCompiler = useRebarCompiler;
   }
 
+  @NotNull
+  public String getCustomRebarConfig() {
+    return myCompilerOptions.myCustomRebarConfig;
+  }
+
+  public void setCustomRebarConfig(@NotNull String customRebarConfig) {
+    myCompilerOptions.myCustomRebarConfig = customRebarConfig;
+  }
+
+  @NotNull
+  public String getCustomEunitRebarConfig() {
+    return myCompilerOptions.myCustomEunitRebarConfig;
+  }
+
+  public void setCustomEunitRebarConfig(@NotNull String customEunitRebarConfig) {
+    myCompilerOptions.myCustomEunitRebarConfig = customEunitRebarConfig;
+  }
+
   public boolean isAddDebugInfoEnabled() {
     return myCompilerOptions.myAddDebugInfoEnabled;
   }

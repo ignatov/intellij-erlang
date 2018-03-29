@@ -30,6 +30,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.io.FileUtil;
@@ -63,10 +64,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.URL;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
@@ -207,15 +205,52 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   private void setModulesToInterpret() {
     Project project = myExecutionEnvironment.getProject();
-    Collection<ErlangFile> erlangModules = ErlangModulesUtil.getErlangModules(project);
     ErlangRunConfigurationBase<?> runConfiguration = getRunConfiguration();
+
+    Collection<ErlangFile> erlangModules;
+    switch (runConfiguration.getDebugOptions().getInterpretModulesLevel()) {
+      case PROJECT:
+        erlangModules = ErlangModulesUtil.getErlangModules(project);
+        break;
+      case DEPENDENCIES:
+        erlangModules = new ArrayList<>();
+        Module currentModule = runConfiguration.getConfigurationModule().getModule();
+        if (currentModule != null) {
+          erlangModules.addAll(ErlangModulesUtil.getErlangModules(currentModule, false));
+          ModuleManager moduleManager = ModuleManager.getInstance(project);
+          for (Module module : moduleManager.getModules()) {
+            if (moduleManager.isModuleDependent(currentModule, module)) {
+              erlangModules.addAll(ErlangModulesUtil.getErlangModules(module, false));
+            }
+          }
+        }
+        break;
+      case MODULE:
+        Module module = runConfiguration.getConfigurationModule().getModule();
+        if (module != null) {
+          erlangModules = ErlangModulesUtil.getErlangModules(module, false);
+        } else {
+          erlangModules = new ArrayList<>();
+        }
+        break;
+      default:
+        erlangModules = new ArrayList<>();
+    }
+
     if (runConfiguration.isUseTestCodePath()) {
-      HashSet<ErlangFile> erlangTestModules = new HashSet<>();
-      for (Module module : runConfiguration.getModules()) {
-        erlangTestModules.addAll(ErlangModulesUtil.getErlangModules(module, true));
+      if (runConfiguration.isUseRebarPaths()) {
+        Module module = runConfiguration.getConfigurationModule().getModule();
+        if (module != null) {
+          erlangModules.addAll(ErlangModulesUtil.getErlangModules(module, true));
+        }
+      } else {
+        HashSet<ErlangFile> erlangTestModules = new HashSet<>();
+        for (Module module : runConfiguration.getModules()) {
+          erlangTestModules.addAll(ErlangModulesUtil.getErlangModules(module, true));
+        }
+        erlangTestModules.addAll(erlangModules);
+        erlangModules = erlangTestModules;
       }
-      erlangTestModules.addAll(erlangModules);
-      erlangModules = erlangTestModules;
     }
     Set<String> notToInterpret = runConfiguration.getDebugOptions().getModulesNotToInterpret();
     List<String> moduleSourcePaths = ContainerUtil.newArrayListWithCapacity(erlangModules.size());
