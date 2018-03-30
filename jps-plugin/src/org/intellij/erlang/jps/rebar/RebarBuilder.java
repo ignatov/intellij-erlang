@@ -37,10 +37,10 @@ import org.jetbrains.jps.model.JpsDummyElement;
 import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.JpsModule;
+import org.jetbrains.jps.util.JpsPathUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Collections;
 
@@ -75,8 +75,8 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
     boolean isRebarRun = false;
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
-      String contentRootPath = new URL(contentRootUrl).getPath();
-      File contentRootDir = new File(contentRootPath);
+      String contentRootPath = JpsPathUtil.urlToPath(contentRootUrl);
+      File contentRootDir = JpsPathUtil.urlToFile(contentRootUrl);
       File rebarConfigFile = new File(contentRootDir, REBAR_CONFIG_FILE_NAME);
       if (!rebarConfigFile.exists()) continue;
       runRebar(escriptPath, rebarPath, contentRootPath, compilerOptions.myAddDebugInfoEnabled, context);
