@@ -25,6 +25,7 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.apache.commons.lang3.ObjectUtils;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
@@ -107,7 +108,8 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
       public String getName() {
         ErlangFunctionCallExpression call = myPointer.getElement();
         assert call != null;
-        return call.getName();
+        String name = call.getName();
+        return ObjectUtils.defaultIfNull(ErlangPsiImplUtil.toAtomName(name), name);
       }
 
       @NotNull

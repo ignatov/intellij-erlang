@@ -1,0 +1,1 @@
+foo() -> 'q<caret> ote'().

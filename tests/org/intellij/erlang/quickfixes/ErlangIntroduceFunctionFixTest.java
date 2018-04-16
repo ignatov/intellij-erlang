@@ -37,4 +37,5 @@ public class ErlangIntroduceFunctionFixTest extends ErlangQuickFixTestBase {
   public void testFunctionExpression()  { doTest("Create Function lll/6"); }
   public void testFunctionSpec()        { doTest("Create Function lll/6"); }
   public void testFunctionExport()      { doTest("Create Function lll/6"); }
+  public void testQuote()               { doTest("Create Function 'q ote'/0"); }
 }
