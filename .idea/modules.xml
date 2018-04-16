@@ -2,19 +2,16 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Erlang.iml" filepath="$PROJECT_DIR$/.idea/modules/Erlang.iml" />
       <module fileurl="file://$PROJECT_DIR$/Erlang.iml" filepath="$PROJECT_DIR$/Erlang.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Erlang_main.iml" filepath="$PROJECT_DIR$/.idea/modules/Erlang_main.iml" group="Erlang" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Erlang_test.iml" filepath="$PROJECT_DIR$/.idea/modules/Erlang_test.iml" group="Erlang" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang.iml" group="intellij-erlang" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang_main.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang_main.iml" group="intellij-erlang" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang_main.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang_main.iml" group="intellij-erlang" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang_test.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang_test.iml" group="intellij-erlang" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin.iml" group="jps-plugin" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang_test.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang_test.iml" group="intellij-erlang" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin.iml" group="jps-plugin" />
       <module fileurl="file://$PROJECT_DIR$/jps-plugin/jps-plugin.iml" filepath="$PROJECT_DIR$/jps-plugin/jps-plugin.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_main.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_main.iml" group="jps-plugin" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_main.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_main.iml" group="jps-plugin" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_test.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_test.iml" group="jps-plugin" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_test.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_test.iml" group="jps-plugin" />
     </modules>
   </component>
