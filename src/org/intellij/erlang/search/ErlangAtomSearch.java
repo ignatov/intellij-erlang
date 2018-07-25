@@ -37,7 +37,7 @@ public class ErlangAtomSearch extends QueryExecutorBase<PsiReference, References
 
   @Override
   public void processQuery(@NotNull ReferencesSearch.SearchParameters parameters,
-                           @NotNull Processor<PsiReference> consumer) {
+                           @NotNull Processor<? super PsiReference> consumer) {
     PsiElement element = parameters.getElementToSearch();
     if (!(element instanceof ErlangQAtom)) return;
 
@@ -47,21 +47,22 @@ public class ErlangAtomSearch extends QueryExecutorBase<PsiReference, References
     SearchScope searchScope = parameters.getEffectiveSearchScope();
     MyCodeOccurenceProcessor processor = new MyCodeOccurenceProcessor(element, consumer);
     short searchContext = UsageSearchContext.IN_CODE | UsageSearchContext.IN_STRINGS;
-    PsiSearchHelper.SERVICE.getInstance(element.getProject()).processElementsWithWord(processor, searchScope, name, searchContext, true);
+    PsiSearchHelper.getInstance(element.getProject()).processElementsWithWord(processor, searchScope, name, searchContext, true);
   }
 
   private static class MyCodeOccurenceProcessor implements TextOccurenceProcessor {
     private PsiElement myElement;
-    private Processor<PsiReference> myPsiReferenceProcessor;
+    private Processor<? super PsiReference> myPsiReferenceProcessor;
 
-    public MyCodeOccurenceProcessor(@NotNull PsiElement element, @NotNull Processor<PsiReference> psiReferenceProcessor) {
+    public MyCodeOccurenceProcessor(@NotNull PsiElement element,
+                                    @NotNull Processor<? super PsiReference> psiReferenceProcessor) {
       myElement = element;
       myPsiReferenceProcessor = psiReferenceProcessor;
     }
 
     public boolean execute(@NotNull PsiElement element, int offsetInElement) {
       PsiReference ref = element.getReference();
-      if (ref!=null && ref.isReferenceTo(myElement)) {
+      if (ref != null && ref.isReferenceTo(myElement)) {
         return myPsiReferenceProcessor.process(ref);
       }
       return true;
