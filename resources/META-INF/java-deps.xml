@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<idea-plugin version="2">
+<idea-plugin>
   <extensions defaultExtensionNs="com.intellij">
     <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.module.ErlangModuleType"/>
     <compileServer.plugin classpath="jps-plugin.jar"/>

@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<idea-plugin version="2">
+<idea-plugin>
     <!--Rebar related extensions -->
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable"/>
