@@ -67,6 +67,7 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
 
   @Override
   public EditorNotificationPanel createNotificationPanel(@NotNull VirtualFile file, @NotNull FileEditor fileEditor) {
+    if (ApplicationManager.getApplication().isUnitTestMode()) return null;
     if (!(file.getFileType() instanceof ErlangFileType)) return null;
 
     PsiFile psiFile = PsiManager.getInstance(myProject).findFile(file);

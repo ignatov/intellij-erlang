@@ -54,8 +54,12 @@ public class Erlang17SmallIdeHighlightingTest extends ErlangHighlightingTestBase
 
   @Override
   protected void tearDown() throws Exception {
-    ErlangSdkForSmallIdes.setUpOrUpdateSdk(getProject(), "");
-    super.tearDown();
+    try {
+      ErlangSdkForSmallIdes.setUpOrUpdateSdk(getProject(), "");
+    }
+    finally {
+      super.tearDown();
+    }
   }
 
   public void testCorrectSdkReleaseIsReported() {
