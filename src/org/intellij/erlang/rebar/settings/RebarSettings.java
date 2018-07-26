@@ -21,15 +21,9 @@ import com.intellij.openapi.project.Project;
 import org.intellij.erlang.jps.rebar.JpsRebarSettingsSerializer;
 import org.intellij.erlang.jps.rebar.RebarSettingsState;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@State(
-  name = JpsRebarSettingsSerializer.REBAR_COMPONENT_NAME,
-  storages = {
-    @Storage(file = StoragePathMacros.PROJECT_FILE),
-    @Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/" + JpsRebarSettingsSerializer.REBAR_CONFIG_FILE_NAME, scheme = StorageScheme.DIRECTORY_BASED)
-  }
-)
+@State(name = JpsRebarSettingsSerializer.REBAR_COMPONENT_NAME,
+       storages = {@Storage(value = JpsRebarSettingsSerializer.REBAR_CONFIG_FILE_NAME)})
 public final class RebarSettings implements PersistentStateComponent<RebarSettingsState> {
   @NotNull private RebarSettingsState myRebarSettingsState = new RebarSettingsState();
 
@@ -39,7 +33,7 @@ public final class RebarSettings implements PersistentStateComponent<RebarSettin
     return persisted != null ? persisted : new RebarSettings();
   }
 
-  @Nullable
+  @NotNull
   @Override
   public RebarSettingsState getState() {
     return myRebarSettingsState;

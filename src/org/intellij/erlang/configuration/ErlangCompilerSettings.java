@@ -26,13 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-@State(
-  name = JpsErlangCompilerOptionsSerializer.COMPILER_OPTIONS_COMPONENT_NAME,
-  storages = {
-    @Storage(file = StoragePathMacros.PROJECT_FILE),
-    @Storage(file = StoragePathMacros.PROJECT_CONFIG_DIR + "/compiler.xml", scheme = StorageScheme.DIRECTORY_BASED)
-  }
-)
+@State(name = JpsErlangCompilerOptionsSerializer.COMPILER_OPTIONS_COMPONENT_NAME, storages = {@Storage(value = "compiler.xml")})
 public class ErlangCompilerSettings implements PersistentStateComponent<ErlangCompilerOptions> {
   private ErlangCompilerOptions myCompilerOptions = new ErlangCompilerOptions();
 
@@ -43,7 +37,7 @@ public class ErlangCompilerSettings implements PersistentStateComponent<ErlangCo
   }
 
   @Override
-  public void loadState(ErlangCompilerOptions state) {
+  public void loadState(@NotNull ErlangCompilerOptions state) {
     myCompilerOptions = state;
   }
 
