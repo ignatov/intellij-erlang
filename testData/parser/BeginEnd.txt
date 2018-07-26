@@ -28,5 +28,5 @@ ERL_FILE
                 PsiElement(()('(')
                 PsiElement())(')')
             PsiElement(,)(',')
-            PsiErrorElement:<expression> expected, unexpected end of file
+            PsiErrorElement:<expression> expected
               <empty list>

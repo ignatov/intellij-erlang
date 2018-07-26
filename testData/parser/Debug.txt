@@ -25,7 +25,7 @@ ERL_FILE
             ERL_ATOM
               PsiElement(atom_name)('ok')
     PsiElement(.)('.')
-    PsiErrorElement:'' unexpected
+    PsiErrorElement:unmatched input
       PsiElement(BAD_CHARACTER)('')
   PsiComment(function_doc_comment)('%% API')
   ERL_ATTRIBUTE
@@ -38,7 +38,7 @@ ERL_FILE
         PsiElement(])(']')
       PsiElement())(')')
     PsiElement(.)('.')
-    PsiErrorElement:'' unexpected
+    PsiErrorElement:unmatched input
       PsiElement(BAD_CHARACTER)('')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
