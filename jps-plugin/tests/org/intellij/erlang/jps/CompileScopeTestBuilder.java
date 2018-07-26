@@ -17,17 +17,14 @@ package org.intellij.erlang.jps;
 
 import org.jetbrains.jps.builders.BuildTarget;
 import org.jetbrains.jps.builders.BuildTargetType;
-import org.jetbrains.jps.builders.java.JavaModuleBuildTargetType;
 import org.jetbrains.jps.incremental.CompileScope;
 import org.jetbrains.jps.incremental.CompileScopeImpl;
-import org.jetbrains.jps.incremental.ModuleBuildTarget;
 import org.jetbrains.jps.incremental.TargetTypeRegistry;
-import org.jetbrains.jps.incremental.artifacts.ArtifactBuildTarget;
-import org.jetbrains.jps.incremental.artifacts.ArtifactBuildTargetType;
-import org.jetbrains.jps.model.artifact.JpsArtifact;
-import org.jetbrains.jps.model.module.JpsModule;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CompileScopeTestBuilder {
   private final boolean myForceBuild;
@@ -42,38 +39,8 @@ public class CompileScopeTestBuilder {
     return new CompileScopeTestBuilder(false);
   }
 
-  public static CompileScopeTestBuilder recompile() {
-    return new CompileScopeTestBuilder(true);
-  }
-
   private CompileScopeTestBuilder(boolean forceBuild) {
     myForceBuild = forceBuild;
-  }
-
-  public CompileScopeTestBuilder allModules() {
-    myTargetTypes.addAll(JavaModuleBuildTargetType.ALL_TYPES);
-    return this;
-  }
-
-  public CompileScopeTestBuilder module(JpsModule module) {
-    myTargets.add(new ModuleBuildTarget(module, JavaModuleBuildTargetType.PRODUCTION));
-    myTargets.add(new ModuleBuildTarget(module, JavaModuleBuildTargetType.TEST));
-    return this;
-  }
-
-  public CompileScopeTestBuilder allArtifacts() {
-    myTargetTypes.add(ArtifactBuildTargetType.INSTANCE);
-    return this;
-  }
-
-  public CompileScopeTestBuilder artifact(JpsArtifact artifact) {
-    myTargets.add(new ArtifactBuildTarget(artifact));
-    return this;
-  }
-
-  public CompileScopeTestBuilder targetTypes(BuildTargetType<?>... targets) {
-    myTargetTypes.addAll(Arrays.asList(targets));
-    return this;
   }
 
   public CompileScope build() {
@@ -83,13 +50,6 @@ public class CompileScopeTestBuilder {
 
   public CompileScopeTestBuilder all() {
     myTargetTypes.addAll(TargetTypeRegistry.getInstance().getTargetTypes());
-    return this;
-  }
-
-  public CompileScopeTestBuilder artifacts(JpsArtifact[] artifacts) {
-    for (JpsArtifact artifact : artifacts) {
-      myTargets.add(new ArtifactBuildTarget(artifact));
-    }
     return this;
   }
 }
