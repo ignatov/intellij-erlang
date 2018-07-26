@@ -21,7 +21,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 
-@State(name = "DialyzerSettings", storages = {@Storage(value = "dialyzer.xml")})
+@State(name = "DialyzerSettings", storages = {
+  @Storage("emacs.xml"),
+  @Storage(value = "dialyzer.xml", deprecated = true)
+})
 public final class DialyzerSettings implements PersistentStateComponent<DialyzerSettings> {
   @NotNull
   private String myCurrentPltPath = "";
