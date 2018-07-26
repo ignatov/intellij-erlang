@@ -81,11 +81,13 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
            completeExpression(file, editor, ErlangTypes.ERL_OF, ErlangTryExpression.class);
   }
 
-  private static boolean completeExpression(@NotNull PsiFile file, @NotNull Editor editor,
-                                            @NotNull IElementType lastElementType, @NotNull Class expectedParentClass) {
+  private static boolean completeExpression(@NotNull PsiFile file,
+                                            @NotNull Editor editor,
+                                            @NotNull IElementType lastElementType,
+                                            @NotNull Class expectedParentClass) {
     PsiElement lastElement = getPrecedingLeafOnSameLineOfType(file, editor, lastElementType);
     PsiElement parent = lastElement != null ? lastElement.getParent() : null;
-    parent = parent != null && expectedParentClass.isInstance(parent) && !hasEnd(parent) ? parent : null;
+    parent = expectedParentClass.isInstance(parent) && !hasEnd(parent) ? parent : null;
 
     if (parent != null) {
       appendEndAndMoveCaret(file, editor, lastElement.getTextRange().getEndOffset(), needCommaAfter(parent));

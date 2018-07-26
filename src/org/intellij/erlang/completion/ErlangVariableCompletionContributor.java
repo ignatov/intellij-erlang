@@ -136,7 +136,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
 
     @SuppressWarnings("NullableProblems")
     private MyBaseScopeProcessor(@NotNull Collection<ErlangQVar> result, @NotNull PsiElement element, @Nullable PsiElement scopeOwner) {
-      this(ContainerUtil.<String>newArrayList(), element, scopeOwner, true);
+      this(ContainerUtil.newArrayList(), element, scopeOwner, true);
       myVars = result;
     }
 

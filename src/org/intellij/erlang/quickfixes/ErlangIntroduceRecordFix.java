@@ -41,7 +41,7 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
     PsiElement element = descriptor.getPsiElement();
 
-    List<String> fieldNames = element instanceof ErlangRecordRef ? getFieldNames((ErlangRecordRef) element) : ContainerUtil.<String>emptyList();
+    List<String> fieldNames = element instanceof ErlangRecordRef ? getFieldNames((ErlangRecordRef) element) : ContainerUtil.emptyList();
     PsiElement record = ErlangElementFactory.createRecordFromText(project, element.getText(), ArrayUtil.toStringArray(fieldNames));
     PsiFile file = element.getContainingFile();
 

@@ -219,7 +219,7 @@ public class ErlangPsiImplUtil {
     PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
     if (macrosDefinition instanceof ErlangMacrosDefinition) {
       ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
-      List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.<ErlangExpression>emptyList();
+      List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.emptyList();
       for (ErlangExpression ee : expressionList) {
         if (ee instanceof ErlangMaxExpression) {
           ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
@@ -582,7 +582,7 @@ public class ErlangPsiImplUtil {
                                                                                           @Nullable String exclude) {
     List<LookupElement> lookupElements = ContainerUtil.newArrayList();
     for (String moduleName : ErlangModuleIndex.getNames(project)) {
-      if (exclude != null && moduleName.equals(exclude)) continue;
+      if (moduleName.equals(exclude)) continue;
       for (ErlangFunction function : getExternalFunctionForCompletion(project, moduleName)) {
         String functionName = function.getName();
         String fullName = moduleName + ":" + functionName;
@@ -719,7 +719,7 @@ public class ErlangPsiImplUtil {
 
       List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(BUILT_IN_TYPES, s -> PrioritizedLookupElement.withPriority(
         LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler),
-        ErlangCompletionContributor.TYPE_PRIORITY)) : ContainerUtil.<LookupElement>emptyList();
+        ErlangCompletionContributor.TYPE_PRIORITY)) : ContainerUtil.emptyList();
 
       List<LookupElement> foundedTypes = ContainerUtil.map(
         types,
@@ -771,7 +771,7 @@ public class ErlangPsiImplUtil {
 
     ErlangFunTypeSigs signature = getSignature(o);
     List<ErlangTypeSig> typeSigs = signature != null ? signature.getTypeSigList()
-                                                     : ContainerUtil.<ErlangTypeSig>emptyList();
+                                                     : ContainerUtil.emptyList();
     ErlangTypeSig sig = typeSigs.size() > 0 ? typeSigs.get(0) : null;
     return sig != null ? sig.getFunType().getFunTypeArguments().getTypeList().size() : -1;
   }
@@ -1667,11 +1667,11 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<ErlangType> getCallBackSpecArguments(@NotNull ErlangCallbackSpec spec) {
     ErlangFunTypeSigs funTypeSigs = getFunTypeSigs(spec);
-    List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
+    List<ErlangTypeSig> typeSigList = funTypeSigs != null ? funTypeSigs.getTypeSigList() : ContainerUtil.emptyList();
     ErlangTypeSig typeSig = ContainerUtil.getFirstItem(typeSigList);
     ErlangFunType funType = typeSig != null ? typeSig.getFunType() : null;
     ErlangFunTypeArguments arguments = funType != null ? funType.getFunTypeArguments() : null;
-    return arguments != null ? arguments.getTypeList() : ContainerUtil.<ErlangType>emptyList();
+    return arguments != null ? arguments.getTypeList() : ContainerUtil.emptyList();
   }
 
   public static boolean isPrivateFunction(@NotNull PsiFile containingFile, @NotNull ErlangFunction function) {

@@ -57,7 +57,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
        css = ResourceUtil.loadText(ResourceUtil.getResource(
          ErlangSdkDocProviderBase.class, "/documentation", "erlang-sdk-doc.css"));
     } catch (IOException e) {
-      throw (AssertionError) new AssertionError().initCause(e);
+      throw new AssertionError(e);
     }
     HTTP_STYLE = "<style type=\"text/css\">\n" + css + "</style>\n";
   }
@@ -149,13 +149,12 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
     return null;
   }
 
-  @NotNull
-  private String appendCorrectedLine(@NotNull StringBuilder builder, @NotNull String line) {
+  private void appendCorrectedLine(@NotNull StringBuilder builder, @NotNull String line) {
     Matcher matcher = PATTERN_HREF.matcher(line);
     int lastCopiedChar = 0;
     while (matcher.find()) {
       MatchResult matchResult = matcher.toMatchResult();
-      builder.append(line.substring(lastCopiedChar, matchResult.start()));
+      builder.append(line, lastCopiedChar, matchResult.start());
       String linkHref = matchResult.group(1);
       String convertedLink = convertLink(linkHref);
       builder.append("<a href=\"")
@@ -163,8 +162,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
         .append("\">");
       lastCopiedChar = matchResult.end();
     }
-    builder.append(line.substring(lastCopiedChar, line.length()));
-    return line;
+    builder.append(line.substring(lastCopiedChar));
   }
 
   @NotNull
@@ -206,7 +204,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
         }
       }
     }
-    return fileUrls != null ? fileUrls : Collections.<String>emptyList();
+    return fileUrls != null ? fileUrls : Collections.emptyList();
   }
 
   @Nullable
@@ -227,7 +225,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
     return null;
   }
 
-  @Nullable
+  @NotNull
   private static String httpDocRelPath(@NotNull VirtualFile virtualFile) {
     String appDirName = virtualFile.getParent().getParent().getName();
     String prefix;

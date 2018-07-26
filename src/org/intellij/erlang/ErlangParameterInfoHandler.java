@@ -91,7 +91,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
       }
       if (clauses.size() > 0) {
-        Collections.sort(clauses, (lhs, rhs) -> {
+        clauses.sort((lhs, rhs) -> {
           int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
           int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
           return Integer.signum(lhsSize - rhsSize);
@@ -105,7 +105,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
           ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
           String moduleName = moduleRef.getText();
           String functionName = erlFunctionCall.getName();
-          List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.<ErlangBifDescriptor>emptyList();
+          List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.emptyList();
           context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs(moduleName, functionName), moduleInfo)));
           context.showHint(args, args.getTextRange().getStartOffset(), this);
         }
@@ -163,7 +163,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       List<ErlangArgumentDefinition> args = ((ErlangFunctionClause) p).getArgumentDefinitionList().getArgumentDefinitionList();
 
       ErlangFunTypeArguments arguments = argsRef.get();
-      List<ErlangType> typeList = arguments == null ? ContainerUtil.<ErlangType>emptyList() : arguments.getTypeList();
+      List<ErlangType> typeList = arguments == null ? ContainerUtil.emptyList() : arguments.getTypeList();
       boolean typesAvailable = typeList.size() == args.size();
 
       for (int i = 0; i < args.size(); i++) {

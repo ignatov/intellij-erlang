@@ -211,7 +211,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testAppFileKeywordsAreDistinct() {
     Set<String> set = ContainerUtil.newHashSet(ErlangAppCompletionContributor.KEYWORDS);
-    assertTrue(set.size() == ErlangAppCompletionContributor.KEYWORDS.size());
+    assertEquals(set.size(), ErlangAppCompletionContributor.KEYWORDS.size());
   }
 
   public void testSingleQuotes() {

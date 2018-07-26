@@ -94,7 +94,7 @@ public class ErlangAppCompletionContributor extends CompletionContributor {
         ErlangTupleExpression tuple = PsiTreeUtil.getParentOfType(element, ErlangTupleExpression.class);
         ErlangExpression expression = PsiTreeUtil.getParentOfType(element, ErlangExpression.class);
         List<ErlangExpression> expressions = tuple != null ? tuple.getExpressionList()
-                                                           : ContainerUtil.<ErlangExpression>emptyList();
+                                                           : ContainerUtil.emptyList();
         return expressions.size() > position && expressions.get(position) == expression;
       }
     };

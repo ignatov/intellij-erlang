@@ -187,7 +187,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     private static boolean isInsideEbinOrSrcDirectory(VirtualFile file) {
       VirtualFile parentDirectory = file.getParent();
       String parentDirectoryName = parentDirectory != null ? parentDirectory.getName() : null;
-      return null != parentDirectoryName && ("src".equals(parentDirectoryName) || "ebin".equals(parentDirectoryName));
+      return "src".equals(parentDirectoryName) || "ebin".equals(parentDirectoryName);
     }
   }
 

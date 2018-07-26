@@ -150,7 +150,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   private static void performInplaceIntroduce(@NotNull Editor editor, @NotNull ErlangExpression expression, boolean replaceAll) {
-    List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : ContainerUtil.<PsiElement>list(expression);
+    List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : ContainerUtil.list(expression);
     PsiElement declaration = performElement(editor, expression, occurrences);
 
     ErlangQVar target = PsiTreeUtil.findChildOfType(declaration, ErlangQVar.class);

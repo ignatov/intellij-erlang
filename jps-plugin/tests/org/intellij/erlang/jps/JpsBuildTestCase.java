@@ -213,7 +213,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
   }
 
   protected void loadProject(String projectPath) {
-    loadProject(projectPath, Collections.<String, String>emptyMap());
+    loadProject(projectPath, Collections.emptyMap());
   }
 
   private void loadProject(String projectPath,

@@ -43,7 +43,7 @@ class ErlangCompletionUtil {
     PsiElement argListOwner = argList != null ? argList.getParent() : null;
     ErlangFunctionCallExpression call = ObjectUtils.tryCast(argListOwner, ErlangFunctionCallExpression.class);
     int argIndex = call != null ? ContainerUtil.indexOfIdentity(argList.getExpressionList(), expr) : -1;
-    return argIndex != -1 ? expectedArgumentTypes(call, argIndex) : Collections.<ErlangExpressionType>emptySet();
+    return argIndex != -1 ? expectedArgumentTypes(call, argIndex) : Collections.emptySet();
   }
 
   static boolean containsType(@NotNull Set<ErlangExpressionType> typeSet, @NotNull ErlangExpressionType type) {
@@ -64,7 +64,7 @@ class ErlangCompletionUtil {
       ErlangFunction function = ObjectUtils.tryCast(r.getElement(), ErlangFunction.class);
       ErlangSpecification spec = function != null ? function.findSpecification() : null;
       ErlangFunTypeSigs signature = ErlangPsiImplUtil.getSignature(spec);
-      List<ErlangTypeSig> sigs = signature != null ? signature.getTypeSigList() : ContainerUtil.<ErlangTypeSig>emptyList();
+      List<ErlangTypeSig> sigs = signature != null ? signature.getTypeSigList() : ContainerUtil.emptyList();
       for (ErlangTypeSig sig : sigs) {
         ErlangFunTypeArguments arguments = sig.getFunType().getFunTypeArguments();
         ErlangType type = arguments.getTypeList().get(argIndex);

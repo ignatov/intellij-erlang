@@ -25,7 +25,7 @@ public class RebarSettingsState {
   }
 
   public RebarSettingsState(RebarSettingsState state) {
-    myRebarPath = new String(state.myRebarPath);
+    myRebarPath = state.myRebarPath;
   }
 
   @Tag("rebarPath")

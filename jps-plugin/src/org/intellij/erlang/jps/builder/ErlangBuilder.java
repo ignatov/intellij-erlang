@@ -284,7 +284,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   private static void addParseTransforms(@NotNull GeneralCommandLine commandLine,
                                          @Nullable JpsModule module) throws ProjectBuildException {
     JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
-    List<String> parseTransforms = extension != null ? extension.getParseTransforms() : Collections.<String>emptyList();
+    List<String> parseTransforms = extension != null ? extension.getParseTransforms() : Collections.emptyList();
     if (parseTransforms.isEmpty()) return;
     for (String ptModule : parseTransforms) {
       commandLine.addParameter("+{parse_transform, " + ptModule + "}");
@@ -296,7 +296,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
                                   @NotNull ErlangTarget target,
                                   @NotNull CompileContext context) throws ProjectBuildException {
     List<JpsModule> codePathModules = ContainerUtil.newArrayList();
-    collectDependentModules(module, codePathModules, ContainerUtil.<String>newHashSet());
+    collectDependentModules(module, codePathModules, ContainerUtil.newHashSet());
     addModuleToCodePath(commandLine, module, target.isTests(), context);
     for (JpsModule codePathModule : codePathModules) {
       if (codePathModule != module) {

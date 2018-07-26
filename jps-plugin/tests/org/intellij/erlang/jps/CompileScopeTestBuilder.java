@@ -27,7 +27,6 @@ import org.jetbrains.jps.incremental.artifacts.ArtifactBuildTargetType;
 import org.jetbrains.jps.model.artifact.JpsArtifact;
 import org.jetbrains.jps.model.module.JpsModule;
 
-import java.io.File;
 import java.util.*;
 
 public class CompileScopeTestBuilder {
@@ -78,8 +77,8 @@ public class CompileScopeTestBuilder {
   }
 
   public CompileScope build() {
-    Collection<BuildTargetType<?>> typesToForceBuild = myForceBuild ? myTargetTypes : Collections.<BuildTargetType<?>>emptyList();
-    return new CompileScopeImpl(myTargetTypes, typesToForceBuild, myTargets, Collections.<BuildTarget<?>,Set<File>>emptyMap());
+    Collection<BuildTargetType<?>> typesToForceBuild = myForceBuild ? myTargetTypes : Collections.emptyList();
+    return new CompileScopeImpl(myTargetTypes, typesToForceBuild, myTargets, Collections.emptyMap());
   }
 
   public CompileScopeTestBuilder all() {

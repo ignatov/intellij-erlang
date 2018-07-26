@@ -689,7 +689,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     for (ErlangAttribute attr : getAttributes()) {
       ErlangOptionalCallbacks callbacks = attr.getOptionalCallbacks();
       ErlangOptionalCallbackFunctions opts = callbacks != null ? callbacks.getOptionalCallbackFunctions() : null;
-      optionalCallbacks.addAll(opts != null ? opts.getCallbackFunctionList() : ContainerUtil.<ErlangCallbackFunction>emptyList());
+      optionalCallbacks.addAll(opts != null ? opts.getCallbackFunctionList() : ContainerUtil.emptyList());
     }
     return optionalCallbacks;
   }
@@ -757,7 +757,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     ErlangFileStub stub = getStub();
     if (stub != null) {
       String fromStub = stub.getParseTransforms();
-      List<String> split = fromStub != null ? StringUtil.split(fromStub, ",") : ContainerUtil.<String>emptyList();
+      List<String> split = fromStub != null ? StringUtil.split(fromStub, ",") : ContainerUtil.emptyList();
       parseTransforms.addAll(split);
       return;
     }

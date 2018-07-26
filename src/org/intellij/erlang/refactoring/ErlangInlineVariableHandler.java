@@ -31,14 +31,11 @@ import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.HelpID;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
-import com.intellij.util.Query;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-
-import java.util.Collection;
 
 public class ErlangInlineVariableHandler extends InlineActionHandler {
   private static final String REFACTORING_NAME = "Inline variable";

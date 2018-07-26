@@ -61,7 +61,7 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   @Override
   protected void applyEditorTo(ErlangRunConfigurationBase.ErlangDebugOptions erlangDebugOptions) throws ConfigurationException {
     erlangDebugOptions.setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected());
-    Set<String> modules = erlangDebugOptions.isAutoUpdateModulesNotToInterpret() ? Collections.<String>emptySet() :
+    Set<String> modules = erlangDebugOptions.isAutoUpdateModulesNotToInterpret() ? Collections.emptySet() :
       ContainerUtil.map2Set(myModulesNotToInterpretListModel.getItems(),
                             String::valueOf);
     erlangDebugOptions.setModulesNotToInterpret(modules);

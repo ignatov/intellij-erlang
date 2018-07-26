@@ -49,8 +49,7 @@ public class ErlangTestFinder implements TestFinder {
     Collection<PsiElement> result = ContainerUtil.newTroveSet();
     Project project = element.getProject();
     for (String suffix : SUFFIXES) {
-      Collections.addAll(result,
-        FilenameIndex.getFilesByName(project, virtualFile.getNameWithoutExtension() + suffix + EXT, getScope(project)));
+      Collections.addAll(result, FilenameIndex.getFilesByName(project, virtualFile.getNameWithoutExtension() + suffix + EXT, getScope(project)));
     }
     return result;
   }
@@ -66,8 +65,7 @@ public class ErlangTestFinder implements TestFinder {
     int length = name.length();
     for (String suffix : SUFFIXES) {
       if (name.endsWith(suffix)) {
-        Collections.addAll(result,
-          FilenameIndex.getFilesByName(project, name.substring(0, length - suffix.length()) + EXT, getScope(project)));
+        Collections.addAll(result, FilenameIndex.getFilesByName(project, name.substring(0, length - suffix.length()) + EXT, getScope(project)));
       }
     }
     return result;
@@ -80,8 +78,7 @@ public class ErlangTestFinder implements TestFinder {
   @Nullable
   private VirtualFile getVirtualFile(PsiElement element) {
     PsiFile file = findSourceElement(element);
-    if (file == null || !(file instanceof ErlangFile)) return null;
-    return file.getVirtualFile();
+    return file instanceof ErlangFile ? file.getVirtualFile() : null;
   }
 
   @Override

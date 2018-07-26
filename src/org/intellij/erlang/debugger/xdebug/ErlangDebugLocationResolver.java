@@ -52,7 +52,7 @@ public class ErlangDebugLocationResolver {
 
   @Nullable
   public VirtualFile resolveModuleFile(@Nullable String moduleName) {
-    List<VirtualFile> virtualFiles = moduleName == null ? ContainerUtil.<VirtualFile>emptyList() :
+    List<VirtualFile> virtualFiles = moduleName == null ? ContainerUtil.emptyList() :
       ErlangModuleIndex.getVirtualFilesByName(myProject, moduleName, mySessionSearchScope);
     return ContainerUtil.getFirstItem(virtualFiles);
   }

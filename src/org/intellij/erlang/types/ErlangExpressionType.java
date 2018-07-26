@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class ErlangExpressionType {
   public String getName() {
@@ -184,7 +185,7 @@ public abstract class ErlangExpressionType {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     ErlangExpressionType that = (ErlangExpressionType) o;
-    if (myName != null ? !myName.equals(that.myName) : that.myName != null) return false;
+    if (!Objects.equals(myName, that.myName)) return false;
     return true;
   }
 

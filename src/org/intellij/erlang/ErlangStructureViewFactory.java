@@ -38,7 +38,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -201,7 +200,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   //TODO replace with ContainerUtil.sorted() when it supports contravariant comparator argument
   private static <T> List<T> sorted(List<T> list, Comparator<? super T> comparator) {
     List<T> sorted = ContainerUtil.newArrayList(list);
-    Collections.sort(sorted, comparator);
+    sorted.sort(comparator);
     return sorted;
   }
 

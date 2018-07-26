@@ -137,7 +137,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   @NotNull
   private static List<String> getGlobalParseTransforms(@NotNull Module module) {
     ErlangFacet erlangFacet = ErlangFacet.getFacet(module);
-    return erlangFacet != null ? erlangFacet.getConfiguration().getParseTransforms() : ContainerUtil.<String>emptyList();
+    return erlangFacet != null ? erlangFacet.getConfiguration().getParseTransforms() : ContainerUtil.emptyList();
   }
 
   @NotNull
@@ -209,8 +209,8 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     private void buildDependenciesMap(@NotNull Module module) {
       List<String> globalParseTransform = resolvePathsFromNames(getGlobalParseTransforms(module), module);
-      buildDependenciesMap(module, getErlangHeaderFiles(module, false), ContainerUtil.<String>emptyList());
-      buildDependenciesMap(module, getErlangHeaderFiles(module, true), ContainerUtil.<String>emptyList());
+      buildDependenciesMap(module, getErlangHeaderFiles(module, false), ContainerUtil.emptyList());
+      buildDependenciesMap(module, getErlangHeaderFiles(module, true), ContainerUtil.emptyList());
       buildDependenciesMap(module, getErlangModuleFiles(module, false), globalParseTransform);
       buildDependenciesMap(module, getErlangModuleFiles(module, true), globalParseTransform);
     }

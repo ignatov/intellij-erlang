@@ -26,15 +26,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ErlangUnresolvedIncludeInspection extends ErlangInspectionBase {
-  private static String INCLUDE_LABEL = "include";
-
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
     for (ErlangInclude erlangInclude : file.getIncludes()) {
       ErlangIncludeString string = erlangInclude.getIncludeStringSafe();
       if (string == null) continue;
       List<ErlangFile> files = ErlangPsiImplUtil.getDirectlyIncludedFiles(erlangInclude, file);
-      ErlangUnresolvedIncludeLibInspection.processInclude(problemsHolder, files, string, INCLUDE_LABEL);
+      ErlangUnresolvedIncludeLibInspection.processInclude(problemsHolder, files, string, "include");
     }
   }
 }

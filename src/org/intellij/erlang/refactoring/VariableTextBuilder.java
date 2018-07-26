@@ -61,7 +61,7 @@ public class VariableTextBuilder extends PsiRecursiveElementVisitor {
     else if (element instanceof ErlangFunExpression) {
       myResult.append("Fun");
       ErlangFunClauses clauses = ((ErlangFunExpression) element).getFunClauses();
-      List<ErlangFunClause> funClauses = clauses != null ? clauses.getFunClauseList() : ContainerUtil.<ErlangFunClause>emptyList();
+      List<ErlangFunClause> funClauses = clauses != null ? clauses.getFunClauseList() : ContainerUtil.emptyList();
       ErlangFunClause firstItem = ContainerUtil.getFirstItem(funClauses);
       if (firstItem != null) {
         VariableTextBuilder b = new VariableTextBuilder();

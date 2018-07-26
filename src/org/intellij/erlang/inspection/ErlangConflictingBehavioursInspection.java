@@ -93,7 +93,7 @@ public class ErlangConflictingBehavioursInspection extends ErlangInspectionBase 
       Collection<String> callbackOwners = callbacksToOwners.get(callback);
       //noinspection ConstantConditions
       return callbackOwners.size() < 2 ? null :
-             Pair.<String, List<String>>create(callback, ContainerUtil.newArrayList(callbackOwners));
+             Pair.create(callback, ContainerUtil.newArrayList(callbackOwners));
     });
   }
 }

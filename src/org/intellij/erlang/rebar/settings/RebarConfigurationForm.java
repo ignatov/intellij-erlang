@@ -33,7 +33,6 @@ import com.intellij.util.download.FileDownloader;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

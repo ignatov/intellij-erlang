@@ -63,17 +63,12 @@ public final class ExtProcessUtil {
 
   @NotNull
   private static String readLine(InputStream stream) {
-    BufferedReader errReader = new BufferedReader(new InputStreamReader(stream));
-    try {
+    try (BufferedReader errReader = new BufferedReader(new InputStreamReader(stream))) {
       return StringUtil.notNullize(errReader.readLine());
-    } catch (IOException ignore) {
-    } finally {
-      try {
-        errReader.close();
-      } catch (IOException ignore) {
-      }
     }
-    return "";
+    catch (IOException ignore) {
+      return "";
+    }
   }
 
   public static class ExtProcessOutput {

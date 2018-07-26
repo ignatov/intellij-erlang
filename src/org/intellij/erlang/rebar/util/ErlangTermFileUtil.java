@@ -56,7 +56,7 @@ public final class ErlangTermFileUtil {
   private static List<ErlangTupleExpression> findNamedTuples(@Nullable ErlangExpression listExpression,
                                                              @Nullable String name) {
     ErlangListExpression propList = listExpression instanceof ErlangListExpression ? (ErlangListExpression) listExpression : null;
-    return propList != null ? findNamedTuples(propList.getExpressionList(), name) : ContainerUtil.<ErlangTupleExpression>emptyList();
+    return propList != null ? findNamedTuples(propList.getExpressionList(), name) : ContainerUtil.emptyList();
   }
 
   @NotNull

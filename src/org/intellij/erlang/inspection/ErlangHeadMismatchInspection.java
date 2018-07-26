@@ -71,7 +71,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
 
   private void checkFunExpression(ErlangFunExpression funExpression, ProblemsHolder problemsHolder) {
     ErlangFunClauses funClauses = funExpression.getFunClauses();
-    List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : Collections.<ErlangFunClause>emptyList();
+    List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : Collections.emptyList();
     if (funClauseList.size() <= 1) return;
     ErlangFunClause firstClause = funClauseList.get(0);
     String firstClauseName = getFunExpressionClauseName(firstClause);

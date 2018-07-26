@@ -58,7 +58,7 @@ public abstract class ErlangRemoveFunctionFromImportFixBase extends ErlangQuickF
     for (ErlangAttribute attribute : attributes) {
       ErlangImportDirective importDirective = attribute.getImportDirective();
       ErlangImportFunctions fns = importDirective != null && importDirective.getModuleRef() != null ? importDirective.getImportFunctions() : null;
-      List<ErlangImportFunction> functions = fns == null ? ContainerUtil.<ErlangImportFunction>emptyList() : fns.getImportFunctionList();
+      List<ErlangImportFunction> functions = fns == null ? ContainerUtil.emptyList() : fns.getImportFunctionList();
       if (name == null || functions.isEmpty()) continue;
 
       for (int i = 0; i < functions.size(); ++i) {
