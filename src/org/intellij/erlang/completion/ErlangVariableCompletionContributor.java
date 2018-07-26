@@ -22,7 +22,7 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveState;
-import com.intellij.psi.scope.BaseScopeProcessor;
+import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
@@ -120,7 +120,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
     result.addElement(LookupElementBuilder.create(variable).withIcon(ErlangIcons.VARIABLE));
   }
 
-  private static class MyBaseScopeProcessor extends BaseScopeProcessor {
+  private static class MyBaseScopeProcessor implements PsiScopeProcessor {
     private final PsiElement myElement;
     private final PsiElement myScopeOwner;
     private final boolean myForce;

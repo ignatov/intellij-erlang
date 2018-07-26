@@ -37,7 +37,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiElement;
-import com.intellij.util.containers.WeakHashMap;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.jps.model.JpsErlangModelSerializerExtension;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
@@ -67,7 +67,7 @@ public class ErlangSdkType extends SdkType {
   private static final Logger LOG = Logger.getInstance(ErlangSdkType.class);
 
   private final Map<String, ErlangSdkRelease> mySdkHomeToReleaseCache = ApplicationManager.getApplication().isUnitTestMode() ?
-                                                                        new HashMap<>() : new WeakHashMap<>();
+                                                                        new HashMap<>() : ContainerUtil.createWeakMap();
 
   @NotNull
   public static ErlangSdkType getInstance() {
@@ -280,8 +280,8 @@ public class ErlangSdkType extends SdkType {
     SdkModificator sdkModificator = sdk.getSdkModificator();
     setupLocalSdkPaths(sdkModificator);
     String externalDocUrl = getDefaultDocumentationUrl(getRelease(sdk));
-    if (externalDocUrl != null) {
-      VirtualFile fileByUrl = VirtualFileManager.getInstance().findFileByUrl(externalDocUrl);
+    VirtualFile fileByUrl = externalDocUrl == null ? null : VirtualFileManager.getInstance().findFileByUrl(externalDocUrl);
+    if (fileByUrl != null) {
       sdkModificator.addRoot(fileByUrl, JavadocOrderRootType.getInstance());
     }
     sdkModificator.commitChanges();

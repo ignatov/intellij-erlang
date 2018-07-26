@@ -18,7 +18,6 @@ package org.intellij.erlang.compilation;
 
 import com.intellij.compiler.impl.BuildTargetScopeProvider;
 import com.intellij.openapi.compiler.CompileScope;
-import com.intellij.openapi.compiler.CompilerFilter;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.project.Project;
@@ -34,11 +33,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class ErlangTargetScopeProvider extends BuildTargetScopeProvider {
-
   @NotNull
   @Override
   public List<TargetTypeBuildScope> getBuildTargetScopes(@NotNull CompileScope baseScope,
-                                                         @NotNull CompilerFilter filter,
                                                          @NotNull Project project,
                                                          boolean forceBuild) {
     if (ErlangCompilerSettings.getInstance(project).isUseRebarCompilerEnabled() || !hasErlangModules(baseScope)) {

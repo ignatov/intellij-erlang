@@ -20,7 +20,6 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.openapi.application.AccessToken;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
@@ -50,9 +49,9 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
         ErlangCompositeElement atom = o.getQAtom();
         if (atom != null && !StringUtil.equals(moduleName, withoutExtension)) {
           holder.registerProblem(atom, "Module with name '" + moduleName + "' should be declared in a file named '" +
-              moduleName + "." + ext + "'.",
-            new ErlangRenameModuleFix(withoutExtension),
-            new ErlangRenameFileFix()
+                                       moduleName + "." + ext + "'.",
+                                 new ErlangRenameModuleFix(withoutExtension),
+                                 new ErlangRenameFileFix()
           );
         }
 
@@ -61,10 +60,10 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
   }
 
   private static class ErlangRenameModuleFix implements LocalQuickFix {
-    private final String myShouldBeName;
+    private final String myNewName;
 
-    public ErlangRenameModuleFix(String shouldBeName) {
-      myShouldBeName = shouldBeName;
+    public ErlangRenameModuleFix(@NotNull String newName) {
+      myNewName = newName;
     }
 
     @NotNull
@@ -83,18 +82,17 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
       ErlangModule module = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangModule.class);
       if (module == null) return;
-      AccessToken token = WriteAction.start();
-      String name;
+      WriteAction.run(() -> module.setName(sanitize(project)));
+    }
+
+    @NotNull
+    private String sanitize(@NotNull Project project) {
       try {
-        ErlangElementFactory.createAtomFromText(project, myShouldBeName);
-        name = myShouldBeName;
-      } catch (Exception e) {
-        name = "'" + myShouldBeName + "'";
+        ErlangElementFactory.createAtomFromText(project, myNewName);
+        return myNewName;
       }
-      try {
-        module.setName(name);
-      } finally {
-        token.finish();
+      catch (Exception e) {
+        return "'" + myNewName + "'";
       }
     }
   }
@@ -116,16 +114,16 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
       ErlangModule module = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangModule.class);
       if (module == null) return;
-      AccessToken token = WriteAction.start();
       try {
-        VirtualFile virtualFile = module.getContainingFile().getVirtualFile();
-        String extension = FileUtilRt.getExtension(module.getContainingFile().getName());
-        if (virtualFile != null) {
-          virtualFile.rename(problemDescriptor, StringUtil.replace(module.getName(), "'", "") + "." + extension);
-        }
-      } catch (IOException ignored) {
-      } finally {
-        token.finish();
+        WriteAction.run(() -> {
+          VirtualFile virtualFile = module.getContainingFile().getVirtualFile();
+          String extension = FileUtilRt.getExtension(module.getContainingFile().getName());
+          if (virtualFile != null) {
+            virtualFile.rename(problemDescriptor, StringUtil.replace(module.getName(), "'", "") + "." + extension);
+          }
+        });
+      }
+      catch (IOException ignored) {
       }
     }
   }

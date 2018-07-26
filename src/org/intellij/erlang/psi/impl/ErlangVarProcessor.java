@@ -20,7 +20,7 @@ import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
-import com.intellij.psi.scope.BaseScopeProcessor;
+import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
@@ -31,7 +31,7 @@ import java.util.Map;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
-public class ErlangVarProcessor extends BaseScopeProcessor {
+public class ErlangVarProcessor implements PsiScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
   private List<ErlangQVar> myVarList = ContainerUtil.newArrayListWithCapacity(0);
   private final String myRequestedName;
@@ -46,7 +46,7 @@ public class ErlangVarProcessor extends BaseScopeProcessor {
   public boolean execute(@NotNull PsiElement psiElement, @NotNull ResolveState resolveState) {
     Map<String, ErlangQVar> variableContext = psiElement.getContainingFile().getOriginalFile().getUserData(ERLANG_VARIABLE_CONTEXT);
     if (variableContext != null) {
-      ContainerUtil.addIfNotNull(variableContext.get(myRequestedName), myVarList);
+      ContainerUtil.addIfNotNull(myVarList, variableContext.get(myRequestedName));
       return true;
     }
 

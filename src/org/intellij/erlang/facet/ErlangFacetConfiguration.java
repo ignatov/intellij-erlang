@@ -21,12 +21,10 @@ import com.intellij.facet.ui.FacetEditorContext;
 import com.intellij.facet.ui.FacetEditorTab;
 import com.intellij.facet.ui.FacetValidatorsManager;
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.util.InvalidDataException;
-import com.intellij.openapi.util.WriteExternalException;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.facet.ui.ErlangFacetEditor;
 import org.intellij.erlang.jps.model.ErlangModuleExtensionProperties;
-import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -41,14 +39,6 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
     return new FacetEditorTab[] {new ErlangFacetEditor(editorContext, this)};
   }
 
-  @Override
-  public void readExternal(Element element) throws InvalidDataException {
-  }
-
-  @Override
-  public void writeExternal(Element element) throws WriteExternalException {
-  }
-
   @Nullable
   @Override
   public ErlangModuleExtensionProperties getState() {
@@ -56,7 +46,7 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
   }
 
   @Override
-  public void loadState(ErlangModuleExtensionProperties state) {
+  public void loadState(@NotNull ErlangModuleExtensionProperties state) {
     myState = state;
   }
 

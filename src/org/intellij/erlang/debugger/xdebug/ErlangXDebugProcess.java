@@ -42,6 +42,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.io.URLUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
+import com.intellij.xdebugger.XExpression;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
@@ -256,10 +257,10 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       @NotNull
       @Override
       public Document createDocument(@NotNull Project project,
-                                     @NotNull String text,
+                                     @NotNull XExpression expression,
                                      @Nullable XSourcePosition sourcePosition,
                                      @NotNull EvaluationMode mode) {
-        LightVirtualFile file = new LightVirtualFile("plain-text-erlang-debugger.txt", text);
+        LightVirtualFile file = new LightVirtualFile("plain-text-erlang-debugger.txt", expression.getExpression());
         //noinspection ConstantConditions
         return FileDocumentManager.getInstance().getDocument(file);
       }
