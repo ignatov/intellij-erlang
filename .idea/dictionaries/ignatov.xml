@@ -3,6 +3,7 @@
     <words>
       <w>autoimported</w>
       <w>dialyzer</w>
+      <w>ebin</w>
       <w>erlang</w>
       <w>eunit</w>
       <w>rebar</w>
