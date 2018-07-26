@@ -108,7 +108,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
       }
       return true;
     };
-    PsiSearchHelper.SERVICE.getInstance(module.getProject()).processAllFilesWithWord("load_nif", scope, collector, true);
+    PsiSearchHelper.getInstance(module.getProject()).processAllFilesWithWord("load_nif", scope, collector, true);
 
     return modules;
   }

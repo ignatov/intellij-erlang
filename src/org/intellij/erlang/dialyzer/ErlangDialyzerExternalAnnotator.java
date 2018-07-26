@@ -72,7 +72,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     String homePath = sdk.getHomePath();
     if (homePath == null) return null;
 
-    InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getInspectionProfile();
+    InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile();
     HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
     if (!profile.isToolEnabled(key)) return null;
 

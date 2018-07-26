@@ -104,7 +104,7 @@ public class ErlangPsiImplUtil {
     return processor.execute(o, state);
   }
 
-  @Nullable
+  @NotNull
   public static PsiReference getReference(@NotNull ErlangQVar o) {
     return new ErlangVariableReferenceImpl(o, TextRange.from(0, o.getTextLength()));
   }
@@ -247,7 +247,7 @@ public class ErlangPsiImplUtil {
     return getRecordFieldReference(o.getFieldNameAtom());
   }
 
-  @Nullable
+  @NotNull
   public static PsiReference getReference(@NotNull ErlangFieldType o) {
     return getRecordFieldReference(o.getQAtom());
   }
@@ -365,7 +365,7 @@ public class ErlangPsiImplUtil {
            };
   }
 
-  @Nullable
+  @NotNull
   public static PsiReference getReference(@NotNull ErlangFunctionCallExpression o) {
     PsiElement parent = o.getParent();
     ErlangModuleRef moduleReference = null;
@@ -432,7 +432,7 @@ public class ErlangPsiImplUtil {
     return o != null ? new ErlangMacrosReferenceImpl(o) : null;
   }
 
-  @Nullable
+  @NotNull
   public static PsiReference getReference(@NotNull ErlangTypeRef o) {
     return getModuleReference(o, o.getQAtom());
   }
@@ -443,7 +443,7 @@ public class ErlangPsiImplUtil {
     return new ErlangTypeReferenceImpl(atom, moduleRef);
   }
 
-  @Nullable
+  @NotNull
   public static PsiReference getReference(@NotNull ErlangExportType o) {
     return getModuleReference(o, o.getQAtom());
   }
@@ -832,7 +832,7 @@ public class ErlangPsiImplUtil {
     return recordRef != null ? recordRef.getReference() : null;
   }
 
-  @Nullable
+  @NotNull
   public static PsiReference getReference(@NotNull ErlangRecordRef o) {
     return createRecordRef(o.getQAtom());
   }
@@ -1133,7 +1133,7 @@ public class ErlangPsiImplUtil {
 
   public static void addDeclaredBehaviourModuleNames(@NotNull ErlangFile file, @NotNull Set<String> behaviourNames) {
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
-      ContainerUtil.addIfNotNull(getName(behaviour), behaviourNames);
+      ContainerUtil.addIfNotNull(behaviourNames, getName(behaviour));
     }
   }
 
@@ -1152,7 +1152,7 @@ public class ErlangPsiImplUtil {
     if (!"parse_transform".equals(getAtomName(first instanceof ErlangMaxExpression ? (ErlangMaxExpression) first : null))) return;
     ErlangExpression second = expressionList.get(1);
     String parseTransformModuleName = getAtomName(second instanceof ErlangMaxExpression ? (ErlangMaxExpression) second : null);
-    ContainerUtil.addIfNotNull(parseTransformModuleName, parseTransforms);
+    ContainerUtil.addIfNotNull(parseTransforms, parseTransformModuleName);
   }
 
   @Nullable
@@ -1460,19 +1460,19 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static ItemPresentation getPresentation(@NotNull final ErlangFunction o) {
     return new ItemPresentation() {
-      @Nullable
+      @NotNull
       @Override
       public String getPresentableText() {
         return createFunctionPresentation(o);
       }
 
-      @Nullable
+      @NotNull
       @Override
       public String getLocationString() {
         return o.getContainingFile().getName();
       }
 
-      @Nullable
+      @NotNull
       @Override
       public Icon getIcon(boolean b) {
         return o.getIcon(0);

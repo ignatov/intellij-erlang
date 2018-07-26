@@ -105,7 +105,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
       //              ErlangSmallIdeHighlightingTest.testIncludeFromOtpIncludeDirResolve()
       //              it seems, that index is reused for different tests, thus we obtain keys (appNames)
       //              which are not valid anymore...
-      ContainerUtil.addIfNotNull(processor.getApplicationPath(), result);
+      ContainerUtil.addIfNotNull(result, processor.getApplicationPath());
       return true;
     }, project);
 
@@ -154,7 +154,7 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     private VirtualFile myPath = null;
 
     @Override
-    public boolean process(VirtualFile appFile, @Nullable Void value) {
+    public boolean process(@NotNull VirtualFile appFile, @Nullable Void value) {
       VirtualFile libDir = getLibraryDirectory(appFile);
       if (libDir == null) return true;
       String appName = getApplicationName(appFile);

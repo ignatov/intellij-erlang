@@ -23,7 +23,7 @@ import org.jetbrains.jps.incremental.messages.BuildMessage;
 
 import java.util.List;
 
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 public class BuildResult implements MessageHandler {
   private final List<BuildMessage> myErrorMessages;

@@ -150,7 +150,7 @@ public final class ErlangModulesUtil {
     return moduleFileIndex::isInTestSourceContent;
   }
 
-  @Nullable
+  @NotNull
   private static Processor<VirtualFile> getErlangModulesCollector(@NotNull final PsiManager psiManager,
                                                                   @NotNull final Collection<ErlangFile> erlangFiles,
                                                                   @NotNull final ErlangFileType type) {

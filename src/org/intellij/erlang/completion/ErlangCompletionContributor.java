@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.completion;
 
+import com.intellij.application.options.CodeStyle;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
@@ -35,7 +36,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.codeStyle.CodeStyleSettingsManager;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -257,9 +257,14 @@ public class ErlangCompletionContributor extends CompletionContributor {
   }
 
   private static LookupElement createFieldLookupElement(@NotNull Project project, @NotNull String text, boolean withoutEq) {
-    ErlangCodeStyleSettings customSettings = CodeStyleSettingsManager.getSettings(project).getCustomSettings(ErlangCodeStyleSettings.class);
-    boolean surroundWithSpaces = customSettings.SPACE_AROUND_EQ_IN_RECORDS;
-    return LookupElementBuilder.create(text).withIcon(ErlangIcons.FIELD).withInsertHandler(withoutEq ? null : new SingleCharInsertHandler('=', surroundWithSpaces));
+    return LookupElementBuilder.create(text)
+                               .withIcon(ErlangIcons.FIELD)
+                               .withInsertHandler(withoutEq ? null : equalsInsertHandler(project));
+  }
+
+  @NotNull
+  private static SingleCharInsertHandler equalsInsertHandler(@NotNull Project project) {
+    return new SingleCharInsertHandler('=', CodeStyle.getSettings(project).getCustomSettings(ErlangCodeStyleSettings.class).SPACE_AROUND_EQ_IN_RECORDS);
   }
 
   @NotNull

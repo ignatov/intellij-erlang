@@ -39,7 +39,7 @@ public class CommonFindUsagesDialog extends AbstractFindUsagesDialog {
   @Override
   protected boolean isInFileOnly() {
     return super.isInFileOnly() ||
-           PsiSearchHelper.SERVICE.getInstance(myPsiElement.getProject()).getUseScope(myPsiElement) instanceof LocalSearchScope;
+           PsiSearchHelper.getInstance(myPsiElement.getProject()).getUseScope(myPsiElement) instanceof LocalSearchScope;
   }
 
   @Override

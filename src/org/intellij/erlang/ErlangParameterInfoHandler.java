@@ -48,11 +48,6 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   }
 
   @Override
-  public Object[] getParametersForDocumentation(Object p, ParameterInfoContext context) {
-    return null;
-  }
-
-  @Override
   public ErlangArgumentList findElementForParameterInfo(@NotNull CreateParameterInfoContext context) {
     return getErlangArgumentList(context);
   }
