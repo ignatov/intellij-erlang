@@ -15,14 +15,10 @@
  */
 package org.intellij.erlang.jps;
 
-import com.intellij.openapi.application.PathManager;
-import com.intellij.openapi.application.ex.PathManagerEx;
-import com.intellij.openapi.util.io.FileSystemUtil;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.testFramework.UsefulTestCase;
 import com.intellij.util.containers.hash.HashMap;
-import com.intellij.util.io.TestFileSystemBuilder;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.api.CanceledStatus;
 import org.jetbrains.jps.builders.impl.BuildDataPathsImpl;
@@ -53,18 +49,14 @@ import org.jetbrains.jps.model.library.sdk.JpsSdkType;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.module.JpsModuleType;
 import org.jetbrains.jps.model.module.JpsSdkReferencesTable;
-import org.jetbrains.jps.model.serialization.JpsProjectLoader;
-import org.jetbrains.jps.model.serialization.PathMacroUtil;
 import org.jetbrains.jps.util.JpsPathUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
-import static org.intellij.erlang.jps.CompileScopeTestBuilder.make;
-
 public abstract class JpsBuildTestCase extends UsefulTestCase {
+  @Nullable
   private File myProjectDir;
   private JpsProject myProject;
   protected JpsModel myModel;
@@ -73,22 +65,6 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
   private TestProjectBuilderLogger myLogger;
 
   private Map<String, String> myBuildParams;
-
-  protected static void rename(String path, String newName) {
-    try {
-      File file = new File(FileUtil.toSystemDependentName(path));
-      assertTrue("File " + file.getAbsolutePath() + " doesn't exist", file.exists());
-      File tempFile = new File(file.getParentFile(), "__" + newName);
-      FileUtil.rename(file, tempFile);
-      File newFile = new File(file.getParentFile(), newName);
-      FileUtil.copyContent(tempFile, newFile);
-      FileUtil.delete(tempFile);
-      change(newFile.getPath());
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   @Override
   protected void setUp() throws Exception {
@@ -104,72 +80,6 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
   protected void tearDown() throws Exception {
     myProjectDir = null;
     super.tearDown();
-  }
-
-  private static void assertOutput(String outputPath, TestFileSystemBuilder expected) {
-    expected.build().assertDirectoryEqual(new File(FileUtil.toSystemDependentName(outputPath)));
-  }
-
-  protected static void assertOutput(JpsModule module, TestFileSystemBuilder expected) {
-    String outputUrl = JpsJavaExtensionService.getInstance().getOutputUrl(module, false);
-    assertNotNull(outputUrl);
-    assertOutput(JpsPathUtil.urlToPath(outputUrl), expected);
-  }
-
-  private static void change(String filePath) {
-    change(filePath, null);
-  }
-
-  private static void change(String filePath, @Nullable String newContent) {
-    try {
-      File file = new File(FileUtil.toSystemDependentName(filePath));
-      assertTrue("File " + file.getAbsolutePath() + " doesn't exist", file.exists());
-      if (newContent != null) {
-        FileUtil.writeToFile(file, newContent);
-      }
-      long oldTimestamp = FileSystemUtil.lastModified(file);
-      long time = System.currentTimeMillis();
-      setLastModified(file, time);
-      if (FileSystemUtil.lastModified(file) <= oldTimestamp) {
-        setLastModified(file, time + 1);
-        long newTimeStamp = FileSystemUtil.lastModified(file);
-        if (newTimeStamp <= oldTimestamp) {
-          //Mac OS and some versions of Linux truncates timestamp to nearest second
-          setLastModified(file, time + 1000);
-          newTimeStamp = FileSystemUtil.lastModified(file);
-          assertTrue("Failed to change timestamp for " + file.getAbsolutePath(), newTimeStamp > oldTimestamp);
-        }
-        sleepUntil(newTimeStamp);
-      }
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static void sleepUntil(long time) {
-    //we need this to ensure that the file won't be treated as changed by user during compilation and therefore marked for recompilation
-    long delta;
-    while ((delta = time - System.currentTimeMillis()) > 0) {
-      try {
-        //noinspection BusyWait
-        Thread.sleep(delta);
-      }
-      catch (InterruptedException ignored) {
-      }
-    }
-  }
-
-  private static void setLastModified(File file, long time) {
-    boolean updated = file.setLastModified(time);
-    assertTrue("Cannot modify timestamp for " + file.getAbsolutePath(), updated);
-  }
-
-  protected static void delete(String filePath) {
-    File file = new File(FileUtil.toSystemDependentName(filePath));
-    assertTrue("File " + file.getAbsolutePath() + " doesn't exist", file.exists());
-    boolean deleted = FileUtil.delete(file);
-    assertTrue("Cannot delete file " + file.getAbsolutePath(), deleted);
   }
 
   private JpsSdk<JpsDummyElement> addJdk(String name) {
@@ -212,40 +122,12 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     }
   }
 
-  protected void loadProject(String projectPath) {
-    loadProject(projectPath, Collections.emptyMap());
-  }
-
-  private void loadProject(String projectPath,
-                           Map<String, String> pathVariables) {
-    try {
-      String testDataRootPath = getTestDataRootPath();
-      String fullProjectPath = FileUtil.toSystemDependentName(testDataRootPath != null ? testDataRootPath + "/" + projectPath : projectPath);
-      Map<String, String> allPathVariables = new HashMap<>(pathVariables.size() + 1);
-      allPathVariables.putAll(pathVariables);
-      allPathVariables.put(PathMacroUtil.APPLICATION_HOME_DIR, PathManager.getHomePath());
-      addPathVariables(allPathVariables);
-      JpsProjectLoader.loadProject(myProject, allPathVariables, fullProjectPath);
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private void addPathVariables(Map<String, String> pathVariables) {
-  }
-
-  @Nullable
-  private String getTestDataRootPath() {
-    return null;
-  }
-
-  protected <T extends JpsElement> JpsModule addModule(String moduleName,
-                                                       String[] srcPaths,
-                                                       @Nullable String outputPath,
-                                                       @Nullable String testOutputPath,
-                                                       JpsSdk<T> sdk) {
-    return addModule(moduleName, srcPaths, outputPath, testOutputPath, sdk, JpsJavaModuleType.INSTANCE);
+  protected <T extends JpsElement> void addModule(String moduleName,
+                                                  String[] srcPaths,
+                                                  @Nullable String outputPath,
+                                                  @Nullable String testOutputPath,
+                                                  JpsSdk<T> sdk) {
+    addModule(moduleName, srcPaths, outputPath, testOutputPath, sdk, JpsJavaModuleType.INSTANCE);
   }
 
   protected <T extends JpsElement, M extends JpsModuleType & JpsElementTypeWithDefaultProperties> JpsModule addModule(String moduleName,
@@ -291,10 +173,6 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     doBuild(CompileScopeTestBuilder.rebuild().all()).assertSuccessful();
   }
 
-  protected BuildResult makeAll() {
-    return doBuild(make().all());
-  }
-
   private BuildResult doBuild(CompileScopeTestBuilder scope) {
     ProjectDescriptor descriptor = createProjectDescriptor(new BuildLoggingManager(myLogger));
     try {
@@ -304,14 +182,6 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     finally {
       descriptor.release();
     }
-  }
-
-  public void assertCompiled(String builderName, String... paths) {
-    myLogger.assertCompiled(builderName, new File[]{myProjectDir, myDataStorageRoot}, paths);
-  }
-
-  protected void assertDeleted(String... paths) {
-    myLogger.assertDeleted(new File[]{myProjectDir, myDataStorageRoot}, paths);
   }
 
   private BuildResult doBuild(ProjectDescriptor descriptor, CompileScopeTestBuilder scopeBuilder) {
@@ -327,10 +197,6 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     return result;
   }
 
-  protected String createFile(String relativePath) {
-    return createFile(relativePath, "");
-  }
-
   protected String createFile(String relativePath, String text) {
     try {
       File file = new File(getOrCreateProjectDir(), relativePath);
@@ -340,28 +206,6 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  protected String copyToProject(String relativeSourcePath, String relativeTargetPath) {
-    File source = findFindUnderProjectHome(relativeSourcePath);
-    String fullTargetPath = getAbsolutePath(relativeTargetPath);
-    File target = new File(fullTargetPath);
-    try {
-      if (source.isDirectory()) {
-        FileUtil.copyDir(source, target);
-      }
-      else {
-        FileUtil.copy(source, target);
-      }
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    return fullTargetPath;
-  }
-
-  private File findFindUnderProjectHome(String relativeSourcePath) {
-    return PathManagerEx.findFileUnderProjectHome(relativeSourcePath, getClass());
   }
 
   private File getOrCreateProjectDir() {
@@ -376,7 +220,7 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     return myProjectDir;
   }
 
-  private File doGetProjectDir() throws IOException {
+  private static File doGetProjectDir() throws IOException {
     return FileUtil.createTempDirectory("prj", null);
   }
 
@@ -384,10 +228,10 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     return FileUtil.toSystemIndependentName(new File(getOrCreateProjectDir(), pathRelativeToProjectRoot).getAbsolutePath());
   }
 
-  protected JpsModule addModule(String moduleName, String... srcPaths) {
+  protected void addModule(String moduleName, String... srcPaths) {
     if (myJdk == null) {
       myJdk = addJdk("1.6");
     }
-    return addModule(moduleName, srcPaths, getAbsolutePath("out/production/" + moduleName), null, myJdk);
+    addModule(moduleName, srcPaths, getAbsolutePath("out/production/" + moduleName), null, myJdk);
   }
 }
