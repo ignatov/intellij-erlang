@@ -6,6 +6,7 @@
       <w>ebin</w>
       <w>erlang</w>
       <w>eunit</w>
+      <w>introducer</w>
       <w>rebar</w>
     </words>
   </dictionary>
