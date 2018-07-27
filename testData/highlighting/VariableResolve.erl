@@ -97,3 +97,11 @@ issue413() ->
 comprehensions_scope() ->
   _X = [A || A <- []],
   _Y = <error>A</error>.
+
+<warning descr="Unused function 'test/0'">test</warning>() ->
+  F = fun(A) ->
+    B = 123,
+    io:format(<warning descr="Wrong number of arguments in format call, should be 0">"A,B=pn"</warning>, [{?MODULE, ?LINE, A, B}])
+      end,
+  io:format(<warning descr="Wrong number of arguments in format call, should be 0">"B=pn"</warning>, [{?MODULE, ?LINE, <error descr="Variable 'B' is unbound">B</error>}]),
+  F(1).
