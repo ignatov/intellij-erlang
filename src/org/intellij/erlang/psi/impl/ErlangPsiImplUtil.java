@@ -989,6 +989,11 @@ public class ErlangPsiImplUtil {
   }
 
   @SuppressWarnings("UnusedParameters")
+  public static boolean processDeclarations(@NotNull ErlangFunExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    return true;
+  }
+
+  @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;

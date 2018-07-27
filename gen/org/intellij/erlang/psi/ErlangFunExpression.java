@@ -4,6 +4,8 @@ package org.intellij.erlang.psi;
 import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.ResolveState;
+import com.intellij.psi.scope.PsiScopeProcessor;
 
 public interface ErlangFunExpression extends ErlangExpression {
 
@@ -30,5 +32,7 @@ public interface ErlangFunExpression extends ErlangExpression {
 
   @NotNull
   PsiElement getFun();
+
+  boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place);
 
 }

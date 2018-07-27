@@ -9,6 +9,8 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
+import com.intellij.psi.ResolveState;
+import com.intellij.psi.scope.PsiScopeProcessor;
 
 public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements ErlangFunExpression {
 
@@ -71,6 +73,10 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   @NotNull
   public PsiElement getFun() {
     return notNullChild(findChildByType(ERL_FUN));
+  }
+
+  public boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place) {
+    return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }
 
 }
