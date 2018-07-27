@@ -9,7 +9,7 @@ and other IntelliJ-based products
 [WebStorm](http://www.jetbrains.com/webstorm/), etc.) to a convenient [Erlang](http://www.erlang.org/) IDE.
 
 ## Pre-release builds
-[Download](https://teamcity.jetbrains.com/repository/download/IntellijIdeaPlugins_IntellijErlang_Tests/.lastSuccessful/Erlang-0.9.{build.number}.zip?guest=1)  the latest successful plugin, hit 'Install plugin from disk...' at 'Plugins' page in 'Settings' of your IDE, and point it to the downloaded archive.
+Download [the latest successful plugin](https://teamcity.jetbrains.com/repository/download/IntellijIdeaPlugins_IntellijErlang_Tests/.lastSuccessful/intellij-erlang-0.11.{build.number}.zip?guest=1), hit 'Install plugin from disk...' at 'Plugins' page in 'Settings' of your IDE, and point it to the downloaded archive.
 
 Note for **Mac OS X** users: you need to download the entire zip file, not a several jars (see [Apple discussion forum](https://discussions.apple.com/thread/1483114)).
 
