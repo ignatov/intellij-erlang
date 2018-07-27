@@ -35,19 +35,19 @@ import org.jetbrains.annotations.NotNull;
 
 public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static boolean isApplicationLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
-    PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
+    PsiFile file = builder_.getUserData(FileContextUtil.CONTAINING_FILE_KEY);
     assert file != null;
     return file.getFileType() == ErlangFileType.APP;
   }
 
   public static boolean isConfigLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
-    PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
+    PsiFile file = builder_.getUserData(FileContextUtil.CONTAINING_FILE_KEY);
     assert file != null;
     return file.getFileType() == ErlangFileType.TERMS;
   }
 
   public static boolean isConsole(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
-    PsiFile file = builder_.getUserDataUnprotected(FileContextUtil.CONTAINING_FILE_KEY);
+    PsiFile file = builder_.getUserData(FileContextUtil.CONTAINING_FILE_KEY);
     assert file != null;
     return isConsole(file);
   }
@@ -64,8 +64,8 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   private static final Key<TObjectLongHashMap<String>> MODES_KEY = Key.create("MODES_KEY");
 
   private static TObjectLongHashMap<String> getParsingModes(PsiBuilder builder_) {
-    TObjectLongHashMap<String> flags = builder_.getUserDataUnprotected(MODES_KEY);
-    if (flags == null) builder_.putUserDataUnprotected(MODES_KEY, flags = new TObjectLongHashMap<>());
+    TObjectLongHashMap<String> flags = builder_.getUserData(MODES_KEY);
+    if (flags == null) builder_.putUserData(MODES_KEY, flags = new TObjectLongHashMap<>());
     return flags;
   }
 
