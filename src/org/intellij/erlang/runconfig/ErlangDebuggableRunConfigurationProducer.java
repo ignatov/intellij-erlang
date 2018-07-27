@@ -135,7 +135,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
         }
 
         PsiReference reference = functionCallExpression.getReference();
-        PsiElement resolve = reference != null ? reference.resolve() : null;
+        PsiElement resolve = reference.resolve();
         if (resolve == null) {
           super.visitFunctionCallExpression(functionCallExpression);
           return;
