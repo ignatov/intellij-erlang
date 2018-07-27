@@ -1,5 +1,7 @@
 // initial: https://github.com/erlang/otp/blob/master/lib/stdlib/src/erl_parse.yrl
 {
+  generate = [ token-accessors="yes" ]
+
   parserClass="org.intellij.erlang.parser.ErlangParser"
   parserUtilClass="org.intellij.erlang.parser.ErlangParserUtil"
 
@@ -18,9 +20,7 @@
 
   psiImplUtilClass="org.intellij.erlang.psi.impl.ErlangPsiImplUtil"
 
-  generateTokenAccessors=true
-
-  // operators
+  tokens = [
   OP_PLUS         = "+"
   OP_MINUS        = "-"
   OP_AR_MUL       = "*"
@@ -63,6 +63,7 @@
   QMARK           = "?"
   MATCH           = ":="
   ASSOC           = "=>"
+  ]
 
   extends("assignment_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal)")=expression
