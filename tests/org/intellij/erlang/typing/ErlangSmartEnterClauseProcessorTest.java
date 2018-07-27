@@ -18,14 +18,10 @@ package org.intellij.erlang.typing;
 
 import com.intellij.codeInsight.editorActions.smartEnter.SmartEnterProcessor;
 import com.intellij.codeInsight.editorActions.smartEnter.SmartEnterProcessors;
-import com.intellij.openapi.application.Result;
 import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.openapi.editor.Editor;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testFunctionClause() {
@@ -77,16 +73,11 @@ public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCode
 
   private void doTest(@NotNull String before, @NotNull String after) {
     myFixture.configureByText("a.erl", before);
-    final List<SmartEnterProcessor> processors = SmartEnterProcessors.INSTANCE.forKey(ErlangLanguage.INSTANCE);
-    new WriteCommandAction(myFixture.getProject()) {
-      @Override
-      protected void run(@NotNull Result result) {
-        Editor editor = myFixture.getEditor();
-        for (SmartEnterProcessor processor : processors) {
-          processor.process(myFixture.getProject(), editor, myFixture.getFile());
-        }
+    WriteCommandAction.writeCommandAction(getProject()).run(() -> {
+      for (SmartEnterProcessor processor : SmartEnterProcessors.INSTANCE.forKey(ErlangLanguage.INSTANCE)) {
+        processor.process(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile());
       }
-    }.execute();
+    });
     myFixture.checkResult(after);
   }
 }
