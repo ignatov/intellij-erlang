@@ -30,6 +30,3 @@ Note for **Mac OS X** users: you need to download the entire zip file, not a sev
 
 ### Work in progress
 * Preprocessing support
-
-## Grammar-Kit version
-[Download](https://github.com/JetBrains/Grammar-Kit/releases/tag/1.2.0.2) the right version of Grammar-Kit.
