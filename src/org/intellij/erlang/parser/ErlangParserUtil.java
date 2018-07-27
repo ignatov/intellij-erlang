@@ -129,7 +129,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return false;
   }
 
-  private static Key<Boolean> IS_COMPREHENSION_KEY = Key.create("Erlang.IS_COMPREHENSION");
+  private static final Key<Boolean> IS_COMPREHENSION_KEY = Key.create("Erlang.IS_COMPREHENSION");
 
   public static boolean markComprehension(PsiBuilder builder, @SuppressWarnings("UnusedParameters") int level) {
     IS_COMPREHENSION_KEY.set(builder, Boolean.TRUE);

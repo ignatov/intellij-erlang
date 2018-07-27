@@ -23,7 +23,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.ModifiableModuleModel;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -98,7 +97,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   }
 
   @Override
-  public void setList(@Nullable List<ImportedOtpApp> selectedOtpApps) throws ConfigurationException {
+  public void setList(@Nullable List<ImportedOtpApp> selectedOtpApps) {
     if (selectedOtpApps != null) {
       mySelectedOtpApps = selectedOtpApps;
     }

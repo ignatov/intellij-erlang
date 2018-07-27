@@ -30,11 +30,11 @@ import javax.swing.*;
 import java.util.List;
 
 public abstract class ErlangFileType extends LanguageFileType {
-  public static ErlangFileType MODULE = new ModuleFileType();
-  public static ErlangFileType HEADER = new HrlFileType();
-  public static ErlangFileType APP = new AppFileType();
-  public static ErlangFileType TERMS = new ErlangTermsFileType();
-  public static List<ErlangFileType> TYPES = ContainerUtil.immutableList(MODULE, HEADER, APP, TERMS);
+  public static final ErlangFileType MODULE = new ModuleFileType();
+  public static final ErlangFileType HEADER = new HrlFileType();
+  public static final ErlangFileType APP = new AppFileType();
+  public static final ErlangFileType TERMS = new ErlangTermsFileType();
+  public static final List<ErlangFileType> TYPES = ContainerUtil.immutableList(MODULE, HEADER, APP, TERMS);
 
   private final String myName;
   private final String myDescription;

@@ -22,15 +22,14 @@ import gnu.trove.THashSet;
 import org.jetbrains.jps.builders.impl.logging.ProjectBuilderLoggerBase;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 public class TestProjectBuilderLogger extends ProjectBuilderLoggerBase {
-  private MultiMap<String, File> myCompiledFiles = new MultiMap<>();
-  private Set<File> myDeletedFiles = new THashSet<>(FileUtil.FILE_HASHING_STRATEGY);
+  private final MultiMap<String, File> myCompiledFiles = new MultiMap<>();
+  private final Set<File> myDeletedFiles = new THashSet<>(FileUtil.FILE_HASHING_STRATEGY);
   
   @Override
   public void logDeletedFiles(Collection<String> paths) {
@@ -40,7 +39,7 @@ public class TestProjectBuilderLogger extends ProjectBuilderLoggerBase {
   }
 
   @Override
-  public void logCompiledFiles(Collection<File> files, String builderName, String description) throws IOException {
+  public void logCompiledFiles(Collection<File> files, String builderName, String description) {
     myCompiledFiles.putValues(builderName, files);
   }
 

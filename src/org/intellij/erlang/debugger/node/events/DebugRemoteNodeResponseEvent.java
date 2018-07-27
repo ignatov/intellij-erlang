@@ -27,7 +27,7 @@ class DebugRemoteNodeResponseEvent extends ErlangDebuggerEvent {
   private final String myNodeName;
   private final String myError;
 
-  public DebugRemoteNodeResponseEvent(OtpErlangTuple receivedMessage) throws DebuggerEventFormatException {
+  public DebugRemoteNodeResponseEvent(OtpErlangTuple receivedMessage) {
     myNodeName = OtpErlangTermUtil.getAtomText(receivedMessage.elementAt(1));
     OtpErlangObject status = receivedMessage.elementAt(2);
     myError = "ok".equals(OtpErlangTermUtil.getAtomText(status)) ? null : status.toString();

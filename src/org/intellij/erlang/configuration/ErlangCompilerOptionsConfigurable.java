@@ -20,7 +20,6 @@ import com.intellij.compiler.options.CompilerConfigurable;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.options.Configurable;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.ex.Settings;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
@@ -99,7 +98,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   }
 
   @Override
-  public void apply() throws ConfigurationException {
+  public void apply() {
     mySettings.setUseRebarCompilerEnabled(myUseRebarCompilerCheckBox.isSelected());
     mySettings.setAddDebugInfoEnabled(myAddDebugInfoCheckBox.isSelected());
     mySettings.setAdditionalErlcArguments(arguments(myAdditionalErlcArgumentsEditor.getText()));

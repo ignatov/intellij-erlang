@@ -17,7 +17,6 @@
 package org.intellij.erlang.application.ui;
 
 import com.intellij.application.options.ModulesComboBox;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
@@ -57,7 +56,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   }
 
   @Override
-  protected void doApplyEditorTo(ErlangApplicationConfiguration configuration) throws ConfigurationException {
+  protected void doApplyEditorTo(ErlangApplicationConfiguration configuration) {
     configuration.setModule(myComboModules.getSelectedModule());
     configuration.setParams(myParamsField.getText());
     configuration.setModuleAndFunction(myModuleAndFunctionField.getText());

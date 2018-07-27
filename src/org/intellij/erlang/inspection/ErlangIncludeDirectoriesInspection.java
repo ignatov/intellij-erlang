@@ -72,7 +72,7 @@ public class ErlangIncludeDirectoriesInspection extends ErlangInspectionBase {
   }
 
   private static class ErlangIncludeDirectoriesQuickFix implements LocalQuickFix {
-    private boolean myDoFix;
+    private final boolean myDoFix;
     private final String myName;
 
     protected ErlangIncludeDirectoriesQuickFix(boolean doFix) {

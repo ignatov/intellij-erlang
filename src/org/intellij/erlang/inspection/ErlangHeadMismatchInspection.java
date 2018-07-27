@@ -117,7 +117,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
   }
 
   private static class ChangeFunExpressionNameQuickFix extends LocalQuickFixBase {
-    private String myNewName;
+    private final String myNewName;
 
     public ChangeFunExpressionNameQuickFix(@Nullable String newName) {
       super("Change clause name");

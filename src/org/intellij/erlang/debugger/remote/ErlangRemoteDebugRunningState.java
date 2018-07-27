@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.debugger.remote;
 
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.filters.TextConsoleBuilder;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
@@ -57,8 +56,9 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
     return false;
   }
 
+  @Nullable
   @Override
-  public ErlangEntryPoint getEntryPoint() throws ExecutionException {
+  public ErlangEntryPoint getEntryPoint() {
     return null;
   }
 

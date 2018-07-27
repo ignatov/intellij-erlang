@@ -33,7 +33,7 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVarProcessor implements PsiScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
-  private List<ErlangQVar> myVarList = ContainerUtil.newArrayListWithCapacity(0);
+  private final List<ErlangQVar> myVarList = ContainerUtil.newArrayListWithCapacity(0);
   private final String myRequestedName;
   private final PsiElement myOrigin;
 

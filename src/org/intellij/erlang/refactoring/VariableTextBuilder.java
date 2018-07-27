@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class VariableTextBuilder extends PsiRecursiveElementVisitor {
-  private StringBuilder myResult = new StringBuilder();
+  private final StringBuilder myResult = new StringBuilder();
 
   @Override
   public void visitWhiteSpace(@NotNull PsiWhiteSpace space) {

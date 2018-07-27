@@ -47,13 +47,13 @@ import java.util.List;
  * @author mark-dev
  */
 public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
-  private static char INCLUDE_STRING_PATH_SEPARATOR = '/';
+  private static final char INCLUDE_STRING_PATH_SEPARATOR = '/';
   /*
    * if true after adding facets include string will be renamed to direct link on hrl file
    * eg: -include("pr285_helper/include/internal_communication.hrl")
    * will be renamed to -include("internal_communication.hrl").
    */
-  private boolean setDirectHrlLink;
+  private final boolean setDirectHrlLink;
 
 
   public ErlangFindIncludeQuickFix(boolean setDirectHrlLink) {

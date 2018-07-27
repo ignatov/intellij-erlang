@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.eunit;
 
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.Location;
 import com.intellij.execution.configurations.RunConfigurationBase;
@@ -69,7 +68,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
       @Nullable
       @Override
-      public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) throws ExecutionException {
+      public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) {
         ErlangUnitRunConfiguration runConfiguration = createRerunFailedTestsRunConfiguration();
 
         return new ErlangUnitRunningState(env, getModules()[0], runConfiguration);

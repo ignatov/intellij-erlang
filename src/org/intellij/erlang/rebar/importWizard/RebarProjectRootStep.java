@@ -19,12 +19,14 @@ package org.intellij.erlang.rebar.importWizard;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Platform;
 import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.process.*;
+import com.intellij.execution.process.OSProcessHandler;
+import com.intellij.execution.process.ProcessAdapter;
+import com.intellij.execution.process.ProcessEvent;
+import com.intellij.execution.process.ProcessTerminatedListener;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -67,7 +69,7 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
   }
 
   @Override
-  public boolean validate() throws ConfigurationException {
+  public boolean validate() {
     String projectRootPath = myProjectRootComponent.getText();
     if (StringUtil.isEmpty(projectRootPath)) {
       return false;

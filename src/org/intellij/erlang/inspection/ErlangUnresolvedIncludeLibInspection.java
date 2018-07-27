@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
-  private static String INCLUDE_LIB_LABEL = "include_lib";
+  private static final String INCLUDE_LIB_LABEL = "include_lib";
   private static final Logger LOG = Logger.getInstance(ErlangUnresolvedIncludeLibInspection.class);
 
   @Override

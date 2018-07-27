@@ -45,8 +45,8 @@ import java.io.IOException;
 import java.util.*;
 
 public class ErlangUnitRunningState extends ErlangRunningState {
-  private static int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
-  private ErlangUnitRunConfiguration myConfiguration;
+  private static final int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
+  private final ErlangUnitRunConfiguration myConfiguration;
 
   public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
     super(env, module);

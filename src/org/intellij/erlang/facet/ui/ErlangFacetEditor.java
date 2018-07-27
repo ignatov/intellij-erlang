@@ -18,7 +18,6 @@ package org.intellij.erlang.facet.ui;
 
 import com.intellij.facet.ui.FacetEditorContext;
 import com.intellij.facet.ui.FacetEditorTab;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.text.CharFilter;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.DocumentAdapter;
@@ -77,7 +76,7 @@ public class ErlangFacetEditor extends FacetEditorTab {
   }
 
   @Override
-  public void apply() throws ConfigurationException {
+  public void apply() {
     myConfiguration.setParseTransformsFrom(getUiParseTransforms());
     myIsModified = false;
   }

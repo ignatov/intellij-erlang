@@ -21,7 +21,7 @@ import com.intellij.util.containers.ContainerUtil;
 import java.util.List;
 
 public class ErlangModuleBuildOrder {
-  public List<String> myOrderedErlangFilePaths = ContainerUtil.newArrayList();
+  public final List<String> myOrderedErlangFilePaths = ContainerUtil.newArrayList();
 
-  public List<String> myOrderedErlangTestFilePaths = ContainerUtil.newArrayList();
+  public final List<String> myOrderedErlangTestFilePaths = ContainerUtil.newArrayList();
 }

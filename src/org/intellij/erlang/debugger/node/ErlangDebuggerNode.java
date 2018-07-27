@@ -52,7 +52,7 @@ public class ErlangDebuggerNode {
   @NotNull
   private final ErlangDebuggerEventListener myEventListener;
   @NotNull
-  private AtomicBoolean myStopped = new AtomicBoolean(false);
+  private final AtomicBoolean myStopped = new AtomicBoolean(false);
 
   public ErlangDebuggerNode(@NotNull ErlangDebuggerEventListener eventListener) throws ErlangDebuggerNodeException {
     myEventListener = eventListener;

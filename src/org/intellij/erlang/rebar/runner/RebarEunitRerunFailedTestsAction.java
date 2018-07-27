@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.rebar.runner;
 
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.Location;
 import com.intellij.execution.configurations.RunConfigurationBase;
@@ -102,7 +101,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
       @Nullable
       @Override
-      public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) throws ExecutionException {
+      public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) {
         RebarEunitRunConfiguration runConfiguration = createRerunFailedTestsRunConfiguration();
         return new RebarEunitRunningState(env, runConfiguration);
       }

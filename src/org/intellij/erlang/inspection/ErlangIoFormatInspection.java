@@ -119,7 +119,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
   }
 
   private static class InvalidControlSequenceException extends Exception {
-    private int myInvalidSequenceStartIdx;
+    private final int myInvalidSequenceStartIdx;
 
     InvalidControlSequenceException(int invalidSequenceStartIdx) {
       myInvalidSequenceStartIdx = invalidSequenceStartIdx;

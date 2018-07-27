@@ -27,7 +27,6 @@ import org.jetbrains.jps.builders.BuildRootIndex;
 import org.jetbrains.jps.builders.BuildTarget;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
 import org.jetbrains.jps.incremental.CompileContext;
-import org.jetbrains.jps.incremental.ProjectBuildException;
 import org.jetbrains.jps.incremental.TargetBuilder;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
@@ -49,7 +48,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
   public void build(@NotNull ErlangModuleBuildOrderTarget target,
                     @NotNull DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangModuleBuildOrderTarget> holder,
                     @NotNull BuildOutputConsumer outputConsumer,
-                    @NotNull CompileContext context) throws ProjectBuildException, IOException {
+                    @NotNull CompileContext context) throws IOException {
     LOG.info("Computing dirty files");
     LOG.debug("Load project build order.");
     ErlangProjectBuildOrder projectBuildOrder = loadProjectBuildOrder(context);
@@ -64,7 +63,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
     List<String> dirtyErlangFilePaths = new DirtyFilesProcessor<String, ErlangModuleBuildOrderTarget>() {
       @Nullable
       @Override
-      protected String getDirtyElement(@NotNull File file) throws IOException {
+      protected String getDirtyElement(@NotNull File file) {
         String fileName = file.getName();
         return isSource(fileName) || isHeader(fileName) ? ErlangBuilderUtil.getPath(file) : null;
       }

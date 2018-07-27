@@ -80,8 +80,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final OSProcessHandler myErlangProcessHandler;
   private final ErlangDebugLocationResolver myLocationResolver;
 
-  private XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
-  private ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
+  private final XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
+  private final ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
   private XDebuggerEvaluator.XEvaluationCallback myEvalCallback = null;
 

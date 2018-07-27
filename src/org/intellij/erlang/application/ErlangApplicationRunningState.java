@@ -31,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class ErlangApplicationRunningState extends ErlangRunningState {
-  private ErlangApplicationConfiguration myConfiguration;
+  private final ErlangApplicationConfiguration myConfiguration;
 
   public ErlangApplicationRunningState(ExecutionEnvironment env, Module module, ErlangApplicationConfiguration configuration) {
     super(env, module);

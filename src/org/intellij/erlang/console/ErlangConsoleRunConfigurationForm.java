@@ -18,7 +18,6 @@ package org.intellij.erlang.console;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
@@ -65,7 +64,7 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   }
 
   @Override
-  protected void applyEditorTo(@NotNull ErlangConsoleRunConfiguration config) throws ConfigurationException {
+  protected void applyEditorTo(@NotNull ErlangConsoleRunConfiguration config) {
     config.setModule((Module) myModuleComboBox.getSelectedItem());
     config.setWorkingDirPath(myWorkingDirPathField.getText());
     config.setConsoleArgs(myConsoleArgsEditor.getText());

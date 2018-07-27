@@ -52,7 +52,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     ALL, SINGLE, ASK
   }
 
-  private ReplaceStrategy myReplaceStrategy;
+  private final ReplaceStrategy myReplaceStrategy;
 
   public ErlangIntroduceVariableHandler(ReplaceStrategy replaceStrategy) {
     myReplaceStrategy = replaceStrategy;
@@ -352,7 +352,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   private static class ErlangInplaceVariableIntroducer extends InplaceVariableIntroducer<PsiElement> {
-    private ErlangQVar myTarget;
+    private final ErlangQVar myTarget;
 
     public ErlangInplaceVariableIntroducer(ErlangQVar target,
                                            Editor editor,

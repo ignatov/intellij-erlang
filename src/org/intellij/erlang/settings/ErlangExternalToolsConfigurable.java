@@ -18,7 +18,6 @@ package org.intellij.erlang.settings;
 
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
@@ -51,10 +50,10 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   private JTextField myEmacsVersionText;
   private RebarConfigurationForm myRebarConfigurationForm;
   private TextFieldWithBrowseButton myPltPathSelector;
-  private String myPrevEmacsPath;
-  private EmacsSettings myEmacsSettings;
-  private RebarSettings myRebarSettings;
-  private DialyzerSettings myDialyzerSettings;
+  private final String myPrevEmacsPath;
+  private final EmacsSettings myEmacsSettings;
+  private final RebarSettings myRebarSettings;
+  private final DialyzerSettings myDialyzerSettings;
   private TextFieldWithBrowseButton mySdkPathSelector;
   private TitledSeparator mySdkTitledSeparator;
   private JLabel mySdkPathLabel;
@@ -142,7 +141,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   }
 
   @Override
-  public void apply() throws ConfigurationException {
+  public void apply() {
     myRebarSettings.setRebarPath(myRebarConfigurationForm.getPath());
     myEmacsSettings.setEmacsPath(myEmacsPathSelector.getText());
     myDialyzerSettings.setCurrentPltPath(myPltPathSelector.getText());

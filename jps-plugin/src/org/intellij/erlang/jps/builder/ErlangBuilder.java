@@ -147,7 +147,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     List<File> appConfigFiles = new DirtyFilesProcessor<File, ErlangTarget>() {
       @Nullable
       @Override
-      protected File getDirtyElement(@NotNull File file) throws IOException {
+      protected File getDirtyElement(@NotNull File file) {
         return ErlangBuilderUtil.isAppConfigFileName(file.getName()) ? file : null;
       }
     }.collectDirtyElements(holder);
@@ -282,7 +282,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
   }
 
   private static void addParseTransforms(@NotNull GeneralCommandLine commandLine,
-                                         @Nullable JpsModule module) throws ProjectBuildException {
+                                         @Nullable JpsModule module) {
     JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
     List<String> parseTransforms = extension != null ? extension.getParseTransforms() : Collections.emptyList();
     if (parseTransforms.isEmpty()) return;

@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.rebar.runner;
 
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -57,12 +56,12 @@ public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration
   }
 
   @NotNull
-  public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) throws ExecutionException {
+  public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) {
     return new RebarRunningState(env, this);
   }
 
   @Override
-  public void checkConfiguration() throws RuntimeConfigurationException {
+  public void checkConfiguration() {
     // TODO parse rebar command line to check if it is valid
   }
 

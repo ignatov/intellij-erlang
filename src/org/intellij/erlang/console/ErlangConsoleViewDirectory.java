@@ -27,7 +27,7 @@ import java.util.Set;
 final class ErlangConsoleViewDirectory {
   private static final ErlangConsoleViewDirectory outInstance = new ErlangConsoleViewDirectory();
 
-  private Set<ErlangConsoleView> consoleViews = new HashSet<>();
+  private final Set<ErlangConsoleView> consoleViews = new HashSet<>();
 
   private ErlangConsoleViewDirectory() {
   }

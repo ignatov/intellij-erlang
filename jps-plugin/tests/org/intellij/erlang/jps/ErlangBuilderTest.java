@@ -27,21 +27,20 @@ import org.jetbrains.jps.model.JpsElement;
 import org.jetbrains.jps.model.library.JpsOrderRootType;
 import org.jetbrains.jps.model.library.JpsTypedLibrary;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
-import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.util.JpsPathUtil;
 
 import java.io.File;
 
 public class ErlangBuilderTest extends JpsBuildTestCase {
-  public void testSimple() throws Exception {
+  public void testSimple() {
     doSingleFileTest("src/simple.erl", "-module(simple). foo() -> ok.", "simple.beam");
   }
 
-  public void testAppFilesAreCopiedToOutputDirectory() throws Exception {
+  public void testAppFilesAreCopiedToOutputDirectory() {
     doSingleFileTest("src/simple.app", "", "simple.app");
   }
 
-  public void testAppSrcFilesAreCopiedToOutputDirectory() throws Exception {
+  public void testAppSrcFilesAreCopiedToOutputDirectory() {
     doSingleFileTest("src/simple.app.src", "", "simple.app");
   }
 
@@ -71,11 +70,11 @@ public class ErlangBuilderTest extends JpsBuildTestCase {
   }
 
   @Override
-  protected <T extends JpsElement> JpsModule addModule(@NotNull String moduleName,
-                                                       @NotNull String[] srcPaths,
-                                                       @Nullable String outputPath,
-                                                       @Nullable String testOutputPath,
-                                                       @NotNull JpsSdk<T> sdk) {
-    return addModule(moduleName, srcPaths, outputPath, testOutputPath, sdk, JpsErlangModuleType.INSTANCE);
+  protected <T extends JpsElement> void addModule(@NotNull String moduleName,
+                                                  @NotNull String[] srcPaths,
+                                                  @Nullable String outputPath,
+                                                  @Nullable String testOutputPath,
+                                                  @NotNull JpsSdk<T> sdk) {
+    addModule(moduleName, srcPaths, outputPath, testOutputPath, sdk, JpsErlangModuleType.INSTANCE);
   }
 }

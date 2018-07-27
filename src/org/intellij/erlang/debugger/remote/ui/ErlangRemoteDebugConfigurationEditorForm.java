@@ -17,7 +17,6 @@
 package org.intellij.erlang.debugger.remote.ui;
 
 import com.intellij.application.options.ModulesComboBox;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.intellij.erlang.module.ErlangModuleType;
@@ -54,7 +53,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   }
 
   @Override
-  protected void doApplyEditorTo(ErlangRemoteDebugRunConfiguration configuration) throws ConfigurationException {
+  protected void doApplyEditorTo(ErlangRemoteDebugRunConfiguration configuration) {
     configuration.setModule(myModuleComboBox.getSelectedModule());
     configuration.setRemoteErlangNodeName(myNodeTextField.getText());
     configuration.setCookie(myCookieTextField.getText());

@@ -44,5 +44,5 @@ public abstract class DirtyFilesProcessor<T, P extends BuildTarget<ErlangSourceR
   }
 
   @Nullable
-  protected abstract T getDirtyElement(@NotNull File file) throws IOException;
+  protected abstract T getDirtyElement(@NotNull File file);
 }

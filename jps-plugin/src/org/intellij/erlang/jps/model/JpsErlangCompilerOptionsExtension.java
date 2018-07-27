@@ -24,7 +24,7 @@ import org.jetbrains.jps.model.ex.JpsElementChildRoleBase;
 public class JpsErlangCompilerOptionsExtension extends JpsCompositeElementBase<JpsErlangCompilerOptionsExtension> {
   public static final JpsElementChildRole<JpsErlangCompilerOptionsExtension> ROLE = JpsElementChildRoleBase.create("ErlangCompilerOptions");
 
-  private ErlangCompilerOptions myOptions;
+  private final ErlangCompilerOptions myOptions;
 
   public JpsErlangCompilerOptionsExtension(@NotNull ErlangCompilerOptions options) {
     myOptions = options;

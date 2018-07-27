@@ -18,7 +18,6 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.application.options.ModulesComboBox;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
@@ -58,7 +57,7 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   }
 
   @Override
-  protected void applyEditorTo(@NotNull RebarRunConfigurationBase rebarRunConfiguration) throws ConfigurationException {
+  protected void applyEditorTo(@NotNull RebarRunConfigurationBase rebarRunConfiguration) {
     rebarRunConfiguration.setCommand(myCommandText.getText());
     rebarRunConfiguration.setSkipDependencies(mySkipDependenciesCheckBox.isSelected());
     Module selectedModule = myRunInModuleCheckBox.isSelected() ? myModulesComboBox.getSelectedModule() : null;

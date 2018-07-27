@@ -92,9 +92,9 @@ public class ErlangPsiImplUtil {
   public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 
   @NotNull
-  private static Pattern ATOM_PATTERN = Pattern.compile("[a-z][a-zA-Z_@0-9]*");
+  private static final Pattern ATOM_PATTERN = Pattern.compile("[a-z][a-zA-Z_@0-9]*");
   @NotNull
-  private static Pattern QUOTED_ATOM_NAME = Pattern.compile("(\\\\\\^.|\\\\.|[^'])*"); //see https://github.com/rvirding/leex/blob/master/examples/erlang_scan.xrl
+  private static final Pattern QUOTED_ATOM_NAME = Pattern.compile("(\\\\\\^.|\\\\.|[^'])*"); //see https://github.com/rvirding/leex/blob/master/examples/erlang_scan.xrl
 
   private ErlangPsiImplUtil() {
   }

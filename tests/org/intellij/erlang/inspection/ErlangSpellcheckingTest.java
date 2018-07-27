@@ -26,7 +26,7 @@ public class ErlangSpellcheckingTest extends ErlangLightPlatformCodeInsightFixtu
     myFixture.enableInspections(new SpellCheckingInspection());
   }
 
-  public void testFunctionName() throws Exception { doTest(); }
+  public void testFunctionName() { doTest(); }
 
   private void doTest() {
     myFixture.testHighlighting(false, false, true, getTestName(true) + ".erl");

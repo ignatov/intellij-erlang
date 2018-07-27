@@ -17,7 +17,6 @@
 package org.intellij.erlang.eunit.ui;
 
 import com.intellij.application.options.ModulesComboBox;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.HideableTitledPanel;
@@ -74,7 +73,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   }
 
   @Override
-  protected void doApplyEditorTo(ErlangUnitRunConfiguration configuration) throws ConfigurationException {
+  protected void doApplyEditorTo(ErlangUnitRunConfiguration configuration) {
     configuration.setModule(myModuleComboBox.getSelectedModule());
     configuration.setWorkDirectory(StringUtil.nullize(myWorkingDirectoryComponent.getText()));
 

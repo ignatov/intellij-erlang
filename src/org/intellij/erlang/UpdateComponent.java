@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 public class UpdateComponent implements ApplicationComponent, Disposable {
   private static final String PLUGIN_ID = "org.jetbrains.erlang";
   private static final String KEY = "erlang.last.update.timestamp";
-  private static Logger LOG = Logger.getInstance(UpdateComponent.class);
+  private static final Logger LOG = Logger.getInstance(UpdateComponent.class);
   private final EditorFactoryAdapter myListener = new EditorFactoryAdapter() {
     @Override
     public void editorCreated(@NotNull EditorFactoryEvent event) {

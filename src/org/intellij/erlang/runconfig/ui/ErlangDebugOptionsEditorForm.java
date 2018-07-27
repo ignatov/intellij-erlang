@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.runconfig.ui;
 
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.ui.InputValidator;
 import com.intellij.openapi.ui.Messages;
@@ -59,7 +58,7 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   }
 
   @Override
-  protected void applyEditorTo(ErlangRunConfigurationBase.ErlangDebugOptions erlangDebugOptions) throws ConfigurationException {
+  protected void applyEditorTo(ErlangRunConfigurationBase.ErlangDebugOptions erlangDebugOptions) {
     erlangDebugOptions.setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected());
     Set<String> modules = erlangDebugOptions.isAutoUpdateModulesNotToInterpret() ? Collections.emptySet() :
       ContainerUtil.map2Set(myModulesNotToInterpretListModel.getItems(),

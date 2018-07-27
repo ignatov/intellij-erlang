@@ -45,7 +45,7 @@ public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends E
     doApplyEditorTo(runConfig);
   }
 
-  protected abstract void doApplyEditorTo(RunConfig runConfig) throws ConfigurationException;
+  protected abstract void doApplyEditorTo(RunConfig runConfig);
 
 
   protected HideableTitledPanel createDebugOptionsHideablePanel() {

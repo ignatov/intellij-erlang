@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.runconfig;
 
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ModuleBasedConfiguration;
@@ -102,7 +101,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   }
 
   @Override
-  public void checkSettingsBeforeRun() throws RuntimeConfigurationException {
+  public void checkSettingsBeforeRun() {
     ErlangDebuggableRunConfigurationProducer.updateDebugOptions(this);
   }
 
@@ -114,7 +113,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
 
   @Nullable
   @Override
-  public final RunningState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment) throws ExecutionException {
+  public final RunningState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
     ErlangModuleBasedConfiguration configuration = getConfigurationModule();
     Module module = configuration.getModule();
     return module != null ? newRunningState(environment, module) : null;

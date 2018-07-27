@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.console;
 
-import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -55,8 +54,7 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
   }
 
   @NotNull
-  public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment)
-    throws ExecutionException {
+  public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
     return new ErlangConsoleCommandLineState(this, environment);
   }
 

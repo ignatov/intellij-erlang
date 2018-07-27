@@ -51,8 +51,8 @@ public class ErlangAtomSearch extends QueryExecutorBase<PsiReference, References
   }
 
   private static class MyCodeOccurenceProcessor implements TextOccurenceProcessor {
-    private PsiElement myElement;
-    private Processor<? super PsiReference> myPsiReferenceProcessor;
+    private final PsiElement myElement;
+    private final Processor<? super PsiReference> myPsiReferenceProcessor;
 
     public MyCodeOccurenceProcessor(@NotNull PsiElement element,
                                     @NotNull Processor<? super PsiReference> psiReferenceProcessor) {

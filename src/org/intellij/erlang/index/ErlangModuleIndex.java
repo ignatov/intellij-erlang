@@ -42,7 +42,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   private static final EnumeratorStringDescriptor DESCRIPTOR = new EnumeratorStringDescriptor();
 
   @NotNull
-  private DataIndexer<String, Void, FileContent> myDataIndexer = new MyDataIndexer();
+  private final DataIndexer<String, Void, FileContent> myDataIndexer = new MyDataIndexer();
 
   @NotNull
   @Override

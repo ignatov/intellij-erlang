@@ -138,7 +138,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     return new ModuleCompileScope(myProject, modules, false);
   }
 
-  protected void compileAndAssertOutput(boolean withTest) throws Exception {
+  protected void compileAndAssertOutput(boolean withTest) {
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
     if (withTest) {
@@ -283,7 +283,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
   }
 
   protected class CompilationRunner {
-    private CompileScope myScope;
+    private final CompileScope myScope;
     private CompilerTester myTester;
 
     CompilationRunner(@NotNull Module... moduleNames) throws Exception {

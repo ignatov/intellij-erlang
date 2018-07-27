@@ -57,7 +57,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     new AttributesDescriptor("Specifications", SPEC),
   };
 
-  private static Map<String, TextAttributesKey> ATTRIBUTES_KEY_MAP = ContainerUtil.newHashMap();
+  private static final Map<String, TextAttributesKey> ATTRIBUTES_KEY_MAP = ContainerUtil.newHashMap();
 
   static {
     ATTRIBUTES_KEY_MAP.put("a", ATOM);

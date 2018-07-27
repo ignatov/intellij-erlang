@@ -48,7 +48,7 @@ public class RebarRunningStateUtil {
   }
 
   @NotNull
-  public static GeneralCommandLine getRebarCommandLine(@NotNull RebarRunConfigurationBase configuration) throws ExecutionException {
+  public static GeneralCommandLine getRebarCommandLine(@NotNull RebarRunConfigurationBase configuration) {
     Project project = configuration.getProject();
     RebarSettings rebarSettings = RebarSettings.getInstance(project);
     String sdkPath = ErlangSdkType.getSdkPath(project);
