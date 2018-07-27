@@ -51,27 +51,24 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
   @Override
   public ItemPresentation getPresentation() {
     final String text = UsageViewUtil.createNodeText(this);
-    if (text != null) {
-      return new ItemPresentation() {
-        @Nullable
-        @Override
-        public String getPresentableText() {
-          return text;
-        }
+    return new ItemPresentation() {
+      @NotNull
+      @Override
+      public String getPresentableText() {
+        return text;
+      }
 
-        @Nullable
-        @Override
-        public String getLocationString() {
-          return getContainingFile().getName();
-        }
+      @NotNull
+      @Override
+      public String getLocationString() {
+        return getContainingFile().getName();
+      }
 
-        @Nullable
-        @Override
-        public Icon getIcon(boolean b) {
-          return ErlangCompositeElementImpl.this.getIcon(0);
-        }
-      };
-    }
-    return super.getPresentation();
+      @Nullable
+      @Override
+      public Icon getIcon(boolean b) {
+        return ErlangCompositeElementImpl.this.getIcon(0);
+      }
+    };
   }
 }
