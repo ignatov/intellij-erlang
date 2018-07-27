@@ -38,7 +38,7 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
     return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
   }
 
-  @Nullable
+  @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }

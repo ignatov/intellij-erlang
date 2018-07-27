@@ -10,12 +10,6 @@ public interface ErlangMapType extends ErlangType {
   @NotNull
   List<ErlangType> getTypeList();
 
-  @Nullable
-  PsiElement getCurlyLeft();
-
-  @Nullable
-  PsiElement getCurlyRight();
-
   @NotNull
   PsiElement getRadix();
 

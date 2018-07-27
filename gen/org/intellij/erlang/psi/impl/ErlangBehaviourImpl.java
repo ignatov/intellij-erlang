@@ -18,8 +18,8 @@ public class ErlangBehaviourImpl extends ErlangStubbedPsiElementBase<ErlangBehav
     super(node);
   }
 
-  public ErlangBehaviourImpl(ErlangBehaviourStub stub, IStubElementType nodeType) {
-    super(stub, nodeType);
+  public ErlangBehaviourImpl(ErlangBehaviourStub stub, IStubElementType stubType) {
+    super(stub, stubType);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {

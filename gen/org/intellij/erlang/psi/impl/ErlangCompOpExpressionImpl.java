@@ -26,12 +26,6 @@ public class ErlangCompOpExpressionImpl extends ErlangFakeBinaryExpressionImpl i
   }
 
   @Override
-  @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
-  }
-
-  @Override
   @Nullable
   public PsiElement getOpDivEq() {
     return findChildByType(ERL_OP_DIV_EQ);

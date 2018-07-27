@@ -11,13 +11,7 @@ public interface ErlangFieldType extends ErlangType {
   @NotNull
   ErlangQAtom getQAtom();
 
-  @Nullable
-  ErlangType getType();
-
-  @Nullable
-  PsiElement getColonColon();
-
-  @Nullable
+  @NotNull
   PsiReference getReference();
 
 }

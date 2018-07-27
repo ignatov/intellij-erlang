@@ -35,7 +35,7 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
     return notNullChild(findChildByType(ERL_VAR));
   }
 
-  @Nullable
+  @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }

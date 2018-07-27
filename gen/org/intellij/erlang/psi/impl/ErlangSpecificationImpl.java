@@ -14,12 +14,12 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangSpecificationImpl extends ErlangNamedStubbedPsiElementBase<ErlangSpecificationStub> implements ErlangSpecification {
 
-  public ErlangSpecificationImpl(ASTNode node) {
-    super(node);
+  public ErlangSpecificationImpl(ErlangSpecificationStub stub, IStubElementType type) {
+    super(stub, type);
   }
 
-  public ErlangSpecificationImpl(ErlangSpecificationStub stub, IStubElementType nodeType) {
-    super(stub, nodeType);
+  public ErlangSpecificationImpl(ASTNode node) {
+    super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {

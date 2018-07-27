@@ -9,7 +9,7 @@ ERL_FILE
           PsiElement(atom_name)('m')
       PsiElement())(')')
     PsiElement(.)('.')
-  PsiErrorElement:'-', <function clause>, <q atom> or '?' expected, got '.'
+  PsiErrorElement:'-', <attribute>, <function clause>, <q atom> or '?' expected, got '.'
     PsiElement(ERROR_ELEMENT)('.')
   PsiElement(.)('.')
   PsiElement(.)('.')

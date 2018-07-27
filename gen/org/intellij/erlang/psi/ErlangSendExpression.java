@@ -8,9 +8,6 @@ import com.intellij.psi.PsiElement;
 public interface ErlangSendExpression extends ErlangFakeBinaryExpression {
 
   @NotNull
-  List<ErlangExpression> getExpressionList();
-
-  @NotNull
   PsiElement getOpExl();
 
 }

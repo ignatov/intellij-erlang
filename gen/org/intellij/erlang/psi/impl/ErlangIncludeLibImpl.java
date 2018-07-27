@@ -18,8 +18,8 @@ public class ErlangIncludeLibImpl extends ErlangStubbedPsiElementBase<ErlangIncl
     super(node);
   }
 
-  public ErlangIncludeLibImpl(ErlangIncludeLibStub stub, IStubElementType nodeType) {
-    super(stub, nodeType);
+  public ErlangIncludeLibImpl(ErlangIncludeLibStub stub, IStubElementType stubType) {
+    super(stub, stubType);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {

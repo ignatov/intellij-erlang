@@ -32,7 +32,7 @@ public class ErlangTypeRefImpl extends ErlangCompositeElementImpl implements Erl
     return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
   }
 
-  @Nullable
+  @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }

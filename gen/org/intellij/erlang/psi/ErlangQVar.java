@@ -14,7 +14,7 @@ public interface ErlangQVar extends ErlangNamedElement {
   @NotNull
   PsiElement getVar();
 
-  @Nullable
+  @NotNull
   PsiReference getReference();
 
   boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place);

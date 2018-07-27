@@ -346,8 +346,6 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   public static final TokenSet[] EXTENDS_SETS_ = new TokenSet[] {
-    create_token_set_(ERL_ADDITIVE_EXPRESSION, ERL_ANDALSO_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION, ERL_COMP_OP_EXPRESSION,
-      ERL_LIST_OP_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION, ERL_ORELSE_EXPRESSION, ERL_SEND_EXPRESSION),
     create_token_set_(ERL_BINARY_TYPE, ERL_BIN_BASE_TYPE, ERL_BIN_UNIT_TYPE, ERL_BIT_TYPE,
       ERL_EXPORT_TYPE, ERL_FIELD_TYPE, ERL_FUN_TYPE, ERL_FUN_TYPE_100_T,
       ERL_INT_TYPE, ERL_MAP_ENTRY_TYPE, ERL_MAP_TYPE, ERL_RECORD_LIKE_TYPE,
@@ -421,7 +419,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // &<<p>> app_atom
-  static boolean app_atom_named(PsiBuilder b, int l, final Parser _p) {
+  static boolean app_atom_named(PsiBuilder b, int l, Parser _p) {
     if (!recursion_guard_(b, l, "app_atom_named")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
@@ -433,7 +431,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   // &<<p>>
-  private static boolean app_atom_named_0(PsiBuilder b, int l, final Parser _p) {
+  private static boolean app_atom_named_0(PsiBuilder b, int l, Parser _p) {
     if (!recursion_guard_(b, l, "app_atom_named_0")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
@@ -446,7 +444,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '{' app_atom ',' config_expression '}'
   public static boolean app_env_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_env_expression")) return false;
-    if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_CURLY_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_TUPLE_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_CURLY_LEFT);
@@ -463,7 +461,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '{' <<app_atom_named ('application')>> ',' app_atom ',' <<list_of app_parameter>> '}'
   public static boolean app_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_expression")) return false;
-    if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_CURLY_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_TUPLE_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_CURLY_LEFT);
@@ -978,11 +976,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' argument_definition)*
   private static boolean argument_definition_list_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "argument_definition_list_2")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!argument_definition_list_2_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "argument_definition_list_2", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -1049,7 +1046,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // atom_name ['(' typed_attr_val ')' | typed_attr_val | attr_val]
   public static boolean atom_attribute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atom_attribute")) return false;
-    if (!nextTokenIs(b, ERL_ATOM_NAME)) return false;
+    if (!nextTokenIs(b, "<attribute>", ERL_ATOM_NAME)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_ATOM_ATTRIBUTE, "<attribute>");
     r = consumeToken(b, ERL_ATOM_NAME);
@@ -1131,11 +1128,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     boolean r;
     Marker m = enter_section_(b);
     r = atomic_2_0(b, l + 1);
-    int c = current_position_(b);
     while (r) {
+      int c = current_position_(b);
       if (!atomic_2_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "atomic_2", c)) break;
-      c = current_position_(b);
     }
     exit_section_(b, m, null, r);
     return r;
@@ -1145,10 +1141,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean atomic_2_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic_2_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = string_literal(b, l + 1);
     if (!r) r = macros(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -1193,7 +1187,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   )
   public static boolean attribute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "attribute")) return false;
-    if (!nextTokenIs(b, ERL_OP_MINUS)) return false;
+    if (!nextTokenIs(b, "<attribute>", ERL_OP_MINUS)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_ATTRIBUTE, "<attribute>");
     r = consumeToken(b, ERL_OP_MINUS);
@@ -1248,7 +1242,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // !'(' <<p1>> | '(' <<p1>> ')'
-  static boolean attribute_tail(PsiBuilder b, int l, final Parser _p1) {
+  static boolean attribute_tail(PsiBuilder b, int l, Parser _p1) {
     if (!recursion_guard_(b, l, "attribute_tail")) return false;
     boolean r;
     Marker m = enter_section_(b);
@@ -1259,7 +1253,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   // !'(' <<p1>>
-  private static boolean attribute_tail_0(PsiBuilder b, int l, final Parser _p1) {
+  private static boolean attribute_tail_0(PsiBuilder b, int l, Parser _p1) {
     if (!recursion_guard_(b, l, "attribute_tail_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
@@ -1280,7 +1274,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   // '(' <<p1>> ')'
-  private static boolean attribute_tail_1(PsiBuilder b, int l, final Parser _p1) {
+  private static boolean attribute_tail_1(PsiBuilder b, int l, Parser _p1) {
     if (!recursion_guard_(b, l, "attribute_tail_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
@@ -1306,7 +1300,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // begin begin_end_body end
   public static boolean begin_end_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "begin_end_expression")) return false;
-    if (!nextTokenIs(b, ERL_BEGIN)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BEGIN)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_BEGIN_END_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_BEGIN);
@@ -1347,12 +1341,11 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // q_var ':' integer
   public static boolean bin_base_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_base_type")) return false;
-    if (!nextTokenIs(b, ERL_VAR)) return false;
+    if (!nextTokenIs(b, "<type>", ERL_VAR)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_BIN_BASE_TYPE, "<type>");
     r = q_var(b, l + 1);
-    r = r && consumeToken(b, ERL_COLON);
-    r = r && consumeToken(b, ERL_INTEGER);
+    r = r && consumeTokens(b, 0, ERL_COLON, ERL_INTEGER);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -1446,11 +1439,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' bin_element)*
   private static boolean bin_element_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_element_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!bin_element_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "bin_element_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -1483,14 +1475,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // q_var ':' q_var '*' integer
   public static boolean bin_unit_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_unit_type")) return false;
-    if (!nextTokenIs(b, ERL_VAR)) return false;
+    if (!nextTokenIs(b, "<type>", ERL_VAR)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_BIN_UNIT_TYPE, "<type>");
     r = q_var(b, l + 1);
     r = r && consumeToken(b, ERL_COLON);
     r = r && q_var(b, l + 1);
-    r = r && consumeToken(b, ERL_OP_AR_MUL);
-    r = r && consumeToken(b, ERL_INTEGER);
+    r = r && consumeTokens(b, 0, ERL_OP_AR_MUL, ERL_INTEGER);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -1499,7 +1490,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>'
   public static boolean binary_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_comprehension")) return false;
-    if (!nextTokenIs(b, ERL_BIN_START)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BIN_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
     r = consumeToken(b, ERL_BIN_START);
@@ -1516,7 +1507,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '<<' bin_element_list? '>>'
   public static boolean binary_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_expression")) return false;
-    if (!nextTokenIs(b, ERL_BIN_START)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BIN_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_BINARY_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_BIN_START);
@@ -1538,7 +1529,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '<<' [bin_base_type | bin_unit_type | bin_base_type_list] '>>'
   public static boolean binary_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_type")) return false;
-    if (!nextTokenIs(b, ERL_BIN_START)) return false;
+    if (!nextTokenIs(b, "<type>", ERL_BIN_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_BINARY_TYPE, "<type>");
     r = consumeToken(b, ERL_BIN_START);
@@ -1560,11 +1551,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean binary_type_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_type_1_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = bin_base_type(b, l + 1);
     if (!r) r = bin_unit_type(b, l + 1);
     if (!r) r = bin_base_type_list(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -1583,19 +1572,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // [':' integer]
   private static boolean bit_type_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bit_type_1")) return false;
-    bit_type_1_0(b, l + 1);
+    parseTokens(b, 0, ERL_COLON, ERL_INTEGER);
     return true;
-  }
-
-  // ':' integer
-  private static boolean bit_type_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "bit_type_1_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_COLON);
-    r = r && consumeToken(b, ERL_INTEGER);
-    exit_section_(b, m, null, r);
-    return r;
   }
 
   /* ********************************************************** */
@@ -1614,11 +1592,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // ('-' bit_type)*
   private static boolean bit_type_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bit_type_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!bit_type_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "bit_type_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -1651,11 +1628,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' expr_with_guard)*
   private static boolean call_exprs_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "call_exprs_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!call_exprs_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "call_exprs_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -1680,8 +1656,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_CALLBACK_FUNCTION, "<callback function>");
     r = q_atom(b, l + 1);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_OP_AR_DIV));
-    r = p && consumeToken(b, ERL_INTEGER) && r;
+    r = r && report_error_(b, consumeTokens(b, -1, ERL_OP_AR_DIV, ERL_INTEGER));
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -1702,11 +1677,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' callback_function)*
   private static boolean callback_function_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "callback_function_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!callback_function_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "callback_function_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -1740,7 +1714,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // case expression of cr_clauses end
   public static boolean case_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "case_expression")) return false;
-    if (!nextTokenIs(b, ERL_CASE)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_CASE)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_CASE_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_CASE);
@@ -1801,7 +1775,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // (&('||'))? <<p1>>
-  static boolean comprehension_element(PsiBuilder b, int l, final Parser _p1) {
+  static boolean comprehension_element(PsiBuilder b, int l, Parser _p1) {
     if (!recursion_guard_(b, l, "comprehension_element")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
@@ -1824,18 +1798,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "comprehension_element_0_0")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
-    r = comprehension_element_0_0_0(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // ('||')
-  private static boolean comprehension_element_0_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "comprehension_element_0_0_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
     r = consumeToken(b, ERL_OR_OR);
-    exit_section_(b, m, null, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -1865,7 +1829,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '<<' config_exprs? '>>'
   public static boolean config_bin_list_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_bin_list_expression")) return false;
-    if (!nextTokenIs(b, ERL_BIN_START)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BIN_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_BINARY_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_BIN_START);
@@ -1887,7 +1851,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // config_argument_list
   public static boolean config_call_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_call_expression")) return false;
-    if (!nextTokenIs(b, ERL_PAR_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_PAR_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _LEFT_, ERL_CONFIG_CALL_EXPRESSION, "<expression>");
     r = config_argument_list(b, l + 1);
@@ -1976,11 +1940,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' config_expression)*
   private static boolean config_exprs_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_exprs_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!config_exprs_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "config_exprs_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2001,7 +1964,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '[' config_exprs? ']'
   public static boolean config_list_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_list_expression")) return false;
-    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BRACKET_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_BRACKET_LEFT);
@@ -2049,11 +2012,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' config_map_assoc)*
   private static boolean config_map_assoc_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_map_assoc_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!config_map_assoc_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "config_map_assoc_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2074,7 +2036,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // config_map_tuple
   public static boolean config_map_construct_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_map_construct_expression")) return false;
-    if (!nextTokenIs(b, ERL_RADIX)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_RADIX)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_MAP_EXPRESSION, "<expression>");
     r = config_map_tuple(b, l + 1);
@@ -2089,10 +2051,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!nextTokenIs(b, ERL_RADIX)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_MAP_TUPLE, null);
-    r = consumeToken(b, ERL_RADIX);
+    r = consumeTokens(b, 1, ERL_RADIX, ERL_CURLY_LEFT);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_CURLY_LEFT));
-    r = p && report_error_(b, config_map_tuple_2(b, l + 1)) && r;
+    r = r && report_error_(b, config_map_tuple_2(b, l + 1));
     r = p && consumeToken(b, ERL_CURLY_RIGHT) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
@@ -2129,7 +2090,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '{' config_exprs? '}'
   public static boolean config_tuple_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_tuple_expression")) return false;
-    if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_CURLY_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_TUPLE_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_CURLY_LEFT);
@@ -2228,11 +2189,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (';' cr_clause)*
   private static boolean cr_clauses_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "cr_clauses_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!cr_clauses_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "cr_clauses_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2298,8 +2258,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_EXPORT_FUNCTION, "<export function>");
     r = q_atom(b, l + 1);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_OP_AR_DIV));
-    r = p && consumeToken(b, ERL_INTEGER) && r;
+    r = r && report_error_(b, consumeTokens(b, -1, ERL_OP_AR_DIV, ERL_INTEGER));
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -2320,11 +2279,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' export_function)*
   private static boolean export_function_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "export_function_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!export_function_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "export_function_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2371,8 +2329,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_EXPORT_TYPE, "<type>");
     r = q_atom(b, l + 1);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_OP_AR_DIV));
-    r = p && consumeToken(b, ERL_INTEGER) && r;
+    r = r && report_error_(b, consumeTokens(b, -1, ERL_OP_AR_DIV, ERL_INTEGER));
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -2406,11 +2363,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' export_type)*
   private static boolean export_type_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "export_type_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!export_type_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "export_type_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2494,18 +2450,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "expression_parse_error_0")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
-    r = expression_parse_error_0_0(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // ('||')
-  private static boolean expression_parse_error_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "expression_parse_error_0_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
     r = consumeToken(b, ERL_OR_OR);
-    exit_section_(b, m, null, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -2524,11 +2470,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (exprs_tail)*
   private static boolean exprs_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "exprs_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!exprs_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "exprs_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2629,11 +2574,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' field_type)*
   private static boolean field_type_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "field_type_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!field_type_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "field_type_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2768,11 +2712,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // form_with_period *
   private static boolean forms_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "forms_2")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!form_with_period(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "forms_2", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2824,11 +2767,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (';' fun_clause)*
   private static boolean fun_clauses_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_clauses_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!fun_clauses_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "fun_clauses_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -2849,7 +2791,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // fun (fun_expression_block | fun_expression_lambda)
   public static boolean fun_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_expression")) return false;
-    if (!nextTokenIs(b, ERL_FUN)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_FUN)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_FUN_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_FUN);
@@ -2863,10 +2805,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean fun_expression_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_expression_1")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = fun_expression_block(b, l + 1);
     if (!r) r = fun_expression_lambda(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -2918,10 +2858,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean fun_expression_lambda_0_0_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_expression_lambda_0_0_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = module_ref(b, l + 1);
     if (!r) r = q_var(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -2929,10 +2867,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean fun_expression_lambda_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_expression_lambda_1")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = function_with_arity(b, l + 1);
     if (!r) r = function_with_arity_variables(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -2964,7 +2900,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // fun_type_arguments top_type_clause
   public static boolean fun_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_type")) return false;
-    if (!nextTokenIs(b, ERL_PAR_LEFT)) return false;
+    if (!nextTokenIs(b, "<type>", ERL_PAR_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_FUN_TYPE, "<type>");
     r = fun_type_arguments(b, l + 1);
@@ -2978,7 +2914,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '(' ('...' | top_type_list?) ')' top_type_clause
   public static boolean fun_type_100_t(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_type_100_t")) return false;
-    if (!nextTokenIs(b, ERL_PAR_LEFT)) return false;
+    if (!nextTokenIs(b, "<type>", ERL_PAR_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_FUN_TYPE_100_T, "<type>");
     r = consumeToken(b, ERL_PAR_LEFT);
@@ -3101,11 +3037,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (';' function_clause)*
   private static boolean function_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!function_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "function_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -3154,8 +3089,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_FUNCTION_WITH_ARITY, "<function with arity>");
     r = q_atom(b, l + 1);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_OP_AR_DIV));
-    r = p && consumeToken(b, ERL_INTEGER) && r;
+    r = r && report_error_(b, consumeTokens(b, -1, ERL_OP_AR_DIV, ERL_INTEGER));
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -3179,10 +3113,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean function_with_arity_variables_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "function_with_arity_variables_2")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = consumeToken(b, ERL_INTEGER);
     if (!r) r = q_var(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -3202,11 +3134,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (';' exprs)*
   private static boolean guard_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "guard_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!guard_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "guard_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -3231,7 +3162,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // <<enterMode "GUARD">> (<<p1>> <<exitMode "GUARD">>|<<exitMode "GUARD">> !())
-  static boolean guarded(PsiBuilder b, int l, final Parser _p1) {
+  static boolean guarded(PsiBuilder b, int l, Parser _p1) {
     if (!recursion_guard_(b, l, "guarded")) return false;
     boolean r;
     Marker m = enter_section_(b);
@@ -3242,7 +3173,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   // <<p1>> <<exitMode "GUARD">>|<<exitMode "GUARD">> !()
-  private static boolean guarded_1(PsiBuilder b, int l, final Parser _p1) {
+  private static boolean guarded_1(PsiBuilder b, int l, Parser _p1) {
     if (!recursion_guard_(b, l, "guarded_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
@@ -3253,7 +3184,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   // <<p1>> <<exitMode "GUARD">>
-  private static boolean guarded_1_0(PsiBuilder b, int l, final Parser _p1) {
+  private static boolean guarded_1_0(PsiBuilder b, int l, Parser _p1) {
     if (!recursion_guard_(b, l, "guarded_1_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
@@ -3318,11 +3249,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (';' if_clause)*
   private static boolean if_clauses_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "if_clauses_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!if_clauses_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "if_clauses_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -3343,7 +3273,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // if if_clauses end
   public static boolean if_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "if_expression")) return false;
-    if (!nextTokenIs(b, ERL_IF)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_IF)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_IF_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_IF);
@@ -3361,10 +3291,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_ATOM_ATTRIBUTE, "<attribute>");
     r = ifdef_ifndef_undef_attribute_0(b, l + 1);
-    r = r && consumeToken(b, ERL_ATOM_NAME);
+    r = r && consumeTokens(b, 1, ERL_ATOM_NAME, ERL_PAR_LEFT);
     p = r; // pin = 2
-    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
-    r = p && report_error_(b, macros_name(b, l + 1)) && r;
+    r = r && report_error_(b, macros_name(b, l + 1));
     r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
@@ -3417,8 +3346,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_IMPORT_FUNCTION, "<import function>");
     r = q_atom(b, l + 1);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_OP_AR_DIV));
-    r = p && consumeToken(b, ERL_INTEGER) && r;
+    r = r && report_error_(b, consumeTokens(b, -1, ERL_OP_AR_DIV, ERL_INTEGER));
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -3439,11 +3367,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' import_function)*
   private static boolean import_function_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "import_function_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!import_function_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "import_function_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -3579,7 +3506,6 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // &<<isApplicationLanguage>>
   static boolean is_app(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "is_app")) return false;
-    if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
     r = isApplicationLanguage(b, l + 1);
@@ -3666,11 +3592,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' lc_expression)*
   private static boolean lc_exprs_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_exprs_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!lc_exprs_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "lc_exprs_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -3717,11 +3642,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     boolean r;
     Marker m = enter_section_(b);
     r = qualified_expression(b, l + 1);
-    int c = current_position_(b);
     while (r) {
+      int c = current_position_(b);
       if (!qualified_expression(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "left_accessors_1", c)) break;
-      c = current_position_(b);
     }
     exit_section_(b, m, null, r);
     return r;
@@ -3731,7 +3655,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '[' expression '||' lc_exprs ']'
   public static boolean list_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_comprehension")) return false;
-    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BRACKET_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
     r = consumeToken(b, ERL_BRACKET_LEFT);
@@ -3761,7 +3685,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '[' list_expr_or_comprehension_body? ']'
   public static boolean list_expr_or_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expr_or_comprehension")) return false;
-    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BRACKET_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_BRACKET_LEFT);
@@ -3824,10 +3748,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean list_expr_or_comprehension_body_1_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expr_or_comprehension_body_1_1")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = marked_lc_tail(b, l + 1);
     if (!r) r = list_expression_tail(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -3835,7 +3757,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '[' expression list_expression_tail? ']'
   public static boolean list_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expression")) return false;
-    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BRACKET_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_BRACKET_LEFT);
@@ -3887,11 +3809,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     boolean r;
     Marker m = enter_section_(b);
     r = list_items_0(b, l + 1);
-    int c = current_position_(b);
     while (r) {
+      int c = current_position_(b);
       if (!list_items_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "list_items", c)) break;
-      c = current_position_(b);
     }
     exit_section_(b, m, null, r);
     return r;
@@ -3911,7 +3832,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // '[' <<p>>? (',' <<p>>)* ']'
-  public static boolean list_of(PsiBuilder b, int l, final Parser _p) {
+  public static boolean list_of(PsiBuilder b, int l, Parser _p) {
     if (!recursion_guard_(b, l, "list_of")) return false;
     if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
     boolean r, p;
@@ -3926,26 +3847,25 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   // <<p>>?
-  private static boolean list_of_1(PsiBuilder b, int l, final Parser _p) {
+  private static boolean list_of_1(PsiBuilder b, int l, Parser _p) {
     if (!recursion_guard_(b, l, "list_of_1")) return false;
     _p.parse(b, l);
     return true;
   }
 
   // (',' <<p>>)*
-  private static boolean list_of_2(PsiBuilder b, int l, final Parser _p) {
+  private static boolean list_of_2(PsiBuilder b, int l, Parser _p) {
     if (!recursion_guard_(b, l, "list_of_2")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!list_of_2_0(b, l + 1, _p)) break;
       if (!empty_element_parsed_guard_(b, "list_of_2", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
 
   // ',' <<p>>
-  private static boolean list_of_2_0(PsiBuilder b, int l, final Parser _p) {
+  private static boolean list_of_2_0(PsiBuilder b, int l, Parser _p) {
     if (!recursion_guard_(b, l, "list_of_2_0")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
@@ -3990,8 +3910,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!nextTokenIs(b, ERL_QMARK)) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_QMARK);
-    r = r && consumeToken(b, ERL_QMARK);
+    r = consumeTokens(b, 0, ERL_QMARK, ERL_QMARK);
     r = r && q_var(b, l + 1);
     exit_section_(b, m, ERL_MACROS_ARG, r);
     return r;
@@ -4013,11 +3932,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // ((',' | ';' | '->') expression)*
   private static boolean macros_body_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_body_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!macros_body_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "macros_body_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -4064,18 +3982,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "macros_call_0")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
-    r = macros_call_0_0(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // ('?')
-  private static boolean macros_call_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_call_0_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
     r = consumeToken(b, ERL_QMARK);
-    exit_section_(b, m, null, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -4147,11 +4055,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '#' '{' <<comprehension_element map_assoc>> '||' lc_exprs '}'
   public static boolean map_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_comprehension")) return false;
-    if (!nextTokenIs(b, ERL_RADIX)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_RADIX)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
-    r = consumeToken(b, ERL_RADIX);
-    r = r && consumeToken(b, ERL_CURLY_LEFT);
+    r = consumeTokens(b, 0, ERL_RADIX, ERL_CURLY_LEFT);
     r = r && comprehension_element(b, l + 1, map_assoc_parser_);
     r = r && consumeToken(b, ERL_OR_OR);
     p = r; // pin = 4
@@ -4165,7 +4072,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // map_tuple
   public static boolean map_construct_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_construct_expression")) return false;
-    if (!nextTokenIs(b, ERL_RADIX)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_RADIX)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_MAP_EXPRESSION, "<expression>");
     r = map_tuple(b, l + 1);
@@ -4189,11 +4096,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' map_entry)*
   private static boolean map_entries_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_entries_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!map_entries_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "map_entries_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -4304,11 +4210,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' map_entry_type)*
   private static boolean map_entry_type_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_entry_type_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!map_entry_type_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "map_entry_type_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -4346,8 +4251,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!nextTokenIs(b, ERL_RADIX)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_MAP_TUPLE, null);
-    r = consumeToken(b, ERL_RADIX);
-    r = r && consumeToken(b, ERL_CURLY_LEFT);
+    r = consumeTokens(b, 2, ERL_RADIX, ERL_CURLY_LEFT);
     p = r; // pin = 2
     r = r && report_error_(b, map_tuple_2(b, l + 1));
     r = p && consumeToken(b, ERL_CURLY_RIGHT) && r;
@@ -4366,13 +4270,12 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '#' '{' map_entry_type_list? '}'
   public static boolean map_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_type")) return false;
-    if (!nextTokenIs(b, ERL_RADIX)) return false;
+    if (!nextTokenIs(b, "<type>", ERL_RADIX)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_MAP_TYPE, "<type>");
-    r = consumeToken(b, ERL_RADIX);
+    r = consumeTokens(b, 1, ERL_RADIX, ERL_CURLY_LEFT);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_CURLY_LEFT));
-    r = p && report_error_(b, map_type_2(b, l + 1)) && r;
+    r = r && report_error_(b, map_type_2(b, l + 1));
     r = p && consumeToken(b, ERL_CURLY_RIGHT) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
@@ -4471,11 +4374,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' model_field)*
   private static boolean model_field_list_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "model_field_list_2")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!model_field_list_2_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "model_field_list_2", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -4542,10 +4444,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   static boolean module_tail(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "module_tail")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = model_field_list(b, l + 1);
     if (!r) r = argument_definition(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -4605,10 +4505,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_ATOM_ATTRIBUTE, "<on load>");
     r = on_load_0(b, l + 1);
-    r = r && consumeToken(b, ERL_ATOM_NAME);
+    r = r && consumeTokens(b, 1, ERL_ATOM_NAME, ERL_PAR_LEFT);
     p = r; // pin = 2
-    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
-    r = p && report_error_(b, function_with_arity(b, l + 1)) && r;
+    r = r && report_error_(b, function_with_arity(b, l + 1));
     r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
@@ -4771,10 +4670,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   static boolean q_atom_or_var(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "q_atom_or_var")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = q_atom(b, l + 1);
     if (!r) r = q_var(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -4807,7 +4704,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // receive (after_clause | cr_clauses after_clause? ) end
   public static boolean receive_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "receive_expression")) return false;
-    if (!nextTokenIs(b, ERL_RECEIVE)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_RECEIVE)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_RECEIVE_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_RECEIVE);
@@ -4896,10 +4793,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean record_field_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_field_2")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = qualified_atom_expression(b, l + 1);
     if (!r) r = expression(b, l + 1, -1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -4933,11 +4828,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' record_field)*
   private static boolean record_fields_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_fields_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!record_fields_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "record_fields_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -5059,18 +4953,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "record_head_1_1_0_1_2_0")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NOT_);
-    r = !record_head_1_1_0_1_2_0_0(b, l + 1);
+    r = !consumeToken(b, ERL_PAR_LEFT);
     exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // ('(')
-  private static boolean record_head_1_1_0_1_2_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "record_head_1_1_0_1_2_0_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = consumeToken(b, ERL_PAR_LEFT);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -5092,7 +4976,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '{' top_type_list? '}'
   public static boolean record_like_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_like_type")) return false;
-    if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
+    if (!nextTokenIs(b, "<type>", ERL_CURLY_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_LIKE_TYPE, "<type>");
     r = consumeToken(b, ERL_CURLY_LEFT);
@@ -5189,11 +5073,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (';' rule_clause)*
   private static boolean rule_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "rule_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!rule_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "rule_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -5262,22 +5145,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "spec_fun_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = spec_fun_1_0(b, l + 1);
+    r = parseTokens(b, 1, ERL_OP_AR_DIV, ERL_INTEGER);
     if (!r) r = spec_fun_1_1(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
-  }
-
-  // '/' integer
-  private static boolean spec_fun_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "spec_fun_1_0")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_);
-    r = consumeToken(b, ERL_OP_AR_DIV);
-    p = r; // pin = 1
-    r = r && consumeToken(b, ERL_INTEGER);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
   }
 
   // &('(')
@@ -5285,18 +5156,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "spec_fun_1_1")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
-    r = spec_fun_1_1_0(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // ('(')
-  private static boolean spec_fun_1_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "spec_fun_1_1_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
     r = consumeToken(b, ERL_PAR_LEFT);
-    exit_section_(b, m, null, r);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -5317,7 +5178,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // string
   public static boolean string_literal(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "string_literal")) return false;
-    if (!nextTokenIs(b, ERL_STRING)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_STRING)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_STRING_LITERAL, "<expression>");
     r = consumeToken(b, ERL_STRING);
@@ -5385,11 +5246,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' top_type)*
   private static boolean top_type_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "top_type_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!top_type_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "top_type_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -5530,11 +5390,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (';' try_clause)*
   private static boolean try_clauses_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "try_clauses_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!try_clauses_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "try_clauses_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -5555,7 +5414,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // try try_expressions_clause [of cr_clauses] try_catch end
   public static boolean try_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "try_expression")) return false;
-    if (!nextTokenIs(b, ERL_TRY)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_TRY)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_TRY_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_TRY);
@@ -5602,7 +5461,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '{' (&'}' | exprs) '}'
   public static boolean tuple_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "tuple_expression")) return false;
-    if (!nextTokenIs(b, ERL_CURLY_LEFT)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_CURLY_LEFT)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_TUPLE_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_CURLY_LEFT);
@@ -5734,10 +5593,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "type_2")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
-    r = consumeToken(b, ERL_FUN);
+    r = consumeTokens(b, 1, ERL_FUN, ERL_PAR_LEFT);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
-    r = p && report_error_(b, type_2_2(b, l + 1)) && r;
+    r = r && report_error_(b, type_2_2(b, l + 1));
     r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
@@ -5855,20 +5713,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // [',' '...']
   private static boolean type_6_1_0_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_6_1_0_1")) return false;
-    type_6_1_0_1_0(b, l + 1);
+    parseTokens(b, 1, ERL_COMMA, ERL_DOT_DOT_DOT);
     return true;
-  }
-
-  // ',' '...'
-  private static boolean type_6_1_0_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "type_6_1_0_1_0")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_);
-    r = consumeToken(b, ERL_COMMA);
-    p = r; // pin = 1
-    r = r && consumeToken(b, ERL_DOT_DOT_DOT);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
   }
 
   // record_hash record_ref '{' field_type_list? '}'
@@ -5975,11 +5821,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' type_guard)*
   private static boolean type_guard_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_guard_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!type_guard_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "type_guard_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -6012,11 +5857,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // ('|' type)*
   private static boolean type_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!type_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "type_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -6125,11 +5969,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (';' type_sig)*
   private static boolean type_sigs_list_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_sigs_list_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!type_sigs_list_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "type_sigs_list_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -6151,10 +5994,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   static boolean type_spec(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_spec")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = fun_type_sigs_braces(b, l + 1);
     if (!r) r = fun_type_sigs(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -6260,10 +6101,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   static boolean typed_expr_or_macros(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "typed_expr_or_macros")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = generic_function_call_expression(b, l + 1);
     if (!r) r = typed_expr(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -6283,11 +6122,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // (',' typed_expr_or_macros)*
   private static boolean typed_exprs_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "typed_exprs_1")) return false;
-    int c = current_position_(b);
     while (true) {
+      int c = current_position_(b);
       if (!typed_exprs_1_0(b, l + 1)) break;
       if (!empty_element_parsed_guard_(b, "typed_exprs_1", c)) break;
-      c = current_position_(b);
     }
     return true;
   }
@@ -6500,8 +6338,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_ATOM_WITH_ARITY_EXPRESSION, "<expression>");
     r = isModeOn(b, l + 1, "ATOM_ATTRIBUTE");
     r = r && q_atom(b, l + 1);
-    r = r && consumeToken(b, ERL_OP_AR_DIV);
-    r = r && consumeToken(b, ERL_INTEGER);
+    r = r && consumeTokensSmart(b, 0, ERL_OP_AR_DIV, ERL_INTEGER);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -6596,10 +6433,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   private static boolean generic_function_call_expression_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "generic_function_call_expression_1")) return false;
     boolean r;
-    Marker m = enter_section_(b);
     r = q_atom_or_var(b, l + 1);
     if (!r) r = macros(b, l + 1);
-    exit_section_(b, m, null, r);
     return r;
   }
 

@@ -14,9 +14,6 @@ public interface ErlangMapEntryType extends ErlangType {
   PsiElement getAssoc();
 
   @Nullable
-  PsiElement getDotDotDot();
-
-  @Nullable
   PsiElement getMatch();
 
 }

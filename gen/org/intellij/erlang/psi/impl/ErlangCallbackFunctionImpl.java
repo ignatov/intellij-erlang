@@ -19,8 +19,8 @@ public class ErlangCallbackFunctionImpl extends ErlangStubbedPsiElementBase<Erla
     super(node);
   }
 
-  public ErlangCallbackFunctionImpl(ErlangCallbackFunctionStub stub, IStubElementType nodeType) {
-    super(stub, nodeType);
+  public ErlangCallbackFunctionImpl(ErlangCallbackFunctionStub stub, IStubElementType stubType) {
+    super(stub, stubType);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {

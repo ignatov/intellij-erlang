@@ -32,18 +32,6 @@ public class ErlangMapTypeImpl extends ErlangTypeImpl implements ErlangMapType {
   }
 
   @Override
-  @Nullable
-  public PsiElement getCurlyLeft() {
-    return findChildByType(ERL_CURLY_LEFT);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getCurlyRight() {
-    return findChildByType(ERL_CURLY_RIGHT);
-  }
-
-  @Override
   @NotNull
   public PsiElement getRadix() {
     return notNullChild(findChildByType(ERL_RADIX));

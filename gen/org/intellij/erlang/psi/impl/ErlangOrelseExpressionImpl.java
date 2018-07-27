@@ -27,12 +27,6 @@ public class ErlangOrelseExpressionImpl extends ErlangFakeBinaryExpressionImpl i
 
   @Override
   @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
-  }
-
-  @Override
-  @NotNull
   public PsiElement getOrelse() {
     return notNullChild(findChildByType(ERL_ORELSE));
   }

@@ -26,21 +26,9 @@ public class ErlangTopTypeImpl extends ErlangTypeImpl implements ErlangTopType {
   }
 
   @Override
-  @Nullable
-  public ErlangQVar getQVar() {
-    return PsiTreeUtil.getChildOfType(this, ErlangQVar.class);
-  }
-
-  @Override
   @NotNull
   public List<ErlangType> getTypeList() {
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangType.class);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getColonColon() {
-    return findChildByType(ERL_COLON_COLON);
   }
 
 }

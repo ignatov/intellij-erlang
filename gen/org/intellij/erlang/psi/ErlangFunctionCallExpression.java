@@ -14,7 +14,7 @@ public interface ErlangFunctionCallExpression extends ErlangExpression {
   @NotNull
   ErlangQAtom getQAtom();
 
-  @Nullable
+  @NotNull
   PsiReference getReference();
 
   @NotNull

@@ -16,12 +16,12 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangFunctionStub> implements ErlangFunction {
 
-  public ErlangFunctionImpl(ASTNode node) {
-    super(node);
+  public ErlangFunctionImpl(ErlangFunctionStub stub, IStubElementType type) {
+    super(stub, type);
   }
 
-  public ErlangFunctionImpl(ErlangFunctionStub stub, IStubElementType nodeType) {
-    super(stub, nodeType);
+  public ErlangFunctionImpl(ASTNode node) {
+    super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {

@@ -33,12 +33,6 @@ public class ErlangBitTypeImpl extends ErlangTypeImpl implements ErlangBitType {
 
   @Override
   @Nullable
-  public PsiElement getColon() {
-    return findChildByType(ERL_COLON);
-  }
-
-  @Override
-  @Nullable
   public PsiElement getInteger() {
     return findChildByType(ERL_INTEGER);
   }

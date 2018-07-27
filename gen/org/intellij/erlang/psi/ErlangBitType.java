@@ -11,9 +11,6 @@ public interface ErlangBitType extends ErlangType {
   ErlangQAtom getQAtom();
 
   @Nullable
-  PsiElement getColon();
-
-  @Nullable
   PsiElement getInteger();
 
 }

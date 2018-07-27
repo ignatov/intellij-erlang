@@ -44,7 +44,7 @@ public class ErlangExportTypeImpl extends ErlangTypeImpl implements ErlangExport
     return findChildByType(ERL_INTEGER);
   }
 
-  @Nullable
+  @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }

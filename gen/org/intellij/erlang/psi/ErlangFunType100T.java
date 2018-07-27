@@ -13,13 +13,7 @@ public interface ErlangFunType100T extends ErlangType {
   @NotNull
   List<ErlangType> getTypeList();
 
-  @Nullable
-  PsiElement getDotDotDot();
-
   @NotNull
   PsiElement getParLeft();
-
-  @Nullable
-  PsiElement getParRight();
 
 }

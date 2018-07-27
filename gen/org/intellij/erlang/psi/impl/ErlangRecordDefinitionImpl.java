@@ -14,12 +14,12 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangRecordDefinitionImpl extends ErlangNamedStubbedPsiElementBase<ErlangRecordDefinitionStub> implements ErlangRecordDefinition {
 
-  public ErlangRecordDefinitionImpl(ASTNode node) {
-    super(node);
+  public ErlangRecordDefinitionImpl(ErlangRecordDefinitionStub stub, IStubElementType type) {
+    super(stub, type);
   }
 
-  public ErlangRecordDefinitionImpl(ErlangRecordDefinitionStub stub, IStubElementType nodeType) {
-    super(stub, nodeType);
+  public ErlangRecordDefinitionImpl(ASTNode node) {
+    super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {

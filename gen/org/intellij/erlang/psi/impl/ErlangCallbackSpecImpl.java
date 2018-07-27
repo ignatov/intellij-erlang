@@ -18,8 +18,8 @@ public class ErlangCallbackSpecImpl extends ErlangStubbedPsiElementBase<ErlangCa
     super(node);
   }
 
-  public ErlangCallbackSpecImpl(ErlangCallbackSpecStub stub, IStubElementType nodeType) {
-    super(stub, nodeType);
+  public ErlangCallbackSpecImpl(ErlangCallbackSpecStub stub, IStubElementType stubType) {
+    super(stub, stubType);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {

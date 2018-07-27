@@ -14,12 +14,12 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangMacrosDefinitionImpl extends ErlangNamedStubbedPsiElementBase<ErlangMacrosDefinitionStub> implements ErlangMacrosDefinition {
 
-  public ErlangMacrosDefinitionImpl(ASTNode node) {
-    super(node);
+  public ErlangMacrosDefinitionImpl(ErlangMacrosDefinitionStub stub, IStubElementType type) {
+    super(stub, type);
   }
 
-  public ErlangMacrosDefinitionImpl(ErlangMacrosDefinitionStub stub, IStubElementType nodeType) {
-    super(stub, nodeType);
+  public ErlangMacrosDefinitionImpl(ASTNode node) {
+    super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {

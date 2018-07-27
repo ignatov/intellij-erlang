@@ -7,13 +7,7 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangTopType extends ErlangType {
 
-  @Nullable
-  ErlangQVar getQVar();
-
   @NotNull
   List<ErlangType> getTypeList();
-
-  @Nullable
-  PsiElement getColonColon();
 
 }

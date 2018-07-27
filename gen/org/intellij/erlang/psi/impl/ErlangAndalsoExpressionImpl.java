@@ -27,12 +27,6 @@ public class ErlangAndalsoExpressionImpl extends ErlangFakeBinaryExpressionImpl 
 
   @Override
   @NotNull
-  public List<ErlangExpression> getExpressionList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
-  }
-
-  @Override
-  @NotNull
   public PsiElement getAndalso() {
     return notNullChild(findChildByType(ERL_ANDALSO));
   }

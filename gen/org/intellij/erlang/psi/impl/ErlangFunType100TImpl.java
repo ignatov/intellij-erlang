@@ -38,21 +38,9 @@ public class ErlangFunType100TImpl extends ErlangTypeImpl implements ErlangFunTy
   }
 
   @Override
-  @Nullable
-  public PsiElement getDotDotDot() {
-    return findChildByType(ERL_DOT_DOT_DOT);
-  }
-
-  @Override
   @NotNull
   public PsiElement getParLeft() {
     return notNullChild(findChildByType(ERL_PAR_LEFT));
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getParRight() {
-    return findChildByType(ERL_PAR_RIGHT);
   }
 
 }

@@ -7,9 +7,6 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangAdditiveExpression extends ErlangFakeBinaryExpression {
 
-  @NotNull
-  List<ErlangExpression> getExpressionList();
-
   @Nullable
   PsiElement getOpMinus();
 

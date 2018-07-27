@@ -329,9 +329,6 @@ public interface ErlangTypes {
       else if (type == ERL_EXPORT_TYPE_ATTRIBUTE) {
         return new ErlangExportTypeAttributeImpl(node);
       }
-      else if (type == ERL_EXPRESSION) {
-        return new ErlangExpressionImpl(node);
-      }
       else if (type == ERL_FIELD_TYPE) {
         return new ErlangFieldTypeImpl(node);
       }
