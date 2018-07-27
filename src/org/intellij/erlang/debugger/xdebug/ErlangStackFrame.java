@@ -89,7 +89,7 @@ public class ErlangStackFrame extends XStackFrame {
           title += ": " + mySourcePosition.getFunExpressionName() + " at line " + line;
         }
         component.append(title, SimpleTextAttributes.REGULAR_ATTRIBUTES);
-        component.setIcon(AllIcons.Debugger.StackFrame);
+        component.setIcon(AllIcons.Debugger.Frame);
         return;
       }
     }
