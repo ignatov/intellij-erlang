@@ -44,7 +44,7 @@ public class ErlangSymbolContributor implements ChooseByNameContributor {
     GlobalSearchScope scope = includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
     Collection<ErlangNamedElement> result = StubIndex.getElements(ErlangAllNameIndex.KEY, name, project, scope, ErlangNamedElement.class);
     List<NavigationItem> items = ContainerUtil.newArrayListWithCapacity(result.size());
-    for (final ErlangNamedElement element : result) {
+    for (ErlangNamedElement element : result) {
       items.add(new ErlangStructureViewFactory.Element(element) {
         @Override
         public String getLocationString() {
@@ -52,6 +52,6 @@ public class ErlangSymbolContributor implements ChooseByNameContributor {
         }
       });
     }
-    return items.toArray(new NavigationItem[items.size()]);
+    return items.toArray(new NavigationItem[0]);
   }
 }
