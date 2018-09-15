@@ -33,11 +33,12 @@ public class ErlangIntroduceRecordFixTest extends ErlangQuickFixTestBase {
     return "testData/quickfixes/introduce_record/";
   }
 
-  private void doIntroduceRecordTest()                        { doTest("Introduce new record"); }
+  private void doIntroduceRecordTest()       { doTest("Introduce new record"); }
 
   public void testSimple()                   { doIntroduceRecordTest(); }
   public void testWithPrecedingFunctions()   { doIntroduceRecordTest(); }
   public void testWithPrecedingRecords()     { doIntroduceRecordTest(); }
   public void testSurroundedByDeclarations() { doIntroduceRecordTest(); }
   public void testWithFields()               { doIntroduceRecordTest(); }
+  public void testAloneMacro()               { doIntroduceRecordTest(); }
 }

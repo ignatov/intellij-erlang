@@ -1,0 +1,1 @@
+-define(aa, #ss<caret>s{}).
