@@ -129,6 +129,25 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return false;
   }
 
+  public static boolean consumeMacroBody(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level_) {
+    PsiBuilder.Marker m = builder_.mark();
+    while (!builder_.eof()) {
+      IElementType one = builder_.rawLookup(0);
+      IElementType two = builder_.rawLookup(1);
+      if (one == ErlangTypes.ERL_PAR_RIGHT && two == ErlangTypes.ERL_DOT) {
+        m.drop();
+        return true;
+      }
+      builder_.advanceLexer();
+    }
+    m.rollbackTo();
+    return false;
+  }
+
+  public static boolean isInCompletion(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
+    return ErrorState.get(builder_).completionState != null;
+  }
+
   private static final Key<Boolean> IS_COMPREHENSION_KEY = Key.create("Erlang.IS_COMPREHENSION");
 
   public static boolean markComprehension(PsiBuilder builder, @SuppressWarnings("UnusedParameters") int level) {

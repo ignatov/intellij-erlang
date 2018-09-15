@@ -3917,50 +3917,70 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // expression ((',' | ';' | '->') expression)*
+  // (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<consumeMacroBody>>
   public static boolean macros_body(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_body")) return false;
-    boolean r, p;
+    boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_MACROS_BODY, "<macros body>");
+    r = macros_body_0(b, l + 1);
+    if (!r) r = consumeMacroBody(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // expression ((',' | ';' | '->') expression)* &properly_parsed
+  private static boolean macros_body_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
     r = expression(b, l + 1, -1);
-    p = r; // pin = 1
-    r = r && macros_body_1(b, l + 1);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
+    r = r && macros_body_0_1(b, l + 1);
+    r = r && macros_body_0_2(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   // ((',' | ';' | '->') expression)*
-  private static boolean macros_body_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_1")) return false;
+  private static boolean macros_body_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_0_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!macros_body_1_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "macros_body_1", c)) break;
+      if (!macros_body_0_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "macros_body_0_1", c)) break;
     }
     return true;
   }
 
   // (',' | ';' | '->') expression
-  private static boolean macros_body_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_1_0")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_);
-    r = macros_body_1_0_0(b, l + 1);
-    p = r; // pin = 1
+  private static boolean macros_body_0_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_0_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = macros_body_0_1_0_0(b, l + 1);
     r = r && expression(b, l + 1, -1);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   // ',' | ';' | '->'
-  private static boolean macros_body_1_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_1_0_0")) return false;
+  private static boolean macros_body_0_1_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_0_1_0_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, ERL_COMMA);
     if (!r) r = consumeToken(b, ERL_SEMI);
     if (!r) r = consumeToken(b, ERL_ARROW);
     exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &properly_parsed
+  private static boolean macros_body_0_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_0_2")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = properly_parsed(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -4648,6 +4668,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, ERL_OP_MINUS);
     if (!r) r = consumeToken(b, ERL_BNOT);
     if (!r) r = consumeToken(b, ERL_NOT);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // ')''.' | <<isInCompletion>> | <<eof>>
+  static boolean properly_parsed(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "properly_parsed")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = parseTokens(b, 0, ERL_PAR_RIGHT, ERL_DOT);
+    if (!r) r = isInCompletion(b, l + 1);
+    if (!r) r = eof(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
