@@ -43,7 +43,6 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
 
   @Override
   protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     ErlangHighlightingTestBase.setUpInspections(myFixture);
     setUpProjectSdk();

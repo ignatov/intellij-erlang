@@ -18,12 +18,6 @@ package org.intellij.erlang.quickfixes;
 
 public class ErlangGenerateSpecFixTest extends ErlangQuickFixTestBase {
   @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
-  @Override
   protected String getTestDataPath() {
     return "testData/quickfixes/generate_spec/";
   }

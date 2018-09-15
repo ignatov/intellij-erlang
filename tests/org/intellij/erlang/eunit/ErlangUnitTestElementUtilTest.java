@@ -30,12 +30,6 @@ import java.util.Collection;
 
 public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
-  @Override
   protected String getTestDataPath() {
     return "testData/eunit/config/";
   }

@@ -31,7 +31,6 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
 
   @Override
   protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     myFixture.configureByFile(MODULE_NAME + ".erl");
     myErlangFile = (ErlangFile) myFixture.getFile();

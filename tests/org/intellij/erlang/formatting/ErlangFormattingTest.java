@@ -439,7 +439,6 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
 
   @Override
   protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
     super.setUp();
     setTestStyleSettings();
     getErlangSettings().INDENT_RELATIVE = !getTestName(true).endsWith(INDENT_RELATIVE_OFF_SUFFIX);

@@ -22,13 +22,7 @@ import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
 
 public class ErlangSafeDeleteTest extends LightCodeInsightFixtureTestCase {
   @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
-  @Override
-    protected String getTestDataPath() {
+  protected String getTestDataPath() {
       return "testData/refactoring/delete/";
     }
 

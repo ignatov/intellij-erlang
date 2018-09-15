@@ -27,12 +27,6 @@ import java.util.List;
 
 public class ErlangIncludeLibResolveTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
-  @Override
   protected String getTestDataPath() {
     return "testData/resolve/includeLib/";
   }

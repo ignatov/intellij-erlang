@@ -37,12 +37,6 @@ public class ErlangInlineVariableTest extends LightCodeInsightFixtureTestCase {
     return "testData/inline/";
   }
 
-  @Override
-  protected void setUp() throws Exception {
-    System.setProperty("idea.platform.prefix", "Idea");
-    super.setUp();
-  }
-
   private void doTest() {
     String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
