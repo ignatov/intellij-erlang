@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Collection;
 
-public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration<ErlangModuleBasedConfiguration> implements RunConfigurationWithSuppressedDefaultRunAction, RunConfigurationWithSuppressedDefaultDebugAction {
+public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration<ErlangModuleBasedConfiguration, Element> implements RunConfigurationWithSuppressedDefaultRunAction, RunConfigurationWithSuppressedDefaultDebugAction {
   @NotNull
   private String myCommand = "";
   private boolean mySkipDependencies = false;

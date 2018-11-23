@@ -40,7 +40,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunningState> extends ModuleBasedConfiguration<ErlangModuleBasedConfiguration>
+public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunningState> extends ModuleBasedConfiguration<ErlangModuleBasedConfiguration, Element>
   implements RunConfigurationWithSuppressedDefaultRunAction {
   private ErlangDebugOptions myDebugOptions = new ErlangDebugOptions();
   private String myWorkDirectory;

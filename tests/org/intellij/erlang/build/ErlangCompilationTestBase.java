@@ -292,7 +292,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
     CompilationRunner(@NotNull CompileScope scope) throws Exception {
       myScope = scope;
-      myTester = new CompilerTester(myProject, Arrays.asList(scope.getAffectedModules()));
+      myTester = new CompilerTester(myProject, Arrays.asList(scope.getAffectedModules()), getTestRootDisposable());
     }
 
     public void compile() {

@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Collection;
 
-public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguration<RunConfigurationModule> {
+public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguration<RunConfigurationModule, Element> {
   @NotNull private String myWorkingDirPath;
   private String myConsoleArgs;
 
