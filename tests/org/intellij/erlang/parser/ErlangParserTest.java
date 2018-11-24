@@ -96,4 +96,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testOptionalCallbacksRecovery()           { doTest(true);  }
   public void testWhitespaceEscapeInCharLiterals()      { doTest(false); }
   public void testMacroCallsInCompoundStringLiterals()  { doTest(false); }
+  public void testTypo()                                { doTest(true);  }
 }

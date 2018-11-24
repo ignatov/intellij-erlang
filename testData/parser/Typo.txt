@@ -1,0 +1,33 @@
+ERL_FILE
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_MODULE
+      PsiElement(atom_name)('module')
+      PsiElement(()('(')
+      PsiErrorElement:<q atom> expected, got '<'
+        <empty list>
+    PsiElement(<)('<')
+  PsiErrorElement:
+    PsiElement(var)('TYPO')
+    PsiElement(>)('>')
+    PsiElement(atom_name)('aasd')
+    PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('foor')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_FUNCTION_CALL_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('asdasd')
+          ERL_ARGUMENT_LIST
+            PsiElement(()('(')
+            PsiElement())(')')
+    PsiElement(.)('.')
