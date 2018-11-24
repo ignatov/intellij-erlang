@@ -39,7 +39,9 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     "is_record/3", "is_reference/1", "is_tuple/1",
     "length/1", "map_size/1", "node/1",
     "node/0", "round/1", "self/0",
-    "size/1", "tl/1", "trunc/1", "tuple_size/1");
+    "size/1", "tl/1", "trunc/1", "tuple_size/1",
+    "map_get/2", "is_map_key/2"
+  );
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {

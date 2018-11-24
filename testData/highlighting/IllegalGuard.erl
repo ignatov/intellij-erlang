@@ -1,4 +1,4 @@
--export([zoo/1, abs/1, foo/1, doo/1, roo/1, op/0]).
+-export([zoo/1, abs/1, foo/1, doo/1, roo/1, op/0, test_map/1, test_map2/1]).
 
 zoo(A) -> A.
 abs(A) -> A.
@@ -53,3 +53,6 @@ roo(A) ->
 op() when erlang:'+'(1, 2) -> ok;
 op() when erlang:'div'(1, 2) -> ok;
 op() when 'erlang':'div'(1, 2) -> ok.
+
+test_map(Map) when <warning descr="Unresolved function is_map_key/2">is_map_key</warning>(key, Map) -> ok.
+test_map2(Map) when <error descr="Illegal guard expression"><warning descr="Unresolved function is_map_key/3">is_map_key</warning>(key, Map, key2)</error> -> not_ok.
