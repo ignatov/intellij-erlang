@@ -12,6 +12,7 @@ import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.text.StringHash;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.TokenType;
@@ -717,7 +718,8 @@ public class GeneratedParserUtilBase {
     LighterASTNode leftMarker = (LighterASTNode) frame.leftMarker;
     PsiBuilder.Marker precede = frame.leftMarker.precede();
     if (leftMarker.getTokenType() == TokenType.ERROR_ELEMENT) {
-      precede.error("");
+      String message = PsiBuilderImpl.getErrorMessage(leftMarker);
+      precede.error(StringUtil.notNullize(message));
     }
     else {
       precede.done(leftMarker.getTokenType());

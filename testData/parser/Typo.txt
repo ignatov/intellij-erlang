@@ -7,7 +7,7 @@ ERL_FILE
       PsiErrorElement:<q atom> expected, got '<'
         <empty list>
     PsiElement(<)('<')
-  PsiErrorElement:
+  PsiErrorElement:'-', <attribute>, <function clause> or '?' expected, got 'TYPO'
     PsiElement(var)('TYPO')
     PsiElement(>)('>')
     PsiElement(atom_name)('aasd')
