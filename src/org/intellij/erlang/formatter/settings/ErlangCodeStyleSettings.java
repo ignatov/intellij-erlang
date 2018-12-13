@@ -44,7 +44,7 @@ public class ErlangCodeStyleSettings extends CustomCodeStyleSettings {
   public boolean ALIGN_RECORD_FIELD_ASSIGNMENTS = false;
   public boolean UNIFORM_BINARY_EXPRESSIONS = false;
 
-  public final int EXPRESSION_IN_CLAUSE_WRAP = CommonCodeStyleSettings.WRAP_AS_NEEDED;
+  public int EXPRESSION_IN_CLAUSE_WRAP = CommonCodeStyleSettings.WRAP_AS_NEEDED;
 
   protected ErlangCodeStyleSettings(CodeStyleSettings container) {
     super("ErlangCodeStyleSettings", container);
