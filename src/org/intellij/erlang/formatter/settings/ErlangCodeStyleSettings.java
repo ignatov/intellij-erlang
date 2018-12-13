@@ -35,10 +35,10 @@ public class ErlangCodeStyleSettings extends CustomCodeStyleSettings {
   public boolean INDENT_RELATIVE = true;
   public boolean NEW_LINE_BEFORE_COMMA = false;
   public int NEW_LINE_AFTER_ARROW = NewLineAfterArrow.DO_NOT_FORCE;
-  public final boolean SPACE_AROUND_SEND = true;
-  public final boolean SPACE_AROUND_ARROW = true;
-  public final boolean SPACE_AROUND_LEFT_ARROW = true;
-  public final boolean SPACE_AROUND_EQ_IN_RECORDS = true;
+  public boolean SPACE_AROUND_SEND = true;
+  public boolean SPACE_AROUND_ARROW = true;
+  public boolean SPACE_AROUND_LEFT_ARROW = true;
+  public boolean SPACE_AROUND_EQ_IN_RECORDS = true;
   public boolean SPACE_AROUND_OR_IN_LISTS = true;
   public boolean ALIGN_FUN_CLAUSES = false;
   public boolean ALIGN_RECORD_FIELD_ASSIGNMENTS = false;
