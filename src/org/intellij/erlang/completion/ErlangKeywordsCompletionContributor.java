@@ -59,12 +59,11 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
     extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFile.class)), new CompletionProvider<CompletionParameters>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters,
-                                    ProcessingContext context,
+                                    @NotNull ProcessingContext context,
                                     @NotNull CompletionResultSet result) {
         PsiFile file = parameters.getOriginalFile();
         if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
         PsiElement position = parameters.getPosition();
-        //noinspection unchecked
         if (PsiTreeUtil.getParentOfType(position, ErlangExport.class, ErlangColonQualifiedExpression.class, ErlangStringLiteral.class, PsiComment.class) != null) return;
         for (String keyword : suggestKeywords(position)) {
           result.addElement(createKeywordLookupElement(keyword));
@@ -122,7 +121,7 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
     }
 
     @Override
-    public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
+    public void handleInsert(@NotNull InsertionContext context, @NotNull LookupElement item) {
       super.handleInsert(context, item);
       Editor editor = context.getEditor();
 

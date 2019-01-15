@@ -92,7 +92,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     ErlangRecordTuple recordTuple = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangRecordTuple.class);
     PsiElement previousByOffset = elementAt != null ? PsiTreeUtil.prevVisibleLeaf(elementAt) : startOffset > 0 ? file.findElementAt(startOffset - 1) : null;
     ErlangBehaviour behaviour = PsiTreeUtil.getParentOfType(elementAt, ErlangBehaviour.class);
-    //noinspection unchecked
+
     ErlangCompositeElement typeParent = PsiTreeUtil.getParentOfType(elementAt, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class);
     if (parent instanceof ErlangExport || PsiTreeUtil.getParentOfType(parent , ErlangExportFunctions.class, false) != null
       || parent instanceof ErlangImportDirective || parent instanceof ErlangImportFunctions

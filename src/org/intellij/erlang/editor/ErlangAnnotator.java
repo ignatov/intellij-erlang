@@ -200,7 +200,6 @@ public class ErlangAnnotator implements Annotator, DumbAware {
 
       @Override
       public void visitSpecFun(@NotNull ErlangSpecFun o) {
-        //noinspection unchecked
         ErlangCompositeElement parent = PsiTreeUtil.getParentOfType(o, ErlangSpecification.class, ErlangCallbackSpec.class);
         ErlangQAtom qAtom = o.getQAtom();
         if (parent instanceof ErlangSpecification) {
@@ -250,8 +249,10 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     markAttributeName(o, annotationHolder, name, ErlangSyntaxHighlighter.ATTRIBUTE);
   }
 
-  private static void markAttributeName(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder,
-                                        @NotNull String name, @NotNull TextAttributesKey key) {
+  private static void markAttributeName(@NotNull ErlangCompositeElement o,
+                                        @NotNull AnnotationHolder annotationHolder,
+                                        @NotNull String name,
+                                        @NotNull TextAttributesKey key) {
     PsiElement rec = o.getFirstChild();
     while (rec != null) {
       if (rec instanceof LeafPsiElement && name.equals(rec.getText())) break;
@@ -262,7 +263,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     }
   }
 
-  private static void markFirstChild(@NotNull ErlangCompositeElement o, @NotNull AnnotationHolder annotationHolder,
+  private static void markFirstChild(@NotNull ErlangCompositeElement o,
+                                     @NotNull AnnotationHolder annotationHolder,
                                      @NotNull TextAttributesKey key) {
     PsiElement firstChild = o.getFirstChild();
     if (firstChild != null) {

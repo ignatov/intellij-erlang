@@ -37,7 +37,7 @@ public final class ExtProcessUtil {
   @NotNull
   public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull String... command) {
     try {
-      final Process cmdRunner = new GeneralCommandLine(command).createProcess();
+      Process cmdRunner = new GeneralCommandLine(command).createProcess();
       ExecutorService singleTreadExecutor = Executors.newSingleThreadExecutor();
       try {
         Future<ExtProcessOutput> cmdRunnerFuture = singleTreadExecutor.submit(() -> {
@@ -49,14 +49,16 @@ public final class ExtProcessUtil {
 
         try {
           return cmdRunnerFuture.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (Exception e) { // Suppress
         }
-
+        catch (Exception ignored) {
+        }
         cmdRunnerFuture.cancel(true);
-      } finally {
+      }
+      finally {
         singleTreadExecutor.shutdown();
       }
-    } catch (ExecutionException e) { // Suppress
+    }
+    catch (ExecutionException ignored) {
     }
     return new ExtProcessOutput("", "");
   }
