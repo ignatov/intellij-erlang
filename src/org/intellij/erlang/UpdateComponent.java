@@ -23,12 +23,12 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PermanentInstallationID;
-import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.components.BaseComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.event.EditorFactoryAdapter;
 import com.intellij.openapi.editor.event.EditorFactoryEvent;
+import com.intellij.openapi.editor.event.EditorFactoryListener;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.JDOMUtil;
@@ -43,11 +43,11 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.concurrent.TimeUnit;
 
-public class UpdateComponent implements ApplicationComponent, Disposable {
+public class UpdateComponent implements BaseComponent, Disposable {
   private static final String PLUGIN_ID = "org.jetbrains.erlang";
   private static final String KEY = "erlang.last.update.timestamp";
   private static final Logger LOG = Logger.getInstance(UpdateComponent.class);
-  private final EditorFactoryAdapter myListener = new EditorFactoryAdapter() {
+  private final EditorFactoryListener myListener = new EditorFactoryListener() {
     @Override
     public void editorCreated(@NotNull EditorFactoryEvent event) {
       Document document = event.getEditor().getDocument();
