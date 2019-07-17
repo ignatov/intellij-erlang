@@ -25,9 +25,9 @@ import java.util.regex.Pattern;
 
 final class ErlangSdkFunctionDocProvider extends ErlangSdkDocProviderBase {
   private static final Pattern PATTERN_FUNC_BEGIN = Pattern.compile(
-    "<a name=\"(.*?)\"></a><span class=\"bold_code\">.*?</span><br>");
+    "<a name=\"(.*?)\"></a>");
   private static final Pattern PATTERN_BIF_BEGIN = Pattern.compile(
-    "<a name=\"(.*?)\"><span class=\"bold_code\">.*?</span></a><br>");
+    "<a name=\"(.*?)\"></a>");
   private static final Pattern PATTERN_END_OF_DOC = Pattern.compile("^<div class=\"footer\">$");
 
   @NotNull private final String myFuncSignature;
