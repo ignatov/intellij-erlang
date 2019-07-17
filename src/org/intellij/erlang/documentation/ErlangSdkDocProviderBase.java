@@ -194,7 +194,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
     List<String> fileUrls = null;
     for (OrderEntry orderEntry : orderEntries) {
       VirtualFile[] docRootFiles = orderEntry.getFiles(JavadocOrderRootType.getInstance());
-      String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
+      String sdkHttpDocRelPath = fileDocRelPath(virtualFile);
       for (VirtualFile docRootFile : docRootFiles) {
         if (docRootFile.isInLocalFileSystem()) {
           if (fileUrls == null) {
@@ -235,6 +235,26 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
     else {
       prefix = "lib/";
     }
+
+    String[] splittedAppDirName = appDirName.split("\\.");
+    if(splittedAppDirName.length > 2){
+      appDirName = splittedAppDirName[0] + "." + splittedAppDirName[1];
+    }
+
+    return prefix + appDirName + "/doc/html/" + virtualFile.getNameWithoutExtension() + ".html";
+  }
+
+  @NotNull
+  private static String fileDocRelPath(@NotNull VirtualFile virtualFile) {
+    String appDirName = virtualFile.getParent().getParent().getName();
+    String prefix;
+    if (appDirName.startsWith("erts")) {
+      prefix = "";
+    }
+    else {
+      prefix = "lib/";
+    }
+
     return prefix + appDirName + "/doc/html/" + virtualFile.getNameWithoutExtension() + ".html";
   }
 
