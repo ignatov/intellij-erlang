@@ -74,6 +74,6 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
   }
 
   private ErlangDebugLocationResolver createResolver() {
-    return new ErlangDebugLocationResolver(getProject(), myModule, false);
+    return new ErlangDebugLocationResolver(getProject(), getModule(), false);
   }
 }

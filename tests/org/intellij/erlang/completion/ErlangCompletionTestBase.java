@@ -67,7 +67,6 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
     InjectedLanguageManagerImpl.checkInjectorsAreDisposed(getProject());
     myFixture.setUp();
     myFixture.setTestDataPath(getTestDataPath());
-    myModule = myFixture.getModule();
   }
 
   protected void doCheckResult(@NotNull String before, @NotNull String after) { doCheckResult(before, after, null); }
