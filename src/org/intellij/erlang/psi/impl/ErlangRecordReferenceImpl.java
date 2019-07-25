@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2019 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
-  public ErlangRecordReferenceImpl(@NotNull ErlangQAtom element) {
-    super(element, getTextRangeForRecordReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
+  public ErlangRecordReferenceImpl(@NotNull PsiElement owner, @NotNull ErlangQAtom element) {
+    super(owner, element, getTextRangeForRecordReference(owner, element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
   }
 
   @Override
@@ -50,7 +50,7 @@ public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   }
 
   @NotNull
-  private static TextRange getTextRangeForRecordReference(@NotNull ErlangQAtom atom) {
-    return atom.getMacros() != null ? TextRange.from(0, 1) : ErlangPsiImplUtil.getTextRangeForReference(atom);
+  private static TextRange getTextRangeForRecordReference(@NotNull PsiElement owner, @NotNull ErlangQAtom atom) {
+    return atom.getMacros() != null ? TextRange.from(0, 1) : ErlangPsiImplUtil.getTextRangeForReference(owner, atom);
   }
 }

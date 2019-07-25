@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2019 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   private final ErlangModuleRef myModuleRef;
 
   public ErlangTypeReferenceImpl(@NotNull ErlangQAtom element, @Nullable ErlangModuleRef moduleRef) {
-    super(element, ErlangPsiImplUtil.getTextRangeForReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
+    super(element, element, ErlangPsiImplUtil.getTextRangeForReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
     myModuleRef = moduleRef;
   }
 
@@ -55,7 +55,7 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @NotNull
   @Override
   public Object[] getVariants() {
-    ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myElement, ErlangExportTypeAttribute.class);
+    ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myQAtom, ErlangExportTypeAttribute.class);
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile(), myModuleRef == null && exportTypeAttribute == null, exportTypeAttribute != null));
   }
 

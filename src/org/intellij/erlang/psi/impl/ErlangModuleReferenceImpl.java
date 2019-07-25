@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2019 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@ import java.util.List;
 public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   private static final int COMPARE_NO_RESULT = Integer.MIN_VALUE;
 
-  public ErlangModuleReferenceImpl(@NotNull ErlangQAtom element) {
-    super(element, ErlangPsiImplUtil.getTextRangeForReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
+  public ErlangModuleReferenceImpl(@NotNull PsiElement owner, @NotNull ErlangQAtom qAtom) {
+    super(owner, qAtom, ErlangPsiImplUtil.getTextRangeForReference(owner, qAtom), ErlangPsiImplUtil.getNameIdentifier(qAtom).getText());
   }
 
   @Override
