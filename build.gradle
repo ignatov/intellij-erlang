@@ -1,5 +1,5 @@
 plugins {
-  id 'org.jetbrains.intellij' version "0.3.12"
+  id 'org.jetbrains.intellij' version "0.4.9"
 }
 
 version = "${version}.$buildNumber"
@@ -22,7 +22,7 @@ allprojects {
   apply plugin: 'org.jetbrains.intellij'
   intellij {
     version ideaVersion
-    plugins 'copyright'
+    plugins = ['copyright', 'java']
     downloadSources Boolean.valueOf(sources)
     sameSinceUntilBuild Boolean.valueOf(isEAP)
     alternativeIdePath localIdePath
