@@ -20,7 +20,6 @@ import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
@@ -29,14 +28,15 @@ public class ErlangApplicationRunConfigurationType extends ConfigurationTypeBase
 
   private ErlangApplicationRunConfigurationType() {
     super("ErlangApplicationRunConfiguration",
-      "Erlang Application",
-      "Erlang application run configuration",
-      ErlangIcons.FILE);
+          "Erlang Application",
+          "Erlang application run configuration",
+          ErlangIcons.FILE);
     addFactory(new ErlangFactory(this));
   }
 
+  @NotNull
   public static ErlangApplicationRunConfigurationType getInstance() {
-    return Extensions.findExtension(CONFIGURATION_TYPE_EP, ErlangApplicationRunConfigurationType.class);
+    return CONFIGURATION_TYPE_EP.findExtensionOrFail(ErlangApplicationRunConfigurationType.class);
   }
 
   public static class ErlangFactory extends ConfigurationFactory {

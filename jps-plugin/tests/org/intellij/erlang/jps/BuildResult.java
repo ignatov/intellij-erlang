@@ -17,7 +17,7 @@ package org.intellij.erlang.jps;
 
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.Function;
-import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.SmartList;
 import org.jetbrains.jps.incremental.MessageHandler;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 
@@ -31,9 +31,9 @@ public class BuildResult implements MessageHandler {
   private final List<BuildMessage> myInfoMessages;
 
   public BuildResult() {
-    myErrorMessages = ContainerUtil.newArrayList();
-    myWarnMessages = ContainerUtil.newArrayList();
-    myInfoMessages = ContainerUtil.newArrayList();
+    myErrorMessages = new SmartList<>();
+    myWarnMessages = new SmartList<>();
+    myInfoMessages = new SmartList<>();
   }
 
   @Override

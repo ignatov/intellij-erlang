@@ -21,11 +21,11 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.options.colors.AttributesDescriptor;
 import com.intellij.openapi.options.colors.ColorDescriptor;
 import com.intellij.openapi.options.colors.ColorSettingsPage;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.intellij.erlang.editor.ErlangSyntaxHighlighter.*;
@@ -57,7 +57,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     new AttributesDescriptor("Specifications", SPEC),
   };
 
-  private static final Map<String, TextAttributesKey> ATTRIBUTES_KEY_MAP = ContainerUtil.newHashMap();
+  private static final Map<String, TextAttributesKey> ATTRIBUTES_KEY_MAP = new HashMap<>();
 
   static {
     ATTRIBUTES_KEY_MAP.put("a", ATOM);

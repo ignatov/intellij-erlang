@@ -30,6 +30,7 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.List;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
@@ -59,16 +60,14 @@ public class ErlangAppCompletionContributor extends CompletionContributor {
     PsiElementPattern.Capture<PsiElement> psiElementInAppFile =
       psiElement(ErlangTypes.ERL_ATOM_NAME).inFile(instanceOf(ErlangFile.class))
                                            .inVirtualFile(virtualFile().ofType(ErlangFileType.APP));
-    //noinspection unchecked
     PsiElementPattern.Capture<PsiElement> placeForAppKeyword = psiElementInAppFile
       .withParents(ErlangAtom.class, ErlangQAtom.class, ErlangConfigExpression.class,
                    ErlangTupleExpression.class, ErlangFile.class).with(positionInTuple(0));
-    //noinspection unchecked
     PsiElementPattern.Capture<PsiElement> placeForParameterKeywords = psiElementInAppFile
       .withParents(ErlangAtom.class, ErlangQAtom.class, ErlangConfigExpression.class, ErlangTupleExpression.class,
                    ErlangListExpression.class, ErlangTupleExpression.class, ErlangFile.class).with(positionInTuple(0));
 
-    extend(CompletionType.BASIC, placeForAppKeyword, getProvider(ContainerUtil.list(APPLICATION_KEYWORD)));
+    extend(CompletionType.BASIC, placeForAppKeyword, getProvider(Collections.singletonList(APPLICATION_KEYWORD)));
     extend(CompletionType.BASIC, placeForParameterKeywords, getProvider(KEYWORDS));
   }
 
@@ -76,7 +75,7 @@ public class ErlangAppCompletionContributor extends CompletionContributor {
   private static CompletionProvider<CompletionParameters> getProvider(@NotNull final List<String> keywords) {
     return new CompletionProvider<CompletionParameters>() {
       @Override
-      protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context,
+      protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context,
                                     @NotNull CompletionResultSet result) {
         for (String keyword : keywords) {
           result.addElement(PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword),

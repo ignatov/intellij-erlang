@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.jps.builder;
 
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +29,7 @@ import java.io.IOException;
 import java.util.List;
 
 public abstract class DirtyFilesProcessor<T, P extends BuildTarget<ErlangSourceRootDescriptor>> implements FileProcessor<ErlangSourceRootDescriptor, P> {
-  private final List<T> myDirtyElements = ContainerUtil.newArrayList();
+  private final List<T> myDirtyElements = new SmartList<>();
 
   public List<T> collectDirtyElements(@NotNull DirtyFilesHolder<ErlangSourceRootDescriptor, P> holder) throws IOException {
     holder.processDirtyFiles(this);
@@ -36,9 +37,7 @@ public abstract class DirtyFilesProcessor<T, P extends BuildTarget<ErlangSourceR
   }
 
   @Override
-  public boolean apply(P erlangTarget,
-                       File file,
-                       ErlangSourceRootDescriptor erlangSourceRootDescriptor) throws IOException {
+  public boolean apply(P erlangTarget, File file, ErlangSourceRootDescriptor erlangSourceRootDescriptor) {
     ContainerUtil.addIfNotNull(myDirtyElements, getDirtyElement(file));
     return true;
   }

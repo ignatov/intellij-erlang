@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.marker;
 
-import com.intellij.codeHighlighting.Pass;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.codeInsight.daemon.impl.PsiElementListNavigator;
@@ -67,21 +66,15 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
                                                            Collection<ErlangCallbackSpec> callbackSpecs) {
     String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
 
-    List<NavigatablePsiElement> navigatables = ContainerUtil.newArrayList();
-    for (ErlangCallbackSpec callbackSpec : callbackSpecs) {
-      navigatables.add(ErlangNavigationUtil.getNavigatableSpecFun(presentation, callbackSpec));
-    }
-
     return new LineMarkerInfo<>(
       atom,
       atom.getTextRange(),
       AllIcons.Gutter.ImplementingMethod,
-      Pass.UPDATE_ALL,
       element -> "Implements callback '" + presentation + "'",
       (e, elt) -> {
         String title = MessageFormat.format("<html><body>Choose Overriding Callback of <b>{0}</b> ({1} callbacks found)</body></html>", presentation, callbackSpecs.size());
         PsiElementListNavigator.openTargets(
-          e, navigatables.toArray(new NavigatablePsiElement[navigatables.size()]),
+          e, callbackSpecs.stream().map(callbackSpec -> ErlangNavigationUtil.getNavigatableSpecFun(presentation, callbackSpec)).toArray(NavigatablePsiElement[]::new),
           title, title, new DefaultPsiElementCellRenderer()
         );
       },
