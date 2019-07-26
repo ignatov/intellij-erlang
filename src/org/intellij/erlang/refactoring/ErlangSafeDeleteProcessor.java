@@ -59,27 +59,24 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
       for (PsiReference ref : all) {
         PsiElement refElement = ref.getElement();
         if (PsiTreeUtil.getParentOfType(refElement, ErlangSpecification.class) != null) continue;
-        final boolean inExport = PsiTreeUtil.getParentOfType(refElement, ErlangExportFunction.class) != null;
+        final boolean inExport = PsiTreeUtil.getParentOfType(refElement, ErlangExportFunction.class, false) != null;
         result.add(new SafeDeleteReferenceSimpleDeleteUsageInfo(refElement, element, inExport) {
           @Override
           public void deleteElement() throws IncorrectOperationException {
             PsiElement e = getElement();
             if (isSafeDelete() && inExport && e != null) {
-              PsiElement parent = e.getParent();
-              PsiElement prev = PsiTreeUtil.prevVisibleLeaf(parent);
+
+              PsiElement prev = PsiTreeUtil.prevVisibleLeaf(e);
               if (isComma(prev)) {
                 prev.delete();
               }
               else {
-                PsiElement next = PsiTreeUtil.nextVisibleLeaf(parent);
+                PsiElement next = PsiTreeUtil.nextVisibleLeaf(e);
                 if (isComma(next)) {
                   next.delete();
                 }
               }
-              parent.delete();
-            }
-            else {
-              super.deleteElement();
+              e.delete();
             }
           }
 
