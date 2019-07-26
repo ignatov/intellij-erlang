@@ -30,6 +30,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements IntentionAction {
@@ -115,7 +116,7 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements I
 
     @NotNull
     public List<String> getArguments() {
-      List<String> arguments = ContainerUtil.newArrayListWithCapacity(myArity);
+      List<String> arguments = new ArrayList<>(myArity);
       for (int i = 0; i < myArity; i++) {
         arguments.add("_Arg" + i);
       }

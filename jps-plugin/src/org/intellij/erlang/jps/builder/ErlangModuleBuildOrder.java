@@ -16,12 +16,14 @@
 
 package org.intellij.erlang.jps.builder;
 
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ErlangModuleBuildOrder {
-  public final List<String> myOrderedErlangFilePaths = ContainerUtil.newArrayList();
+  public final List<String> myOrderedErlangFilePaths = new SmartList<>();
 
-  public final List<String> myOrderedErlangTestFilePaths = ContainerUtil.newArrayList();
+  public final List<String> myOrderedErlangTestFilePaths = new SmartList<>();
 }

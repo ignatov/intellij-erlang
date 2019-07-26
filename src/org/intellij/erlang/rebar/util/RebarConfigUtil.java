@@ -22,6 +22,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +36,7 @@ public final class RebarConfigUtil {
 
   @NotNull
   public static List<String> getIncludePaths(@NotNull ErlangFile rebarConfig) {
-    final List<String> includePaths = ContainerUtil.newArrayList();
+    final List<String> includePaths = new SmartList<>();
     ErlangTermFileUtil.processConfigSection(rebarConfig, "erl_opts", section -> ErlangTermFileUtil.processConfigSection(section, "i", includeOptionValue -> {
       if (includeOptionValue instanceof ErlangStringLiteral) {
         includePaths.add(getStringLiteralText((ErlangStringLiteral) includeOptionValue));
@@ -51,7 +52,7 @@ public final class RebarConfigUtil {
 
   @NotNull
   public static List<String> getDependencyAppNames(@NotNull ErlangFile rebarConfig) {
-    final List<String> dependencyAppNames = ContainerUtil.newArrayList();
+    final List<String> dependencyAppNames = new SmartList<>();
     ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", tuplesList -> {
       List<ErlangTupleExpression> dependencyTuples = ErlangTermFileUtil.findNamedTuples(tuplesList);
       for (ErlangTupleExpression namedTuple : dependencyTuples) {
@@ -63,7 +64,7 @@ public final class RebarConfigUtil {
 
   @NotNull
   public static List<String> getParseTransforms(@Nullable ErlangFile rebarConfig) {
-    final List<String> parseTransforms = ContainerUtil.newArrayList();
+    final List<String> parseTransforms = new SmartList<>();
     ErlangTermFileUtil.processConfigSection(rebarConfig, "erl_opts", section -> ErlangTermFileUtil.processConfigSection(section, "parse_transform", configExpression -> {
       ErlangQAtom parseTransform = PsiTreeUtil.getChildOfType(configExpression, ErlangQAtom.class);
       ErlangAtom parseTransformAtom = parseTransform != null ? parseTransform.getAtom() : null;

@@ -56,6 +56,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 public abstract class ErlangCompilationTestBase extends PlatformTestCase {
@@ -198,7 +199,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
   }
 
   private static <T> void assertUnorderedElementsAreEqual(Collection<T> actual, Collection<T> expected) {
-    assertEquals(ContainerUtil.newHashSet(expected), ContainerUtil.newHashSet(actual));
+    assertEquals(new HashSet<>(expected), new HashSet<>(actual));
   }
 
   @Nullable

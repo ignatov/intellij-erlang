@@ -42,6 +42,7 @@ import org.intellij.erlang.refactoring.VariableTextBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -159,7 +160,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   private static void performInplaceIntroduce(@NotNull Editor editor,
                                               @NotNull ErlangExpression expression,
                                               boolean replaceAll) {
-    List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : ContainerUtil.list(expression);
+    List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : Arrays.asList(expression);
     PsiElement declaration = performElement(editor, expression, occurrences);
 
     ErlangQVar target = PsiTreeUtil.findChildOfType(declaration, ErlangQVar.class);

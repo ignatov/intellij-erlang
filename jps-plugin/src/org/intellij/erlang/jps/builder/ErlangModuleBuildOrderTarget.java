@@ -17,6 +17,7 @@
 package org.intellij.erlang.jps.builder;
 
 import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildRootIndex;
@@ -66,7 +67,7 @@ public class ErlangModuleBuildOrderTarget extends BuildTarget<ErlangSourceRootDe
     if (model == null) {
       return ContainerUtil.emptyList();
     }
-    List<ErlangSourceRootDescriptor> result = ContainerUtil.newArrayList();
+    List<ErlangSourceRootDescriptor> result = new SmartList<>();
     for (JpsModule module : model.getProject().getModules()) {
       ErlangTargetBuilderUtil.addRootDescriptors(this, module, result);
     }

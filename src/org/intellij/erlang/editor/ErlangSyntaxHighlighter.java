@@ -26,6 +26,7 @@ import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.jetbrains.annotations.NotNull;
 
+import static com.intellij.openapi.editor.colors.TextAttributesKey.EMPTY_ARRAY;
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 import static org.intellij.erlang.ErlangTypes.*;
 
@@ -125,6 +126,6 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
       ) {
       return pack(KEYWORD);
     }
-    return EMPTY;
+    return EMPTY_ARRAY;
   }
 }

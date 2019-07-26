@@ -25,6 +25,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.stubs.types.ErlangFileElementType;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class ErlangFileStub extends PsiFileStubImpl<ErlangFile> {
@@ -35,7 +36,7 @@ public class ErlangFileStub extends PsiFileStubImpl<ErlangFile> {
   public ErlangFileStub(ErlangFile file) {
     super(file);
     myExportAll = file.isExportedAll();
-    Set<String> transforms = ContainerUtil.newHashSet();
+    Set<String> transforms = new HashSet<>();
     file.addDeclaredParseTransforms(transforms);
     String join = StringUtil.join(transforms, ",");
     myParseTransformsRef = StringRef.fromString(join);

@@ -9,6 +9,10 @@
     <bytecodeTargetLevel>
       <module name="Erlang_main" target="1.8" />
       <module name="Erlang_test" target="1.8" />
+      <module name="intellij-erlang.jps-plugin.main" target="1.8" />
+      <module name="intellij-erlang.jps-plugin.test" target="1.8" />
+      <module name="intellij-erlang.main" target="1.8" />
+      <module name="intellij-erlang.test" target="1.8" />
       <module name="intellij-erlang_main" target="1.8" />
       <module name="intellij-erlang_test" target="1.8" />
       <module name="jps-plugin_main" target="1.8" />

@@ -39,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 public class RebarRunningStateUtil {
@@ -61,7 +62,7 @@ public class RebarRunningStateUtil {
     commandLine.setExePath(escriptPath);
     commandLine.addParameter(rebarSettings.getRebarPath());
 
-    List<String> split = ContainerUtil.list(configuration.getCommand().split("\\s+"));
+    List<String> split = Arrays.asList(configuration.getCommand().split("\\s+"));
     if (!rebarSettings.isRebar3() && configuration.isSkipDependencies() && !split.contains("skip_deps=true")) {
       commandLine.addParameter("skip_deps=true");
     }

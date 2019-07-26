@@ -28,6 +28,7 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 
@@ -81,7 +82,7 @@ public abstract class ErlangExpressionType {
   };
 
   public static final Map<String , ErlangExpressionType> TYPE_MAP = ContainerUtil.newMapFromValues(
-    ContainerUtil.list(
+    Arrays.asList(
       FLOAT, FUN, INTEGER, LIST, IOLIST, TUPLE, ATOM, BINARY, BITSTRING, STRING, PID, PORT, REF, TERM, BOOLEAN
     ).iterator(), erlangExpressionType -> erlangExpressionType.myName.toLowerCase());
 

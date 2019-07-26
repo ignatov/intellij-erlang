@@ -95,12 +95,12 @@ public final class ErlangModulesUtil {
 
   @NotNull
   public static Collection<VirtualFile> getErlangHeaderFiles(@NotNull Module module, boolean onlyTestModules) {
-    return addFiles(module, onlyTestModules, ContainerUtil.newHashSet(), ErlangFileType.HEADER);
+    return addFiles(module, onlyTestModules, new HashSet<>(), ErlangFileType.HEADER);
   }
 
   @NotNull
   public static Collection<VirtualFile> getErlangModuleFiles(@NotNull Module module, boolean onlyTestModules) {
-    return addFiles(module, onlyTestModules, ContainerUtil.newHashSet(), ErlangFileType.MODULE);
+    return addFiles(module, onlyTestModules, new HashSet<>(), ErlangFileType.MODULE);
   }
 
   @NotNull

@@ -28,6 +28,7 @@ import org.intellij.erlang.psi.ErlangNamedElement;
 import org.intellij.erlang.stubs.index.ErlangAllNameIndex;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class ErlangSymbolContributor implements ChooseByNameContributor {
   public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
     GlobalSearchScope scope = includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
     Collection<ErlangNamedElement> result = StubIndex.getElements(ErlangAllNameIndex.KEY, name, project, scope, ErlangNamedElement.class);
-    List<NavigationItem> items = ContainerUtil.newArrayListWithCapacity(result.size());
+    List<NavigationItem> items = new ArrayList<>(result.size());
     for (ErlangNamedElement element : result) {
       items.add(new ErlangStructureViewFactory.Element(element) {
         @Override

@@ -16,14 +16,14 @@
 
 package org.intellij.erlang.refactoring;
 
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
 
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.ALL;
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.SINGLE;
 
-public class ErlangIntroduceVariableTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   @Override
   protected String getTestDataPath() {
     return "testData/refactoring/introduce_variable";

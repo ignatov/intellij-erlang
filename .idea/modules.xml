@@ -4,11 +4,17 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Erlang.iml" filepath="$PROJECT_DIR$/Erlang.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/intellij-erlang.jps-plugin.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/intellij-erlang.jps-plugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/intellij-erlang.jps-plugin.main.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/intellij-erlang.jps-plugin.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/intellij-erlang.jps-plugin.test.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/intellij-erlang.jps-plugin.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang.main.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang.test.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang_main.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang_main.iml" group="intellij-erlang" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/intellij-erlang_test.iml" filepath="$PROJECT_DIR$/.idea/modules/intellij-erlang_test.iml" group="intellij-erlang" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin.iml" group="jps-plugin" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_main.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_main.iml" group="jps-plugin" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_test.iml" filepath="$PROJECT_DIR$/.idea/modules/jps-plugin/jps-plugin_test.iml" group="jps-plugin" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/projects.intellij-erlang.iml" filepath="$PROJECT_DIR$/.idea/modules/projects.intellij-erlang.iml" />
     </modules>
   </component>
 </project>

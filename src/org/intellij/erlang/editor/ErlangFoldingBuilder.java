@@ -25,6 +25,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -41,7 +42,7 @@ public class ErlangFoldingBuilder extends FoldingBuilderEx implements DumbAware 
     if (!(root instanceof ErlangFile)) return FoldingDescriptor.EMPTY;
     ErlangFile file = (ErlangFile) root;
 
-    final List<FoldingDescriptor> result = ContainerUtil.newArrayList();
+    final List<FoldingDescriptor> result = new SmartList<>();
     for (ErlangFunction function : file.getFunctions()) {
       result.add(new FoldingDescriptor(function, function.getTextRange()));
     }

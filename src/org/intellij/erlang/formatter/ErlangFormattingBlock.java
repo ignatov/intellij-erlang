@@ -37,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -257,13 +258,13 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private AlignmentStrategy createOrGetAlignmentStrategy() {
     PsiElement psi = getNode().getPsi();
     if (myErlangSettings.ALIGN_FUNCTION_CLAUSES && psi instanceof ErlangFunction) {
-      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_CLAUSE_BODY), ERL_FUNCTION_CLAUSE, true);
+      return AlignmentStrategy.createAlignmentPerTypeStrategy(Arrays.asList(ERL_CLAUSE_BODY), ERL_FUNCTION_CLAUSE, true);
     }
     if (myErlangSettings.ALIGN_FUN_CLAUSES && psi instanceof ErlangFunExpression) {
-      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_FUN_CLAUSE), ERL_FUN_CLAUSES, true);
+      return AlignmentStrategy.createAlignmentPerTypeStrategy(Arrays.asList(ERL_FUN_CLAUSE), ERL_FUN_CLAUSES, true);
     }
     if (myErlangSettings.ALIGN_RECORD_FIELD_ASSIGNMENTS && psi instanceof ErlangRecordTuple) {
-      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_OP_EQ), ERL_RECORD_FIELD, true);
+      return AlignmentStrategy.createAlignmentPerTypeStrategy(Arrays.asList(ERL_OP_EQ), ERL_RECORD_FIELD, true);
     }
 
     return myAlignmentStrategy;
