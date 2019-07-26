@@ -17,10 +17,13 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation;
+import com.intellij.ide.util.DeleteNameDescriptionLocation;
+import com.intellij.ide.util.DeleteTypeDescriptionLocation;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.refactoring.util.RefactoringDescriptionLocation;
 import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewShortNameLocation;
@@ -38,7 +41,10 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
     if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom)) {
       return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
     }
-    if (location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE) {
+    if (location == UsageViewShortNameLocation.INSTANCE ||
+        location == UsageViewLongNameLocation.INSTANCE ||
+        location instanceof DeleteNameDescriptionLocation
+    ) {
       if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
       if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
       if (o instanceof ErlangAttribute) {
@@ -49,7 +55,10 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
     if (location == HighlightUsagesDescriptionLocation.INSTANCE) {
       return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
     }
-    if (location == UsageViewTypeLocation.INSTANCE) {
+    if (location == UsageViewTypeLocation.INSTANCE ||
+        location == RefactoringDescriptionLocation.WITH_PARENT ||
+        location instanceof DeleteTypeDescriptionLocation
+    ) {
       if (o instanceof ErlangModule) return "module";
       else if (o instanceof ErlangFunction) return "function";
       else if (o instanceof ErlangRecordDefinition) return "record";
