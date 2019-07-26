@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2019 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,15 +37,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingReferenceBase<ErlangQAtom> implements ErlangFunctionReference {
+public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingReferenceBase<PsiElement> implements ErlangFunctionReference {
+  @NotNull
+  private final ErlangQAtom myQAtom;
   @Nullable
   private final ErlangQAtom myModuleAtom;
   private final String myReferenceName;
   private final int myArity;
 
-  public ErlangFunctionReferenceImpl(@NotNull ErlangQAtom element, @Nullable ErlangQAtom moduleAtom, int arity) {
-    super(element, ErlangPsiImplUtil.getTextRangeForReference(element));
-    myReferenceName = ErlangPsiImplUtil.getNameIdentifier(element).getText();
+  public ErlangFunctionReferenceImpl(@NotNull PsiElement owner,
+                                     @NotNull ErlangQAtom qAtom,
+                                     @Nullable ErlangQAtom moduleAtom,
+                                     int arity) {
+    super(owner, ErlangPsiImplUtil.getTextRangeForReference(owner, qAtom));
+    myReferenceName = ErlangPsiImplUtil.getNameIdentifier(qAtom).getText();
+    myQAtom = qAtom;
     myModuleAtom = moduleAtom;
     myArity = arity;
   }
@@ -142,7 +148,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   }
 
   private boolean suppressResolve() {
-    return PsiTreeUtil.getParentOfType(myElement, ErlangCallbackSpec.class) != null;
+    return PsiTreeUtil.getParentOfType(myQAtom, ErlangCallbackSpec.class) != null;
   }
 
   @Override
@@ -164,13 +170,13 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @NotNull
   @Override
   public Object[] getVariants() {
-    if (PsiTreeUtil.getParentOfType(myElement, ErlangExportFunction.class) != null) return EMPTY_ARRAY;
+    if (PsiTreeUtil.getParentOfType(myQAtom, ErlangExportFunction.class) != null) return EMPTY_ARRAY;
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getFunctionLookupElements(getElement().getContainingFile(), true, myModuleAtom));
   }
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    ErlangPsiImplUtil.renameAtom(getElement().getAtom(), newElementName);
+    ErlangPsiImplUtil.renameAtom(myQAtom.getAtom(), newElementName);
     return getElement();
   }
 

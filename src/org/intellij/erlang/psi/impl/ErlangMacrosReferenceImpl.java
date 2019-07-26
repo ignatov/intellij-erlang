@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2019 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,24 +29,26 @@ import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangMacrosReferenceImpl extends PsiReferenceBase<ErlangMacrosName> {
+public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> {
+  private final ErlangMacrosName myNameElement;
   private final String myReferenceName;
 
-  public ErlangMacrosReferenceImpl(ErlangMacrosName element) {
-    super(element, ErlangPsiImplUtil.getTextRangeForReference(element));
+  public ErlangMacrosReferenceImpl(@NotNull PsiElement owner, ErlangMacrosName element) {
+    super(owner, ErlangPsiImplUtil.getTextRangeForReference(owner, element));
+    myNameElement = element;
     myReferenceName = ErlangPsiImplUtil.getNameIdentifier(element).getText();
   }
 
   @Override
   public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
-    ErlangPsiImplUtil.setName(myElement, newElementName);
+    ErlangPsiImplUtil.setName(myNameElement, newElementName);
     return myElement;
   }
 
   @Override
   public PsiElement resolve() {
-    ErlangMacrosDefinition definition = PsiTreeUtil.getParentOfType(myElement, ErlangMacrosDefinition.class);
-    if (definition != null && definition.getMacrosName() == myElement) return null;
+    ErlangMacrosDefinition definition = PsiTreeUtil.getParentOfType(myNameElement, ErlangMacrosDefinition.class);
+    if (definition != null && definition.getMacrosName() == myNameElement) return null;
 
     PsiFile containingFile = myElement.getContainingFile();
     if (containingFile instanceof ErlangFile) {
@@ -69,6 +71,6 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<ErlangMacrosName
   public boolean isReferenceTo(PsiElement element) {
     ErlangMacrosDefinition definition = ObjectUtils.tryCast(element, ErlangMacrosDefinition.class);
     String macroName = definition != null ? definition.getName() : null;
-    return macroName != null && macroName.equals(myReferenceName) && definition.getMacrosName() != myElement;
+    return macroName != null && macroName.equals(myReferenceName) && definition.getMacrosName() != myNameElement;
   }
 }
