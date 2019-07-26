@@ -246,7 +246,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
   @NotNull
   private static Set<ErlangNamedElement> getSimpleDeclarations(@NotNull List<? extends PsiElement> children) {
-    final Set<ErlangNamedElement> result = new HashSet<>();
+    final Set<ErlangNamedElement> result = new LinkedHashSet<>();
     for (PsiElement child : children) {
       child.accept(new ErlangRecursiveVisitor() {
         @Override
