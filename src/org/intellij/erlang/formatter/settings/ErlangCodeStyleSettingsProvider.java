@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.formatter.settings;
 
-import com.intellij.openapi.options.Configurable;
+import com.intellij.psi.codeStyle.CodeStyleConfigurable;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CodeStyleSettingsProvider;
 import com.intellij.psi.codeStyle.CustomCodeStyleSettings;
@@ -30,8 +30,9 @@ public class ErlangCodeStyleSettingsProvider extends CodeStyleSettingsProvider {
 
   @NotNull
   @Override
-  public Configurable createSettingsPage(CodeStyleSettings settings, CodeStyleSettings originalSettings) {
-    return new ErlangCodeStyleConfigurable(settings, originalSettings);
+  public CodeStyleConfigurable createConfigurable(@NotNull CodeStyleSettings settings,
+                                                  @NotNull CodeStyleSettings modelSettings) {
+    return new ErlangCodeStyleConfigurable(settings, modelSettings);
   }
 
   @NotNull
