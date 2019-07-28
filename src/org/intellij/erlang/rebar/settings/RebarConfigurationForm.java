@@ -81,8 +81,7 @@ public class RebarConfigurationForm {
     File rebarFile = new File(rebarPath);
     if (!rebarFile.exists()) return false;
 
-    String escript = RebarRunningStateUtil.findEscriptExecutable();
-    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(3000, escript, rebarPath, "--version");
+    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(3000, rebarPath, "--version");
     String version = output.getStdOut();
 
     if (version.startsWith("rebar")) {
@@ -90,8 +89,22 @@ public class RebarConfigurationForm {
       return true;
     }
 
+    String escript = RebarRunningStateUtil.findEscriptExecutable();
+    ExtProcessUtil.ExtProcessOutput outputWithEscript = ExtProcessUtil.execAndGetFirstLine(3000, escript, rebarPath, "--version");
+    String versionWithEscript = output.getStdOut();
+
+    if (versionWithEscript.startsWith("rebar")) {
+      myRebarVersionText.setText(versionWithEscript);
+      return true;
+    }
+
     String stdErr = output.getStdErr();
-    myRebarVersionText.setText("N/A" + (StringUtil.isNotEmpty(stdErr) ? ": Error: " + stdErr : ""));
+    String stdErrWithEscript = outputWithEscript.getStdErr();
+
+    String errMessage = StringUtil.isNotEmpty(stdErr) ? ": Error: " + stdErr : "";
+    errMessage += StringUtil.isNotEmpty(stdErrWithEscript) ? ": ErrorWithEscript: " + stdErrWithEscript : "";
+    myRebarVersionText.setText("N/A" + errMessage);
+
     return false;
   }
 
