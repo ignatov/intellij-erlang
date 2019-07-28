@@ -20,17 +20,11 @@ import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectOpenProcessorBase;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 
 public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarProjectImportBuilder> {
-  public RebarProjectOpenProcessor(@NotNull RebarProjectImportBuilder builder) {
-    super(builder);
-  }
-
-  @Nullable
+  @NotNull
   public String[] getSupportedExtensions() {
-    return new String[] {"rebar.config"};
+    return new String[]{"rebar.config"};
   }
 
   public boolean doQuickImport(@NotNull VirtualFile configFile, @NotNull WizardContext wizardContext) {
@@ -42,7 +36,7 @@ public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarPro
 
   @NotNull
   @Override
-  public RebarProjectImportBuilder getBuilder() {
-    return super.getBuilder();
+  protected RebarProjectImportBuilder doGetBuilder() {
+    return new RebarProjectImportBuilder();
   }
 }

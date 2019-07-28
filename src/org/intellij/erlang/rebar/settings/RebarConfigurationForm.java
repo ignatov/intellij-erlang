@@ -21,7 +21,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
@@ -53,7 +53,7 @@ public class RebarConfigurationForm {
                                                 FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     myRebarPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
-      protected void textChanged(DocumentEvent documentEvent) {
+      protected void textChanged(@NotNull DocumentEvent documentEvent) {
         myRebarPathValid = validateRebarPath();
       }
     });
@@ -105,7 +105,7 @@ public class RebarConfigurationForm {
   private ActionLink createLink(@NotNull String title, final @NotNull String url, final @NotNull String fileName) {
     return new ActionLink(title, new AnAction() {
       @Override
-      public void actionPerformed(AnActionEvent e) {
+      public void actionPerformed(@NotNull AnActionEvent e) {
         DownloadableFileService service = DownloadableFileService.getInstance();
         DownloadableFileDescription rebar = service.createFileDescription(url, fileName);
         FileDownloader downloader = service.createDownloader(ContainerUtil.list(rebar), fileName);
@@ -115,7 +115,7 @@ public class RebarConfigurationForm {
             try {
               String path = pair.first.getCanonicalPath();
               if (path != null) {
-                FileUtilRt.setExecutableAttribute(path, true);
+                FileUtil.setExecutable(new File(path));
                 myRebarPathSelector.setText(path);
                 validateRebarPath();
               }
