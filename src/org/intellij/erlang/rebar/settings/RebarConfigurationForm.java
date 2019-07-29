@@ -18,6 +18,8 @@ package org.intellij.erlang.rebar.settings;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Pair;
@@ -39,6 +41,7 @@ import javax.swing.event.DocumentEvent;
 import java.awt.*;
 import java.io.File;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class RebarConfigurationForm {
   private JPanel myPanel;
@@ -46,24 +49,21 @@ public class RebarConfigurationForm {
   private JTextField myRebarVersionText;
   private JPanel myLinkContainer;
 
-  private boolean myRebarPathValid;
-
   public RebarConfigurationForm() {
     myRebarPathSelector.addBrowseFolderListener("Select Rebar Executable", "", null,
                                                 FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     myRebarPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
       protected void textChanged(@NotNull DocumentEvent documentEvent) {
-        myRebarPathValid = validateRebarPath();
+        validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
       }
     });
-    myRebarPathValid = false;
   }
 
   public void setPath(@NotNull String rebarPath) {
     if (!myRebarPathSelector.getText().equals(rebarPath)) {
       myRebarPathSelector.setText(rebarPath);
-      myRebarPathValid = validateRebarPath();
+      validateRebarPath(myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
     }
   }
 
@@ -73,26 +73,50 @@ public class RebarConfigurationForm {
   }
 
   public boolean isPathValid() {
-    return myRebarPathValid;
+    return myRebarVersionText.getText().startsWith("rebar");
   }
 
-  private boolean validateRebarPath() {
-    String rebarPath = myRebarPathSelector.getText();
+  private static void validateRebarPath(String rebarPath, Consumer<String> consumer) {
     File rebarFile = new File(rebarPath);
-    if (!rebarFile.exists()) return false;
-
-    String escript = RebarRunningStateUtil.findEscriptExecutable();
-    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(3000, escript, rebarPath, "--version");
-    String version = output.getStdOut();
-
-    if (version.startsWith("rebar")) {
-      myRebarVersionText.setText(version);
-      return true;
+    if (!rebarFile.exists()) {
+      consumer.accept("");
+      return;
     }
 
-    String stdErr = output.getStdErr();
-    myRebarVersionText.setText("N/A" + (StringUtil.isNotEmpty(stdErr) ? ": Error: " + stdErr : ""));
-    return false;
+    ApplicationManager.getApplication().executeOnPooledThread(
+      () -> {
+        ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(3000, rebarPath, "--version");
+        String version = rebar.getStdOut();
+
+        if (version.startsWith("rebar")) {
+          updateUI(consumer, version);
+          return;
+        }
+
+        String escriptPath = RebarRunningStateUtil.findEscriptExecutable();
+        ExtProcessUtil.ExtProcessOutput escript = ExtProcessUtil.execAndGetFirstLine(3000, escriptPath, rebarPath, "--version");
+        String versionWithEscript = rebar.getStdOut();
+
+        if (versionWithEscript.startsWith("rebar")) {
+          updateUI(consumer, versionWithEscript);
+          return;
+        }
+
+        String rebarErr = rebar.getStdErr();
+        if (StringUtil.isNotEmpty(rebarErr)) {
+          updateUI(consumer, "Error: " + rebarErr);
+          return;
+        }
+
+        String escriptErr = escript.getStdErr();
+        if (StringUtil.isNotEmpty(escriptErr)) {
+          updateUI(consumer, "Escript Error: " + escriptErr);
+        }
+      });
+  }
+
+  private static void updateUI(Consumer<String> consumer, String errMessage) {
+    ApplicationManager.getApplication().invokeLater(() -> consumer.accept(errMessage), ModalityState.any());
   }
 
   private void createUIComponents() {
@@ -117,7 +141,7 @@ public class RebarConfigurationForm {
               if (path != null) {
                 FileUtil.setExecutable(new File(path));
                 myRebarPathSelector.setText(path);
-                validateRebarPath();
+                validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
               }
             }
             catch (Exception ignore) {
