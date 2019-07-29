@@ -60,7 +60,6 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
   
   public void addParseTransforms(Collection<String> newParseTransforms) {
     if (newParseTransforms.isEmpty()) return;
-    //noinspection unchecked
     setParseTransformsFrom(ContainerUtil.concat(myState.myParseTransforms, newParseTransforms));
   }
 }

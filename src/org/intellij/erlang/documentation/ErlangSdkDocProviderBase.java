@@ -245,7 +245,6 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
     URLConnection urlConnection = url.openConnection();
     String contentEncoding = urlConnection.getContentEncoding();
     InputStream inputStream = urlConnection.getInputStream();
-    //noinspection IOResourceOpenedButNotSafelyClosed
     InputStreamReader inputStreamReader = contentEncoding != null
       ? new InputStreamReader(inputStream, contentEncoding)
       : new InputStreamReader(inputStream);
@@ -255,7 +254,6 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @Nullable
   private static BufferedReader createFileReader(@NotNull URL url) {
     try {
-      //noinspection IOResourceOpenedButNotSafelyClosed
       InputStreamReader stream = new InputStreamReader(url.openStream(), CharsetToolkit.UTF8_CHARSET);
       return new BufferedReader(stream);
     } catch (IOException e) {

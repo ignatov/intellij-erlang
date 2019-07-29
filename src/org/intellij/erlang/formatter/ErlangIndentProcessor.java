@@ -89,7 +89,6 @@ public class ErlangIndentProcessor {
     }
     if (parentType == ERL_RECORD_TUPLE) {
       // todo: not a smart solution
-      //noinspection unchecked
       boolean insideCall = PsiTreeUtil.getParentOfType(node.getPsi(), ErlangArgumentDefinition.class, ErlangParenthesizedExpression.class) != null;
       return insideCall ? Indent.getNormalIndent() : Indent.getNoneIndent();
     }
@@ -136,6 +135,6 @@ public class ErlangIndentProcessor {
   }
 
   private static boolean needIndent(@Nullable IElementType type) {
-    return type != null && ErlangFormattingBlock.BLOCKS_TOKEN_SET.contains(type);
+    return ErlangFormattingBlock.BLOCKS_TOKEN_SET.contains(type);
   }
 }

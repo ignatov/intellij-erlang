@@ -37,7 +37,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashSet;
 
-@SuppressWarnings("ComponentNotRegistered")
 public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
   public ErlangUnitRerunFailedTestsAction(@NotNull ComponentContainer componentContainer) {
     super(componentContainer);
@@ -66,7 +65,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         return ((ErlangUnitRunConfiguration)getPeer()).getModules();
       }
 
-      @Nullable
+      @NotNull
       @Override
       public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) {
         ErlangUnitRunConfiguration runConfiguration = createRerunFailedTestsRunConfiguration();

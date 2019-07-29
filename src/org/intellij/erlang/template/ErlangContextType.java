@@ -88,7 +88,6 @@ public abstract class ErlangContextType extends TemplateContextType {
       super("ERLANG_STATEMENT", "Statement", Generic.class);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected boolean isInContext(PsiElement element) {
       return PsiTreeUtil.getParentOfType(element, ErlangClauseBody.class, ErlangFunction.class) != null;
@@ -100,7 +99,6 @@ public abstract class ErlangContextType extends TemplateContextType {
       super("ERLANG_EXPRESSION", "Expression", Generic.class);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected boolean isInContext(PsiElement element) {
       return PsiTreeUtil.getParentOfType(element, ErlangExpression.class, ErlangFunction.class) != null;

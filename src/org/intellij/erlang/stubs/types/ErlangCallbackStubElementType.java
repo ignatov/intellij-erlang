@@ -19,7 +19,6 @@ package org.intellij.erlang.stubs.types;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.psi.stubs.StubInputStream;
 import com.intellij.psi.stubs.StubOutputStream;
-import com.intellij.util.ArrayFactory;
 import org.intellij.erlang.psi.ErlangCallbackSpec;
 import org.intellij.erlang.psi.impl.ErlangCallbackSpecImpl;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -29,10 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangCallbackStubElementType extends ErlangStubElementType<ErlangCallbackSpecStub, ErlangCallbackSpec> {
-  private static final ErlangCallbackSpec[] EMPTY_ARRAY = new ErlangCallbackSpec[0];
-
-  public static final ArrayFactory<ErlangCallbackSpec> ARRAY_FACTORY = count -> count == 0 ? EMPTY_ARRAY : new ErlangCallbackSpec[count];
-
   public ErlangCallbackStubElementType(@NotNull String name) {
     super(name);
   }
@@ -42,6 +37,7 @@ public class ErlangCallbackStubElementType extends ErlangStubElementType<ErlangC
     return new ErlangCallbackSpecImpl(stub, this);
   }
 
+  @NotNull
   @Override
   public ErlangCallbackSpecStub createStub(@NotNull ErlangCallbackSpec spec, StubElement parentStub) {
     String name = ErlangPsiImplUtil.getCallbackSpecName(spec);

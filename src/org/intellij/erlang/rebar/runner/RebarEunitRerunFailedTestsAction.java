@@ -54,7 +54,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-@SuppressWarnings("ComponentNotRegistered")
 public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
   static {
     // enables rerun failed tests action in RubyMine
@@ -99,7 +98,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         return ((RebarEunitRunConfiguration)getPeer()).getModules();
       }
 
-      @Nullable
+      @NotNull
       @Override
       public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) {
         RebarEunitRunConfiguration runConfiguration = createRerunFailedTestsRunConfiguration();

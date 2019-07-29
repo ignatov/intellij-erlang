@@ -37,7 +37,6 @@ public class ErlangReferenceContributor extends PsiReferenceContributor {
   public void registerReferenceProviders(@NotNull PsiReferenceRegistrar registrar) {
     PsiElementPattern.Capture<ErlangQAtom> atom = psiElement(ErlangQAtom.class);
 
-    //noinspection unchecked
     PsiElementPattern.Capture<ErlangQAtom> atomArg = atom.withParents(ErlangMaxExpression.class,
                                                                       ErlangArgumentList.class,
                                                                       ErlangFunctionCallExpression.class);

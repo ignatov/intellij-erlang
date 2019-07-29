@@ -310,7 +310,6 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     PsiElement anchor = occurrences.get(0);
     next:
     do {
-      //noinspection unchecked
       ErlangCompositeElement clause = PsiTreeUtil.getParentOfType(anchor, ErlangClauseBody.class, ErlangTryExpressionsClause.class);
 
       int minOffset = Integer.MAX_VALUE;

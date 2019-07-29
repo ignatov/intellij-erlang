@@ -37,7 +37,6 @@ public class ErlangImplementationTextSelectioner implements ImplementationTextSe
 
   @NotNull
   private static TextRange getTextRange(PsiElement psiElement) {
-    @SuppressWarnings("unchecked")
     PsiElement function = PsiTreeUtil.getParentOfType(psiElement, ErlangFunctionClause.class, ErlangAttribute.class);
     PsiElement element = function == null ? psiElement : function;
     return element.getTextRange();

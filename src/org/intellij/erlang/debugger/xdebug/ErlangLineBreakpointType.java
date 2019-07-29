@@ -71,7 +71,6 @@ public class ErlangLineBreakpointType extends XLineBreakpointType<ErlangLineBrea
       if (ErlangPsiImplUtil.isWhitespaceOrComment(psiElement) ||
         psiElement.getNode().getElementType() == ErlangTypes.ERL_DOT ||
         psiElement.getNode().getElementType() == ErlangTypes.ERL_ARROW) return true;
-      @SuppressWarnings("unchecked")
       ErlangCompositeElement nonExecutableParent = PsiTreeUtil.getParentOfType(psiElement,
           ErlangGuard.class,
           ErlangArgumentDefinition.class,

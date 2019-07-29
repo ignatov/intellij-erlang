@@ -68,7 +68,6 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     boolean inMacroDefinition = PsiTreeUtil.isAncestor(macroDefinition, psiElement, false) && inDefinitionOrAssignment;
     if (inFunction || inModule(psiElement) || inSpecification || inMacroDefinition) {
       boolean inArgumentList = inArgumentList(psiElement);
-      //noinspection unchecked
       boolean inArgumentListBeforeAssignment =
         PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
@@ -88,7 +87,6 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   }
 
   private boolean hasNarrowerParentScope(PsiElement psiElement) {
-    @SuppressWarnings("unchecked")
     ErlangCompositeElement narrowestParentScopeOwner = PsiTreeUtil.getParentOfType(psiElement,
                                                                                    ErlangCrClause.class,
                                                                                    ErlangFunClause.class,
