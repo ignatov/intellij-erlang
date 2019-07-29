@@ -18,6 +18,7 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Pair;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
 import org.intellij.erlang.psi.ErlangBehaviour;
@@ -26,9 +27,7 @@ import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ErlangConflictingBehavioursInspection extends ErlangInspectionBase {
   @Override
@@ -70,10 +69,10 @@ public class ErlangConflictingBehavioursInspection extends ErlangInspectionBase 
 
   @NotNull
   private static List<Pair<String, List<String>>> computeCallbacksRequiredByMultipleModules(@NotNull ErlangFile file) {
-    List<String> orderedCallbacks = ContainerUtil.newArrayList();
+    List<String> orderedCallbacks = new SmartList<>();
     final MultiMap<String, String> callbacksToOwners = MultiMap.create();
 
-    Set<String> distinctBehaviours = ContainerUtil.newHashSet();
+    Set<String> distinctBehaviours = new HashSet<>();
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       String behaviourName = behaviour.getName();
       if (!distinctBehaviours.add(behaviourName)) continue;
@@ -91,7 +90,6 @@ public class ErlangConflictingBehavioursInspection extends ErlangInspectionBase 
 
     return ContainerUtil.mapNotNull(orderedCallbacks, callback -> {
       Collection<String> callbackOwners = callbacksToOwners.get(callback);
-      //noinspection ConstantConditions
       return callbackOwners.size() < 2 ? null :
              Pair.create(callback, ContainerUtil.newArrayList(callbackOwners));
     });

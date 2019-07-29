@@ -62,7 +62,6 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
     super.attachToProcess(processHandler);
     OutputStream processInput = processHandler.getProcessInput();
     assert processInput != null;
-    //noinspection IOResourceOpenedButNotSafelyClosed
     myProcessInputWriter = new OutputStreamWriter(processInput);
     myHistoryController = new ConsoleHistoryController("Erlang", null, this);
     myHistoryController.install();
