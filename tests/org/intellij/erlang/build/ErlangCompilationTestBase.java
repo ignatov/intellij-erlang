@@ -56,6 +56,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 public abstract class ErlangCompilationTestBase extends PlatformTestCase {
@@ -198,7 +199,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
   }
 
   private static <T> void assertUnorderedElementsAreEqual(Collection<T> actual, Collection<T> expected) {
-    assertEquals(ContainerUtil.newHashSet(expected), ContainerUtil.newHashSet(actual));
+    assertEquals(new HashSet<>(expected), new HashSet<>(actual));
   }
 
   @Nullable
@@ -268,10 +269,10 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     File file = new File(relativePath);
     String name = FileUtil.getNameWithoutExtension(file);
     CharSequence extension = FileUtilRt.getExtension(relativePath);
-    if ("erl".equals(extension)) {
+    if ("erl".contentEquals(extension)) {
       return name + ".beam";
     }
-    if ("app".equals(extension) || "app.src".equals(extension)) {
+    if ("app".contentEquals(extension) || "app.src".contentEquals(extension)) {
       return name + ".app";
     }
     return null;
