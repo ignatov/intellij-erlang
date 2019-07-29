@@ -55,7 +55,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   private JTextField myEmacsVersionText;
   private RebarConfigurationForm myRebarConfigurationForm;
   private TextFieldWithBrowseButton myPltPathSelector;
-  private final String myPrevEmacsPath;
   private final EmacsSettings myEmacsSettings;
   private final RebarSettings myRebarSettings;
   private final DialyzerSettings myDialyzerSettings;
@@ -71,7 +70,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myEmacsPathSelector.addBrowseFolderListener("Select Emacs Executable", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     myPltPathSelector.addBrowseFolderListener("Select Dialyzer PLT", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
     mySdkPathSelector.addBrowseFolderListener("Select Erlang SDK Path", "", null, FileChooserDescriptorFactory.createSingleFolderDescriptor().withTitle("Select Erlang SDK Root"));
-    myPrevEmacsPath = myEmacsSettings.getEmacsPath();
 
     if (StringUtil.isEmpty(myRebarSettings.getRebarPath())) {
       VirtualFile baseDir = project.getBaseDir();
