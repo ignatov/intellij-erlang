@@ -129,12 +129,12 @@ public class ErlangPsiImplUtil {
       }
 
       @Override
-      public boolean isReferenceTo(PsiElement element) {
+      public boolean isReferenceTo(@NotNull PsiElement element) {
         return element instanceof ErlangQAtom && standaloneAtom(o) && Comparing.equal(element.getText(), getElement().getText());
       }
 
       @Override
-      public PsiElement handleElementRename(String newName) throws IncorrectOperationException {
+      public PsiElement handleElementRename(@NotNull String newName) throws IncorrectOperationException {
         renameQAtom(o, newName);
         return getElement();
       }
@@ -156,8 +156,8 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
-    List<ErlangTypedExpr> result = ContainerUtil.newArrayListWithCapacity(0);
-    List<ErlangQAtom> atoms = ContainerUtil.newArrayListWithCapacity(0);
+    List<ErlangTypedExpr> result = new SmartList<>();
+    List<ErlangQAtom> atoms = new SmartList<>();
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
@@ -180,7 +180,7 @@ public class ErlangPsiImplUtil {
 
         if (!ref.isNull()) {
           PsiReference r = ref.get().getReference();
-          PsiElement rr = r != null ? r.resolve() : null;
+          PsiElement rr = r.resolve();
           if (rr instanceof ErlangRecordDefinition) {
             resolve = rr;
           }
@@ -453,7 +453,6 @@ public class ErlangPsiImplUtil {
     return getModuleReference(o, o.getQAtom());
   }
 
-  @SuppressWarnings("unchecked")
   public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {
     return inArgumentDefinition(psiElement) && inArgumentList(psiElement) && PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class, ErlangArgumentList.class) instanceof ErlangArgumentDefinition;
   }
@@ -462,7 +461,6 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
   }
 
-  @SuppressWarnings("unchecked")
   public static boolean inArgumentList(PsiElement psiElement) {
     ErlangArgumentList argList = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, true,
       ErlangFunctionCallExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
@@ -501,7 +499,6 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inAtomAttribute(PsiElement psiElement) {
-    //noinspection unchecked
     return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangTypeDefinition.class) != null;
   }
 
@@ -535,8 +532,8 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, boolean withArity, @Nullable ErlangQAtom moduleAtom) {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
-      List<ErlangFunction> functions = ContainerUtil.newArrayList();
-      List<LookupElement> lookupElements = ContainerUtil.newArrayList();
+      List<ErlangFunction> functions = new SmartList<>();
+      List<LookupElement> lookupElements = new SmartList<>();
 
       ErlangSdkRelease release = ErlangSdkType.getRelease(containingFile);
       if (moduleAtom != null) {
@@ -585,7 +582,7 @@ public class ErlangPsiImplUtil {
   public static Collection<LookupElement> getAllExportedFunctionsWithModuleLookupElements(@NotNull Project project,
                                                                                           boolean withArity,
                                                                                           @Nullable String exclude) {
-    List<LookupElement> lookupElements = ContainerUtil.newArrayList();
+    List<LookupElement> lookupElements = new SmartList<>();
     for (String moduleName : ErlangModuleIndex.getNames(project)) {
       if (moduleName.equals(exclude)) continue;
       for (ErlangFunction function : getExternalFunctionForCompletion(project, moduleName)) {
@@ -626,7 +623,7 @@ public class ErlangPsiImplUtil {
   private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name + arity, name)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
-      .withInsertHandler(getInsertHandler(name, arity, withArity)), (double) priority);
+      .withInsertHandler(getInsertHandler(name, arity, withArity)), priority);
   }
 
   @NotNull
@@ -636,50 +633,48 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   private static InsertHandler<LookupElement> getInsertHandler(@NotNull final String name, @Nullable final String moduleName, final int arity, boolean withArity) {
-    return withArity ?
-      new BasicInsertHandler<LookupElement>() {
-        @Override
-        public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
-          QuoteInsertHandler.process(name, moduleName, context);
-          Editor editor = context.getEditor();
-          Document document = editor.getDocument();
-          context.commitDocument();
-          PsiElement next = findNextToken(context);
-          ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
+    return !withArity ? new ParenthesesInsertHandler<LookupElement>() {
+      @Override
+      public void handleInsert(@NotNull InsertionContext context, @NotNull LookupElement item) {
+        QuoteInsertHandler.process(name, moduleName, context);
+        super.handleInsert(context, item);
+      }
 
-          if (next != null && "/".equals(next.getText())) {
-            next.delete();
-          }
-          if (intNode != null && intNode.getElementType() == ErlangTypes.ERL_INTEGER) {
-            intNode.getPsi().delete();
-          }
-          PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
-          document.insertString(context.getTailOffset(), "/" + arity);
-          editor.getCaretModel().moveToOffset(context.getTailOffset());
-        }
+      @Override
+      protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
+        return arity > 0;
+      }
+    } : new BasicInsertHandler<LookupElement>() {
+      @Override
+      public void handleInsert(@NotNull InsertionContext context, @NotNull LookupElement item) {
+        QuoteInsertHandler.process(name, moduleName, context);
+        Editor editor = context.getEditor();
+        Document document = editor.getDocument();
+        context.commitDocument();
+        PsiElement next = findNextToken(context);
+        ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
 
-        @Nullable
-        private PsiElement findNextToken(@NotNull InsertionContext context) {
-          PsiFile file = context.getFile();
-          PsiElement element = file.findElementAt(context.getTailOffset());
-          if (element instanceof PsiWhiteSpace) {
-            element = file.findElementAt(element.getTextRange().getEndOffset());
-          }
-          return element;
+        if (next != null && "/".equals(next.getText())) {
+          next.delete();
         }
-      } :
-      new ParenthesesInsertHandler<LookupElement>() {
-        @Override
-        public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
-          QuoteInsertHandler.process(name, moduleName, context);
-          super.handleInsert(context, item);
+        if (intNode != null && intNode.getElementType() == ErlangTypes.ERL_INTEGER) {
+          intNode.getPsi().delete();
         }
+        PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
+        document.insertString(context.getTailOffset(), "/" + arity);
+        editor.getCaretModel().moveToOffset(context.getTailOffset());
+      }
 
-        @Override
-        protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
-          return arity > 0;
+      @Nullable
+      private PsiElement findNextToken(@NotNull InsertionContext context) {
+        PsiFile file = context.getFile();
+        PsiElement element = file.findElementAt(context.getTailOffset());
+        if (element instanceof PsiWhiteSpace) {
+          element = file.findElementAt(element.getTextRange().getEndOffset());
         }
-      };
+        return element;
+      }
+    };
   }
 
   @NotNull
@@ -689,7 +684,7 @@ public class ErlangPsiImplUtil {
       List<LookupElement> fromFile = ContainerUtil.map(
         concat,
         md -> LookupElementBuilder.create(md).withIcon(ErlangIcons.MACROS));
-      List<LookupElement> stdMacros = ContainerUtil.newArrayList();
+      List<LookupElement> stdMacros = new SmartList<>();
       for (String m : KNOWN_MACROS) {
         stdMacros.add(LookupElementBuilder.create(m).withIcon(ErlangIcons.MACROS));
       }
@@ -1061,7 +1056,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangFile erlangFile) {
-    List<ErlangFile> files = ContainerUtil.newArrayList();
+    List<ErlangFile> files = new SmartList<>();
     for (ErlangInclude include : erlangFile.getIncludes()) {
       files.addAll(getDirectlyIncludedFiles(include, erlangFile));
     }
@@ -1196,7 +1191,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangRecordDefinition> getErlangRecordFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
-    List<ErlangRecordDefinition> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangRecordDefinition> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getRecord(name));
@@ -1210,7 +1205,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangFunction> getErlangFunctionsFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name, int arity) {
-    List<ErlangFunction> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangFunction> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getFunction(name, arity));
@@ -1224,7 +1219,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangImportFunction> getImportsFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name, int arity) {
-    List<ErlangImportFunction> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangImportFunction> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getImportedFunction(name, arity));
@@ -1240,7 +1235,7 @@ public class ErlangPsiImplUtil {
   static List<ErlangMacrosDefinition> getErlangMacrosFromIncludes(@NotNull ErlangFile containingFile,
                                                                   boolean forCompletion,
                                                                   @NotNull String name) {
-    List<ErlangMacrosDefinition> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangMacrosDefinition> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getMacros(name));
@@ -1254,7 +1249,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangTypeDefinition> getErlangTypeFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name) {
-    List<ErlangTypeDefinition> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangTypeDefinition> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getType(name));
@@ -1407,7 +1402,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   private static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project,
                                                                        @NotNull String moduleName) {
-    List<ErlangFunction> result = ContainerUtil.newArrayList();
+    List<ErlangFunction> result = new SmartList<>();
     List<ErlangFile> erlangModules = ErlangModuleIndex.getFilesByName(project, moduleName, GlobalSearchScope.allScope(project));
     for (ErlangFile file : erlangModules) {
       result.addAll(file.getExportedFunctions());
@@ -1966,7 +1961,7 @@ public class ErlangPsiImplUtil {
       if (position != myPosition) return false;
 
       ErlangFunctionReferenceImpl reference = (ErlangFunctionReferenceImpl)call.getReference();
-      ResolveResult[] variants = reference != null ? reference.multiResolve(true) : ResolveResult.EMPTY_ARRAY;
+      ResolveResult[] variants = reference.multiResolve(true);
       for (ResolveResult variant : variants) {
         if (isExpectedFunction(ObjectUtils.tryCast(variant.getElement(), ErlangFunction.class))) {
           return true;
