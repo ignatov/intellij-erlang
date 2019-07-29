@@ -23,7 +23,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.PlatformUtils;
 import com.intellij.util.containers.ContainerUtil;
@@ -33,7 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends LightPlatformCodeInsightFixtureTestCase {
+public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends BasePlatformTestCase {
   private String myBackedUpPlatformPrefix;
   private final boolean myIsSmallIde;
 
@@ -65,7 +65,7 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Ligh
     super.tearDown();
   }
 
-  protected static void releaseErlangSdks() {
+  private static void releaseErlangSdks() {
     ApplicationManager.getApplication().runWriteAction(() -> {
       ProjectJdkTable table = ProjectJdkTable.getInstance();
       List<Sdk> sdksOfType = table.getSdksOfType(ErlangSdkType.getInstance());

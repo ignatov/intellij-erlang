@@ -20,7 +20,7 @@ import com.intellij.application.options.ModulesComboBox;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.HideableTitledPanel;
-import com.intellij.ui.ListCellRendererWrapper;
+import com.intellij.ui.SimpleListCellRenderer;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
@@ -109,8 +109,8 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
     myErlangModulesField.setVisible(moduleTestSelected);
   }
 
-  private static ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> getTestKindListCellRendererWrapper() {
-    return new ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind>() {
+  private static SimpleListCellRenderer<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> getTestKindListCellRendererWrapper() {
+    return new SimpleListCellRenderer<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind>() {
       @Override
       public void customize(JList list, ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind, int index, boolean selected, boolean hasFocus) {
         if (kind != null) {

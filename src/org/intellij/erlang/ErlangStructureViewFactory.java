@@ -30,6 +30,7 @@ import com.intellij.psi.PsiNamedElement;
 import com.intellij.ui.RowIcon;
 import com.intellij.util.PlatformIcons;
 import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.icons.ErlangIconProvider;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.*;
@@ -205,7 +206,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   }
 
   private static TreeElement[] elementsArray(List<? extends PsiElement>... psiLists) {
-    List<TreeElement> elements = ContainerUtil.newArrayList();
+    List<TreeElement> elements = new SmartList<>();
     for (List<? extends PsiElement> psis : psiLists) {
       for (PsiElement psi : psis) {
         elements.add(new Element(psi));

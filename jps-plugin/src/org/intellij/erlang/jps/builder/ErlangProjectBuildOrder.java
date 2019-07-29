@@ -16,18 +16,18 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Tag;
+import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Tag("dependenciesTree")
 public class ErlangProjectBuildOrder {
   @Tag("files")
-  @AbstractCollection(surroundWithTag = false, elementTag = "file")
-  public List<ErlangFileDescriptor> myErlangFiles = ContainerUtil.newArrayList();
+  @XCollection(elementName = "files")
+  public List<ErlangFileDescriptor> myErlangFiles = new ArrayList<>();
 
   @SuppressWarnings("unused") // reflection
   public ErlangProjectBuildOrder() {

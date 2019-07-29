@@ -17,6 +17,7 @@
 package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageManagerImpl;
 import com.intellij.testFramework.UsefulTestCase;
@@ -35,6 +36,8 @@ import java.util.Collection;
 import java.util.List;
 
 abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  private Module myModule;
+
   protected ErlangCompletionTestBase(boolean isSmallIde) {
     super(isSmallIde);
   }

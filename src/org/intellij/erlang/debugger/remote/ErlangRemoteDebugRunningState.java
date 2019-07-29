@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.List;
 
 public class ErlangRemoteDebugRunningState extends ErlangRunningState {
@@ -85,11 +86,11 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
   @NotNull
   private List<String> getNodeNameArgs() {
     if (myConfiguration.isUseShortNames()) {
-      return ContainerUtil.list("-sname", getNodeName());
+      return Arrays.asList("-sname", getNodeName());
     }
     String host = StringUtil.nullize(myConfiguration.getHost(), true);
     String qualifiedName = getNodeName() + "@" + (host == null ? getDefaultHost() : host);
-    return ContainerUtil.list("-name", qualifiedName);
+    return Arrays.asList("-name", qualifiedName);
   }
 
   @NotNull

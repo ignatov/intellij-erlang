@@ -24,6 +24,7 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testIntegration.TestFinder;
 import com.intellij.util.containers.ContainerUtil;
+import gnu.trove.THashSet;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +47,7 @@ public class ErlangTestFinder implements TestFinder {
   public Collection<PsiElement> findTestsForClass(@NotNull PsiElement element) {
     VirtualFile virtualFile = getVirtualFile(element);
     if (virtualFile == null) return ContainerUtil.emptyList();
-    Collection<PsiElement> result = ContainerUtil.newTroveSet();
+    Collection<PsiElement> result = new THashSet<>();
     Project project = element.getProject();
     for (String suffix : SUFFIXES) {
       Collections.addAll(result, FilenameIndex.getFilesByName(project, virtualFile.getNameWithoutExtension() + suffix + EXT, getScope(project)));
@@ -59,7 +60,7 @@ public class ErlangTestFinder implements TestFinder {
   public Collection<PsiElement> findClassesForTest(@NotNull PsiElement element) {
     VirtualFile virtualFile = getVirtualFile(element);
     if (virtualFile == null) return ContainerUtil.emptyList();
-    Collection<PsiElement> result = ContainerUtil.newTroveSet();
+    Collection<PsiElement> result = new THashSet<>();
     Project project = element.getProject();
     String name = virtualFile.getNameWithoutExtension();
     int length = name.length();

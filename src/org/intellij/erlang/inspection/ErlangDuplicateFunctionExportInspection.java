@@ -18,19 +18,19 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangRemoveDuplicateFunctionExportFix;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class ErlangDuplicateFunctionExportInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
-    Set<String> exported = ContainerUtil.newHashSet();
+    Set<String> exported = new HashSet<>();
     for (ErlangAttribute attribute : file.getAttributes()) {
       ErlangExport export = attribute.getExport();
       ErlangExportFunctions exportFunctions = export != null ? export.getExportFunctions() : null;

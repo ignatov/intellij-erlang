@@ -34,8 +34,8 @@ import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.testFramework.JavaModuleTestCase;
 import com.intellij.testFramework.MapDataContext;
-import com.intellij.testFramework.ModuleTestCase;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.ArrayUtil;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationProducer;
@@ -46,12 +46,14 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 
-public class ErlangDebuggableRunConfigurationProducerTest extends ModuleTestCase {
+public class ErlangDebuggableRunConfigurationProducerTest extends JavaModuleTestCase {
+  @NotNull
   @Override
   protected ModuleType getModuleType() {
     return ErlangModuleType.getInstance();
   }
 
+  @NotNull
   @Override
   protected String getTestDirectoryName() {
     return "testData/runconfig/debuggableConfigurationProducer/";

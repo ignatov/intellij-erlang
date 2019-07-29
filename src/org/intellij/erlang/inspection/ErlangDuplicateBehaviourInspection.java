@@ -22,13 +22,13 @@ import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangBehaviour;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class ErlangDuplicateBehaviourInspection extends ErlangInspectionBase {
@@ -39,8 +39,8 @@ public class ErlangDuplicateBehaviourInspection extends ErlangInspectionBase {
     ErlangModule module = file.getModule();
     if (module == null) return;
 
-    Set<String> distinctBehaviourNames = ContainerUtil.newHashSet();
-    Set<String> behaviourDuplicates = ContainerUtil.newHashSet();
+    Set<String> distinctBehaviourNames = new HashSet<>();
+    Set<String> behaviourDuplicates = new HashSet<>();
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       String name = behaviour.getName();
       if (!distinctBehaviourNames.add(name)) {
@@ -68,7 +68,7 @@ public class ErlangDuplicateBehaviourInspection extends ErlangInspectionBase {
       ErlangFile file = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangFile.class);
       if (file == null) return;
 
-      Set<String> distinctBehaviourNames = ContainerUtil.newHashSet();
+      Set<String> distinctBehaviourNames = new HashSet<>();
       for (ErlangBehaviour behaviour : file.getBehaviours()) {
         if (!distinctBehaviourNames.add(behaviour.getName())) {
           PsiElement element = PsiTreeUtil.getParentOfType(behaviour, ErlangAttribute.class);
