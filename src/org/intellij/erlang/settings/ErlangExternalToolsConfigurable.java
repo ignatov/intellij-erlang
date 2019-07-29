@@ -16,6 +16,9 @@
 
 package org.intellij.erlang.settings;
 
+import com.intellij.openapi.application.Application;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.SearchableConfigurable;
@@ -25,6 +28,7 @@ import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.TitledSeparator;
 import org.intellij.erlang.dialyzer.DialyzerSettings;
 import org.intellij.erlang.emacs.EmacsSettings;
@@ -39,6 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
 import java.io.File;
 
 public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
@@ -88,12 +93,19 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
         myEmacsSettings.setEmacsPath(suggestedPath);
       }
     }
-    
+
     if (!ErlangSystemUtil.isSmallIde()) {
       mySdkPathSelector.setVisible(false);
       mySdkTitledSeparator.setVisible(false);
       mySdkPathLabel.setVisible(false);
     }
+
+    myEmacsPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
+      @Override
+      protected void textChanged(@NotNull DocumentEvent e) {
+        validateEmacsPath();
+      }
+    });
 
     reset();
   }
@@ -131,8 +143,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   @Override
   public boolean isModified() {
     String emacsSelectedPath = myEmacsPathSelector.getText();
-    if (!myPrevEmacsPath.equals(emacsSelectedPath)) validateEmacsPath();
-
     return
          !myRebarSettings.getRebarPath().equals(myRebarConfigurationForm.getPath())
       || !myEmacsSettings.getEmacsPath().equals(emacsSelectedPath)
@@ -164,7 +174,11 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   }
 
   private void validateEmacsPath() {
-    String rawVersion = ExtProcessUtil.execAndGetFirstLine(3000, myEmacsPathSelector.getText(), "--version").getStdOut();
-    myEmacsVersionText.setText(StringUtil.containsIgnoreCase(rawVersion, "emacs") ? rawVersion : "N/A");
+    Application application = ApplicationManager.getApplication();
+    application.executeOnPooledThread(() -> {
+      String rawVersion = ExtProcessUtil.execAndGetFirstLine(3000, myEmacsPathSelector.getText(), "--version").getStdOut();
+      application.invokeLater(
+        () -> myEmacsVersionText.setText(StringUtil.containsIgnoreCase(rawVersion, "emacs") ? rawVersion : "N/A"), ModalityState.any());
+    });
   }
 }
