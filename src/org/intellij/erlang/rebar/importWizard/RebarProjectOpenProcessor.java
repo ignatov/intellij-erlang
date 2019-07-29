@@ -20,15 +20,13 @@ import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectOpenProcessorBase;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 
 public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarProjectImportBuilder> {
-  public RebarProjectOpenProcessor(@NotNull RebarProjectImportBuilder builder) {
-    super(builder);
+  public RebarProjectOpenProcessor() {
+    super();
   }
-
-  @Nullable
+  @NotNull
   public String[] getSupportedExtensions() {
     return new String[] {"rebar.config"};
   }

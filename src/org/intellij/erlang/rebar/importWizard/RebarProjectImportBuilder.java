@@ -218,7 +218,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
                              @Nullable ModifiableModuleModel moduleModel,
                              @NotNull ModulesProvider modulesProvider,
                              @Nullable ModifiableArtifactModel modifiableArtifactModel) {
-    Set<String> selectedAppNames = ContainerUtil.newHashSet();
+    Set<String> selectedAppNames = new HashSet<>();
     for (ImportedOtpApp importedOtpApp : mySelectedOtpApps) {
       selectedAppNames.add(importedOtpApp.getName());
     }
@@ -437,7 +437,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
                                                @NotNull ImportedOtpApp importedOtpApp,
                                                @Nullable Sdk projectSdk,
                                                @NotNull Set<String> allImportedAppNames) {
-    HashSet<String> unresolvedAppNames = ContainerUtil.newHashSet();
+    HashSet<String> unresolvedAppNames = new HashSet<>();
     for (String depAppName : importedOtpApp.getDeps()) {
       if (allImportedAppNames.contains(depAppName)) {
         rootModel.addInvalidModuleEntry(depAppName);

@@ -33,6 +33,7 @@ import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.types.ErlangExpressionType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -104,7 +105,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
 
   private static ErlangExpressionType computeReturnType(ErlangFunction function) {
     List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
-    List<ErlangExpression> lastExpressions = ContainerUtil.newArrayListWithCapacity(clauses.size());
+    List<ErlangExpression> lastExpressions = new ArrayList<>(clauses.size());
     for (ErlangFunctionClause clause : clauses) {
       ErlangClauseBody clauseBody = clause.getClauseBody();
       if (clauseBody != null) {
@@ -122,7 +123,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
 
   private static List<ErlangExpression> getArgumentPatterns(ErlangFunction function, int argumentIdx) {
     List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
-    List<ErlangExpression> argumentPatterns = ContainerUtil.newArrayListWithCapacity(clauses.size());
+    List<ErlangExpression> argumentPatterns = new ArrayList<>(clauses.size());
     for (ErlangFunctionClause clause : clauses) {
       ErlangArgumentDefinitionList argDefList = clause.getArgumentDefinitionList();
       List<ErlangArgumentDefinition> clauseArgs = argDefList.getArgumentDefinitionList();

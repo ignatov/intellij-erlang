@@ -22,6 +22,7 @@ import com.intellij.util.ArrayUtilRt;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -210,7 +211,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testAppFileKeywordsAreDistinct() {
-    Set<String> set = ContainerUtil.newHashSet(ErlangAppCompletionContributor.KEYWORDS);
+    Set<String> set = new HashSet<>(ErlangAppCompletionContributor.KEYWORDS);
     assertEquals(set.size(), ErlangAppCompletionContributor.KEYWORDS.size());
   }
 

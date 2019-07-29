@@ -29,15 +29,16 @@ import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 final class ImportedOtpApp {
   private final String myName;
   private final VirtualFile myRoot;
-  private final Set<String> myDeps = ContainerUtil.newHashSet();
-  private final Set<VirtualFile> myIncludePaths = ContainerUtil.newHashSet();
-  private final Set<String> myParseTransforms = ContainerUtil.newHashSet();
+  private final Set<String> myDeps = new HashSet<>();
+  private final Set<VirtualFile> myIncludePaths = new HashSet<>();
+  private final Set<String> myParseTransforms = new HashSet<>();
   private VirtualFile myIdeaModuleFile;
   private Module myModule;
 

@@ -42,6 +42,7 @@ import com.intellij.refactoring.RefactoringActionHandler;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
@@ -136,7 +137,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     if (e == null) return Collections.emptyList();
     if (e.getTextRange().getStartOffset() < first.getTextRange().getStartOffset()) return Collections.emptyList();
 
-    List<ErlangExpression> res = ContainerUtil.newArrayList();
+    List<ErlangExpression> res = new SmartList<>();
     for (PsiElement i = e; i != null && i.getTextOffset() <= second.getTextOffset(); i = i.getNextSibling()) {
       if (i instanceof ErlangExpression) res.add((ErlangExpression) i);
     }
@@ -245,7 +246,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
   @NotNull
   private static Set<ErlangNamedElement> getSimpleDeclarations(@NotNull List<? extends PsiElement> children) {
-    final Set<ErlangNamedElement> result = ContainerUtil.newLinkedHashSet();
+    final Set<ErlangNamedElement> result = new LinkedHashSet<>();
     for (PsiElement child : children) {
       child.accept(new ErlangRecursiveVisitor() {
         @Override
@@ -258,7 +259,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   }
 
   private static class RefVisitor extends PsiRecursiveElementVisitor {
-    private final LinkedHashSet<ErlangNamedElement> myComponentNames = ContainerUtil.newLinkedHashSet();
+    private final LinkedHashSet<ErlangNamedElement> myComponentNames = new LinkedHashSet<>();
 
     @NotNull
     public Collection<ErlangNamedElement> getComponentNames() {

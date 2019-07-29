@@ -52,6 +52,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangStringLiteralEscaper;
 import org.intellij.erlang.ErlangTypes;
@@ -156,8 +157,8 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
-    List<ErlangTypedExpr> result = ContainerUtil.newArrayListWithCapacity(0);
-    List<ErlangQAtom> atoms = ContainerUtil.newArrayListWithCapacity(0);
+    List<ErlangTypedExpr> result = new ArrayList<>(0);
+    List<ErlangQAtom> atoms = new ArrayList<>(0);
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
@@ -535,8 +536,8 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<LookupElement> getFunctionLookupElements(@NotNull PsiFile containingFile, boolean withArity, @Nullable ErlangQAtom moduleAtom) {
     if (containingFile instanceof ErlangFile && !ErlangParserUtil.isApplicationConfigFileType(containingFile)) {
-      List<ErlangFunction> functions = ContainerUtil.newArrayList();
-      List<LookupElement> lookupElements = ContainerUtil.newArrayList();
+      List<ErlangFunction> functions = new SmartList<>();
+      List<LookupElement> lookupElements = new SmartList<>();
 
       ErlangSdkRelease release = ErlangSdkType.getRelease(containingFile);
       if (moduleAtom != null) {
@@ -585,7 +586,7 @@ public class ErlangPsiImplUtil {
   public static Collection<LookupElement> getAllExportedFunctionsWithModuleLookupElements(@NotNull Project project,
                                                                                           boolean withArity,
                                                                                           @Nullable String exclude) {
-    List<LookupElement> lookupElements = ContainerUtil.newArrayList();
+    List<LookupElement> lookupElements = new SmartList<>();
     for (String moduleName : ErlangModuleIndex.getNames(project)) {
       if (moduleName.equals(exclude)) continue;
       for (ErlangFunction function : getExternalFunctionForCompletion(project, moduleName)) {
@@ -689,7 +690,7 @@ public class ErlangPsiImplUtil {
       List<LookupElement> fromFile = ContainerUtil.map(
         concat,
         md -> LookupElementBuilder.create(md).withIcon(ErlangIcons.MACROS));
-      List<LookupElement> stdMacros = ContainerUtil.newArrayList();
+      List<LookupElement> stdMacros = new SmartList<>();
       for (String m : KNOWN_MACROS) {
         stdMacros.add(LookupElementBuilder.create(m).withIcon(ErlangIcons.MACROS));
       }
@@ -1061,7 +1062,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static List<ErlangFile> getDirectlyIncludedFiles(@NotNull ErlangFile erlangFile) {
-    List<ErlangFile> files = ContainerUtil.newArrayList();
+    List<ErlangFile> files = new SmartList<>();
     for (ErlangInclude include : erlangFile.getIncludes()) {
       files.addAll(getDirectlyIncludedFiles(include, erlangFile));
     }
@@ -1196,7 +1197,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangRecordDefinition> getErlangRecordFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, String name) {
-    List<ErlangRecordDefinition> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangRecordDefinition> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getRecord(name));
@@ -1210,7 +1211,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangFunction> getErlangFunctionsFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name, int arity) {
-    List<ErlangFunction> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangFunction> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getFunction(name, arity));
@@ -1224,7 +1225,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangImportFunction> getImportsFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name, int arity) {
-    List<ErlangImportFunction> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangImportFunction> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getImportedFunction(name, arity));
@@ -1240,7 +1241,7 @@ public class ErlangPsiImplUtil {
   static List<ErlangMacrosDefinition> getErlangMacrosFromIncludes(@NotNull ErlangFile containingFile,
                                                                   boolean forCompletion,
                                                                   @NotNull String name) {
-    List<ErlangMacrosDefinition> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangMacrosDefinition> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getMacros(name));
@@ -1254,7 +1255,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static List<ErlangTypeDefinition> getErlangTypeFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name) {
-    List<ErlangTypeDefinition> fromIncludes = ContainerUtil.newArrayList();
+    List<ErlangTypeDefinition> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
         ContainerUtil.addIfNotNull(fromIncludes, file.getType(name));
@@ -1407,7 +1408,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   private static List<ErlangFunction> getExternalFunctionForCompletion(@NotNull Project project,
                                                                        @NotNull String moduleName) {
-    List<ErlangFunction> result = ContainerUtil.newArrayList();
+    List<ErlangFunction> result = new SmartList<>();
     List<ErlangFile> erlangModules = ErlangModuleIndex.getFilesByName(project, moduleName, GlobalSearchScope.allScope(project));
     for (ErlangFile file : erlangModules) {
       result.addAll(file.getExportedFunctions());

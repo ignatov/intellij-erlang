@@ -66,7 +66,7 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
   }
 
   @Override
-  public EditorNotificationPanel createNotificationPanel(@NotNull VirtualFile file, @NotNull FileEditor fileEditor) {
+  public EditorNotificationPanel createNotificationPanel(@NotNull VirtualFile file, @NotNull FileEditor fileEditor, @NotNull Project project) {
     if (ApplicationManager.getApplication().isUnitTestMode()) return null;
     if (!(file.getFileType() instanceof ErlangFileType)) return null;
 

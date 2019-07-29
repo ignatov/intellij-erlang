@@ -64,10 +64,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.URL;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
@@ -219,7 +216,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       erlangModules = erlangTestModules;
     }
     Set<String> notToInterpret = runConfiguration.getDebugOptions().getModulesNotToInterpret();
-    List<String> moduleSourcePaths = ContainerUtil.newArrayListWithCapacity(erlangModules.size());
+    List<String> moduleSourcePaths = new ArrayList<>(erlangModules.size());
     for (ErlangFile erlangModule : erlangModules) {
       VirtualFile file = erlangModule.getVirtualFile();
       if (file != null && !notToInterpret.contains(file.getNameWithoutExtension())) {

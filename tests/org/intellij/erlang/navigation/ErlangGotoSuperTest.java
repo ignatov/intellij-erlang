@@ -20,7 +20,7 @@ import com.intellij.codeInsight.CodeInsightActionHandler;
 import com.intellij.lang.CodeInsightActions;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.testFramework.fixtures.LightPlatformCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangCallbackSpec;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -28,7 +28,7 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 
 import java.util.List;
 
-public class ErlangGotoSuperTest extends LightPlatformCodeInsightFixtureTestCase {
+public class ErlangGotoSuperTest extends BasePlatformTestCase {
   @Override
   protected String getTestDataPath() {
     return "testData/navigation/goto_super/";

@@ -113,7 +113,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
   private static Set<String> getAllDirtyFiles(@NotNull ErlangProjectBuildOrder projectBuildOrder,
                                               @NotNull List<String> dirtyFiles) {
     Graph<String> dependencies = GraphGenerator.create(new SortedModuleDependencyGraph(projectBuildOrder));
-    Set<String> allDirtyFiles = ContainerUtil.newHashSet();
+    Set<String> allDirtyFiles = new HashSet<>();
     for (String dirtyFile : dirtyFiles) {
       collectDirtyFiles(dirtyFile, dependencies, allDirtyFiles);
     }
@@ -171,7 +171,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
   }
 
   private static class SortedModuleDependencyGraph implements GraphGenerator.SemiGraph<String> {
-    private final LinkedHashMap<String, List<String>> myPathsToDependenciesMap = ContainerUtil.newLinkedHashMap();
+    private final LinkedHashMap<String, List<String>> myPathsToDependenciesMap = new LinkedHashMap<>();
 
     public SortedModuleDependencyGraph(@NotNull ErlangProjectBuildOrder projectBuildOrder) {
       for (ErlangFileDescriptor node : projectBuildOrder.myErlangFiles) {

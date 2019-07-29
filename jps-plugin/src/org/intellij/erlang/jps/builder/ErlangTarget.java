@@ -17,6 +17,7 @@
 package org.intellij.erlang.jps.builder;
 
 import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.jps.model.JpsErlangModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +51,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   @Override
   public Collection<BuildTarget<?>> computeDependencies(BuildTargetRegistry targetRegistry,
                                                         TargetOutputIndex outputIndex) {
-    List<BuildTarget<?>> dependencies = ContainerUtil.newArrayList();
+    List<BuildTarget<?>> dependencies = new SmartList<>();
     Set<JpsModule> modules = getDependenciesModules();
     for (JpsModule module : modules) {
       if (module.getModuleType().equals(JpsErlangModuleType.INSTANCE)) {
@@ -72,7 +73,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
                                                                  ModuleExcludeIndex index,
                                                                  IgnoredFileIndex ignoredFileIndex,
                                                                  BuildDataPaths dataPaths) {
-    List<ErlangSourceRootDescriptor> result = ContainerUtil.newArrayList();
+    List<ErlangSourceRootDescriptor> result = new SmartList<>();
     ErlangTargetBuilderUtil.addRootDescriptors(this, myModule, result);
     return result;
   }

@@ -25,7 +25,7 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
-import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.*;
@@ -36,6 +36,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,7 +62,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
         }
 
         if (!(position.getParent() instanceof ErlangRecordExpression)) {
-          Collection<String> vars = ContainerUtil.newHashSet();
+          Collection<String> vars = new HashSet<>();
 
           //noinspection unchecked
           PsiElement scopeOwner = PsiTreeUtil.getParentOfType(position,
@@ -91,7 +92,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
         Set<ErlangExpressionType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
         if (expectedTypes.isEmpty()) return;
 
-        Collection<ErlangQVar> vars = ContainerUtil.newHashSet();
+        Collection<ErlangQVar> vars = new HashSet<>();
         ErlangFunctionClause clause = PsiTreeUtil.getParentOfType(position, ErlangFunctionClause.class);
         ResolveUtil.treeWalkUp(position, new MyBaseScopeProcessor(vars, position, clause));
 
@@ -136,7 +137,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
 
     @SuppressWarnings("NullableProblems")
     private MyBaseScopeProcessor(@NotNull Collection<ErlangQVar> result, @NotNull PsiElement element, @Nullable PsiElement scopeOwner) {
-      this(ContainerUtil.newArrayList(), element, scopeOwner, true);
+      this(new SmartList<>(), element, scopeOwner, true);
       myVars = result;
     }
 

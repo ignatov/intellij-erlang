@@ -35,6 +35,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.popup.HintUpdateSupply;
 import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -43,12 +44,13 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPsiElement {
   private static final int MAX_EXPORT_STRING_LENGTH = 80;
-  private final Set<RangeHighlighter> myExportHighlighters = ContainerUtil.newHashSet();
+  private final Set<RangeHighlighter> myExportHighlighters = new HashSet<>();
 
   public ErlangExportFunctionFix(ErlangFunction function) {
     super(function);
@@ -169,7 +171,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   @NotNull
   public static List<ErlangExport> getExportPsiElements(@NotNull ErlangFile file) {
-    List<ErlangExport> exports = ContainerUtil.newArrayList(); // todo: mode to erlang file
+    List<ErlangExport> exports = new SmartList<>(); // todo: mode to erlang file
     for (ErlangAttribute attribute : file.getAttributes()) {
       if (attribute.getExport() != null) {
         exports.add(attribute.getExport());

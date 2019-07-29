@@ -17,13 +17,15 @@
 package org.intellij.erlang.compilation;
 
 import com.intellij.openapi.compiler.CompilerManager;
-import com.intellij.openapi.components.AbstractProjectComponent;
+import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupManager;
 
-public class ErlangDependenciesManager extends AbstractProjectComponent {
-  protected ErlangDependenciesManager(Project project) {
-    super(project);
+public class ErlangDependenciesManager implements ProjectComponent {
+  protected final Project myProject;
+
+  public ErlangDependenciesManager(Project project) {
+    myProject = project;
   }
 
   @Override

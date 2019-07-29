@@ -25,6 +25,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
+import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
@@ -49,7 +50,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
       ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviourRef);
       if (behaviourModule == null) continue;
 
-      List<ErlangCallbackSpec> undefinedCallbacks = ContainerUtil.newArrayList();
+      List<ErlangCallbackSpec> undefinedCallbacks = new SmartList<>();
       Map<String, ErlangCallbackSpec> callbackMap = behaviourModule.getCallbackMap();
       for (ErlangCallbackSpec spec : callbackMap.values()) {
         if (supportOptionalCallbacks && spec.isOptional()) continue;

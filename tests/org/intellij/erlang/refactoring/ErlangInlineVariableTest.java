@@ -17,10 +17,10 @@
 package org.intellij.erlang.refactoring;
 
 import com.intellij.psi.PsiElement;
-import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.intellij.erlang.psi.ErlangQVar;
 
-public class ErlangInlineVariableTest extends LightCodeInsightFixtureTestCase {
+public class ErlangInlineVariableTest extends BasePlatformTestCase {
   public void testSimple()                             { doTest(); }
   public void testFunExpression()                      { doTest(); }
   public void testLowPrecedence()                      { doTest(); }
