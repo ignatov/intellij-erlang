@@ -55,9 +55,7 @@ public class ErlangEnterInCommentsHandler extends EnterHandlerDelegateAdapter {
     PsiElement elementAtCaret = file.findElementAt(caret);
     ASTNode nodeAtCaret = elementAtCaret != null ? elementAtCaret.getNode() : null;
     IElementType type = nodeAtCaret != null ? nodeAtCaret.getElementType() : null;
-    if (type == null ||
-        !ErlangParserDefinition.COMMENTS.contains(type) ||
-        ErlangParserDefinition.ERL_SHEBANG == type) {
+    if (!ErlangParserDefinition.COMMENTS.contains(type) || ErlangParserDefinition.ERL_SHEBANG == type) {
       return Result.Continue;
     }
 

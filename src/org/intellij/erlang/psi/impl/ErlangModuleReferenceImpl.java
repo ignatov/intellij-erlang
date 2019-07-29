@@ -72,15 +72,14 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   }
 
   private final class ModuleResolutionComparator implements Comparator<ErlangModule> {
-    private final GlobalSearchScope myScope;
     private final VirtualFile myStdLibDir;
     private final VirtualFile myKernelLibDir;
     private final ProjectFileIndex myFileIndex;
 
     public ModuleResolutionComparator() {
-      myScope = getSearchScope();
-      myStdLibDir = ErlangApplicationIndex.getApplicationDirectoryByName("stdlib", myScope);
-      myKernelLibDir = ErlangApplicationIndex.getApplicationDirectoryByName("kernel", myScope);
+      GlobalSearchScope scope = getSearchScope();
+      myStdLibDir = ErlangApplicationIndex.getApplicationDirectoryByName("stdlib", scope);
+      myKernelLibDir = ErlangApplicationIndex.getApplicationDirectoryByName("kernel", scope);
       myFileIndex = ProjectRootManager.getInstance(myElement.getProject()).getFileIndex();
     }
 
