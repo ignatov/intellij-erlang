@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.ProjectTopics;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.module.Module;
@@ -25,8 +24,6 @@ import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectBundle;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootEvent;
-import com.intellij.openapi.roots.ModuleRootListener;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService;
 import com.intellij.openapi.util.Key;
@@ -42,22 +39,10 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-// todo: extract the common one
 public class SetupSDKNotificationProvider extends EditorNotifications.Provider<EditorNotificationPanel> {
   private static final Key<EditorNotificationPanel> KEY = Key.create("Setup Erlang SDK");
-
-  private final Project myProject;
-
-  public SetupSDKNotificationProvider(Project project, final EditorNotifications notifications) {
-    myProject = project;
-    myProject.getMessageBus().connect(project).subscribe(ProjectTopics.PROJECT_ROOTS, new ModuleRootListener() {
-      @Override
-      public void rootsChanged(ModuleRootEvent event) {
-        notifications.updateAllNotifications();
-      }
-    });
-  }
 
   @NotNull
   @Override
@@ -65,18 +50,21 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
     return KEY;
   }
 
+  @Nullable
   @Override
-  public EditorNotificationPanel createNotificationPanel(@NotNull VirtualFile file, @NotNull FileEditor fileEditor) {
+  public EditorNotificationPanel createNotificationPanel(@NotNull VirtualFile file,
+                                                         @NotNull FileEditor fileEditor,
+                                                         @NotNull Project project) {
     if (ApplicationManager.getApplication().isUnitTestMode()) return null;
     if (!(file.getFileType() instanceof ErlangFileType)) return null;
 
-    PsiFile psiFile = PsiManager.getInstance(myProject).findFile(file);
+    PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
     if (psiFile == null || psiFile.getLanguage() != ErlangLanguage.INSTANCE) return null;
 
     ErlangSdkRelease sdkRelease = ErlangSdkType.getRelease(psiFile);
     if (sdkRelease != null) return null;
 
-    return createPanel(myProject, psiFile);
+    return createPanel(project, psiFile);
   }
 
   @NotNull
