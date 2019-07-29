@@ -37,10 +37,10 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
   static {
     String fieldWidth =                 "(?:(\\*)|(?:-?\\d+))?";
     String precision =                  "(?:\\.(?:(\\*)|(?:\\d+))?)";
-    String oneOfErlangEscapeSequences = "(?:\\\\(?:[bdefnrstv'\"\\\\]|(?:[0-7]{1,3})|(?:x[0-9a-fA-F]{2})|(?:x\\{[0-9a-fA-F]+\\})|(?:\\^[a-zA-Z])))";
+    String oneOfErlangEscapeSequences = "(?:\\\\(?:[bdefnrstv'\"\\\\]|(?:[0-7]{1,3})|(?:x[0-9a-fA-F]{2})|(?:x\\{[0-9a-fA-F]+})|(?:\\^[a-zA-Z])))";
     String paddingCharacter =           "(?:\\.(?:(\\*)|" + oneOfErlangEscapeSequences + "|.))?";
     String controlSequenceModifier =    "[tl]?";
-    String controlSequenceType =        "(?:([cfegswpWPBX#bx\\+i])|([~n]))";
+    String controlSequenceType =        "(?:([cfegswpWPBX#bx+i])|([~n]))";
     CONTROL_SEQUENCE_PATTERN = Pattern.compile("~" + fieldWidth + "(?:" + precision + paddingCharacter + ")?" + controlSequenceModifier + controlSequenceType);
   }
 
@@ -63,7 +63,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
         if (module == null || !MODULE_NAMES.contains(module.getName())) return;
 
         PsiReference ref = expression.getReference();
-        ErlangFunction function = ObjectUtils.tryCast(ref != null ? ref.resolve() : null, ErlangFunction.class);
+        ErlangFunction function = ObjectUtils.tryCast(ref.resolve(), ErlangFunction.class);
         if (function == null || !FUNCTION_NAMES.contains(function.getName())) return;
 
         List<ErlangExpression> reverse = ContainerUtil.reverse(expressionList);
