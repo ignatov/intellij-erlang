@@ -25,7 +25,7 @@ public interface ErlangSpecification extends ErlangNamedElement, StubBasedPsiEle
   String getName();
 
   @NotNull
-  PsiElement setName(String newName);
+  PsiElement setName(@NotNull String newName);
 
   int getArity();
 

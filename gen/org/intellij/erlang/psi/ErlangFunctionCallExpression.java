@@ -17,6 +17,9 @@ public interface ErlangFunctionCallExpression extends ErlangExpression {
   @NotNull
   PsiReference getReference();
 
+  @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
   @NotNull
   PsiElement getNameIdentifier();
 

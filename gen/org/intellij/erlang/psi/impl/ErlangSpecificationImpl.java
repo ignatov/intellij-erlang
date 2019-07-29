@@ -14,11 +14,11 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangSpecificationImpl extends ErlangNamedStubbedPsiElementBase<ErlangSpecificationStub> implements ErlangSpecification {
 
-  public ErlangSpecificationImpl(ErlangSpecificationStub stub, IStubElementType type) {
+  public ErlangSpecificationImpl(@NotNull ErlangSpecificationStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
-  public ErlangSpecificationImpl(ASTNode node) {
+  public ErlangSpecificationImpl(@NotNull ASTNode node) {
     super(node);
   }
 
@@ -43,26 +43,31 @@ public class ErlangSpecificationImpl extends ErlangNamedStubbedPsiElementBase<Er
     return PsiTreeUtil.getChildOfType(this, ErlangFunTypeSigsBraces.class);
   }
 
+  @Override
   @Nullable
   public ErlangFunTypeSigs getSignature() {
     return ErlangPsiImplUtil.getSignature(this);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
-  public PsiElement setName(String newName) {
+  public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   public int getArity() {
     return ErlangPsiImplUtil.getArity(this);
   }

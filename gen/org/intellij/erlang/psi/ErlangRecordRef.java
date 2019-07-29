@@ -11,6 +11,9 @@ public interface ErlangRecordRef extends ErlangCompositeElement {
   @NotNull
   ErlangQAtom getQAtom();
 
+  @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
   @NotNull
   PsiReference getReference();
 

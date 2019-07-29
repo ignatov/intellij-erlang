@@ -44,9 +44,16 @@ public class ErlangFunctionWithArityImpl extends ErlangCompositeElementImpl impl
     return findChildByType(ERL_INTEGER);
   }
 
+  @Override
   @Nullable
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
+  }
+
+  @Override
+  @Nullable
+  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+    return ErlangPsiImplUtil.getReference(this, o);
   }
 
 }

@@ -22,4 +22,7 @@ public interface ErlangCallbackFunction extends ErlangCompositeElement, StubBase
   @NotNull
   PsiReference getReference();
 
+  @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
 }

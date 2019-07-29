@@ -14,11 +14,11 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangMacrosDefinitionImpl extends ErlangNamedStubbedPsiElementBase<ErlangMacrosDefinitionStub> implements ErlangMacrosDefinition {
 
-  public ErlangMacrosDefinitionImpl(ErlangMacrosDefinitionStub stub, IStubElementType type) {
+  public ErlangMacrosDefinitionImpl(@NotNull ErlangMacrosDefinitionStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
-  public ErlangMacrosDefinitionImpl(ASTNode node) {
+  public ErlangMacrosDefinitionImpl(@NotNull ASTNode node) {
     super(node);
   }
 
@@ -73,21 +73,25 @@ public class ErlangMacrosDefinitionImpl extends ErlangNamedStubbedPsiElementBase
     return findChildByType(ERL_PAR_RIGHT);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
-  public PsiElement setName(String newName) {
+  public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   public int getTextOffset() {
     return ErlangPsiImplUtil.getTextOffset(this);
   }

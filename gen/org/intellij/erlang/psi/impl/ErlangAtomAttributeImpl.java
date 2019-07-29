@@ -55,6 +55,7 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
     return notNullChild(findChildByType(ERL_ATOM_NAME));
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);

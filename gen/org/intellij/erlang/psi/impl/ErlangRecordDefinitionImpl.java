@@ -14,11 +14,11 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangRecordDefinitionImpl extends ErlangNamedStubbedPsiElementBase<ErlangRecordDefinitionStub> implements ErlangRecordDefinition {
 
-  public ErlangRecordDefinitionImpl(ErlangRecordDefinitionStub stub, IStubElementType type) {
+  public ErlangRecordDefinitionImpl(@NotNull ErlangRecordDefinitionStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
-  public ErlangRecordDefinitionImpl(ASTNode node) {
+  public ErlangRecordDefinitionImpl(@NotNull ASTNode node) {
     super(node);
   }
 
@@ -67,21 +67,25 @@ public class ErlangRecordDefinitionImpl extends ErlangNamedStubbedPsiElementBase
     return findChildByType(ERL_PAR_RIGHT);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
-  public PsiElement setName(String newName) {
+  public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   public int getTextOffset() {
     return ErlangPsiImplUtil.getTextOffset(this);
   }

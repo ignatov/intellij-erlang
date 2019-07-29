@@ -433,7 +433,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  private static PsiReference getReference(@NotNull PsiElement owner, @Nullable ErlangMacrosName o) {
+  static PsiReference getReference(@NotNull PsiElement owner, @Nullable ErlangMacrosName o) {
     return o != null ? new ErlangMacrosReferenceImpl(owner, o) : null;
   }
 

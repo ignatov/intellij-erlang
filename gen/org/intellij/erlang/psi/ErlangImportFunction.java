@@ -20,4 +20,7 @@ public interface ErlangImportFunction extends ErlangCompositeElement {
   @NotNull
   PsiReference getReference();
 
+  @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
 }

@@ -35,30 +35,42 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
     return notNullChild(findChildByType(ERL_VAR));
   }
 
+  @Override
   @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 
-  public boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place) {
+  @Override
+  @Nullable
+  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+    return ErlangPsiImplUtil.getReference(this, o);
+  }
+
+  @Override
+  public boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
-  public PsiElement setName(String newName) {
+  public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   @NotNull
   public SearchScope getUseScope() {
     return ErlangPsiImplUtil.getUseScope(this);

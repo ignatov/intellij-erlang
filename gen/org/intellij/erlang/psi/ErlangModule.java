@@ -33,13 +33,13 @@ public interface ErlangModule extends ErlangNamedElement, StubBasedPsiElement<Er
   String getName();
 
   @NotNull
-  PsiElement setName(String newName);
+  PsiElement setName(@NotNull String newName);
 
   @NotNull
   PsiElement getNameIdentifier();
 
   int getTextOffset();
 
-  boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place);
+  boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place);
 
 }

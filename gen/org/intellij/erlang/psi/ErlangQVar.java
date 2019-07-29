@@ -17,13 +17,16 @@ public interface ErlangQVar extends ErlangNamedElement {
   @NotNull
   PsiReference getReference();
 
-  boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place);
+  @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
+  boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place);
 
   @NotNull
   String getName();
 
   @NotNull
-  PsiElement setName(String newName);
+  PsiElement setName(@NotNull String newName);
 
   @NotNull
   PsiElement getNameIdentifier();

@@ -21,6 +21,6 @@ public interface ErlangListComprehension extends ErlangExpression {
   @NotNull
   PsiElement getOrOr();
 
-  boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place);
+  boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place);
 
 }
