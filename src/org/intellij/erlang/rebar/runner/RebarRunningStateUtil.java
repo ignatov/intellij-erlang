@@ -18,7 +18,9 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.OSProcessHandler;
+import com.intellij.execution.process.ProcessOutput;
 import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
@@ -51,15 +53,8 @@ public class RebarRunningStateUtil {
   public static GeneralCommandLine getRebarCommandLine(@NotNull RebarRunConfigurationBase configuration) {
     Project project = configuration.getProject();
     RebarSettings rebarSettings = RebarSettings.getInstance(project);
-    String sdkPath = ErlangSdkType.getSdkPath(project);
-    String escriptPath = sdkPath != null ?
-      JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
-                         findEscriptExecutable();
-    GeneralCommandLine commandLine = new GeneralCommandLine();
 
-    commandLine.withWorkDirectory(getWorkingDirectory(configuration));
-    commandLine.setExePath(escriptPath);
-    commandLine.addParameter(rebarSettings.getRebarPath());
+    GeneralCommandLine commandLine = getRebarCommandLine(configuration, rebarSettings);
 
     List<String> split = ContainerUtil.list(configuration.getCommand().split("\\s+"));
     if (!rebarSettings.isRebar3() && configuration.isSkipDependencies() && !split.contains("skip_deps=true")) {
@@ -67,6 +62,52 @@ public class RebarRunningStateUtil {
     }
     commandLine.addParameters(split);
 
+    return commandLine;
+  }
+
+  @NotNull
+  private static GeneralCommandLine getRebarCommandLine(@NotNull RebarRunConfigurationBase configuration,
+                                                        RebarSettings rebarSettings) {
+    try {
+      GeneralCommandLine commandLine = getRebarCommandLineAsCmd(configuration, rebarSettings);
+      if (isRebarCommandLineValid(commandLine)) {
+        return commandLine;
+      }
+    }
+    catch (ExecutionException e) {
+    }
+    return getRebarCommandLineAsEscript(configuration, rebarSettings);
+  }
+
+  @NotNull
+  private static Boolean isRebarCommandLineValid(GeneralCommandLine commandLine) throws ExecutionException {
+    GeneralCommandLine commandLineCopy = new GeneralCommandLine(commandLine.getCommandLineList(null));
+    commandLineCopy.addParameter("--version");
+    CapturingProcessHandler handler = new CapturingProcessHandler(commandLineCopy);
+    ProcessOutput result = handler.runProcess(2000);
+    return result.getStdout().startsWith("rebar");
+  }
+
+  @NotNull
+  private static GeneralCommandLine getRebarCommandLineAsEscript(@NotNull RebarRunConfigurationBase configuration,
+                                                                 RebarSettings rebarSettings) {
+    Project project = configuration.getProject();
+    String sdkPath = ErlangSdkType.getSdkPath(project);
+    String escriptPath = sdkPath != null ?
+                         JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
+                         findEscriptExecutable();
+    GeneralCommandLine commandLine = getRebarCommandLineAsCmd(configuration, rebarSettings);
+    commandLine.setExePath(escriptPath);
+    commandLine.addParameter(rebarSettings.getRebarPath());
+    return commandLine;
+  }
+
+  @NotNull
+  private static GeneralCommandLine getRebarCommandLineAsCmd(@NotNull RebarRunConfigurationBase configuration,
+                                                             RebarSettings rebarSettings) {
+    GeneralCommandLine commandLine = new GeneralCommandLine();
+    commandLine.withWorkDirectory(getWorkingDirectory(configuration));
+    commandLine.setExePath(rebarSettings.getRebarPath());
     return commandLine;
   }
 
