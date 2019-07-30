@@ -6,6 +6,7 @@ import com.intellij.lang.PsiBuilder.Marker;
 import static org.intellij.erlang.ErlangTypes.*;
 import static org.intellij.erlang.parser.ErlangParserUtil.*;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.IFileElementType;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.lang.PsiParser;
@@ -23,320 +24,11 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     boolean r;
     b = adapt_builder_(t, b, this, EXTENDS_SETS_);
     Marker m = enter_section_(b, 0, _COLLAPSE_, null);
-    if (t == ERL_AFTER_CLAUSE_BODY) {
-      r = after_clause_body(b, 0);
-    }
-    else if (t == ERL_ARGUMENT_DEFINITION) {
-      r = argument_definition(b, 0);
-    }
-    else if (t == ERL_ARGUMENT_DEFINITION_LIST) {
-      r = argument_definition_list(b, 0);
-    }
-    else if (t == ERL_ARGUMENT_LIST) {
-      r = argument_list(b, 0);
-    }
-    else if (t == ERL_ATOM) {
-      r = atom(b, 0);
-    }
-    else if (t == ERL_ATOM_ATTRIBUTE) {
-      r = atom_attribute(b, 0);
-    }
-    else if (t == ERL_ATTR_VAL) {
-      r = attr_val(b, 0);
-    }
-    else if (t == ERL_ATTRIBUTE) {
-      r = attribute(b, 0);
-    }
-    else if (t == ERL_BEGIN_END_BODY) {
-      r = begin_end_body(b, 0);
-    }
-    else if (t == ERL_BEGIN_END_EXPRESSION) {
-      r = begin_end_expression(b, 0);
-    }
-    else if (t == ERL_BEHAVIOUR) {
-      r = behaviour(b, 0);
-    }
-    else if (t == ERL_BIN_BASE_TYPE) {
-      r = bin_base_type(b, 0);
-    }
-    else if (t == ERL_BIN_ELEMENT) {
-      r = bin_element(b, 0);
-    }
-    else if (t == ERL_BIN_UNIT_TYPE) {
-      r = bin_unit_type(b, 0);
-    }
-    else if (t == ERL_BINARY_EXPRESSION) {
-      r = binary_expression(b, 0);
-    }
-    else if (t == ERL_BINARY_TYPE) {
-      r = binary_type(b, 0);
-    }
-    else if (t == ERL_BIT_TYPE) {
-      r = bit_type(b, 0);
-    }
-    else if (t == ERL_CALLBACK_FUNCTION) {
-      r = callback_function(b, 0);
-    }
-    else if (t == ERL_CALLBACK_SPEC) {
-      r = callback_spec(b, 0);
-    }
-    else if (t == ERL_CASE_EXPRESSION) {
-      r = case_expression(b, 0);
-    }
-    else if (t == ERL_CLAUSE_BODY) {
-      r = clause_body(b, 0);
-    }
-    else if (t == ERL_CLAUSE_GUARD) {
-      r = clause_guard(b, 0);
-    }
-    else if (t == ERL_CONFIG_CALL_EXPRESSION) {
-      r = config_call_expression(b, 0);
-    }
-    else if (t == ERL_CONFIG_EXPRESSION) {
-      r = config_expression(b, 0);
-    }
-    else if (t == ERL_CR_CLAUSE) {
-      r = cr_clause(b, 0);
-    }
-    else if (t == ERL_EXPORT) {
-      r = export(b, 0);
-    }
-    else if (t == ERL_EXPORT_FUNCTION) {
-      r = export_function(b, 0);
-    }
-    else if (t == ERL_EXPORT_FUNCTIONS) {
-      r = export_functions(b, 0);
-    }
-    else if (t == ERL_EXPORT_TYPE) {
-      r = export_type(b, 0);
-    }
-    else if (t == ERL_EXPORT_TYPE_ATTRIBUTE) {
-      r = export_type_attribute(b, 0);
-    }
-    else if (t == ERL_EXPORT_TYPES) {
-      r = export_types(b, 0);
-    }
-    else if (t == ERL_EXPRESSION) {
-      r = expression(b, 0, -1);
-    }
-    else if (t == ERL_FIELD_TYPE) {
-      r = field_type(b, 0);
-    }
-    else if (t == ERL_FUN_CLAUSE) {
-      r = fun_clause(b, 0);
-    }
-    else if (t == ERL_FUN_CLAUSES) {
-      r = fun_clauses(b, 0);
-    }
-    else if (t == ERL_FUN_EXPRESSION) {
-      r = fun_expression(b, 0);
-    }
-    else if (t == ERL_FUN_TYPE) {
-      r = fun_type(b, 0);
-    }
-    else if (t == ERL_FUN_TYPE_100_T) {
-      r = fun_type_100_t(b, 0);
-    }
-    else if (t == ERL_FUN_TYPE_ARGUMENTS) {
-      r = fun_type_arguments(b, 0);
-    }
-    else if (t == ERL_FUN_TYPE_SIGS) {
-      r = fun_type_sigs(b, 0);
-    }
-    else if (t == ERL_FUN_TYPE_SIGS_BRACES) {
-      r = fun_type_sigs_braces(b, 0);
-    }
-    else if (t == ERL_FUNCTION) {
-      r = function(b, 0);
-    }
-    else if (t == ERL_FUNCTION_CLAUSE) {
-      r = function_clause(b, 0);
-    }
-    else if (t == ERL_FUNCTION_WITH_ARITY) {
-      r = function_with_arity(b, 0);
-    }
-    else if (t == ERL_FUNCTION_WITH_ARITY_VARIABLES) {
-      r = function_with_arity_variables(b, 0);
-    }
-    else if (t == ERL_GUARD) {
-      r = guard(b, 0);
-    }
-    else if (t == ERL_IF_CLAUSE) {
-      r = if_clause(b, 0);
-    }
-    else if (t == ERL_IF_EXPRESSION) {
-      r = if_expression(b, 0);
-    }
-    else if (t == ERL_IMPORT_DIRECTIVE) {
-      r = import_directive(b, 0);
-    }
-    else if (t == ERL_IMPORT_FUNCTION) {
-      r = import_function(b, 0);
-    }
-    else if (t == ERL_IMPORT_FUNCTIONS) {
-      r = import_functions(b, 0);
-    }
-    else if (t == ERL_INCLUDE) {
-      r = include(b, 0);
-    }
-    else if (t == ERL_INCLUDE_LIB) {
-      r = include_lib(b, 0);
-    }
-    else if (t == ERL_INCLUDE_STRING) {
-      r = include_string(b, 0);
-    }
-    else if (t == ERL_INT_TYPE) {
-      r = int_type(b, 0);
-    }
-    else if (t == ERL_LC_EXPRESSION) {
-      r = lc_expression(b, 0);
-    }
-    else if (t == ERL_LIST_COMPREHENSION) {
-      r = list_comprehension(b, 0);
-    }
-    else if (t == ERL_LIST_EXPRESSION) {
-      r = list_expression(b, 0);
-    }
-    else if (t == ERL_MACROS) {
-      r = macros(b, 0);
-    }
-    else if (t == ERL_MACROS_ARG) {
-      r = macros_arg(b, 0);
-    }
-    else if (t == ERL_MACROS_BODY) {
-      r = macros_body(b, 0);
-    }
-    else if (t == ERL_MACROS_CALL) {
-      r = macros_call(b, 0);
-    }
-    else if (t == ERL_MACROS_DEFINITION) {
-      r = macros_definition(b, 0);
-    }
-    else if (t == ERL_MACROS_NAME) {
-      r = macros_name(b, 0);
-    }
-    else if (t == ERL_MAP_ENTRY) {
-      r = map_entry(b, 0);
-    }
-    else if (t == ERL_MAP_ENTRY_TYPE) {
-      r = map_entry_type(b, 0);
-    }
-    else if (t == ERL_MAP_TUPLE) {
-      r = map_tuple(b, 0);
-    }
-    else if (t == ERL_MAP_TYPE) {
-      r = map_type(b, 0);
-    }
-    else if (t == ERL_MODEL_FIELD_LIST) {
-      r = model_field_list(b, 0);
-    }
-    else if (t == ERL_MODULE) {
-      r = module(b, 0);
-    }
-    else if (t == ERL_MODULE_REF) {
-      r = module_ref(b, 0);
-    }
-    else if (t == ERL_OPT_BIT_TYPE_LIST) {
-      r = opt_bit_type_list(b, 0);
-    }
-    else if (t == ERL_OPTIONAL_CALLBACK_FUNCTIONS) {
-      r = optional_callback_functions(b, 0);
-    }
-    else if (t == ERL_OPTIONAL_CALLBACKS) {
-      r = optional_callbacks(b, 0);
-    }
-    else if (t == ERL_Q_ATOM) {
-      r = q_atom(b, 0);
-    }
-    else if (t == ERL_Q_VAR) {
-      r = q_var(b, 0);
-    }
-    else if (t == ERL_RECEIVE_EXPRESSION) {
-      r = receive_expression(b, 0);
-    }
-    else if (t == ERL_RECORD_DEFINITION) {
-      r = record_definition(b, 0);
-    }
-    else if (t == ERL_RECORD_FIELD) {
-      r = record_field(b, 0);
-    }
-    else if (t == ERL_RECORD_LIKE_TYPE) {
-      r = record_like_type(b, 0);
-    }
-    else if (t == ERL_RECORD_REF) {
-      r = record_ref(b, 0);
-    }
-    else if (t == ERL_RECORD_TUPLE) {
-      r = record_tuple(b, 0);
-    }
-    else if (t == ERL_RULE) {
-      r = rule(b, 0);
-    }
-    else if (t == ERL_RULE_BODY) {
-      r = rule_body(b, 0);
-    }
-    else if (t == ERL_RULE_CLAUSE) {
-      r = rule_clause(b, 0);
-    }
-    else if (t == ERL_SPEC_FUN) {
-      r = spec_fun(b, 0);
-    }
-    else if (t == ERL_SPECIFICATION) {
-      r = specification(b, 0);
-    }
-    else if (t == ERL_STRING_LITERAL) {
-      r = string_literal(b, 0);
-    }
-    else if (t == ERL_TOP_TYPE) {
-      r = top_type(b, 0);
-    }
-    else if (t == ERL_TOP_TYPE_CLAUSE) {
-      r = top_type_clause(b, 0);
-    }
-    else if (t == ERL_TRY_CLAUSE) {
-      r = try_clause(b, 0);
-    }
-    else if (t == ERL_TRY_CLAUSES) {
-      r = try_clauses(b, 0);
-    }
-    else if (t == ERL_TRY_EXPRESSION) {
-      r = try_expression(b, 0);
-    }
-    else if (t == ERL_TRY_EXPRESSIONS_CLAUSE) {
-      r = try_expressions_clause(b, 0);
-    }
-    else if (t == ERL_TUPLE_EXPRESSION) {
-      r = tuple_expression(b, 0);
-    }
-    else if (t == ERL_TYPE) {
-      r = type(b, 0);
-    }
-    else if (t == ERL_TYPE_DEFINITION) {
-      r = type_definition(b, 0);
-    }
-    else if (t == ERL_TYPE_GUARD) {
-      r = type_guard(b, 0);
-    }
-    else if (t == ERL_TYPE_REF) {
-      r = type_ref(b, 0);
-    }
-    else if (t == ERL_TYPE_SIG) {
-      r = type_sig(b, 0);
-    }
-    else if (t == ERL_TYPE_SIG_GUARD) {
-      r = type_sig_guard(b, 0);
-    }
-    else if (t == ERL_TYPED_ATTR_VAL) {
-      r = typed_attr_val(b, 0);
-    }
-    else if (t == ERL_TYPED_EXPR) {
-      r = typed_expr(b, 0);
-    }
-    else if (t == ERL_TYPED_RECORD_FIELDS) {
-      r = typed_record_fields(b, 0);
+    if (t instanceof IFileElementType) {
+      r = parse_root_(t, b, 0);
     }
     else {
-      r = parse_root_(t, b, 0);
+      r = false;
     }
     exit_section_(b, 0, m, t, r, true, TRUE_CONDITION);
   }
@@ -3880,7 +3572,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '++' | '--'
   static boolean list_op(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_op")) return false;
-    if (!nextTokenIs(b, "", ERL_OP_PLUS_PLUS, ERL_OP_MINUS_MINUS)) return false;
+    if (!nextTokenIs(b, "", ERL_OP_MINUS_MINUS, ERL_OP_PLUS_PLUS)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, ERL_OP_PLUS_PLUS);
@@ -4918,7 +4610,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // record_head_classic | macros &('{'|'.' q_atom &(!('(')))
   static boolean record_head(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_head")) return false;
-    if (!nextTokenIs(b, "", ERL_RADIX, ERL_QMARK)) return false;
+    if (!nextTokenIs(b, "", ERL_QMARK, ERL_RADIX)) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = record_head_classic(b, l + 1);
@@ -5041,7 +4733,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // record_head (record_field_ref | record_tuple | ())
   static boolean record_tail(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_tail")) return false;
-    if (!nextTokenIs(b, "", ERL_RADIX, ERL_QMARK)) return false;
+    if (!nextTokenIs(b, "", ERL_QMARK, ERL_RADIX)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
     r = record_head(b, l + 1);
@@ -6505,7 +6197,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // record_tail
   public static boolean record2_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record2_expression")) return false;
-    if (!nextTokenIsSmart(b, ERL_RADIX, ERL_QMARK)) return false;
+    if (!nextTokenIsSmart(b, ERL_QMARK, ERL_RADIX)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_EXPRESSION, "<expression>");
     r = record_tail(b, l + 1);
@@ -6585,182 +6277,182 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  final static Parser app_atom_parser_ = new Parser() {
+  static final Parser app_atom_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_atom(b, l + 1);
     }
   };
-  final static Parser app_env_expression_parser_ = new Parser() {
+  static final Parser app_env_expression_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_env_expression(b, l + 1);
     }
   };
-  final static Parser app_expression_1_0_parser_ = new Parser() {
+  static final Parser app_expression_1_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_expression_1_0(b, l + 1);
     }
   };
-  final static Parser app_module_expression_parser_ = new Parser() {
+  static final Parser app_module_expression_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_module_expression(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_0_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_0_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_0_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_10_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_10_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_10_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_11_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_11_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_11_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_12_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_12_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_12_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_1_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_1_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_1_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_2_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_2_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_2_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_3_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_3_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_3_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_4_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_4_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_4_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_5_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_5_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_5_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_6_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_6_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_6_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_7_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_7_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_7_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_8_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_8_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_8_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_1_9_0_0_parser_ = new Parser() {
+  static final Parser app_parameter_1_9_0_0_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter_1_9_0_0(b, l + 1);
     }
   };
-  final static Parser app_parameter_parser_ = new Parser() {
+  static final Parser app_parameter_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return app_parameter(b, l + 1);
     }
   };
-  final static Parser argument_definition_parser_ = new Parser() {
+  static final Parser argument_definition_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return argument_definition(b, l + 1);
     }
   };
-  final static Parser atom_attribute_parser_ = new Parser() {
+  static final Parser atom_attribute_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return atom_attribute(b, l + 1);
     }
   };
-  final static Parser binary_expression_parser_ = new Parser() {
+  static final Parser binary_expression_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return binary_expression(b, l + 1);
     }
   };
-  final static Parser config_expr_recover_parser_ = new Parser() {
+  static final Parser config_expr_recover_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return config_expr_recover(b, l + 1);
     }
   };
-  final static Parser export_functions_parser_ = new Parser() {
+  static final Parser export_functions_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return export_functions(b, l + 1);
     }
   };
-  final static Parser export_types_parser_ = new Parser() {
+  static final Parser export_types_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return export_types(b, l + 1);
     }
   };
-  final static Parser expression_parser_ = new Parser() {
+  static final Parser expression_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return expression(b, l + 1, -1);
     }
   };
-  final static Parser exprs_recover_parser_ = new Parser() {
+  static final Parser exprs_recover_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return exprs_recover(b, l + 1);
     }
   };
-  final static Parser form_recover_parser_ = new Parser() {
+  static final Parser form_recover_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return form_recover(b, l + 1);
     }
   };
-  final static Parser guard_parser_ = new Parser() {
+  static final Parser guard_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return guard(b, l + 1);
     }
   };
-  final static Parser list_expr_or_comprehension_parser_ = new Parser() {
+  static final Parser list_expr_or_comprehension_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return list_expr_or_comprehension(b, l + 1);
     }
   };
-  final static Parser macros_body_parser_ = new Parser() {
+  static final Parser macros_body_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return macros_body(b, l + 1);
     }
   };
-  final static Parser macros_call_recover_parser_ = new Parser() {
+  static final Parser macros_call_recover_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return macros_call_recover(b, l + 1);
     }
   };
-  final static Parser map_assoc_parser_ = new Parser() {
+  static final Parser map_assoc_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return map_assoc(b, l + 1);
     }
   };
-  final static Parser optional_callback_functions_parser_ = new Parser() {
+  static final Parser optional_callback_functions_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return optional_callback_functions(b, l + 1);
     }
   };
-  final static Parser try_argument_definition_parser_ = new Parser() {
+  static final Parser try_argument_definition_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return try_argument_definition(b, l + 1);
     }
   };
-  final static Parser tuple_recoverer_parser_ = new Parser() {
+  static final Parser tuple_recoverer_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return tuple_recoverer(b, l + 1);
     }
   };
-  final static Parser type_body_parser_ = new Parser() {
+  static final Parser type_body_parser_ = new Parser() {
     public boolean parse(PsiBuilder b, int l) {
       return type_body(b, l + 1);
     }

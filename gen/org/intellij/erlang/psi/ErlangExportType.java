@@ -17,6 +17,9 @@ public interface ErlangExportType extends ErlangType {
   @Nullable
   PsiElement getInteger();
 
+  @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
   @NotNull
   PsiReference getReference();
 

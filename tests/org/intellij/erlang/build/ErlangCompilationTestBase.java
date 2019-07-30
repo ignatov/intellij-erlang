@@ -269,10 +269,10 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     File file = new File(relativePath);
     String name = FileUtil.getNameWithoutExtension(file);
     CharSequence extension = FileUtilRt.getExtension(relativePath);
-    if ("erl".equals(extension)) {
+    if ("erl".contentEquals(extension)) {
       return name + ".beam";
     }
-    if ("app".equals(extension) || "app.src".equals(extension)) {
+    if ("app".contentEquals(extension) || "app.src".contentEquals(extension)) {
       return name + ".app";
     }
     return null;

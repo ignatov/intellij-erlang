@@ -52,7 +52,7 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
   private static final String GENERATED_FILE = "src/org/intellij/erlang/bif/ErlangBifTable.java";
   private static final String ERLANG_SDK_PATH = "/usr/lib/erlang";
   private static final String ERLANG_DOC_PATH = "/home/ignatov/Downloads/otp_doc_html_R16B";
-  private static final Pattern BIF_DECLARATION = Pattern.compile("bif (\\w+)\\:(\\w+)/(\\d+)");
+  private static final Pattern BIF_DECLARATION = Pattern.compile("bif (\\w+):(\\w+)/(\\d+)");
   private static final Pattern BIF_SEPARATOR = Pattern.compile("# New Bifs in (R.+)");
 
   private ErlangDocumentationProvider myDocProvider;

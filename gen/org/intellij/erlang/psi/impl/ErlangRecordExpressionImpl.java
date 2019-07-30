@@ -62,6 +62,7 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
     return findChildByType(ERL_RADIX);
   }
 
+  @Override
   @Nullable
   public PsiReference getReferenceInternal() {
     return ErlangPsiImplUtil.getReferenceInternal(this);

@@ -25,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ErlangQuickFixBase implements LocalQuickFix {
   @Nullable
   static ErlangCompositeElement getAnchorElement(@Nullable ErlangFile file) {
-    //noinspection unchecked
     return PsiTreeUtil.getChildOfAnyType(
       file,
       ErlangRecordDefinition.class, ErlangFunction.class, ErlangSpecification.class,

@@ -199,7 +199,7 @@ public class ErlangDebuggerNode {
     OtpErlangObject receivedMessage = receive(socket);
     if (receivedMessage == null) return;
 
-    LOG.debug("Message received: " + String.valueOf(receivedMessage));
+    LOG.debug("Message received: " + receivedMessage);
 
     ErlangDebuggerEvent event = ErlangDebuggerEvent.create(receivedMessage);
     boolean messageRecognized = event != null;

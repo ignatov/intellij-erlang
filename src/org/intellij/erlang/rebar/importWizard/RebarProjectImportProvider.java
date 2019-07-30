@@ -20,13 +20,15 @@ import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.ProjectJdkForModuleStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.projectImport.ProjectImportBuilder;
 import com.intellij.projectImport.ProjectImportProvider;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
 public class RebarProjectImportProvider extends ProjectImportProvider {
-  public RebarProjectImportProvider(@NotNull RebarProjectImportBuilder builder) {
-    super(builder);
+  @Override
+  protected ProjectImportBuilder doGetBuilder() {
+    return new RebarProjectImportBuilder();
   }
 
   public ModuleWizardStep[] createSteps(@NotNull WizardContext context) {

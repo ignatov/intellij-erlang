@@ -14,11 +14,11 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangTypeDefinitionImpl extends ErlangNamedStubbedPsiElementBase<ErlangTypeDefinitionStub> implements ErlangTypeDefinition {
 
-  public ErlangTypeDefinitionImpl(ErlangTypeDefinitionStub stub, IStubElementType type) {
+  public ErlangTypeDefinitionImpl(@NotNull ErlangTypeDefinitionStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
-  public ErlangTypeDefinitionImpl(ASTNode node) {
+  public ErlangTypeDefinitionImpl(@NotNull ASTNode node) {
     super(node);
   }
 
@@ -73,25 +73,30 @@ public class ErlangTypeDefinitionImpl extends ErlangNamedStubbedPsiElementBase<E
     return findChildByType(ERL_PAR_RIGHT);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
-  public PsiElement setName(String newName) {
+  public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   public int getTextOffset() {
     return ErlangPsiImplUtil.getTextOffset(this);
   }
 
+  @Override
   public int getArity() {
     return ErlangPsiImplUtil.getArity(this);
   }

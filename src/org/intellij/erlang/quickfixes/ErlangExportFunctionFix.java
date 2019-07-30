@@ -190,12 +190,11 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   @NotNull
   private JBList createExportJBList(@NotNull final Editor editor, @NotNull List<ErlangExport> exportList) {
-    DefaultListModel model = new DefaultListModel();
+    DefaultListModel<ErlangExport> model = new DefaultListModel<>();
     for (ErlangExport export : exportList) {
-      //noinspection unchecked, because of Java 6
       model.addElement(export);
     }
-    final JBList exportPopupList = new JBList(model);
+    JBList<ErlangExport> exportPopupList = new JBList<>(model);
     exportPopupList.setCellRenderer(new DefaultListCellRenderer() {
       @NotNull
       @Override
@@ -221,12 +220,12 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       }
     });
     exportPopupList.addListSelectionListener(e -> {
-      ErlangExport export = (ErlangExport) exportPopupList.getSelectedValue();
+      ErlangExport export = exportPopupList.getSelectedValue();
       if (export == null) return;
       dropHighlighters();
       MarkupModel markupModel = editor.getMarkupModel();
       TextAttributes attributes = EditorColorsManager.getInstance().getGlobalScheme().getAttributes(EditorColors.IDENTIFIER_UNDER_CARET_ATTRIBUTES);
-      ErlangExport selectedExport = (ErlangExport) exportPopupList.getSelectedValue();
+      ErlangExport selectedExport = exportPopupList.getSelectedValue();
       myExportHighlighters.add(
         markupModel.addRangeHighlighter(
           selectedExport.getTextRange().getStartOffset(),

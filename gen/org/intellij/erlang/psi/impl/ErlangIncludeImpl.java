@@ -55,6 +55,7 @@ public class ErlangIncludeImpl extends ErlangStubbedPsiElementBase<ErlangInclude
     return findChildByType(ERL_PAR_RIGHT);
   }
 
+  @Override
   @Nullable
   public ErlangIncludeString getIncludeStringSafe() {
     return ErlangPsiImplUtil.getIncludeStringSafe(this);

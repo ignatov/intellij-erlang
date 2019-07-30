@@ -16,11 +16,11 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangFunctionStub> implements ErlangFunction {
 
-  public ErlangFunctionImpl(ErlangFunctionStub stub, IStubElementType type) {
+  public ErlangFunctionImpl(@NotNull ErlangFunctionStub stub, @NotNull IStubElementType type) {
     super(stub, type);
   }
 
-  public ErlangFunctionImpl(ASTNode node) {
+  public ErlangFunctionImpl(@NotNull ASTNode node) {
     super(node);
   }
 
@@ -54,39 +54,47 @@ public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangF
     return p1.get(0);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
-  public PsiElement setName(String newName) {
+  public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   public int getArity() {
     return ErlangPsiImplUtil.getArity(this);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   @NotNull
   public ItemPresentation getPresentation() {
     return ErlangPsiImplUtil.getPresentation(this);
   }
 
+  @Override
   @NotNull
   public Icon getIcon(int flags) {
     return ErlangPsiImplUtil.getIcon(this, flags);
   }
 
+  @Override
   public boolean isExported() {
     return ErlangPsiImplUtil.isExported(this);
   }
 
+  @Override
   @Nullable
   public ErlangSpecification findSpecification() {
     return ErlangPsiImplUtil.findSpecification(this);

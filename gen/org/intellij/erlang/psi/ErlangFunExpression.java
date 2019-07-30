@@ -33,6 +33,6 @@ public interface ErlangFunExpression extends ErlangExpression {
   @NotNull
   PsiElement getFun();
 
-  boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place);
+  boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place);
 
 }

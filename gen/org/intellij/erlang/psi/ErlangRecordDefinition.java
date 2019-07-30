@@ -31,7 +31,7 @@ public interface ErlangRecordDefinition extends ErlangNamedElement, StubBasedPsi
   String getName();
 
   @NotNull
-  PsiElement setName(String newName);
+  PsiElement setName(@NotNull String newName);
 
   @NotNull
   PsiElement getNameIdentifier();

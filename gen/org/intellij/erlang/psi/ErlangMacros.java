@@ -17,4 +17,7 @@ public interface ErlangMacros extends ErlangCompositeElement {
   @Nullable
   PsiReference getReference();
 
+  @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
 }

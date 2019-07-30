@@ -14,4 +14,7 @@ public interface ErlangFieldType extends ErlangType {
   @NotNull
   PsiReference getReference();
 
+  @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
 }

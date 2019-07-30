@@ -67,9 +67,7 @@ public abstract class ErlangRemoveFunctionFromImportFixBase extends ErlangQuickF
           cutFunction(functions.get(i), i == functions.size() - 1);
         }
       }
-      //noinspection unchecked
       if (PsiTreeUtil.getChildOfAnyType(fns, ErlangImportFunction.class, PsiComment.class) == null) {
-        //noinspection ConstantConditions
         if (attribute.getNextSibling() instanceof PsiWhiteSpace) {
           attribute.getNextSibling().delete();
         }

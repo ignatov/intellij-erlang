@@ -56,7 +56,6 @@ class ErlangCompletionUtil {
   @NotNull
   private static Set<ErlangExpressionType> expectedArgumentTypes(@NotNull ErlangFunctionCallExpression call, int argIndex) {
     PsiPolyVariantReference reference = (PsiPolyVariantReference) call.getReference();
-    if (reference == null) return Collections.emptySet();
 
     HashSet<ErlangExpressionType> expectedArgumentTypes = new HashSet<>();
     ResolveResult[] resolveResults = reference.multiResolve(true);

@@ -212,7 +212,7 @@ public interface ErlangTypes {
   class Factory {
     public static PsiElement createElement(ASTNode node) {
       IElementType type = node.getElementType();
-       if (type == ERL_ADDITIVE_EXPRESSION) {
+      if (type == ERL_ADDITIVE_EXPRESSION) {
         return new ErlangAdditiveExpressionImpl(node);
       }
       else if (type == ERL_AFTER_CLAUSE_BODY) {

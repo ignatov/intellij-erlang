@@ -44,7 +44,6 @@ public class ErlangNavigationUtil {
     final String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(function);
     return ContainerUtil.mapNotNull(((ErlangFile)function.getContainingFile()).getBehaviours(), behaviour -> {
       ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviour.getModuleRef());
-      //noinspection ConstantConditions
       return behaviourModule != null ? behaviourModule.getCallbackByName(functionPresentation) : null;
     });
   }
@@ -65,7 +64,7 @@ public class ErlangNavigationUtil {
             return presentation;
           }
 
-          @Nullable
+          @NotNull
           @Override
           public String getLocationString() {
             return getContainingFile().getName();

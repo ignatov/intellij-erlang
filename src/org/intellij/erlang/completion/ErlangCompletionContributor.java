@@ -180,9 +180,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             return;
           }
           else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
-            //noinspection unchecked
             boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
-            //noinspection unchecked
             boolean insideImport = PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective;
             boolean insideBehaviour = PsiTreeUtil.getParentOfType(position, ErlangBehaviour.class) != null;
             if (inside || inConsole && !isDot(position) || insideImport) {

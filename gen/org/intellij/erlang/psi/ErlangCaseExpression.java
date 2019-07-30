@@ -24,6 +24,6 @@ public interface ErlangCaseExpression extends ErlangExpression, ErlangClauseOwne
   @Nullable
   PsiElement getOf();
 
-  boolean processDeclarations(PsiScopeProcessor processor, ResolveState state, PsiElement lastParent, PsiElement place);
+  boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place);
 
 }

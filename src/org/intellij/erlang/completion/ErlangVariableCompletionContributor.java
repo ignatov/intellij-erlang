@@ -47,7 +47,9 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
   public ErlangVariableCompletionContributor() {
     extend(CompletionType.BASIC, psiElement(ErlangTypes.ERL_VAR), new CompletionProvider<CompletionParameters>() {
       @Override
-      protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
+      protected void addCompletions(@NotNull CompletionParameters parameters,
+                                    @NotNull ProcessingContext context,
+                                    @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
         ErlangFile file = (ErlangFile)position.getContainingFile();
 
@@ -64,7 +66,6 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
         if (!(position.getParent() instanceof ErlangRecordExpression)) {
           Collection<String> vars = new HashSet<>();
 
-          //noinspection unchecked
           PsiElement scopeOwner = PsiTreeUtil.getParentOfType(position,
             ErlangFunctionClause.class, ErlangMacrosDefinition.class, ErlangTypeDefinition.class, ErlangSpecification.class);
           ResolveUtil.treeWalkUp(position, new MyBaseScopeProcessor(vars, position, scopeOwner, false));
@@ -86,7 +87,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
     extend(CompletionType.SMART, psiElement(ErlangTypes.ERL_VAR), new CompletionProvider<CompletionParameters>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters,
-                                    ProcessingContext context,
+                                    @NotNull ProcessingContext context,
                                     @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
         Set<ErlangExpressionType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
@@ -135,7 +136,6 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
       myResult = result;
     }
 
-    @SuppressWarnings("NullableProblems")
     private MyBaseScopeProcessor(@NotNull Collection<ErlangQVar> result, @NotNull PsiElement element, @Nullable PsiElement scopeOwner) {
       this(new SmartList<>(), element, scopeOwner, true);
       myVars = result;

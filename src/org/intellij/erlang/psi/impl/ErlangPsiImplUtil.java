@@ -622,6 +622,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name + arity, name)
+
                                                                      .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
                                                                      .withInsertHandler(getInsertHandler(name, arity, withArity)), priority);
   }

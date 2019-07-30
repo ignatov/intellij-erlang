@@ -18,6 +18,9 @@ public interface ErlangSpecFun extends ErlangCompositeElement {
   PsiElement getInteger();
 
   @Nullable
+  PsiReference getReference(@Nullable ErlangMacrosName o);
+
+  @Nullable
   PsiReference getReference();
 
 }

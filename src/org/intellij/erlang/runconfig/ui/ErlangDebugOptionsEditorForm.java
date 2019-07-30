@@ -40,8 +40,8 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   private JPanel myModulesNotToInterpretPanel;
   private JBCheckBox myAutoUpdateModulesNotToInterpretCheckBox;
 
-  private JBList myModulesNotToInterpretList;
-  private CollectionListModel myModulesNotToInterpretListModel;
+  private JBList<String> myModulesNotToInterpretList;
+  private CollectionListModel<String> myModulesNotToInterpretListModel;
 
   public ErlangDebugOptionsEditorForm() {
     myAutoUpdateModulesNotToInterpretCheckBox.addActionListener(e -> setAutoUpdateModulesNotToInterpret(myAutoUpdateModulesNotToInterpretCheckBox.isSelected()));
@@ -51,7 +51,6 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   protected void resetEditorFrom(ErlangRunConfigurationBase.ErlangDebugOptions erlangDebugOptions) {
     myModulesNotToInterpretListModel.removeAll();
     for (String module : erlangDebugOptions.getModulesNotToInterpret()) {
-      //noinspection unchecked
       myModulesNotToInterpretListModel.add(module);
     }
     setAutoUpdateModulesNotToInterpret(erlangDebugOptions.isAutoUpdateModulesNotToInterpret());
@@ -79,9 +78,8 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   }
 
   private void createUIComponents() {
-    //noinspection unchecked
-    myModulesNotToInterpretListModel = new CollectionListModel();
-    myModulesNotToInterpretList = new JBList(myModulesNotToInterpretListModel);
+    myModulesNotToInterpretListModel = new CollectionListModel<>();
+    myModulesNotToInterpretList = new JBList<>(myModulesNotToInterpretListModel);
     myModulesNotToInterpretList.setCellRenderer(new JBList.StripedListCellRenderer());
     myModulesNotToInterpretList.setEmptyText("Add non-debuggable modules here (e.g. NIF modules)");
     myModulesNotToInterpretPanel = ToolbarDecorator.createDecorator(myModulesNotToInterpretList, myModulesNotToInterpretListModel)
@@ -101,7 +99,6 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
         String module = Messages.showInputDialog(myModulesNotToInterpretList,
           "Module name", "Add a Non-Debuggable Module", ErlangIcons.FILE, null, inputValidator);
         if (module != null) {
-          //noinspection unchecked
           myModulesNotToInterpretListModel.add(StringUtil.trim(module));
         }
       })

@@ -24,7 +24,7 @@ public interface ErlangFunction extends ErlangNamedElement, StubBasedPsiElement<
   String getName();
 
   @NotNull
-  PsiElement setName(String newName);
+  PsiElement setName(@NotNull String newName);
 
   int getArity();
 

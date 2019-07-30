@@ -43,6 +43,7 @@ public class ErlangCallbackSpecImpl extends ErlangStubbedPsiElementBase<ErlangCa
     return PsiTreeUtil.getChildOfType(this, ErlangFunTypeSigsBraces.class);
   }
 
+  @Override
   public boolean isOptional() {
     return ErlangPsiImplUtil.isOptional(this);
   }

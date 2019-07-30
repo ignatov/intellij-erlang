@@ -50,9 +50,16 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
     return findChildByType(ERL_OP_EQ);
   }
 
+  @Override
   @Nullable
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
+  }
+
+  @Override
+  @Nullable
+  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+    return ErlangPsiImplUtil.getReference(this, o);
   }
 
   @Override

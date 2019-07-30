@@ -23,7 +23,6 @@ import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("ComponentNotRegistered")
 public class ErlangMarkIncludeSourceRootAction extends MarkSourceRootAction {
   public ErlangMarkIncludeSourceRootAction() {
     super(ErlangIncludeSourceRootType.INSTANCE);

@@ -102,7 +102,6 @@ public class ErlangTestLocationProvider implements SMTestLocator {
   }
 
   @Nullable
-  @SuppressWarnings("unchecked")
   private static PsiElement findTestElementInLine(ErlangFile file, String fileText, int line) {
     int firstColumnOffset = StringUtil.lineColToOffset(fileText, line, 0);
     PsiElement element = file.findElementAt(firstColumnOffset);

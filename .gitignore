@@ -11,3 +11,5 @@
 /build/
 /jps-plugin/build/
 .gradle
+/out/
+/jps-plugin/out/

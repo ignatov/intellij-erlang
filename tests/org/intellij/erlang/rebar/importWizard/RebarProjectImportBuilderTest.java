@@ -124,8 +124,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   private Project doTest(@Nullable Consumer<ModuleWizardStep> adjuster) throws Exception {
     String projectPath = getProject().getBaseDir().getPath();
     String importFromPath = projectPath + "/test/";
-    Module firstModule = importProjectFrom(importFromPath, adjuster,
-      new RebarProjectImportProvider(new RebarProjectImportBuilder()));
+    Module firstModule = importProjectFrom(importFromPath, adjuster, new RebarProjectImportProvider());
     Project createdProject = firstModule.getProject();
     validateProject(createdProject);
     for (Module importedModule : ModuleManager.getInstance(createdProject).getModules()) {

@@ -25,8 +25,8 @@ import java.util.regex.Pattern;
 
 final class ErlangSdkTypeDocProvider extends ErlangSdkDocProviderBase {
   private static final Pattern PATTERN_TYPE_BEGIN = Pattern.compile(
-    "^      <span class=\"bold_code\"><a name=\"type-(.*?)\">.*?</span><br></p>$");
-  private static final Pattern PATTERN_FUNC_BEGIN = Pattern.compile("^  <h3>EXPORTS</h3>$");
+    "^ {6}<span class=\"bold_code\"><a name=\"type-(.*?)\">.*?</span><br></p>$");
+  private static final Pattern PATTERN_FUNC_BEGIN = Pattern.compile("^ {2}<h3>EXPORTS</h3>$");
 
   @NotNull private final String myTypeName;
 

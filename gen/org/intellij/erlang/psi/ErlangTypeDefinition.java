@@ -34,7 +34,7 @@ public interface ErlangTypeDefinition extends ErlangNamedElement, StubBasedPsiEl
   String getName();
 
   @NotNull
-  PsiElement setName(String newName);
+  PsiElement setName(@NotNull String newName);
 
   @NotNull
   PsiElement getNameIdentifier();

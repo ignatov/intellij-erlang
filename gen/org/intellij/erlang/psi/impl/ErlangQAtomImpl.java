@@ -44,9 +44,16 @@ public class ErlangQAtomImpl extends ErlangCompositeElementImpl implements Erlan
     return PsiTreeUtil.getChildOfType(this, ErlangMacrosArg.class);
   }
 
+  @Override
   @Nullable
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
+  }
+
+  @Override
+  @Nullable
+  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+    return ErlangPsiImplUtil.getReference(this, o);
   }
 
 }
