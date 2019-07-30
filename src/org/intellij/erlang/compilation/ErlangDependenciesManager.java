@@ -22,7 +22,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupManager;
 
 public class ErlangDependenciesManager implements ProjectComponent {
-  protected final Project myProject;
+  private final Project myProject;
 
   public ErlangDependenciesManager(Project project) {
     myProject = project;

@@ -30,8 +30,9 @@ public class ErlangCodeStyleSettingsProvider extends CodeStyleSettingsProvider {
 
   @NotNull
   @Override
-  public CodeStyleConfigurable createConfigurable(@NotNull CodeStyleSettings settings, @NotNull CodeStyleSettings originalSettings) {
-    return new ErlangCodeStyleConfigurable(settings, originalSettings);
+  public CodeStyleConfigurable createConfigurable(@NotNull CodeStyleSettings settings,
+                                                  @NotNull CodeStyleSettings modelSettings) {
+    return new ErlangCodeStyleConfigurable(settings, modelSettings);
   }
 
   @NotNull

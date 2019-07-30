@@ -39,6 +39,7 @@ final class ImportedOtpApp {
   private final Set<String> myDeps = new HashSet<>();
   private final Set<VirtualFile> myIncludePaths = new HashSet<>();
   private final Set<String> myParseTransforms = new HashSet<>();
+  @Nullable
   private VirtualFile myIdeaModuleFile;
   private Module myModule;
 

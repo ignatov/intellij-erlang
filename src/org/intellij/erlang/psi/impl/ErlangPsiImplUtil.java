@@ -52,7 +52,6 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
-import kotlin.reflect.jvm.internal.impl.utils.SmartList;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangStringLiteralEscaper;
 import org.intellij.erlang.ErlangTypes;
@@ -130,12 +129,12 @@ public class ErlangPsiImplUtil {
       }
 
       @Override
-      public boolean isReferenceTo(PsiElement element) {
+      public boolean isReferenceTo(@NotNull PsiElement element) {
         return element instanceof ErlangQAtom && standaloneAtom(o) && Comparing.equal(element.getText(), getElement().getText());
       }
 
       @Override
-      public PsiElement handleElementRename(String newName) throws IncorrectOperationException {
+      public PsiElement handleElementRename(@NotNull String newName) throws IncorrectOperationException {
         renameQAtom(o, newName);
         return getElement();
       }
@@ -152,13 +151,13 @@ public class ErlangPsiImplUtil {
     if (o.getAtom() == null) return false;
     PsiElement parent = o.getParent();
     return parent instanceof ErlangMaxExpression || parent instanceof ErlangAtomWithArityExpression ||
-      (parent instanceof ErlangTypeRef || parent instanceof ErlangBitType) && !FormatterUtil.isFollowedBy(parent.getNode(), ErlangTypes.ERL_PAR_LEFT);
+           (parent instanceof ErlangTypeRef || parent instanceof ErlangBitType) && !FormatterUtil.isFollowedBy(parent.getNode(), ErlangTypes.ERL_PAR_LEFT);
   }
 
   @NotNull
   public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
-    List<ErlangTypedExpr> result = new ArrayList<>(0);
-    List<ErlangQAtom> atoms = new ArrayList<>(0);
+    List<ErlangTypedExpr> result = new SmartList<>();
+    List<ErlangQAtom> atoms = new SmartList<>();
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
@@ -181,7 +180,7 @@ public class ErlangPsiImplUtil {
 
         if (!ref.isNull()) {
           PsiReference r = ref.get().getReference();
-          PsiElement rr = r != null ? r.resolve() : null;
+          PsiElement rr = r.resolve();
           if (rr instanceof ErlangRecordDefinition) {
             resolve = rr;
           }
@@ -214,7 +213,7 @@ public class ErlangPsiImplUtil {
     return Pair.create(result, atoms);
   }
 
-   // for #149: Nitrogen support
+  // for #149: Nitrogen support
   private static void processRecordFields(@NotNull ErlangMacros macros, @NotNull List<ErlangQAtom> atoms) {
     PsiReference psiReference = macros.getReference();
     PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
@@ -434,7 +433,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  private static PsiReference getReference(@NotNull PsiElement owner, @Nullable ErlangMacrosName o) {
+  static PsiReference getReference(@NotNull PsiElement owner, @Nullable ErlangMacrosName o) {
     return o != null ? new ErlangMacrosReferenceImpl(owner, o) : null;
   }
 
@@ -454,7 +453,6 @@ public class ErlangPsiImplUtil {
     return getModuleReference(o, o.getQAtom());
   }
 
-  @SuppressWarnings("unchecked")
   public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {
     return inArgumentDefinition(psiElement) && inArgumentList(psiElement) && PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class, ErlangArgumentList.class) instanceof ErlangArgumentDefinition;
   }
@@ -463,10 +461,9 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class) != null;
   }
 
-  @SuppressWarnings("unchecked")
   public static boolean inArgumentList(PsiElement psiElement) {
     ErlangArgumentList argList = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, true,
-      ErlangFunctionCallExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
+                                                             ErlangFunctionCallExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
     PsiElement parent = argList != null ? argList.getParent() : null;
     return parent instanceof ErlangFunctionCallExpression && ((ErlangFunctionCallExpression) parent).getQAtom().getMacros() == null;
   }
@@ -502,7 +499,6 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inAtomAttribute(PsiElement psiElement) {
-    //noinspection unchecked
     return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangTypeDefinition.class) != null;
   }
 
@@ -596,8 +592,8 @@ public class ErlangPsiImplUtil {
         lookupElements.add(
           PrioritizedLookupElement.withPriority(
             LookupElementBuilder.create(function, fullName)
-              .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
-              .withInsertHandler(getInsertHandler(functionName, moduleName, arity, withArity)),
+                                .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
+                                .withInsertHandler(getInsertHandler(functionName, moduleName, arity, withArity)),
             ErlangCompletionContributor.EXTERNAL_FUNCTIONS_PRIORITY));
       }
     }
@@ -619,15 +615,15 @@ public class ErlangPsiImplUtil {
   private static LookupElement createFunctionsLookupElement(@NotNull ErlangFunction function, boolean withArity, double priority) {
     int arity = function.getArity();
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(function)
-      .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
-      .withInsertHandler(getInsertHandler(function.getName(), arity, withArity)), priority);
+                                                                     .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
+                                                                     .withInsertHandler(getInsertHandler(function.getName(), arity, withArity)), priority);
   }
 
   @NotNull
   private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name + arity, name)
-      .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
-      .withInsertHandler(getInsertHandler(name, arity, withArity)), (double) priority);
+                                                                     .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
+                                                                     .withInsertHandler(getInsertHandler(name, arity, withArity)), priority);
   }
 
   @NotNull
@@ -637,50 +633,48 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   private static InsertHandler<LookupElement> getInsertHandler(@NotNull final String name, @Nullable final String moduleName, final int arity, boolean withArity) {
-    return withArity ?
-      new BasicInsertHandler<LookupElement>() {
-        @Override
-        public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
-          QuoteInsertHandler.process(name, moduleName, context);
-          Editor editor = context.getEditor();
-          Document document = editor.getDocument();
-          context.commitDocument();
-          PsiElement next = findNextToken(context);
-          ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
+    return !withArity ? new ParenthesesInsertHandler<LookupElement>() {
+      @Override
+      public void handleInsert(@NotNull InsertionContext context, @NotNull LookupElement item) {
+        QuoteInsertHandler.process(name, moduleName, context);
+        super.handleInsert(context, item);
+      }
 
-          if (next != null && "/".equals(next.getText())) {
-            next.delete();
-          }
-          if (intNode != null && intNode.getElementType() == ErlangTypes.ERL_INTEGER) {
-            intNode.getPsi().delete();
-          }
-          PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
-          document.insertString(context.getTailOffset(), "/" + arity);
-          editor.getCaretModel().moveToOffset(context.getTailOffset());
-        }
+      @Override
+      protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
+        return arity > 0;
+      }
+    } : new BasicInsertHandler<LookupElement>() {
+      @Override
+      public void handleInsert(@NotNull InsertionContext context, @NotNull LookupElement item) {
+        QuoteInsertHandler.process(name, moduleName, context);
+        Editor editor = context.getEditor();
+        Document document = editor.getDocument();
+        context.commitDocument();
+        PsiElement next = findNextToken(context);
+        ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
 
-        @Nullable
-        private PsiElement findNextToken(@NotNull InsertionContext context) {
-          PsiFile file = context.getFile();
-          PsiElement element = file.findElementAt(context.getTailOffset());
-          if (element instanceof PsiWhiteSpace) {
-            element = file.findElementAt(element.getTextRange().getEndOffset());
-          }
-          return element;
+        if (next != null && "/".equals(next.getText())) {
+          next.delete();
         }
-      } :
-      new ParenthesesInsertHandler<LookupElement>() {
-        @Override
-        public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
-          QuoteInsertHandler.process(name, moduleName, context);
-          super.handleInsert(context, item);
+        if (intNode != null && intNode.getElementType() == ErlangTypes.ERL_INTEGER) {
+          intNode.getPsi().delete();
         }
+        PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
+        document.insertString(context.getTailOffset(), "/" + arity);
+        editor.getCaretModel().moveToOffset(context.getTailOffset());
+      }
 
-        @Override
-        protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
-          return arity > 0;
+      @Nullable
+      private PsiElement findNextToken(@NotNull InsertionContext context) {
+        PsiFile file = context.getFile();
+        PsiElement element = file.findElementAt(context.getTailOffset());
+        if (element instanceof PsiWhiteSpace) {
+          element = file.findElementAt(element.getTextRange().getEndOffset());
         }
-      };
+        return element;
+      }
+    };
   }
 
   @NotNull
@@ -1714,23 +1708,23 @@ public class ErlangPsiImplUtil {
     if (element instanceof ErlangPrefixExpression) return 9;
     if (element instanceof ErlangColonQualifiedExpression) return 10;
     if (element instanceof ErlangFunctionCallExpression
-      || element instanceof ErlangGlobalFunctionCallExpression
-      || element instanceof ErlangGenericFunctionCallExpression
-      || element instanceof ErlangAnonymousCallExpression
-      || element instanceof ErlangRecordExpression
-      || element instanceof ErlangQualifiedExpression) return 11;
+        || element instanceof ErlangGlobalFunctionCallExpression
+        || element instanceof ErlangGenericFunctionCallExpression
+        || element instanceof ErlangAnonymousCallExpression
+        || element instanceof ErlangRecordExpression
+        || element instanceof ErlangQualifiedExpression) return 11;
     if (element instanceof ErlangMaxExpression
-      || element instanceof ErlangTupleExpression
-      || element instanceof ErlangListExpression
-      || element instanceof ErlangCaseExpression
-      || element instanceof ErlangIfExpression
-      || element instanceof ErlangListComprehension
-      || element instanceof ErlangReceiveExpression
-      || element instanceof ErlangFunExpression
-      || element instanceof ErlangTryExpression
-      || element instanceof ErlangBinaryExpression
-      || element instanceof ErlangBeginEndExpression
-      ) return 12;
+        || element instanceof ErlangTupleExpression
+        || element instanceof ErlangListExpression
+        || element instanceof ErlangCaseExpression
+        || element instanceof ErlangIfExpression
+        || element instanceof ErlangListComprehension
+        || element instanceof ErlangReceiveExpression
+        || element instanceof ErlangFunExpression
+        || element instanceof ErlangTryExpression
+        || element instanceof ErlangBinaryExpression
+        || element instanceof ErlangBeginEndExpression
+    ) return 12;
     if (element instanceof ErlangParenthesizedExpression) return 13;
     return -1;
   }
@@ -1854,7 +1848,7 @@ public class ErlangPsiImplUtil {
   public static boolean isWhitespaceOrComment(@NotNull ASTNode node) {
     IElementType elementType = node.getElementType();
     return ErlangParserDefinition.WS.contains(elementType) ||
-      ErlangParserDefinition.COMMENTS.contains(elementType);
+           ErlangParserDefinition.COMMENTS.contains(elementType);
   }
 
   public static boolean is(@Nullable PsiElement element, IElementType type) {
@@ -1967,7 +1961,7 @@ public class ErlangPsiImplUtil {
       if (position != myPosition) return false;
 
       ErlangFunctionReferenceImpl reference = (ErlangFunctionReferenceImpl)call.getReference();
-      ResolveResult[] variants = reference != null ? reference.multiResolve(true) : ResolveResult.EMPTY_ARRAY;
+      ResolveResult[] variants = reference.multiResolve(true);
       for (ResolveResult variant : variants) {
         if (isExpectedFunction(ObjectUtils.tryCast(variant.getElement(), ErlangFunction.class))) {
           return true;

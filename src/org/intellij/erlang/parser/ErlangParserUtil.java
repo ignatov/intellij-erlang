@@ -19,6 +19,7 @@ package org.intellij.erlang.parser;
 import com.intellij.lang.LighterASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
+import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiFile;
