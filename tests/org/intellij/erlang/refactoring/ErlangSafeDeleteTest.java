@@ -18,9 +18,9 @@ package org.intellij.erlang.refactoring;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.refactoring.safeDelete.SafeDeleteHandler;
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
-public class ErlangSafeDeleteTest extends LightJavaCodeInsightFixtureTestCase {
+public class ErlangSafeDeleteTest extends BasePlatformTestCase {
   @Override
   protected String getTestDataPath() {
       return "testData/refactoring/delete/";

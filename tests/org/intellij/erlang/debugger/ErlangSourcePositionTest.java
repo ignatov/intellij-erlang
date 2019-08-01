@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.debugger;
 
-import com.intellij.openapi.module.Module;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.debugger.xdebug.ErlangDebugLocationResolver;
 import org.intellij.erlang.debugger.xdebug.ErlangSourcePosition;
@@ -29,7 +28,6 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String MODULE_NAME = "erlang-source-position";
   private ErlangFile myErlangFile;
-  private Module myModule;
 
   @Override
   protected void setUp() throws Exception {
