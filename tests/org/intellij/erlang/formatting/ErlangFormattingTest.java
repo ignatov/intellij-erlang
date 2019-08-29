@@ -349,6 +349,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapTupleAfterFirstEntry()  throws Exception { doEnterTest(); }
   public void testMapTupleAfterLastEntry()   throws Exception { doEnterTest(); }
 
+  public void testMapAssocSpacing() throws Exception {
+    ErlangCodeStyleSettings erlangSettings = getErlangSettings();
+    erlangSettings.SPACE_AROUND_ARROW = true;
+    doTest();
+  }
+
 
   public void testFunExpression() throws Exception { doTest(); }
   public void testFunExpression1() throws Exception { doEnterTest(); }
