@@ -351,8 +351,13 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void testMapAssocSpacing() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
-    erlangSettings.SPACE_AROUND_ARROW = true;
-    doTest();
+    boolean prev = erlangSettings.SPACE_AROUND_ARROW;
+    try {
+      erlangSettings.SPACE_AROUND_ARROW = true;
+      doTest();
+    } finally {
+      erlangSettings.SPACE_AROUND_ARROW = prev;
+    }
   }
 
 
