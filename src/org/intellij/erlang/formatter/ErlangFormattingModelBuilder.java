@@ -67,6 +67,8 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
 
       .after(ERL_ARROW).spaceIf(erlangSettings.SPACE_AROUND_ARROW)
       .before(ERL_CLAUSE_BODY).spaceIf(erlangSettings.SPACE_AROUND_ARROW)
+      .around(ERL_ASSOC).spaceIf(erlangSettings.SPACE_AROUND_ARROW)
+      .around(ERL_MATCH).spaceIf(erlangSettings.SPACE_AROUND_ARROW)
 
       .around(ERL_OP_PLUS).spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
       .around(ERL_OP_PLUS_PLUS).spaceIf(settings.SPACE_AROUND_ADDITIVE_OPERATORS)
