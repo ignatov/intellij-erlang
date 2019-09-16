@@ -25,12 +25,17 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getNameIdentifier;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getTextRangeForReference;
+
 public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @Nullable
   private final ErlangModuleRef myModuleRef;
 
-  public ErlangTypeReferenceImpl(@NotNull ErlangQAtom element, @Nullable ErlangModuleRef moduleRef) {
-    super(element, element, ErlangPsiImplUtil.getTextRangeForReference(element), ErlangPsiImplUtil.getNameIdentifier(element).getText());
+  ErlangTypeReferenceImpl(@NotNull ErlangCompositeElement owner,
+                          @NotNull ErlangQAtom element,
+                          @Nullable ErlangModuleRef moduleRef) {
+    super(owner, element, getTextRangeForReference(element), getNameIdentifier(element).getText());
     myModuleRef = moduleRef;
   }
 

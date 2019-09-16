@@ -443,9 +443,9 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static PsiReference getModuleReference(ErlangCompositeElement o, @NotNull ErlangQAtom atom) {
+  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom) {
     ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
-    return new ErlangTypeReferenceImpl(atom, moduleRef);
+    return new ErlangTypeReferenceImpl(o, atom, moduleRef);
   }
 
   @NotNull
