@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.StubBasedPsiElement;
 import org.intellij.erlang.stubs.ErlangSpecificationStub;
 
-public interface ErlangSpecification extends ErlangNamedElement, StubBasedPsiElement<ErlangSpecificationStub> {
+public interface ErlangSpecification extends ErlangMetaAttribute, ErlangNamedElement, StubBasedPsiElement<ErlangSpecificationStub> {
 
   @Nullable
   ErlangFunTypeSigs getFunTypeSigs();

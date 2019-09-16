@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangImportDirective extends ErlangCompositeElement {
+public interface ErlangImportDirective extends ErlangMetaAttribute {
 
   @Nullable
   ErlangImportFunctions getImportFunctions();

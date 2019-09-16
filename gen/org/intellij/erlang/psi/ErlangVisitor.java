@@ -44,7 +44,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
-    visitCompositeElement(o);
+    visitMetaAttribute(o);
   }
 
   public void visitAtomWithArityExpression(@NotNull ErlangAtomWithArityExpression o) {
@@ -68,7 +68,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitBehaviour(@NotNull ErlangBehaviour o) {
-    visitCompositeElement(o);
+    visitMetaAttribute(o);
   }
 
   public void visitBinBaseType(@NotNull ErlangBinBaseType o) {
@@ -100,7 +100,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitCallbackSpec(@NotNull ErlangCallbackSpec o) {
-    visitCompositeElement(o);
+    visitMetaAttribute(o);
   }
 
   public void visitCaseExpression(@NotNull ErlangCaseExpression o) {
@@ -141,7 +141,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitExport(@NotNull ErlangExport o) {
-    visitCompositeElement(o);
+    visitMetaAttribute(o);
   }
 
   public void visitExportFunction(@NotNull ErlangExportFunction o) {
@@ -157,7 +157,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitExportTypeAttribute(@NotNull ErlangExportTypeAttribute o) {
-    visitCompositeElement(o);
+    visitMetaAttribute(o);
   }
 
   public void visitExportTypes(@NotNull ErlangExportTypes o) {
@@ -249,7 +249,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitImportDirective(@NotNull ErlangImportDirective o) {
-    visitCompositeElement(o);
+    visitMetaAttribute(o);
   }
 
   public void visitImportFunction(@NotNull ErlangImportFunction o) {
@@ -345,7 +345,8 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitModule(@NotNull ErlangModule o) {
-    visitNamedElement(o);
+    visitMetaAttribute(o);
+    // visitNamedElement(o);
   }
 
   public void visitModuleRef(@NotNull ErlangModuleRef o) {
@@ -365,7 +366,7 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitOptionalCallbacks(@NotNull ErlangOptionalCallbacks o) {
-    visitCompositeElement(o);
+    visitMetaAttribute(o);
   }
 
   public void visitOrelseExpression(@NotNull ErlangOrelseExpression o) {
@@ -442,7 +443,8 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitSpecification(@NotNull ErlangSpecification o) {
-    visitNamedElement(o);
+    visitMetaAttribute(o);
+    // visitNamedElement(o);
   }
 
   public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
@@ -512,6 +514,10 @@ public class ErlangVisitor extends PsiElementVisitor {
   }
 
   public void visitTypedRecordFields(@NotNull ErlangTypedRecordFields o) {
+    visitCompositeElement(o);
+  }
+
+  public void visitMetaAttribute(@NotNull ErlangMetaAttribute o) {
     visitCompositeElement(o);
   }
 

@@ -82,6 +82,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport7()     { doTest(); }
   public void test605()               { doTest(); }
 
+  public void testAttributeAnnotations() {
+    String testDataFile = getTestName(false) + ".erl";
+    myFixture.configureByFile(testDataFile);
+    myFixture.checkHighlighting(false, true, false, false);
+  }
+
   private void doTestWithInclude() {
     myFixture.configureByText("incl.erl",
       "-module(incl).\n" +

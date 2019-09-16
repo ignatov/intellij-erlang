@@ -9,7 +9,7 @@ import org.intellij.erlang.stubs.ErlangModuleStub;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 
-public interface ErlangModule extends ErlangNamedElement, StubBasedPsiElement<ErlangModuleStub> {
+public interface ErlangModule extends ErlangMetaAttribute, ErlangNamedElement, StubBasedPsiElement<ErlangModuleStub> {
 
   @Nullable
   ErlangArgumentDefinition getArgumentDefinition();

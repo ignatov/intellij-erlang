@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.StubBasedPsiElement;
 import org.intellij.erlang.stubs.ErlangBehaviourStub;
 
-public interface ErlangBehaviour extends ErlangCompositeElement, StubBasedPsiElement<ErlangBehaviourStub> {
+public interface ErlangBehaviour extends ErlangMetaAttribute, StubBasedPsiElement<ErlangBehaviourStub> {
 
   @Nullable
   ErlangModuleRef getModuleRef();

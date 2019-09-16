@@ -171,6 +171,10 @@ attribute ::= '-' (
   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   ) {pin=1}
 
+;{
+  implements("module|export|import_directive|specification|callback_spec|optional_callbacks|behaviour|on_load|.*_attribute")="org.intellij.erlang.psi.ErlangMetaAttribute"
+}
+
 private meta attribute_tail ::= !'(' <<p1>> | '(' <<p1>> ')'
 
 callback_spec ::= 'callback' type_spec {

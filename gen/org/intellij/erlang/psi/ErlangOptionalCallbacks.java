@@ -5,7 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.*;
 import com.intellij.psi.PsiElement;
 
-public interface ErlangOptionalCallbacks extends ErlangCompositeElement {
+public interface ErlangOptionalCallbacks extends ErlangMetaAttribute {
 
   @Nullable
   ErlangOptionalCallbackFunctions getOptionalCallbackFunctions();
