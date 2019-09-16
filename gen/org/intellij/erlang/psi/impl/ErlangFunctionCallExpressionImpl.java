@@ -38,30 +38,25 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
     return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
   }
 
-  @Override
   @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 
-  @Override
   @Nullable
   public PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);
   }
 
-  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
-  @Override
   public int getTextOffset() {
     return ErlangPsiImplUtil.getTextOffset(this);
   }
 
-  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);

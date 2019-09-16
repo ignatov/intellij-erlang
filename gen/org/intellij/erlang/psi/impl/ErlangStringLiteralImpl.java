@@ -32,18 +32,15 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
     return notNullChild(findChildByType(ERL_STRING));
   }
 
-  @Override
   public boolean isValidHost() {
     return ErlangPsiImplUtil.isValidHost(this);
   }
 
-  @Override
   @NotNull
   public ErlangStringLiteral updateText(@NotNull String text) {
     return ErlangPsiImplUtil.updateText(this, text);
   }
 
-  @Override
   @NotNull
   public ErlangStringLiteralEscaper createLiteralTextEscaper() {
     return ErlangPsiImplUtil.createLiteralTextEscaper(this);

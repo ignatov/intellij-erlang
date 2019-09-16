@@ -75,7 +75,6 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
     return notNullChild(findChildByType(ERL_FUN));
   }
 
-  @Override
   public boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }

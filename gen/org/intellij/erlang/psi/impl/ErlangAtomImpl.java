@@ -31,19 +31,16 @@ public class ErlangAtomImpl extends ErlangCompositeElementImpl implements Erlang
     return findChildByType(ERL_ATOM_NAME);
   }
 
-  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
-  @Override
   @NotNull
   public ErlangAtom setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
-  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);

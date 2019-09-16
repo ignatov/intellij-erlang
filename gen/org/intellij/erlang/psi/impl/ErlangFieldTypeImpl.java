@@ -32,13 +32,11 @@ public class ErlangFieldTypeImpl extends ErlangTypeImpl implements ErlangFieldTy
     return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
   }
 
-  @Override
   @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 
-  @Override
   @Nullable
   public PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);
