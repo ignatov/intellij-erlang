@@ -15,3 +15,4 @@ The following people have made contributions (in no particular order):
 * Igor Istocniks (github @istocniks)
 * Olga Telezhnaya (github @telezhnaya)
 * Alexandra Vesloguzova (github @avesloguzova)
+* Dmytro Lytovchenko (github @kvakvs)
