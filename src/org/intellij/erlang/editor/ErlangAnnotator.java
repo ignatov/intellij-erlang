@@ -42,12 +42,12 @@ import java.util.Set;
 
 public class ErlangAnnotator implements Annotator, DumbAware {
   @Override
-  public void annotate(@NotNull PsiElement psiElement, @NotNull final AnnotationHolder annotationHolder) {
-    if (psiElement instanceof PsiComment) {
-      highlightEdocTags((PsiComment) psiElement, annotationHolder);
+  public void annotate(@NotNull PsiElement o, @NotNull final AnnotationHolder annotationHolder) {
+    if (o instanceof PsiComment) {
+      highlightEdocTags((PsiComment) o, annotationHolder);
       return;
     }
-    psiElement.accept(new ErlangVisitor() {
+    o.accept(new ErlangVisitor() {
       @Override
       public void visitAtomAttribute(@NotNull ErlangAtomAttribute o) {
         setHighlighting(o.getAtomName(), annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
