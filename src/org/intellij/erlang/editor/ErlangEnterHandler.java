@@ -84,7 +84,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   private static boolean completeExpression(@NotNull PsiFile file,
                                             @NotNull Editor editor,
                                             @NotNull IElementType lastElementType,
-                                            @NotNull Class expectedParentClass) {
+                                            @NotNull Class<?> expectedParentClass) {
     PsiElement lastElement = getPrecedingLeafOnSameLineOfType(file, editor, lastElementType);
     PsiElement parent = lastElement != null ? lastElement.getParent() : null;
     parent = expectedParentClass.isInstance(parent) && !hasEnd(parent) ? parent : null;
