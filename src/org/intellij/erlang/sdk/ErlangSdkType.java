@@ -49,6 +49,7 @@ import org.jetbrains.annotations.TestOnly;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -225,6 +226,28 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   private static ErlangSdkRelease getRelease(@NotNull String sdkHome) {
+    ErlangSdkRelease withFiles = detectReleaseWithFiles(sdkHome);
+    if (withFiles != null) return withFiles;
+    return detectReleaseWithProcess(sdkHome);
+  }
+
+  @Nullable
+  private static ErlangSdkRelease detectReleaseWithFiles(@NotNull String sdkHome) {
+    try {
+      File startErl = new File(sdkHome, "releases/start_erl.data");
+      String line = ContainerUtil.getFirstItem(FileUtil.loadLines(startErl));
+      List<String> split = StringUtil.split(line, " ");
+      if (split.size() == 2) {
+        return new ErlangSdkRelease(split.get(1), split.get(0));
+      }
+    }
+    catch (IOException ignore) {
+    }
+    return null;
+  }
+
+  @Nullable
+  private static ErlangSdkRelease detectReleaseWithProcess(@NotNull String sdkHome) {
     try {
       File erl = JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkHome);
       if (!erl.canExecute()) {
