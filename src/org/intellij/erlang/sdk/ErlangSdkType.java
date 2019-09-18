@@ -216,45 +216,40 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   private ErlangSdkRelease detectSdkVersion(@NotNull String sdkHome) {
-    ErlangSdkRelease cachedRelease = mySdkHomeToReleaseCache.get(getVersionCacheKey(sdkHome));
-    if (cachedRelease != null) {
-      return ensureReleaseDetected(cachedRelease);
-    }
-
-    File erl = JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkHome);
-    if (!erl.canExecute()) {
-      String reason = erl.getPath() + (erl.exists() ? " is not executable." : " is missing.");
-      LOG.warn("Can't detect Erlang version: " + reason);
-      return ensureReleaseDetected(null);
-    }
-
-    try {
-      ProcessOutput output = ErlangSystemUtil.getProcessOutput(sdkHome, erl.getAbsolutePath(), "-noshell",
-        "-eval", PRINT_VERSION_INFO_EXPRESSION);
-      ErlangSdkRelease release = output.getExitCode() != 0 || output.isCancelled() || output.isTimeout() ? null :
-        parseSdkVersion(output.getStdoutLines());
-      if (release != null) {
-        mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), release);
-      }
-      else {
-        LOG.warn("Failed to detect Erlang version.\n" +
-          "StdOut: " + output.getStdout() + "\n" +
-          "StdErr: " + output.getStderr());
-      }
-      return ensureReleaseDetected(release);
-    } catch (ExecutionException e) {
-      LOG.warn(e);
-    }
-
-    return ensureReleaseDetected(null);
-  }
-
-  @Nullable
-  private static ErlangSdkRelease ensureReleaseDetected(@Nullable ErlangSdkRelease release) {
-    if (ApplicationManager.getApplication().isUnitTestMode() && release == null) {
+    ErlangSdkRelease release = mySdkHomeToReleaseCache.computeIfAbsent(getVersionCacheKey(sdkHome), ErlangSdkType::getRelease);
+    if (release == null && ApplicationManager.getApplication().isUnitTestMode()) {
       throw new AssertionError("SDK version detection failed. If you're using a mock SDK, make sure you have your SDK version pre-cached");
     }
     return release;
+  }
+
+  @Nullable
+  private static ErlangSdkRelease getRelease(@NotNull String sdkHome) {
+    try {
+      File erl = JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkHome);
+      if (!erl.canExecute()) {
+        String reason = erl.getPath() + (erl.exists() ? " is not executable." : " is missing.");
+        LOG.warn("Can't detect Erlang version: " + reason);
+        return null;
+      }
+
+      ProcessOutput output = ErlangSystemUtil.getProcessOutput(sdkHome, erl.getAbsolutePath(), "-noshell",
+                                                               "-eval", PRINT_VERSION_INFO_EXPRESSION);
+      ErlangSdkRelease release = output.getExitCode() != 0 || output.isCancelled() || output.isTimeout()
+                                 ? null
+                                 : parseSdkVersion(output.getStdoutLines());
+
+      if (release == null) {
+        LOG.warn("Failed to detect Erlang version.\n" +
+                 "StdOut: " + output.getStdout() + "\n" +
+                 "StdErr: " + output.getStderr());
+      }
+      return release;
+    }
+    catch (ExecutionException e) {
+      LOG.warn(e);
+      return null;
+    }
   }
 
   @Nullable
