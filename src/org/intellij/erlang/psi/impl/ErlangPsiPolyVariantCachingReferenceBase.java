@@ -27,7 +27,7 @@ public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElem
     super(element, range);
   }
 
-  private static final ResolveCache.AbstractResolver<ErlangPsiPolyVariantCachingReferenceBase, PsiElement> MY_RESOLVER =
+  private static final ResolveCache.AbstractResolver<ErlangPsiPolyVariantCachingReferenceBase<?>, PsiElement> MY_RESOLVER =
     (base, incompleteCode) -> base.resolveInner();
 
   @Nullable
@@ -44,7 +44,7 @@ public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElem
   @Override
   public boolean equals(Object o) {
     return this == o || o instanceof ErlangPsiPolyVariantCachingReferenceBase
-                        && getElement() == ((ErlangPsiPolyVariantCachingReferenceBase) o).getElement();
+                        && getElement() == ((ErlangPsiPolyVariantCachingReferenceBase<?>) o).getElement();
   }
 
   @Override

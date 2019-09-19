@@ -61,7 +61,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   }
 
   @Override
-  public boolean isReferenceTo(PsiElement element) {
+  public boolean isReferenceTo(@NotNull PsiElement element) {
     if (!(element instanceof ErlangQVar)) return false;
     for (ResolveResult result : multiResolve(false)) {
       PsiElement resultElement = result.getElement();
@@ -85,7 +85,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   }
 
   @Override
-  public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+  public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
     myElement.replace(ErlangElementFactory.createQVarFromText(myElement.getProject(), newElementName));
     return myElement;
   }
