@@ -1,0 +1,41 @@
+#parse("Erlang File Header Minimal.erl")
+-module(${NAME_ATOM}).
+
+-behaviour(gen_server).
+
+-export([start_link/0]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
+         code_change/3]).
+
+-define(SERVER, ?MODULE). 
+
+-record(${NAME_ATOM}_state, {}).
+
+%%%===================================================================
+%%% Spawning and gen_server implementation
+%%%===================================================================
+
+start_link() ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+init([]) ->
+    {ok, #${NAME_ATOM}_state{}}.
+
+handle_call(_Request, _From, State = #${NAME_ATOM}_state{}) ->
+    {reply, ok, State}.
+
+handle_cast(_Request, State = #${NAME_ATOM}_state{}) ->
+    {noreply, State}.
+
+handle_info(_Info, State = #${NAME_ATOM}_state{}) ->
+    {noreply, State}.
+
+terminate(_Reason, _State = #${NAME_ATOM}_state{}) ->
+    ok.
+
+code_change(_OldVsn, State = #${NAME_ATOM}_state{}, _Extra) ->
+    {ok, State}.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================

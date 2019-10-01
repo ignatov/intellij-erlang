@@ -30,12 +30,20 @@
         <internalFileTemplate name="Erlang Module"/>
         <internalFileTemplate name="Erlang Header"/>
         <internalFileTemplate name="Erlang EUnit Tests"/>
+
         <internalFileTemplate name="Erlang Application"/>
+        <internalFileTemplate name="Erlang Application Minimal"/>
         <internalFileTemplate name="Erlang Application Resource File"/>
+
         <internalFileTemplate name="Erlang Supervisor"/>
+        <internalFileTemplate name="Erlang Supervisor Minimal"/>
+
         <internalFileTemplate name="Erlang Gen Server"/>
+        <internalFileTemplate name="Erlang Gen Server Minimal"/>
+
         <internalFileTemplate name="Erlang Gen Statem"/>
         <internalFileTemplate name="Erlang Gen FSM"/>
+        <internalFileTemplate name="Erlang Gen FSM Minimal"/>
         <internalFileTemplate name="Erlang Gen Event"/>
 
         <defaultLiveTemplatesProvider implementation="org.intellij.erlang.template.ErlangLiveTemplateProvider"/>
