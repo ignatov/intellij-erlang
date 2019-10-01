@@ -146,8 +146,6 @@
 
         <editorNotificationProvider implementation="org.intellij.erlang.inspection.SetupSDKNotificationProvider"/>
 
-        <copyright.updater filetype="Erlang" implementationClass="org.intellij.erlang.copyright.UpdateErlangCopyrightsProvider"/>
-
         <!--errors-->
         <localInspection language="Erlang" shortName="ErlangUnboundVariable" displayName="Unbound variable"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"

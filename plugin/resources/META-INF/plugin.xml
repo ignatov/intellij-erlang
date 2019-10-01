@@ -40,7 +40,7 @@
     </change-notes>
 
     <depends optional="true" config-file="java-deps.xml">com.intellij.modules.java</depends>
-    <depends optional="true">com.intellij.copyright</depends>
+    <depends optional="true" config-file="copyright.xml">com.intellij.copyright</depends>
 
     <xi:include href="ErlangPlugin.xml" xpointer="xpointer(/idea-plugin/*)">
         <xi:fallback>
