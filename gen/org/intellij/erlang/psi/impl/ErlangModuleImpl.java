@@ -69,25 +69,30 @@ public class ErlangModuleImpl extends ErlangNamedStubbedPsiElementBase<ErlangMod
     return findChildByType(ERL_PAR_RIGHT);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
   public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   public int getTextOffset() {
     return ErlangPsiImplUtil.getTextOffset(this);
   }
 
+  @Override
   public boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }

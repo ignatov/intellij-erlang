@@ -43,26 +43,31 @@ public class ErlangSpecificationImpl extends ErlangNamedStubbedPsiElementBase<Er
     return PsiTreeUtil.getChildOfType(this, ErlangFunTypeSigsBraces.class);
   }
 
+  @Override
   @Nullable
   public ErlangFunTypeSigs getSignature() {
     return ErlangPsiImplUtil.getSignature(this);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
   public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   public int getArity() {
     return ErlangPsiImplUtil.getArity(this);
   }

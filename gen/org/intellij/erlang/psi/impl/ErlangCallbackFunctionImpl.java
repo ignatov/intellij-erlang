@@ -50,11 +50,13 @@ public class ErlangCallbackFunctionImpl extends ErlangStubbedPsiElementBase<Erla
     return findChildByType(ERL_INTEGER);
   }
 
+  @Override
   @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 
+  @Override
   @Nullable
   public PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);

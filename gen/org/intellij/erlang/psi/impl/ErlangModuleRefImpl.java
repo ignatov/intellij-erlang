@@ -32,11 +32,13 @@ public class ErlangModuleRefImpl extends ErlangCompositeElementImpl implements E
     return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
   }
 
+  @Override
   @Nullable
   public PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);
   }
 
+  @Override
   @NotNull
   public PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);

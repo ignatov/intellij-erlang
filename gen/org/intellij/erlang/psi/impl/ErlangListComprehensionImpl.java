@@ -51,6 +51,7 @@ public class ErlangListComprehensionImpl extends ErlangExpressionImpl implements
     return notNullChild(findChildByType(ERL_OR_OR));
   }
 
+  @Override
   public boolean processDeclarations(@NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return ErlangPsiImplUtil.processDeclarations(this, processor, state, lastParent, place);
   }

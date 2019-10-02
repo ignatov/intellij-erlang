@@ -73,21 +73,25 @@ public class ErlangMacrosDefinitionImpl extends ErlangNamedStubbedPsiElementBase
     return findChildByType(ERL_PAR_RIGHT);
   }
 
+  @Override
   @NotNull
   public String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
+  @Override
   @NotNull
   public PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
+  @Override
   @NotNull
   public PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
+  @Override
   public int getTextOffset() {
     return ErlangPsiImplUtil.getTextOffset(this);
   }
