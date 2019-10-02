@@ -1,0 +1,12 @@
+#parse("Erlang File Header Minimal.erl")
+-module(${NAME_ATOM}).
+
+-behaviour(application).
+
+-export([start/2, stop/1]).
+
+start(_StartType, _StartArgs) ->
+    ${NAME_ATOM}_sup:start_link().
+
+stop(_State) ->
+    ok.

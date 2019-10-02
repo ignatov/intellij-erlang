@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class CreateErlangFileAction extends CreateFileFromTemplateAction implements DumbAware {
   private static final String NEW_ERLANG_FILE = "New Erlang File";
+  private static final String DIALOG_TITLE = "Create a new Erlang file from template";
 
   public CreateErlangFileAction() {
     super(NEW_ERLANG_FILE, "", ErlangIcons.FILE);
@@ -37,17 +38,51 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
   @Override
   protected void buildDialog(final Project project, PsiDirectory directory, CreateFileFromTemplateDialog.Builder builder) {
     builder.
-      setTitle(NEW_ERLANG_FILE).
+      setTitle(DIALOG_TITLE).
       addKind("Empty module", ErlangIcons.FILE, "Erlang Module").
       addKind("Header file", ErlangIcons.HEADER, "Erlang Header").
       addKind("EUnit tests", ErlangIcons.EUNIT, "Erlang EUnit Tests").
-      addKind("OTP application", ErlangIcons.OTP_APPLICATION, "Erlang Application").
-      addKind("OTP application resource file", ErlangIcons.OTP_APP_RESOURCE, "Erlang Application Resource File").
-      addKind("OTP supervisor", ErlangIcons.OTP_SUPERVISOR, "Erlang Supervisor").
-      addKind("OTP gen_server", ErlangIcons.OTP_GEN_SERVER, "Erlang Gen Server").
-      addKind("OTP gen_statem", ErlangIcons.OTP_GEN_STATEM, "Erlang Gen Statem").
-      addKind("OTP gen_fsm", ErlangIcons.OTP_GEN_FSM, "Erlang Gen FSM").
-      addKind("OTP gen_event", ErlangIcons.OTP_GEN_EVENT, "Erlang Gen Event").
+      //-----------
+      addKind("OTP application",
+              ErlangIcons.OTP_APPLICATION,
+              "Erlang Application").
+      addKind("OTP application, minimal",
+              ErlangIcons.OTP_APPLICATION,
+              "Erlang Application Minimal").
+      addKind("OTP application resource file",
+              ErlangIcons.OTP_APP_RESOURCE,
+              "Erlang Application Resource File").
+      //-----------
+      addKind("OTP supervisor, Legacy OTP ≤17",
+              ErlangIcons.OTP_SUPERVISOR,
+              "Erlang Supervisor Legacy").
+      addKind("OTP supervisor, OTP ≥18",
+              ErlangIcons.OTP_SUPERVISOR,
+              "Erlang Supervisor").
+      addKind("OTP supervisor, OTP ≥18, minimal",
+              ErlangIcons.OTP_SUPERVISOR,
+              "Erlang Supervisor Minimal").
+      //-----------
+      addKind("OTP gen_server",
+              ErlangIcons.OTP_GEN_SERVER,
+              "Erlang Gen Server").
+      addKind("OTP gen_server, minimal",
+              ErlangIcons.OTP_GEN_SERVER,
+              "Erlang Gen Server Minimal").
+      //-----------
+      addKind("OTP gen_statem, OTP ≥19",
+              ErlangIcons.OTP_GEN_STATEM,
+              "Erlang Gen Statem").
+      addKind("OTP gen_fsm, deprecated in OTP 19",
+              ErlangIcons.OTP_GEN_FSM,
+              "Erlang Gen FSM").
+      addKind("OTP gen_fsm, minimal, deprecated in OTP 19",
+              ErlangIcons.OTP_GEN_FSM,
+              "Erlang Gen FSM Minimal").
+      addKind("OTP gen_event",
+              ErlangIcons.OTP_GEN_EVENT,
+              "Erlang Gen Event").
+
       setValidator(new InputValidatorEx() {
         @Override
         public boolean checkInput(String inputString) {

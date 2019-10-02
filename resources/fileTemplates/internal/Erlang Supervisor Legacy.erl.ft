@@ -36,18 +36,18 @@ start_link() ->
         [ChildSpec :: supervisor:child_spec()]}}
     | ignore | {error, Reason :: term()}).
 init([]) ->
+    RestartStrategy = one_for_one,
     MaxRestarts = 1000,
     MaxSecondsBetweenRestarts = 3600,
-    SupFlags = #{strategy => one_for_one,
-                 intensity => MaxRestarts,
-                 period => MaxSecondsBetweenRestarts},
 
-    AChild = #{id => 'AName',
-               start => {'AModule', start_link, []},
-               restart => permanent,
-               shutdown => 2000,
-               type => worker,
-               modules => ['AModule']},
+    SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
+
+    Restart = permanent,
+    Shutdown = 2000,
+    Type = worker,
+
+    AChild = {'AName', {'AModule', start_link, []},
+              Restart, Shutdown, Type, ['AModule']},
 
     {ok, {SupFlags, [AChild]}}.
 
