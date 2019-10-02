@@ -331,7 +331,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @Nullable
   @Override
   public ErlangFileStub getStub() {
-    StubElement stub = super.getStub();
+    StubElement<?> stub = super.getStub();
     return (ErlangFileStub) stub;
   }
 
@@ -522,7 +522,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     ErlangFileStub stub = getStub();
     if (stub != null) {
       Map<String, ErlangCallbackSpec> callbacksMap = new LinkedHashMap<>();
-      for (StubElement child : stub.getChildrenStubs()) {
+      for (StubElement<?> child : stub.getChildrenStubs()) {
         if (child instanceof ErlangCallbackSpecStub) {
           String name = ((ErlangCallbackSpecStub) child).getName();
           int arity = ((ErlangCallbackSpecStub) child).getArity();
