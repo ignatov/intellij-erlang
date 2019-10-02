@@ -27,6 +27,7 @@ public class ErlangSpellcheckingTest extends ErlangLightPlatformCodeInsightFixtu
   }
 
   public void testFunctionName() { doTest(); }
+  public void testAtom()         { doTest(); }
 
   private void doTest() {
     myFixture.testHighlighting(false, false, true, getTestName(true) + ".erl");
