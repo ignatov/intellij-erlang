@@ -26,6 +26,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVarProcessor implements PsiScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
-  private final List<ErlangQVar> myVarList = ContainerUtil.newArrayListWithCapacity(0);
+  private final List<ErlangQVar> myVarList = new ArrayList<>(0);
   private final String myRequestedName;
   private final PsiElement myOrigin;
 
@@ -66,7 +67,11 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     boolean inDefinitionOrAssignment = inDefinition || inAssignment;
     boolean inFunction = inFunctionClause && inDefinitionOrAssignment;
     boolean inMacroDefinition = PsiTreeUtil.isAncestor(macroDefinition, psiElement, false) && inDefinitionOrAssignment;
+
     if (inFunction || inModule(psiElement) || inSpecification || inMacroDefinition) {
+      // Right side of binary expression after colon <<_:Var>> cannot create a variable declaration
+      if (inAssignment && isBinaryWidthExpression(psiElement)) return true;
+
       boolean inArgumentList = inArgumentList(psiElement);
       boolean inArgumentListBeforeAssignment =
         PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
