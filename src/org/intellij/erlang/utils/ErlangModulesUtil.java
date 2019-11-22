@@ -23,7 +23,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleFileIndex;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.Computable;
-import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -40,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 public final class ErlangModulesUtil {
@@ -137,9 +137,35 @@ public final class ErlangModulesUtil {
                                                                               : getSourceDirectoriesFilter(moduleFileIndex);
 
     for (VirtualFile sourceRoot : rootManager.getSourceRoots(onlyTestModules)) {
-      VfsUtilCore.processFilesRecursively(sourceRoot, filesCollector, sourceDirectoriesFilter);
+      processFilesRecursively(sourceRoot, filesCollector, sourceDirectoriesFilter);
     }
   }
+
+  @Deprecated
+  public static void processFilesRecursively(@NotNull VirtualFile root,
+                                             @NotNull Processor<? super VirtualFile> processor,
+                                             @NotNull Convertor<? super VirtualFile, Boolean> directoryFilter) {
+    if (!processor.process(root)) return;
+
+    if (root.isDirectory() && directoryFilter.convert(root)) {
+      final LinkedList<VirtualFile[]> queue = new LinkedList<>();
+
+      queue.add(root.getChildren());
+
+      do {
+        final VirtualFile[] files = queue.removeFirst();
+
+        for (VirtualFile file : files) {
+          if (!processor.process(file)) return;
+          if (file.isDirectory() && directoryFilter.convert(file)) {
+            queue.add(file.getChildren());
+          }
+        }
+      } while (!queue.isEmpty());
+    }
+  }
+  
+  
   @NotNull
   private static Convertor<VirtualFile, Boolean> getSourceDirectoriesFilter(@NotNull final ModuleFileIndex moduleFileIndex) {
     return moduleFileIndex::isInSourceContent;

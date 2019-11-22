@@ -114,7 +114,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
   public ErlangCompletionContributor() {
     extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFile.class)), new CompletionProvider<CompletionParameters>() {
       @Override
-      protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
+      protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
         PsiFile file = position.getContainingFile();
         if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
@@ -215,7 +215,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             }
           }
 
-          String shortcut = getActionShortcut(IdeActions.ACTION_CODE_COMPLETION);
+          String shortcut = CompletionUtil.getActionShortcut(IdeActions.ACTION_CODE_COMPLETION);
           if (invocationCount == 1 && new Random().nextBoolean()) {
             result.addLookupAdvertisement("Press " + shortcut + " to activate atom completion from application scope");
           }
@@ -237,7 +237,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     });
     extend(CompletionType.SMART, psiElement().inside(true, psiElement(ErlangArgumentList.class)), new CompletionProvider<CompletionParameters>() {
       @Override
-      protected void addCompletions(@NotNull CompletionParameters parameters, ProcessingContext context, @NotNull CompletionResultSet result) {
+      protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
         Set<ErlangExpressionType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
         if (expectedTypes.isEmpty()) return;

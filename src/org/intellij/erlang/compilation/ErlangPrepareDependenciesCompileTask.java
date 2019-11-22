@@ -143,7 +143,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   @NotNull
   private static List<ErlangFileDescriptor> getTopologicallySortedFileDescriptors(@NotNull Module... modulesToCompile) throws CyclicDependencyFoundException {
     final ErlangFilesDependencyGraph semiGraph = ErlangFilesDependencyGraph.createSemiGraph(modulesToCompile);
-    DFSTBuilder<String> builder = new DFSTBuilder<>(GraphGenerator.create(semiGraph));
+    DFSTBuilder<String> builder = new DFSTBuilder<>(GraphGenerator.generate(semiGraph));
     if (!builder.isAcyclic()) {
       throw new CyclicDependencyFoundException(builder.getCircularDependency());
     }
@@ -156,7 +156,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     return ErlangBuilderUtil.getPath(ioFile);
   }
 
-  private static class ErlangFilesDependencyGraph implements GraphGenerator.SemiGraph<String> {
+  private static class ErlangFilesDependencyGraph implements com.intellij.util.graph.InboundSemiGraph<String> {
     private final Project myProject;
     private final PsiManager myPsiManager;
     private final Set<String> myHeaders;
@@ -192,12 +192,14 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), ErlangPrepareDependenciesCompileTask::getPath);
     }
 
+    @NotNull
     @Override
     public Collection<String> getNodes() {
       return myPathsToDependenciesMap.keySet();
     }
 
     @Override
+    @NotNull
     public Iterator<String> getIn(@NotNull String filePath) {
       return myPathsToDependenciesMap.get(filePath).iterator();
     }
@@ -223,7 +225,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
         ErlangFile psi = getErlangFile(file);
         addDeclaredDependencies(module, psi, dependencies);
         dependencies.addAll(globalParseTransforms);
-        myPathsToDependenciesMap.put(getPath(file), ContainerUtil.newArrayList(dependencies));
+        myPathsToDependenciesMap.put(getPath(file), new ArrayList<>(dependencies));
       }
     }
 

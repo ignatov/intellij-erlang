@@ -58,7 +58,7 @@ public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeIn
   }
 
   private Integer[] getMarkedLineNumbers() {
-    List<LineMarkerInfo> lineMarkers = DaemonCodeAnalyzerImpl.getLineMarkers(myFixture.getEditor().getDocument(), myFixture.getProject());
+    List<? extends LineMarkerInfo<?>> lineMarkers = DaemonCodeAnalyzerImpl.getLineMarkers(myFixture.getEditor().getDocument(), myFixture.getProject());
     assertNotNull(lineMarkers);
     Integer[] markedLineNumbers = new Integer[lineMarkers.size()];
     for (int i = 0; i < lineMarkers.size(); i++) {
