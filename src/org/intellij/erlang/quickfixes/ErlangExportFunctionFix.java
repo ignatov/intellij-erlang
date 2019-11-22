@@ -43,12 +43,14 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPsiElement {
   private static final int MAX_EXPORT_STRING_LENGTH = 80;
-  private final Set<RangeHighlighter> myExportHighlighters = ContainerUtil.newHashSet();
+  private final Set<RangeHighlighter> myExportHighlighters = new HashSet<>();
 
   public ErlangExportFunctionFix(ErlangFunction function) {
     super(function);
@@ -169,7 +171,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   @NotNull
   public static List<ErlangExport> getExportPsiElements(@NotNull ErlangFile file) {
-    List<ErlangExport> exports = ContainerUtil.newArrayList(); // todo: mode to erlang file
+    List<ErlangExport> exports = new ArrayList<>(); // todo: move to erlang file
     for (ErlangAttribute attribute : file.getAttributes()) {
       if (attribute.getExport() != null) {
         exports.add(attribute.getExport());

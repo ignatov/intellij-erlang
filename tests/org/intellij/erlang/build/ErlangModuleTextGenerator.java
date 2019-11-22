@@ -17,9 +17,9 @@
 package org.intellij.erlang.build;
 
 import com.intellij.openapi.util.Pair;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class ErlangModuleTextGenerator {
@@ -43,11 +43,11 @@ class ErlangModuleTextGenerator {
 
   static class ErlangModuleTextBuilder {
     private final String myModuleName;
-    private final List<Pair<String, Integer>> myExports = ContainerUtil.newArrayList();
-    private final List<BehaviourBuilder> myBehaviours = ContainerUtil.newArrayList();
-    private final List<String> myParseTransforms = ContainerUtil.newArrayList();
-    private final List<String> myIncludes = ContainerUtil.newArrayList();
-    private final List<String> myIncludeLibs = ContainerUtil.newArrayList();
+    private final List<Pair<String, Integer>> myExports = new ArrayList<>();
+    private final List<BehaviourBuilder> myBehaviours = new ArrayList<>();
+    private final List<String> myParseTransforms = new ArrayList<>();
+    private final List<String> myIncludes = new ArrayList<>();
+    private final List<String> myIncludeLibs = new ArrayList<>();
 
     public ErlangModuleTextBuilder(@NotNull String moduleName) {
       myModuleName = moduleName;
@@ -144,7 +144,7 @@ class ErlangModuleTextGenerator {
     }
 
     private static void appendFunction(@NotNull StringBuilder builder, @NotNull String functionName, int arity) {
-      List<Integer> argumentIndices = ContainerUtil.newArrayListWithCapacity(arity);
+      List<Integer> argumentIndices = new ArrayList<>(arity);
       for (int i = 0; i < arity; i++) {
         argumentIndices.add(i);
       }
@@ -186,7 +186,7 @@ class ErlangModuleTextGenerator {
   }
 
   static class BehaviourBuilder extends ErlangModuleTextBuilder {
-    private final List<Pair<String, Integer>> myCallbacks = ContainerUtil.newArrayList();
+    private final List<Pair<String, Integer>> myCallbacks = new ArrayList<>();
 
     public BehaviourBuilder(@NotNull String moduleName) {
       super(moduleName);

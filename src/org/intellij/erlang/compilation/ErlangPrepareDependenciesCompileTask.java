@@ -179,7 +179,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     @NotNull
     private static Set<String> collectHeaderPaths(@NotNull Module[] modulesToCompile) {
-      Set<String> erlangHeaders = ContainerUtil.newHashSet();
+      Set<String> erlangHeaders = new HashSet<>();
       for (Module module : modulesToCompile) {
         erlangHeaders.addAll(getHeaders(module, false));
         erlangHeaders.addAll(getHeaders(module, true));
@@ -221,7 +221,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
                                       @NotNull Collection<VirtualFile> erlangFiles,
                                       @NotNull List<String> globalParseTransforms) {
       for (VirtualFile file : erlangFiles) {
-        Set<String> dependencies = ContainerUtil.newHashSet();
+        Set<String> dependencies = new HashSet<>();
         ErlangFile psi = getErlangFile(file);
         addDeclaredDependencies(module, psi, dependencies);
         dependencies.addAll(globalParseTransforms);
@@ -245,21 +245,21 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     @NotNull
     private List<String> getDeclaredParseTransformPaths(@NotNull Module module, @NotNull ErlangFile erlangModule) {
-      Set<String> pt = ContainerUtil.newHashSet();
+      Set<String> pt = new HashSet<>();
       erlangModule.addDeclaredParseTransforms(pt);
       return resolvePathsFromNames(pt, module);
     }
 
     @NotNull
     private List<String> getDeclaredBehaviourPaths(@NotNull Module module, @NotNull ErlangFile erlangModule) {
-      Set<String> behaviours = ContainerUtil.newHashSet();
+      Set<String> behaviours = new HashSet<>();
       ErlangPsiImplUtil.addDeclaredBehaviourModuleNames(erlangModule, behaviours);
       return resolvePathsFromNames(behaviours, module);
     }
 
     @NotNull
     private List<String> resolvePathsFromNames(@NotNull Collection<String> erlangModuleNames, @NotNull Module module) {
-      List<String> paths = ContainerUtil.newArrayList();
+      List<String> paths = new ArrayList<>();
       for (String erlangModuleName : erlangModuleNames) {
         paths.addAll(getPathsFromModuleName(erlangModuleName, module));
       }

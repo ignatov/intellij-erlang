@@ -136,7 +136,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     if (e == null) return Collections.emptyList();
     if (e.getTextRange().getStartOffset() < first.getTextRange().getStartOffset()) return Collections.emptyList();
 
-    List<ErlangExpression> res = ContainerUtil.newArrayList();
+    List<ErlangExpression> res = new ArrayList<>();
     for (PsiElement i = e; i != null && i.getTextOffset() <= second.getTextOffset(); i = i.getNextSibling()) {
       if (i instanceof ErlangExpression) res.add((ErlangExpression) i);
     }

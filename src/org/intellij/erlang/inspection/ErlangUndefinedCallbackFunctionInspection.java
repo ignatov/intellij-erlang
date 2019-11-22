@@ -33,6 +33,7 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +50,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
       ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviourRef);
       if (behaviourModule == null) continue;
 
-      List<ErlangCallbackSpec> undefinedCallbacks = ContainerUtil.newArrayList();
+      List<ErlangCallbackSpec> undefinedCallbacks = new ArrayList<>();
       Map<String, ErlangCallbackSpec> callbackMap = behaviourModule.getCallbackMap();
       for (ErlangCallbackSpec spec : callbackMap.values()) {
         if (supportOptionalCallbacks && spec.isOptional()) continue;

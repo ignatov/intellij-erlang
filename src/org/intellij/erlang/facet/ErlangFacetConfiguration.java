@@ -27,6 +27,7 @@ import org.intellij.erlang.jps.model.ErlangModuleExtensionProperties;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -55,7 +56,7 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
   }
 
   public void setParseTransformsFrom(Iterable<String> parseTransforms) {
-    myState.myParseTransforms = ContainerUtil.newArrayList(ContainerUtil.newLinkedHashSet(parseTransforms));
+    myState.myParseTransforms = new ArrayList<>(ContainerUtil.newLinkedHashSet(parseTransforms));
   }
   
   public void addParseTransforms(Collection<String> newParseTransforms) {

@@ -16,12 +16,12 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Attribute;
 import com.intellij.util.xmlb.annotations.Tag;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ErlangFileDescriptor {
@@ -30,7 +30,7 @@ public class ErlangFileDescriptor {
 
   @Tag("dependencies")
   @AbstractCollection(surroundWithTag = false, elementTag = "dependency")
-  public List<String> myDependencies = ContainerUtil.newArrayList();
+  public List<String> myDependencies = new ArrayList<>();
 
   @SuppressWarnings("unused") // reflection
   public ErlangFileDescriptor() {

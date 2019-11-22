@@ -16,7 +16,10 @@
 
 package org.intellij.erlang.configuration;
 
-import com.intellij.openapi.components.*;
+import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.ServiceManager;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
@@ -24,6 +27,7 @@ import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @State(name = JpsErlangCompilerOptionsSerializer.COMPILER_OPTIONS_COMPONENT_NAME, storages = {@Storage(value = "compiler.xml")})
@@ -63,7 +67,7 @@ public class ErlangCompilerSettings implements PersistentStateComponent<ErlangCo
   }
 
   public void setAdditionalErlcArguments(@NotNull List<String> arguments) {
-    myCompilerOptions.myAdditionalErlcArguments = ContainerUtil.newArrayList(arguments);
+    myCompilerOptions.myAdditionalErlcArguments = new ArrayList<>(arguments);
   }
 
   @NotNull

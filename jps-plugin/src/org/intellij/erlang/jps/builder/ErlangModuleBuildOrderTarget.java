@@ -32,6 +32,7 @@ import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.module.JpsModule;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -66,7 +67,7 @@ public class ErlangModuleBuildOrderTarget extends BuildTarget<ErlangSourceRootDe
     if (model == null) {
       return ContainerUtil.emptyList();
     }
-    List<ErlangSourceRootDescriptor> result = ContainerUtil.newArrayList();
+    List<ErlangSourceRootDescriptor> result = new ArrayList<>();
     for (JpsModule module : model.getProject().getModules()) {
       ErlangTargetBuilderUtil.addRootDescriptors(this, module, result);
     }

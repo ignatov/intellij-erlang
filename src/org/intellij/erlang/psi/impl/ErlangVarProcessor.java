@@ -22,6 +22,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +34,7 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVarProcessor implements PsiScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
-  private final List<ErlangQVar> myVarList = ContainerUtil.newArrayListWithCapacity(0);
+  private final List<ErlangQVar> myVarList = new SmartList<>();
   private final String myRequestedName;
   private final PsiElement myOrigin;
 

@@ -371,7 +371,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   private Set<String> calcExportedSignatures() {
-    Set<String> result = ContainerUtil.newHashSet();
+    Set<String> result = new HashSet<>();
     for (ErlangAttribute attribute : getAttributes()) {
       ErlangExport export = attribute.getExport();
       ErlangExportFunctions exportFunctions = export != null ? export.getExportFunctions() : null;
@@ -389,7 +389,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   private List<ErlangExpression> getCompileDirectiveExpressions() {
-    List<ErlangExpression> result = ContainerUtil.newArrayList();
+    List<ErlangExpression> result = new ArrayList<>();
     for (ErlangAttribute attribute : getAttributes()) {
       ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
       if (atomAttribute != null && "compile".equals(atomAttribute.getName()) && atomAttribute.getAttrVal() != null) {
@@ -401,7 +401,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   private Set<String> calcNoAutoImportSignatures() {
-    Set<String> result = ContainerUtil.newHashSet();
+    Set<String> result = new HashSet<>();
     for (ErlangExpression expression : getCompileDirectiveExpressions()) {
       if (expression instanceof ErlangListExpression) {
         for (ErlangExpression tuple : ((ErlangListExpression) expression).getExpressionList()) {
@@ -419,7 +419,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   private static Set<String> getNoAutoImportFunctionSignaturesFromTuple(@Nullable ErlangTupleExpression tupleExpression) {
-    final Set<String> result = ContainerUtil.newHashSet();
+    final Set<String> result = new HashSet<>();
     if (tupleExpression == null || tupleExpression.getExpressionList().size() != 2) return result;
     ErlangExpression first = ContainerUtil.getFirstItem(tupleExpression.getExpressionList());
     ErlangExpression second = ContainerUtil.getLastItem(tupleExpression.getExpressionList());
@@ -685,7 +685,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
                                ErlangCallbackFunctionStubElementType.ARRAY_FACTORY);
     }
 
-    List<ErlangCallbackFunction> optionalCallbacks = ContainerUtil.newArrayList();
+    List<ErlangCallbackFunction> optionalCallbacks = new ArrayList<>();
     for (ErlangAttribute attr : getAttributes()) {
       ErlangOptionalCallbacks callbacks = attr.getOptionalCallbacks();
       ErlangOptionalCallbackFunctions opts = callbacks != null ? callbacks.getOptionalCallbackFunctions() : null;
@@ -799,7 +799,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   private <T extends PsiElement> List<T> collectChildrenDummyAware(@NotNull final Class<T> clazz) {
-    final List<T> result = ContainerUtil.newArrayList();
+    final List<T> result = new ArrayList<>();
     processChildrenDummyAware(this, element -> {
       if (clazz.isInstance(element)) {
         //noinspection unchecked

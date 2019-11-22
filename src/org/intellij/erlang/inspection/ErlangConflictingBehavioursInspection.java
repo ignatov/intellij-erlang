@@ -91,7 +91,7 @@ public class ErlangConflictingBehavioursInspection extends ErlangInspectionBase 
     return ContainerUtil.mapNotNull(orderedCallbacks, callback -> {
       Collection<String> callbackOwners = callbacksToOwners.get(callback);
       return callbackOwners.size() < 2 ? null :
-             Pair.create(callback, ContainerUtil.newArrayList(callbackOwners));
+             Pair.create(callback, new ArrayList<>(callbackOwners));
     });
   }
 }

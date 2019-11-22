@@ -18,7 +18,6 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -28,6 +27,7 @@ import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFromImportFixBase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class ErlangDefiningImportedFunctionInspection extends ErlangInspectionBase {
@@ -37,7 +37,7 @@ public class ErlangDefiningImportedFunctionInspection extends ErlangInspectionBa
   }
 
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
-    Set<String> importedFunctionNames = ContainerUtil.newHashSet();
+    Set<String> importedFunctionNames = new HashSet<>();
     for (ErlangImportFunction f : file.getImportedFunctions()) {
       importedFunctionNames.add(ErlangPsiImplUtil.createFunctionPresentation(f));
     }

@@ -114,7 +114,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
   private static Set<String> getAllDirtyFiles(@NotNull ErlangProjectBuildOrder projectBuildOrder,
                                               @NotNull List<String> dirtyFiles) {
     Graph<String> dependencies = GraphGenerator.generate(new SortedModuleDependencyGraph(projectBuildOrder));
-    Set<String> allDirtyFiles = ContainerUtil.newHashSet();
+    Set<String> allDirtyFiles = new HashSet<>();
     for (String dirtyFile : dirtyFiles) {
       collectDirtyFiles(dirtyFile, dependencies, allDirtyFiles);
     }
