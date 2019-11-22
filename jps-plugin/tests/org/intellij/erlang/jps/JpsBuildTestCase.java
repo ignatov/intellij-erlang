@@ -18,7 +18,6 @@ package org.intellij.erlang.jps;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.testFramework.UsefulTestCase;
-import com.intellij.util.containers.hash.HashMap;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.api.CanceledStatus;
 import org.jetbrains.jps.builders.impl.BuildDataPathsImpl;
@@ -33,7 +32,9 @@ import org.jetbrains.jps.incremental.BuilderRegistry;
 import org.jetbrains.jps.incremental.IncProjectBuilder;
 import org.jetbrains.jps.incremental.RebuildRequestedException;
 import org.jetbrains.jps.incremental.fs.BuildFSState;
+import org.jetbrains.jps.incremental.relativizer.PathRelativizerService;
 import org.jetbrains.jps.incremental.storage.BuildDataManager;
+import org.jetbrains.jps.incremental.storage.BuildTargetSourcesState;
 import org.jetbrains.jps.incremental.storage.BuildTargetsState;
 import org.jetbrains.jps.incremental.storage.ProjectTimestamps;
 import org.jetbrains.jps.indices.ModuleExcludeIndex;
@@ -53,6 +54,7 @@ import org.jetbrains.jps.util.JpsPathUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class JpsBuildTestCase extends UsefulTestCase {
@@ -112,10 +114,17 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
       BuildRootIndexImpl buildRootIndex = new BuildRootIndexImpl(targetRegistry, myModel, index, dataPaths, ignoredFileIndex);
       BuildTargetIndexImpl targetIndex = new BuildTargetIndexImpl(targetRegistry, buildRootIndex);
       BuildTargetsState targetsState = new BuildTargetsState(dataPaths, myModel, buildRootIndex);
-      ProjectTimestamps timestamps = new ProjectTimestamps(myDataStorageRoot, targetsState);
-      BuildDataManager dataManager = new BuildDataManager(dataPaths, targetsState, true);
-      return new ProjectDescriptor(myModel, new BuildFSState(true), timestamps, dataManager, buildLoggingManager, index, targetsState,
-                                   targetIndex, buildRootIndex, ignoredFileIndex);
+      PathRelativizerService relativizer = new PathRelativizerService();
+      ProjectTimestamps timestamps = new ProjectTimestamps(myDataStorageRoot, targetsState, relativizer);
+      BuildDataManager dataManager = new BuildDataManager(dataPaths, targetsState, relativizer, true);
+      BuildTargetSourcesState sourcesState = new BuildTargetSourcesState(targetIndex, buildRootIndex, timestamps, dataPaths, relativizer);
+      return new ProjectDescriptor(myModel,
+                                   new BuildFSState(true),
+                                   timestamps,
+                                   dataManager,
+                                   buildLoggingManager,
+                                   index, targetsState,
+                                   targetIndex, buildRootIndex, ignoredFileIndex, sourcesState);
     }
     catch (IOException e) {
       throw new RuntimeException(e);
