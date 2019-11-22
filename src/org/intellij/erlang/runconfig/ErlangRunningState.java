@@ -30,6 +30,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
@@ -169,7 +170,7 @@ public abstract class ErlangRunningState extends CommandLineState {
       String module = split.get(0);
       String function = split.get(1);
 
-      List<String> args = ContainerUtil.newSmartList();
+      List<String> args = new SmartList<>();
       Matcher m = PATTERN.matcher(params);
       while (m.find()) {
         args.add(m.group(1));

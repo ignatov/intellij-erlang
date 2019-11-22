@@ -37,6 +37,7 @@ import com.intellij.util.SystemProperties;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.graph.DFSTBuilder;
 import com.intellij.util.graph.GraphGenerator;
+import com.intellij.util.graph.InboundSemiGraph;
 import com.intellij.util.xmlb.SkipDefaultValuesSerializationFilters;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
@@ -156,7 +157,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     return ErlangBuilderUtil.getPath(ioFile);
   }
 
-  private static class ErlangFilesDependencyGraph implements com.intellij.util.graph.InboundSemiGraph<String> {
+  private static class ErlangFilesDependencyGraph implements InboundSemiGraph<String> {
     private final Project myProject;
     private final PsiManager myPsiManager;
     private final Set<String> myHeaders;

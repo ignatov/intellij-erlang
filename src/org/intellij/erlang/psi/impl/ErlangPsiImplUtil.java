@@ -1078,7 +1078,7 @@ public class ErlangPsiImplUtil {
       VirtualFile appDir = ErlangApplicationIndex.getApplicationDirectoryByName(libName, GlobalSearchScope.allScope(project));
       ErlangFile includedFile = getRelativeErlangFile(project, relativePath, appDir);
       if (includedFile != null) {
-        return ContainerUtil.newSmartList(includedFile);
+        return new SmartList<>(includedFile);
       }
     }
     //either include_lib does not specify a library, or it was not found, falling back to 'include' behaviour.
@@ -1100,14 +1100,14 @@ public class ErlangPsiImplUtil {
     String relativePath = StringUtil.unquoteString(includeString.getText());
     Project project = erlangFile.getProject();
     ErlangFile relativeToDirectParent = getRelativeErlangFile(project, relativePath, parent);
-    if (relativeToDirectParent != null) return ContainerUtil.newSmartList(relativeToDirectParent);
+    if (relativeToDirectParent != null) return new SmartList<>(relativeToDirectParent);
     //relative to direct parent include file was not found
     //let's search in include directories
     if (containingVirtualFile != null) {
       Module module = ModuleUtilCore.findModuleForFile(containingVirtualFile, project);
       for (VirtualFile includeDir : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
         ErlangFile includedFile = getRelativeErlangFile(project, relativePath, includeDir);
-        if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
+        if (includedFile != null) return new SmartList<>(includedFile);
       }
     }
     //TODO consider providing source roots functionality to small IDEs
@@ -1123,14 +1123,14 @@ public class ErlangPsiImplUtil {
     if (otpAppRoot == null) return ContainerUtil.emptyList();
     VirtualFile otpIncludeDirectory = otpAppRoot.findChild("include");
     ErlangFile relativeToOtpIncludeDirectory = getRelativeErlangFile(project, includeStringPath, otpIncludeDirectory);
-    if (relativeToOtpIncludeDirectory != null) return ContainerUtil.newSmartList(relativeToOtpIncludeDirectory);
+    if (relativeToOtpIncludeDirectory != null) return new SmartList<>(relativeToOtpIncludeDirectory);
     //we haven't found it in 'include' directory, let's try include paths listed in rebar.config
     ErlangFile rebarConfigPsi = RebarConfigUtil.getRebarConfig(project, otpAppRoot);
     if (rebarConfigPsi != null) {
       for(String includePath : ContainerUtil.reverse(RebarConfigUtil.getIncludePaths(rebarConfigPsi))) {
         VirtualFile includePathVirtualFile = VfsUtilCore.findRelativeFile(includePath, otpAppRoot);
         ErlangFile includedFile = getRelativeErlangFile(project, includeStringPath, includePathVirtualFile);
-        if (includedFile != null) return ContainerUtil.newSmartList(includedFile);
+        if (includedFile != null) return new SmartList<>(includedFile);
       }
     }
     return ContainerUtil.emptyList();

@@ -28,7 +28,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.labels.ActionLink;
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.download.DownloadableFileDescription;
 import com.intellij.util.download.DownloadableFileService;
 import com.intellij.util.download.FileDownloader;
@@ -40,6 +39,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -132,7 +132,7 @@ public class RebarConfigurationForm {
       public void actionPerformed(@NotNull AnActionEvent e) {
         DownloadableFileService service = DownloadableFileService.getInstance();
         DownloadableFileDescription rebar = service.createFileDescription(url, fileName);
-        FileDownloader downloader = service.createDownloader(ContainerUtil.list(rebar), fileName);
+        FileDownloader downloader = service.createDownloader(Collections.singletonList(rebar), fileName);
         List<Pair<VirtualFile, DownloadableFileDescription>> pairs = downloader.downloadWithProgress(null, getEventProject(e), myLinkContainer);
         if (pairs != null) {
           for (Pair<VirtualFile, DownloadableFileDescription> pair : pairs) {

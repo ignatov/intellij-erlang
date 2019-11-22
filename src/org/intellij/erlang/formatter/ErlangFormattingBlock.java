@@ -30,7 +30,6 @@ import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -257,13 +256,13 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private AlignmentStrategy createOrGetAlignmentStrategy() {
     PsiElement psi = getNode().getPsi();
     if (myErlangSettings.ALIGN_FUNCTION_CLAUSES && psi instanceof ErlangFunction) {
-      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_CLAUSE_BODY), ERL_FUNCTION_CLAUSE, true);
+      return AlignmentStrategy.createAlignmentPerTypeStrategy(Collections.singletonList(ERL_CLAUSE_BODY), ERL_FUNCTION_CLAUSE, true);
     }
     if (myErlangSettings.ALIGN_FUN_CLAUSES && psi instanceof ErlangFunExpression) {
-      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_FUN_CLAUSE), ERL_FUN_CLAUSES, true);
+      return AlignmentStrategy.createAlignmentPerTypeStrategy(Collections.singletonList(ERL_FUN_CLAUSE), ERL_FUN_CLAUSES, true);
     }
     if (myErlangSettings.ALIGN_RECORD_FIELD_ASSIGNMENTS && psi instanceof ErlangRecordTuple) {
-      return AlignmentStrategy.createAlignmentPerTypeStrategy(ContainerUtil.list(ERL_OP_EQ), ERL_RECORD_FIELD, true);
+      return AlignmentStrategy.createAlignmentPerTypeStrategy(Collections.singletonList(ERL_OP_EQ), ERL_RECORD_FIELD, true);
     }
 
     return myAlignmentStrategy;

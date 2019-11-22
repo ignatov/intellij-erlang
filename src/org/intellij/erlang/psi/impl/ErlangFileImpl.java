@@ -733,7 +733,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       ErlangImportDirective importDirective = attribute.getImportDirective();
       ErlangImportFunctions importFunctions = importDirective != null ? importDirective.getImportFunctions() : null;
       List<ErlangImportFunction> functions = importFunctions != null ? importFunctions.getImportFunctionList() : null;
-      ContainerUtil.addAll(result, ContainerUtil.notNullize(functions));
+      result.addAll(ContainerUtil.notNullize(functions));
     }
     return result;
   }
@@ -829,7 +829,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   private static <E extends StubBasedPsiElement<?>> List<E> getChildrenByType(@NotNull ErlangFileStub stub,
                                                                               @NotNull IElementType elementType,
                                                                               @NotNull ArrayFactory<E> arrayFactory) {
-    return ContainerUtil.list(stub.getChildrenByType(elementType, arrayFactory));
+    return Arrays.asList(stub.getChildrenByType(elementType, arrayFactory));
   }
 
   private abstract class ValueProvider<T> implements CachedValueProvider<T> {

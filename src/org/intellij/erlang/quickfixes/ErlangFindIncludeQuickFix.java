@@ -41,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -118,7 +119,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
       @NotNull
       @Override
-      public List getValues() {
+      public List<PsiFile> getValues() {
         return Arrays.asList(files);
       }
 
@@ -127,7 +128,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
         return true;
       }
 
-      @Nullable
+      @NotNull
       @Override
       public Icon getIconFor(Object o) {
         return ErlangIcons.HEADER;
@@ -154,7 +155,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
         return 0;
       }
 
-      @Nullable
+      @NotNull
       @Override
       public String getTitle() {
         return "Multiple files found";
@@ -167,7 +168,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
         CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
           fixUsingIncludeFile(problem, f);
           renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
-          FileContentUtilCore.reparseFiles(Arrays.asList(problem.getContainingFile().getVirtualFile()));
+          FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
         }), "add facet action(find include quick fix)", null, problemEditor.getDocument());
 
         return null;

@@ -21,8 +21,8 @@ import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.ui.ListCellRendererWrapper;
 import com.intellij.ui.RawCommandLineEditor;
+import com.intellij.ui.SimpleListCellRenderer;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +34,7 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   private JPanel myPanel;
   private RawCommandLineEditor myConsoleArgsEditor;
   private TextFieldWithBrowseButton myWorkingDirPathField;
-  private JComboBox myModuleComboBox;
+  private JComboBox<Module> myModuleComboBox;
 
   @Nullable private final Module myInitialModule;
 
@@ -50,12 +50,10 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
     myModuleComboBox.removeAllItems();
     for (Module module : config.getValidModules()) {
       if (ModuleType.get(module) == ErlangModuleType.getInstance()) {
-        //noinspection unchecked
         myModuleComboBox.addItem(module);
       }
     }
     myModuleComboBox.setSelectedItem(myInitialModule);
-    //noinspection unchecked
     myModuleComboBox.setRenderer(getListCellRendererWrapper());
 
     myWorkingDirPathField.setText(config.getWorkingDirPath());
@@ -82,10 +80,10 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   }
 
   @NotNull
-  private static ListCellRendererWrapper<Module> getListCellRendererWrapper() {
-    return new ListCellRendererWrapper<Module>() {
+  private static SimpleListCellRenderer<Module> getListCellRendererWrapper() {
+    return new SimpleListCellRenderer<Module>() {
       @Override
-      public void customize(JList list, @Nullable Module module, int index, boolean selected, boolean hasFocus) {
+      public void customize(@NotNull JList<? extends Module> list, @Nullable Module module, int index, boolean selected, boolean hasFocus) {
         if (module != null) {
           setText(module.getName());
         }

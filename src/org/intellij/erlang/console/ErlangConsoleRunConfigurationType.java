@@ -18,7 +18,6 @@ package org.intellij.erlang.console;
 
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
-import com.intellij.openapi.extensions.Extensions;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -27,9 +26,9 @@ import javax.swing.*;
 
 public final class ErlangConsoleRunConfigurationType implements ConfigurationType {
   public static ErlangConsoleRunConfigurationType getInstance() {
-    return Extensions.findExtension(CONFIGURATION_TYPE_EP, ErlangConsoleRunConfigurationType.class);
+    return CONFIGURATION_TYPE_EP.findExtensionOrFail(ErlangConsoleRunConfigurationType.class);
   }
-
+  
   @NotNull
   @NonNls
   @Override

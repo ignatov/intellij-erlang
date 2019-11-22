@@ -40,13 +40,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends ErlangRunConfigurationBase> extends RunConfigurationProducer<RunConfig> {
+public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends ErlangRunConfigurationBase<?>> extends RunConfigurationProducer<RunConfig> {
   protected ErlangDebuggableRunConfigurationProducer(ConfigurationType configurationType) {
     super(configurationType);
   }
 
   @Override
-  protected final boolean setupConfigurationFromContext(RunConfig runConfig, ConfigurationContext context, Ref<PsiElement> ref) {
+  protected final boolean setupConfigurationFromContext(@NotNull RunConfig runConfig, @NotNull ConfigurationContext context, Ref<PsiElement> ref) {
     PsiElement location = ref.get();
     return location != null && location.isValid() &&
       setupConfigurationFromContextImpl(runConfig, context, location) &&
@@ -58,7 +58,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
                                                                @NotNull PsiElement target);
 
   @Override
-  public final boolean isConfigurationFromContext(RunConfig runConfig, ConfigurationContext context) {
+  public final boolean isConfigurationFromContext(@NotNull RunConfig runConfig, ConfigurationContext context) {
     PsiElement location = context.getPsiLocation();
     return location != null && location.isValid() &&
       Comparing.equal(runConfig.getConfigurationModule().getModule(), context.getModule()) &&
@@ -74,7 +74,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
     return true;
   }
 
-  public static void updateDebugOptions(@NotNull ErlangRunConfigurationBase runConfig) {
+  public static void updateDebugOptions(@NotNull ErlangRunConfigurationBase<?> runConfig) {
     ErlangRunConfigurationBase.ErlangDebugOptions debugOptions = runConfig.getDebugOptions();
     Module module = runConfig.getConfigurationModule().getModule();
     if (debugOptions.isAutoUpdateModulesNotToInterpret() && module != null) {

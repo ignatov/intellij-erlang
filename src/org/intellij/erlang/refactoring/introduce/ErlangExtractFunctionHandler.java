@@ -41,6 +41,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.RefactoringActionHandler;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.util.ObjectUtils;
+import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
@@ -97,7 +98,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
                                              @Override
                                              public void process(@NotNull Editor editor,
                                                                  @NotNull ErlangExpression expression) {
-                                               perform(ContainerUtil.newSmartList(expression));
+                                               perform(new SmartList<>(expression));
                                              }
                                            });
     }
@@ -127,7 +128,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
     if (commonParent instanceof ErlangExpression) {
       if (ErlangPsiImplUtil.inLeftPartOfAssignment(commonParent, false)) return Collections.emptyList();
-      return ContainerUtil.newSmartList((ErlangExpression) commonParent);
+      return new SmartList<>((ErlangExpression) commonParent);
     }
 
     PsiElement e = first;
@@ -245,7 +246,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
   @NotNull
   private static Set<ErlangNamedElement> getSimpleDeclarations(@NotNull List<? extends PsiElement> children) {
-    final Set<ErlangNamedElement> result = ContainerUtil.newLinkedHashSet();
+    final Set<ErlangNamedElement> result = new LinkedHashSet<>();
     for (PsiElement child : children) {
       child.accept(new ErlangRecursiveVisitor() {
         @Override
@@ -258,7 +259,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   }
 
   private static class RefVisitor extends PsiRecursiveElementVisitor {
-    private final LinkedHashSet<ErlangNamedElement> myComponentNames = ContainerUtil.newLinkedHashSet();
+    private final LinkedHashSet<ErlangNamedElement> myComponentNames = new LinkedHashSet<>();
 
     @NotNull
     public Collection<ErlangNamedElement> getComponentNames() {

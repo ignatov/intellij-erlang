@@ -172,7 +172,7 @@ public class ErlangModuleBuildOrderBuilder extends TargetBuilder<ErlangSourceRoo
   }
 
   private static class SortedModuleDependencyGraph implements InboundSemiGraph<String> {
-    private final LinkedHashMap<String, List<String>> myPathsToDependenciesMap = ContainerUtil.newLinkedHashMap();
+    private final LinkedHashMap<String, List<String>> myPathsToDependenciesMap = new LinkedHashMap<>();
 
     public SortedModuleDependencyGraph(@NotNull ErlangProjectBuildOrder projectBuildOrder) {
       for (ErlangFileDescriptor node : projectBuildOrder.myErlangFiles) {

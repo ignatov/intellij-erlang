@@ -52,6 +52,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
     return new SmartIndentOptionsEditor();
   }
 
+  @NotNull
   @Override
   public CommonCodeStyleSettings getDefaultCommonSettings() {
     CommonCodeStyleSettings defaultSettings = new CommonCodeStyleSettings(getLanguage());

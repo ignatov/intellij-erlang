@@ -117,12 +117,12 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       }
     };
     JBPopupFactory.getInstance().createListPopupBuilder(exportPopupList)
-      .setTitle("Choose export")
+      .setTitle("Choose Export")
       .setMovable(false)
       .setResizable(false)
       .addListener(new JBPopupAdapter() {
         @Override
-        public void onClosed(LightweightWindowEvent event) {
+        public void onClosed(@NotNull LightweightWindowEvent event) {
           dropHighlighters();
         }
       })

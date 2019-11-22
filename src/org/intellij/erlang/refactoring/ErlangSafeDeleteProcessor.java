@@ -28,12 +28,13 @@ import com.intellij.refactoring.safeDelete.SafeDeleteProcessorDelegateBase;
 import com.intellij.refactoring.safeDelete.usageInfo.SafeDeleteReferenceSimpleDeleteUsageInfo;
 import com.intellij.usageView.UsageInfo;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.containers.ContainerUtil;
+import com.intellij.util.SmartList;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -42,7 +43,7 @@ import java.util.List;
 public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
   @Nullable
   @Override
-  public Collection<? extends PsiElement> getElementsToSearch(PsiElement element, @Nullable Module module, Collection<PsiElement> allElementsToDelete) {
+  public Collection<? extends PsiElement> getElementsToSearch(@NotNull PsiElement element, @Nullable Module module, @NotNull Collection<PsiElement> allElementsToDelete) {
     return allElementsToDelete;
   }
 
@@ -53,7 +54,7 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
 
   @Nullable
   @Override
-  public NonCodeUsageSearchInfo findUsages(PsiElement element, PsiElement[] allElementsToDelete, List<UsageInfo> result) {
+  public NonCodeUsageSearchInfo findUsages(@NotNull PsiElement element, @NotNull PsiElement[] allElementsToDelete, @NotNull List<UsageInfo> result) {
     if (element instanceof ErlangFunction) {
       Collection<PsiReference> all = ReferencesSearch.search(element).findAll();
       for (PsiReference ref : all) {
@@ -92,11 +93,11 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
 
   @Nullable
   @Override
-  public Collection<PsiElement> getAdditionalElementsToDelete(PsiElement element, Collection<PsiElement> allElementsToDelete, boolean askUser) {
+  public Collection<PsiElement> getAdditionalElementsToDelete(@NotNull PsiElement element, @NotNull Collection<PsiElement> allElementsToDelete, boolean askUser) {
     if (element instanceof ErlangFunction) {
       ErlangSpecification specification = ((ErlangFunction) element).findSpecification();
       if (specification != null) {
-        return ContainerUtil.newSmartList(specification.getParent());
+        return new SmartList<>(specification.getParent());
       }
     }
     return null;
@@ -104,7 +105,7 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
 
   @Nullable
   @Override
-  public Collection<String> findConflicts(PsiElement element, PsiElement[] allElementsToDelete) {
+  public Collection<String> findConflicts(@NotNull PsiElement element, @NotNull PsiElement[] allElementsToDelete) {
     return null;
   }
 
