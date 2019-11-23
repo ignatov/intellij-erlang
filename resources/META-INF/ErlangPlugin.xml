@@ -135,6 +135,8 @@
         <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.marker.ErlangBehaviourMarkerProvider"/>
         <codeInsight.lineMarkerProvider language="Erlang" implementationClass="org.intellij.erlang.marker.ErlangMethodSeparatorProvider"/>
 
+        <breadcrumbsInfoProvider implementation="org.intellij.erlang.ErlangBreadcrumbsProvider"/>
+
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
         <codeInsight.gotoSuper language="Erlang" implementationClass="org.intellij.erlang.navigation.ErlangGotoSuperHandler"/>
 
