@@ -175,7 +175,7 @@
         <localInspection language="Erlang" shortName="ErlangIncorrectModuleName" displayName="Incorrect module name"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection"/>
-        <localInspection language="Erlang" shortName="ErlangIllegalPattern" displayName="Illegal Pattern"
+        <localInspection language="Erlang" shortName="ErlangIllegalPattern" displayName="Illegal pattern"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangIllegalPatternInspection"/>
         <localInspection language="Erlang" shortName="ErlangIllegalGuard" displayName="Illegal guard"
@@ -282,7 +282,7 @@
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
         </action>
         <action id="org.intellij.erlang.actions.ErlangEmacsFormatAction"
-                class="org.intellij.erlang.actions.ErlangEmacsFormatAction" text="Reformat code with Emacs"
+                class="org.intellij.erlang.actions.ErlangEmacsFormatAction" text="Reformat Code with Emacs"
                 description="Format current file with external Emacs formatter">
             <add-to-group group-id="CodeFormatGroup" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl alt E"/>
