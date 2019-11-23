@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.marker;
 
-import com.intellij.codeHighlighting.Pass;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.openapi.editor.Document;
@@ -39,7 +38,7 @@ import java.util.Set;
 
 public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider, DumbAware {
   @Override
-  public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
+  public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
     return null; //do nothing
   }
 
@@ -80,7 +79,6 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
       super(e,
             e.getTextRange(),
             ErlangIcons.RECURSIVE_CALL,
-            Pass.LINE_MARKERS,
             FunctionUtil.constant("Recursive call"),
             null,
             GutterIconRenderer.Alignment.RIGHT
