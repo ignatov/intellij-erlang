@@ -18,6 +18,7 @@
   <extensions defaultExtensionNs="com.intellij">
     <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.module.ErlangModuleType"/>
     <compileServer.plugin classpath="jps-plugin.jar"/>
+    <buildProcess.parametersProvider implementation="org.intellij.erlang.ErlangBuildProcessParametersProvider"/>
     <facetType implementation="org.intellij.erlang.facet.ErlangFacetType"/>
     <framework.detector implementation="org.intellij.erlang.facet.ErlangFacetBasedFrameworkDetector"/>
     <projectService serviceImplementation="org.intellij.erlang.configuration.ErlangCompilerSettings" />
