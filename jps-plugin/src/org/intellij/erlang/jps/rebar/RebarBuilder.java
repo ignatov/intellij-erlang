@@ -83,7 +83,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
       isRebarRun = true;
     }
     if (!isRebarRun) {
-      String messageText = "Skipped module \'" + module.getName() + "\' because rebar.config is not found.";
+      String messageText = "Skipped module '" + module.getName() + "' because rebar.config is not found.";
       context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, messageText));
     }
   }
