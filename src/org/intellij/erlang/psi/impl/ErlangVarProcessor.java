@@ -67,6 +67,10 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     boolean inDefinitionOrAssignment = inDefinition || inAssignment;
     boolean inFunction = inFunctionClause && inDefinitionOrAssignment;
     boolean inMacroDefinition = PsiTreeUtil.isAncestor(macroDefinition, psiElement, false) && inDefinitionOrAssignment;
+    boolean inBinaryWidthExpression = isBinaryWidthExpression(psiElement);
+    
+    if (inAssignment && inBinaryWidthExpression) return true;
+    
     if (inFunction || inModule(psiElement) || inSpecification || inMacroDefinition) {
       boolean inArgumentList = inArgumentList(psiElement);
       boolean inArgumentListBeforeAssignment =

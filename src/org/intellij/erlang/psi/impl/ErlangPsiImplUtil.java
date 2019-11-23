@@ -510,6 +510,19 @@ public class ErlangPsiImplUtil {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangColonQualifiedExpression.class) != null;
   }
 
+  /**
+   * Check whether expression is used in a binary expression after the colon, like <<_:Var>>
+   */
+  public static boolean isBinaryWidthExpression(PsiElement psiElement) {
+    ErlangMaxExpression maxParent = PsiTreeUtil.getParentOfType(psiElement, ErlangMaxExpression.class);
+    if (maxParent == null) return false;
+
+    PsiElement prevSib = PsiTreeUtil.getPrevSiblingOfType(maxParent, PsiElement.class);
+    if (prevSib == null) return false;
+
+    return prevSib.textMatches(":");
+  }
+
   public static boolean inLeftPartOfAssignment(@NotNull PsiElement psiElement) {
     return inLeftPartOfAssignment(psiElement, true);
   }
