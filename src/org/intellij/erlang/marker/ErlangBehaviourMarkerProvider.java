@@ -37,7 +37,7 @@ import java.util.List;
 
 public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
   @Override
-  public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement element) {
+  public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
     return null;
   }
 
@@ -61,11 +61,10 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
     }
   }
 
-  private static LineMarkerInfo createImplementationMarker(PsiElement atom,
-                                                           ErlangFunction function,
-                                                           Collection<ErlangCallbackSpec> callbackSpecs) {
+  private static LineMarkerInfo<PsiElement> createImplementationMarker(@NotNull PsiElement atom,
+                                                                       @NotNull ErlangFunction function,
+                                                                       @NotNull Collection<ErlangCallbackSpec> callbackSpecs) {
     String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
-
     return new LineMarkerInfo<>(
       atom,
       atom.getTextRange(),
