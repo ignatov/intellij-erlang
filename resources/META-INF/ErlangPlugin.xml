@@ -111,6 +111,7 @@
         <programRunner implementation="org.intellij.erlang.runconfig.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationType"/>
         <runConfigurationProducer implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationProducer"/>
+        <runLineMarkerContributor language="Erlang" implementationClass="org.intellij.erlang.runconfig.ErlangRunLineMarkerContributor"/>
 
         <!-- debug -->
         <programRunner implementation="org.intellij.erlang.debugger.xdebug.ErlangDebugRunner"/>
