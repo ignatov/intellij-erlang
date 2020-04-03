@@ -91,6 +91,13 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         "bar(A, B)-> A#foo{two = }");
   }
 
+  public void testRecordFields7() {
+    doTestInclude(
+      "-record(foo, {id, 'WeirdCase', 'strange-symbol'}).\n" +
+      "bar(A, B)-> A#foo{<caret>}",
+      "id", "'WeirdCase'", "'strange-symbol'");
+  }
+
   public void testMacros() {
     doTestInclude(
       "-define(foo, 1).\n" +

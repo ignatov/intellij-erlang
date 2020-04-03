@@ -255,7 +255,10 @@ public class ErlangCompletionContributor extends CompletionContributor {
   }
 
   private static LookupElement createFieldLookupElement(@NotNull Project project, @NotNull String text, boolean withoutEq) {
-    return LookupElementBuilder.create(text)
+    String maybeQuotedText = ErlangPsiImplUtil.needQuotation(text)
+                             ? "'" + text + "'"
+                             : text;
+    return LookupElementBuilder.create(maybeQuotedText)
                                .withIcon(ErlangIcons.FIELD)
                                .withInsertHandler(withoutEq ? null : equalsInsertHandler(project));
   }
