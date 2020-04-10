@@ -100,7 +100,7 @@ public class ErlangCallHierarchyProvider implements HierarchyProvider {
 
     @Nullable
     @Override
-    protected Comparator<NodeDescriptor> getComparator() {
+    protected Comparator<NodeDescriptor<?>> getComparator() {
       HierarchyBrowserManager.State state = HierarchyBrowserManager.getInstance(myProject).getState();
       return state != null && state.SORT_ALPHABETICALLY ? AlphaComparator.INSTANCE : SourceComparator.INSTANCE;
     }

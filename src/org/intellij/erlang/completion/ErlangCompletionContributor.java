@@ -21,7 +21,6 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
-import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -213,14 +212,6 @@ public class ErlangCompletionContributor extends CompletionContributor {
               result.addElement(PrioritizedLookupElement.withPriority(
                 LookupElementBuilder.create(name).withLookupString(name.toLowerCase()).withIcon(ErlangIcons.ATOM), ATOM_PRIORITY));
             }
-          }
-
-          String shortcut = CompletionUtil.getActionShortcut(IdeActions.ACTION_CODE_COMPLETION);
-          if (invocationCount == 1 && new Random().nextBoolean()) {
-            result.addLookupAdvertisement("Press " + shortcut + " to activate atom completion from application scope");
-          }
-          if (moduleScope) {
-            result.addLookupAdvertisement("Press " + shortcut + " to activate atom completion from project scope");
           }
         }
 
