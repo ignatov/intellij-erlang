@@ -1,5 +1,6 @@
 plugins {
-  id 'org.jetbrains.intellij' version "0.4.19"
+  id 'java'
+  id 'org.jetbrains.intellij' version '0.4.20'
 }
 
 version = "${version}.$buildNumber"
@@ -7,7 +8,11 @@ allprojects {
   apply plugin: 'java'
   sourceCompatibility = javaVersion
   targetCompatibility = javaVersion
-  tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
+  tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    // To enable linting of deprecation warnings:
+    // options.compilerArgs.add("-Xlint:all")
+  }
 
   sourceSets {
     main {
@@ -53,6 +58,7 @@ allprojects {
 }
 
 repositories {
+  mavenCentral()
   flatDir {
     dirs 'libs'
   }
