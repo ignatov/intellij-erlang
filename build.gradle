@@ -59,8 +59,8 @@ repositories {
 }
 
 dependencies {
-  compile name: 'OtpErlang'
-  compile project('jps-plugin')
+  compileOnly name: 'OtpErlang'
+  implementation project('jps-plugin')
 }
 
 apply plugin: 'idea'
