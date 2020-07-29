@@ -24,7 +24,6 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
-import com.intellij.util.ObjectUtils;
 import com.intellij.util.PlatformUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -32,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends BasePlatformTestCase {
   private String myBackedUpPlatformPrefix;
@@ -106,6 +106,6 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Base
   protected <T extends PsiElement> T getElementAtCaret(@NotNull Class<T> clazz) {
     int offset = myFixture.getEditor().getCaretModel().getOffset();
     PsiElement focused = myFixture.getFile().findElementAt(offset);
-    return ObjectUtils.assertNotNull(PsiTreeUtil.getParentOfType(focused, clazz));
+    return Objects.requireNonNull(PsiTreeUtil.getParentOfType(focused, clazz));
   }
 }

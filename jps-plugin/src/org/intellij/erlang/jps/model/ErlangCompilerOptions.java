@@ -17,8 +17,8 @@
 package org.intellij.erlang.jps.model;
 
 import com.intellij.util.SmartList;
-import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Tag;
+import com.intellij.util.xmlb.annotations.XCollection;
 
 import java.util.List;
 
@@ -38,6 +38,6 @@ public class ErlangCompilerOptions {
   public boolean myAddDebugInfoEnabled = true;
 
   @Tag("additionalErlcArguments")
-  @AbstractCollection(elementTag = "arg", elementTypes = String.class)
+  @XCollection(elementName = "arg", elementTypes = String.class)
   public List<String> myAdditionalErlcArguments = new SmartList<>();
 }

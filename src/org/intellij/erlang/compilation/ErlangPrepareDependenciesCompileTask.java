@@ -207,7 +207,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     @NotNull
     public List<String> getDependencies(@NotNull String filePath) {
-      return ObjectUtils.assertNotNull(myPathsToDependenciesMap.get(filePath));
+      return Objects.requireNonNull(myPathsToDependenciesMap.get(filePath));
     }
 
     private void buildDependenciesMap(@NotNull Module module) {
@@ -233,7 +233,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     @NotNull
     private ErlangFile getErlangFile(@NotNull VirtualFile virtualFile) {
       PsiFile psiFile = myPsiManager.findFile(virtualFile);
-      return ObjectUtils.assertNotNull(ObjectUtils.tryCast(psiFile, ErlangFile.class));
+      return Objects.requireNonNull(ObjectUtils.tryCast(psiFile, ErlangFile.class));
     }
 
     private void addDeclaredDependencies(@NotNull Module module,

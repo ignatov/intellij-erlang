@@ -1810,7 +1810,7 @@ public class ErlangPsiImplUtil {
       return false;
     }
 
-    ErlangFile file = ObjectUtils.assertNotNull(ObjectUtils.tryCast(spec.getContainingFile(), ErlangFile.class));
+    ErlangFile file = Objects.requireNonNull(ObjectUtils.tryCast(spec.getContainingFile(), ErlangFile.class));
     int specArity = getCallBackSpecArguments(spec).size();
 
     for (ErlangCallbackFunction callback : file.getOptionalCallbacks()) {
