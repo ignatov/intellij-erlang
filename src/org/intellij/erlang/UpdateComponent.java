@@ -17,7 +17,7 @@
 package org.intellij.erlang;
 
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManager;
+import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
@@ -68,12 +68,12 @@ public class UpdateComponent implements BaseComponent, Disposable {
   @NotNull
   @SuppressWarnings("ConstantConditions")
   private static IdeaPluginDescriptor getPlugin() {
-    return PluginManager.getPlugin(PluginId.getId(PLUGIN_ID));
+    return PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
   }
 
   private static void checkForUpdates() {
     PropertiesComponent propertiesComponent = PropertiesComponent.getInstance();
-    long lastUpdate = propertiesComponent.getOrInitLong(KEY, 0);
+    long lastUpdate = propertiesComponent.getLong(KEY, 0);
     if (lastUpdate == 0 || System.currentTimeMillis() - lastUpdate > TimeUnit.DAYS.toMillis(1)) {
       ApplicationManager.getApplication().executeOnPooledThread(() -> {
         try {

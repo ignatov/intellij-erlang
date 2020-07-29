@@ -31,7 +31,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.util.PsiUtilBase;
+import com.intellij.psi.util.PsiEditorUtil;
 import com.intellij.util.FileContentUtilCore;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
@@ -111,7 +111,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
                                              final String includeString,
                                              final String includeFileName
   ) {
-    final Editor problemEditor = PsiUtilBase.findEditor(problem);
+    final Editor problemEditor = PsiEditorUtil.findEditor(problem);
     if (problemEditor == null) {
       return;
     }
