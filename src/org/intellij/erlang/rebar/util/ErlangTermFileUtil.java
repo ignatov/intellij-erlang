@@ -28,7 +28,6 @@ import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Consumer;
-import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
@@ -40,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 
 //TODO use traversers - no need to build PSI here
@@ -110,7 +110,7 @@ public final class ErlangTermFileUtil {
     Project defaultProject = ProjectManager.getInstance().getDefaultProject();
     PsiFile file = PsiFileFactory.getInstance(defaultProject).createFileFromText("a.config", ErlangFileType.TERMS, formText);
     ErlangExpression form = ContainerUtil.getFirstItem(PsiTreeUtil.getChildrenOfTypeAsList(file, ErlangExpression.class));
-    return ObjectUtils.assertNotNull(form);
+    return Objects.requireNonNull(form);
   }
 
   public static void addListExpressionItem(@NotNull ErlangListExpression list, @NotNull ErlangExpression what) {

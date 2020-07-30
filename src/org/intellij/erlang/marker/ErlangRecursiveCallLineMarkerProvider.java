@@ -43,7 +43,7 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
   }
 
   @Override
-  public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
+  public void collectSlowLineMarkers(@NotNull List<? extends PsiElement> elements, @NotNull Collection<? super LineMarkerInfo<?>> result) {
     Set<Integer> lines = new HashSet<>();
     for (PsiElement element : elements) {
       PsiDocumentManager instance = PsiDocumentManager.getInstance(element.getProject());

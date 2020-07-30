@@ -24,7 +24,6 @@ import com.intellij.openapi.options.ex.Settings;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.RawCommandLineEditor;
-import com.intellij.util.ObjectUtils;
 import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
@@ -34,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import java.util.List;
+import java.util.Objects;
 
 public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
 
@@ -56,7 +56,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   private void setupUiListeners() {
     myConfigureRebarButton.addActionListener(e -> {
       DataContext context = DataManager.getInstance().getDataContext(myConfigureRebarButton);
-      Settings settings = ObjectUtils.assertNotNull(Settings.KEY.getData(context));
+      Settings settings = Objects.requireNonNull(Settings.KEY.getData(context));
       Configurable configurable = settings.find(ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
       if (configurable != null) {
         settings.select(configurable);

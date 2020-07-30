@@ -23,6 +23,7 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiEditorUtil;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilBase;
 import org.intellij.erlang.psi.ErlangFile;
@@ -54,7 +55,7 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
   }
 
   private static void insertMacroDefinition(Project project, ErlangMacros macro, ErlangFile file) {
-    Editor editor = PsiUtilBase.findEditor(file);
+    Editor editor = PsiEditorUtil.findEditor(file);
     String macroName = getMacroName(macro);
 
     if (editor == null || macroName == null) return;

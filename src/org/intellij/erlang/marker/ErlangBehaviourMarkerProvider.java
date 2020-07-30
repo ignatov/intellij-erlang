@@ -43,7 +43,7 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
   }
 
   @Override
-  public void collectSlowLineMarkers(@NotNull List<PsiElement> elements, @NotNull Collection<LineMarkerInfo> result) {
+  public void collectSlowLineMarkers(@NotNull List<? extends PsiElement> elements, @NotNull Collection<? super LineMarkerInfo<?>> result) {
     for (PsiElement element : elements) {
       ErlangFunction function = findFunctionFromNameLeaf(element);
       if (function != null) {

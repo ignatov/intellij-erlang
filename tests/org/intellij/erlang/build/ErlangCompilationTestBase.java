@@ -37,7 +37,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.CompilerTester;
-import com.intellij.testFramework.PlatformTestCase;
+import com.intellij.testFramework.HeavyPlatformTestCase;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.Function;
@@ -59,7 +59,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-public abstract class ErlangCompilationTestBase extends PlatformTestCase {
+public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
   protected CompilationRunner myCompilationRunner;
 
   @Override
@@ -129,7 +129,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
     VirtualFile baseDir = VfsUtil.createDirectoryIfMissing(myProject.getBaseDir(), moduleName);
     File moduleFile = new File(FileUtil.toSystemDependentName(baseDir.getPath()), moduleName + ".iml");
     FileUtil.createIfDoesntExist(moduleFile);
-    myFilesToDelete.add(moduleFile);
+    myFilesToDelete.add(moduleFile.toPath());
     VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(moduleFile);
     assertNotNull(virtualFile);
     return ModuleManager.getInstance(myProject).newModule(virtualFile.getPath(), ErlangModuleType.getInstance().getId());
@@ -285,7 +285,7 @@ public abstract class ErlangCompilationTestBase extends PlatformTestCase {
 
   protected class CompilationRunner {
     private final CompileScope myScope;
-    private CompilerTester myTester;
+    private final CompilerTester myTester;
 
     CompilationRunner(@NotNull Module... moduleNames) throws Exception {
       this(createModulesCompileScope(moduleNames));

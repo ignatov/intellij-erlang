@@ -40,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class RebarRunningStateUtil {
   private static final String REBAR = "rebar3";
@@ -98,7 +99,7 @@ public class RebarRunningStateUtil {
         return contentRoots[0].getPath();
       }
     }
-    return ObjectUtils.assertNotNull(configuration.getProject().getBasePath());
+    return Objects.requireNonNull(configuration.getProject().getBasePath());
   }
 
   @NotNull

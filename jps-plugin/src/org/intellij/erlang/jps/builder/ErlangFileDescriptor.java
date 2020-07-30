@@ -16,9 +16,9 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.util.xmlb.annotations.AbstractCollection;
 import com.intellij.util.xmlb.annotations.Attribute;
 import com.intellij.util.xmlb.annotations.Tag;
+import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ public class ErlangFileDescriptor {
   public String myPath;
 
   @Tag("dependencies")
-  @AbstractCollection(surroundWithTag = false, elementTag = "dependency")
+  @XCollection(elementName = "dependency")
   public List<String> myDependencies = new ArrayList<>();
 
   @SuppressWarnings("unused") // reflection

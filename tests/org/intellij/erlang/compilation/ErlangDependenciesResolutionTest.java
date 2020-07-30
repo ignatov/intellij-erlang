@@ -22,7 +22,7 @@ import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.testFramework.ModuleTestCase;
+import com.intellij.testFramework.JavaModuleTestCase;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
@@ -33,7 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class ErlangDependenciesResolutionTest extends ModuleTestCase {
+public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
