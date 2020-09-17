@@ -87,7 +87,7 @@ public class ErlangPsiImplUtil {
   public static final Set<String> BUILT_IN_TYPES = ContainerUtil.set(
     "any", "atom", "boolean", "byte", "char", "float", "integer", "iolist", "list", "maybe_improper_list", "mfa",
     "module", "neg_integer", "no_return", "node", "non_neg_integer", "none", "nonempty_string", "number", "pid", "port",
-    "pos_integer", "ref", "string", "term", "timeout"
+    "pos_integer", "reference", "string", "term", "timeout"
   );
   public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 
