@@ -155,10 +155,10 @@ send_debug_remote_node_response(Node, Error) ->
   ?RDEBUG_NOTIFIER ! #debug_remote_node_response{node = Node, status = {error, Error}}.
 
 connect_to_remote_node(Node, nocookie) ->
-  net_kernel:connect(Node);
+  net_kernel:connect_node(Node);
 connect_to_remote_node(Node, Cookie) ->
   erlang:set_cookie(Node, Cookie),
-  net_kernel:connect(Node).
+  net_kernel:connect_node(Node).
 
 interpret_modules(Modules, Node) ->
   IntNiResults = [{Module, int:ni(Module)} || Module <- Modules],
