@@ -53,6 +53,7 @@ allprojects {
 }
 
 repositories {
+  mavenCentral()
   flatDir {
     dirs 'libs'
   }
@@ -61,6 +62,7 @@ repositories {
 dependencies {
   compile name: 'OtpErlang'
   compile project('jps-plugin')
+  compile group: 'com.github.metadave', name: 'etp', version: '0.4'
 }
 
 apply plugin: 'idea'
