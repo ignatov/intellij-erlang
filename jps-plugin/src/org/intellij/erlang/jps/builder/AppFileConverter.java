@@ -61,6 +61,7 @@ public class AppFileConverter {
     if(appConfigterms!=null)
       try(FileWriter fw=new FileWriter(appConfigDst)) {
         fw.write(appConfigterms.toString());
+        fw.write(".");
       } catch(Exception e) {
         context.processMessage(new CompilerMessage(ErlangBuilder.NAME, BuildMessage.Kind.INFO, "Failed to write "+appConfigDst+" : "+e.getLocalizedMessage()));
         appConfigterms=null;
