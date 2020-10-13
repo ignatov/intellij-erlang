@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.jps.builder;
 
+import com.intellij.openapi.vfs.VirtualFileManager;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -90,6 +91,7 @@ public class ErlangCompilerError {
                                                          @NotNull String details) {
     int lineNumber = StringUtil.parseInt(line, -1);
     BuildMessage.Kind category = warning != null ? BuildMessage.Kind.WARNING : BuildMessage.Kind.ERROR;
-    return new ErlangCompilerError(details, VfsUtilCore.pathToUrl(filePath), lineNumber, category);
+    String fileUrl= "file://"+ FileUtil.toSystemIndependentName(filePath);
+    return new ErlangCompilerError(details, fileUrl, lineNumber, category);
   }
 }
