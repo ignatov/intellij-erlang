@@ -18,7 +18,6 @@ package org.intellij.erlang.jps.builder;
 
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.openapi.util.Key;
-import com.intellij.openapi.vfs.VirtualFileManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
@@ -49,9 +48,15 @@ public class ErlangCompilerProcessAdapter extends BuilderProcessAdapter {
     if (error != null) {
       kind = error.getKind();
       messageText = error.getErrorMessage();
-      sourcePath = VirtualFileManager.extractPath(error.getUrl());
+
+      sourcePath = extractPath(error.getUrl());
       line = error.getLine();
     }
     return new CompilerMessage(builderName, kind, messageText, sourcePath, -1L, -1L, -1L, line, -1L);
+  }
+
+  private static String extractPath(String url) {
+    int index = url.indexOf("://");
+    return index >= 0 ? url.substring(index + "://".length()) : url;
   }
 }
