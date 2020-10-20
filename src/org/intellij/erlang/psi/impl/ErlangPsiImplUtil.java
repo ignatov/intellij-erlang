@@ -1300,20 +1300,25 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   private static ThreeState atomNameRequiresQuotes(@NotNull String atomName) {
-    //check if it's a regular atom
-    Matcher matcher = ATOM_PATTERN.matcher(atomName);
-    if (matcher.matches()) {
-      return ThreeState.NO;
+    try {
+      //check if it's a regular atom
+      Matcher matcher = ATOM_PATTERN.matcher(atomName);
+      if (matcher.matches()) {
+        return ThreeState.NO;
+      }
+      //check if it's a quoted atom name
+      matcher = QUOTED_ATOM_NAME.matcher(atomName);
+      if (matcher.matches()) {
+        return ThreeState.YES;
+      }
+      //check if it's already quoted
+      matcher = QUOTED_ATOM_NAME.matcher(StringUtil.unquoteString(atomName, '\''));
+      if (matcher.matches()) {
+        return ThreeState.NO;
+      }
     }
-    //check if it's a quoted atom name
-    matcher = QUOTED_ATOM_NAME.matcher(atomName);
-    if (matcher.matches()) {
-      return ThreeState.YES;
-    }
-    //check if it's already quoted
-    matcher = QUOTED_ATOM_NAME.matcher(StringUtil.unquoteString(atomName, '\''));
-    if (matcher.matches()) {
-      return ThreeState.NO;
+    catch (StackOverflowError e) {
+      return ThreeState.UNSURE;
     }
     return ThreeState.UNSURE;
   }
