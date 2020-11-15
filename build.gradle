@@ -73,3 +73,7 @@ idea {
     generatedSourceDirs += file('gen')
   }
 }
+
+runIde {
+  jvmArgs '-Xmx1024M'
+}

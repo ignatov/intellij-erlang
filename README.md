@@ -1,4 +1,4 @@
-## Erlang plugin
+## Erlang plugin for IntelliJ
 [![Build Status](https://teamcity.jetbrains.com/app/rest/builds/buildType:(id:IntellijIdeaPlugins_IntellijErlang_Tests)/statusIcon.svg?guest=1)](https://teamcity.jetbrains.com/viewType.html?buildTypeId=IntellijIdeaPlugins_IntellijErlang_Tests&guest=1)
 [![Build Status](https://travis-ci.org/ignatov/intellij-erlang.svg?branch=master)](https://travis-ci.org/ignatov/intellij-erlang)
 
@@ -30,3 +30,9 @@ Note for **Mac OS X** users: you need to download the entire zip file, not a sev
 
 ### Work in progress
 * Preprocessing support
+
+## Testing
+
+The tests are known to run clean on Java 11 and Linux OS. Using `asdf` and `azul-zulu-11.0.3` Java flavour.
+
+On Windows Rebar tests can show "takes too long" warning.
