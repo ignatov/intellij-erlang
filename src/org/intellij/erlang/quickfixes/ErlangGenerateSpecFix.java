@@ -102,6 +102,8 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     if (argumentPatterns.isEmpty()) return ANY_TYPE_STRING;
     HashSet<String> argTypes = new LinkedHashSet<>();
     for (ErlangExpression expression:argumentPatterns){
+      if (expression instanceof ErlangAssignmentExpression)
+        expression = ((ErlangAssignmentExpression) expression).getLeft();
       ErlangExpressionType erlangExpressionType = ErlangExpressionType.create(expression);
       argTypes.add(getTypeString(erlangExpressionType));
     }
