@@ -18,6 +18,7 @@ package org.intellij.erlang.compilation;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.ModuleType;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
@@ -28,11 +29,13 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+@Ignore
 public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
   @Override
   protected void setUp() throws Exception {
