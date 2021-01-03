@@ -307,7 +307,7 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   private static String getDefaultDocumentationUrl(@Nullable ErlangSdkRelease version) {
-    return version == null ? null : "http://www.erlang.org/documentation/doc-" + version.getErtsVersion();
+    return version == null ? null : "http://erlang.org/documentation/doc-" + version.getErtsVersion();
   }
 
   private static void setupLocalSdkPaths(@NotNull SdkModificator sdkModificator) {
