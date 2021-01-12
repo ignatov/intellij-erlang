@@ -51,6 +51,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
+import org.junit.Ignore;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +60,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+@Ignore
 public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
   protected CompilationRunner myCompilationRunner;
 
@@ -129,7 +131,7 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
     VirtualFile baseDir = VfsUtil.createDirectoryIfMissing(myProject.getBaseDir(), moduleName);
     File moduleFile = new File(FileUtil.toSystemDependentName(baseDir.getPath()), moduleName + ".iml");
     FileUtil.createIfDoesntExist(moduleFile);
-    myFilesToDelete.add(moduleFile.toPath());
+//    myFilesToDelete.add(moduleFile.toPath());
     VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(moduleFile);
     assertNotNull(virtualFile);
     return ModuleManager.getInstance(myProject).newModule(virtualFile.getPath(), ErlangModuleType.getInstance().getId());
