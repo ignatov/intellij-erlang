@@ -15,3 +15,8 @@ f() ->
     1 +   A,
     %% noinspection ErlangUnboundVariable
     D.
+    
+%%noinspection ErlangUnresolvedFunction
+-define(MACROS(Val), (persistent_term:get(Val)):myfun()).
+
+-define(MACROS(Val), (persistent_term:<warning>get</warning>(Val)):<warning>myfun</warning>()).

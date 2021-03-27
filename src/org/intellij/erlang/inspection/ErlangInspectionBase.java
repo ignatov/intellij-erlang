@@ -81,14 +81,17 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     return new SuppressIntentionAction[]{
       new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for function", ErlangFunction.class),
       new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for attribute", ErlangAttribute.class),
-      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for expression", ErlangExpression.class)
+      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for expression", ErlangExpression.class),
+      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for macro definition", ErlangMacrosDefinition.class),
     };
   }
 
   @Override
   public boolean isSuppressedFor(@NotNull PsiElement element) {
-    return isSuppressedForParent(element, ErlangFunction.class) ||
+    return 
+      isSuppressedForParent(element, ErlangFunction.class) ||
       isSuppressedForParent(element, ErlangAttribute.class) ||
+      isSuppressedForParent(element, ErlangMacrosDefinition.class) ||
       isSuppressedForExpression(element);
   }
 
