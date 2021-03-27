@@ -28,7 +28,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 final class ErlangFunctionDocProvider implements ElementDocProvider {
-  @NotNull private final ErlangFunction myErlangFunction;
+  @NotNull
+  private final ErlangFunction myErlangFunction;
 
   public ErlangFunctionDocProvider(@NotNull ErlangFunction erlangFunction) {
     myErlangFunction = erlangFunction;
@@ -40,7 +41,7 @@ final class ErlangFunctionDocProvider implements ElementDocProvider {
     return null;
   }
 
-  @Nullable
+  @NotNull
   @Override
   public String getDocText() {
     ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, ErlangFunction.class);
@@ -52,7 +53,7 @@ final class ErlangFunctionDocProvider implements ElementDocProvider {
       commentText += spec.getText().replaceFirst("spec", "<b>Specification:</b><br/>") + "<br/><br/>";
     }
     if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT &&
-      ErlangPsiImplUtil.notFromPreviousFunction(comment, prevFunction)) {
+        ErlangPsiImplUtil.notFromPreviousFunction(comment, prevFunction)) {
       commentText += "<b>Comment:</b><br/>" + ErlangDocUtil.getCommentsText(
         ErlangDocUtil.collectPrevComments(comment), "%%", ErlangDocUtil.EDOC_FUNCTION_TAGS);
     }
