@@ -4,6 +4,7 @@ plugins {
 
 version = "${version}.$buildNumber"
 allprojects {
+  repositories { mavenCentral() }
   apply plugin: 'java'
   sourceCompatibility = javaVersion
   targetCompatibility = javaVersion
