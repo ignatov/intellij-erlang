@@ -32,9 +32,8 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>IntelliJ Platform 2018.3 support</li>
-              <li>Erlang/OTP 21 map guards support</li>
-              <li>Minor fixes</li>
+              <li>Enhanced suppression, <a href="https://github.com/ignatov/intellij-erlang/issues/941">#941</a></li>
+              <li>Enhanced copyright and edoc support, <a href="https://github.com/ignatov/intellij-erlang/issues/936">#936</a></li>
             </ul>
         ]]>
     </change-notes>
