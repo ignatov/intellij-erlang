@@ -29,7 +29,6 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -67,6 +66,7 @@ public class RebarRunningStateUtil {
       commandLine.addParameter("skip_deps=true");
     }
     commandLine.addParameters(split);
+    commandLine.withEnvironment(configuration.getEnvData().getEnvs());
 
     return commandLine;
   }
