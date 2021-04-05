@@ -34,6 +34,7 @@
             <ul>
               <li>Enhanced suppression, <a href="https://github.com/ignatov/intellij-erlang/issues/941">#941</a></li>
               <li>Enhanced copyright and edoc support, <a href="https://github.com/ignatov/intellij-erlang/issues/936">#936</a></li>
+              <li>Supported environment variables in Rebar run configurations, <a href="https://github.com/ignatov/intellij-erlang/issues/480">#480</a></li>
             </ul>
         ]]>
     </change-notes>
