@@ -44,6 +44,7 @@ import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
@@ -123,7 +124,7 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLineString);
       handler.addProcessListener(new ProcessAdapter() {
         @Override
-        public void processTerminated(ProcessEvent event) {
+        public void processTerminated(@NotNull ProcessEvent event) {
           ApplicationManager.getApplication().invokeLater(() -> {
             try {
               final String emacsText = FileUtilRt.loadFile(tmpFile, true);

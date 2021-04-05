@@ -18,6 +18,7 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.notification.Notification;
@@ -53,7 +54,7 @@ public class RebarRunningStateUtil {
     RebarSettings rebarSettings = RebarSettings.getInstance(project);
     String sdkPath = ErlangSdkType.getSdkPath(project);
     String escriptPath = sdkPath != null ?
-      JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
+                         JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
                          findEscriptExecutable();
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
@@ -74,17 +75,18 @@ public class RebarRunningStateUtil {
   @NotNull
   public static OSProcessHandler runRebar(Project project, GeneralCommandLine commandLine) throws ExecutionException {
     try {
-      return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
-    } catch (ExecutionException e) {
+      return new KillableColoredProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
+    }
+    catch (ExecutionException e) {
       String message = e.getMessage();
       boolean isEmpty = message.equals("Executable is not specified");
       boolean notCorrect = message.startsWith("Cannot run program");
       if (isEmpty || notCorrect) {
         Notifications.Bus.notify(
           new Notification("Rebar run configuration", "Rebar settings",
-            "Rebar executable path is " + (isEmpty ? "empty" : "not specified correctly") +
-              "<br/><a href='configure'>Configure</a>",
-            NotificationType.ERROR, new ErlangExternalToolsNotificationListener(project)), project);
+                           "Rebar executable path is " + (isEmpty ? "empty" : "not specified correctly") +
+                           "<br/><a href='configure'>Configure</a>",
+                           NotificationType.ERROR, new ErlangExternalToolsNotificationListener(project)), project);
       }
       throw e;
     }
@@ -130,7 +132,8 @@ public class RebarRunningStateUtil {
       GeneralCommandLine which = new GeneralCommandLine("which");
       which.addParameter(name);
       output = ScriptRunnerUtil.getProcessOutput(which);
-    } catch (Exception ignored) {
+    }
+    catch (Exception ignored) {
     }
     return output.trim();
   }
