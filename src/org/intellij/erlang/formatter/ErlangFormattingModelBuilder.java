@@ -16,10 +16,7 @@
 
 package org.intellij.erlang.formatter;
 
-import com.intellij.formatting.FormattingModel;
-import com.intellij.formatting.FormattingModelBuilder;
-import com.intellij.formatting.FormattingModelProvider;
-import com.intellij.formatting.SpacingBuilder;
+import com.intellij.formatting.*;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -34,9 +31,10 @@ import org.jetbrains.annotations.NotNull;
 import static org.intellij.erlang.ErlangTypes.*;
 
 public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
-  @NotNull
   @Override
-  public FormattingModel createModel(PsiElement element, CodeStyleSettings settings) {
+  public @NotNull FormattingModel createModel(@NotNull FormattingContext formattingContext) {
+    CodeStyleSettings settings = formattingContext.getCodeStyleSettings();
+    PsiElement element = formattingContext.getPsiElement();
     CommonCodeStyleSettings commonSettings = settings.getCommonSettings(ErlangLanguage.INSTANCE);
     ErlangCodeStyleSettings erlangSettings = settings.getCustomSettings(ErlangCodeStyleSettings.class);
     SpacingBuilder spacingBuilder = createSpacingBuilder(commonSettings, erlangSettings);

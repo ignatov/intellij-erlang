@@ -33,14 +33,13 @@ import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
-import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.io.HttpRequests;
 import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 public class UpdateComponent implements BaseComponent, Disposable {
@@ -76,42 +75,33 @@ public class UpdateComponent implements BaseComponent, Disposable {
     long lastUpdate = propertiesComponent.getLong(KEY, 0);
     if (lastUpdate == 0 || System.currentTimeMillis() - lastUpdate > TimeUnit.DAYS.toMillis(1)) {
       ApplicationManager.getApplication().executeOnPooledThread(() -> {
-        try {
-          String buildNumber = ApplicationInfo.getInstance().getBuild().asString();
-          String pluginVersion = getPlugin().getVersion();
-          String pluginId = getPlugin().getPluginId().getIdString();
-          String os = URLEncoder.encode(SystemInfo.OS_NAME + " " + SystemInfo.OS_VERSION, CharsetToolkit.UTF8);
-          String uid = PermanentInstallationID.get();
-          final String url =
-            "https://plugins.jetbrains.com/plugins/list" +
-            "?pluginId=" + pluginId +
-            "&build=" + buildNumber +
-            "&pluginVersion=" + pluginVersion +
-            "&os=" + os +
-            "&uuid=" + uid;
-          PropertiesComponent.getInstance().setValue(KEY, String.valueOf(System.currentTimeMillis()));
-          HttpRequests.request(url).connect(
-            request -> {
-              try {
-                JDOMUtil.load(request.getReader());
-                LOG.info((request.isSuccessful() ? "Successful" : "Unsuccessful") + " update: " + url);
-              }
-              catch (JDOMException e) {
-                LOG.warn(e);
-              }
-              return null;
+        String buildNumber = ApplicationInfo.getInstance().getBuild().asString();
+        String pluginVersion = getPlugin().getVersion();
+        String pluginId = getPlugin().getPluginId().getIdString();
+        String os = URLEncoder.encode(SystemInfo.OS_NAME + " " + SystemInfo.OS_VERSION, StandardCharsets.UTF_8);
+        String uid = PermanentInstallationID.get();
+        final String url =
+          "https://plugins.jetbrains.com/plugins/list" +
+          "?pluginId=" + pluginId +
+          "&build=" + buildNumber +
+          "&pluginVersion=" + pluginVersion +
+          "&os=" + os +
+          "&uuid=" + uid;
+        PropertiesComponent.getInstance().setValue(KEY, String.valueOf(System.currentTimeMillis()));
+        HttpRequests.request(url).connect(
+          request -> {
+            try {
+              JDOMUtil.load(request.getReader());
+              LOG.info("Successful update: " + url);
             }
-          );
-        }
-        catch (IOException e) {
-          LOG.warn(e);
-        }
+            catch (JDOMException e) {
+              LOG.warn(e);
+            }
+            return null;
+          }, new Object(), LOG
+        );
       });
     }
-  }
-
-  @Override
-  public void disposeComponent() {
   }
 
   @NotNull
@@ -122,6 +112,5 @@ public class UpdateComponent implements BaseComponent, Disposable {
 
   @Override
   public void dispose() {
-    disposeComponent();
   }
 }
