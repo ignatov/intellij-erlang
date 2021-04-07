@@ -23,7 +23,6 @@ import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ResourceUtil;
 import com.intellij.util.net.HttpConfigurable;
@@ -36,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -54,8 +54,8 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   static {
     String css;
     try {
-       css = ResourceUtil.loadText(ResourceUtil.getResource(
-         ErlangSdkDocProviderBase.class, "/documentation", "erlang-sdk-doc.css"));
+       css = ResourceUtil.loadText(ResourceUtil.getResourceAsStream(
+         ErlangSdkDocProviderBase.class.getClassLoader(), "/documentation", "erlang-sdk-doc.css"));
     } catch (IOException e) {
       throw new AssertionError(e);
     }
@@ -91,19 +91,17 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
     urls.addAll(httpUrls);
     for (String urlString : urls) {
       BufferedReader reader = createReader(urlString);
-      if (reader == null) {
-        continue;
-      }
-      try {
+      try (reader) {
+        if (reader == null) {
+          continue;
+        }
         String retrievedHtml = retrieveDoc(reader);
         if (retrievedHtml != null) {
           return decorateRetrievedHtml(retrievedHtml);
         }
-      } finally {
-        try {
-          reader.close();
-        } catch (IOException e) { // Ignore
-        }
+      }
+      catch (IOException e) {
+        // Ignore
       }
     }
     return null;
@@ -120,7 +118,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @Nullable
   private String retrieveDoc(@NotNull BufferedReader reader) {
-    try {
+    try (reader) {
       String line;
       boolean functionDocFound = false;
       while ((line = reader.readLine()) != null) {
@@ -139,12 +137,9 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
         builder.append("\n");
       }
       return builder.toString();
-    } catch (IOException e) { // Ignore
-    } finally {
-      try {
-        reader.close();
-      } catch (IOException e) { // Ignore
-      }
+    }
+    catch (IOException e) {
+      // Ignore
     }
     return null;
   }
@@ -254,9 +249,10 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @Nullable
   private static BufferedReader createFileReader(@NotNull URL url) {
     try {
-      InputStreamReader stream = new InputStreamReader(url.openStream(), CharsetToolkit.UTF8_CHARSET);
+      InputStreamReader stream = new InputStreamReader(url.openStream(), StandardCharsets.UTF_8);
       return new BufferedReader(stream);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       return null;
     }
   }

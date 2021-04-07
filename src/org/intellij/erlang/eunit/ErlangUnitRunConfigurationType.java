@@ -19,7 +19,6 @@ package org.intellij.erlang.eunit;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +35,7 @@ public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
   }
 
   public static ErlangUnitRunConfigurationType getInstance() {
-    return Extensions.findExtension(CONFIGURATION_TYPE_EP, ErlangUnitRunConfigurationType.class);
+    return CONFIGURATION_TYPE_EP.findExtensionOrFail(ErlangUnitRunConfigurationType.class);
   }
 
   public static class ErlangUnitConfigurationFactory extends ConfigurationFactory {
