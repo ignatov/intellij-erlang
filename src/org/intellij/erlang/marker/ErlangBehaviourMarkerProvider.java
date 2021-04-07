@@ -76,11 +76,12 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
                                                                        @NotNull ErlangFunction function,
                                                                        @NotNull Collection<ErlangCallbackSpec> callbackSpecs) {
     String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
+    String text = "Implements callback '" + presentation + "'";
     return new LineMarkerInfo<>(
       atom,
       atom.getTextRange(),
       AllIcons.Gutter.ImplementingMethod,
-      element -> "Implements callback '" + presentation + "'",
+      element -> text,
       (e, elt) -> {
         String title = MessageFormat.format("<html><body>Choose Overriding Callback of <b>{0}</b> ({1} callbacks found)</body></html>", presentation, callbackSpecs.size());
         PsiElementListNavigator.openTargets(
@@ -88,7 +89,8 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
           title, title, new DefaultPsiElementCellRenderer()
         );
       },
-      GutterIconRenderer.Alignment.RIGHT
+      GutterIconRenderer.Alignment.RIGHT,
+      () -> text
     );
   }
 }
