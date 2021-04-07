@@ -38,7 +38,7 @@ import java.util.List;
 
 public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
   @Override
-  public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
+  public @Nullable LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
     return null;
   }
 
