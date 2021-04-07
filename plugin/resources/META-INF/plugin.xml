@@ -47,10 +47,4 @@
             <xi:include href="/META-INF/ErlangPlugin.xml" xpointer="xpointer(/idea-plugin/*)"/>
         </xi:fallback>
     </xi:include>
-
-    <application-components>
-        <component>
-            <implementation-class>org.intellij.erlang.UpdateComponent</implementation-class>
-        </component>
-    </application-components>
 </idea-plugin>

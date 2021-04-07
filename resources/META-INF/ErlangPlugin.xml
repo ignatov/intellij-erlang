@@ -260,6 +260,8 @@
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
 
+        <fileTypeStatisticProvider implementation="com.intellij.erlang.ErlangFileTypeStatisticsProvider"/>
+
         <intentionAction>
           <className>org.intellij.erlang.intention.ErlangExportFunctionIntention</className>
           <category>Erlang</category>
