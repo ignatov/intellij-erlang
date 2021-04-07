@@ -40,7 +40,7 @@ public class ErlangConsoleActionPromoter implements ActionPromoter {
   };
 
   @Override
-  public List<AnAction> promote(List<AnAction> actions, DataContext context) {
+  public List<AnAction> promote(@NotNull List<? extends AnAction> actions, @NotNull DataContext context) {
     ArrayList<AnAction> result = new ArrayList<>(actions);
     ContainerUtil.sort(result, COMPARATOR);
     return result;
