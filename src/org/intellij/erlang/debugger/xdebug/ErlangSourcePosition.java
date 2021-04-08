@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.debugger.xdebug;
 
+import com.google.common.base.Objects;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Computable;
@@ -108,10 +109,10 @@ public final class ErlangSourcePosition {
 
     return myFunExpressionArity == that.myFunExpressionArity &&
            myFunctionArity == that.myFunctionArity &&
-           Comparing.equal(myFunctionName, that.myFunctionName) &&
-           Comparing.equal(myFunExpressionName, that.myFunExpressionName) &&
-           Comparing.equal(getFile(), that.getFile()) &&
-           Comparing.equal(getLine(), that.getLine());
+           Objects.equal(myFunctionName, that.myFunctionName) &&
+           Objects.equal(myFunExpressionName, that.myFunExpressionName) &&
+           Objects.equal(getFile(), that.getFile()) &&
+           Objects.equal(getLine(), that.getLine());
   }
 
   @Override
