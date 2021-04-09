@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.debugger.xdebug;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Computable;
