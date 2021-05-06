@@ -50,7 +50,9 @@ public final class ErlangDocUtil {
   static {
     EDOC_OVERVIEW_TAGS.addAll(EDOC_GENERIC_TAGS);
     EDOC_MODULE_TAGS.addAll(EDOC_GENERIC_TAGS);
+
     EDOC_FUNCTION_TAGS.addAll(EDOC_GENERIC_TAGS);
+    EDOC_FUNCTION_TAGS.addAll(EDOC_MODULE_TAGS);
   }
 
   private ErlangDocUtil() {

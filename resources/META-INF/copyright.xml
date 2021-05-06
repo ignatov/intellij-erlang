@@ -15,7 +15,10 @@
   -->
 
 <idea-plugin>
-  <extensions defaultExtensionNs="com.intellij">
-    <copyright.updater filetype="Erlang" implementationClass="org.intellij.erlang.copyright.UpdateErlangCopyrightsProvider"/>
+  <extensions defaultExtensionNs="com.intellij.copyright">
+    <updater filetype="Erlang" implementationClass="org.intellij.erlang.copyright.UpdateErlangCopyrightsProvider"/>
+    <updater filetype="Erlang Header" implementationClass="org.intellij.erlang.copyright.UpdateErlangCopyrightsProvider"/>
+    <updater filetype="Erlang/OTP app" implementationClass="org.intellij.erlang.copyright.UpdateErlangCopyrightsProvider"/>
+    <updater filetype="Erlang Terms" implementationClass="org.intellij.erlang.copyright.UpdateErlangCopyrightsProvider"/>
   </extensions>
 </idea-plugin>

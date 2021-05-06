@@ -16,7 +16,6 @@
 
 package org.intellij.erlang;
 
-import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.lang.parameterInfo.*;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiElement;
@@ -37,16 +36,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangArgumentList, Object> {
-  @Override
-  public boolean couldShowInLookup() {
-    return true;
-  }
-
-  @Override
-  public Object[] getParametersForLookup(LookupElement item, ParameterInfoContext context) {
-    return ArrayUtil.EMPTY_OBJECT_ARRAY;
-  }
-
   @Override
   public ErlangArgumentList findElementForParameterInfo(@NotNull CreateParameterInfoContext context) {
     return getErlangArgumentList(context);
@@ -79,7 +68,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
       }
       if (clauses.isEmpty()) {
-        PsiElement resolve = reference != null ? reference.resolve() : null;
+        PsiElement resolve = reference.resolve();
         if (resolve instanceof ErlangFunction) {
           List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
           clauses.addAll(clauseList);
@@ -102,13 +91,12 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
           String functionName = erlFunctionCall.getName();
           List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.emptyList();
           context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs(moduleName, functionName), moduleInfo)));
-          context.showHint(args, args.getTextRange().getStartOffset(), this);
         }
         else {
           String name = erlFunctionCall.getName();
           context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs("erlang", name), ErlangBifTable.getBifs("", name))));
-          context.showHint(args, args.getTextRange().getStartOffset(), this);
         }
+        context.showHint(args, args.getTextRange().getStartOffset(), this);
       }
     }
   }
@@ -116,16 +104,6 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   @Override
   public void updateParameterInfo(@NotNull ErlangArgumentList place, @NotNull UpdateParameterInfoContext context) {
     context.setCurrentParameter(ParameterInfoUtils.getCurrentParameterIndex(place.getNode(), context.getOffset(), ErlangTypes.ERL_COMMA));
-  }
-
-  @Override
-  public String getParameterCloseChars() {
-    return ",){}";
-  }
-
-  @Override
-  public boolean tracksParameterIndex() {
-    return true;
   }
 
   @Override

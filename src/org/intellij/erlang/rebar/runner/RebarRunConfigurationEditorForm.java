@@ -17,6 +17,7 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.application.options.ModulesComboBox;
+import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
 import org.intellij.erlang.module.ErlangModuleType;
@@ -31,6 +32,7 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   private JCheckBox myRunInModuleCheckBox;
   private ModulesComboBox myModulesComboBox;
   private JCheckBox mySkipDependenciesCheckBox;
+  private EnvironmentVariablesComponent myEnvironmentVariablesComponent;
 
   RebarRunConfigurationEditorForm() {
     myRunInModuleCheckBox.addActionListener(e -> myModulesComboBox.setEnabled(myRunInModuleCheckBox.isSelected()));
@@ -42,6 +44,7 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   protected void resetEditorFrom(@NotNull RebarRunConfigurationBase configuration) {
     myCommandText.setText(configuration.getCommand());
     mySkipDependenciesCheckBox.setSelected(configuration.isSkipDependencies());
+    myEnvironmentVariablesComponent.setEnvData(configuration.getEnvData());
     Module module = null;
     if (!ErlangSystemUtil.isSmallIde()) {
       myModulesComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
@@ -60,6 +63,7 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   protected void applyEditorTo(@NotNull RebarRunConfigurationBase rebarRunConfiguration) {
     rebarRunConfiguration.setCommand(myCommandText.getText());
     rebarRunConfiguration.setSkipDependencies(mySkipDependenciesCheckBox.isSelected());
+    rebarRunConfiguration.setEnvData(myEnvironmentVariablesComponent.getEnvData());
     Module selectedModule = myRunInModuleCheckBox.isSelected() ? myModulesComboBox.getSelectedModule() : null;
     rebarRunConfiguration.setModule(selectedModule);
   }
@@ -75,8 +79,8 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
     myComponent.setVisible(false);
   }
 
-  private void setRunInModuleSelected(boolean b) {
-    if (b) {
+  private void setRunInModuleSelected(boolean value) {
+    if (value) {
       if (!myRunInModuleCheckBox.isSelected()) {
         myRunInModuleCheckBox.doClick();
       }

@@ -22,7 +22,6 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import org.intellij.erlang.psi.*;
@@ -33,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 //TODO add arity mismatch checks
 public class ErlangHeadMismatchInspection extends ErlangInspectionBase implements DumbAware {
@@ -69,7 +69,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     }
   }
 
-  private void checkFunExpression(ErlangFunExpression funExpression, ProblemsHolder problemsHolder) {
+  private static void checkFunExpression(ErlangFunExpression funExpression, ProblemsHolder problemsHolder) {
     ErlangFunClauses funClauses = funExpression.getFunClauses();
     List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : Collections.emptyList();
     if (funClauseList.size() <= 1) return;
@@ -77,7 +77,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     String firstClauseName = getFunExpressionClauseName(firstClause);
     for (ErlangFunClause funClause : funClauseList) {
       String funClauseName = getFunExpressionClauseName(funClause);
-      if (!Comparing.equal(firstClauseName, funClauseName)) {
+      if (!Objects.equals(firstClauseName, funClauseName)) {
         String problemDescription = firstClauseName == null ?
           "Head mismatch: named clause in an unnamed fun expression" :
           funClauseName == null ?

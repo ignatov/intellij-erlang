@@ -1,9 +1,10 @@
 plugins {
-  id 'org.jetbrains.intellij' version "0.4.10"
+  id 'org.jetbrains.intellij' version "0.6.5"
 }
 
 version = "${version}.$buildNumber"
 allprojects {
+  repositories { mavenCentral() }
   apply plugin: 'java'
   sourceCompatibility = javaVersion
   targetCompatibility = javaVersion
@@ -53,6 +54,7 @@ allprojects {
 }
 
 repositories {
+  jcenter()
   flatDir {
     dirs 'libs'
   }

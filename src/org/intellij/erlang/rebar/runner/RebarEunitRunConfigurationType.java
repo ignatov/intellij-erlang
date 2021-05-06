@@ -18,7 +18,6 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationTypeBase;
-import com.intellij.openapi.extensions.Extensions;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +27,7 @@ public class RebarEunitRunConfigurationType extends ConfigurationTypeBase {
   }
 
   public static RebarEunitRunConfigurationType getInstance() {
-    return Extensions.findExtension(CONFIGURATION_TYPE_EP, RebarEunitRunConfigurationType.class);
+    return CONFIGURATION_TYPE_EP.findExtensionOrFail(RebarEunitRunConfigurationType.class);
   }
 
   @NotNull

@@ -16,12 +16,11 @@
 
 package org.intellij.erlang.jps.builder;
 
-import org.jetbrains.jps.incremental.messages.BuildMessage;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.VfsUtilCore;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.jps.incremental.messages.BuildMessage;
 
 import java.io.File;
 import java.util.regex.Matcher;
@@ -75,7 +74,7 @@ public class ErlangCompilerError {
 
     String relativeFilePath = FileUtil.toSystemIndependentName(matcher.group(PATH_MATCH_INDEX));
     File path = StringUtil.isEmpty(rootPath) ? new File(relativeFilePath) : new File(FileUtil.toSystemIndependentName(rootPath), relativeFilePath);
-    if(!path.exists()) return null;
+    if (!path.exists()) return null;
 
     String line = matcher.group(LINE_MATCH_INDEX);
     String warning = matcher.group(WARNING_MATCH_INDEX);
@@ -90,6 +89,8 @@ public class ErlangCompilerError {
                                                          @NotNull String details) {
     int lineNumber = StringUtil.parseInt(line, -1);
     BuildMessage.Kind category = warning != null ? BuildMessage.Kind.WARNING : BuildMessage.Kind.ERROR;
-    return new ErlangCompilerError(details, VfsUtilCore.pathToUrl(filePath), lineNumber, category);
+    // VfsUtilCore.pathToUrl(filePath)
+    String fileUrl = "file://" + FileUtil.toSystemIndependentName(filePath);
+    return new ErlangCompilerError(details, fileUrl, lineNumber, category);
   }
 }

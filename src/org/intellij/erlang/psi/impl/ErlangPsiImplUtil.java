@@ -130,7 +130,7 @@ public class ErlangPsiImplUtil {
 
       @Override
       public boolean isReferenceTo(@NotNull PsiElement element) {
-        return element instanceof ErlangQAtom && standaloneAtom(o) && Comparing.equal(element.getText(), getElement().getText());
+        return element instanceof ErlangQAtom && standaloneAtom(o) && Objects.equals(element.getText(), getElement().getText());
       }
 
       @Override
@@ -1911,7 +1911,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean fromTheSameCaseExpression(@NotNull PsiElement origin, @NotNull PsiElement element) {
-    if (element instanceof ErlangQVar && Comparing.equal(element.getText(), element.getText())) {
+    if (element instanceof ErlangQVar && Objects.equals(element.getText(), element.getText())) {
       ErlangCompositeElement cr2 = PsiTreeUtil.getParentOfType(element, ErlangCrClause.class);
       ErlangCompositeElement cr1 = PsiTreeUtil.getParentOfType(origin, ErlangCrClause.class);
       if (cr1 != null && cr2 != null) {

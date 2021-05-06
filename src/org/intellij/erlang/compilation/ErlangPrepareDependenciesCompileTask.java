@@ -33,7 +33,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ObjectUtils;
-import com.intellij.util.SystemProperties;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.graph.DFSTBuilder;
 import com.intellij.util.graph.GraphGenerator;
@@ -97,7 +96,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       parentDir.mkdirs();
       File file = new File(parentDir, ErlangBuilderUtil.BUILD_ORDER_FILE_NAME);
       LOG.debug("Write build order to " + file.getAbsolutePath());
-      JDOMUtil.writeDocument(serializedDocument, file, SystemProperties.getLineSeparator());
+      JDOMUtil.writeDocument(serializedDocument, file, System.lineSeparator());
     }
     catch (XmlSerializationException e) {
       LOG.error("Can't serialize build order object.", e);
@@ -161,7 +160,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     private final Project myProject;
     private final PsiManager myPsiManager;
     private final Set<String> myHeaders;
-    private final Map<String, List<String>> myPathsToDependenciesMap = ContainerUtil.newHashMap();
+    private final Map<String, List<String>> myPathsToDependenciesMap = new HashMap<>();
 
     private ErlangFilesDependencyGraph(@NotNull Module[] modulesToCompile) {
       assert modulesToCompile.length > 0;

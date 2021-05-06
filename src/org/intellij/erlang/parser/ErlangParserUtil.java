@@ -77,16 +77,8 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return getParsingModes(builder_).get(mode) > 0;
   }
 
-  public static boolean isModeOff(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
-    return getParsingModes(builder_).get(mode) == 0;
-  }
-
   public static boolean withOn(PsiBuilder builder_, int level_, String mode, Parser parser) {
     return withImpl(builder_, level_, mode, true, parser, parser);
-  }
-
-  public static boolean withCleared(PsiBuilder builder_, int level_, String mode, Parser whenOn, Parser whenOff) {
-    return withImpl(builder_, level_, mode, false, whenOn, whenOff);
   }
 
   private static boolean withImpl(PsiBuilder builder_, int level_, String mode, boolean onOff, Parser whenOn, Parser whenOff) {

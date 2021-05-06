@@ -32,7 +32,7 @@ public class ErlangEunitReporterModule {
   private static final String MODULE_BEAM = MODULE_NAME + ".beam";
 
   public static void putReporterModuleTo(@NotNull File directory) throws IOException {
-    URL moduleUrl = ResourceUtil.getResource(ErlangEunitReporterModule.class, "/eunit", MODULE_BEAM);
+    URL moduleUrl = ResourceUtil.getResource(ErlangEunitReporterModule.class.getClassLoader(), "/eunit", MODULE_BEAM);
     if (moduleUrl == null) {
       throw new IOException("Failed to locate eunit reporter module.");
     }

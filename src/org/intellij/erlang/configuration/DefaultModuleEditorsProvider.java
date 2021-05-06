@@ -30,7 +30,7 @@ import javax.swing.*;
 
 public class DefaultModuleEditorsProvider implements ModuleConfigurationEditorProvider {
   public ModuleConfigurationEditor[] createEditors(ModuleConfigurationState state) {
-    Module module = state.getRootModel().getModule();
+    Module module = state.getCurrentRootModel().getModule();
     if (ModuleType.get(module) instanceof ErlangModuleType) {
       return new ModuleConfigurationEditor[]{
         new ErlangContentEntriesEditor(module.getName(), state),

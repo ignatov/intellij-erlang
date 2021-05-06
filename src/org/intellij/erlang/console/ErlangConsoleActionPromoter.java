@@ -28,7 +28,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ErlangConsoleActionPromoter implements ActionPromoter {
-  private static final Comparator<AnAction> COMPARATOR = new Comparator<AnAction>() {
+  private static final Comparator<AnAction> COMPARATOR = new Comparator<>() {
     @Override
     public int compare(@NotNull AnAction o1, @NotNull AnAction o2) {
       return notEnter(o1) ? notEnter(o2) ? 0 : -1 : notEnter(o2) ? 1 : 0;
@@ -40,7 +40,7 @@ public class ErlangConsoleActionPromoter implements ActionPromoter {
   };
 
   @Override
-  public List<AnAction> promote(List<AnAction> actions, DataContext context) {
+  public List<AnAction> promote(@NotNull List<? extends AnAction> actions, @NotNull DataContext context) {
     ArrayList<AnAction> result = new ArrayList<>(actions);
     ContainerUtil.sort(result, COMPARATOR);
     return result;

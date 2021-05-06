@@ -22,10 +22,10 @@ import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangApplicationRunConfigurationType extends ConfigurationTypeBase {
-
   private ErlangApplicationRunConfigurationType() {
     super("ErlangApplicationRunConfiguration",
           "Erlang Application",
@@ -40,6 +40,12 @@ public class ErlangApplicationRunConfigurationType extends ConfigurationTypeBase
   }
 
   public static class ErlangFactory extends ConfigurationFactory {
+    @Override
+    @NotNull
+    @NonNls
+    public String getId() {
+      return "Erlang";
+    }
 
     public ErlangFactory(ConfigurationType type) {
       super(type);
