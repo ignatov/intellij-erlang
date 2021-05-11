@@ -26,7 +26,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.util.PsiUtilBase;
+import com.intellij.psi.util.PsiEditorUtil;
 import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangVisitor;
@@ -77,7 +77,7 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
       if (anchor != null) {
         PsiElement parent = anchor.getParent();
         if (parent != null) {
-          Editor editor = PsiUtilBase.findEditor(anchor);
+          Editor editor = PsiEditorUtil.findEditor(anchor);
           if (editor == null) return;
 
           editor.getCaretModel().moveToOffset(anchor.getTextRange().getStartOffset());
