@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 
 public class ErlangTestFinder implements TestFinder {
   private static final String EXT = "." + ErlangFileType.MODULE.getDefaultExtension();
@@ -46,7 +47,7 @@ public class ErlangTestFinder implements TestFinder {
   public Collection<PsiElement> findTestsForClass(@NotNull PsiElement element) {
     VirtualFile virtualFile = getVirtualFile(element);
     if (virtualFile == null) return ContainerUtil.emptyList();
-    Collection<PsiElement> result = ContainerUtil.newTroveSet();
+    Collection<PsiElement> result = new HashSet<>();
     Project project = element.getProject();
     for (String suffix : SUFFIXES) {
       Collections.addAll(result, FilenameIndex.getFilesByName(project, virtualFile.getNameWithoutExtension() + suffix + EXT, getScope(project)));
@@ -59,7 +60,7 @@ public class ErlangTestFinder implements TestFinder {
   public Collection<PsiElement> findClassesForTest(@NotNull PsiElement element) {
     VirtualFile virtualFile = getVirtualFile(element);
     if (virtualFile == null) return ContainerUtil.emptyList();
-    Collection<PsiElement> result = ContainerUtil.newTroveSet();
+    Collection<PsiElement> result = new HashSet<>();
     Project project = element.getProject();
     String name = virtualFile.getNameWithoutExtension();
     int length = name.length();

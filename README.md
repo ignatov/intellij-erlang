@@ -15,18 +15,9 @@ Note for **Mac OS X** users: you need to download the entire zip file, not a sev
 
 ## Recent changes
 ### The latest version
-* Improved build system - incremental compilation (<a href="https://github.com/ignatov/intellij-erlang/issues/657">#657</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/609">#609</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/513">#513</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/475">#475</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/428">#428</a>)
-* Enhanced .app files support: reference resolution and autocomplete
-* Erlang 18 compatibility: optional callbacks support (<a href="https://github.com/ignatov/intellij-erlang/issues/644">#644</a>), eunit compatibility (<a href="https://github.com/ignatov/intellij-erlang/issues/629">#629</a>)
-* Enhanced -behavior attribute support: autocomplete, conflicts inspection (<a href="https://github.com/ignatov/intellij-erlang/issues/640">#640</a>)
-* Spellchecking
-* Illegal pattern/guard inspection (<a href="https://github.com/ignatov/intellij-erlang/issues/620">#620</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/622">#622</a>)
-* Code editing/indentation/formatting improvements (<a href="https://github.com/ignatov/intellij-erlang/issues/593">#593</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/574">#574</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/594">#594</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/582">#582</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/589">#589</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/587">#587</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/582">#582</a>)
-* Working directory for run configurations (<a href="https://github.com/ignatov/intellij-erlang/issues/572">#572</a>)
-* Rebar on Windows (<a href="https://github.com/ignatov/intellij-erlang/issues/432">#432</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/469">#469</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/496">#496</a>)
-* Source files are no longer copied to output upon build (<a href="https://github.com/ignatov/intellij-erlang/issues/608">#608</a>)
-* Maps syntax in Erlang Term Files (<a href="https://github.com/ignatov/intellij-erlang/issues/588">#588</a>)
-* Various bugfixes (<a href="https://github.com/ignatov/intellij-erlang/issues/632">#632</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/559">#559</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/605">#605</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/614">#614</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/612">#612</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/562">#562</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/603">#603</a>, <a href="https://github.com/ignatov/intellij-erlang/issues/576">#576</a>)
 
-### Work in progress
-* Preprocessing support
+* IntelliJ 2021.1 support
+* Erlang plugin could be installed and upgraded without restart
+* Enhanced suppression, <a href="https://github.com/ignatov/intellij-erlang/issues/941">#941</a>
+* Enhanced copyright and edoc support, <a href="https://github.com/ignatov/intellij-erlang/issues/936">#936</a>
+* Supported environment variables in Rebar run configurations

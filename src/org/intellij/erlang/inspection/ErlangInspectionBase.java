@@ -16,7 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInsight.daemon.impl.actions.AbstractSuppressByNoInspectionCommentFix;
+import com.intellij.codeInsight.daemon.impl.actions.AbstractBatchSuppressByNoInspectionCommentFix;
 import com.intellij.codeInspection.*;
 import com.intellij.lang.Commenter;
 import com.intellij.lang.LanguageCommenters;
@@ -66,7 +66,7 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
       @Override
-      public void visitFile(PsiFile file) {
+      public void visitFile(@NotNull PsiFile file) {
         checkFile((ErlangFile)file, holder);
       }
     };
@@ -78,17 +78,20 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   @Nullable
   @Override
   public SuppressIntentionAction[] getSuppressActions(@Nullable PsiElement element) {
-    return new SuppressIntentionAction[]{
+    return SuppressIntentionActionFromFix.convertBatchToSuppressIntentionActions(new ErlangSuppressInspectionFix[]{
       new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for function", ErlangFunction.class),
       new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for attribute", ErlangAttribute.class),
-      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for expression", ErlangExpression.class)
-    };
+      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for expression", ErlangExpression.class),
+      new ErlangSuppressInspectionFix(getMySuppressId(), "Suppress for macro definition", ErlangMacrosDefinition.class),
+      });
   }
 
   @Override
   public boolean isSuppressedFor(@NotNull PsiElement element) {
-    return isSuppressedForParent(element, ErlangFunction.class) ||
+    return 
+      isSuppressedForParent(element, ErlangFunction.class) ||
       isSuppressedForParent(element, ErlangAttribute.class) ||
+      isSuppressedForParent(element, ErlangMacrosDefinition.class) ||
       isSuppressedForExpression(element);
   }
 
@@ -146,19 +149,25 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
     return getShortName().replace("Inspection", "");
   }
 
-  protected void registerProblem(@NotNull ProblemsHolder holder, @NotNull PsiElement target, @NotNull String text,
-                                 LocalQuickFix... fixes) {
+  protected static void registerProblem(@NotNull ProblemsHolder holder,
+                                        @NotNull PsiElement target,
+                                        @NotNull String text,
+                                        LocalQuickFix... fixes) {
     registerProblem(holder, target, text, null, null, fixes);
   }
 
-  protected void registerProblem(@NotNull ProblemsHolder holder,@NotNull PsiElement target, @NotNull String text,
-                                 @Nullable TextRange range, @Nullable ProblemHighlightType severity, LocalQuickFix... fixes) {
+  protected static void registerProblem(@NotNull ProblemsHolder holder,
+                                        @NotNull PsiElement target,
+                                        @NotNull String text,
+                                        @Nullable TextRange range,
+                                        @Nullable ProblemHighlightType severity,
+                                        LocalQuickFix... fixes) {
     severity = ErlangPsiImplUtil.inMacroCallArguments(target) ? ProblemHighlightType.WEAK_WARNING :
       ObjectUtils.notNull(severity, ProblemHighlightType.GENERIC_ERROR_OR_WARNING);
     holder.registerProblem(holder.getManager().createProblemDescriptor(target, range, text, severity, false, fixes));
   }
 
-  public static class ErlangSuppressInspectionFix extends AbstractSuppressByNoInspectionCommentFix {
+  public static class ErlangSuppressInspectionFix extends AbstractBatchSuppressByNoInspectionCommentFix {
     private final Class<? extends ErlangCompositeElement> myContainerClass;
   
     public ErlangSuppressInspectionFix(String ID, String text, Class<? extends ErlangCompositeElement> containerClass) {
@@ -169,7 +178,7 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   
     @Override
     @Nullable
-    protected PsiElement getContainer(PsiElement context) {
+    public PsiElement getContainer(PsiElement context) {
       if (myContainerClass == ErlangExpression.class) return getTopmostExpression(context);
       return PsiTreeUtil.getParentOfType(context, myContainerClass);
     }

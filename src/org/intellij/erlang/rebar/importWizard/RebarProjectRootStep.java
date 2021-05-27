@@ -136,7 +136,7 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
           OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getPreparedCommandLine(Platform.current()));
           handler.addProcessListener(new ProcessAdapter() {
             @Override
-            public void onTextAvailable(ProcessEvent event, Key outputType) {
+            public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
               String text = event.getText();
               indicator.setText2(text);
             }

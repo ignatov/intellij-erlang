@@ -46,7 +46,7 @@
         <internalFileTemplate name="Erlang Gen FSM Minimal"/>
         <internalFileTemplate name="Erlang Gen Event"/>
 
-        <defaultLiveTemplatesProvider implementation="org.intellij.erlang.template.ErlangLiveTemplateProvider"/>
+        <defaultLiveTemplates file="liveTemplates/erlang"/>
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Generic"/>
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Declaration"/>
         <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Statement"/>
@@ -259,6 +259,8 @@
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
+
+        <fileTypeStatisticProvider implementation="org.intellij.erlang.ErlangFileTypeStatisticsProvider"/>
 
         <intentionAction>
           <className>org.intellij.erlang.intention.ErlangExportFunctionIntention</className>

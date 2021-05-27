@@ -33,8 +33,6 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.text.CaseInsensitiveStringHashingStrategy;
-import gnu.trove.THashSet;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
@@ -45,18 +43,19 @@ import org.intellij.erlang.psi.ErlangStringLiteral;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.Set;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 import static com.intellij.patterns.StandardPatterns.instanceOf;
 
 public class ErlangKeywordsCompletionContributor extends CompletionContributor implements DumbAware {
-  private static final THashSet<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.newTroveSet(CaseInsensitiveStringHashingStrategy.INSTANCE,
-                                                                                              "include", "include_lib", "module", "export", "export_type", "import", "define", "record", "behaviour", "behavior",
-                                                                                              "optional_callbacks"
+  private static final Set<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.immutableSet(
+    "include", "include_lib", "module", "export", "export_type", "import",
+    "define", "record", "behaviour", "behavior", "optional_callbacks"
   );
 
   public ErlangKeywordsCompletionContributor() {
-    extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFile.class)), new CompletionProvider<CompletionParameters>() {
+    extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFile.class)), new CompletionProvider<>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters,
                                     @NotNull ProcessingContext context,
@@ -64,7 +63,9 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
         PsiFile file = parameters.getOriginalFile();
         if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
         PsiElement position = parameters.getPosition();
-        if (PsiTreeUtil.getParentOfType(position, ErlangExport.class, ErlangColonQualifiedExpression.class, ErlangStringLiteral.class, PsiComment.class) != null) return;
+        if (PsiTreeUtil.getParentOfType(position, ErlangExport.class, ErlangColonQualifiedExpression.class, ErlangStringLiteral.class, PsiComment.class) != null) {
+          return;
+        }
         for (String keyword : suggestKeywords(position)) {
           result.addElement(createKeywordLookupElement(keyword));
         }

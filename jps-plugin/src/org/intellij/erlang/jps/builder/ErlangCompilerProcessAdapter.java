@@ -55,8 +55,11 @@ public class ErlangCompilerProcessAdapter extends BuilderProcessAdapter {
     return new CompilerMessage(builderName, kind, messageText, sourcePath, -1L, -1L, -1L, line, -1L);
   }
 
-  private static String extractPath(String url) {
-    int index = url.indexOf("://");
-    return index >= 0 ? url.substring(index + "://".length()) : url;
+  // VirtualFileManager.extractPath
+  private static final String SCHEME_SEPARATOR = "://";
+
+  private static @NotNull String extractPath(@NotNull String url) {
+    int index = url.indexOf(SCHEME_SEPARATOR);
+    return index >= 0 ? url.substring(index + SCHEME_SEPARATOR.length()) : url;
   }
 }

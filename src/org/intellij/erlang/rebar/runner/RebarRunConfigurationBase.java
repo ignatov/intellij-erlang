@@ -17,6 +17,7 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
@@ -25,8 +26,8 @@ import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.InvalidDataException;
+import com.intellij.openapi.util.JDOMExternalizerUtil;
 import com.intellij.openapi.util.WriteExternalException;
-import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.runconfig.ErlangModuleBasedConfiguration;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
@@ -38,6 +39,7 @@ public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration
   @NotNull
   private String myCommand = "";
   private boolean mySkipDependencies = false;
+  private EnvironmentVariablesData myEnvData = EnvironmentVariablesData.DEFAULT;
 
   protected RebarRunConfigurationBase(@NotNull String name, @NotNull Project project, @NotNull ConfigurationFactory configurationFactory) {
     super(name, new ErlangModuleBasedConfiguration(project), configurationFactory);
@@ -67,12 +69,16 @@ public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration
 
   public void writeExternal(@NotNull Element element) throws WriteExternalException {
     super.writeExternal(element);
-    XmlSerializer.serializeInto(this, element);
+    JDOMExternalizerUtil.writeField(element, "command", myCommand);
+    JDOMExternalizerUtil.writeField(element, "skipDependencies", String.valueOf(mySkipDependencies));
+    myEnvData.writeExternal(element);
   }
 
   public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
-    XmlSerializer.deserializeInto(this, element);
+    myCommand = JDOMExternalizerUtil.readField(element, "command", "");
+    mySkipDependencies = Boolean.parseBoolean(JDOMExternalizerUtil.readField(element, "skipDependencies", "false"));
+    myEnvData = EnvironmentVariablesData.readExternal(element);
   }
 
   @NotNull
@@ -90,5 +96,13 @@ public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration
 
   public void setSkipDependencies(boolean skipDeps) {
     mySkipDependencies = skipDeps;
+  }
+
+  public EnvironmentVariablesData getEnvData() {
+    return myEnvData;
+  }
+
+  public void setEnvData(EnvironmentVariablesData envData) {
+    myEnvData = envData;
   }
 }

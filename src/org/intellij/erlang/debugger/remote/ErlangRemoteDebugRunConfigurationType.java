@@ -19,7 +19,6 @@ package org.intellij.erlang.debugger.remote;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +42,6 @@ public class ErlangRemoteDebugRunConfigurationType extends ConfigurationTypeBase
   }
 
   public static ErlangRemoteDebugRunConfigurationType getInstance() {
-    return Extensions.findExtension(CONFIGURATION_TYPE_EP, ErlangRemoteDebugRunConfigurationType.class);
+    return CONFIGURATION_TYPE_EP.findExtensionOrFail(ErlangRemoteDebugRunConfigurationType.class);
   }
 }

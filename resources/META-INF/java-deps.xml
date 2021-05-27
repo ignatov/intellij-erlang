@@ -35,12 +35,8 @@
     <projectOpenProcessor implementation="org.intellij.erlang.rebar.importWizard.RebarProjectOpenProcessor"/>
     <projectStructure.sourceRootEditHandler implementation="org.intellij.erlang.roots.ErlangIncludeSourceRootEditHandler"/>
     <compiler.buildTargetScopeProvider implementation="org.intellij.erlang.compilation.ErlangTargetScopeProvider"/>
+    <compiler.task execute="BEFORE" implementation="org.intellij.erlang.compilation.ErlangPrepareDependenciesCompileTask"/>
   </extensions>
-  <project-components>
-    <component>
-      <implementation-class>org.intellij.erlang.compilation.ErlangDependenciesManager</implementation-class>
-    </component>
-  </project-components>
   <actions>
     <action id="Erlang.MarkAsIncludeDirectory"
             class="org.intellij.erlang.roots.ErlangMarkIncludeSourceRootAction">

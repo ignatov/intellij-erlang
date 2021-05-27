@@ -1,9 +1,10 @@
 plugins {
-  id 'org.jetbrains.intellij' version "0.4.10"
+  id 'org.jetbrains.intellij' version "0.6.5"
 }
 
 version = "${version}.$buildNumber"
 allprojects {
+  repositories { mavenCentral() }
   apply plugin: 'java'
   sourceCompatibility = javaVersion
   targetCompatibility = javaVersion
@@ -53,7 +54,7 @@ allprojects {
 }
 
 repositories {
-  mavenCentral()
+  jcenter()
   flatDir {
     dirs 'libs'
   }
@@ -62,7 +63,6 @@ repositories {
 dependencies {
   compile name: 'OtpErlang'
   compile project('jps-plugin')
-  compile group: 'com.github.metadave', name: 'etp', version: '0.4'
 }
 
 apply plugin: 'idea'
