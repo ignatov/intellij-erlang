@@ -153,7 +153,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     for (File appConfigSrc : appConfigFiles) {
       for (File outputDir : outputDirectories) {
         File appConfigDst = getDestinationAppConfig(outputDir, appConfigSrc.getName());
-        FileUtil.copy(appConfigSrc, appConfigDst);
+        new AppFileConverter(context, appConfigSrc, outputDir).writeToFile(appConfigDst);
         reportMessage(context, String.format("Copy %s to %s", ErlangBuilderUtil.getPath(appConfigSrc), ErlangBuilderUtil.getPath(outputDir)));
         outputConsumer.registerOutputFile(appConfigDst, Collections.singletonList(ErlangBuilderUtil.getPath(appConfigSrc)));
       }
