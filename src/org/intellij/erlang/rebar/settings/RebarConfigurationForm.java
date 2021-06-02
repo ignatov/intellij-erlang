@@ -95,7 +95,7 @@ public class RebarConfigurationForm {
 
         String escriptPath = RebarRunningStateUtil.findEscriptExecutable();
         ExtProcessUtil.ExtProcessOutput escript = ExtProcessUtil.execAndGetFirstLine(3000, escriptPath, rebarPath, "--version");
-        String versionWithEscript = rebar.getStdOut();
+        String versionWithEscript = escript.getStdOut();
 
         if (versionWithEscript.startsWith("rebar")) {
           updateUI(consumer, versionWithEscript);
