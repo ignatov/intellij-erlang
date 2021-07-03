@@ -76,7 +76,12 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @Override
   public List<String> getExternalDocUrls() {
     if (myExternalDocUrls == null) {
-      myExternalDocUrls = getHttpUrls(getOrderEntries(), myVirtualFile, getInDocRef());
+      List<String> httpUrls = getHttpUrls(getOrderEntries(), myVirtualFile, getInDocRef());
+      if (httpUrls.isEmpty()) {
+        List<String> fileUrls = getFileUrls(getOrderEntries(), myVirtualFile);
+        myExternalDocUrls = fileUrls;
+      }
+      else myExternalDocUrls = httpUrls;
     }
     return myExternalDocUrls;
   }

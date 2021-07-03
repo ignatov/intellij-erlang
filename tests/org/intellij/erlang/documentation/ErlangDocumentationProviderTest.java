@@ -47,21 +47,21 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testExternalUrlSdkFunction() {
-    doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#foreach-2",
+    doTestGetUrls("http://erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#foreach-2",
       "-module(test).\n" +
         "test() ->\n" +
         "    lists:for<caret>each(foo, bar).\n");
   }
 
   public void testExternalUrlSdkBif() {
-    doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#member-2",
+    doTestGetUrls("http://erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#member-2",
       "-module(test).\n" +
         "test() ->\n" +
         "    lists:mem<caret>ber(foo, bar).\n");
   }
 
   public void testExternalUrlSdkModule() {
-    doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html",
+    doTestGetUrls("http://erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html",
       "-module(test).\n" +
         "test() ->\n" +
         "    lis<caret>ts:foreach(foo, bar).\n");
