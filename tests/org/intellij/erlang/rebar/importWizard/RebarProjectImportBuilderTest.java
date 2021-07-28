@@ -34,6 +34,8 @@ import com.intellij.openapi.roots.impl.ModuleRootManagerImpl;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+
+import java.util.Collections;
 import java.util.function.Consumer;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
@@ -157,7 +159,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     PathMacros.getInstance().setMacro(MODULE_DIR, importedModulePath);
     PathMacroManager.getInstance(module).collapsePaths(actualImlElement);
     PathMacroManager.getInstance(getProject()).collapsePaths(actualImlElement);
-    PathMacros.getInstance().removeMacro(MODULE_DIR);
+    PathMacros.getInstance().setIgnoredMacroNames(Collections.singletonList(MODULE_DIR));
 
     String projectPath = getProject().getBaseDir().getPath();
     String expectedImlPath = "/expected/" + module.getName() + ".iml";

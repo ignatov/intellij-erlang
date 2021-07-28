@@ -68,17 +68,17 @@ public class ErlangCallHierarchyProvider implements HierarchyProvider {
     }
 
     @Override
-    protected void createTrees(@NotNull Map<String, JTree> trees) {
+    protected void createTrees(@NotNull Map<? super String, ? super JTree> trees) {
       ActionGroup group = (ActionGroup) ActionManager.getInstance().getAction(IdeActions.GROUP_CALL_HIERARCHY_POPUP);
       final JTree tree1 = createTree(false);
-      PopupHandler.installPopupHandler(tree1, group, ActionPlaces.CALL_HIERARCHY_VIEW_POPUP, ActionManager.getInstance());
+      PopupHandler.installPopupMenu(tree1, group, ActionPlaces.CALL_HIERARCHY_VIEW_POPUP);
       final CallHierarchyBrowser.BaseOnThisMethodAction baseOnThisMethodAction = new CallHierarchyBrowser.BaseOnThisMethodAction();
       baseOnThisMethodAction
         .registerCustomShortcutSet(ActionManager.getInstance().getAction(IdeActions.ACTION_CALL_HIERARCHY).getShortcutSet(), tree1);
       trees.put(CALLEE_TYPE, tree1);
 
       final JTree tree2 = createTree(false);
-      PopupHandler.installPopupHandler(tree2, group, ActionPlaces.CALL_HIERARCHY_VIEW_POPUP, ActionManager.getInstance());
+      PopupHandler.installPopupMenu(tree2, group, ActionPlaces.CALL_HIERARCHY_VIEW_POPUP);
       baseOnThisMethodAction
         .registerCustomShortcutSet(ActionManager.getInstance().getAction(IdeActions.ACTION_CALL_HIERARCHY).getShortcutSet(), tree2);
       trees.put(CALLER_TYPE, tree2);
