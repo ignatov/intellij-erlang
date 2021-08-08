@@ -1911,7 +1911,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean fromTheSameCaseExpression(@NotNull PsiElement origin, @NotNull PsiElement element) {
-    if (element instanceof ErlangQVar && Objects.equals(element.getText(), element.getText())) {
+    if (element instanceof ErlangQVar && Objects.equals(origin.getText(), element.getText())) {
       ErlangCompositeElement cr2 = PsiTreeUtil.getParentOfType(element, ErlangCrClause.class);
       ErlangCompositeElement cr1 = PsiTreeUtil.getParentOfType(origin, ErlangCrClause.class);
       if (cr1 != null && cr2 != null) {
