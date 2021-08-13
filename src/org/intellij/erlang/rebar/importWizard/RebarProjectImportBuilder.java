@@ -145,7 +145,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
         List<VirtualFile> rebarConfigFiles = findRebarConfigs(myProjectRoot, indicator);
         final LinkedHashSet<ImportedOtpApp> importedOtpApps = new LinkedHashSet<>(rebarConfigFiles.size());
 
-        VfsUtilCore.visitChildrenRecursively(projectRoot, new VirtualFileVisitor() {
+        VfsUtilCore.visitChildrenRecursively(projectRoot, new VirtualFileVisitor<Void>() {
           @Override
           public boolean visitFile(@NotNull VirtualFile file) {
             indicator.checkCanceled();
@@ -184,7 +184,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
   @SuppressWarnings("DialogTitleCapitalization")
   @Override
-  public boolean validate(Project current, Project dest) {
+  public boolean validate(Project current, @NotNull Project dest) {
     if (!findIdeaModuleFiles(mySelectedOtpApps)) {
       return true;
     }
@@ -333,7 +333,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   private List<VirtualFile> findRebarConfigs(@NotNull final VirtualFile root, @NotNull final ProgressIndicator indicator) {
     root.refresh(false, true);
     final List<VirtualFile> foundRebarConfigs = new ArrayList<>();
-    VfsUtilCore.visitChildrenRecursively(root, new VirtualFileVisitor() {
+    VfsUtilCore.visitChildrenRecursively(root, new VirtualFileVisitor<Void>() {
       @Override
       public boolean visitFile(@NotNull VirtualFile file) {
         indicator.checkCanceled();

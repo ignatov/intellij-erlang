@@ -22,6 +22,7 @@ import com.intellij.openapi.fileTypes.LanguageFileType;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.fileTypes.FileNameMatcherFactory;
@@ -57,6 +58,11 @@ public abstract class ErlangFileType extends LanguageFileType {
   @NotNull
   @Override
   public final String getName() {
+    return myName;
+  }
+
+  @Override
+  public @Nls @NotNull String getDisplayName() {
     return myName;
   }
 
