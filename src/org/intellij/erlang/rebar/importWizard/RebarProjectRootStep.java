@@ -30,6 +30,7 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
+import com.intellij.openapi.progress.util.BackgroundTaskUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Key;
@@ -60,12 +61,16 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
   public RebarProjectRootStep(WizardContext context) {
     super(context);
     String projectFileDirectory = context.getProjectFileDirectory();
-    myProjectRootComponent.addBrowseFolderListener("Select rebar.config of a Rebar Project to Import", "", null,
+    //noinspection DialogTitleCapitalization
+    myProjectRootComponent.addBrowseFolderListener("Select `rebar.config` of a Rebar Project to Import", "", null,
                                                    FileChooserDescriptorFactory.createSingleFolderDescriptor());
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
 
     myGetDepsCheckbox.setVisible(ourEnabled);
-    myRebarConfigurationForm.setPath(RebarRunningStateUtil.getRebarPath(projectFileDirectory));
+    BackgroundTaskUtil.executeOnPooledThread(myProjectRootComponent, () -> {
+      var path = RebarRunningStateUtil.getRebarPath(projectFileDirectory);
+      ApplicationManager.getApplication().invokeLater(() -> myRebarConfigurationForm.setPath(path));
+    });
   }
 
   @Override

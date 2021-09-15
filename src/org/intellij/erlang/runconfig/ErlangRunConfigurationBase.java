@@ -106,7 +106,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   }
 
   @Override
-  public void readExternal(Element element) throws InvalidDataException {
+  public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
     XmlSerializer.deserializeInto(this, element);
   }
