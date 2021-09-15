@@ -29,11 +29,8 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>IntelliJ 2021.1 support</li>
+              <li>IntelliJ 2021.2 support</li>
               <li>Erlang plugin could be installed and upgraded without restart</li>
-              <li>Enhanced suppression, <a href="https://github.com/ignatov/intellij-erlang/issues/941">#941</a></li>
-              <li>Enhanced copyright and edoc support, <a href="https://github.com/ignatov/intellij-erlang/issues/936">#936</a></li>
-              <li>Supported environment variables in Rebar run configurations, <a href="https://github.com/ignatov/intellij-erlang/issues/480">#480</a></li>
             </ul>
         ]]>
     </change-notes>

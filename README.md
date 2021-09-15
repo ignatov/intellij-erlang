@@ -16,8 +16,5 @@ Note for **Mac OS X** users: you need to download the entire zip file, not a sev
 ## Recent changes
 ### The latest version
 
-* IntelliJ 2021.1 support
+* IntelliJ 2021.2 support
 * Erlang plugin could be installed and upgraded without restart
-* Enhanced suppression, <a href="https://github.com/ignatov/intellij-erlang/issues/941">#941</a>
-* Enhanced copyright and edoc support, <a href="https://github.com/ignatov/intellij-erlang/issues/936">#936</a>
-* Supported environment variables in Rebar run configurations

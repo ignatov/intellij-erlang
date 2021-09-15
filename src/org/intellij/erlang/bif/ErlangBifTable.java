@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.bif;
 
-import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,7 +26,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 public final class ErlangBifTable {
-  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {
+  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<>() {
     @NotNull
     @Override
     protected Collection<ErlangBifDescriptor> createCollection() {
@@ -441,11 +440,6 @@ public final class ErlangBifTable {
   }
 
   @NotNull
-  public static Collection<ErlangBifDescriptor> getAutoimportedBifs(@NotNull String moduleName) {
-    return ContainerUtil.filter(bifMap.get(moduleName), ErlangBifDescriptor::isAutoImported);
-  }
-
-  @NotNull
   public static List<ErlangBifDescriptor> getBifs(@NotNull String moduleName, @NotNull String functionName) {
     List<ErlangBifDescriptor> bifDescriptors = new ArrayList<>();
     for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {
@@ -465,7 +459,6 @@ public final class ErlangBifTable {
     }
     return null;
   }
-
 
   public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {
     Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);
