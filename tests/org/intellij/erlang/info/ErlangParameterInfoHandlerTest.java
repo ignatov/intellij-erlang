@@ -56,7 +56,6 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     }
     else {
       assertNotNull(element);
-      //noinspection unchecked
       parameterInfoHandler.updateParameterInfo(element, updateContext);
       assertEquals(highlightedParameterIndex, updateContext.getCurrentParameter());
     }
