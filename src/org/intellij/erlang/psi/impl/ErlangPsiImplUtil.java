@@ -121,10 +121,10 @@ public class ErlangPsiImplUtil {
   @Nullable
   private static PsiReference createAtomReference(@NotNull final ErlangQAtom o) {
     if (!standaloneAtom(o)) return null;
-    return new PsiPolyVariantReferenceBase<ErlangQAtom>(o, TextRange.create(0, o.getTextLength())) {
+    return new PsiPolyVariantReferenceBase<>(o, TextRange.create(0, o.getTextLength())) {
       @NotNull
       @Override
-      public ResolveResult[] multiResolve(boolean b) {
+      public ResolveResult @NotNull [] multiResolve(boolean b) {
         return new ResolveResult[]{};
       }
 
@@ -141,7 +141,7 @@ public class ErlangPsiImplUtil {
 
       @NotNull
       @Override
-      public Object[] getVariants() { // todo
+      public Object @NotNull [] getVariants() { // todo
         return ArrayUtil.EMPTY_OBJECT_ARRAY;
       }
     };
@@ -273,7 +273,7 @@ public class ErlangPsiImplUtil {
 
       @NotNull
       @Override
-      public Object[] getVariants() {
+      public Object @NotNull [] getVariants() {
         return ArrayUtil.EMPTY_OBJECT_ARRAY;
       }
     };
@@ -282,7 +282,7 @@ public class ErlangPsiImplUtil {
   @Nullable
   public static PsiReference getReference(@NotNull ErlangIncludeString o) {
     return o.getTextLength() < 2 ? null :
-           new PsiReferenceBase<ErlangIncludeString>(o, TextRange.from(1, o.getTextLength() - 2)) {
+           new PsiReferenceBase<>(o, TextRange.from(1, o.getTextLength() - 2)) {
              @Override
              public PsiElement resolve() {
                ErlangFile file = (ErlangFile) myElement.getContainingFile();
@@ -333,7 +333,7 @@ public class ErlangPsiImplUtil {
 
              @NotNull
              @Override
-             public Object[] getVariants() {
+             public Object @NotNull [] getVariants() {
                return ArrayUtil.EMPTY_OBJECT_ARRAY;
              }
 
@@ -646,7 +646,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   private static InsertHandler<LookupElement> getInsertHandler(@NotNull final String name, @Nullable final String moduleName, final int arity, boolean withArity) {
-    return !withArity ? new ParenthesesInsertHandler<LookupElement>() {
+    return !withArity ? new ParenthesesInsertHandler<>() {
       @Override
       public void handleInsert(@NotNull InsertionContext context, @NotNull LookupElement item) {
         QuoteInsertHandler.process(name, moduleName, context);
@@ -657,7 +657,7 @@ public class ErlangPsiImplUtil {
       protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
         return arity > 0;
       }
-    } : new BasicInsertHandler<LookupElement>() {
+    } : new BasicInsertHandler<>() {
       @Override
       public void handleInsert(@NotNull InsertionContext context, @NotNull LookupElement item) {
         QuoteInsertHandler.process(name, moduleName, context);
@@ -723,7 +723,7 @@ public class ErlangPsiImplUtil {
       ErlangFile erlangFile = (ErlangFile) containingFile;
       List<ErlangTypeDefinition> types = ContainerUtil.concat(erlangFile.getTypes(), getErlangTypeFromIncludes(erlangFile, true, ""));
 
-      final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<LookupElement>() {
+      final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<>() {
         @Override
         protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
           return false;
@@ -1911,7 +1911,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean fromTheSameCaseExpression(@NotNull PsiElement origin, @NotNull PsiElement element) {
-    if (element instanceof ErlangQVar && Objects.equals(element.getText(), element.getText())) {
+    if (element instanceof ErlangQVar && Objects.equals(origin.getText(), element.getText())) {
       ErlangCompositeElement cr2 = PsiTreeUtil.getParentOfType(element, ErlangCrClause.class);
       ErlangCompositeElement cr1 = PsiTreeUtil.getParentOfType(origin, ErlangCrClause.class);
       if (cr1 != null && cr2 != null) {

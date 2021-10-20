@@ -24,6 +24,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.SlowOperations;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
@@ -59,7 +60,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       PsiReference reference = erlFunctionCall.getReference();
       List<ErlangFunctionClause> clauses = new ArrayList<>();
       if (reference instanceof PsiPolyVariantReference) {
-        ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
+        ResolveResult[] resolveResults = SlowOperations.allowSlowOperations(() -> ((PsiPolyVariantReference) reference).multiResolve(true)) ;
         for (ResolveResult result : resolveResults) {
           PsiElement element = result.getElement();
           if (element instanceof ErlangFunction) {
@@ -68,20 +69,19 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         }
       }
       if (clauses.isEmpty()) {
-        PsiElement resolve = reference.resolve();
+        PsiElement resolve = SlowOperations.allowSlowOperations(reference::resolve);
         if (resolve instanceof ErlangFunction) {
           List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
           clauses.addAll(clauseList);
         }
       }
-      if (clauses.size() > 0) {
+      if (!clauses.isEmpty()) {
         clauses.sort((lhs, rhs) -> {
           int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
           int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
           return Integer.signum(lhsSize - rhsSize);
         });
         context.setItemsToShow(ArrayUtil.toObjectArray(clauses));
-        context.showHint(args, args.getTextRange().getStartOffset(), this);
       }
       else {
         ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
@@ -96,8 +96,8 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
           String name = erlFunctionCall.getName();
           context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs("erlang", name), ErlangBifTable.getBifs("", name))));
         }
-        context.showHint(args, args.getTextRange().getStartOffset(), this);
       }
+      context.showHint(args, args.getTextRange().getStartOffset(), this);
     }
   }
 

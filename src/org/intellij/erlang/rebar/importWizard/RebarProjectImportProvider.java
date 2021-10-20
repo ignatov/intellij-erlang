@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class RebarProjectImportProvider extends ProjectImportProvider {
   @Override
-  protected ProjectImportBuilder doGetBuilder() {
+  protected ProjectImportBuilder<ImportedOtpApp> doGetBuilder() {
     return new RebarProjectImportBuilder();
   }
 

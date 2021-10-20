@@ -25,7 +25,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
-import com.intellij.openapi.util.Couple;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -288,20 +287,26 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   }
 
   static class CyclicDependencyFoundException extends Exception {
-    private final Couple<String> myCyclicDependencies;
+    private final Map.Entry<String, String> myCyclicDependencies;
 
-    CyclicDependencyFoundException(@NotNull Couple<String> cyclicDependencies) {
+    CyclicDependencyFoundException(Map.@Nullable Entry<String, String> cyclicDependencies) {
       this.myCyclicDependencies = cyclicDependencies;
     }
 
     @NotNull
     public String getFirstFileInCycle() {
-      return myCyclicDependencies.getFirst();
+      if (myCyclicDependencies != null) {
+        return myCyclicDependencies.getKey();
+      }
+      return "";
     }
 
     @NotNull
     public String getLastFileInCycle() {
-      return myCyclicDependencies.getSecond();
+      if (myCyclicDependencies != null) {
+        return myCyclicDependencies.getValue();
+      }
+      return "";
     }
   }
 }

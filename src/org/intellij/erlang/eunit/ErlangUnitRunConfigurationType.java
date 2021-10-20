@@ -21,6 +21,7 @@ import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
@@ -41,6 +42,12 @@ public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
   public static class ErlangUnitConfigurationFactory extends ConfigurationFactory {
     protected ErlangUnitConfigurationFactory(ErlangUnitRunConfigurationType type) {
       super(type);
+    }
+
+    @Override
+    public @NotNull
+    @NonNls String getId() {
+      return "Erlang Eunit";
     }
 
     @NotNull
