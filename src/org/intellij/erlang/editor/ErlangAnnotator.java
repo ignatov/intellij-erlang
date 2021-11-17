@@ -18,6 +18,7 @@ package org.intellij.erlang.editor;
 
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
@@ -197,12 +198,11 @@ public class ErlangAnnotator implements Annotator, DumbAware {
   }
 
   private static void setHighlighting(@NotNull TextRange range, @NotNull AnnotationHolder holder, @NotNull TextAttributesKey key) {
-    holder.createInfoAnnotation(range, null).setEnforcedTextAttributes(TextAttributes.ERASE_MARKER);
-    holder.createInfoAnnotation(range, null).setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key));
+    holder.newSilentAnnotation(HighlightSeverity.INFORMATION).range(range).enforcedTextAttributes(TextAttributes.ERASE_MARKER).create();
+    holder.newSilentAnnotation(HighlightSeverity.INFORMATION).range(range).enforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key)).create();
   }
 
   private static void setHighlighting(@NotNull PsiElement element, @NotNull AnnotationHolder holder, @NotNull TextAttributesKey key) {
-    holder.createInfoAnnotation(element, null).setEnforcedTextAttributes(TextAttributes.ERASE_MARKER);
-    holder.createInfoAnnotation(element, null).setEnforcedTextAttributes(EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key));
+    setHighlighting(element.getTextRange(), holder, key);
   }
 }
