@@ -17,10 +17,12 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitFunctionCallExpression(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -39,20 +41,17 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
   }
 
   @Override
-  @NotNull
-  public PsiReference getReference() {
+  public @NotNull PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 
   @Override
-  @Nullable
-  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+  public @Nullable PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);
   }
 
   @Override
-  @NotNull
-  public PsiElement getNameIdentifier() {
+  public @NotNull PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
@@ -62,8 +61,7 @@ public class ErlangFunctionCallExpressionImpl extends ErlangExpressionImpl imple
   }
 
   @Override
-  @NotNull
-  public String getName() {
+  public @NotNull String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 

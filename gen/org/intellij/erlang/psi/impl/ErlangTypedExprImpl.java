@@ -20,6 +20,7 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
     visitor.visitTypedExpr(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -56,20 +57,17 @@ public class ErlangTypedExprImpl extends ErlangNamedElementImpl implements Erlan
   }
 
   @Override
-  @NotNull
-  public String getName() {
+  public @NotNull String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
   @Override
-  @NotNull
-  public PsiElement setName(String newName) {
+  public @NotNull PsiElement setName(String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
   @Override
-  @NotNull
-  public PsiElement getNameIdentifier() {
+  public @NotNull PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 

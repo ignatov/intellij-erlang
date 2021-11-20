@@ -20,6 +20,7 @@ public class ErlangTryClauseImpl extends ErlangCompositeElementImpl implements E
     visitor.visitTryClause(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

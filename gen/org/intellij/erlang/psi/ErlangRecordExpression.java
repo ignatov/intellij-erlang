@@ -26,7 +26,6 @@ public interface ErlangRecordExpression extends ErlangExpression {
   @Nullable
   PsiElement getRadix();
 
-  @Nullable
-  PsiReference getReferenceInternal();
+  @Nullable PsiReference getReferenceInternal();
 
 }

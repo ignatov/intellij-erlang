@@ -11,10 +11,8 @@ public interface ErlangIncludeString extends ErlangCompositeElement {
   @NotNull
   PsiElement getString();
 
-  @Nullable
-  PsiReference getReference();
+  @Nullable PsiReference getReference();
 
-  @Nullable
-  PsiReference getReference(@Nullable ErlangMacrosName o);
+  @Nullable PsiReference getReference(@Nullable ErlangMacrosName o);
 
 }

@@ -16,10 +16,12 @@ public class ErlangBinBaseTypeImpl extends ErlangTypeImpl implements ErlangBinBa
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitBinBaseType(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

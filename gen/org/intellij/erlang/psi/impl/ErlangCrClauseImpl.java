@@ -20,6 +20,7 @@ public class ErlangCrClauseImpl extends ErlangCompositeElementImpl implements Er
     visitor.visitCrClause(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

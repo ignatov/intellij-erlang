@@ -17,10 +17,12 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitRecordExpression(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -63,8 +65,7 @@ public class ErlangRecordExpressionImpl extends ErlangExpressionImpl implements 
   }
 
   @Override
-  @Nullable
-  public PsiReference getReferenceInternal() {
+  public @Nullable PsiReference getReferenceInternal() {
     return ErlangPsiImplUtil.getReferenceInternal(this);
   }
 

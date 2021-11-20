@@ -20,6 +20,7 @@ public class ErlangFunctionClauseImpl extends ErlangCompositeElementImpl impleme
     visitor.visitFunctionClause(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

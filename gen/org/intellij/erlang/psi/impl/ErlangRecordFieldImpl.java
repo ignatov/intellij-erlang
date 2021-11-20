@@ -21,6 +21,7 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
     visitor.visitRecordField(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -51,14 +52,12 @@ public class ErlangRecordFieldImpl extends ErlangCompositeElementImpl implements
   }
 
   @Override
-  @Nullable
-  public PsiReference getReference() {
+  public @Nullable PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 
   @Override
-  @Nullable
-  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+  public @Nullable PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);
   }
 
