@@ -1571,6 +1571,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | config_bin_list_expression
   //   | config_qualified_or_call_expression
   //   | config_map_construct_expression
+  //   | config_fun_expression
   //   | (prefix_op? atomic)
   //   | q_var
   public static boolean config_expression(PsiBuilder b, int l) {
@@ -1582,26 +1583,27 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!r) r = config_bin_list_expression(b, l + 1);
     if (!r) r = config_qualified_or_call_expression(b, l + 1);
     if (!r) r = config_map_construct_expression(b, l + 1);
-    if (!r) r = config_expression_5(b, l + 1);
+    if (!r) r = config_fun_expression(b, l + 1);
+    if (!r) r = config_expression_6(b, l + 1);
     if (!r) r = q_var(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
   // prefix_op? atomic
-  private static boolean config_expression_5(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "config_expression_5")) return false;
+  private static boolean config_expression_6(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_expression_6")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = config_expression_5_0(b, l + 1);
+    r = config_expression_6_0(b, l + 1);
     r = r && atomic(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // prefix_op?
-  private static boolean config_expression_5_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "config_expression_5_0")) return false;
+  private static boolean config_expression_6_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_expression_6_0")) return false;
     prefix_op(b, l + 1);
     return true;
   }
@@ -1638,6 +1640,20 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, ERL_COMMA);
     p = r; // pin = 1
     r = r && config_expression(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // fun fun_expression_lambda
+  public static boolean config_fun_expression(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "config_fun_expression")) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_FUN)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_FUN_EXPRESSION, "<expression>");
+    r = consumeToken(b, ERL_FUN);
+    p = r; // pin = 1
+    r = r && fun_expression_lambda(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
