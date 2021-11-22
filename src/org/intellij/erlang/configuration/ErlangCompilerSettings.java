@@ -72,7 +72,7 @@ public class ErlangCompilerSettings implements PersistentStateComponent<ErlangCo
 
   @NotNull
   public static ErlangCompilerSettings getInstance(@NotNull Project project) {
-    ErlangCompilerSettings persisted = ServiceManager.getService(project, ErlangCompilerSettings.class);
+    ErlangCompilerSettings persisted = project.getService(ErlangCompilerSettings.class);
     return persisted != null ? persisted : new ErlangCompilerSettings();
   }
 }
