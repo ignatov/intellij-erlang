@@ -53,7 +53,7 @@ public class ErlangCallHierarchyProvider implements HierarchyProvider {
 
   @Override
   public void browserActivated(@NotNull HierarchyBrowser hierarchyBrowser) {
-    ((CallHierarchyBrowserBase) hierarchyBrowser).changeView(CallHierarchyBrowserBase.CALLER_TYPE);
+    ((CallHierarchyBrowserBase) hierarchyBrowser).changeView(CallHierarchyBrowserBase.getCalleeType());
   }
 
   private static class MyCallHierarchyBrowserBase extends CallHierarchyBrowserBase {
@@ -75,13 +75,13 @@ public class ErlangCallHierarchyProvider implements HierarchyProvider {
       final CallHierarchyBrowser.BaseOnThisMethodAction baseOnThisMethodAction = new CallHierarchyBrowser.BaseOnThisMethodAction();
       baseOnThisMethodAction
         .registerCustomShortcutSet(ActionManager.getInstance().getAction(IdeActions.ACTION_CALL_HIERARCHY).getShortcutSet(), tree1);
-      trees.put(CALLEE_TYPE, tree1);
+      trees.put(getCalleeType(), tree1);
 
       final JTree tree2 = createTree(false);
       PopupHandler.installPopupMenu(tree2, group, ActionPlaces.CALL_HIERARCHY_VIEW_POPUP);
       baseOnThisMethodAction
         .registerCustomShortcutSet(ActionManager.getInstance().getAction(IdeActions.ACTION_CALL_HIERARCHY).getShortcutSet(), tree2);
-      trees.put(CALLER_TYPE, tree2);
+      trees.put(getCallerType(), tree2);
     }
 
     @Override
@@ -92,8 +92,8 @@ public class ErlangCallHierarchyProvider implements HierarchyProvider {
     @Nullable
     @Override
     protected HierarchyTreeStructure createHierarchyTreeStructure(@NotNull String type, @NotNull PsiElement e) {
-      if (CALLER_TYPE.equals(type)) return new ErlangCallerMethodsTreeStructure(myProject, (ErlangFunction)e, getCurrentScopeType());
-      if (CALLEE_TYPE.equals(type)) return new ErlangCalleeMethodsTreeStructure(myProject, (ErlangFunction)e, getCurrentScopeType());
+      if (getCallerType().equals(type)) return new ErlangCallerMethodsTreeStructure(myProject, (ErlangFunction)e, getCurrentScopeType());
+      if (getCalleeType().equals(type)) return new ErlangCalleeMethodsTreeStructure(myProject, (ErlangFunction)e, getCurrentScopeType());
       LOG.error("unexpected type: " + type);
       return null;
     }
