@@ -150,7 +150,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   private void validateModule(@NotNull Module module) throws Exception {
-    String importedModulePath = getProject().getBaseDir().getPath();
+    String importedModulePath = getProject().getBasePath();
 
     Element actualImlElement = new Element("root");
     ModuleRootManager instance = ModuleRootManager.getInstance(module);
@@ -160,7 +160,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     PathMacroManager.getInstance(getProject()).collapsePaths(actualImlElement);
     PathMacros.getInstance().setIgnoredMacroNames(Collections.singletonList(MODULE_DIR));
 
-    String projectPath = getProject().getBaseDir().getPath();
+    String projectPath = getProject().getBasePath();
     String expectedImlPath = "/expected/" + module.getName() + ".iml";
     File expectedImlFile = new File(projectPath + expectedImlPath);
     Document expectedIml = JDOMUtil.loadDocument(expectedImlFile);

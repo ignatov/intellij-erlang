@@ -23,6 +23,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.ui.popup.*;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -139,7 +140,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       public String getTextFor(Object o) {
         //Uses relative path to project root if possible (if not - full path)
         VirtualFile f = ((PsiFile) o).getVirtualFile();
-        String projectRootRelativePath = VfsUtilCore.getRelativePath(f, project.getBaseDir(), INCLUDE_STRING_PATH_SEPARATOR);
+        String projectRootRelativePath = VfsUtilCore.getRelativePath(f, ProjectUtil.guessProjectDir(project), INCLUDE_STRING_PATH_SEPARATOR);
         return projectRootRelativePath == null ?
           f.getPath() : projectRootRelativePath;
       }

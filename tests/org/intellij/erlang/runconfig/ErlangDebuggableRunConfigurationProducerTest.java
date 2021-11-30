@@ -123,7 +123,7 @@ public class ErlangDebuggableRunConfigurationProducerTest extends JavaModuleTest
     dataContext.put(CommonDataKeys.PSI_ELEMENT, elementToProduceFor);
     dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(elementToProduceFor));
 
-    ConfigurationContext configurationContext = ConfigurationContext.getFromContext(dataContext);
+    ConfigurationContext configurationContext = ConfigurationContext.getFromContext(dataContext, null);
     RunConfigurationProducer producer = RunConfigurationProducer.getInstance(producerClass);
     ConfigurationFromContext confFromCtx = producer.createConfigurationFromContext(configurationContext);
     assertNotNull(confFromCtx);
