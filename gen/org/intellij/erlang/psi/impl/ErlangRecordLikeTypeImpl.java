@@ -16,10 +16,12 @@ public class ErlangRecordLikeTypeImpl extends ErlangTypeImpl implements ErlangRe
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitRecordLikeType(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

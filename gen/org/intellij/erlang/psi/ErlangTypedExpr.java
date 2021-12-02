@@ -22,14 +22,11 @@ public interface ErlangTypedExpr extends ErlangNamedElement {
   @Nullable
   PsiElement getOpEq();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
-  @NotNull
-  PsiElement setName(String newName);
+  @NotNull PsiElement setName(String newName);
 
-  @NotNull
-  PsiElement getNameIdentifier();
+  @NotNull PsiElement getNameIdentifier();
 
   int getTextOffset();
 

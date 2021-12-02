@@ -17,10 +17,12 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitStringLiteral(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -38,14 +40,12 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
-  @NotNull
-  public ErlangStringLiteral updateText(@NotNull String text) {
+  public @NotNull ErlangStringLiteral updateText(@NotNull String text) {
     return ErlangPsiImplUtil.updateText(this, text);
   }
 
   @Override
-  @NotNull
-  public ErlangStringLiteralEscaper createLiteralTextEscaper() {
+  public @NotNull ErlangStringLiteralEscaper createLiteralTextEscaper() {
     return ErlangPsiImplUtil.createLiteralTextEscaper(this);
   }
 

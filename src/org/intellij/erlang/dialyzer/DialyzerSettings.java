@@ -31,7 +31,7 @@ public final class DialyzerSettings implements PersistentStateComponent<Dialyzer
 
   @NotNull
   public static DialyzerSettings getInstance(@NotNull Project project) {
-    DialyzerSettings persisted = ServiceManager.getService(project, DialyzerSettings.class);
+    DialyzerSettings persisted = project.getService(DialyzerSettings.class);
     return persisted != null ? persisted : new DialyzerSettings();
   }
 

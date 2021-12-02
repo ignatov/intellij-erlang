@@ -20,26 +20,20 @@ public interface ErlangFunction extends ErlangNamedElement, StubBasedPsiElement<
   @NotNull
   ErlangFunctionClause getFirstClause();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
-  @NotNull
-  PsiElement setName(@NotNull String newName);
+  @NotNull PsiElement setName(@NotNull String newName);
 
   int getArity();
 
-  @NotNull
-  PsiElement getNameIdentifier();
+  @NotNull PsiElement getNameIdentifier();
 
-  @NotNull
-  ItemPresentation getPresentation();
+  @NotNull ItemPresentation getPresentation();
 
-  @NotNull
-  Icon getIcon(int flags);
+  @NotNull Icon getIcon(int flags);
 
   boolean isExported();
 
-  @Nullable
-  ErlangSpecification findSpecification();
+  @Nullable ErlangSpecification findSpecification();
 
 }

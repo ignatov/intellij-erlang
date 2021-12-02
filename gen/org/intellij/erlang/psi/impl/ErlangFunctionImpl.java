@@ -28,6 +28,7 @@ public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangF
     visitor.visitFunction(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -55,14 +56,12 @@ public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangF
   }
 
   @Override
-  @NotNull
-  public String getName() {
+  public @NotNull String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
   @Override
-  @NotNull
-  public PsiElement setName(@NotNull String newName) {
+  public @NotNull PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
@@ -72,20 +71,17 @@ public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangF
   }
 
   @Override
-  @NotNull
-  public PsiElement getNameIdentifier() {
+  public @NotNull PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
   @Override
-  @NotNull
-  public ItemPresentation getPresentation() {
+  public @NotNull ItemPresentation getPresentation() {
     return ErlangPsiImplUtil.getPresentation(this);
   }
 
   @Override
-  @NotNull
-  public Icon getIcon(int flags) {
+  public @NotNull Icon getIcon(int flags) {
     return ErlangPsiImplUtil.getIcon(this, flags);
   }
 
@@ -95,8 +91,7 @@ public class ErlangFunctionImpl extends ErlangNamedStubbedPsiElementBase<ErlangF
   }
 
   @Override
-  @Nullable
-  public ErlangSpecification findSpecification() {
+  public @Nullable ErlangSpecification findSpecification() {
     return ErlangPsiImplUtil.findSpecification(this);
   }
 

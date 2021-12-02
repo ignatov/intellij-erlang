@@ -14,18 +14,19 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangCallbackSpecImpl extends ErlangStubbedPsiElementBase<ErlangCallbackSpecStub> implements ErlangCallbackSpec {
 
-  public ErlangCallbackSpecImpl(ASTNode node) {
-    super(node);
+  public ErlangCallbackSpecImpl(@NotNull ErlangCallbackSpecStub stub, @NotNull IStubElementType type) {
+    super(stub, type);
   }
 
-  public ErlangCallbackSpecImpl(ErlangCallbackSpecStub stub, IStubElementType stubType) {
-    super(stub, stubType);
+  public ErlangCallbackSpecImpl(@NotNull ASTNode node) {
+    super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitCallbackSpec(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

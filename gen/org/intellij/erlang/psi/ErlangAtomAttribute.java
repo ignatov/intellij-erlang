@@ -22,7 +22,6 @@ public interface ErlangAtomAttribute extends ErlangMetaAttribute {
   @NotNull
   PsiElement getAtomName();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
 }
