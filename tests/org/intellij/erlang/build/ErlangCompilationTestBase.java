@@ -23,6 +23,7 @@ import com.intellij.openapi.compiler.CompilerMessage;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil;
@@ -128,7 +129,7 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
 
   @NotNull
   private Module createModuleInDirectory(String moduleName) throws IOException {
-    VirtualFile baseDir = VfsUtil.createDirectoryIfMissing(myProject.getBaseDir(), moduleName);
+    VirtualFile baseDir = VfsUtil.createDirectoryIfMissing(ProjectUtil.guessProjectDir(myProject), moduleName);
     File moduleFile = new File(FileUtil.toSystemDependentName(baseDir.getPath()), moduleName + ".iml");
     FileUtil.createIfDoesntExist(moduleFile);
 //    myFilesToDelete.add(moduleFile.toPath());
