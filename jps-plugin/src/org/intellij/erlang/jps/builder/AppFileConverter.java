@@ -52,7 +52,10 @@ public class AppFileConverter {
       }
     }
     catch (Exception e) {
-      context.processMessage(new CompilerMessage(ErlangBuilder.NAME, BuildMessage.Kind.INFO, "Failed to parse "+appConfigSrc+" app src file : "+e.getLocalizedMessage()));
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      context.processMessage(new CompilerMessage(ErlangBuilder.NAME, BuildMessage.Kind.INFO, "Failed to parse "+appConfigSrc+" app src file : "+e.getLocalizedMessage()+","+sw.toString()));
       appConfigterms = null;
     }
   }

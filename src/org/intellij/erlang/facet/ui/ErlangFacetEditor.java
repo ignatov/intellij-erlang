@@ -29,10 +29,14 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 public class ErlangFacetEditor extends FacetEditorTab {
   private JPanel myRootPanel;
   private JTextField myParseTransformsEditorField;
+  private JTextField myFlagsEditorField;
+
 
   private final ErlangFacetConfiguration myConfiguration;
   private boolean myIsModified = false;
@@ -40,6 +44,12 @@ public class ErlangFacetEditor extends FacetEditorTab {
   public ErlangFacetEditor(@SuppressWarnings("UnusedParameters") FacetEditorContext editorContext, ErlangFacetConfiguration configuration) {
     myConfiguration = configuration;
     myParseTransformsEditorField.getDocument().addDocumentListener(new DocumentAdapter() {
+      @Override
+      protected void textChanged(DocumentEvent e) {
+        myIsModified = true;
+      }
+    });
+    myFlagsEditorField.getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
       protected void textChanged(DocumentEvent e) {
         myIsModified = true;
@@ -68,6 +78,7 @@ public class ErlangFacetEditor extends FacetEditorTab {
   @Override
   public void reset() {
     myParseTransformsEditorField.setText(getConfigurationParseTransforms());
+    myFlagsEditorField.setText(getConfigurationExtraFlags());
     myIsModified = false;
   }
 
@@ -78,11 +89,41 @@ public class ErlangFacetEditor extends FacetEditorTab {
   @Override
   public void apply() {
     myConfiguration.setParseTransformsFrom(getUiParseTransforms());
+    myConfiguration.setExtraFlagsFrom(getUiExtraFlags());
     myIsModified = false;
   }
 
   private String getConfigurationParseTransforms() {
     return StringUtil.join(myConfiguration.getParseTransforms(), ", ");
+  }
+
+  private String getConfigurationExtraFlags() {
+    return StringUtil.join(myConfiguration.getExtraFlags(), " ");
+  }
+
+  private List<String> getUiExtraFlags() {
+    String extraFlagsString = myFlagsEditorField.getText();
+    StringTokenizer st=new StringTokenizer(extraFlagsString," '");
+    boolean quoted=false;
+    List<String> result=new ArrayList<String>();
+    StringBuilder sb=new StringBuilder();
+    while(st.hasMoreTokens())
+    {
+      String token=st.nextToken();
+      if(token.equals("'")) {
+         quoted = !quoted;
+      }
+      if(!quoted && token.equals(" ")) {
+        if(sb.length()>0)
+          result.add(sb.toString());
+        sb = new StringBuilder();
+      } else {
+        sb.append(token);
+      }
+    }
+    if(sb.length()>0)
+      result.add(sb.toString());
+    return result;
   }
 
   private List<String> getUiParseTransforms() {

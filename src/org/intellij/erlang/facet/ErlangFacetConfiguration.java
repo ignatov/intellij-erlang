@@ -55,12 +55,26 @@ public class ErlangFacetConfiguration implements FacetConfiguration, PersistentS
     return Collections.unmodifiableList(myState.myParseTransforms);
   }
 
+
   public void setParseTransformsFrom(Iterable<String> parseTransforms) {
     myState.myParseTransforms = new ArrayList<>(ContainerUtil.newLinkedHashSet(parseTransforms));
   }
+
   
   public void addParseTransforms(Collection<String> newParseTransforms) {
     if (newParseTransforms.isEmpty()) return;
     setParseTransformsFrom(ContainerUtil.concat(myState.myParseTransforms, newParseTransforms));
+  }
+
+
+  public List<String> getExtraFlags() {
+    return Collections.unmodifiableList(myState.myExtraFlags);
+  }
+  public void setExtraFlagsFrom(Iterable<String> extraFlags) {
+    myState.myExtraFlags = new ArrayList<>(ContainerUtil.newLinkedHashSet(extraFlags));
+  }
+  public void addExtraFlags(Collection<String> extraFlags) {
+    if (extraFlags.isEmpty()) return;
+    setParseTransformsFrom(ContainerUtil.concat(myState.myExtraFlags, extraFlags));
   }
 }
