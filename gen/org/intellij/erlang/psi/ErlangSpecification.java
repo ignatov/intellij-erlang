@@ -15,17 +15,13 @@ public interface ErlangSpecification extends ErlangMetaAttribute, ErlangNamedEle
   @Nullable
   ErlangFunTypeSigsBraces getFunTypeSigsBraces();
 
-  @Nullable
-  ErlangFunTypeSigs getSignature();
+  @Nullable ErlangFunTypeSigs getSignature();
 
-  @NotNull
-  PsiElement getNameIdentifier();
+  @NotNull PsiElement getNameIdentifier();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
-  @NotNull
-  PsiElement setName(@NotNull String newName);
+  @NotNull PsiElement setName(@NotNull String newName);
 
   int getArity();
 

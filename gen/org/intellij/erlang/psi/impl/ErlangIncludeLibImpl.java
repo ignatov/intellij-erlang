@@ -14,18 +14,19 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangIncludeLibImpl extends ErlangStubbedPsiElementBase<ErlangIncludeLibStub> implements ErlangIncludeLib {
 
-  public ErlangIncludeLibImpl(ASTNode node) {
-    super(node);
+  public ErlangIncludeLibImpl(@NotNull ErlangIncludeLibStub stub, @NotNull IStubElementType type) {
+    super(stub, type);
   }
 
-  public ErlangIncludeLibImpl(ErlangIncludeLibStub stub, IStubElementType stubType) {
-    super(stub, stubType);
+  public ErlangIncludeLibImpl(@NotNull ASTNode node) {
+    super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitIncludeLib(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -56,8 +57,7 @@ public class ErlangIncludeLibImpl extends ErlangStubbedPsiElementBase<ErlangIncl
   }
 
   @Override
-  @Nullable
-  public ErlangIncludeString getIncludeStringSafe() {
+  public @Nullable ErlangIncludeString getIncludeStringSafe() {
     return ErlangPsiImplUtil.getIncludeStringSafe(this);
   }
 

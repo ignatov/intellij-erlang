@@ -23,6 +23,7 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
@@ -72,7 +73,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     mySdkPathSelector.addBrowseFolderListener("Select Erlang SDK Path", "", null, FileChooserDescriptorFactory.createSingleFolderDescriptor().withTitle("Select Erlang SDK Root"));
 
     if (StringUtil.isEmpty(myRebarSettings.getRebarPath())) {
-      VirtualFile baseDir = project.getBaseDir();
+      VirtualFile baseDir = ProjectUtil.guessProjectDir(project);
       if (baseDir != null) {
         VirtualFile rebar = baseDir.findChild("rebar");
         if (rebar != null) {

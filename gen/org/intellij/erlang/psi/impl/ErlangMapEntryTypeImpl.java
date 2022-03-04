@@ -16,10 +16,12 @@ public class ErlangMapEntryTypeImpl extends ErlangTypeImpl implements ErlangMapE
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitMapEntryType(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

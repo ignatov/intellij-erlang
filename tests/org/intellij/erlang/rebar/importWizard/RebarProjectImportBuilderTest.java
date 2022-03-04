@@ -26,18 +26,12 @@ import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.roots.impl.ModuleRootManagerImpl;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
-
-import java.util.Collections;
-import java.util.function.Consumer;
-import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
@@ -51,7 +45,9 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Ignore;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Ignore
 public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
@@ -66,9 +62,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     createMockSdk();
     File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
     String basePath = getProject().getBasePath();
-    VirtualFile guess = ProjectUtil.guessProjectDir(getProject());
-    System.out.println("BP: " + basePath);
-    System.out.println("GUESS: " + guess);
+    assertNotNull(basePath);
     FileUtil.copyDir(currentTestRoot, new File(basePath));
   }
 
@@ -84,18 +78,18 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     super.tearDown();
   }
 
-  public void testFromEbinAppFile() throws Exception { doTest(null); } 
-  public void testFromSrcAppSrcFile() throws Exception { doTest(null); } 
-  public void testContentIncludesAndExcludes() throws Exception { doTest(null); } 
-  public void testRebarSubDirs() throws Exception { doTest(null); } 
-  public void testMissingSubDir() throws Exception { doTest(null); } 
-  public void testExtraSubDir() throws Exception { doTest(null); } 
-  public void testMultipleRebarConfigs() throws Exception { doTest(null); } 
-  public void testDepsOnOtherApps() throws Exception { doTest(null); } 
-  public void testDepsOnSdkApps() throws Exception { doTest(null); } 
+  public void testFromEbinAppFile() throws Exception { doTest(null); }
+  public void testFromSrcAppSrcFile() throws Exception { doTest(null); }
+  public void testContentIncludesAndExcludes() throws Exception { doTest(null); }
+  public void testRebarSubDirs() throws Exception { doTest(null); }
+  public void testMissingSubDir() throws Exception { doTest(null); }
+  public void testExtraSubDir() throws Exception { doTest(null); }
+  public void testMultipleRebarConfigs() throws Exception { doTest(null); }
+  public void testDepsOnOtherApps() throws Exception { doTest(null); }
+  public void testDepsOnSdkApps() throws Exception { doTest(null); }
   public void testDepsOnMissingApps() throws Exception { doTest(null); }
-  
-  public void testModuleNameConflict() throws Exception { 
+
+  public void testModuleNameConflict() throws Exception {
     doTest(moduleWizardStep -> {
       if (moduleWizardStep instanceof SelectImportedOtpAppsStep) {
         SelectImportedOtpAppsStep theStep = (SelectImportedOtpAppsStep) moduleWizardStep;
@@ -111,12 +105,12 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     assertEquals(createdProject.getBasePath() + "/rebar", RebarSettings.getInstance(createdProject).getRebarPath());
   }
 
-  public void testRebarlessDeps() throws Exception { doTest(null); } 
-  public void testRebarDependencies() throws Exception { doTest(null); } 
-  public void testTransitiveRebarDependencies() throws Exception { doTest(null); } 
-  public void testIncludePathsInRebarConfig1() throws Exception { doTest(null); } 
+  public void testRebarlessDeps() throws Exception { doTest(null); }
+  public void testRebarDependencies() throws Exception { doTest(null); }
+  public void testTransitiveRebarDependencies() throws Exception { doTest(null); }
+  public void testIncludePathsInRebarConfig1() throws Exception { doTest(null); }
   public void testIncludePathsInRebarConfig2() throws Exception { doTest(null); }
-  
+
   public void testParseTransformInRebarConfig() throws Exception {
     Project project = doTest(null);
     Module[] modules = ModuleManager.getInstance(project).getModules();
@@ -151,17 +145,17 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   private void validateModule(@NotNull Module module) throws Exception {
-    String importedModulePath = getProject().getBaseDir().getPath();
+    String importedModulePath = getProject().getBasePath();
 
     Element actualImlElement = new Element("root");
     ModuleRootManager instance = ModuleRootManager.getInstance(module);
-    ((ModuleRootManagerImpl) instance).getState().writeExternal(actualImlElement);
+//    ((ModuleRootManagerImpl) instance).getState().writeExternal(actualImlElement);
     PathMacros.getInstance().setMacro(MODULE_DIR, importedModulePath);
     PathMacroManager.getInstance(module).collapsePaths(actualImlElement);
     PathMacroManager.getInstance(getProject()).collapsePaths(actualImlElement);
     PathMacros.getInstance().setIgnoredMacroNames(Collections.singletonList(MODULE_DIR));
 
-    String projectPath = getProject().getBaseDir().getPath();
+    String projectPath = getProject().getBasePath();
     String expectedImlPath = "/expected/" + module.getName() + ".iml";
     File expectedImlFile = new File(projectPath + expectedImlPath);
     Document expectedIml = JDOMUtil.loadDocument(expectedImlFile);
@@ -178,7 +172,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     if (OVERWRITE_TESTDATA) {
       FileUtil.writeToFile(new File(TEST_DATA_IMPORT, getTestName(true) + expectedImlPath), actualString);
     }
-    
+
     assertTrue(errorMsg, JDOMUtil.areElementsEqual(expectedImlElement, actualImlElement));
     validateFacet(module);
   }

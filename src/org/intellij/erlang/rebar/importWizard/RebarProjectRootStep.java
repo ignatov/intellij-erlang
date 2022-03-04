@@ -125,7 +125,7 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
   private static void fetchDependencies(@NotNull final VirtualFile projectRoot, @NotNull final String rebarPath) {
     Project project = ProjectImportBuilder.getCurrentProject();
     String sdkPath = project != null ? ErlangSdkType.getSdkPath(project) : null;
-    final String escriptPath = sdkPath != null 
+    final String escriptPath = sdkPath != null
                                ? JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath()
                                : RebarRunningStateUtil.findEscriptExecutable();
 
@@ -150,7 +150,8 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
           handler.startNotify();
           handler.waitFor();
           indicator.setText2("Refreshing");
-        } catch (ExecutionException e) {
+        }
+        catch (ExecutionException e) {
           LOG.warn(e);
         }
       }

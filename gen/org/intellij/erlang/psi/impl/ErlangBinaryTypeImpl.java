@@ -16,10 +16,12 @@ public class ErlangBinaryTypeImpl extends ErlangTypeImpl implements ErlangBinary
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitBinaryType(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

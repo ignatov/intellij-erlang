@@ -20,6 +20,7 @@ public class ErlangTypeSigImpl extends ErlangCompositeElementImpl implements Erl
     visitor.visitTypeSig(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

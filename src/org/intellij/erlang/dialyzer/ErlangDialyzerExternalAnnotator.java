@@ -37,6 +37,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
@@ -76,7 +77,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
     if (!profile.isToolEnabled(key)) return null;
 
-    String workingDir = file.getProject().getBasePath();
+    String workingDir = ObjectUtils.notNull(file.getProject().getBasePath(), "");
     String dialyzerPath = homePath + "/bin/dialyzer" + (SystemInfo.isWindows ? ".exe" : "");
 
     String currentPltPath = DialyzerSettings.getInstance(file.getProject()).getCurrentPltPath();

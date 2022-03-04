@@ -11,10 +11,8 @@ public interface ErlangFieldType extends ErlangType {
   @NotNull
   ErlangQAtom getQAtom();
 
-  @NotNull
-  PsiReference getReference();
+  @NotNull PsiReference getReference();
 
-  @Nullable
-  PsiReference getReference(@Nullable ErlangMacrosName o);
+  @Nullable PsiReference getReference(@Nullable ErlangMacrosName o);
 
 }

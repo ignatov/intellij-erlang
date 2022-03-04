@@ -24,6 +24,7 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
     visitor.visitQVar(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -36,14 +37,12 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
   }
 
   @Override
-  @NotNull
-  public PsiReference getReference() {
+  public @NotNull PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 
   @Override
-  @Nullable
-  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+  public @Nullable PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);
   }
 
@@ -53,26 +52,22 @@ public class ErlangQVarImpl extends ErlangNamedElementImpl implements ErlangQVar
   }
 
   @Override
-  @NotNull
-  public String getName() {
+  public @NotNull String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
   @Override
-  @NotNull
-  public PsiElement setName(@NotNull String newName) {
+  public @NotNull PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 
   @Override
-  @NotNull
-  public PsiElement getNameIdentifier() {
+  public @NotNull PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
   @Override
-  @NotNull
-  public SearchScope getUseScope() {
+  public @NotNull SearchScope getUseScope() {
     return ErlangPsiImplUtil.getUseScope(this);
   }
 
