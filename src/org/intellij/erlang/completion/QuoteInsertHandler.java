@@ -34,7 +34,7 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
   }
 
   @Override
-  public void handleInsert(@NotNull InsertionContext context, LookupElement item) {
+  public void handleInsert(@NotNull InsertionContext context, @NotNull LookupElement item) {
     process(myName, null, context);
     if (needColon()) {
       AutoPopupController.getInstance(context.getProject()).autoPopupMemberLookup(context.getEditor(), null);

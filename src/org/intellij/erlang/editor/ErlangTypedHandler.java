@@ -22,7 +22,6 @@ import com.intellij.codeInsight.editorActions.TypedHandlerDelegate;
 import com.intellij.codeInsight.highlighting.BraceMatcher;
 import com.intellij.codeInsight.highlighting.BraceMatchingUtil;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
@@ -34,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ErlangTypedHandler extends TypedHandlerDelegate {
   @Override
-  public Result checkAutoPopup(char c, Project project, Editor editor, PsiFile file) {
+  public @NotNull Result checkAutoPopup(char c, @NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
     if (!(file instanceof ErlangFile)) return super.checkAutoPopup(c, project, editor, file);
 
     AutoPopupController autoPopupController = AutoPopupController.getInstance(project);
@@ -47,7 +46,7 @@ public class ErlangTypedHandler extends TypedHandlerDelegate {
   }
 
   @Override
-  public Result charTyped(char c, Project project, @NotNull Editor editor, @NotNull PsiFile file) {
+  public @NotNull Result charTyped(char c, @NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
     if (!(file instanceof ErlangFile)) return super.charTyped(c, project, editor, file);
 
     if (c != '<' || !CodeInsightSettings.getInstance().AUTOINSERT_PAIR_BRACKET) {
@@ -71,7 +70,7 @@ public class ErlangTypedHandler extends TypedHandlerDelegate {
 
     FileType fileType = file.getFileType();
     int offset = editor.getCaretModel().getOffset();
-    HighlighterIterator iterator = ((EditorEx) editor).getHighlighter().createIterator(offset);
+    HighlighterIterator iterator = editor.getHighlighter().createIterator(offset);
     boolean atEndOfDocument = offset == editor.getDocument().getTextLength();
 
     if (!atEndOfDocument) iterator.retreat();
@@ -100,7 +99,7 @@ public class ErlangTypedHandler extends TypedHandlerDelegate {
     int lparenOffset = BraceMatchingUtil.findLeftmostLParen(iterator, braceTokenType, fileText, fileType);
     if (lparenOffset < 0) lparenOffset = 0;
 
-    iterator = ((EditorEx) editor).getHighlighter().createIterator(lparenOffset);
+    iterator = editor.getHighlighter().createIterator(lparenOffset);
 
     if (!BraceMatchingUtil.matchBrace(fileText, fileType, iterator, true, true)) {
       editor.getDocument().insertString(offset, ">>");
