@@ -117,11 +117,10 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
 
     @NotNull
     @Override
-    public TreeElement[] getChildren() {
+    public TreeElement @NotNull [] getChildren() {
       if (myElement instanceof ErlangFunction) {
         List<ErlangFunctionClause> clauses = ((ErlangFunction) myElement).getFunctionClauseList();
         if (clauses.size() != 1) {
-          //noinspection unchecked
           return elementsArray(clauses);
         }
       }
@@ -132,7 +131,6 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
           return name.compareToIgnoreCase(o2.getName());
         };
         ErlangFile file = (ErlangFile) myElement;
-        //noinspection unchecked
         return elementsArray(
           sorted(file.getMacroses(), comparator),
           sorted(file.getRecords(), comparator),
@@ -205,6 +203,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     return sorted;
   }
 
+  @SafeVarargs
   private static TreeElement[] elementsArray(List<? extends PsiElement>... psiLists) {
     List<TreeElement> elements = new ArrayList<>();
     for (List<? extends PsiElement> psis : psiLists) {
@@ -212,6 +211,6 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         elements.add(new Element(psi));
       }
     }
-    return elements.toArray(new TreeElement[elements.size()]);
+    return elements.toArray(new TreeElement[0]);
   }
 }
