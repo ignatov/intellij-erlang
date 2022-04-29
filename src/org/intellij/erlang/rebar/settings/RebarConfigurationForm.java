@@ -27,7 +27,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
-import com.intellij.ui.components.labels.ActionLink;
+import com.intellij.ui.components.AnActionLink;
 import com.intellij.util.download.DownloadableFileDescription;
 import com.intellij.util.download.DownloadableFileService;
 import com.intellij.util.download.FileDownloader;
@@ -126,8 +126,8 @@ public class RebarConfigurationForm {
   }
 
   @NotNull
-  private ActionLink createLink(@NotNull String title, final @NotNull String url, final @NotNull String fileName) {
-    return new ActionLink(title, new AnAction() {
+  private AnActionLink createLink(@NotNull String title, final @NotNull String url, final @NotNull String fileName) {
+    return new AnActionLink(title, new AnAction() {
       @Override
       public void actionPerformed(@NotNull AnActionEvent e) {
         DownloadableFileService service = DownloadableFileService.getInstance();
