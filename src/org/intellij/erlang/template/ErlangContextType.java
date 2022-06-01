@@ -16,6 +16,7 @@
 package org.intellij.erlang.template;
 
 import com.intellij.codeInsight.template.EverywhereContextType;
+import com.intellij.codeInsight.template.TemplateActionContext;
 import com.intellij.codeInsight.template.TemplateContextType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
@@ -41,7 +42,9 @@ public abstract class ErlangContextType extends TemplateContextType {
   }
 
   @Override
-  public boolean isInContext(@NotNull PsiFile file, int offset) {
+  public boolean isInContext(@NotNull TemplateActionContext templateActionContext) {
+    PsiFile file = templateActionContext.getFile();
+    int offset = templateActionContext.getStartOffset();
     if (!PsiUtilCore.getLanguageAtOffset(file, offset).isKindOf(ErlangLanguage.INSTANCE)) return false;
     PsiElement element = file.findElementAt(offset);
     if (element instanceof PsiWhiteSpace) {

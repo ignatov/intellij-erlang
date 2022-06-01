@@ -16,18 +16,18 @@
 
 package org.intellij.erlang.rebar.settings;
 
-import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
+import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
-import com.intellij.ui.components.labels.ActionLink;
+import com.intellij.ui.components.AnActionLink;
 import com.intellij.util.download.DownloadableFileDescription;
 import com.intellij.util.download.DownloadableFileService;
 import com.intellij.util.download.FileDownloader;
@@ -126,29 +126,39 @@ public class RebarConfigurationForm {
   }
 
   @NotNull
-  private ActionLink createLink(@NotNull String title, final @NotNull String url, final @NotNull String fileName) {
-    return new ActionLink(title, new AnAction() {
-      @Override
-      public void actionPerformed(@NotNull AnActionEvent e) {
-        DownloadableFileService service = DownloadableFileService.getInstance();
-        DownloadableFileDescription rebar = service.createFileDescription(url, fileName);
-        FileDownloader downloader = service.createDownloader(Collections.singletonList(rebar), fileName);
-        List<Pair<VirtualFile, DownloadableFileDescription>> pairs = downloader.downloadWithProgress(null, getEventProject(e), myLinkContainer);
-        if (pairs != null) {
-          for (Pair<VirtualFile, DownloadableFileDescription> pair : pairs) {
-            try {
-              String path = pair.first.getCanonicalPath();
-              if (path != null) {
-                FileUtil.setExecutable(new File(path));
-                myRebarPathSelector.setText(path);
-                validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
-              }
+  private AnActionLink createLink(@NotNull String title, final @NotNull String url, final @NotNull String fileName) {
+    return new AnActionLink(title, new DownloadRebarAction(url, fileName));
+  }
+
+  private class DownloadRebarAction extends DumbAwareAction {
+    private final @NotNull String myUrl;
+    private final @NotNull String myFileName;
+
+    public DownloadRebarAction(@NotNull String url, @NotNull String fileName) {
+      myUrl = url;
+      myFileName = fileName;
+    }
+
+    @Override
+    public void actionPerformed(@NotNull AnActionEvent e) {
+      DownloadableFileService service = DownloadableFileService.getInstance();
+      DownloadableFileDescription rebar = service.createFileDescription(myUrl, myFileName);
+      FileDownloader downloader = service.createDownloader(Collections.singletonList(rebar), myFileName);
+      List<Pair<VirtualFile, DownloadableFileDescription>> pairs = downloader.downloadWithProgress(null, getEventProject(e), myLinkContainer);
+      if (pairs != null) {
+        for (Pair<VirtualFile, DownloadableFileDescription> pair : pairs) {
+          try {
+            String path = pair.first.getCanonicalPath();
+            if (path != null) {
+              FileUtil.setExecutable(new File(path));
+              myRebarPathSelector.setText(path);
+              validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
             }
-            catch (Exception ignore) {
-            }
+          }
+          catch (Exception ignore) {
           }
         }
       }
-    });
+    }
   }
 }

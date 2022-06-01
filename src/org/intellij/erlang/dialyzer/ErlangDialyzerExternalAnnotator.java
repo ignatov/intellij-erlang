@@ -21,9 +21,9 @@ import com.intellij.codeInspection.InspectionProfile;
 import com.intellij.codeInspection.ex.DisableInspectionToolAction;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
-import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
@@ -37,6 +37,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
@@ -49,7 +50,7 @@ import java.util.List;
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
   private static final NotificationGroup NOTIFICATION_GROUP = NotificationGroup.logOnlyGroup("Dialyzer-based inspections");
-  
+
   @Nullable
   private static Problem parseProblem(String input) {
     List<String> split = StringUtil.split(input, ":");
@@ -76,7 +77,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
     if (!profile.isToolEnabled(key)) return null;
 
-    String workingDir = file.getProject().getBasePath();
+    String workingDir = ObjectUtils.notNull(file.getProject().getBasePath(), "");
     String dialyzerPath = homePath + "/bin/dialyzer" + (SystemInfo.isWindows ? ".exe" : "");
 
     String currentPltPath = DialyzerSettings.getInstance(file.getProject()).getCurrentPltPath();
@@ -93,7 +94,8 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     try {
       String[] params = StringUtil.isEmptyOrSpaces(state.myCurrentPltPath) ? new String[]{state.myFilePath} : new String[]{"--plt", state.myCurrentPltPath, state.myFilePath};
       output = ErlangSystemUtil.getProcessOutput(state.myWorkingDir, state.myDialyzerPath, params);
-    } catch (ExecutionException e) {
+    }
+    catch (ExecutionException e) {
       LOG.debug(e);
     }
     if (output != null) {
@@ -127,15 +129,18 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
       TextRange problemRange = TextRange.create(offset, offset + width);
       String message = "Dialyzer: " + problem.myDescription;
-      Annotation annotation = holder.createWarningAnnotation(problemRange, message);
       HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
-      annotation.registerFix(new DisableInspectionToolAction(key) {
-        @NotNull
-        @Override
-        public String getName() {
-          return "Disable 'Dialyzer-based inspections'";
-        }
-      });
+      holder
+        .newAnnotation(HighlightSeverity.WARNING, message)
+        .range(problemRange)
+        .withFix(new DisableInspectionToolAction(key) {
+          @NotNull
+          @Override
+          public String getName() {
+            return "Disable 'Dialyzer-based inspections'";
+          }
+        })
+        .create();
     }
   }
 
@@ -151,9 +156,9 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     @Override
     public String toString() {
       return "Problem{" +
-        "myLine=" + myLine +
-        ", myDescription='" + myDescription + '\'' +
-        '}';
+             "myLine=" + myLine +
+             ", myDescription='" + myDescription + '\'' +
+             '}';
     }
   }
 

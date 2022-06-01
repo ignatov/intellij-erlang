@@ -49,7 +49,7 @@ public class ErlangTargetType extends ModuleBasedBuildTargetType<ErlangTarget> {
   @NotNull
   @Override
   public BuildTargetLoader<ErlangTarget> createLoader(@NotNull final JpsModel model) {
-    return new BuildTargetLoader<ErlangTarget>() {
+    return new BuildTargetLoader<>() {
       @Nullable
       @Override
       public ErlangTarget createTarget(@NotNull String targetId) {

@@ -41,13 +41,13 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVariableCompletionContributor extends CompletionContributor implements DumbAware {
   public ErlangVariableCompletionContributor() {
-    extend(CompletionType.BASIC, psiElement(ErlangTypes.ERL_VAR), new CompletionProvider<CompletionParameters>() {
+    extend(CompletionType.BASIC, psiElement(ErlangTypes.ERL_VAR), new CompletionProvider<>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters,
                                     @NotNull ProcessingContext context,
                                     @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
-        ErlangFile file = (ErlangFile)position.getContainingFile();
+        ErlangFile file = (ErlangFile) position.getContainingFile();
 
         ErlangQVar originalVar = PsiTreeUtil.getParentOfType(parameters.getOriginalPosition(), ErlangQVar.class);
         if (originalVar != null) {
@@ -63,7 +63,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
           Collection<String> vars = new HashSet<>();
 
           PsiElement scopeOwner = PsiTreeUtil.getParentOfType(position,
-            ErlangFunctionClause.class, ErlangMacrosDefinition.class, ErlangTypeDefinition.class, ErlangSpecification.class);
+                                                              ErlangFunctionClause.class, ErlangMacrosDefinition.class, ErlangTypeDefinition.class, ErlangSpecification.class);
           ResolveUtil.treeWalkUp(position, new MyBaseScopeProcessor(vars, position, scopeOwner, false));
 
           ErlangModule module = file.getModule();
@@ -80,7 +80,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
         }
       }
     });
-    extend(CompletionType.SMART, psiElement(ErlangTypes.ERL_VAR), new CompletionProvider<CompletionParameters>() {
+    extend(CompletionType.SMART, psiElement(ErlangTypes.ERL_VAR), new CompletionProvider<>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters,
                                     @NotNull ProcessingContext context,

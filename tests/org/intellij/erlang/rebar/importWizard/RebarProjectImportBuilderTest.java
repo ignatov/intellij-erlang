@@ -26,17 +26,12 @@ import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
-
-import java.util.Collections;
-import java.util.function.Consumer;
-import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
@@ -50,7 +45,9 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Ignore;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Ignore
 public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
@@ -65,9 +62,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     createMockSdk();
     File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
     String basePath = getProject().getBasePath();
-    VirtualFile guess = ProjectUtil.guessProjectDir(getProject());
-    System.out.println("BP: " + basePath);
-    System.out.println("GUESS: " + guess);
+    assertNotNull(basePath);
     FileUtil.copyDir(currentTestRoot, new File(basePath));
   }
 
@@ -150,7 +145,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   private void validateModule(@NotNull Module module) throws Exception {
-    String importedModulePath = getProject().getBaseDir().getPath();
+    String importedModulePath = getProject().getBasePath();
 
     Element actualImlElement = new Element("root");
     ModuleRootManager instance = ModuleRootManager.getInstance(module);
@@ -160,7 +155,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     PathMacroManager.getInstance(getProject()).collapsePaths(actualImlElement);
     PathMacros.getInstance().setIgnoredMacroNames(Collections.singletonList(MODULE_DIR));
 
-    String projectPath = getProject().getBaseDir().getPath();
+    String projectPath = getProject().getBasePath();
     String expectedImlPath = "/expected/" + module.getName() + ".iml";
     File expectedImlFile = new File(projectPath + expectedImlPath);
     Document expectedIml = JDOMUtil.loadDocument(expectedImlFile);

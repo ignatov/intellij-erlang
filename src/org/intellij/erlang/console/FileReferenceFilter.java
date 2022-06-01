@@ -101,6 +101,7 @@ public final class FileReferenceFilter implements Filter {
     myPattern = Pattern.compile(expression, Pattern.MULTILINE);
   }
 
+  @Nullable
   public Result applyFilter(@NotNull String line, int entireLength) {
     Matcher matcher = myPattern.matcher(line);
     if (!matcher.find()) {
@@ -134,11 +135,13 @@ public final class FileReferenceFilter implements Filter {
     if (asIsFile != null) {
       return asIsFile;
     }
-    String projectBasedPath = path.startsWith(myProject.getBasePath())
-      ? path : new File(myProject.getBasePath(), path).getAbsolutePath();
-    VirtualFile projectBasedFile = pathToVirtualFile(projectBasedPath);
-    if (projectBasedFile != null) {
-      return projectBasedFile;
+    String projectBasePath = myProject.getBasePath();
+    if (projectBasePath != null) {
+      String projectBasedPath = path.startsWith(projectBasePath) ? path : new File(projectBasePath, path).getAbsolutePath();
+      VirtualFile projectBasedFile = pathToVirtualFile(projectBasedPath);
+      if (projectBasedFile != null) {
+        return projectBasedFile;
+      }
     }
     Matcher filenameMatcher = PATTERN_FILENAME.matcher(path);
     if (filenameMatcher.find()) {

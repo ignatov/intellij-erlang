@@ -23,6 +23,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.ui.popup.*;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -115,7 +116,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     if (problemEditor == null) {
       return;
     }
-    ListPopup p = JBPopupFactory.getInstance().createListPopup(new ListPopupStep() {
+    ListPopup p = JBPopupFactory.getInstance().createListPopup(new ListPopupStep<PsiFile>() {
 
       @NotNull
       @Override
@@ -124,29 +125,29 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       }
 
       @Override
-      public boolean isSelectable(Object o) {
+      public boolean isSelectable(PsiFile o) {
         return true;
       }
 
       @NotNull
       @Override
-      public Icon getIconFor(Object o) {
+      public Icon getIconFor(PsiFile o) {
         return ErlangIcons.HEADER;
       }
 
       @NotNull
       @Override
-      public String getTextFor(Object o) {
-        //Uses relative path to project root if possible (if not - full path)
-        VirtualFile f = ((PsiFile) o).getVirtualFile();
-        String projectRootRelativePath = VfsUtilCore.getRelativePath(f, project.getBaseDir(), INCLUDE_STRING_PATH_SEPARATOR);
-        return projectRootRelativePath == null ?
-          f.getPath() : projectRootRelativePath;
+      public String getTextFor(PsiFile o) {
+        // Uses relative path to project root if possible (if not - full path)
+        VirtualFile f = o.getVirtualFile();
+        VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
+        String projectRootRelativePath = projectDir == null ? null : VfsUtilCore.getRelativePath(f, projectDir, INCLUDE_STRING_PATH_SEPARATOR);
+        return projectRootRelativePath == null ? f.getPath() : projectRootRelativePath;
       }
 
       @Nullable
       @Override
-      public ListSeparator getSeparatorAbove(Object o) {
+      public ListSeparator getSeparatorAbove(PsiFile o) {
         return null;
       }
 
@@ -163,10 +164,9 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
       @Nullable
       @Override
-      public PopupStep onChosen(Object o, boolean b) {
-        final PsiFile f = (PsiFile) o;
+      public PopupStep<PsiFile> onChosen(PsiFile o, boolean b) {
         CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
-          fixUsingIncludeFile(problem, f);
+          fixUsingIncludeFile(problem, o);
           renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
           FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
         }), "add facet action(find include quick fix)", null, problemEditor.getDocument());
@@ -175,13 +175,12 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       }
 
       @Override
-      public boolean hasSubstep(Object o) {
+      public boolean hasSubstep(PsiFile o) {
         return false;
       }
 
       @Override
       public void canceled() {
-
       }
 
       @Override
@@ -191,7 +190,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
       @Nullable
       @Override
-      public MnemonicNavigationFilter getMnemonicNavigationFilter() {
+      public MnemonicNavigationFilter<PsiFile> getMnemonicNavigationFilter() {
         return null;
       }
 
@@ -202,7 +201,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
       @Nullable
       @Override
-      public SpeedSearchFilter getSpeedSearchFilter() {
+      public SpeedSearchFilter<PsiFile> getSpeedSearchFilter() {
         return null;
       }
 

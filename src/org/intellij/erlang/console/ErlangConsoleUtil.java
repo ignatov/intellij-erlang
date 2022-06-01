@@ -26,6 +26,7 @@ import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.ObjectUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -95,7 +96,7 @@ public final class ErlangConsoleUtil {
   @NotNull
   static String getWorkingDirPath(@NotNull Project project, @NotNull String workingDirPath) {
     if (workingDirPath.isEmpty()) {
-      return project.getBasePath();
+      return ObjectUtils.notNull(project.getBasePath(), "");
     }
     return workingDirPath;
   }
