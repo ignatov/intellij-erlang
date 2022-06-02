@@ -67,7 +67,6 @@ repositories {
 }
 
 dependencies {
-  implementation 'org.jetbrains:annotations:21.0.1'
   compile name: 'OtpErlang'
   compile project('jps-plugin')
 }
