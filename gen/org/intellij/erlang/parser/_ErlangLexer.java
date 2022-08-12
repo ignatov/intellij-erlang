@@ -3,8 +3,11 @@
 package org.intellij.erlang.parser;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import static org.intellij.erlang.ErlangTypes.*;
 import static org.intellij.erlang.ErlangParserDefinition.*;
+import org.intellij.erlang.sdk.ErlangSdkType;import org.jetbrains.annotations.Nullable;
+import com.intellij.openapi.project.Project;
 
 
 /**
@@ -383,9 +386,13 @@ public class _ErlangLexer implements FlexLexer {
   private boolean zzEOFDone;
 
   /* user code: */
-  public _ErlangLexer() {
-    this((java.io.Reader)null);
-  }
+    // Used by the tokenizer to request language features to be enabled
+    public Project project = null;
+
+    public _ErlangLexer(@Nullable Project project_) {
+      this((java.io.Reader)null);
+      this.project = project_;
+    }
 
 
   /**
@@ -1023,7 +1030,8 @@ public class _ErlangLexer implements FlexLexer {
             // fall through
           case 160: break;
           case 79: 
-            { return ERL_MAYBE;
+            { boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe();
+        return isSupported ? ERL_MAYBE : ERL_ATOM_NAME;
             } 
             // fall through
           case 161: break;
