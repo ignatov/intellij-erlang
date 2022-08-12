@@ -36,6 +36,7 @@ public class ErlangBraceMatcher implements PairedBraceMatcher {
     new BracePair(ErlangTypes.ERL_TRY, ErlangTypes.ERL_END, true),
     new BracePair(ErlangTypes.ERL_FUN, ErlangTypes.ERL_END, true),
     new BracePair(ErlangTypes.ERL_RECEIVE, ErlangTypes.ERL_END, true),
+    new BracePair(ErlangTypes.ERL_MAYBE, ErlangTypes.ERL_END, true),
   };
 
   @NotNull

@@ -237,6 +237,37 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBindTryFirstCatchClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
   public void testBindTryLastCatchClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
 
+  public void testMaybe1() throws Exception { doEnterTest(); }
+  public void testMaybe2() throws Exception { doEnterTest(); }
+  public void testMaybe3() throws Exception { doEnterTest(); }
+  public void testMaybe4() throws Exception { doEnterTest(); }
+  public void testMaybe5() throws Exception { doEnterTest(); }
+
+  public void testMaybeParasite1() throws Exception { doEnterTest(); }
+  public void testMaybeParasite2() throws Exception { doEnterTest(); }
+  public void testMaybeParasite3() throws Exception { doEnterTest(); }
+  public void testMaybeParasite4() throws Exception { doEnterTest(); }
+  public void testMaybeParasite5() throws Exception { doEnterTest(); }
+
+  public void testBindMaybe()                throws Exception { doEnterTest(); }
+  public void testBindMaybeElse()            throws Exception { doEnterTest(); }
+  public void testBindMaybeFirstElseClause() throws Exception { doEnterTest(); }
+  public void testBindMaybeLastElseClause()  throws Exception { doEnterTest(); }
+
+  public void testBindMaybe__IR_OFF()                throws Exception { doEnterTest(); }
+  public void testBindMaybeElse__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindMaybeFirstElseClause__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindMaybeLastElseClause__IR_OFF()  throws Exception { doEnterTest(); }
+
+  public void testBindMaybeParasite()                throws Exception { doEnterTest(); }
+  public void testBindMaybeElseParasite()            throws Exception { doEnterTest(); }
+  public void testBindMaybeFirstElseClauseParasite() throws Exception { doEnterTest(); }
+  public void testBindMaybeLastElseClauseParasite()  throws Exception { doEnterTest(); }
+
+  public void testBindMaybeParasite__IR_OFF()                throws Exception { doEnterTest(); }
+  public void testBindMaybeElseParasite__IR_OFF()            throws Exception { doEnterTest(); }
+  public void testBindMaybeFirstElseClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
+  public void testBindMaybeLastElseClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
 
   public void testCase1() throws Exception { doEnterTest(); }
   public void testCase2() throws Exception { doEnterTest(); }

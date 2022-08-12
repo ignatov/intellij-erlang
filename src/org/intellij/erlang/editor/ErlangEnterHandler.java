@@ -52,7 +52,8 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
         completeCaseOf(file, editor) ||
         completeReceive(file, editor) ||
         completeIf(file, editor) ||
-        completeTry(file, editor)) {
+        completeTry(file, editor) ||
+        completeMaybe(file, editor)) {
       return Result.Stop;
     }
 
@@ -79,6 +80,11 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     return completeExpression(file, editor, ErlangTypes.ERL_CATCH, ErlangTryExpression.class) ||
            completeExpression(file, editor, ErlangTypes.ERL_AFTER, ErlangTryExpression.class) ||
            completeExpression(file, editor, ErlangTypes.ERL_OF, ErlangTryExpression.class);
+  }
+
+  private static boolean completeMaybe(@NotNull PsiFile file, @NotNull Editor editor) {
+    return completeExpression(file, editor, ErlangTypes.ERL_MAYBE, ErlangMaybeExpression.class) ||
+           completeExpression(file, editor, ErlangTypes.ERL_ELSE, ErlangMaybeExpression.class);
   }
 
   private static boolean completeExpression(@NotNull PsiFile file,
@@ -142,6 +148,7 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
   private static boolean needCommaAfter(@NotNull PsiElement parent) {
     if (parent instanceof ErlangBeginEndExpression) return needCommaAfter((ErlangBeginEndExpression) parent);
+    if (parent instanceof ErlangMaybeExpression)    return needCommaAfter((ErlangMaybeExpression) parent);
     if (parent instanceof ErlangClauseOwner)        return needCommaAfter((ErlangClauseOwner) parent);
     if (parent instanceof ErlangIfExpression)       return needCommaAfter((ErlangIfExpression) parent);
     return false;
@@ -174,13 +181,24 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
       PsiTreeUtil.findChildOfType(firstIfClause, ErlangIfExpression.class) != null;
   }
 
+  private static boolean needCommaAfter(@NotNull ErlangMaybeExpression maybeExpression) {
+    ErlangMaybeMatchExprs maybeMatchExprs = maybeExpression.getMaybeMatchExprs();
+    if (maybeMatchExprs == null) return false;
+
+    ErlangExpression expression = PsiTreeUtil.getChildOfType(maybeMatchExprs, ErlangExpression.class);
+    if(expression == null) return false;
+
+    return true;
+  }
+
   private static boolean shouldEndWithEnd(@NotNull PsiElement element) {
     return element instanceof ErlangBeginEndExpression ||
            element instanceof ErlangCaseExpression ||
            element instanceof ErlangIfExpression ||
            element instanceof ErlangReceiveExpression ||
            element instanceof ErlangFunExpression && PsiTreeUtil.getChildOfType(element, ErlangFunClauses.class) != null ||
-           element instanceof ErlangTryExpression;
+           element instanceof ErlangTryExpression ||
+           element instanceof ErlangMaybeExpression;
   }
 
   @Nullable
