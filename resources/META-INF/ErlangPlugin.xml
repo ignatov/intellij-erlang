@@ -214,6 +214,9 @@
         <localInspection language="Erlang" shortName="ErlangFunctionAlreadyImported" displayName="Function already imported"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangFunctionAlreadyImportedInspection"/>
+        <localInspection language="Erlang" shortName="Erlang25Syntax" displayName="Erlang 25.0 syntax"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.Erlang25SyntaxInspection"/>
 
         <!--warnings-->
         <localInspection language="Erlang" shortName="Erlang18Syntax" displayName="Erlang 18.0 syntax"
