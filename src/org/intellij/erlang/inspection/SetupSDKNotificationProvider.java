@@ -18,14 +18,10 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditor;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectBundle;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootModificationUtil;
-import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService;
+import com.intellij.openapi.roots.ui.configuration.SdkPopupFactory;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -70,6 +66,7 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
   @NotNull
   private static EditorNotificationPanel createPanel(@NotNull final Project project, @NotNull final PsiFile file) {
     EditorNotificationPanel panel = new EditorNotificationPanel();
+
     panel.setText(ProjectBundle.message("project.sdk.not.defined"));
     panel.createActionLabel(ProjectBundle.message("project.sdk.setup"), () -> {
       if (ErlangSystemUtil.isSmallIde()) {
@@ -77,14 +74,13 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
         return;
       }
 
-      Sdk projectSdk = ProjectSettingsService.getInstance(project).chooseAndSetSdk();
-      if (projectSdk == null) return;
-      ApplicationManager.getApplication().runWriteAction(() -> {
-        Module module = ModuleUtilCore.findModuleForPsiElement(file);
-        if (module != null) {
-          ModuleRootModificationUtil.setSdkInherited(module);
-        }
-      });
+      SdkPopupFactory
+        .newBuilder()
+        .withProject(project)
+        .withSdkTypeFilter(type -> type instanceof ErlangSdkType)
+        .updateProjectSdkFromSelection()
+        .buildPopup()
+        .showInFocusCenter();
     });
     return panel;
   }
