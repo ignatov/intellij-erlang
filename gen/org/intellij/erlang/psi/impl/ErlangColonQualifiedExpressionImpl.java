@@ -16,10 +16,12 @@ public class ErlangColonQualifiedExpressionImpl extends ErlangExpressionImpl imp
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitColonQualifiedExpression(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

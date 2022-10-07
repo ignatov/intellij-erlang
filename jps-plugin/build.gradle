@@ -5,5 +5,5 @@ repositories {
 }
 
 dependencies {
-  compile group: 'com.github.metadave', name: 'etp', version: '0.4'
+  compile group: 'com.github.metadave', name: 'etp', version: '0.7'
 }

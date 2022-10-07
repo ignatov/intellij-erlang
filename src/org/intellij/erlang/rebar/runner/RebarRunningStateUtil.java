@@ -30,6 +30,7 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -40,7 +41,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class RebarRunningStateUtil {
   private static final String REBAR = "rebar3";
@@ -101,7 +101,7 @@ public class RebarRunningStateUtil {
         return contentRoots[0].getPath();
       }
     }
-    return Objects.requireNonNull(configuration.getProject().getBasePath());
+    return ObjectUtils.notNull(configuration.getProject().getBasePath(), "");
   }
 
   @NotNull

@@ -26,6 +26,7 @@ public class ErlangSpecificationImpl extends ErlangNamedStubbedPsiElementBase<Er
     visitor.visitSpecification(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -44,26 +45,22 @@ public class ErlangSpecificationImpl extends ErlangNamedStubbedPsiElementBase<Er
   }
 
   @Override
-  @Nullable
-  public ErlangFunTypeSigs getSignature() {
+  public @Nullable ErlangFunTypeSigs getSignature() {
     return ErlangPsiImplUtil.getSignature(this);
   }
 
   @Override
-  @NotNull
-  public PsiElement getNameIdentifier() {
+  public @NotNull PsiElement getNameIdentifier() {
     return ErlangPsiImplUtil.getNameIdentifier(this);
   }
 
   @Override
-  @NotNull
-  public String getName() {
+  public @NotNull String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 
   @Override
-  @NotNull
-  public PsiElement setName(@NotNull String newName) {
+  public @NotNull PsiElement setName(@NotNull String newName) {
     return ErlangPsiImplUtil.setName(this, newName);
   }
 

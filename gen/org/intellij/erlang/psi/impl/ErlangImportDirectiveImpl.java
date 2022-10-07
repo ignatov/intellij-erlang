@@ -20,6 +20,7 @@ public class ErlangImportDirectiveImpl extends ErlangCompositeElementImpl implem
     visitor.visitImportDirective(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

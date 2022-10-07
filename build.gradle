@@ -1,5 +1,13 @@
 plugins {
-  id 'org.jetbrains.intellij' version "0.6.5"
+  id 'org.jetbrains.intellij' version "1.8.0"
+}
+
+dependencies {
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.6.1'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.3'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.3'
+  testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.6.3'
+  testCompileOnly 'junit:junit:4.13'
 }
 
 version = "${version}.$buildNumber"
@@ -22,17 +30,16 @@ allprojects {
 
   apply plugin: 'org.jetbrains.intellij'
   intellij {
-    version ideaVersion
+    version = ideaVersion
     plugins = ['copyright', 'java']
-    downloadSources Boolean.valueOf(sources)
-    sameSinceUntilBuild Boolean.valueOf(isEAP)
-    alternativeIdePath localIdePath
+    downloadSources = Boolean.valueOf(sources)
+    sameSinceUntilBuild = Boolean.valueOf(isEAP)
   }
   
   def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
   
   test {
-    useJUnit {
+    useJUnitPlatform {
       exclude compilationPackages
     }
     testLogging {
@@ -61,8 +68,8 @@ repositories {
 }
 
 dependencies {
-  compile name: 'OtpErlang'
-  compile project('jps-plugin')
+  implementation name: 'OtpErlang'
+  implementation project('jps-plugin')
 }
 
 apply plugin: 'idea'

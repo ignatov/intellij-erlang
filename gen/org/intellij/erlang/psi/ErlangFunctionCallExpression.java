@@ -14,18 +14,14 @@ public interface ErlangFunctionCallExpression extends ErlangExpression {
   @NotNull
   ErlangQAtom getQAtom();
 
-  @NotNull
-  PsiReference getReference();
+  @NotNull PsiReference getReference();
 
-  @Nullable
-  PsiReference getReference(@Nullable ErlangMacrosName o);
+  @Nullable PsiReference getReference(@Nullable ErlangMacrosName o);
 
-  @NotNull
-  PsiElement getNameIdentifier();
+  @NotNull PsiElement getNameIdentifier();
 
   int getTextOffset();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
 }

@@ -25,6 +25,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDirectory;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CreateErlangFileAction extends CreateFileFromTemplateAction implements DumbAware {
@@ -36,7 +37,7 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
   }
 
   @Override
-  protected void buildDialog(final Project project, PsiDirectory directory, CreateFileFromTemplateDialog.Builder builder) {
+  protected void buildDialog(final @NotNull Project project, @NotNull PsiDirectory directory, CreateFileFromTemplateDialog.Builder builder) {
     builder.
       setTitle(DIALOG_TITLE).
       addKind("Empty module", ErlangIcons.FILE, "Erlang Module").
@@ -105,7 +106,7 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
   }
 
   @Override
-  protected String getActionName(PsiDirectory directory, String newName, String templateName) {
+  protected String getActionName(PsiDirectory directory, @NotNull String newName, String templateName) {
     return NEW_ERLANG_FILE;
   }
 

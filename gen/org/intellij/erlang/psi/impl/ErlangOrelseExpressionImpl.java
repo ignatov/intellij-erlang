@@ -16,10 +16,12 @@ public class ErlangOrelseExpressionImpl extends ErlangFakeBinaryExpressionImpl i
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitOrelseExpression(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

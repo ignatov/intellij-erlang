@@ -364,6 +364,7 @@ config_expression ::=
   | config_bin_list_expression
   | config_qualified_or_call_expression
   | config_map_construct_expression
+  | config_fun_expression
   | (prefix_op? atomic)
   | q_var
 private config_qualified_or_call_expression ::= q_atom left_accessors?
@@ -373,6 +374,7 @@ config_argument_list ::= '(' config_exprs? ')' {elementType=argument_list}
 config_list_expression ::= '[' config_exprs? ']' {elementType=list_expression}
 config_bin_list_expression ::= '<<' config_exprs? '>>' {elementType=binary_expression}
 config_tuple_expression ::= '{' config_exprs? '}' {elementType=tuple_expression}
+config_fun_expression ::= fun fun_expression_lambda {elementType=fun_expression pin=1}
 
 config_map_construct_expression ::= config_map_tuple {elementType=map_expression}
 config_map_tuple ::= '#' '{' config_map_assoc_list? '}' {pin=1 elementType=map_tuple}

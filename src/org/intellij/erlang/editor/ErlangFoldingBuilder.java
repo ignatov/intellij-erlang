@@ -37,7 +37,7 @@ import java.util.List;
 public class ErlangFoldingBuilder extends FoldingBuilderEx implements DumbAware {
   @NotNull
   @Override
-  public FoldingDescriptor[] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
+  public FoldingDescriptor @NotNull [] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
     if (!(root instanceof ErlangFile)) return FoldingDescriptor.EMPTY;
     ErlangFile file = (ErlangFile) root;
 

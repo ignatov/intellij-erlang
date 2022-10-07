@@ -21,6 +21,7 @@ public class ErlangTypeRefImpl extends ErlangCompositeElementImpl implements Erl
     visitor.visitTypeRef(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -33,14 +34,12 @@ public class ErlangTypeRefImpl extends ErlangCompositeElementImpl implements Erl
   }
 
   @Override
-  @Nullable
-  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+  public @Nullable PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);
   }
 
   @Override
-  @NotNull
-  public PsiReference getReference() {
+  public @NotNull PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 

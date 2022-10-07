@@ -30,6 +30,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
@@ -112,7 +113,7 @@ public abstract class ErlangRunningState extends CommandLineState {
 
   public final void setWorkDirectory(GeneralCommandLine commandLine) {
     String workDirectory = getWorkDirectory();
-    commandLine.withWorkDirectory(StringUtil.isEmpty(workDirectory) ? myModule.getProject().getBasePath() : workDirectory);
+    commandLine.withWorkDirectory(StringUtil.isEmpty(workDirectory) ? ObjectUtils.notNull(myModule.getProject().getBasePath(), "") : workDirectory);
   }
 
   public final void setStopErlang(GeneralCommandLine commandLine) {

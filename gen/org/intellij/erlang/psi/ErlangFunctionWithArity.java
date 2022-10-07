@@ -17,10 +17,8 @@ public interface ErlangFunctionWithArity extends ErlangCompositeElement {
   @Nullable
   PsiElement getInteger();
 
-  @Nullable
-  PsiReference getReference();
+  @Nullable PsiReference getReference();
 
-  @Nullable
-  PsiReference getReference(@Nullable ErlangMacrosName o);
+  @Nullable PsiReference getReference(@Nullable ErlangMacrosName o);
 
 }

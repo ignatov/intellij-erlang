@@ -29,14 +29,11 @@ public interface ErlangModule extends ErlangMetaAttribute, ErlangNamedElement, S
   @Nullable
   PsiElement getParRight();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
-  @NotNull
-  PsiElement setName(@NotNull String newName);
+  @NotNull PsiElement setName(@NotNull String newName);
 
-  @NotNull
-  PsiElement getNameIdentifier();
+  @NotNull PsiElement getNameIdentifier();
 
   int getTextOffset();
 

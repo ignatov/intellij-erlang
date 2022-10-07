@@ -10,13 +10,10 @@ public interface ErlangAtom extends ErlangCompositeElement {
   @Nullable
   PsiElement getAtomName();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
-  @NotNull
-  ErlangAtom setName(@NotNull String newName);
+  @NotNull ErlangAtom setName(@NotNull String newName);
 
-  @NotNull
-  PsiElement getNameIdentifier();
+  @NotNull PsiElement getNameIdentifier();
 
 }

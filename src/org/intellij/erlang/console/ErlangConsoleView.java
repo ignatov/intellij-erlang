@@ -17,6 +17,7 @@
 package org.intellij.erlang.console;
 
 import com.intellij.execution.console.ConsoleHistoryController;
+import com.intellij.execution.console.ConsoleRootType;
 import com.intellij.execution.console.LanguageConsoleImpl;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -63,7 +64,8 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
     OutputStream processInput = processHandler.getProcessInput();
     assert processInput != null;
     myProcessInputWriter = new OutputStreamWriter(processInput);
-    myHistoryController = new ConsoleHistoryController("Erlang", null, this);
+    ConsoleRootType myConsoleRootType = new ConsoleRootType("Erlang", "Erlang") {};
+    myHistoryController = new ConsoleHistoryController(myConsoleRootType, null, this);
     myHistoryController.install();
     ErlangConsoleViewDirectory.getInstance().addConsole(this);
   }

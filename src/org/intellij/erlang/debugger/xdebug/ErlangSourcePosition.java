@@ -17,7 +17,6 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.xdebugger.XDebuggerUtil;
@@ -31,6 +30,7 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -108,10 +108,10 @@ public final class ErlangSourcePosition {
 
     return myFunExpressionArity == that.myFunExpressionArity &&
            myFunctionArity == that.myFunctionArity &&
-           Comparing.equal(myFunctionName, that.myFunctionName) &&
-           Comparing.equal(myFunExpressionName, that.myFunExpressionName) &&
-           Comparing.equal(getFile(), that.getFile()) &&
-           Comparing.equal(getLine(), that.getLine());
+           Objects.equals(myFunctionName, that.myFunctionName) &&
+           Objects.equals(myFunExpressionName, that.myFunExpressionName) &&
+           Objects.equals(getFile(), that.getFile()) &&
+           Objects.equals(getLine(), that.getLine());
   }
 
   @Override

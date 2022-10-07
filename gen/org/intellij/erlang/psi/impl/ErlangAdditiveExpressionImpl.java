@@ -16,10 +16,12 @@ public class ErlangAdditiveExpressionImpl extends ErlangFakeBinaryExpressionImpl
     super(node);
   }
 
+  @Override
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitAdditiveExpression(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

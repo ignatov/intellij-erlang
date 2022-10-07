@@ -14,18 +14,19 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangBehaviourImpl extends ErlangStubbedPsiElementBase<ErlangBehaviourStub> implements ErlangBehaviour {
 
-  public ErlangBehaviourImpl(ASTNode node) {
-    super(node);
+  public ErlangBehaviourImpl(@NotNull ErlangBehaviourStub stub, @NotNull IStubElementType type) {
+    super(stub, type);
   }
 
-  public ErlangBehaviourImpl(ErlangBehaviourStub stub, IStubElementType stubType) {
-    super(stub, stubType);
+  public ErlangBehaviourImpl(@NotNull ASTNode node) {
+    super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitBehaviour(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -50,8 +51,7 @@ public class ErlangBehaviourImpl extends ErlangStubbedPsiElementBase<ErlangBehav
   }
 
   @Override
-  @NotNull
-  public String getName() {
+  public @NotNull String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 

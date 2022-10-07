@@ -15,18 +15,19 @@ import com.intellij.psi.stubs.IStubElementType;
 
 public class ErlangCallbackFunctionImpl extends ErlangStubbedPsiElementBase<ErlangCallbackFunctionStub> implements ErlangCallbackFunction {
 
-  public ErlangCallbackFunctionImpl(ASTNode node) {
-    super(node);
+  public ErlangCallbackFunctionImpl(@NotNull ErlangCallbackFunctionStub stub, @NotNull IStubElementType type) {
+    super(stub, type);
   }
 
-  public ErlangCallbackFunctionImpl(ErlangCallbackFunctionStub stub, IStubElementType stubType) {
-    super(stub, stubType);
+  public ErlangCallbackFunctionImpl(@NotNull ASTNode node) {
+    super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {
     visitor.visitCallbackFunction(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -51,14 +52,12 @@ public class ErlangCallbackFunctionImpl extends ErlangStubbedPsiElementBase<Erla
   }
 
   @Override
-  @NotNull
-  public PsiReference getReference() {
+  public @NotNull PsiReference getReference() {
     return ErlangPsiImplUtil.getReference(this);
   }
 
   @Override
-  @Nullable
-  public PsiReference getReference(@Nullable ErlangMacrosName o) {
+  public @Nullable PsiReference getReference(@Nullable ErlangMacrosName o) {
     return ErlangPsiImplUtil.getReference(this, o);
   }
 

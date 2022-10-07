@@ -18,7 +18,6 @@ public interface ErlangBehaviour extends ErlangMetaAttribute, StubBasedPsiElemen
   @Nullable
   PsiElement getParRight();
 
-  @NotNull
-  String getName();
+  @NotNull String getName();
 
 }

@@ -20,6 +20,7 @@ public class ErlangMapTupleImpl extends ErlangCompositeElementImpl implements Er
     visitor.visitMapTuple(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);

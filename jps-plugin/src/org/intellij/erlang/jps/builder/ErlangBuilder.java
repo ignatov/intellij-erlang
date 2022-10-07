@@ -262,7 +262,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
 
   @NotNull
   private static List<String> getErlangModulePathsDefault(@NotNull ErlangTarget target, boolean isTests) {
-    CommonProcessors.CollectProcessor<File> erlFilesCollector = new CommonProcessors.CollectProcessor<File>() {
+    CommonProcessors.CollectProcessor<File> erlFilesCollector = new CommonProcessors.CollectProcessor<>() {
       @Override
       protected boolean accept(@NotNull File file) {
         return !file.isDirectory() && isSource(file.getName());

@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 public class ErlangProjectStructureDetector extends ProjectStructureDetector {
   @NotNull
   @Override
-  public DirectoryProcessingResult detectRoots(@NotNull File dir, @NotNull File[] children, @NotNull File base, @NotNull List<DetectedProjectRoot> result) {
+  public DirectoryProcessingResult detectRoots(@NotNull File dir, @NotNull File @NotNull [] children, @NotNull File base, @NotNull List<DetectedProjectRoot> result) {
     Pattern pattern = Pattern.compile(".*\\.[e|h]rl");
     List<File> filesByMask = FileUtil.findFilesByMask(pattern, base);
     if (!filesByMask.isEmpty()) {

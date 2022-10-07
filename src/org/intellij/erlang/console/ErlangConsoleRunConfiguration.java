@@ -28,6 +28,7 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jdom.Element;
@@ -35,7 +36,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Objects;
 
 public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguration<RunConfigurationModule, Element> {
   @NotNull private String myWorkingDirPath;
@@ -43,7 +43,7 @@ public final class ErlangConsoleRunConfiguration extends ModuleBasedConfiguratio
 
   public ErlangConsoleRunConfiguration(@NotNull String name, @NotNull Project project) {
     super(name, new RunConfigurationModule(project), ErlangConsoleRunConfigurationFactory.getInstance());
-    myWorkingDirPath = Objects.requireNonNull(project.getBasePath());
+    myWorkingDirPath = ObjectUtils.notNull(project.getBasePath(), "");
     myConsoleArgs = "";
   }
 

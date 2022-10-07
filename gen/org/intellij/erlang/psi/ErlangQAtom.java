@@ -17,10 +17,8 @@ public interface ErlangQAtom extends ErlangCompositeElement {
   @Nullable
   ErlangMacrosArg getMacrosArg();
 
-  @Nullable
-  PsiReference getReference();
+  @Nullable PsiReference getReference();
 
-  @Nullable
-  PsiReference getReference(@Nullable ErlangMacrosName o);
+  @Nullable PsiReference getReference(@Nullable ErlangMacrosName o);
 
 }

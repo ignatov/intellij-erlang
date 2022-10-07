@@ -35,11 +35,12 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("ConstantConditions")
 public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-
   public void setUp() throws Exception {
     super.setUp();
     File currentTestRoot = new File("testData/rebar/sampleProject");
-    FileUtil.copyDir(currentTestRoot, new File(getProject().getBaseDir().getPath()));
+    String basePath = getProject().getBasePath();
+    assertNotNull(basePath);
+    FileUtil.copyDir(currentTestRoot, new File(basePath));
     setUpProjectSdk();
   }
 
@@ -90,7 +91,7 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
   
   public void testEunitFullErrorPath() {
     FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.EUNIT_ERROR_PATH);
-    File base = new File(getProject().getBaseDir().getPath());
+    File base = new File(getProject().getBasePath());
     File file = ContainerUtil.getFirstItem(FileUtil.findFilesByMask(Pattern.compile(".*\\.erl"), base));
     VirtualFile vFile = LocalFileSystem.getInstance().findFileByIoFile(file);
     assertNotNull(vFile);

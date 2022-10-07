@@ -20,6 +20,7 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
     visitor.visitAtomAttribute(this);
   }
 
+  @Override
   public void accept(@NotNull PsiElementVisitor visitor) {
     if (visitor instanceof ErlangVisitor) accept((ErlangVisitor)visitor);
     else super.accept(visitor);
@@ -56,8 +57,7 @@ public class ErlangAtomAttributeImpl extends ErlangCompositeElementImpl implemen
   }
 
   @Override
-  @NotNull
-  public String getName() {
+  public @NotNull String getName() {
     return ErlangPsiImplUtil.getName(this);
   }
 

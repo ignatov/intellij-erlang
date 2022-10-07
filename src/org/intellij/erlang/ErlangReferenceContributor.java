@@ -55,7 +55,7 @@ public class ErlangReferenceContributor extends PsiReferenceContributor {
   private static abstract class ReferenceProvider extends PsiReferenceProvider {
     @NotNull
     @Override
-    public PsiReference[] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
+    public PsiReference @NotNull [] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
       ErlangQAtom atom = ObjectUtils.tryCast(element, ErlangQAtom.class);
       return atom != null ? new PsiReference[]{createReference(atom)}
                           : PsiReference.EMPTY_ARRAY;
