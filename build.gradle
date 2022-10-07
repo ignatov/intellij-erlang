@@ -12,7 +12,10 @@ dependencies {
 
 version = "${version}.$buildNumber"
 allprojects {
-  repositories { mavenCentral() }
+  repositories {
+    mavenLocal()
+    mavenCentral()
+  }
   apply plugin: 'java'
   sourceCompatibility = javaVersion
   targetCompatibility = javaVersion
@@ -61,6 +64,7 @@ allprojects {
 }
 
 repositories {
+  mavenLocal()
   jcenter()
   flatDir {
     dirs 'libs'
