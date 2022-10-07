@@ -17,6 +17,7 @@
 package org.intellij.erlang;
 
 import com.intellij.ide.structureView.*;
+import com.intellij.ide.util.treeView.smartTree.Sorter;
 import com.intellij.ide.util.treeView.smartTree.TreeElement;
 import com.intellij.lang.PsiStructureViewFactory;
 import com.intellij.navigation.ItemPresentation;
@@ -74,6 +75,14 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     public boolean isAlwaysLeaf(StructureViewTreeElement structureViewTreeElement) {
       return false;
     }
+
+    @NotNull
+    @Override
+    public Sorter[] getSorters() {
+      return new Sorter[] {
+        Sorter.ALPHA_SORTER,
+        };
+    }
   }
 
   public static class Element implements StructureViewTreeElement, ItemPresentation, NavigationItem {
@@ -117,27 +126,20 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
 
     @NotNull
     @Override
-    public TreeElement[] getChildren() {
+    public TreeElement @NotNull [] getChildren() {
       if (myElement instanceof ErlangFunction) {
         List<ErlangFunctionClause> clauses = ((ErlangFunction) myElement).getFunctionClauseList();
         if (clauses.size() != 1) {
-          //noinspection unchecked
           return elementsArray(clauses);
         }
       }
       else if (myElement instanceof ErlangFile) {
-        Comparator<ErlangNamedElement> comparator = (o1, o2) -> {
-          String name = o1.getName();
-          if (name == null) return -1;
-          return name.compareToIgnoreCase(o2.getName());
-        };
         ErlangFile file = (ErlangFile) myElement;
-        //noinspection unchecked
         return elementsArray(
-          sorted(file.getMacroses(), comparator),
-          sorted(file.getRecords(), comparator),
-          sorted(file.getTypes(), comparator),
-          sorted(file.getFunctions(), comparator)
+          file.getMacroses(),
+          file.getRecords(),
+          file.getTypes(),
+          file.getFunctions()
         );
       }
       return EMPTY_ARRAY;
@@ -205,6 +207,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
     return sorted;
   }
 
+  @SafeVarargs
   private static TreeElement[] elementsArray(List<? extends PsiElement>... psiLists) {
     List<TreeElement> elements = new ArrayList<>();
     for (List<? extends PsiElement> psis : psiLists) {
@@ -212,6 +215,6 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
         elements.add(new Element(psi));
       }
     }
-    return elements.toArray(new TreeElement[elements.size()]);
+    return elements.toArray(new TreeElement[0]);
   }
 }

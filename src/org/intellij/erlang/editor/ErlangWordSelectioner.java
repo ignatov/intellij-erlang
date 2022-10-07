@@ -24,6 +24,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -34,10 +35,10 @@ public class ErlangWordSelectioner extends ExtendWordSelectionHandlerBase {
   }
 
   @Override
-  public List<TextRange> select(PsiElement e, CharSequence editorText, int cursorOffset, Editor editor) {
+  public List<TextRange> select(@NotNull PsiElement e, @NotNull CharSequence editorText, int cursorOffset, @NotNull Editor editor) {
     List<TextRange> select = super.select(e, editorText, cursorOffset, editor);
     PsiElement clause = e.getParent();
-    if (clause instanceof ErlangClauseBody) {
+    if (clause instanceof ErlangClauseBody && select != null) {
       List<ErlangExpression> list = ((ErlangClauseBody) clause).getExpressionList();
       ErlangExpression first = ContainerUtil.getFirstItem(list);
       ErlangExpression last = ContainerUtil.getLastItem(list);

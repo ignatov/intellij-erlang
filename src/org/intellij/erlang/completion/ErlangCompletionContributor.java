@@ -111,9 +111,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
   }
 
   public ErlangCompletionContributor() {
-    extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFile.class)), new CompletionProvider<CompletionParameters>() {
+    extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFile.class)), new CompletionProvider<>() {
       @Override
-      protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
+      protected void addCompletions(@NotNull CompletionParameters parameters,
+                                    @NotNull ProcessingContext context,
+                                    @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
         PsiFile file = position.getContainingFile();
         if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
@@ -131,7 +133,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (originalParent instanceof ErlangIncludeString && originalPosition instanceof LeafPsiElement &&
             ErlangTypes.ERL_STRING == ((LeafPsiElement) originalPosition).getElementType()) {
           TextRange range = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, parameters.getOffset());
-          String includeText = range.getLength() >=0 ? range.substring(file.getText()) : "";
+          String includeText = range.getLength() >= 0 ? range.substring(file.getText()) : "";
           if (grandPa instanceof ErlangInclude) {
             result.addAllElements(getModulePathLookupElements(file, includeText));
           }
@@ -163,9 +165,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
             ErlangColonQualifiedExpression originalColonQExpr = PsiTreeUtil.getParentOfType(originalPosition, ErlangColonQualifiedExpression.class);
             String moduleName = moduleAtom != null ? getName(moduleAtom) : null;
             String prefix = originalColonQExpr != null ?
-              StringUtil.first(originalColonQExpr.getText(), parameters.getOffset() - originalColonQExpr.getTextOffset(), false) :
-              moduleName != null ? moduleName + ":" : null;
-            (StringUtil.isEmpty(prefix) ? result : result.withPrefixMatcher(result.getPrefixMatcher().cloneWithPrefix(prefix) ))
+                            StringUtil.first(originalColonQExpr.getText(), parameters.getOffset() - originalColonQExpr.getTextOffset(), false) :
+                            moduleName != null ? moduleName + ":" : null;
+            (StringUtil.isEmpty(prefix) ? result : result.withPrefixMatcher(result.getPrefixMatcher().cloneWithPrefix(prefix)))
               .addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, moduleName));
           }
           else if (grandPa instanceof ErlangRecordField || grandPa instanceof ErlangRecordTuple) {
@@ -191,8 +193,8 @@ public class ErlangCompletionContributor extends CompletionContributor {
             }
           }
           if (colonQualified == null
-            && grandPa instanceof ErlangExpression
-            && (inFunction(position) || inConsole || PsiTreeUtil.getParentOfType(position, ErlangTypedRecordFields.class) != null)) {
+              && grandPa instanceof ErlangExpression
+              && (inFunction(position) || inConsole || PsiTreeUtil.getParentOfType(position, ErlangTypedRecordFields.class) != null)) {
             result.addAllElements(getFunctionLookupElements(file, false, null));
             result.addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, null));
           }
@@ -200,7 +202,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           int invocationCount = parameters.getInvocationCount();
           boolean moduleScope = invocationCount > 0 && invocationCount % 2 == 0;
           boolean moduleWithDeps = invocationCount > 0 && invocationCount % 3 == 0;
-          
+
           if (moduleScope || moduleWithDeps) {
             Project project = file.getProject();
 
@@ -226,9 +228,11 @@ public class ErlangCompletionContributor extends CompletionContributor {
         return dot != null && dot.getNode().getElementType() == ErlangTypes.ERL_DOT;
       }
     });
-    extend(CompletionType.SMART, psiElement().inside(true, psiElement(ErlangArgumentList.class)), new CompletionProvider<CompletionParameters>() {
+    extend(CompletionType.SMART, psiElement().inside(true, psiElement(ErlangArgumentList.class)), new CompletionProvider<>() {
       @Override
-      protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context, @NotNull CompletionResultSet result) {
+      protected void addCompletions(@NotNull CompletionParameters parameters,
+                                    @NotNull ProcessingContext context,
+                                    @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
         Set<ErlangExpressionType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
         if (expectedTypes.isEmpty()) return;
@@ -375,7 +379,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
     JBIterable
       .of(children)
-      .filter(new Condition<VirtualFile>() {
+      .filter(new Condition<>() {
         @Override
         public boolean value(VirtualFile child) {
           return child.getName().startsWith(childPrefix) && (child.isDirectory() || canBeIncluded(child));

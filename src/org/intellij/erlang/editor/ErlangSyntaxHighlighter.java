@@ -62,7 +62,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
 
   @NotNull
   @Override
-  public TextAttributesKey[] getTokenHighlights(IElementType type) {
+  public TextAttributesKey @NotNull [] getTokenHighlights(IElementType type) {
     if (type == TokenType.BAD_CHARACTER) {
       return pack(ILLEGAL);
     }

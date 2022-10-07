@@ -73,7 +73,7 @@ public class ErlangAppCompletionContributor extends CompletionContributor {
 
   @NotNull
   private static CompletionProvider<CompletionParameters> getProvider(@NotNull final List<String> keywords) {
-    return new CompletionProvider<CompletionParameters>() {
+    return new CompletionProvider<>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters, @NotNull ProcessingContext context,
                                     @NotNull CompletionResultSet result) {
@@ -87,7 +87,7 @@ public class ErlangAppCompletionContributor extends CompletionContributor {
 
   @NotNull
   private static PatternCondition<PsiElement> positionInTuple(final int position) {
-    return new PatternCondition<PsiElement>("positionInTuple") {
+    return new PatternCondition<>("positionInTuple") {
       @Override
       public boolean accepts(@NotNull PsiElement element, ProcessingContext context) {
         ErlangTupleExpression tuple = PsiTreeUtil.getParentOfType(element, ErlangTupleExpression.class);

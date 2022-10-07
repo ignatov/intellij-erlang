@@ -121,8 +121,10 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
                                    timestamps,
                                    dataManager,
                                    buildLoggingManager,
-                                   index, targetsState,
-                                   targetIndex, buildRootIndex, ignoredFileIndex);
+                                   index,
+                                   targetIndex,
+                                   buildRootIndex,
+                                   ignoredFileIndex);
     }
     catch (IOException e) {
       throw new RuntimeException(e);

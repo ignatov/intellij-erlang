@@ -1,9 +1,10 @@
 jar.archiveName = "jps-plugin.jar"
 
 repositories {
+  mavenLocal()
   mavenCentral()
 }
 
 dependencies {
-  compile group: 'com.github.metadave', name: 'etp', version: '0.4'
+  implementation group: 'com.github.metadave', name: 'etp', version: '0.7'
 }

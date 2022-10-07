@@ -39,7 +39,7 @@ import java.util.List;
 public class ErlangMethodSeparatorProvider implements LineMarkerProvider {
   @Nullable
   @Override
-  public LineMarkerInfo getLineMarkerInfo(@NotNull PsiElement function) {
+  public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement function) {
     return null;
   }
 
