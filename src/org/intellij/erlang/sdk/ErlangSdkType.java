@@ -50,6 +50,8 @@ import org.jetbrains.annotations.TestOnly;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class ErlangSdkType extends SdkType {
@@ -149,7 +151,7 @@ public class ErlangSdkType extends SdkType {
     var searchRoots = new String[]{
       System.getProperty("user.home") + "/.asdf/installs/erlang",
       "/usr/lib/erlang",
-    };
+      };
 
     return searchForErlangRecursivelyIn(searchRoots);
   }
@@ -260,11 +262,59 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   private static ErlangSdkRelease getRelease(@NotNull String sdkHome) {
+    ErlangSdkRelease withOTPVERSION = detectReleaseWithOTPVERSION(sdkHome);
+    if (withOTPVERSION != null) return withOTPVERSION;
     ErlangSdkRelease withFiles = detectReleaseWithFiles(sdkHome);
     if (withFiles != null) return withFiles;
     return detectReleaseWithProcess(sdkHome);
   }
 
+  private static @Nullable ErlangSdkRelease detectReleaseWithOTPVERSION(String sdkHome) {
+    // Enumerate directories and read into OTP_VERSION file
+    var otpRelease = readOtpVersionFile(sdkHome);
+
+    // Try read either SDKDIR/erts-x.x or SDKDIR/lib/erts-x.x
+    var ertsVersion = Optional
+      .ofNullable(readErtsDirectoryVersion(sdkHome))
+      .orElse(readErtsDirectoryVersion(sdkHome + "/lib"));
+    if (otpRelease != null && ertsVersion != null) {
+      return new ErlangSdkRelease(otpRelease, ertsVersion);
+    }
+    return null;
+  }
+
+  private static @Nullable String readErtsDirectoryVersion(String searchIn) {
+    var ertsDir = new File(searchIn)
+      .listFiles((dir, name) -> {
+        var f = new File(dir, name);
+        return f.isDirectory() && name.startsWith("erts-");
+      });
+    if (ertsDir != null && ertsDir.length > 0) {
+      return ertsDir[0].getName().substring(5); // Trim leading "erts-" keep the version
+    }
+    return null;
+  }
+
+  private static @Nullable String readOtpVersionFile(String sdkHome) {
+    // Enumerate directories and read into OTP_VERSION file
+    var releaseFiles = new File(sdkHome + "/releases")
+      .listFiles((File dir, String name) -> {
+        // Filter directories in SDKDIR/releases/* which contain OTP_VERSION file
+        var otpversion = new File(dir.getPath() + "/" + name, "OTP_VERSION");
+        return otpversion.exists() && otpversion.isFile();
+      });
+    if (releaseFiles != null && releaseFiles.length > 0) {
+      try {
+        // Read the OTP_VERSION file in the first result
+        return Files.readString(Path.of(releaseFiles[0].toString() + "/OTP_VERSION")).trim();
+      }
+      catch (IOException ignored) {
+      }
+    }
+    return null;
+  }
+
+  // This does not work on OTP versions after 16+, use detectReleaseWithOTPVERSION instead
   @Nullable
   private static ErlangSdkRelease detectReleaseWithFiles(@NotNull String sdkHome) {
     try {
