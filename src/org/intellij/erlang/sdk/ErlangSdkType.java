@@ -92,35 +92,71 @@ public class ErlangSdkType extends SdkType {
   @Override
   public String suggestHomePath() {
     if (SystemInfo.isWindows) {
-      return "C:\\cygwin\\bin";
+      return suggestWindowsErlangPath();
     }
     else if (SystemInfo.isMac) {
-      String macPorts = "/opt/local/lib/erlang";
-      if (new File(macPorts).exists()) return macPorts;
-
-      // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
-      for (String version : new String[]{"", "-r14", "-r15", "-r16"}) {
-        File brewRoot = new File("/usr/local/Cellar/erlang" + version);
-        if (brewRoot.exists()) {
-          final Ref<String> ref = Ref.create();
-          FileUtil.processFilesRecursively(brewRoot, file -> {
-            if (!ref.isNull()) return false;
-            if (!file.isDirectory()) return true;
-            if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
-              ref.set(file.getAbsolutePath());
-              return false;
-            }
-            return true;
-          });
-          if (!ref.isNull()) return ref.get();
-        }
-      }
-      return null;
+      return suggestMacOSErlangPath();
     }
     else if (SystemInfo.isLinux) {
-      return "/usr/lib/erlang";
+      return suggestLinuxErlangPath();
     }
     return null;
+  }
+
+  private static @Nullable String suggestMacOSErlangPath() {
+    String macPorts = "/opt/local/lib/erlang";
+    if (new File(macPorts).exists()) return macPorts;
+
+    var searchRoots = new String[]{
+      System.getProperty("user.home") + "/.asdf/installs/erlang",
+      "/opt/brewroot/Cellar/erlang", // Brew install location for M1 arm64
+      "/usr/local/Cellar/erlang",
+      "/usr/local/Cellar/erlang-r14",
+      "/usr/local/Cellar/erlang-r15",
+      "/usr/local/Cellar/erlang-r16",
+      };
+
+    return searchForErlangRecursivelyIn(searchRoots);
+  }
+
+  // Look into nested directories under each of the roots, and see if there's */lib/erlang in them
+  // Reason is that on MacOS and Linux the erl/erlc binaries are often installed separately
+  // from the rest of the OTP files
+  private static @Nullable String searchForErlangRecursivelyIn(String[] roots) {
+    // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
+    for (String trySearchIn : roots) {
+      File brewRoot = new File(trySearchIn);
+      if (brewRoot.exists()) {
+        final Ref<String> ref = Ref.create(); // store return value from lambda below
+
+        FileUtil.processFilesRecursively(brewRoot, file -> {
+          if (!ref.isNull()) return false;
+          if (!file.isDirectory()) return true;
+          if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
+            ref.set(file.getAbsolutePath());
+            return false;
+          }
+          return true;
+        });
+
+        if (!ref.isNull()) return ref.get();
+      }
+    }
+    return null;
+  }
+
+  private static @Nullable String suggestLinuxErlangPath() {
+    var searchRoots = new String[]{
+      System.getProperty("user.home") + "/.asdf/installs/erlang",
+      "/usr/lib/erlang",
+    };
+
+    return searchForErlangRecursivelyIn(searchRoots);
+  }
+
+  @NotNull
+  private static String suggestWindowsErlangPath() {
+    return "C:\\cygwin\\bin";
   }
 
   @Override
