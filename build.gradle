@@ -35,9 +35,9 @@ allprojects {
     downloadSources = Boolean.valueOf(sources)
     sameSinceUntilBuild = Boolean.valueOf(isEAP)
   }
-  
+
   def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
-  
+
   test {
     useJUnitPlatform {
       exclude compilationPackages
@@ -81,4 +81,8 @@ idea {
   module {
     generatedSourceDirs += file('gen')
   }
+}
+
+runIde {
+  jvmArgs '-Xmx1536M'
 }
