@@ -32,6 +32,7 @@ public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_18_0 = new ErlangSdkRelease("18", "7.0");
 
   private static final Pattern VERSION_PATTERN = Pattern.compile("Erlang/OTP (\\S+) \\[erts-(\\S+)]");
+  private static final Pattern NEW_VERSION_PATTERN = Pattern.compile("OTP (\\S+), erts-(\\S+)");
 
   private final String myOtpRelease;
   private final String myErtsVersion;
@@ -66,7 +67,13 @@ public final class ErlangSdkRelease {
 
   @Nullable
   static ErlangSdkRelease fromString(@Nullable String versionString) {
-    Matcher m = versionString != null ? VERSION_PATTERN.matcher(versionString) : null;
-    return m != null && m.matches() ? new ErlangSdkRelease(m.group(1), m.group(2)) : null;
+    if (versionString == null) return null;
+    for (Pattern pattern : new Pattern[]{VERSION_PATTERN, NEW_VERSION_PATTERN}) {
+      Matcher m = pattern.matcher(versionString);
+      if (m.matches()) {
+        return new ErlangSdkRelease(m.group(1), m.group(2));
+      }
+    }
+    return null;
   }
 }
