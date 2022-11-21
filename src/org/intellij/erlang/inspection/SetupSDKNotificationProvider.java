@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.ide.IdeDeprecatedMessagesBundle;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.module.Module;
@@ -31,6 +32,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.ui.EditorNotificationPanel;
+import com.intellij.ui.EditorNotificationProvider;
 import com.intellij.ui.EditorNotifications;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
@@ -41,36 +43,14 @@ import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SetupSDKNotificationProvider extends EditorNotifications.Provider<EditorNotificationPanel> {
-  private static final Key<EditorNotificationPanel> KEY = Key.create("Setup Erlang SDK");
+import javax.swing.*;
+import java.util.function.Function;
 
-  @NotNull
-  @Override
-  public Key<EditorNotificationPanel> getKey() {
-    return KEY;
-  }
-
-  @Nullable
-  @Override
-  public EditorNotificationPanel createNotificationPanel(@NotNull VirtualFile file,
-                                                         @NotNull FileEditor fileEditor,
-                                                         @NotNull Project project) {
-    if (ApplicationManager.getApplication().isUnitTestMode()) return null;
-    if (!(file.getFileType() instanceof ErlangFileType)) return null;
-
-    PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-    if (psiFile == null || psiFile.getLanguage() != ErlangLanguage.INSTANCE) return null;
-
-    ErlangSdkRelease sdkRelease = ErlangSdkType.getRelease(psiFile);
-    if (sdkRelease != null) return null;
-
-    return createPanel(project, psiFile);
-  }
-
+public class SetupSDKNotificationProvider implements EditorNotificationProvider {
   @NotNull
   private static EditorNotificationPanel createPanel(@NotNull final Project project, @NotNull final PsiFile file) {
     EditorNotificationPanel panel = new EditorNotificationPanel();
-    panel.setText(ProjectBundle.message("project.sdk.not.defined"));
+    panel.setText(IdeDeprecatedMessagesBundle.message("project.sdk.not.defined"));
     panel.createActionLabel(ProjectBundle.message("project.sdk.setup"), () -> {
       if (ErlangSystemUtil.isSmallIde()) {
         ShowSettingsUtil.getInstance().showSettingsDialog(project, ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
@@ -87,5 +67,20 @@ public class SetupSDKNotificationProvider extends EditorNotifications.Provider<E
       });
     });
     return panel;
+  }
+
+  @Override
+  public @Nullable Function<? super @NotNull FileEditor, ? extends @Nullable JComponent> collectNotificationData(@NotNull Project project,
+                                                                                                                 @NotNull VirtualFile file) {
+    if (ApplicationManager.getApplication().isUnitTestMode()) return null;
+    if (!(file.getFileType() instanceof ErlangFileType)) return null;
+
+    PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+    if (psiFile == null || psiFile.getLanguage() != ErlangLanguage.INSTANCE) return null;
+
+    ErlangSdkRelease sdkRelease = ErlangSdkType.getRelease(psiFile);
+    if (sdkRelease != null) return null;
+
+    return fileEditor -> createPanel(project, psiFile);
   }
 }
