@@ -27,13 +27,11 @@ import com.intellij.openapi.project.ProjectBundle;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService;
-import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.ui.EditorNotificationPanel;
 import com.intellij.ui.EditorNotificationProvider;
-import com.intellij.ui.EditorNotifications;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -46,7 +44,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.util.function.Function;
 
-public class SetupSDKNotificationProvider implements EditorNotificationProvider {
+public class ErlangSdkNotificationProvider implements EditorNotificationProvider {
   @NotNull
   private static EditorNotificationPanel createPanel(@NotNull final Project project, @NotNull final PsiFile file) {
     EditorNotificationPanel panel = new EditorNotificationPanel();
