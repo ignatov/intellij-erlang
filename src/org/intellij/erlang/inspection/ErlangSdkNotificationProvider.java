@@ -24,9 +24,8 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectBundle;
-import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
-import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService;
+import com.intellij.openapi.roots.ui.configuration.SdkPopupFactory;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -55,14 +54,21 @@ public class ErlangSdkNotificationProvider implements EditorNotificationProvider
         return;
       }
 
-      Sdk projectSdk = ProjectSettingsService.getInstance(project).chooseAndSetSdk();
-      if (projectSdk == null) return;
-      ApplicationManager.getApplication().runWriteAction(() -> {
-        Module module = ModuleUtilCore.findModuleForPsiElement(file);
-        if (module != null) {
-          ModuleRootModificationUtil.setSdkInherited(module);
-        }
-      });
+      SdkPopupFactory
+        .newBuilder()
+        .withProject(project)
+        .withSdkTypeFilter(type -> type instanceof ErlangSdkType)
+        .updateSdkForFile(file)
+        .onSdkSelected(
+          sdk ->
+            ApplicationManager.getApplication().runWriteAction(() -> {
+              Module module = ModuleUtilCore.findModuleForPsiElement(file);
+              if (module != null) {
+                ModuleRootModificationUtil.setSdkInherited(module);
+              }
+            }))
+        .buildPopup()
+        .showCenteredInCurrentWindow(project);
     });
     return panel;
   }
