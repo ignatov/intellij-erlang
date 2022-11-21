@@ -1,5 +1,5 @@
 plugins {
-  id 'org.jetbrains.intellij' version "1.8.0"
+  id 'org.jetbrains.intellij' version "1.10.0"
 }
 
 dependencies {
@@ -7,7 +7,7 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
   testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.6.1'
-  testCompileOnly 'junit:junit:4.13'
+  testCompileOnly 'junit:junit:4.13.1'
 }
 
 version = "${version}.$buildNumber"
@@ -15,7 +15,7 @@ allprojects {
   repositories { mavenCentral() }
   apply plugin: 'java'
   sourceCompatibility = javaVersion
-  targetCompatibility = javaVersion
+  targetCompatibility = javaTargetVersion
   tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
 
   sourceSets {
