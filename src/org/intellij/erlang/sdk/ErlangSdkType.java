@@ -50,25 +50,22 @@ import org.jetbrains.annotations.TestOnly;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.*;
 
 public class ErlangSdkType extends SdkType {
   private static final String OTP_RELEASE_PREFIX_LINE = "ErlangSdkType_OTP_RELEASE:";
   private static final String ERTS_VERSION_PREFIX_LINE = "ErlangSdkType_ERTS_VERSION:";
   private static final String PRINT_VERSION_INFO_EXPRESSION =
     "io:format(\"~n~s~n~s~n~s~n~s~n\",[" +
-      "\"" + OTP_RELEASE_PREFIX_LINE + "\"," +
-      "erlang:system_info(otp_release)," +
-      "\"" + ERTS_VERSION_PREFIX_LINE + "\"," +
-      "erlang:system_info(version)" +
-      "]),erlang:halt().";
+    "\"" + OTP_RELEASE_PREFIX_LINE + "\"," +
+    "erlang:system_info(otp_release)," +
+    "\"" + ERTS_VERSION_PREFIX_LINE + "\"," +
+    "erlang:system_info(version)" +
+    "]),erlang:halt().";
   private static final Logger LOG = Logger.getInstance(ErlangSdkType.class);
 
   private final Map<String, ErlangSdkRelease> mySdkHomeToReleaseCache = ApplicationManager.getApplication().isUnitTestMode() ?
-                                                                        new HashMap<>() : ContainerUtil.createWeakMap();
+                                                                        new HashMap<>() : new WeakHashMap<>();
 
   @NotNull
   public static ErlangSdkType getInstance() {
@@ -100,7 +97,7 @@ public class ErlangSdkType extends SdkType {
     else if (SystemInfo.isMac) {
       String macPorts = "/opt/local/lib/erlang";
       if (new File(macPorts).exists()) return macPorts;
-      
+
       // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
       for (String version : new String[]{"", "-r14", "-r15", "-r16"}) {
         File brewRoot = new File("/usr/local/Cellar/erlang" + version);
@@ -153,7 +150,8 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   @Override
-  public AdditionalDataConfigurable createAdditionalDataConfigurable(@NotNull SdkModel sdkModel, @NotNull SdkModificator sdkModificator) {
+  public AdditionalDataConfigurable createAdditionalDataConfigurable(@NotNull SdkModel sdkModel,
+                                                                     @NotNull SdkModificator sdkModificator) {
     return null;
   }
 
@@ -234,7 +232,13 @@ public class ErlangSdkType extends SdkType {
   @Nullable
   private static ErlangSdkRelease detectReleaseWithFiles(@NotNull String sdkHome) {
     try {
-      File startErl = new File(sdkHome, "releases/start_erl.data");
+      File startErl = Arrays.stream(new File[]{
+        new File(sdkHome, "releases/start_erl.data"),
+        new File(sdkHome, "lib/erlang/releases/start_erl.data"),
+        }).filter(File::exists).findFirst().orElse(null);
+
+      if (startErl == null) return null;
+
       String line = ContainerUtil.getFirstItem(FileUtil.loadLines(startErl));
       List<String> split = StringUtil.split(line, " ");
       if (split.size() == 2) {
@@ -338,14 +342,16 @@ public class ErlangSdkType extends SdkType {
           }
         }
       }
-    } catch (ExecutionException ignore) {
+    }
+    catch (ExecutionException ignore) {
     }
 
     File stdLibDir = new File("/usr/lib/erlang");
     tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir);
   }
 
-  private static boolean tryToProcessAsStandardLibraryDir(@NotNull SdkModificator sdkModificator, @NotNull File stdLibDir) {
+  private static boolean tryToProcessAsStandardLibraryDir(@NotNull SdkModificator sdkModificator,
+                                                          @NotNull File stdLibDir) {
     if (!isStandardLibraryDir(stdLibDir)) return false;
     VirtualFile dir = LocalFileSystem.getInstance().findFileByIoFile(stdLibDir);
     if (dir != null) {
@@ -361,7 +367,7 @@ public class ErlangSdkType extends SdkType {
 
   @NotNull
   private static String getDefaultSdkName(@NotNull String sdkHome, @Nullable ErlangSdkRelease version) {
-    return  version != null ? "Erlang " + version.getOtpRelease() : "Unknown Erlang version at " + sdkHome;
+    return version != null ? "Erlang " + version.getOtpRelease() : "Unknown Erlang version at " + sdkHome;
   }
 
   @Nullable
@@ -374,7 +380,7 @@ public class ErlangSdkType extends SdkType {
     if (sdk != null && sdk.getSdkType() == getInstance()) {
       ErlangSdkRelease fromVersionString = ErlangSdkRelease.fromString(sdk.getVersionString());
       return fromVersionString != null ? fromVersionString :
-        getInstance().detectSdkVersion(StringUtil.notNullize(sdk.getHomePath()));
+             getInstance().detectSdkVersion(StringUtil.notNullize(sdk.getHomePath()));
     }
     return null;
   }
