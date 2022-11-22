@@ -31,6 +31,7 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ErlangAtomIndex extends ScalarIndexExtension<String> {
@@ -52,7 +53,7 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
   @Override
   public DataIndexer<String, Void, FileContent> getIndexer() {
     return inputData -> {
-      final Map<String, Void> result = new THashMap<>();
+      final Map<String, Void> result = new HashMap<>();
       PsiFile file = inputData.getPsiFile();
       if (file instanceof ErlangFile) {
         file.accept(new ErlangRecursiveVisitor() {

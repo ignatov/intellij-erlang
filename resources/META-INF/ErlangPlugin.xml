@@ -155,7 +155,7 @@
         <referencesSearch implementation="org.intellij.erlang.search.ErlangAtomSearch"/>
         <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.search.ErlangTargetElementEvaluator"/>
 
-        <editorNotificationProvider implementation="org.intellij.erlang.inspection.SetupSDKNotificationProvider"/>
+        <editorNotificationProvider implementation="org.intellij.erlang.inspection.ErlangSdkNotificationProvider"/>
 
         <callHierarchyProvider language="Erlang" implementationClass="org.intellij.erlang.hierarchy.ErlangCallHierarchyProvider"/>
 
