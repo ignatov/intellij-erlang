@@ -13,14 +13,14 @@
   </option>
   <option name="ERL_RECORDS">
     <value>
-      <option name="FOREGROUND" value="9876aa"/>
+      <option name="FOREGROUND" value="4ec9b0"/>
       <option name="FONT_TYPE" value="1"/>
       <option name="EFFECT_TYPE" value="1"/>
     </value>
   </option>
   <option name="ERL_MACRO">
     <value>
-      <option name="FOREGROUND" value="9876aa"/>
+      <option name="FOREGROUND" value="ce9178"/>
       <option name="FONT_TYPE" value="2"/>
       <option name="EFFECT_TYPE" value="1"/>
     </value>
