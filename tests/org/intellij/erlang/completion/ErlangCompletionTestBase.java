@@ -18,6 +18,7 @@ package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.util.registry.Registry;
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageManagerImpl;
 import com.intellij.testFramework.UsefulTestCase;
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
@@ -98,6 +99,7 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
   }
 
   protected void doTestVariantsInner(CompletionType type, int count, CheckType checkType, String... variants) {
+    Registry.get("ide.completion.variant.limit").setValue(2000);
     myFixture.complete(type, count);
     List<String> stringList = myFixture.getLookupElementStrings();
 

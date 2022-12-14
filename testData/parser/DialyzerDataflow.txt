@@ -776,8 +776,8 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      PsiElement(atom_name)('else')
+    ERL_ELSE_ATOM_ATTRIBUTE
+      PsiElement(else)('else')
     PsiElement(.)('.')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
@@ -45543,8 +45543,8 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      PsiElement(atom_name)('else')
+    ERL_ELSE_ATOM_ATTRIBUTE
+      PsiElement(else)('else')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -58880,8 +58880,8 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      PsiElement(atom_name)('else')
+    ERL_ELSE_ATOM_ATTRIBUTE
+      PsiElement(else)('else')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
@@ -58991,8 +58991,8 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      PsiElement(atom_name)('else')
+    ERL_ELSE_ATOM_ATTRIBUTE
+      PsiElement(else)('else')
     PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
