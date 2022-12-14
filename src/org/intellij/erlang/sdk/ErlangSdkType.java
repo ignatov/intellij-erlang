@@ -50,6 +50,8 @@ import org.jetbrains.annotations.TestOnly;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class ErlangSdkType extends SdkType {
@@ -92,35 +94,71 @@ public class ErlangSdkType extends SdkType {
   @Override
   public String suggestHomePath() {
     if (SystemInfo.isWindows) {
-      return "C:\\cygwin\\bin";
+      return suggestWindowsErlangPath();
     }
     else if (SystemInfo.isMac) {
-      String macPorts = "/opt/local/lib/erlang";
-      if (new File(macPorts).exists()) return macPorts;
-
-      // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
-      for (String version : new String[]{"", "-r14", "-r15", "-r16"}) {
-        File brewRoot = new File("/usr/local/Cellar/erlang" + version);
-        if (brewRoot.exists()) {
-          final Ref<String> ref = Ref.create();
-          FileUtil.processFilesRecursively(brewRoot, file -> {
-            if (!ref.isNull()) return false;
-            if (!file.isDirectory()) return true;
-            if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
-              ref.set(file.getAbsolutePath());
-              return false;
-            }
-            return true;
-          });
-          if (!ref.isNull()) return ref.get();
-        }
-      }
-      return null;
+      return suggestMacOSErlangPath();
     }
     else if (SystemInfo.isLinux) {
-      return "/usr/lib/erlang";
+      return suggestLinuxErlangPath();
     }
     return null;
+  }
+
+  private static @Nullable String suggestMacOSErlangPath() {
+    String macPorts = "/opt/local/lib/erlang";
+    if (new File(macPorts).exists()) return macPorts;
+
+    var searchRoots = new String[]{
+      System.getProperty("user.home") + "/.asdf/installs/erlang",
+      "/opt/brewroot/Cellar/erlang", // Brew install location for M1 arm64
+      "/usr/local/Cellar/erlang",
+      "/usr/local/Cellar/erlang-r14",
+      "/usr/local/Cellar/erlang-r15",
+      "/usr/local/Cellar/erlang-r16",
+      };
+
+    return searchForErlangRecursivelyIn(searchRoots);
+  }
+
+  // Look into nested directories under each of the roots, and see if there's */lib/erlang in them
+  // Reason is that on MacOS and Linux the erl/erlc binaries are often installed separately
+  // from the rest of the OTP files
+  private static @Nullable String searchForErlangRecursivelyIn(String[] roots) {
+    // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
+    for (String trySearchIn : roots) {
+      File brewRoot = new File(trySearchIn);
+      if (brewRoot.exists()) {
+        final Ref<String> ref = Ref.create(); // store return value from lambda below
+
+        FileUtil.processFilesRecursively(brewRoot, file -> {
+          if (!ref.isNull()) return false;
+          if (!file.isDirectory()) return true;
+          if ("erlang".equals(file.getName()) && file.getParent().endsWith("lib")) {
+            ref.set(file.getAbsolutePath());
+            return false;
+          }
+          return true;
+        });
+
+        if (!ref.isNull()) return ref.get();
+      }
+    }
+    return null;
+  }
+
+  private static @Nullable String suggestLinuxErlangPath() {
+    var searchRoots = new String[]{
+      System.getProperty("user.home") + "/.asdf/installs/erlang",
+      "/usr/lib/erlang",
+      };
+
+    return searchForErlangRecursivelyIn(searchRoots);
+  }
+
+  @NotNull
+  private static String suggestWindowsErlangPath() {
+    return "C:\\cygwin\\bin";
   }
 
   @Override
@@ -224,11 +262,59 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   private static ErlangSdkRelease getRelease(@NotNull String sdkHome) {
+    ErlangSdkRelease withOTPVERSION = detectReleaseWithOTPVERSION(sdkHome);
+    if (withOTPVERSION != null) return withOTPVERSION;
     ErlangSdkRelease withFiles = detectReleaseWithFiles(sdkHome);
     if (withFiles != null) return withFiles;
     return detectReleaseWithProcess(sdkHome);
   }
 
+  private static @Nullable ErlangSdkRelease detectReleaseWithOTPVERSION(String sdkHome) {
+    // Enumerate directories and read into OTP_VERSION file
+    var otpRelease = readOtpVersionFile(sdkHome);
+
+    // Try read either SDKDIR/erts-x.x or SDKDIR/lib/erts-x.x
+    var ertsVersion = Optional
+      .ofNullable(readErtsDirectoryVersion(sdkHome))
+      .orElse(readErtsDirectoryVersion(sdkHome + "/lib"));
+    if (otpRelease != null && ertsVersion != null) {
+      return new ErlangSdkRelease(otpRelease, ertsVersion);
+    }
+    return null;
+  }
+
+  private static @Nullable String readErtsDirectoryVersion(String searchIn) {
+    var ertsDir = new File(searchIn)
+      .listFiles((dir, name) -> {
+        var f = new File(dir, name);
+        return f.isDirectory() && name.startsWith("erts-");
+      });
+    if (ertsDir != null && ertsDir.length > 0) {
+      return ertsDir[0].getName().substring(5); // Trim leading "erts-" keep the version
+    }
+    return null;
+  }
+
+  private static @Nullable String readOtpVersionFile(String sdkHome) {
+    // Enumerate directories and read into OTP_VERSION file
+    var releaseFiles = new File(sdkHome + "/releases")
+      .listFiles((File dir, String name) -> {
+        // Filter directories in SDKDIR/releases/* which contain OTP_VERSION file
+        var otpversion = new File(dir.getPath() + "/" + name, "OTP_VERSION");
+        return otpversion.exists() && otpversion.isFile();
+      });
+    if (releaseFiles != null && releaseFiles.length > 0) {
+      try {
+        // Read the OTP_VERSION file in the first result
+        return Files.readString(Path.of(releaseFiles[0].toString() + "/OTP_VERSION")).trim();
+      }
+      catch (IOException ignored) {
+      }
+    }
+    return null;
+  }
+
+  // This does not work on OTP versions after 16+, use detectReleaseWithOTPVERSION instead
   @Nullable
   private static ErlangSdkRelease detectReleaseWithFiles(@NotNull String sdkHome) {
     try {
