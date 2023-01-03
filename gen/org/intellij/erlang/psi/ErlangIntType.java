@@ -17,6 +17,9 @@ public interface ErlangIntType extends ErlangType {
   PsiElement getOpMinus();
 
   @Nullable
+  PsiElement getChar();
+
+  @Nullable
   PsiElement getInteger();
 
 }
