@@ -528,12 +528,21 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inLeftPartOfAssignment(@NotNull PsiElement psiElement, boolean strict) {
+    // '=' assignment
     ErlangAssignmentExpression assignment = PsiTreeUtil.getParentOfType(psiElement, ErlangAssignmentExpression.class, true);
     while (assignment != null) {
       if (PsiTreeUtil.isAncestor(assignment.getLeft(), psiElement, strict)) {
         return true;
       }
       assignment = PsiTreeUtil.getParentOfType(assignment, ErlangAssignmentExpression.class, true);
+    }
+    // '?=' maybe assignment
+    ErlangMaybeMatchExpression maybeMatchAssignment = PsiTreeUtil.getParentOfType(psiElement, ErlangMaybeMatchExpression.class, true);
+    while (maybeMatchAssignment != null) {
+      if (PsiTreeUtil.isAncestor(maybeMatchAssignment.getLeft(), psiElement, strict)) {
+        return true;
+      }
+      maybeMatchAssignment = PsiTreeUtil.getParentOfType(maybeMatchAssignment, ErlangMaybeMatchExpression.class, true);
     }
     return false;
   }

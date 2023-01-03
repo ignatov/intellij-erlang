@@ -54,6 +54,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     ERL_TOP_TYPE_CLAUSE,
     ERL_FUN_CLAUSES,
     ERL_TRY_EXPRESSIONS_CLAUSE,
+    ERL_MAYBE_MATCH_EXPRS,
     ERL_TYPE_SIG_GUARD,
     ERL_TOP_TYPE_CLAUSE
   );
@@ -354,13 +355,14 @@ public class ErlangFormattingBlock extends AbstractBlock {
       type == ERL_IF_EXPRESSION && newChildIndex == 1 ||
       type == ERL_CASE_EXPRESSION && newChildIndex == 1 ||
       type == ERL_BEGIN_END_EXPRESSION && newChildIndex == 1 ||
+      type == ERL_MAYBE_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5) ||
       type == ERL_FUN_EXPRESSION && newChildIndex == 1 ||
       type == ERL_RECEIVE_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5) ||
       type == ERL_TRY_EXPRESSION && (newChildIndex == 1 || newChildIndex == 3 || newChildIndex == 5)) {
       return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
     }
 
-    if (type == ERL_IF_EXPRESSION || type == ERL_CASE_EXPRESSION ||
+    if (type == ERL_IF_EXPRESSION || type == ERL_CASE_EXPRESSION || type == ERL_MAYBE_EXPRESSION ||
       type == ERL_RECEIVE_EXPRESSION || type == ERL_BEGIN_END_EXPRESSION || type == ERL_FUN_EXPRESSION) {
       IElementType previousElement = getPreviousElementType(newChildIndex);
       if (previousElement != null &&
@@ -370,6 +372,8 @@ public class ErlangFormattingBlock extends AbstractBlock {
     }
 
     if (type == ERL_BEGIN_END_BODY) return Indent.getNoneIndent();
+
+    if (type == ERL_MAYBE_MATCH_EXPRS) return Indent.getNoneIndent();
 
     if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
 

@@ -1,0 +1,4 @@
+test() ->
+  maybe
+    <caret>
+  end

@@ -140,6 +140,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitElseAtomAttribute(@NotNull ErlangElseAtomAttribute o) {
+    visitMetaAttribute(o);
+  }
+
   public void visitExport(@NotNull ErlangExport o) {
     visitMetaAttribute(o);
   }
@@ -338,6 +342,19 @@ public class ErlangVisitor extends PsiElementVisitor {
 
   public void visitMaxExpression(@NotNull ErlangMaxExpression o) {
     visitExpression(o);
+  }
+
+  public void visitMaybeExpression(@NotNull ErlangMaybeExpression o) {
+    visitExpression(o);
+    // visitClauseOwner(o);
+  }
+
+  public void visitMaybeMatchExpression(@NotNull ErlangMaybeMatchExpression o) {
+    visitFakeBinaryExpression(o);
+  }
+
+  public void visitMaybeMatchExprs(@NotNull ErlangMaybeMatchExprs o) {
+    visitCompositeElement(o);
   }
 
   public void visitModelFieldList(@NotNull ErlangModelFieldList o) {

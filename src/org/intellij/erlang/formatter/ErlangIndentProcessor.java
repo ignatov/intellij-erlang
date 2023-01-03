@@ -25,10 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
-import org.intellij.erlang.psi.ErlangArgumentDefinition;
-import org.intellij.erlang.psi.ErlangExpression;
-import org.intellij.erlang.psi.ErlangListOpExpression;
-import org.intellij.erlang.psi.ErlangParenthesizedExpression;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -92,7 +89,7 @@ public class ErlangIndentProcessor {
       boolean insideCall = PsiTreeUtil.getParentOfType(node.getPsi(), ErlangArgumentDefinition.class, ErlangParenthesizedExpression.class) != null;
       return insideCall ? Indent.getNormalIndent() : Indent.getNoneIndent();
     }
-    if (parentType == ERL_BEGIN_END_BODY || parentType == ERL_TRY_EXPRESSIONS_CLAUSE) {
+    if (parentType == ERL_BEGIN_END_BODY || parentType == ERL_TRY_EXPRESSIONS_CLAUSE || parentType == ERL_MAYBE_MATCH_EXPRS ) {
       return Indent.getNoneIndent();
     }
     if (parentType == ERL_TRY_CLAUSES || parentType == ERL_FUN_CLAUSES) {
@@ -100,12 +97,12 @@ public class ErlangIndentProcessor {
     }
     if (parentType == ERL_CASE_EXPRESSION || parentType == ERL_RECEIVE_EXPRESSION || parentType == ERL_TRY_EXPRESSION ||
         parentType == ERL_BEGIN_END_EXPRESSION || parentType == ERL_IF_EXPRESSION || parentType == ERL_FUN_EXPRESSION || 
-        parentType == ERL_CATCH_EXPRESSION) {
+        parentType == ERL_CATCH_EXPRESSION || parentType == ERL_MAYBE_EXPRESSION ) {
       if (elementType == ERL_CR_CLAUSE || elementType == ERL_IF_CLAUSE || elementType == ERL_BEGIN_END_BODY ||
-        elementType == ERL_TRY_EXPRESSIONS_CLAUSE || elementType == ERL_AFTER_CLAUSE_BODY) {
+        elementType == ERL_TRY_EXPRESSIONS_CLAUSE || elementType == ERL_MAYBE_MATCH_EXPRS || elementType == ERL_AFTER_CLAUSE_BODY) {
         return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
       }
-      if (elementType == ERL_OF || elementType == ERL_CATCH || elementType == ERL_AFTER || elementType == ERL_END ||
+      if (elementType == ERL_OF || elementType == ERL_CATCH || elementType == ERL_ELSE || elementType == ERL_AFTER || elementType == ERL_END ||
         elementType == ERL_TRY_CLAUSES || elementType == ERL_FUN_CLAUSES) {
         return myErlangSettings.INDENT_RELATIVE ? Indent.getSpaceIndent(0, true) : Indent.getNoneIndent();
       }

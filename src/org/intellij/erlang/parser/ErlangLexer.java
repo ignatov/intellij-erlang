@@ -26,7 +26,8 @@ import static org.intellij.erlang.ErlangTypes.*;
 
 public class ErlangLexer extends LookAheadLexer {
   public static final TokenSet KEYWORDS = TokenSet.create(
-    ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_FUN, ERL_CATCH, ERL_IF, ERL_RECEIVE, ERL_TRY);
+    ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_FUN, ERL_CATCH, ERL_IF, ERL_RECEIVE, ERL_TRY,
+    ERL_ELSE, ERL_MAYBE);
 
   public ErlangLexer() {
     super(new MergingLexerAdapter(new FlexAdapter(new _ErlangLexer()), COMMENTS));

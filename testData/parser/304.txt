@@ -69,8 +69,8 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    ERL_ATOM_ATTRIBUTE
-      PsiElement(atom_name)('else')
+    ERL_ELSE_ATOM_ATTRIBUTE
+      PsiElement(else)('else')
   ERL_MACROS_DEFINITION
     PsiElement(-)('-')
     PsiElement(atom_name)('define')
