@@ -32,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention {
   public static final String NAME = "Generate function @doc";
@@ -95,28 +96,16 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
    * @param function The PSI node
    * @return List of argument PSI nodes
    */
-  private static List<ErlangCompositeElement> getQVarArguments(ErlangFunction function) {
+  private static List<ErlangQVar> getQVarArguments(ErlangFunction function) {
     var firstClause = function.getFirstClause();
     return firstClause.getArgumentDefinitionList()
                       .getArgumentDefinitionList()
                       .stream()
                       .map(argDef -> {
-                        ErlangCompositeElement expr = argDef.getExpression();
-
-                        if (expr instanceof ErlangAssignmentExpression assignmentExpr) {
-                          var left = assignmentExpr.getLeft();
-                          if (left instanceof ErlangMaxExpression) expr = left;
-                          var right = assignmentExpr.getRight();
-                          if (right instanceof ErlangMaxExpression) expr = right;
-                        }
-
-                        if (expr instanceof ErlangMaxExpression maxExpr) {
-                          // Unwrap a maxExpression's first child
-                          return maxExpr.getQVar();
-                        }
-
-                        return expr;
+                        var unwrapResult = PsiExprUtil.extractQVarFromAssignment(argDef.getExpression());
+                        return unwrapResult.qVar;
                       })
+                      .filter(Objects::nonNull)
                       .toList();
   }
 
@@ -134,13 +123,11 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
     // Insert: %% @param $ParamN$ for each parameter which is not a pattern
     var count = 1;
 
-    for (var argExpr : getQVarArguments(function)) {
-      if (argExpr instanceof ErlangQVar qVar) {
-        template.addTextSegment("%% @param " + qVar.getName() + " ");
-        template.addVariable("PARAM" + count, new ConstantNode("Describe " + qVar.getName()), true);
-        template.addTextSegment("\n");
-        count++;
-      }
+    for (var qVar : getQVarArguments(function)) {
+      template.addTextSegment("%% @param " + qVar.getName() + " ");
+      template.addVariable("PARAM" + count, new ConstantNode("Describe " + qVar.getName()), true);
+      template.addTextSegment("\n");
+      count++;
     }
 
     // Add final %% @returns $Return$
