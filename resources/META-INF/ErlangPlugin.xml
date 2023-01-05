@@ -266,18 +266,22 @@
         <fileTypeStatisticProvider implementation="org.intellij.erlang.ErlangFileTypeStatisticsProvider"/>
 
         <intentionAction>
+          <language>Erlang</language>
           <className>org.intellij.erlang.intention.ErlangExportFunctionIntention</className>
           <category>Erlang</category>
         </intentionAction>
         <intentionAction>
+          <language>Erlang</language>
           <className>org.intellij.erlang.intention.ErlangExportTypeIntention</className>
           <category>Erlang</category>
         </intentionAction>
         <intentionAction>
+          <language>Erlang</language>
           <className>org.intellij.erlang.intention.ErlangGenerateSpecIntention</className>
           <category>Erlang</category>
         </intentionAction>
         <intentionAction>
+            <language>Erlang</language>
             <className>org.intellij.erlang.intention.ErlangGenerateDocIntention</className>
             <category>Erlang</category>
         </intentionAction>
