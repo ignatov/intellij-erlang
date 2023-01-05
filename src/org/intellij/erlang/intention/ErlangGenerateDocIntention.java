@@ -27,18 +27,17 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.ErlangParserDefinition;
-import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
-import org.intellij.erlang.psi.*;
-import org.intellij.erlang.quickfixes.ErlangGenerateSpecFix;
-import org.intellij.erlang.types.ErlangExpressionType;
+import org.intellij.erlang.psi.ErlangAttribute;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangQVar;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
 public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention {
+  public static final String NAME = "Generate function @doc";
   protected ErlangGenerateDocIntention() {
-    super("Generate Doc", "Generate Doc");
+    super(NAME, NAME);
   }
 
   @Override
@@ -53,8 +52,7 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
   private static PsiComment findFunctionComment(ErlangFunction function) {
     if (function == null) return null;
     for (PsiElement child = function.getPrevSibling(); child != null; child = child.getPrevSibling()) {
-      if (child instanceof PsiComment) {
-        PsiComment comment = (PsiComment) child;
+      if (child instanceof PsiComment comment) {
         if (comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT) return comment;
         return null;
       }
@@ -75,21 +73,42 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
       throw new IncorrectOperationException("Cursor should be placed on Erlang function.");
     }
     int textOffset = function.getTextOffset();
-    Template template = createErlangDocTemplate(project);
+    Template template = createErlangDocTemplate(project, function);
     editor.getCaretModel().moveToOffset(textOffset);
     TemplateManager.getInstance(project).startTemplate(editor, template);
   }
 
-  private static Template createErlangDocTemplate(Project project) {
+  private static Template createErlangDocTemplate(Project project, ErlangFunction function) {
     TemplateManager templateManager = TemplateManager.getInstance(project);
     Template template = templateManager.createTemplate("", "");
     template.setToReformat(true);
+
+    // Add first line: %% @doc $Documentation$
     template.addTextSegment("");
-    template.addTextSegment("%%------------------------------------------------------------------------------\n");
     template.addTextSegment("%% @doc ");
+    template.addVariable("DOC", new ConstantNode("Text"), true);
+    template.addTextSegment("\n");
+
+    // Insert: %% @param $ParamN$ for each parameter which is not a pattern
+    var firstClause = function.getFirstClause();
+    var count = 1;
+    for (var argumentDef: firstClause.getArgumentDefinitionList().getArgumentDefinitionList()) {
+      var argExpr = argumentDef.getExpression().getFirstChild();
+
+      if (argExpr instanceof ErlangQVar qVar) {
+        template.addTextSegment("%% @param " + qVar.getName() + " ");
+        template.addVariable("PARAM" + count, new ConstantNode("Describe " + qVar.getName()), true);
+        template.addTextSegment("\n");
+        count++;
+      }
+    }
+
+    // Add final %% @returns $Return$
+    template.addTextSegment("%% @returns ");
+    template.addVariable("RETURN", new ConstantNode("What"), true);
+    template.addTextSegment("\n");
+
     template.addEndVariable();
-    template.addTextSegment("\n%% @end\n" +
-                  "%%------------------------------------------------------------------------------\n");
     return template;
   }
 

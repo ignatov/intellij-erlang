@@ -28,7 +28,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangAttribute;
+import org.intellij.erlang.psi.ErlangExport;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -72,9 +75,9 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
   private static void processFunction(@NotNull final Project project,
                                       @NotNull final ErlangFunction function,
                                       @Nullable Editor editor) {
-    if (!(function.getContainingFile() instanceof ErlangFile)) return;
-    ErlangFile file = (ErlangFile) function.getContainingFile();
-    List<ErlangExport> exports = getExportPsiElements(file);
+    if (!(function.getContainingFile() instanceof ErlangFile file)) return;
+
+    var exports = getExportPsiElements(file);
 
     if (exports.isEmpty()) {
       createNewExport(project, file, function, null);
@@ -82,34 +85,40 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     }
 
     if (editor == null || ApplicationManager.getApplication().isUnitTestMode()) {
-      ErlangExport first = ContainerUtil.getFirstItem(exports);
+      var first = ContainerUtil.getFirstItem(exports);
       assert first != null;
       updateExport(project, function, first);
       return;
     }
 
-    List<ErlangExport> notEmptyExports = getNotEmptyExports(exports);
-    List<PsiElement> exportsShow = new ArrayList<>(exports);
+    var notEmptyExports = getNotEmptyExports(exports);
+    var exportsShow = new ArrayList<PsiElement>(exports);
+
     if (exports.size() == notEmptyExports.size()) {
       exportsShow.add(createExport(project, ""));
     }
+
     JBPopupFactory.getInstance().createPopupChooserBuilder(exportsShow)
                   .setTitle("Choose Export")
                   .setMovable(false)
                   .setResizable(false)
                   .setItemChosenCallback(
                     erlangExport ->
-                      CommandProcessor.getInstance().executeCommand(project, () ->
-                        ApplicationManager.getApplication().runWriteAction(() -> {
-                        PsiDocumentManager.getInstance(project).commitAllDocuments();
-                        if (erlangExport instanceof ErlangExport) {
-                          updateExport(project, function, (ErlangExport) erlangExport);
-                        }
-                        else {
-                          createNewExport(project, file, function,
-                                          exports.isEmpty() ? null : exports.get(exports.size() - 1).getParent());
-                        }
-                      }), "Export function", null))
+                      CommandProcessor.getInstance().executeCommand(
+                        project,
+                        () ->
+                          ApplicationManager.getApplication().runWriteAction(
+                            () -> {
+                              PsiDocumentManager.getInstance(project).commitAllDocuments();
+
+                              if (erlangExport instanceof ErlangExport erlangExportTyped) {
+                                updateExport(project, function, erlangExportTyped);
+                              }
+                              else {
+                                createNewExport(project, file, function,
+                                                exports.isEmpty() ? null : exports.get(exports.size() - 1).getParent());
+                              }
+                            }), "Export Function", null))
                   .setRequestFocus(true)
                   .setRenderer(getRenderer())
                   .createPopup().showInBestPositionFor(editor);
@@ -125,24 +134,26 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                                     int index,
                                                     boolean isSelected,
                                                     boolean cellHasFocus) {
-        Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-        if (value instanceof ErlangExport) {
-          ErlangExport export = (ErlangExport) value;
+        var rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+        if (value instanceof ErlangExport export) {
           if (export.getExportFunctions() != null) {
             setText(getPrettyPrefix(export.getExportFunctions().getText()));
           }
         }
         else {
-          setText("new export");
+          setText("Add a new -export() attribute");
         }
+
         return rendererComponent;
       }
 
       @NotNull
-      private String getPrettyPrefix(@NotNull String s) {
+      private static String getPrettyPrefix(@NotNull String s) {
         if (s.length() > MAX_EXPORT_STRING_LENGTH) {
           return s.substring(0, MAX_EXPORT_STRING_LENGTH - 2) + "...";
         }
+
         return s;
       }
     };
@@ -152,13 +163,18 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                    @NotNull ErlangFunction function,
                                    @Nullable ErlangExport oldExport) {
     if (oldExport == null) return;
-    ErlangExportFunctions exportFunctions = oldExport.getExportFunctions();
+
+    var exportFunctions = oldExport.getExportFunctions();
+
     if (exportFunctions == null) return;
-    String replace = exportFunctions.getText().replace("[", "").replace("]", "");
-    String s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") +
-      ErlangPsiImplUtil.createFunctionPresentation(function);
-    ErlangAttribute attribute = PsiTreeUtil.getParentOfType(oldExport, ErlangAttribute.class);
+
+    var replace = exportFunctions.getText().replace("[", "").replace("]", "");
+    var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") +
+            ErlangPsiImplUtil.createFunctionPresentation(function);
+    var attribute = PsiTreeUtil.getParentOfType(oldExport, ErlangAttribute.class);
+
     if (attribute == null) return;
+
     attribute.replace(ErlangElementFactory.createExportFromText(project, s));
   }
 
@@ -172,7 +188,9 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       file.addAfter(ErlangElementFactory.createLeafFromText(project, "\n"), elementAfter);
       return;
     }
-    ErlangCompositeElement elementBefore = ErlangQuickFixBase.getAnchorElement(file);
+
+    var elementBefore = ErlangQuickFixBase.getAnchorElement(file);
+
     if (elementBefore != null) {
       file.addBefore(createExport(project, function.getName() + "/" + function.getArity()),
                      elementBefore);
@@ -186,7 +204,8 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   @NotNull
   public static List<ErlangExport> getExportPsiElements(@NotNull ErlangFile file) {
-    List<ErlangExport> exports = new ArrayList<>(); // todo: move to erlang file
+    var exports = new ArrayList<ErlangExport>(); // todo: move to erlang file
+
     for (ErlangAttribute attribute : file.getAttributes()) {
       if (attribute.getExport() != null) {
         exports.add(attribute.getExport());
@@ -197,9 +216,12 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   @NotNull
   public static List<ErlangExport> getNotEmptyExports(@NotNull List<ErlangExport> exports) {
-    return ContainerUtil.filter(exports, export -> {
-      ErlangExportFunctions functions = export.getExportFunctions();
-      return functions != null && !functions.getExportFunctionList().isEmpty();
-    });
+    return ContainerUtil.filter(
+      exports,
+      export -> {
+        var functions = export.getExportFunctions();
+
+        return functions != null && !functions.getExportFunctionList().isEmpty();
+      });
   }
 }
