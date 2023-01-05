@@ -20,27 +20,24 @@ import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.ConstantNode;
 import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.types.ErlangExpressionType;
+import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeUnion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 
 public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   public static final String NAME = "Generate function spec";
   private static final String ANY_TYPE_STRING = "any()";
-  private static final Logger LOG = Logger.getInstance(ErlangGenerateSpecFix.class);
 
   @NotNull
   @Override
@@ -61,7 +58,11 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     }
   }
 
-  private static @Nullable String getArgName(ErlangCompositeElement expression) {
+  /**
+   * Try and guess variable name used in the given expression, for spec argument naming purpose.
+   * @return The guess or null
+   */
+  private static @Nullable String guessArgumentName(ErlangCompositeElement expression) {
     var unwrapResult = PsiExprUtil.extractQVarFromAssignment((ErlangExpression) expression);
 
     if (unwrapResult.qVar != null) return unwrapResult.qVar.getName();
@@ -96,32 +97,19 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   private static String computeArgumentDescriptionString(ErlangFunction function, int argumentIdx) {
     var argumentPatterns = getArgumentPatterns(function, argumentIdx);
 
-    if (argumentPatterns.isEmpty()) return ANY_TYPE_STRING;
+    if (argumentPatterns.isEmpty()) return ErlType.ANY_TYPE.toString();
 
-    var argTypes = new LinkedHashSet<String>();
+    var argType = new ErlTypeUnion(null);
 
     for (ErlangExpression expression : argumentPatterns) {
       var unwrapResult = PsiExprUtil.extractQVarFromAssignment(expression);
-      var erlangExpressionType = ErlangExpressionType.create(unwrapResult.expression);
+      var exprType = ErlType.fromExpression(unwrapResult.expression);
 
-      LOG.info("qvar=%s expr=%s unwrapexpr=%s type=%s"
-                 .formatted(unwrapResult.getQVarString(), expression.toString(),
-                            unwrapResult.expression.toString(), erlangExpressionType.toString()));
-
-      argTypes.add(getTypeString(erlangExpressionType));
+      argType.add(exprType);
     }
 
-    String typeString;
-
-    // TODO: Union type, and construct from hashset
-    if (!argTypes.contains(ANY_TYPE_STRING)) {
-      typeString = StringUtil.join(argTypes, "|");
-    }
-    else {
-      typeString = ANY_TYPE_STRING;
-    }
-
-    var argName = getArgName(argumentPatterns.get(0));
+    String typeString = argType.toString();
+    var argName = guessArgumentName(argumentPatterns.get(0));
 
     return argName == null || argName.isEmpty()
            ? typeString
@@ -143,22 +131,17 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     }
   }
 
-  private static String getTypeString(ErlangExpressionType t) {
-    return t == ErlangExpressionType.UNKNOWN
-           ? ANY_TYPE_STRING
-           : t.getName().toLowerCase() + "()";
-  }
+  private static ErlType computeCommonType(List<ErlangExpression> expressions) {
+    var types = expressions.stream().map(ErlType::fromExpression).toList();
+    var unionType = new ErlTypeUnion(types);
 
-  private static ErlangExpressionType computeCommonType(List<ErlangExpression> expressions) {
-    var types = ContainerUtil.map(expressions, ErlangExpressionType::create);
-
-    //TODO compute common type
-    return types.isEmpty()
-           ? ErlangExpressionType.UNKNOWN
+    // Empty union by default converges to NONE_TYPE, but we want ANY_TYPE instead
+    return unionType.isEmpty()
+           ? ErlType.ANY_TYPE
            : types.get(0);
   }
 
-  private static ErlangExpressionType computeReturnType(ErlangFunction function) {
+  private static ErlType computeReturnType(ErlangFunction function) {
     var clauses = function.getFunctionClauseList();
     var lastExpressions = new ArrayList<ErlangExpression>(clauses.size());
 
@@ -180,7 +163,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     template.addTextSegment("-spec " + function.getName() + "(");
     addArgsTypeSpecsAsTemplateFields(template, function);
     template.addTextSegment(") -> ");
-    template.addVariable("RETURN", new ConstantNode(getTypeString(computeReturnType(function))), true);
+    template.addVariable("RETURN", new ConstantNode(computeReturnType(function).toString()), true);
     template.addTextSegment(".\n");
 
     template.addEndVariable();
