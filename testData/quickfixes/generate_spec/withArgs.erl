@@ -1,1 +1,1 @@
-foo<caret>(One, Two, Three) -> ok.
+foo<caret>(A, <<"binbin">> = B, C = {tuple}) -> ok.

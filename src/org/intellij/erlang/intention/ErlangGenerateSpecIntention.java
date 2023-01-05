@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention {
+
   public ErlangGenerateSpecIntention() {
     super(ErlangGenerateSpecFix.NAME, ErlangGenerateSpecFix.NAME);
   }
@@ -34,8 +35,11 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
   @Override
   public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
     if (!(file instanceof ErlangFile)) return false;
-    ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
+
+    var function = findFunction(file, editor.getCaretModel().getOffset());
+
     if (function == null) return false;
+
     return function.findSpecification() == null;
   }
 
@@ -44,13 +48,17 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
     if (!(file instanceof ErlangFile)) {
       throw new IncorrectOperationException("Only applicable to Erlang files.");
     }
-    ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
+
+    var function = findFunction(file, editor.getCaretModel().getOffset());
+
     if (function == null) {
       throw new IncorrectOperationException("Cursor should be placed on Erlang function.");
     }
+
     if (function.findSpecification() != null) {
       throw new IncorrectOperationException("Specification for this function already exists.");
     }
+
     ErlangGenerateSpecFix.generateSpec(editor, function);
   }
 

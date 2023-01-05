@@ -86,15 +86,17 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Base
   }
 
   protected void launchIntention(@NotNull String name) {
-    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(name);
-    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
+    var availableIntentions = myFixture.filterAvailableIntentions(name);
+    var action = ContainerUtil.getFirstItem(availableIntentions);
+
     assertNotNull(action);
     myFixture.launchAction(action);
   }
 
   protected void assertNoIntentionsAvailable(@NotNull String name, @Nullable String message) {
-    List<IntentionAction> availableIntentions = myFixture.filterAvailableIntentions(name);
-    IntentionAction action = ContainerUtil.getFirstItem(availableIntentions);
+    var availableIntentions = myFixture.filterAvailableIntentions(name);
+    var action = ContainerUtil.getFirstItem(availableIntentions);
+
     assertNull(message, action);
   }
   
