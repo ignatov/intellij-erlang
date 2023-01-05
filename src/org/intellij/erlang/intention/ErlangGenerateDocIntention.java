@@ -141,9 +141,6 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
         template.addTextSegment("\n");
         count++;
       }
-      else {
-        template.addTextSegment("%% " + argExpr.getClass().getName() + "\n");
-      }
     }
 
     // Add final %% @returns $Return$
