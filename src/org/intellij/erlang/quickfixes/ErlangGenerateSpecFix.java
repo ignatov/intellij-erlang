@@ -32,6 +32,7 @@ import org.intellij.erlang.types.ErlangExpressionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -91,8 +92,10 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   }
 
   private static ErlangAttribute createSpecTemplate(ErlangFunction function, ErlangFile file, Project project) {
-    var text = function.getName() + '(' + computeArgsTypeSpecs(function) + ')'
-               + " -> " + getTypeString(computeReturnType(function)) + '.';
+    var text = MessageFormat.format("{0}({1}) -> {2}.",
+                                    function.getName(),
+                                    computeArgsTypeSpecs(function),
+                                    getTypeString(computeReturnType(function)));
     var spec = file.addBefore(ErlangElementFactory.createSpecFromText(project, text), function);
 
     file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n"), function);
@@ -122,8 +125,8 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     var argTypes = new LinkedHashSet<String>();
 
     for (ErlangExpression expression : argumentPatterns) {
-      if (expression instanceof ErlangAssignmentExpression) {
-        expression = ((ErlangAssignmentExpression) expression).getLeft();
+      if (expression instanceof ErlangAssignmentExpression assignmentExpression) {
+        expression = assignmentExpression.getLeft();
       }
 
       var erlangExpressionType = ErlangExpressionType.create(expression);

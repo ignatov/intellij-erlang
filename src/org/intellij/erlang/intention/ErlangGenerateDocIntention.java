@@ -27,15 +27,15 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.ErlangParserDefinition;
-import org.intellij.erlang.psi.ErlangAttribute;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention {
   public static final String NAME = "Generate function @doc";
+
   protected ErlangGenerateDocIntention() {
     super(NAME, NAME);
   }
@@ -43,23 +43,30 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
   @Override
   public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
     if (!(file instanceof ErlangFile)) return false;
-    ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
+
+    var function = findFunction(file, editor.getCaretModel().getOffset());
+
     if (function == null) return false;
+
     return findFunctionComment(function) == null;
   }
 
   @Nullable
   private static PsiComment findFunctionComment(ErlangFunction function) {
     if (function == null) return null;
+
     for (PsiElement child = function.getPrevSibling(); child != null; child = child.getPrevSibling()) {
       if (child instanceof PsiComment comment) {
         if (comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT) return comment;
+
         return null;
       }
       if (child instanceof ErlangAttribute) continue;
       if (child instanceof PsiWhiteSpace) continue;
+
       return null;
     }
+
     return null;
   }
 
@@ -68,19 +75,54 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
     if (!(file instanceof ErlangFile)) {
       throw new IncorrectOperationException("Only applicable to Erlang files.");
     }
-    ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
+
+    var function = findFunction(file, editor.getCaretModel().getOffset());
+
     if (function == null) {
       throw new IncorrectOperationException("Cursor should be placed on Erlang function.");
     }
-    int textOffset = function.getTextOffset();
-    Template template = createErlangDocTemplate(project, function);
+
+    var textOffset = function.getTextOffset();
+    var template = createErlangDocTemplate(project, function);
+
     editor.getCaretModel().moveToOffset(textOffset);
     TemplateManager.getInstance(project).startTemplate(editor, template);
   }
 
-  private static Template createErlangDocTemplate(Project project, ErlangFunction function) {
-    TemplateManager templateManager = TemplateManager.getInstance(project);
-    Template template = templateManager.createTemplate("", "");
+  /**
+   * For a function node, return its arguments which can be casted to QVar and skip the incompatible ones.
+   *
+   * @param function The PSI node
+   * @return List of argument PSI nodes
+   */
+  private static List<ErlangCompositeElement> getQVarArguments(ErlangFunction function) {
+    var firstClause = function.getFirstClause();
+    return firstClause.getArgumentDefinitionList()
+                      .getArgumentDefinitionList()
+                      .stream()
+                      .map(argDef -> {
+                        ErlangCompositeElement expr = argDef.getExpression();
+
+                        if (expr instanceof ErlangAssignmentExpression assignmentExpr) {
+                          var left = assignmentExpr.getLeft();
+                          if (left instanceof ErlangMaxExpression) expr = left;
+                          var right = assignmentExpr.getRight();
+                          if (right instanceof ErlangMaxExpression) expr = right;
+                        }
+
+                        if (expr instanceof ErlangMaxExpression maxExpr) {
+                          // Unwrap a maxExpression's first child
+                          return maxExpr.getQVar();
+                        }
+
+                        return expr;
+                      })
+                      .toList();
+  }
+
+  private static @NotNull Template createErlangDocTemplate(Project project, ErlangFunction function) {
+    var template = TemplateManager.getInstance(project).createTemplate("", "");
+
     template.setToReformat(true);
 
     // Add first line: %% @doc $Documentation$
@@ -90,16 +132,17 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
     template.addTextSegment("\n");
 
     // Insert: %% @param $ParamN$ for each parameter which is not a pattern
-    var firstClause = function.getFirstClause();
     var count = 1;
-    for (var argumentDef: firstClause.getArgumentDefinitionList().getArgumentDefinitionList()) {
-      var argExpr = argumentDef.getExpression().getFirstChild();
 
+    for (var argExpr : getQVarArguments(function)) {
       if (argExpr instanceof ErlangQVar qVar) {
         template.addTextSegment("%% @param " + qVar.getName() + " ");
         template.addVariable("PARAM" + count, new ConstantNode("Describe " + qVar.getName()), true);
         template.addTextSegment("\n");
         count++;
+      }
+      else {
+        template.addTextSegment("%% " + argExpr.getClass().getName() + "\n");
       }
     }
 
@@ -116,5 +159,4 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
   private static ErlangFunction findFunction(PsiFile file, int offset) {
     return findElement(file, offset, ErlangFunction.class);
   }
-
 }

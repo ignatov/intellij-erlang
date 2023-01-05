@@ -27,6 +27,7 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Consumer;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangExport;
@@ -98,30 +99,31 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       exportsShow.add(createExport(project, ""));
     }
 
+    Consumer<PsiElement> onClick = erlangExport ->
+      CommandProcessor.getInstance().executeCommand(
+        project,
+        () ->
+          ApplicationManager.getApplication().runWriteAction(
+            () -> {
+              PsiDocumentManager.getInstance(project).commitAllDocuments();
+
+              if (erlangExport instanceof ErlangExport erlangExportTyped) {
+                updateExport(project, function, erlangExportTyped);
+              }
+              else {
+                createNewExport(project, file, function, exports.isEmpty() ? null : exports.get(exports.size() - 1).getParent());
+              }
+            }), "Export Function", null);
+
     JBPopupFactory.getInstance().createPopupChooserBuilder(exportsShow)
                   .setTitle("Choose Export")
                   .setMovable(false)
                   .setResizable(false)
-                  .setItemChosenCallback(
-                    erlangExport ->
-                      CommandProcessor.getInstance().executeCommand(
-                        project,
-                        () ->
-                          ApplicationManager.getApplication().runWriteAction(
-                            () -> {
-                              PsiDocumentManager.getInstance(project).commitAllDocuments();
-
-                              if (erlangExport instanceof ErlangExport erlangExportTyped) {
-                                updateExport(project, function, erlangExportTyped);
-                              }
-                              else {
-                                createNewExport(project, file, function,
-                                                exports.isEmpty() ? null : exports.get(exports.size() - 1).getParent());
-                              }
-                            }), "Export Function", null))
+                  .setItemChosenCallback(onClick)
                   .setRequestFocus(true)
                   .setRenderer(getRenderer())
-                  .createPopup().showInBestPositionFor(editor);
+                  .createPopup()
+                  .showInBestPositionFor(editor);
   }
 
   @NotNull
