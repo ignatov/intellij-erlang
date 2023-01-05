@@ -1,2 +1,2 @@
--spec foo() -> ok.
-foo() -> ok.
+-spec foo(A :: any(), B :: any(), C :: any()) -> any().
+foo(A, {_, _} = B, C) -> ok.

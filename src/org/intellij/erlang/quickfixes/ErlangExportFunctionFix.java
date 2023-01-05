@@ -140,7 +140,10 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
         if (value instanceof ErlangExport export) {
           if (export.getExportFunctions() != null) {
-            setText(getPrettyPrefix(export.getExportFunctions().getText()));
+            var exportText = export.getExportFunctions().getText();
+            // Replace consequent whitespaces and tabs with one space
+            var trimmedText = exportText.trim().replaceAll(" +", " ");
+            setText(getPrettyPrefix(trimmedText));
           }
         }
         else {
