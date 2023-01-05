@@ -20,6 +20,7 @@ import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.ConstantNode;
 import com.intellij.codeInspection.ProblemDescriptor;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
@@ -39,6 +40,7 @@ import java.util.Objects;
 public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   public static final String NAME = "Generate function spec";
   private static final String ANY_TYPE_STRING = "any()";
+  private static final Logger LOG = Logger.getInstance(ErlangGenerateSpecFix.class);
 
   @NotNull
   @Override
@@ -60,21 +62,11 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   }
 
   private static @Nullable String getArgName(ErlangCompositeElement expression) {
-    if (expression instanceof ErlangAssignmentExpression assignmentExpression) {
-      var right = assignmentExpression.getRight();
-      if (right instanceof ErlangMaxExpression) {
-        expression = right;
-      }
-      else {
-        var left = assignmentExpression.getLeft();
-        if (left instanceof ErlangMaxExpression) expression = left;
-      }
-    }
+    var unwrapResult = PsiExprUtil.extractQVarFromAssignment((ErlangExpression) expression);
 
-    if (expression instanceof ErlangMaxExpression maxExpr) expression = maxExpr.getQVar();
-    if (expression instanceof ErlangQVar qVar) return qVar.getName();
+    if (unwrapResult.qVar != null) return unwrapResult.qVar.getName();
 
-    if (expression instanceof ErlangRecordExpression) {
+    if (unwrapResult.expression instanceof ErlangRecordExpression) {
       var recordRef = ((ErlangRecordExpression) expression).getRecordRef();
 
       if (recordRef != null) {
@@ -109,20 +101,19 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     var argTypes = new LinkedHashSet<String>();
 
     for (ErlangExpression expression : argumentPatterns) {
-      if (expression instanceof ErlangAssignmentExpression assignmentExpr) {
-        // Unwrap X = <something>, or <something> = X into X
-        var left = assignmentExpr.getLeft();
-        if (left instanceof ErlangMaxExpression) expression = left;
-        var right = assignmentExpr.getRight();
-        if (right instanceof ErlangMaxExpression) expression = right;
-      }
+      var unwrapResult = PsiExprUtil.extractQVarFromAssignment(expression);
+      var erlangExpressionType = ErlangExpressionType.create(unwrapResult.expression);
 
-      var erlangExpressionType = ErlangExpressionType.create(expression);
+      LOG.info("qvar=%s expr=%s unwrapexpr=%s type=%s"
+                 .formatted(unwrapResult.getQVarString(), expression.toString(),
+                            unwrapResult.expression.toString(), erlangExpressionType.toString()));
+
       argTypes.add(getTypeString(erlangExpressionType));
     }
 
     String typeString;
 
+    // TODO: Union type, and construct from hashset
     if (!argTypes.contains(ANY_TYPE_STRING)) {
       typeString = StringUtil.join(argTypes, "|");
     }

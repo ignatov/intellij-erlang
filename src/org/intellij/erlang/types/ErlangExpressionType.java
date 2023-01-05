@@ -148,6 +148,7 @@ public abstract class ErlangExpressionType {
         else if (o.getFloat() != null) ref.set(FLOAT);
         else if (o.getQAtom() != null) ref.set(ATOM);
         else if (o.getChar() != null) ref.set(CHAR);
+        // TODO: Detect binary(), detect map(), rework entire type detection thing
       }
 
       @Override

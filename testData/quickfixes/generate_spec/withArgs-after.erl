@@ -1,2 +1,2 @@
--spec foo(One :: any(), Two :: any(), Three :: any()) -> atom().
-foo(One, Two, Three) -> ok.
+-spec foo(A :: any(), B :: binary(), C :: tuple()) -> atom().
+foo(A, <<"binbin">> = B, C = {tuple}) -> ok.
