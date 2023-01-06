@@ -24,7 +24,7 @@ import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.types.ErlangExpressionType;
+import org.intellij.erlang.types.ErlType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -37,28 +37,27 @@ class ErlangCompletionUtil {
   }
 
   @NotNull
-  static Set<ErlangExpressionType> expectedArgumentTypes(@NotNull PsiElement elementInCallArgument) {
+  static Set<ErlType> expectedArgumentTypes(@NotNull PsiElement elementInCallArgument) {
     ErlangExpression expr = PsiTreeUtil.getParentOfType(elementInCallArgument, ErlangExpression.class);
     ErlangArgumentList argList = ObjectUtils.tryCast(expr != null ? expr.getParent() : null, ErlangArgumentList.class);
     PsiElement argListOwner = argList != null ? argList.getParent() : null;
     ErlangFunctionCallExpression call = ObjectUtils.tryCast(argListOwner, ErlangFunctionCallExpression.class);
     int argIndex = call != null ? ContainerUtil.indexOfIdentity(argList.getExpressionList(), expr) : -1;
+
     return argIndex != -1 ? expectedArgumentTypes(call, argIndex) : Collections.emptySet();
   }
 
-  static boolean containsType(@NotNull Set<ErlangExpressionType> typeSet, @NotNull ErlangExpressionType type) {
-    for (ErlangExpressionType setItem : typeSet) {
-      if (setItem.accept(type)) return true;
-    }
-    return false;
+  static boolean containsType(@NotNull Set<ErlType> typeSet, @NotNull ErlType type) {
+    return typeSet.stream().anyMatch(type::isSubtypeOf);
   }
 
   @NotNull
-  private static Set<ErlangExpressionType> expectedArgumentTypes(@NotNull ErlangFunctionCallExpression call, int argIndex) {
+  private static Set<ErlType> expectedArgumentTypes(@NotNull ErlangFunctionCallExpression call, int argIndex) {
     PsiPolyVariantReference reference = (PsiPolyVariantReference) call.getReference();
 
-    HashSet<ErlangExpressionType> expectedArgumentTypes = new HashSet<>();
+    HashSet<ErlType> expectedArgumentTypes = new HashSet<>();
     ResolveResult[] resolveResults = reference.multiResolve(true);
+
     for (ResolveResult r : resolveResults) {
       ErlangFunction function = ObjectUtils.tryCast(r.getElement(), ErlangFunction.class);
       ErlangSpecification spec = function != null ? function.findSpecification() : null;
@@ -76,13 +75,13 @@ class ErlangCompletionUtil {
     return expectedArgumentTypes;
   }
 
-  private static void collectExpressionTypes(@NotNull ErlangType type, @NotNull Set<ErlangExpressionType> types) {
+  private static void collectExpressionTypes(@NotNull ErlangType type, @NotNull Set<ErlType> types) {
     for (ErlangType childType : PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class)) {
       collectExpressionTypes(childType, types);
     }
     ErlangTypeRef typeRef = type.getTypeRef();
     String key = typeRef != null ? typeRef.getText() : type.getFirstChild().getText();
-    ErlangExpressionType et = ErlangExpressionType.TYPE_MAP.get(key);
+    ErlType et = ErlType.fromString(key);
     ContainerUtil.addIfNotNull(types, et);
   }
 }
