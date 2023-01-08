@@ -20,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A simple union type implementation, later to be upgraded to full union impl when type inference is implemented.
@@ -38,8 +37,8 @@ public class ErlTypeUnion {
   }
 
   public String toString() {
-    if (members.isEmpty()) return ErlType.NONE_TYPE.toString();
-    if (members.stream().anyMatch(t -> t.kind == ErlType.Kind.ANY)) return ErlType.ANY_TYPE.toString();
+    if (members.isEmpty()) return ErlSimpleType.NONE.toString();
+    if (members.stream().anyMatch(t -> t.getKind() == ErlType.Kind.ANY)) return ErlSimpleType.ANY.toString();
 
     String[] membersAsStrings = members.stream().map(ErlType::toString).toArray(String[]::new);
     return String.join(" | ", membersAsStrings);

@@ -60,6 +60,7 @@ import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.stubs.index.ErlangBehaviourModuleIndex;
 import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -242,7 +243,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
         for (LookupElement lookupElement : functionLookupElements) {
           ErlangFunction function = ObjectUtils.tryCast(lookupElement.getPsiElement(), ErlangFunction.class);
-          ErlType type = function != null ? ErlType.calculateFunctionType(function) : null;
+          ErlType type = function != null ? ErlTypeFactory.calculateFunctionType(function) : null;
 
           if (type != null && ErlangCompletionUtil.containsType(expectedTypes, type)) {
             result.addElement(lookupElement);

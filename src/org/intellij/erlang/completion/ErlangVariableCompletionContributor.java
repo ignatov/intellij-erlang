@@ -31,6 +31,7 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangVarProcessor;
 import org.intellij.erlang.psi.impl.ResolveUtil;
 import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -99,7 +100,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
 
           ErlangAssignmentExpression assign = PsiTreeUtil.getParentOfType(v, ErlangAssignmentExpression.class);
           ErlangExpression right = assign != null ? assign.getRight() : null;
-          ErlType varType = ErlType.fromExpression(right);
+          ErlType varType = ErlTypeFactory.fromExpression(right);
 
           if (ErlangCompletionUtil.containsType(expectedTypes, varType)) {
             addVariable(result, v.getName());

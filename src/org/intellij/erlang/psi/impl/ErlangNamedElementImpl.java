@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangNamedElement;
+import org.intellij.erlang.types.ErlSimpleType;
 import org.intellij.erlang.types.ErlType;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +38,6 @@ public abstract class ErlangNamedElementImpl extends ErlangCompositeElementImpl 
 
   @Override
   public ErlType synthesizeType() {
-    return ErlType.FLOAT_TYPE;
+    return ErlSimpleType.FLOAT;
   }
 }

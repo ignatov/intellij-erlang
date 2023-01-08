@@ -25,6 +25,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -81,7 +82,7 @@ class ErlangCompletionUtil {
     }
     ErlangTypeRef typeRef = type.getTypeRef();
     String key = typeRef != null ? typeRef.getText() : type.getFirstChild().getText();
-    ErlType et = ErlType.fromString(key);
+    ErlType et = ErlTypeFactory.fromString(key);
     ContainerUtil.addIfNotNull(types, et);
   }
 }

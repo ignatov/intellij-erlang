@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import org.intellij.erlang.psi.ErlangNamedElement;
+import org.intellij.erlang.types.ErlSimpleType;
 import org.intellij.erlang.types.ErlType;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,6 +42,6 @@ public abstract class ErlangNamedStubbedPsiElementBase<T extends StubElement<?>>
 
   @Override
   public ErlType synthesizeType() {
-    return ErlType.FUN_TYPE;
+    return ErlSimpleType.FUN;
   }
 }

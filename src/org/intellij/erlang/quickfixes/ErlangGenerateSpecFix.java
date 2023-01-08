@@ -26,7 +26,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.types.ErlSimpleType;
 import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeFactory;
 import org.intellij.erlang.types.ErlTypeUnion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -97,13 +99,13 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   private static String computeArgumentDescriptionString(ErlangFunction function, int argumentIdx) {
     var argumentPatterns = getArgumentPatterns(function, argumentIdx);
 
-    if (argumentPatterns.isEmpty()) return ErlType.ANY_TYPE.toString();
+    if (argumentPatterns.isEmpty()) return ErlSimpleType.ANY.toString();
 
     var argType = new ErlTypeUnion(null);
 
     for (ErlangExpression expression : argumentPatterns) {
       var unwrapResult = PsiExprUtil.extractQVarFromAssignment(expression);
-      var exprType = ErlType.fromExpression(unwrapResult.expression);
+      var exprType = ErlTypeFactory.fromExpression(unwrapResult.expression);
 
       argType.add(exprType);
     }
@@ -132,12 +134,12 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   }
 
   private static ErlType computeCommonType(List<ErlangExpression> expressions) {
-    var types = expressions.stream().map(ErlType::fromExpression).toList();
+    var types = expressions.stream().map(ErlTypeFactory::fromExpression).toList();
     var unionType = new ErlTypeUnion(types);
 
     // Empty union by default converges to NONE_TYPE, but we want ANY_TYPE instead
     return unionType.isEmpty()
-           ? ErlType.ANY_TYPE
+           ? ErlSimpleType.ANY
            : types.get(0);
   }
 
