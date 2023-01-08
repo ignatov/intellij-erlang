@@ -17,12 +17,10 @@
 package org.intellij.erlang.documentation;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
@@ -36,49 +34,43 @@ public final class ElementDocProviderFactory {
   @Nullable
   static ElementDocProvider create(@NotNull PsiElement psiElement) {
     Project project = psiElement.getProject();
-    if (psiElement instanceof ErlangModule) {
-      VirtualFile virtualFile = getVirtualFile(psiElement);
-      if (virtualFile == null) return null;
-      ErlangModule erlangModule = (ErlangModule) psiElement;
-      if (isFileFromErlangSdk(project, virtualFile)) {
-        return new ErlangSdkModuleDocProvider(project, virtualFile);
-      }
-      return new ErlangModuleDocProvider(erlangModule);
+
+    if (psiElement instanceof ErlangQVar qVar) {
+      return new ErlangEmptyDocProvider(qVar.getName());
     }
-    else if (psiElement instanceof ErlangFunction) {
-      VirtualFile virtualFile = getVirtualFile(psiElement);
-      if (virtualFile == null) return null;
-      ErlangFunction erlangFunction = (ErlangFunction) psiElement;
-      if (isFileFromErlangSdk(project, virtualFile)) {
-        return new ErlangSdkFunctionDocProvider(project, erlangFunction.getName(), erlangFunction.getArity(), virtualFile);
-      }
-      return new ErlangFunctionDocProvider(erlangFunction);
+    if (psiElement instanceof ErlangModule erlangModule) {
+      return createModuleDocProvider(project, erlangModule);
     }
-    else if (psiElement instanceof ErlangTypeDefinition) {
-      VirtualFile virtualFile = getVirtualFile(psiElement);
-      if (virtualFile == null) return null;
-      ErlangTypeDefinition typeDefinition = (ErlangTypeDefinition) psiElement;
-      if (isFileFromErlangSdk(project, virtualFile)) {
-        return new ErlangSdkTypeDocProvider(project, virtualFile, typeDefinition.getName());
-      }
-      return null; // TODO implement TypeDocProvider
+    if (psiElement instanceof ErlangFunction erlangFunction) {
+      return createFunctionDocProvider(project, erlangFunction);
     }
-    else {
-      ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(
-        psiElement, ErlangGlobalFunctionCallExpression.class);
-      if (erlGlobalFunctionCall != null) {
-        ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
-        String moduleName = moduleRef.getText();
-        ErlangFunctionCallExpression erlFunctionCall = erlGlobalFunctionCall.getFunctionCallExpression();
-        String functionName = erlFunctionCall.getName();
-        int arity = erlFunctionCall.getArgumentList().getExpressionList().size();
-        if (ErlangBifTable.isBif(moduleName, functionName, arity)) {
-          PsiElement tentativeErlangModule = moduleRef.getReference().resolve();
-          if (tentativeErlangModule instanceof ErlangModule) {
-            VirtualFile virtualFile = getVirtualFile(tentativeErlangModule);
-            if (virtualFile != null) {
-              return new ErlangSdkFunctionDocProvider(project, functionName, arity, virtualFile);
-            }
+    if (psiElement instanceof ErlangTypeDefinition typeDefinition) {
+      return createTypedefDocProvider(project, typeDefinition);
+    }
+
+    return createApplyDocProvider(psiElement, project);
+  }
+
+  @Nullable
+  private static ErlangSdkFunctionDocProvider createApplyDocProvider(@NotNull PsiElement psiElement,
+                                                                     Project project) {
+    var erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(psiElement, ErlangGlobalFunctionCallExpression.class);
+
+    if (erlGlobalFunctionCall != null) {
+      var moduleRef = erlGlobalFunctionCall.getModuleRef();
+      var moduleName = moduleRef.getText();
+      var erlFunctionCall = erlGlobalFunctionCall.getFunctionCallExpression();
+      var functionName = erlFunctionCall.getName();
+      int arity = erlFunctionCall.getArgumentList().getExpressionList().size();
+
+      if (ErlangBifTable.isBif(moduleName, functionName, arity)) {
+        var tentativeErlangModule = moduleRef.getReference().resolve();
+
+        if (tentativeErlangModule instanceof ErlangModule) {
+          var virtualFile = getVirtualFile(tentativeErlangModule);
+
+          if (virtualFile != null) {
+            return new ErlangSdkFunctionDocProvider(project, functionName, arity, virtualFile);
           }
         }
       }
@@ -86,10 +78,48 @@ public final class ElementDocProviderFactory {
     return null;
   }
 
+  @Nullable
+  private static ErlangSdkTypeDocProvider createTypedefDocProvider(Project project,
+                                                                   @NotNull ErlangTypeDefinition typeDefinition) {
+    var virtualFile = getVirtualFile(typeDefinition);
+    if (virtualFile == null) return null;
+
+    if (isFileFromErlangSdk(project, virtualFile)) {
+      return new ErlangSdkTypeDocProvider(project, virtualFile, typeDefinition.getName());
+    }
+    return null;
+  }
+
+  @Nullable
+  private static ElementDocProvider createFunctionDocProvider(Project project,
+                                                              @NotNull ErlangFunction erlangFunction) {
+    var virtualFile = getVirtualFile(erlangFunction);
+    if (virtualFile == null) return null;
+
+    if (isFileFromErlangSdk(project, virtualFile)) {
+      return new ErlangSdkFunctionDocProvider(project, erlangFunction.getName(), erlangFunction.getArity(), virtualFile);
+    }
+    return new ErlangFunctionDocProvider(erlangFunction);
+  }
+
+  @Nullable
+  private static ElementDocProvider createModuleDocProvider(Project project,
+                                                            @NotNull ErlangModule erlangModule) {
+    var virtualFile = getVirtualFile(erlangModule);
+    if (virtualFile == null) return null;
+
+    if (isFileFromErlangSdk(project, virtualFile)) {
+      return new ErlangSdkModuleDocProvider(project, virtualFile);
+    }
+    return new ErlangModuleDocProvider(erlangModule);
+  }
+
   private static boolean isFileFromErlangSdk(@NotNull Project project, @NotNull VirtualFile virtualFile) {
-    ProjectRootManager projectRootManager = ProjectRootManager.getInstance(project);
-    Sdk projectSdk = projectRootManager.getProjectSdk();
+    var projectRootManager = ProjectRootManager.getInstance(project);
+    var projectSdk = projectRootManager.getProjectSdk();
+
     if (projectSdk == null) return false;
+
     for (VirtualFile sdkSourceRoot : projectSdk.getRootProvider().getFiles(OrderRootType.SOURCES)) {
       if (virtualFile.getPath().startsWith(sdkSourceRoot.getPath())) return true;
     }
@@ -98,7 +128,8 @@ public final class ElementDocProviderFactory {
 
   @Nullable
   private static VirtualFile getVirtualFile(@NotNull PsiElement psiElement) {
-    PsiFile containingFile = psiElement.getContainingFile();
+    var containingFile = psiElement.getContainingFile();
     return containingFile == null ? null : containingFile.getVirtualFile();
   }
+
 }

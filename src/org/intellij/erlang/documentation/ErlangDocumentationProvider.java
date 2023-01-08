@@ -28,6 +28,7 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangNamedElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,10 +52,23 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Nullable
   @Override
   public String generateDoc(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
-    ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
+    var elementDocProvider = ElementDocProviderFactory.create(element);
+
     if (elementDocProvider != null && !(elementDocProvider instanceof ErlangSdkDocProviderBase)) {
-      return elementDocProvider.getDocText();
+      var result = new StringBuilder();
+      result.append(elementDocProvider.getDocText());
+
+      // For elements with inferrable types, add the inferred type to the doc.
+      if (element instanceof ErlangNamedElement namedElement) {
+        var inferredType = namedElement.synthesizeType();
+        result.append("<b>Type:</b> ")
+              .append(inferredType.toString())
+              .append("<br>");
+      }
+
+      return result.toString();
     }
+
     return null;
   }
 

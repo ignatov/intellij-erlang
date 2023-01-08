@@ -17,6 +17,8 @@
 package org.intellij.erlang.psi;
 
 import com.intellij.psi.PsiNameIdentifierOwner;
+import org.intellij.erlang.types.ErlType;
 
 public interface ErlangNamedElement extends ErlangCompositeElement, PsiNameIdentifierOwner {
+  ErlType synthesizeType();
 }

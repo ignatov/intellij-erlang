@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import org.intellij.erlang.psi.ErlangNamedElement;
+import org.intellij.erlang.types.ErlType;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class ErlangNamedStubbedPsiElementBase<T extends StubElement<?>> extends ErlangStubbedPsiElementBase<T> implements ErlangNamedElement {
@@ -36,5 +37,10 @@ public abstract class ErlangNamedStubbedPsiElementBase<T extends StubElement<?>>
   public int getTextOffset() {
     PsiElement nameIdentifier = getNameIdentifier();
     return nameIdentifier != null && nameIdentifier != this ? nameIdentifier.getTextOffset() : super.getTextOffset();
+  }
+
+  @Override
+  public ErlType synthesizeType() {
+    return ErlType.FUN_TYPE;
   }
 }
