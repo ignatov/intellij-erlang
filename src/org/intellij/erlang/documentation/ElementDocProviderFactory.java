@@ -35,9 +35,6 @@ public final class ElementDocProviderFactory {
   static ElementDocProvider create(@NotNull PsiElement psiElement) {
     Project project = psiElement.getProject();
 
-    if (psiElement instanceof ErlangQVar qVar) {
-      return new ErlangEmptyDocProvider(qVar.getName());
-    }
     if (psiElement instanceof ErlangModule erlangModule) {
       return createModuleDocProvider(project, erlangModule);
     }
@@ -47,8 +44,12 @@ public final class ElementDocProviderFactory {
     if (psiElement instanceof ErlangTypeDefinition typeDefinition) {
       return createTypedefDocProvider(project, typeDefinition);
     }
-
-    return createApplyDocProvider(psiElement, project);
+    var applyDoc = createApplyDocProvider(psiElement, project);
+    if (applyDoc != null) {
+      return applyDoc;
+    }
+    // Allow the ErlangDocumentationProvider to query PSI node type from ErlTypeFactory
+    return new ErlangEmptyDocProvider();
   }
 
   @Nullable

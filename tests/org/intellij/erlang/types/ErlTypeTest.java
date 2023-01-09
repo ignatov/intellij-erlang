@@ -40,11 +40,11 @@ class ErlTypeTest {
 
   @Test
   void testSubclassRecord() {
-    var recordType = new ErlRecordType("record", new ErlRecordType.RecordMember[] {
+    var recordType = new ErlRecordType("record", new ErlRecordType.RecordMember[]{
       new ErlRecordType.RecordMember("int", ErlSimpleType.INTEGER),
       new ErlRecordType.RecordMember("float", ErlSimpleType.FLOAT),
       new ErlRecordType.RecordMember("atom", ErlSimpleType.ATOM),
-    });
+      });
     assertTrue(recordType.isSubtypeOf(ErlSimpleType.TUPLE));
     assertEquals("#record{int :: integer(), float :: float(), atom :: atom()}",
                  recordType.toDefinitionString());

@@ -27,10 +27,7 @@ import java.util.List;
  * @see ErlangDocumentationProvider
  */
 final class ErlangEmptyDocProvider implements ElementDocProvider {
-  private final String what;
-
-  ErlangEmptyDocProvider(String what) {
-    this.what = what;
+  ErlangEmptyDocProvider() {
   }
 
   @Nullable
@@ -41,6 +38,6 @@ final class ErlangEmptyDocProvider implements ElementDocProvider {
 
   @Override
   public String getDocText() {
-    return "<b>Var</b> %s</br>\n".formatted(what);
+    return "";
   }
 }

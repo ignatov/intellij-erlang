@@ -18,6 +18,7 @@ package org.intellij.erlang.types;
 
 public interface ErlType {
   enum Kind {
+    ERROR, // signifies an error situation, type is not possible to synthesize/infer, see ErlTypeError
     ANY,
     NONE, // empty type
     ATOM,
@@ -38,6 +39,7 @@ public interface ErlType {
     TUPLE,
     /**
      * A record with tag and fields
+     *
      * @see ErlRecordType
      */
     RECORD,
@@ -45,7 +47,9 @@ public interface ErlType {
   }
 
   Kind getKind();
+
   boolean isSubtypeOf(ErlType other);
+
   /**
    * @return String which is usable in the right side of a type definition
    */

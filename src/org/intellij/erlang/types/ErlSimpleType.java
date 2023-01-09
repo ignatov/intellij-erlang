@@ -23,7 +23,8 @@ package org.intellij.erlang.types;
  *
  * @see ErlType
  */
-public record ErlSimpleType(Kind kind) implements ErlType {
+public final class ErlSimpleType implements ErlType {
+  private final Kind kind;
 
   public static ErlType ANY = new ErlSimpleType(Kind.ANY);
   public static ErlType NONE = new ErlSimpleType(Kind.NONE);
@@ -35,10 +36,15 @@ public record ErlSimpleType(Kind kind) implements ErlType {
   public static ErlType NIL = new ErlSimpleType(Kind.NIL);
   public static ErlType STRING = new ErlSimpleType(Kind.STRING);
   public static ErlType TUPLE = new ErlSimpleType(Kind.TUPLE);
+  public static ErlType MAP = new ErlSimpleType(Kind.MAP);
   public static ErlType ATOM = new ErlSimpleType(Kind.ATOM);
   public static ErlType BOOLEAN = new ErlSimpleType(Kind.BOOLEAN);
   public static ErlType CHAR = new ErlSimpleType(Kind.CHAR);
   public static ErlType FUN = new ErlSimpleType(Kind.FUN);
+
+  public ErlSimpleType(Kind kind) {
+    this.kind = kind;
+  }
 
   @Override
   public String toString() {
@@ -155,5 +161,9 @@ public record ErlSimpleType(Kind kind) implements ErlType {
   @Override
   public Kind getKind() {
     return this.kind;
+  }
+
+  public Kind kind() {
+    return kind;
   }
 }

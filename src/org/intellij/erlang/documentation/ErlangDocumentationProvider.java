@@ -28,7 +28,11 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangIntType;
 import org.intellij.erlang.psi.ErlangNamedElement;
+import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,20 +60,22 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
 
     if (elementDocProvider != null && !(elementDocProvider instanceof ErlangSdkDocProviderBase)) {
       var result = new StringBuilder();
+
       result.append(elementDocProvider.getDocText());
-
-      // For elements with inferrable types, add the inferred type to the doc.
-      if (element instanceof ErlangNamedElement namedElement) {
-        var inferredType = namedElement.synthesizeType();
-        result.append("<b>Type:</b> ")
-              .append(inferredType.toString())
-              .append("<br>");
-      }
-
+      tryInferAndGenerateDoc(element, result);
       return result.toString();
     }
 
     return null;
+  }
+
+  private static void tryInferAndGenerateDoc(PsiElement element, StringBuilder result) {
+    ErlType inferredType = ErlTypeFactory.synthesize(element);
+    if (inferredType != null) {
+      result.append("<b>Type:</b> ")
+            .append(inferredType)
+            .append("<br>");
+    }
   }
 
   @Nullable

@@ -20,9 +20,11 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangNamedElement;
 import org.intellij.erlang.types.ErlSimpleType;
 import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeError;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class ErlangNamedStubbedPsiElementBase<T extends StubElement<?>> extends ErlangStubbedPsiElementBase<T> implements ErlangNamedElement {
@@ -42,6 +44,9 @@ public abstract class ErlangNamedStubbedPsiElementBase<T extends StubElement<?>>
 
   @Override
   public ErlType synthesizeType() {
-    return ErlSimpleType.FUN;
+    if (this instanceof ErlangFunction) {
+      return ErlSimpleType.FUN; // TODO: Detailed type
+    }
+    return new ErlTypeError("Can't synthesize type for %s".formatted(this), this);
   }
 }

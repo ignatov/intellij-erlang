@@ -26,6 +26,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlTypeFactory {
+  private ErlTypeFactory() {
+  }
+
   /**
    * Simple inference from expression type
    *
@@ -174,5 +177,64 @@ public class ErlTypeFactory {
     }
 
     return ErlSimpleType.ANY;
+  }
+
+  /**
+   * Try figure out variable definition site, and infer its type, at least approximately…
+   * <p>
+   * - A variable can be defined in an assignment/match operator: A = 0; or case X of {A, _} -> ...
+   * - A variable can be defined in a binary match expression: <<A:8>> = ...
+   * - A variable can be defined in a function head as an incoming argument
+   * <p>
+   * For synthesis it is enough to analyze the right side of the assignment.
+   *
+   * @param qVar The variable definition PSI node
+   * @return The inferred type
+   */
+  public static ErlType fromVariable(@NotNull ErlangQVar qVar) {
+//    var psiFile = qVar.getContainingFile();
+//    var project = qVar.getProject();
+
+    var declarations = qVar.getOwnDeclarations();
+    if (declarations.isEmpty()) return new ErlTypeError("Cannot find declaration for " + qVar.getName(), qVar);
+
+    var firstDeclaration = declarations.iterator().next();
+    return new ErlTypeError("First declaration of %d: %s"
+                              .formatted(declarations.size(), firstDeclaration.toString()), qVar);
+
+//    Logger log = Logger.getInstance(ErlTypeFactory.class);
+//    return ErlSimpleType.NIL;
+  }
+
+  /**
+   * Do the guessing for all possible PSI node types, which synthesize a type.
+   *
+   * @return What we guessed, or a null
+   */
+  public static @Nullable ErlType synthesize(PsiElement element) {
+    // For elements with inferrable types, add the inferred type to the doc.
+    if (element instanceof ErlangNamedElement namedElement) {
+      return namedElement.synthesizeType();
+    }
+    if (element instanceof ErlangQAtom) {
+      return ErlSimpleType.ATOM;
+    }
+    if (element instanceof ErlangIntType) {
+      return ErlSimpleType.INTEGER;
+    }
+    if (element instanceof ErlangTupleExpression) {
+      return ErlSimpleType.TUPLE;
+    }
+    if (element instanceof ErlangMapExpression) {
+      return ErlSimpleType.MAP;
+    }
+    if (element instanceof ErlangBinaryExpression) {
+      return ErlSimpleType.BINARY; // or bit_string?
+    }
+    if (element instanceof ErlangListExpression) {
+      return ErlSimpleType.LIST;
+    }
+
+    return null;
   }
 }

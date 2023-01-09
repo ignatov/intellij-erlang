@@ -354,7 +354,7 @@ app_parameter ::= '{'
   | config_exprs)
   '}' {elementType=tuple_expression}
 app_module_expression ::= module_ref {elementType=config_expression}
-app_integer ::= &integer atomic {elementType=config_expression}
+app_integer ::= &integer literal {elementType=config_expression}
 app_env_expression ::= '{' app_atom ',' config_expression '}' {elementType=tuple_expression}
 app_mod ::= '{' app_module_expression ',' config_expression '}' {elementType=tuple_expression}
 app_runtime_deps ::= '[' string_literal? ']' {elementType=list_expression}
@@ -366,7 +366,7 @@ config_expression ::=
   | config_qualified_or_call_expression
   | config_map_construct_expression
   | config_fun_expression
-  | (prefix_op? atomic)
+  | (prefix_op? literal)
   | q_var
 private config_qualified_or_call_expression ::= q_atom left_accessors?
 private left_accessors ::= config_call_expression | qualified_expression+
@@ -428,7 +428,7 @@ qualified_expression ::= q_atom '.' q_atom !'('
 record2_expression ::= record_tail {elementType=record_expression}
 
 max_expression ::=
-    atomic
+    literal
   | q_var
   | tuple_expression
   | expr_with_brackets
@@ -590,7 +590,8 @@ private exprs ::= expression (exprs_tail)* {pin=2 recoverWhile=exprs_recover}
 private exprs_tail ::= ',' expression {pin=1 recoverWhile=exprs_recover}
 private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | else | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
-private atomic ::= q_atom !'(' | integer | (string_literal | macros)+ | float | char
+// A literal value (literal string, integer, float or char)
+private literal ::= q_atom !'(' | integer | (string_literal | macros)+ | float | char
 string_literal ::= string {
   implements = "com.intellij.psi.PsiLanguageInjectionHost"
   methods = [isValidHost updateText createLiteralTextEscaper]

@@ -21,8 +21,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangNamedElement;
-import org.intellij.erlang.types.ErlSimpleType;
+import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeError;
+import org.intellij.erlang.types.ErlTypeFactory;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,6 +40,11 @@ public abstract class ErlangNamedElementImpl extends ErlangCompositeElementImpl 
 
   @Override
   public ErlType synthesizeType() {
-    return ErlSimpleType.FLOAT;
+    if (this instanceof ErlangQVar qVar) {
+      return ErlTypeFactory.fromVariable(qVar);
+    }
+
+    // Not possible to synthesize or an error?
+    return new ErlTypeError("Not possible to synthesize type for %s".formatted(this), this);
   }
 }
