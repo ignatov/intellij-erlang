@@ -106,30 +106,33 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
     }), "Inline variable", null);
   }
 
-  private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {
-    if (!(variableValue instanceof ErlangFunExpression)) return variable.replace(variableValue);
+  private static PsiElement substituteFunctionCall(Project project,
+                                                   PsiElement variable,
+                                                   ErlangExpression variableValue) {
+    if (variableValue instanceof ErlangFunExpression funExpression) {
+      return variable; // No action
+    }
+    else if (variableValue instanceof ErlangFunRefExpression funRefExpression) {
+      ErlangFunctionWithArity functionWithArity = funRefExpression.getFunctionWithArity();
+      PsiElement function = functionWithArity != null ? functionWithArity.getQAtom() : null;
+      if (function == null) return variable; //the condition is always false
 
-    ErlangFunExpression funExpression = (ErlangFunExpression) variableValue;
+      function = variable.replace(function);
 
-    if (null != funExpression.getFunClauses()) return variable.replace(variableValue);
+      PsiElement parent = function.getParent();
+      ErlangModuleRef moduleRef = funRefExpression.getModuleRef();
+      PsiElement module = moduleRef != null ? moduleRef.getQAtom() : null;
+      if (module == null) module = funRefExpression.getQVar();
 
-    ErlangFunctionWithArity functionWithArity = funExpression.getFunctionWithArity();
-    PsiElement function = functionWithArity != null ? functionWithArity.getQAtom() : null;
+      if (module == null || parent == null) return function;
 
-    if (function == null) return variable; //the condition is always false
+      parent.addBefore(module, function);
+      parent.addBefore(ErlangElementFactory.createLeafFromText(project, ":"), function);
 
-    function = variable.replace(function);
-
-    PsiElement parent = function.getParent();
-    ErlangModuleRef moduleRef = funExpression.getModuleRef();
-    PsiElement module = moduleRef != null ? moduleRef.getQAtom() : null;
-    if (module == null) module = funExpression.getQVar();
-
-    if (module == null || parent == null) return function;
-
-    parent.addBefore(module, function);
-    parent.addBefore(ErlangElementFactory.createLeafFromText(project, ":"), function);
-
-    return parent;
+      return parent;
+    }
+    else {
+      return variable.replace(variableValue);
+    }
   }
 }

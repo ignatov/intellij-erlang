@@ -192,6 +192,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitExpression(o);
   }
 
+  public void visitFunRefExpression(@NotNull ErlangFunRefExpression o) {
+    visitExpression(o);
+  }
+
   public void visitFunType(@NotNull ErlangFunType o) {
     visitType(o);
   }
