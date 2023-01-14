@@ -1651,7 +1651,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "config_fun_expression")) return false;
     if (!nextTokenIs(b, "<expression>", ERL_FUNEXPR_FUN)) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, ERL_FUN_EXPRESSION, "<expression>");
+    Marker m = enter_section_(b, l, _NONE_, ERL_FUN_REF_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_FUNEXPR_FUN);
     p = r; // pin = 1
     r = r && report_error_(b, config_fun_expression_1(b, l + 1));

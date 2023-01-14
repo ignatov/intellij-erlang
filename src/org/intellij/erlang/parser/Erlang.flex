@@ -73,10 +73,11 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
 // This is forward scanned to ensure that 'fun' keyword begins a lambda or named lambda
 // Can look like `fun() -> ok end` or `fun Hello() -> ok end`
-FunLookahead = ( {Whitespace}+ {Variable} )? {Whitespace}* "("
+FunLookahead = ({Whitespace}+ {Variable})? {Whitespace}* \x28
 // This is forward-scanned to ensure that 'fun' keyword begins a `fun mod:func/arity` expression
-// Can look like `fun` followed by `<atom|variable> [:/]`
-FunRefLookahead = {Whitespace}+ ( {AtomName} | {QuotedAtomName} ) [:\/]
+// Can look like `fun` followed by `<atom|variable>` and then `:` or `/`
+// TODO: Handling `fun 'quotedatom'...` which is implemented using lexer states
+FunRefLookahead = {Whitespace}+ ({AtomName} | {Variable}) {Whitespace}* (\: | \x2f)
 
 %state IN_QUOTES
 
