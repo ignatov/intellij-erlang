@@ -23,7 +23,7 @@ public interface ErlangFunRefExpression extends ErlangExpression {
   PsiElement getColon();
 
   @NotNull
-  PsiElement getFun2();
+  PsiElement getFunexprFun();
 
   //WARNING: processDeclarations(...) is skipped
   //matching processDeclarations(ErlangFunRefExpression, ...)

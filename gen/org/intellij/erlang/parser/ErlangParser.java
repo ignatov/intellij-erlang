@@ -1649,10 +1649,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '$$fun_ref_expr' !'(' fun_ref_expression_body
   public static boolean config_fun_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_fun_expression")) return false;
-    if (!nextTokenIs(b, "<expression>", ERL_FUN2)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_FUNEXPR_FUN)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_FUN_EXPRESSION, "<expression>");
-    r = consumeToken(b, ERL_FUN2);
+    r = consumeToken(b, ERL_FUNEXPR_FUN);
     p = r; // pin = 1
     r = r && report_error_(b, config_fun_expression_1(b, l + 1));
     r = p && fun_ref_expression_body(b, l + 1) && r;
@@ -2486,33 +2486,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // fun &'(' fun_expression_block
-  public static boolean fun_expression(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "fun_expression")) return false;
-    if (!nextTokenIs(b, "<expression>", ERL_FUN)) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NONE_, ERL_FUN_EXPRESSION, "<expression>");
-    r = consumeToken(b, ERL_FUN);
-    r = r && fun_expression_1(b, l + 1);
-    r = r && fun_expression_block(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // &'('
-  private static boolean fun_expression_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "fun_expression_1")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _AND_);
-    r = consumeToken(b, ERL_PAR_LEFT);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  /* ********************************************************** */
   // fun_clauses end
-  static boolean fun_expression_block(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "fun_expression_block")) return false;
+  static boolean fun_clauses_end(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "fun_clauses_end")) return false;
     if (!nextTokenIs(b, "", ERL_PAR_LEFT, ERL_VAR)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
@@ -2521,6 +2497,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = r && consumeToken(b, ERL_END);
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  /* ********************************************************** */
+  // fun fun_clauses_end
+  public static boolean fun_expression(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "fun_expression")) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_FUN)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, ERL_FUN_EXPRESSION, "<expression>");
+    r = consumeToken(b, ERL_FUN);
+    r = r && fun_clauses_end(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   /* ********************************************************** */
@@ -2548,25 +2537,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '$$fun_ref_expr' !'(' fun_ref_expression_body
+  // '$$fun_ref_expr' fun_ref_expression_body
   public static boolean fun_ref_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_ref_expression")) return false;
-    if (!nextTokenIs(b, "<expression>", ERL_FUN2)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_FUNEXPR_FUN)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_FUN_REF_EXPRESSION, "<expression>");
-    r = consumeToken(b, ERL_FUN2);
-    r = r && fun_ref_expression_1(b, l + 1);
+    r = consumeToken(b, ERL_FUNEXPR_FUN);
     r = r && fun_ref_expression_body(b, l + 1);
-    exit_section_(b, l, m, r, false, null);
-    return r;
-  }
-
-  // !'('
-  private static boolean fun_ref_expression_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "fun_ref_expression_1")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NOT_);
-    r = !consumeToken(b, ERL_PAR_LEFT);
     exit_section_(b, l, m, r, false, null);
     return r;
   }

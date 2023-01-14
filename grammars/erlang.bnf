@@ -65,7 +65,7 @@
   MATCH           = ":="
   ASSOC           = "=>"
   FUN             = "fun" // parsed as ERL_FUN if followed by a "("
-  FUN2            = "$$fun_ref_expr" // fake token replacing 'fun' in mod:func/arity reference
+  FUNEXPR_FUN     = "$$fun_ref_expr" // fake token replacing 'fun' in mod:func/arity reference expr
   ]
 
   extends("assignment_expression|maybe_match_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
@@ -559,12 +559,13 @@ private after_clause ::= after after_clause_body {pin=1}
 after_clause_body ::= <<guarded expression>> clause_body {pin=1}
 
 // An in-place lambda definition: fun Clause1 -> Return1; Clause2 -> Return2; ... end.
-fun_expression ::= fun &'(' fun_expression_block { pin=3 methods=[processDeclarations] }
-private fun_expression_block ::= fun_clauses end {pin=1}
+// Can contain optional Q_VAR like `fun Fact(1) -> 1; Fact(X) when X > 1 -> X * Fact(X - 1) end`
+fun_expression ::= fun fun_clauses_end { pin=3 methods=[processDeclarations] }
+private fun_clauses_end ::= fun_clauses end {pin=1}
 
 // A function reference possibly with module name fun Mod:Fun/Arity
-// Using ERL_FUN2 token which is renamed to '$$fun_ref_expr' in BNF file but is lexed from 'fun' string
-fun_ref_expression ::= '$$fun_ref_expr' !'(' fun_ref_expression_body {pin=3 methods=[processDeclarations]}
+// Using ERL_FUNEXPR_FUN token which is 'fun' renamed to '$$fun_ref_expr' in the lexer
+fun_ref_expression ::= '$$fun_ref_expr' fun_ref_expression_body {pin=2 methods=[processDeclarations]}
 private fun_ref_expression_body ::= [(module_ref | q_var) ':'] (function_with_arity | function_with_arity_variables)
 
 function_with_arity ::= q_atom '/' integer {pin=1 methods=[getReference]}
