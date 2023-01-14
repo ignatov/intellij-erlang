@@ -377,7 +377,7 @@ config_argument_list ::= '(' config_exprs? ')' {elementType=argument_list}
 config_list_expression ::= '[' config_exprs? ']' {elementType=list_expression}
 config_bin_list_expression ::= '<<' config_exprs? '>>' {elementType=binary_expression}
 config_tuple_expression ::= '{' config_exprs? '}' {elementType=tuple_expression}
-config_fun_expression ::= fun !'(' fun_ref_expression_body {elementType=fun_expression pin=1}
+config_fun_expression ::= '$$fun_ref_expr' !'(' fun_ref_expression_body {elementType=fun_expression pin=1}
 
 config_map_construct_expression ::= config_map_tuple {elementType=map_expression}
 config_map_tuple ::= '#' '{' config_map_assoc_list? '}' {pin=1 elementType=map_tuple}
