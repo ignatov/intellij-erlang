@@ -85,7 +85,8 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
             replacementNode = expr.replace(rightWithoutParentheses).getNode();
           }
         }
-        else if (expr instanceof ErlangFunExpression) {
+        else if (expr instanceof ErlangFunExpression
+                 || expr instanceof ErlangFunRefExpression) {
           replacementNode = host.replace(rightWithoutParentheses).getNode();
         }
         else if (expr instanceof ErlangGenericFunctionCallExpression) {
@@ -103,36 +104,35 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
       }
 
       assignment.delete();
-    }), "Inline variable", null);
+    }), "Inline Variable", null);
   }
 
-  private static PsiElement substituteFunctionCall(Project project,
-                                                   PsiElement variable,
-                                                   ErlangExpression variableValue) {
-    if (variableValue instanceof ErlangFunExpression funExpression) {
-      return variable; // No action
-    }
-    else if (variableValue instanceof ErlangFunRefExpression funRefExpression) {
-      ErlangFunctionWithArity functionWithArity = funRefExpression.getFunctionWithArity();
-      PsiElement function = functionWithArity != null ? functionWithArity.getQAtom() : null;
-      if (function == null) return variable; //the condition is always false
-
-      function = variable.replace(function);
-
-      PsiElement parent = function.getParent();
-      ErlangModuleRef moduleRef = funRefExpression.getModuleRef();
-      PsiElement module = moduleRef != null ? moduleRef.getQAtom() : null;
-      if (module == null) module = funRefExpression.getQVar();
-
-      if (module == null || parent == null) return function;
-
-      parent.addBefore(module, function);
-      parent.addBefore(ErlangElementFactory.createLeafFromText(project, ":"), function);
-
-      return parent;
-    }
-    else {
+  private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {
+    if (variableValue instanceof ErlangFunExpression) {
       return variable.replace(variableValue);
     }
+
+    if (!(variableValue instanceof ErlangFunRefExpression funExpression)) {
+      return variable.replace(variableValue);
+    }
+
+    ErlangFunctionWithArity functionWithArity = funExpression.getFunctionWithArity();
+    PsiElement function = functionWithArity != null ? functionWithArity.getQAtom() : null;
+
+    if (function == null) return variable; //the condition is always false
+
+    function = variable.replace(function);
+
+    PsiElement parent = function.getParent();
+    ErlangModuleRef moduleRef = funExpression.getModuleRef();
+    PsiElement module = moduleRef != null ? moduleRef.getQAtom() : null;
+    if (module == null) module = funExpression.getQVar();
+
+    if (module == null || parent == null) return function;
+
+    parent.addBefore(module, function);
+    parent.addBefore(ErlangElementFactory.createLeafFromText(project, ":"), function);
+
+    return parent;
   }
 }
