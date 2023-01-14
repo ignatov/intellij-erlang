@@ -128,6 +128,17 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     }
   }
 
+  public static boolean consumeFunToken(PsiBuilder builder, int ignoredLevel) {
+    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
+
+    if (indexing ? nextTokenIsFast(builder, ErlangTypes.ERL_FUN)
+                 : GeneratedParserUtilBase.nextTokenIs(builder, ErlangTypes.ERL_FUN)) {
+      builder.advanceLexer(); // skip the 'fun' token
+      return true;
+    }
+    return false;
+  }
+
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static boolean consumeToken(PsiBuilder builder, IElementType token) {
     boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;

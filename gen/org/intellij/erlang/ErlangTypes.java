@@ -174,6 +174,7 @@ public interface ErlangTypes {
   IElementType ERL_END = new ErlangTokenType("end");
   IElementType ERL_FLOAT = new ErlangTokenType("float");
   IElementType ERL_FUN = new ErlangTokenType("fun");
+  IElementType ERL_FUN2 = new ErlangTokenType("$$fun_ref_expr");
   IElementType ERL_IF = new ErlangTokenType("if");
   IElementType ERL_INTEGER = new ErlangTokenType("integer");
   IElementType ERL_MATCH = new ErlangTokenType(":=");

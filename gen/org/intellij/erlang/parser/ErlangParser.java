@@ -1572,7 +1572,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | config_bin_list_expression
   //   | config_qualified_or_call_expression
   //   | config_map_construct_expression
-  //   | config_fun_expression 
+  //   | config_fun_expression
   //   | (prefix_op? atomic)
   //   | q_var
   public static boolean config_expression(PsiBuilder b, int l) {
@@ -2548,13 +2548,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // fun !'(' fun_ref_expression_body
+  // '$$fun_ref_expr' !'(' fun_ref_expression_body
   public static boolean fun_ref_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "fun_ref_expression")) return false;
-    if (!nextTokenIs(b, "<expression>", ERL_FUN)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_FUN2)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_FUN_REF_EXPRESSION, "<expression>");
-    r = consumeToken(b, ERL_FUN);
+    r = consumeToken(b, ERL_FUN2);
     r = r && fun_ref_expression_1(b, l + 1);
     r = r && fun_ref_expression_body(b, l + 1);
     exit_section_(b, l, m, r, false, null);

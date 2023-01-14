@@ -86,7 +86,8 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> "end"                         { return ERL_END; }
 <YYINITIAL> "of"                          { return ERL_OF; }
 <YYINITIAL> "case"                        { return ERL_CASE; }
-<YYINITIAL> "fun"                         { return ERL_FUN; }
+<YYINITIAL> "fun" / {Whitespace}*"("      { return ERL_FUN; }
+<YYINITIAL> "fun" / {Whitespace}*\w       { return ERL_FUN2; }
 <YYINITIAL> "try"                         { return ERL_TRY; }
 <YYINITIAL> "catch"                       { return ERL_CATCH; }
 <YYINITIAL> "if"                          { return ERL_IF; }

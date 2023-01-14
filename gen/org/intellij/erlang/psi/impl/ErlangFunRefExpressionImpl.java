@@ -59,8 +59,8 @@ public class ErlangFunRefExpressionImpl extends ErlangExpressionImpl implements 
 
   @Override
   @NotNull
-  public PsiElement getFun() {
-    return notNullChild(findChildByType(ERL_FUN));
+  public PsiElement getFun2() {
+    return notNullChild(findChildByType(ERL_FUN2));
   }
 
 }

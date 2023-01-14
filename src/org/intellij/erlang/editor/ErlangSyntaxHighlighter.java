@@ -94,37 +94,13 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
       return pack(FUNCTION);
     }
 
-    if (
-      ERL_AFTER == type ||
-        ERL_WHEN == type ||
-        ERL_BEGIN == type ||
-        ERL_END == type ||
-        ERL_OF == type ||
-        ERL_CASE == type ||
-        ERL_FUN == type ||
-        ERL_CATCH == type ||
-        ERL_IF == type ||
-        ERL_RECEIVE == type ||
-        ERL_TRY == type ||
-        ERL_ELSE == type ||
-        ERL_MAYBE == type ||
-        ERL_DOT == type ||
-        ERL_ANDALSO == type ||
-        ERL_ORELSE == type ||
-        ERL_DIV == type ||
-        ERL_REM == type ||
-        ERL_XOR == type ||
-        ERL_BXOR == type ||
-        ERL_BOR == type ||
-        ERL_BAND == type ||
-        ERL_BNOT == type ||
-        ERL_AND == type ||
-        ERL_OR == type ||
-        ERL_NOT == type ||
-        ERL_BSL == type ||
-        ERL_BSR == type ||
-        ERL_OR_OR == type
-      ) {
+    if (ERL_AFTER == type || ERL_WHEN == type || ERL_BEGIN == type || ERL_END == type || ERL_OF == type ||
+        ERL_CASE == type || ERL_FUN2 == type || ERL_FUN == type || ERL_CATCH == type || ERL_IF == type ||
+        ERL_RECEIVE == type || ERL_TRY == type || ERL_ELSE == type || ERL_MAYBE == type || ERL_DOT == type ||
+        ERL_ANDALSO == type || ERL_ORELSE == type || ERL_DIV == type || ERL_REM == type || ERL_XOR == type ||
+        ERL_BXOR == type || ERL_BOR == type || ERL_BAND == type || ERL_BNOT == type || ERL_AND == type ||
+        ERL_OR == type || ERL_NOT == type || ERL_BSL == type || ERL_BSR == type || ERL_OR_OR == type)
+    {
       return pack(KEYWORD);
     }
     return TextAttributesKey.EMPTY_ARRAY;
