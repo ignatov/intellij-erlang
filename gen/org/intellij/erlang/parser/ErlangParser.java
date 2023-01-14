@@ -1646,7 +1646,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '$$fun_ref_expr' !'(' fun_ref_expression_body
+  // '$$fun_ref_expr' fun_ref_expression_body
   public static boolean config_fun_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "config_fun_expression")) return false;
     if (!nextTokenIs(b, "<expression>", ERL_FUNEXPR_FUN)) return false;
@@ -1654,20 +1654,9 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_FUN_REF_EXPRESSION, "<expression>");
     r = consumeToken(b, ERL_FUNEXPR_FUN);
     p = r; // pin = 1
-    r = r && report_error_(b, config_fun_expression_1(b, l + 1));
-    r = p && fun_ref_expression_body(b, l + 1) && r;
+    r = r && fun_ref_expression_body(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
-  }
-
-  // !'('
-  private static boolean config_fun_expression_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "config_fun_expression_1")) return false;
-    boolean r;
-    Marker m = enter_section_(b, l, _NOT_);
-    r = !consumeToken(b, ERL_PAR_LEFT);
-    exit_section_(b, l, m, r, false, null);
-    return r;
   }
 
   /* ********************************************************** */
