@@ -43,7 +43,9 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
   }
 
   private static SpacingBuilder createSpacingBuilder(@NotNull CommonCodeStyleSettings settings, @NotNull ErlangCodeStyleSettings erlangSettings) {
+    // Tokens inside ( ) with 0 space before them
     TokenSet rules = TokenSet.create(ERL_RULE, ERL_RECORD_DEFINITION, ERL_INCLUDE, ERL_MACROS_DEFINITION, ERL_ATTRIBUTE);
+    // Keywords with 1 space around them
     TokenSet keywords = TokenSet.create(
       ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_CATCH, ERL_ELSE, ERL_IF, ERL_RECEIVE,
       ERL_TRY, ERL_MAYBE, ERL_DIV, ERL_REM, ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND, ERL_BAND);
@@ -161,11 +163,13 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
       .between(ERL_FUN, ERL_MODULE_REF).spaces(1)
       .between(ERL_FUN, ERL_FUNCTION_WITH_ARITY).spaces(1)
       .betweenInside(ERL_FUN, ERL_Q_VAR, ERL_FUN_EXPRESSION).spaces(1)
+      .betweenInside(ERL_FUN, ERL_Q_VAR, ERL_FUN_REF_EXPRESSION).spaces(1)
       .betweenInside(ERL_FUN, ERL_MODULE_REF, ERL_FUN_EXPRESSION).spaces(1)
+      .betweenInside(ERL_FUN, ERL_MODULE_REF, ERL_FUN_REF_EXPRESSION).spaces(1)
       .between(ERL_MODULE_REF, ERL_COLON).none()
       .between(ERL_COLON, ERL_FUNCTION_WITH_ARITY).none()
       .between(ERL_COLON, ERL_FUNCTION_WITH_ARITY_VARIABLES).none()
-      .betweenInside(ERL_Q_VAR, ERL_COLON, ERL_FUN_EXPRESSION).none()
+      .betweenInside(ERL_Q_VAR, ERL_COLON, ERL_FUN_REF_EXPRESSION).none()
       .between(ERL_FUN, ERL_FUN_CLAUSES).none()
       .before(ERL_END).spaces(1)
 
