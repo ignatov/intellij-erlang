@@ -36,42 +36,57 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   private final static Logger LOG = Logger.getInstance(ErlangDescriptionProvider.class);
 
   @Override
-  public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
-    if (!(o instanceof ErlangCompositeElement)) return null;
-    if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom || o instanceof ErlangTypeRef)) {
-      return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
+  public String getElementDescription(@NotNull PsiElement el, @NotNull ElementDescriptionLocation location) {
+    if (!(el instanceof ErlangCompositeElement)) return null;
+
+    if (location == UsageViewNodeTextLocation.INSTANCE
+        && (el instanceof ErlangNamedElement
+            || el instanceof ErlangQAtom
+            || el instanceof ErlangTypeRef)) {
+      return getElementDescription(el, UsageViewShortNameLocation.INSTANCE);
     }
-    if (location == UsageViewShortNameLocation.INSTANCE ||
-        location == UsageViewLongNameLocation.INSTANCE ||
-        location instanceof DeleteNameDescriptionLocation
+
+    if (location == UsageViewShortNameLocation.INSTANCE
+        || location == UsageViewLongNameLocation.INSTANCE
+        || location instanceof DeleteNameDescriptionLocation
     ) {
-      if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
-      if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
-      if (o instanceof ErlangTypeRef) return o.getText();
-      if (o instanceof ErlangAttribute) {
-        ErlangSpecification spec = ((ErlangAttribute) o).getSpecification();
+      if (el instanceof ErlangNamedElement) return ((ErlangNamedElement) el).getName();
+      if (el instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)el);
+      if (el instanceof ErlangTypeRef) return el.getText();
+      if (el instanceof ErlangAttribute) {
+        ErlangSpecification spec = ((ErlangAttribute) el).getSpecification();
         if (spec != null) return spec.getName();
       }
     }
+
     if (location == HighlightUsagesDescriptionLocation.INSTANCE) {
-      return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
+      return getElementDescription(el, UsageViewShortNameLocation.INSTANCE);
     }
-    if (location == UsageViewTypeLocation.INSTANCE ||
-        location == RefactoringDescriptionLocation.WITH_PARENT ||
-        location instanceof DeleteTypeDescriptionLocation
+
+    if (location == UsageViewTypeLocation.INSTANCE
+        || location == RefactoringDescriptionLocation.WITH_PARENT
+        || location instanceof DeleteTypeDescriptionLocation
+        || location instanceof UsageViewNodeTextLocation
     ) {
-      if (o instanceof ErlangModule) return "module";
-      else if (o instanceof ErlangFunction) return "function";
-      else if (o instanceof ErlangRecordDefinition) return "record";
-      else if (o instanceof ErlangQVar) return "variable";
-      else if (o instanceof ErlangMacrosDefinition) return "macro";
-      else if (o instanceof ErlangTypedExpr) return "record field";
-      else if (o instanceof ErlangTypeDefinition) return "type";
-      else if (o instanceof ErlangAttribute) return "attribute";
-      else if (o instanceof ErlangQAtom) return "atom";
-      else if (o instanceof ErlangTypeRef) return "type";
+      if (el instanceof ErlangModule) return "module";
+      else if (el instanceof ErlangFunction) return "function";
+      else if (el instanceof ErlangRecordDefinition) return "record";
+      else if (el instanceof ErlangQVar) return "variable";
+      else if (el instanceof ErlangMacrosDefinition) return "macro";
+      else if (el instanceof ErlangTypedExpr) return "record field";
+      else if (el instanceof ErlangTypeDefinition) return "type";
+      else if (el instanceof ErlangAttribute) return "attribute";
+      else if (el instanceof ErlangQAtom
+               || el instanceof ErlangAtom) return "atom";
+      else if (el instanceof ErlangFunctionWithArity) return "function reference with arity";
+      else if (el instanceof ErlangFunExpression) return "inline function definition";
+      else if (el instanceof ErlangFunRefExpression) return "function reference";
+      else if (el instanceof ErlangModuleRef) return "module reference";
+      else if (el instanceof ErlangTypeRef) return "type";
     }
-    LOG.error("Unexpected element " + o.getText() + ", class: " + o.getClass() + ", location: " + location.getClass());
+
+    LOG.error("ErlangDescriptionProvider: Unexpected element `%s`, class=`%s`, location=`%s`"
+                .formatted(el.getText(), el.getClass(), location.getClass()));
     return "<unknown>";
   }
 }

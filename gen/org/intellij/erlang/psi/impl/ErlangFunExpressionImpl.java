@@ -30,39 +30,9 @@ public class ErlangFunExpressionImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
-  @Nullable
+  @NotNull
   public ErlangFunClauses getFunClauses() {
-    return PsiTreeUtil.getChildOfType(this, ErlangFunClauses.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangFunctionWithArity getFunctionWithArity() {
-    return PsiTreeUtil.getChildOfType(this, ErlangFunctionWithArity.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangFunctionWithArityVariables getFunctionWithArityVariables() {
-    return PsiTreeUtil.getChildOfType(this, ErlangFunctionWithArityVariables.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangModuleRef getModuleRef() {
-    return PsiTreeUtil.getChildOfType(this, ErlangModuleRef.class);
-  }
-
-  @Override
-  @Nullable
-  public ErlangQVar getQVar() {
-    return PsiTreeUtil.getChildOfType(this, ErlangQVar.class);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getColon() {
-    return findChildByType(ERL_COLON);
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangFunClauses.class));
   }
 
   @Override

@@ -47,8 +47,8 @@ ERL_FILE
       PsiElement(,)(',')
       ERL_TUPLE_EXPRESSION
         PsiElement({)('{')
-        ERL_FUN_EXPRESSION
-          PsiElement(fun)('fun')
+        ERL_FUN_REF_EXPRESSION
+          PsiElement($$fun_ref_expr)('fun')
           ERL_MODULE_REF
             ERL_Q_ATOM
               ERL_ATOM

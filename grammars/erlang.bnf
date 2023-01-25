@@ -64,6 +64,8 @@
   QMARK           = "?"
   MATCH           = ":="
   ASSOC           = "=>"
+  FUN             = "fun" // parsed as ERL_FUN if followed by a "("
+  FUNEXPR_FUN     = "$$fun_ref_expr" // fake token replacing 'fun' in mod:func/arity reference expr
   ]
 
   extends("assignment_expression|maybe_match_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
@@ -375,7 +377,7 @@ config_argument_list ::= '(' config_exprs? ')' {elementType=argument_list}
 config_list_expression ::= '[' config_exprs? ']' {elementType=list_expression}
 config_bin_list_expression ::= '<<' config_exprs? '>>' {elementType=binary_expression}
 config_tuple_expression ::= '{' config_exprs? '}' {elementType=tuple_expression}
-config_fun_expression ::= fun fun_expression_lambda {elementType=fun_expression pin=1}
+config_fun_expression ::= '$$fun_ref_expr' fun_ref_expression_body {elementType=fun_ref_expression pin=1}
 
 config_map_construct_expression ::= config_map_tuple {elementType=map_expression}
 config_map_tuple ::= '#' '{' config_map_assoc_list? '}' {pin=1 elementType=map_tuple}
@@ -438,7 +440,7 @@ max_expression ::=
   | map_comprehension
   | map_construct_expression
   | receive_expression
-  | fun_expression
+  | fun_expression | fun_ref_expression
   | try_expression
   | maybe_expression
   | binary_expression
@@ -555,9 +557,16 @@ argument_definition ::= expression
 receive_expression ::= receive (after_clause | cr_clauses after_clause? ) end {pin(".*")=1}
 private after_clause ::= after after_clause_body {pin=1}
 after_clause_body ::= <<guarded expression>> clause_body {pin=1}
-fun_expression ::= fun (fun_expression_block | fun_expression_lambda) {pin=1 methods=[processDeclarations]}
-private fun_expression_lambda ::= [(module_ref | q_var) ':'] (function_with_arity | function_with_arity_variables)
-private fun_expression_block ::= fun_clauses end {pin=1}
+
+// An in-place lambda definition: fun Clause1 -> Return1; Clause2 -> Return2; ... end.
+// Can contain optional Q_VAR like `fun Fact(1) -> 1; Fact(X) when X > 1 -> X * Fact(X - 1) end`
+fun_expression ::= fun fun_clauses_end { pin=3 methods=[processDeclarations] }
+private fun_clauses_end ::= fun_clauses end {pin=1}
+
+// A function reference possibly with module name fun Mod:Fun/Arity
+// Using ERL_FUNEXPR_FUN token which is 'fun' renamed to '$$fun_ref_expr' in the lexer
+fun_ref_expression ::= '$$fun_ref_expr' fun_ref_expression_body {pin=2 methods=[processDeclarations]}
+private fun_ref_expression_body ::= [(module_ref | q_var) ':'] (function_with_arity | function_with_arity_variables)
 
 function_with_arity ::= q_atom '/' integer {pin=1 methods=[getReference]}
 function_with_arity_variables ::= q_var '/' (integer|q_var) {pin=1}

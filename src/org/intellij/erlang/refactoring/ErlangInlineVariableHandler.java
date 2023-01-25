@@ -85,7 +85,8 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
             replacementNode = expr.replace(rightWithoutParentheses).getNode();
           }
         }
-        else if (expr instanceof ErlangFunExpression) {
+        else if (expr instanceof ErlangFunExpression
+                 || expr instanceof ErlangFunRefExpression) {
           replacementNode = host.replace(rightWithoutParentheses).getNode();
         }
         else if (expr instanceof ErlangGenericFunctionCallExpression) {
@@ -103,15 +104,17 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
       }
 
       assignment.delete();
-    }), "Inline variable", null);
+    }), "Inline Variable", null);
   }
 
   private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {
-    if (!(variableValue instanceof ErlangFunExpression)) return variable.replace(variableValue);
+    if (variableValue instanceof ErlangFunExpression) {
+      return variable.replace(variableValue);
+    }
 
-    ErlangFunExpression funExpression = (ErlangFunExpression) variableValue;
-
-    if (null != funExpression.getFunClauses()) return variable.replace(variableValue);
+    if (!(variableValue instanceof ErlangFunRefExpression funExpression)) {
+      return variable.replace(variableValue);
+    }
 
     ErlangFunctionWithArity functionWithArity = funExpression.getFunctionWithArity();
     PsiElement function = functionWithArity != null ? functionWithArity.getQAtom() : null;

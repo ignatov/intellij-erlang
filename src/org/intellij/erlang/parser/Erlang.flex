@@ -71,6 +71,15 @@ EmptyAtom = ''
 
 Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
+// This is forward scanned to ensure that 'fun' keyword begins a lambda or named lambda
+// Can look like `fun() -> ok end` or `fun Hello() -> ok end`
+FunLookahead = ({Whitespace}+ {Variable})? {Whitespace}* \x28
+// This is forward-scanned to ensure that 'fun' keyword begins a `fun mod:func/arity` expression
+// Can look like `fun` followed by `<atom|variable>` and then `:` or `/`
+// TODO: Handling `fun 'quotedatom'...` which is implemented using lexer states
+SimpleQuotedAtom = \' {NameChar}* \'
+FunRefLookahead = {Whitespace}+ ({AtomName} | {SimpleQuotedAtom} | {Variable}) {Whitespace}* (\: | \x2f)
+
 %state IN_QUOTES
 
 %%
@@ -86,7 +95,8 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> "end"                         { return ERL_END; }
 <YYINITIAL> "of"                          { return ERL_OF; }
 <YYINITIAL> "case"                        { return ERL_CASE; }
-<YYINITIAL> "fun"                         { return ERL_FUN; }
+<YYINITIAL> "fun" / {FunLookahead}        { return ERL_FUN; }
+<YYINITIAL> "fun" / {FunRefLookahead}     { return ERL_FUNEXPR_FUN; }
 <YYINITIAL> "try"                         { return ERL_TRY; }
 <YYINITIAL> "catch"                       { return ERL_CATCH; }
 <YYINITIAL> "if"                          { return ERL_IF; }

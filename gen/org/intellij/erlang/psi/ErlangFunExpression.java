@@ -9,23 +9,8 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 
 public interface ErlangFunExpression extends ErlangExpression {
 
-  @Nullable
+  @NotNull
   ErlangFunClauses getFunClauses();
-
-  @Nullable
-  ErlangFunctionWithArity getFunctionWithArity();
-
-  @Nullable
-  ErlangFunctionWithArityVariables getFunctionWithArityVariables();
-
-  @Nullable
-  ErlangModuleRef getModuleRef();
-
-  @Nullable
-  ErlangQVar getQVar();
-
-  @Nullable
-  PsiElement getColon();
 
   @Nullable
   PsiElement getEnd();

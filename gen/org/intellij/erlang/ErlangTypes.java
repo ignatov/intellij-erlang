@@ -60,6 +60,7 @@ public interface ErlangTypes {
   IElementType ERL_FUN_CLAUSE = new ErlangCompositeElementType("ERL_FUN_CLAUSE");
   IElementType ERL_FUN_CLAUSES = new ErlangCompositeElementType("ERL_FUN_CLAUSES");
   IElementType ERL_FUN_EXPRESSION = new ErlangCompositeElementType("ERL_FUN_EXPRESSION");
+  IElementType ERL_FUN_REF_EXPRESSION = new ErlangCompositeElementType("ERL_FUN_REF_EXPRESSION");
   IElementType ERL_FUN_TYPE = new ErlangCompositeElementType("ERL_FUN_TYPE");
   IElementType ERL_FUN_TYPE_100_T = new ErlangCompositeElementType("ERL_FUN_TYPE_100_T");
   IElementType ERL_FUN_TYPE_ARGUMENTS = new ErlangCompositeElementType("ERL_FUN_TYPE_ARGUMENTS");
@@ -173,6 +174,7 @@ public interface ErlangTypes {
   IElementType ERL_END = new ErlangTokenType("end");
   IElementType ERL_FLOAT = new ErlangTokenType("float");
   IElementType ERL_FUN = new ErlangTokenType("fun");
+  IElementType ERL_FUNEXPR_FUN = new ErlangTokenType("$$fun_ref_expr");
   IElementType ERL_IF = new ErlangTokenType("if");
   IElementType ERL_INTEGER = new ErlangTokenType("integer");
   IElementType ERL_MATCH = new ErlangTokenType(":=");
@@ -365,6 +367,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_FUN_EXPRESSION) {
         return new ErlangFunExpressionImpl(node);
+      }
+      else if (type == ERL_FUN_REF_EXPRESSION) {
+        return new ErlangFunRefExpressionImpl(node);
       }
       else if (type == ERL_FUN_TYPE) {
         return new ErlangFunTypeImpl(node);
