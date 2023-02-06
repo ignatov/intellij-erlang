@@ -39,7 +39,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testFunctionCompletionInTypedList() {
     doTestInclude("foo() -> ok. -record(state, {first = <caret>}).",
-      "begin", "try", "fun", "if",
+      "begin", "try", "fun", "if", "maybe",
       "node", "pid_to_list", "spawn", "binary_to_list",
       "foo");
   }

@@ -155,7 +155,7 @@
         <referencesSearch implementation="org.intellij.erlang.search.ErlangAtomSearch"/>
         <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.search.ErlangTargetElementEvaluator"/>
 
-        <editorNotificationProvider implementation="org.intellij.erlang.inspection.SetupSDKNotificationProvider"/>
+        <editorNotificationProvider implementation="org.intellij.erlang.inspection.ErlangSdkNotificationProvider"/>
 
         <callHierarchyProvider language="Erlang" implementationClass="org.intellij.erlang.hierarchy.ErlangCallHierarchyProvider"/>
 
@@ -214,6 +214,9 @@
         <localInspection language="Erlang" shortName="ErlangFunctionAlreadyImported" displayName="Function already imported"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangFunctionAlreadyImportedInspection"/>
+        <localInspection language="Erlang" shortName="Erlang25Syntax" displayName="Erlang 25.0 syntax"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.Erlang25SyntaxInspection"/>
 
         <!--warnings-->
         <localInspection language="Erlang" shortName="Erlang18Syntax" displayName="Erlang 18.0 syntax"
@@ -263,18 +266,25 @@
         <fileTypeStatisticProvider implementation="org.intellij.erlang.ErlangFileTypeStatisticsProvider"/>
 
         <intentionAction>
+          <language>Erlang</language>
           <className>org.intellij.erlang.intention.ErlangExportFunctionIntention</className>
           <category>Erlang</category>
         </intentionAction>
         <intentionAction>
+          <language>Erlang</language>
           <className>org.intellij.erlang.intention.ErlangExportTypeIntention</className>
           <category>Erlang</category>
         </intentionAction>
         <intentionAction>
+          <language>Erlang</language>
           <className>org.intellij.erlang.intention.ErlangGenerateSpecIntention</className>
           <category>Erlang</category>
         </intentionAction>
-
+        <intentionAction>
+          <language>Erlang</language>
+          <className>org.intellij.erlang.intention.ErlangGenerateDocIntention</className>
+          <category>Erlang</category>
+        </intentionAction>
         <additionalTextAttributes scheme="Default" file="colorSchemes/ErlangDefault.xml"/>
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/ErlangDarcula.xml"/>
     </extensions>

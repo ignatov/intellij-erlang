@@ -1,0 +1,6 @@
+%% @doc
+%% @param A
+%% @param B
+%% @param D
+%% @return
+foo(A, B, {C1, C2}, D) -> ok.

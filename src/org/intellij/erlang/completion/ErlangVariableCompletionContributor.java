@@ -30,7 +30,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangVarProcessor;
 import org.intellij.erlang.psi.impl.ResolveUtil;
-import org.intellij.erlang.types.ErlangExpressionType;
+import org.intellij.erlang.types.ErlType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -86,7 +86,8 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
                                     @NotNull ProcessingContext context,
                                     @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
-        Set<ErlangExpressionType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
+        Set<ErlType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
+
         if (expectedTypes.isEmpty()) return;
 
         Collection<ErlangQVar> vars = new HashSet<>();
@@ -98,7 +99,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
 
           ErlangAssignmentExpression assign = PsiTreeUtil.getParentOfType(v, ErlangAssignmentExpression.class);
           ErlangExpression right = assign != null ? assign.getRight() : null;
-          ErlangExpressionType varType = ErlangExpressionType.create(right);
+          ErlType varType = ErlType.fromExpression(right);
 
           if (ErlangCompletionUtil.containsType(expectedTypes, varType)) {
             addVariable(result, v.getName());

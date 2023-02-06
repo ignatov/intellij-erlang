@@ -59,7 +59,7 @@ import org.intellij.erlang.rebar.util.RebarConfigUtil;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.stubs.index.ErlangBehaviourModuleIndex;
-import org.intellij.erlang.types.ErlangExpressionType;
+import org.intellij.erlang.types.ErlType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -234,13 +234,16 @@ public class ErlangCompletionContributor extends CompletionContributor {
                                     @NotNull ProcessingContext context,
                                     @NotNull CompletionResultSet result) {
         PsiElement position = parameters.getPosition();
-        Set<ErlangExpressionType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
+        Set<ErlType> expectedTypes = ErlangCompletionUtil.expectedArgumentTypes(position);
+
         if (expectedTypes.isEmpty()) return;
 
         List<LookupElement> functionLookupElements = getFunctionLookupElements(position.getContainingFile(), false, null);
+
         for (LookupElement lookupElement : functionLookupElements) {
           ErlangFunction function = ObjectUtils.tryCast(lookupElement.getPsiElement(), ErlangFunction.class);
-          ErlangExpressionType type = function != null ? ErlangExpressionType.calculateFunctionType(function) : null;
+          ErlType type = function != null ? ErlType.calculateFunctionType(function) : null;
+
           if (type != null && ErlangCompletionUtil.containsType(expectedTypes, type)) {
             result.addElement(lookupElement);
           }

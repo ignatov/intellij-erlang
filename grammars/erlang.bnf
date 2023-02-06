@@ -39,6 +39,7 @@
   OP_EQ           = "="
   OP_EXL          = "!"
   OP_LT_MINUS     = "<-"
+  OP_MAYBE_EQ     = "?="
 
   BIN_START       = "<<"
   BIN_END         = ">>"
@@ -65,7 +66,7 @@
   ASSOC           = "=>"
   ]
 
-  extends("assignment_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
+  extends("assignment_expression|maybe_match_expression|send_expression|orelse_expression|andalso_expression|comp_op_expression|list_op_expression|additive_expression|multiplicative_expression")=fake_binary_expression
   extends(".*_(expression|comprehension|literal)")=expression
 
   name(".*_(expression|comprehension|literal)")=expression
@@ -82,7 +83,7 @@
   extends("behaviour|type_definition|include|include_lib|callback_spec|callback_function")="org.intellij.erlang.psi.impl.ErlangStubbedPsiElementBase<?>"
   elementTypeFactory("function|behaviour|module|record_definition|type_definition|macros_definition|include|include_lib|callback_spec|callback_function|specification")="org.intellij.erlang.ErlangElementTypeFactory.factory"
 
-  implements("case_expression|try_expression|receive_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
+  implements("case_expression|try_expression|receive_expression|maybe_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
 }
 
 forms ::= console_expression | application_file_expression | form_with_period *
@@ -92,7 +93,7 @@ private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
 private empty ::= ()
 private form_with_period ::= form period {recoverWhile=form_recover pin=1}
 private left period ::= '.' | <<isModeOn "ELSE">> <<exitMode "ELSE">>
-private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '#'| '.')
+private form_recover ::= !('+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '#' | '.')
 private form ::=
     is_config config_expression
   | function
@@ -219,7 +220,7 @@ type_ref ::= q_atom {
 }
 
 ifdef_ifndef_undef_attribute ::= &('ifdef'|'ifndef'|'undef') atom_name '(' macros_name ')' {pin=2 elementType=atom_attribute}
-else_atom_attribute ::= &'else' atom_name {elementType=atom_attribute}
+else_atom_attribute ::= 'else' {pin=1}
 on_load ::= &'on_load' atom_name '(' function_with_arity ')'{pin=2 elementType=atom_attribute}
 atom_attribute ::= atom_name ['(' typed_attr_val ')' | typed_attr_val | attr_val] {methods=[getName]}
 export_functions ::= '[' export_function_list? ']' {pin=1}
@@ -290,7 +291,7 @@ type ::=
   | map_type {pin(".*")=1}
 record_like_type ::= '{' top_type_list? '}'
 
-int_type ::= '-'? (integer | macros argument_list?)
+int_type ::= '-'? (integer | macros argument_list? | char)
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {extends=type pin(".*")=1}
 fun_type ::= fun_type_arguments top_type_clause {extends=type pin=1}
 top_type_clause ::= '->' top_type {pin=1}
@@ -439,6 +440,7 @@ max_expression ::=
   | receive_expression
   | fun_expression
   | try_expression
+  | maybe_expression
   | binary_expression
   | begin_end_expression
 
@@ -571,6 +573,10 @@ try_clauses ::= try_clause (';' try_clause)*
 try_clause ::= <<guarded try_argument_definition>> clause_guard? clause_body {pin=1}
 private try_argument_definition ::= [argument_definition ':'] argument_definition
 
+maybe_expression ::= maybe maybe_match_exprs [else cr_clauses] end {pin(".*")=1}
+maybe_match_exprs ::= (maybe_match_expression | expression) [',' maybe_match_exprs] (exprs_tail)* {pin=3 recoverWhile=exprs_recover}
+maybe_match_expression ::= expression '?=' expression { rightAssociative=true }
+
 argument_list ::= '(' call_exprs? ')'
 
 fake fake_binary_expression ::= expression+ {
@@ -582,7 +588,7 @@ fake fake_binary_expression ::= expression+ {
 
 private exprs ::= expression (exprs_tail)* {pin=2 recoverWhile=exprs_recover}
 private exprs_tail ::= ',' expression {pin=1 recoverWhile=exprs_recover}
-private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | end | of | atom '(')
+private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | else | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
 private atomic ::= q_atom !'(' | integer | (string_literal | macros)+ | float | char
 string_literal ::= string {
@@ -591,10 +597,10 @@ string_literal ::= string {
 }
 
 private prefix_op ::= '+' | '-' | bnot | not
-private mult_op ::= '/' |'*' | div | rem  | band | and
-private add_op ::= '+' |'-' | bor | bxor | bsl | bsr | or | xor
+private mult_op ::= '/' | '*' | div | rem  | band | and
+private add_op ::= '+' | '-' | bor | bxor | bsl | bsr | or | xor
 private list_op ::= '++' | '--'
-private comp_op ::= '==' | '/=' |'=<' |'<' |'>=' |'>' |'=:=' |'=/='
+private comp_op ::= '==' | '/=' | '=<' |'<' | '>=' | '>' | '=:=' | '=/='
 
 rule ::= rule_clause (';' rule_clause)* {pin(".*")=1}
 rule_clause ::= q_atom argument_list clause_guard? rule_body

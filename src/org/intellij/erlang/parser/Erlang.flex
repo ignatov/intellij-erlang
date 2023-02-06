@@ -91,6 +91,8 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> "catch"                       { return ERL_CATCH; }
 <YYINITIAL> "if"                          { return ERL_IF; }
 <YYINITIAL> "receive"                     { return ERL_RECEIVE; }
+<YYINITIAL> "maybe"                       { return ERL_MAYBE; }
+<YYINITIAL> "else"                        { return ERL_ELSE; }
 
 <YYINITIAL> ":="                          { return ERL_MATCH; }
 <YYINITIAL> "=>"                          { return ERL_ASSOC; }
@@ -124,6 +126,7 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> "++"                           { return ERL_OP_PLUS_PLUS; }
 <YYINITIAL> "--"                           { return ERL_OP_MINUS_MINUS; }
 <YYINITIAL> "="                            { return ERL_OP_EQ; }
+<YYINITIAL> "?="                           { return ERL_OP_MAYBE_EQ; }
 <YYINITIAL> "!"                            { return ERL_OP_EXL; }
 <YYINITIAL> "<-"                           { return ERL_OP_LT_MINUS; }
 <YYINITIAL> "<="                           { return ERL_OP_LT_EQ; }

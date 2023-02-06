@@ -26,9 +26,12 @@ public abstract class ErlangQuickFixTestBase extends ErlangLightPlatformCodeInsi
 
   protected void doTest(String quickFixName) {
     String testName = getTestName(true);
+
     myFixture.configureByFile(testName + ".erl");
     launchIntention(quickFixName);
+
     String after = String.format("%s-after.erl", testName);
+
     myFixture.checkResultByFile(after);
   }
 }

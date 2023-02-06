@@ -75,7 +75,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
     if (type == ERL_INTEGER || type == ERL_FLOAT) {
       return pack(NUMBER);
     }
-    if (type == ERL_OP_EQ) {
+    if (type == ERL_OP_EQ || type == ERL_OP_MAYBE_EQ) {
       return pack(OP_SIGN);
     }
     if (type == ERL_PAR_LEFT || type == ERL_PAR_RIGHT) {
@@ -106,6 +106,8 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
         ERL_IF == type ||
         ERL_RECEIVE == type ||
         ERL_TRY == type ||
+        ERL_ELSE == type ||
+        ERL_MAYBE == type ||
         ERL_DOT == type ||
         ERL_ANDALSO == type ||
         ERL_ORELSE == type ||
@@ -125,6 +127,6 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
       ) {
       return pack(KEYWORD);
     }
-    return EMPTY;
+    return TextAttributesKey.EMPTY_ARRAY;
   }
 }

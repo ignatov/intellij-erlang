@@ -98,6 +98,32 @@
         <option name="OTHER" value="false" />
       </context>
     </template>
+    <template name="maybe" value="maybe&#10;    $EXPR$&#10;end" description="maybe...end" toReformat="false" toShortenFQNames="true">
+      <variable name="EXPR" expression="completeSmart()" defaultValue="" alwaysStopAt="false" />
+      <context>
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
+      </context>
+    </template>
+    <template name="mayel" value="maybe&#10;    $EXPR$&#10;else&#10;    $PATTERN$ -&gt; $END$&#10;end" description="maybe...else...end" toReformat="false" toShortenFQNames="true">
+      <variable name="EXPR" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
+      <variable name="PATTERN" expression="" defaultValue="" alwaysStopAt="true" />
+      <context>
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
+      </context>
+    </template>
+    <template name="M" value="maybe&#10;    $EXPR$&#10;else&#10;    $PATTERN$ -&gt; $END$&#10;end" description="surround with maybe...else...end" toReformat="false" toShortenFQNames="true">
+      <variable name="EXPR" expression="complete()" defaultValue="" alwaysStopAt="true" />
+      <variable name="PATTERN" expression="" defaultValue="" alwaysStopAt="true" />
+      <context>
+        <option name="ERLANG_STATEMENT" value="true" />
+        <option name="ERLANG_EXPRESSION" value="true" />
+        <option name="OTHER" value="false" />
+      </context>
+    </template>
     <template name="spec" value="-spec $NAME$/$ARITY$ :: ($ARGUMENTS$) -&gt; $RESULT$.$END$" description="define spec" toReformat="false" toShortenFQNames="true">
       <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
       <variable name="ARITY" expression="" defaultValue="" alwaysStopAt="true" />

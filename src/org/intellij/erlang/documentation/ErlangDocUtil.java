@@ -30,22 +30,35 @@ import java.util.Set;
 
 public final class ErlangDocUtil {
 
-  /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id59379">Overview tags</a> */
-  private static final Set<String> EDOC_OVERVIEW_TAGS = ContainerUtil.set(
-    "@author", "@copyright", "@doc", "@reference", "@see", "@since", "@title", "@version"
-  );
-  /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id60723">Module tags</a> */
-  public static final Set<String> EDOC_MODULE_TAGS = ContainerUtil.set(
-    "@author", "@copyright", "@deprecated", "@doc", "@hidden", "@private", "@reference", "@see", "@since", "@version"
-  );
-  /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id56868">Function tags</a> */
-  public static final Set<String> EDOC_FUNCTION_TAGS = ContainerUtil.set(
-    "@deprecated", "@doc", "@equiv", "@hidden", "@private", "@see", "@since", "@spec", "@throws"
-  );
-  /** <a href="www.erlang.org/doc/apps/edoc/chapter.html#id64336">Generic tags</a> */
+  /**
+   * <a href="https://www.erlang.org/doc/apps/edoc/chapter.html#generic-tags">Generic tags</a>
+   */
   private static final Set<String> EDOC_GENERIC_TAGS = ContainerUtil.set(
     "@clear", "@docfile", "@end", "@headerfile", "@todo", "@TODO", "@type"
   );
+
+  /**
+   * <a href="https://www.erlang.org/doc/apps/edoc/chapter.html#overview-tags">Overview tags</a>
+   */
+  private static final Set<String> EDOC_OVERVIEW_TAGS = ContainerUtil.set(
+    "@author", "@copyright", "@doc", "@reference", "@see", "@since", "@title", "@version"
+  );
+
+  /**
+   * <a href="https://www.erlang.org/doc/apps/edoc/chapter.html#module-tags">Module tags</a>
+   */
+  public static final Set<String> EDOC_MODULE_TAGS = ContainerUtil.set(
+    "@author", "@copyright", "@deprecated", "@doc", "@hidden", "@private", "@reference", "@see", "@since", "@version"
+  );
+
+  /**
+   * <a href="https://www.erlang.org/doc/apps/edoc/chapter.html#function-tags">Function tags</a>
+   */
+  public static final Set<String> EDOC_FUNCTION_TAGS = ContainerUtil.set(
+    "@deprecated", "@doc", "@equiv", "@hidden", "@param", "@private", "@returns",
+    "@see", "@since", "@spec", "@throws", "@type"
+  );
+
 
   static {
     EDOC_OVERVIEW_TAGS.addAll(EDOC_GENERIC_TAGS);

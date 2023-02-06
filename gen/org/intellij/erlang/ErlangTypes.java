@@ -43,6 +43,7 @@ public interface ErlangTypes {
   IElementType ERL_CONFIG_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_CONFIG_CALL_EXPRESSION");
   IElementType ERL_CONFIG_EXPRESSION = new ErlangCompositeElementType("ERL_CONFIG_EXPRESSION");
   IElementType ERL_CR_CLAUSE = new ErlangCompositeElementType("ERL_CR_CLAUSE");
+  IElementType ERL_ELSE_ATOM_ATTRIBUTE = new ErlangCompositeElementType("ERL_ELSE_ATOM_ATTRIBUTE");
   IElementType ERL_EXPORT = new ErlangCompositeElementType("ERL_EXPORT");
   IElementType ERL_EXPORT_FUNCTION = new ErlangCompositeElementType("ERL_EXPORT_FUNCTION");
   IElementType ERL_EXPORT_FUNCTIONS = new ErlangCompositeElementType("ERL_EXPORT_FUNCTIONS");
@@ -92,6 +93,9 @@ public interface ErlangTypes {
   IElementType ERL_MAP_TUPLE = new ErlangCompositeElementType("ERL_MAP_TUPLE");
   IElementType ERL_MAP_TYPE = new ErlangCompositeElementType("ERL_MAP_TYPE");
   IElementType ERL_MAX_EXPRESSION = new ErlangCompositeElementType("ERL_MAX_EXPRESSION");
+  IElementType ERL_MAYBE_EXPRESSION = new ErlangCompositeElementType("ERL_MAYBE_EXPRESSION");
+  IElementType ERL_MAYBE_MATCH_EXPRESSION = new ErlangCompositeElementType("ERL_MAYBE_MATCH_EXPRESSION");
+  IElementType ERL_MAYBE_MATCH_EXPRS = new ErlangCompositeElementType("ERL_MAYBE_MATCH_EXPRS");
   IElementType ERL_MODEL_FIELD_LIST = new ErlangCompositeElementType("ERL_MODEL_FIELD_LIST");
   IElementType ERL_MODULE = ErlangElementTypeFactory.factory("ERL_MODULE");
   IElementType ERL_MODULE_REF = new ErlangCompositeElementType("ERL_MODULE_REF");
@@ -165,12 +169,14 @@ public interface ErlangTypes {
   IElementType ERL_DOT = new ErlangTokenType(".");
   IElementType ERL_DOT_DOT = new ErlangTokenType("..");
   IElementType ERL_DOT_DOT_DOT = new ErlangTokenType("...");
+  IElementType ERL_ELSE = new ErlangTokenType("else");
   IElementType ERL_END = new ErlangTokenType("end");
   IElementType ERL_FLOAT = new ErlangTokenType("float");
   IElementType ERL_FUN = new ErlangTokenType("fun");
   IElementType ERL_IF = new ErlangTokenType("if");
   IElementType ERL_INTEGER = new ErlangTokenType("integer");
   IElementType ERL_MATCH = new ErlangTokenType(":=");
+  IElementType ERL_MAYBE = new ErlangTokenType("maybe");
   IElementType ERL_NOT = new ErlangTokenType("not");
   IElementType ERL_OF = new ErlangTokenType("of");
   IElementType ERL_OP_AR_DIV = new ErlangTokenType("/");
@@ -187,6 +193,7 @@ public interface ErlangTypes {
   IElementType ERL_OP_LT = new ErlangTokenType("<");
   IElementType ERL_OP_LT_EQ = new ErlangTokenType("<=");
   IElementType ERL_OP_LT_MINUS = new ErlangTokenType("<-");
+  IElementType ERL_OP_MAYBE_EQ = new ErlangTokenType("?=");
   IElementType ERL_OP_MINUS = new ErlangTokenType("-");
   IElementType ERL_OP_MINUS_MINUS = new ErlangTokenType("--");
   IElementType ERL_OP_OR = new ErlangTokenType("|");
@@ -310,6 +317,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_CR_CLAUSE) {
         return new ErlangCrClauseImpl(node);
+      }
+      else if (type == ERL_ELSE_ATOM_ATTRIBUTE) {
+        return new ErlangElseAtomAttributeImpl(node);
       }
       else if (type == ERL_EXPORT) {
         return new ErlangExportImpl(node);
@@ -454,6 +464,15 @@ public interface ErlangTypes {
       }
       else if (type == ERL_MAX_EXPRESSION) {
         return new ErlangMaxExpressionImpl(node);
+      }
+      else if (type == ERL_MAYBE_EXPRESSION) {
+        return new ErlangMaybeExpressionImpl(node);
+      }
+      else if (type == ERL_MAYBE_MATCH_EXPRESSION) {
+        return new ErlangMaybeMatchExpressionImpl(node);
+      }
+      else if (type == ERL_MAYBE_MATCH_EXPRS) {
+        return new ErlangMaybeMatchExprsImpl(node);
       }
       else if (type == ERL_MODEL_FIELD_LIST) {
         return new ErlangModelFieldListImpl(node);
