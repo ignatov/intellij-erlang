@@ -47,6 +47,16 @@ public class ErlangCompilerErrorTest extends UsefulTestCase {
     );
   }
 
+  public void testMatchesMessageFromErlc24OnLinux() {
+    doRegexMatchTest(
+      "/srv/work/docker-dev/MSVE_dev_env/project/mpro/src/mpro_rest_proxy.erl:476:1: Warning: function merge_pdus/1 is unused\\n'",
+      "/srv/work/docker-dev/MSVE_dev_env/project/mpro/src/mpro_rest_proxy.erl",
+      "476:1",
+      " Warning:",
+      "function merge_pdus/1 is unused\\n'"
+    );
+  }
+
   private static void doRegexMatchTest(
     @NotNull String erlcMessage,
     @Nullable String path,
@@ -56,9 +66,14 @@ public class ErlangCompilerErrorTest extends UsefulTestCase {
   ) {
     Matcher matcher = COMPILER_MESSAGE_PATTERN.matcher(erlcMessage);
     assertTrue(matcher.matches());
-    assertEquals(path, matcher.group(PATH_MATCH_INDEX));
-    assertEquals(line, matcher.group(LINE_MATCH_INDEX));
-    assertEquals(warning, matcher.group(WARNING_MATCH_INDEX));
-    assertEquals(details, matcher.group(DETAILS_MATCH_INDEX));
+    String pathT=matcher.group(PATH_MATCH_INDEX);
+    String lineT=matcher.group(LINE_MATCH_INDEX);
+    String warnT=matcher.group(WARNING_MATCH_INDEX);
+    String detaT=matcher.group(DETAILS_MATCH_INDEX);
+
+    assertEquals(path, pathT);
+    assertEquals(line, lineT);
+    assertEquals(warning,warnT );
+    assertEquals(details, detaT);
   }
 }
