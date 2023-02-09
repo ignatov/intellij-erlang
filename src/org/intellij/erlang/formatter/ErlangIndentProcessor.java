@@ -110,7 +110,7 @@ public class ErlangIndentProcessor {
         return Indent.getNormalIndent(myErlangSettings.INDENT_RELATIVE);
       }
     }
-    if (ErlangParserDefinition.COMMENTS.contains(elementType) && parentType == ERL_TRY_EXPRESSION) {
+    if (ErlangParserDefinition.COMMENTS.contains(elementType) && (parentType == ERL_TRY_EXPRESSION || parentType == ERL_MAYBE_EXPRESSION)) {
       return Indent.getNormalIndent();
     }
     if (needIndent(parentType)) {
