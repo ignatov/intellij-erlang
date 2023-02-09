@@ -3140,7 +3140,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '-'? (integer | macros argument_list?)
+  // '-'? (integer | macros argument_list? | char)
   public static boolean int_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type")) return false;
     boolean r;
@@ -3158,13 +3158,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // integer | macros argument_list?
+  // integer | macros argument_list? | char
   private static boolean int_type_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, ERL_INTEGER);
     if (!r) r = int_type_1_1(b, l + 1);
+    if (!r) r = consumeToken(b, ERL_CHAR);
     exit_section_(b, m, null, r);
     return r;
   }

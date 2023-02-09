@@ -16,29 +16,28 @@
 
 package org.intellij.erlang.quickfixes;
 
-import com.intellij.codeInsight.template.TemplateBuilder;
-import com.intellij.codeInsight.template.TemplateBuilderFactory;
+import com.intellij.codeInsight.template.Template;
+import com.intellij.codeInsight.template.TemplateManager;
+import com.intellij.codeInsight.template.impl.ConstantNode;
 import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangElementFactory;
-import org.intellij.erlang.types.ErlangExpressionType;
+import org.intellij.erlang.types.ErlType;
+import org.intellij.erlang.types.ErlTypeUnion;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
-  public static final String NAME = "Generate spec";
+  public static final String NAME = "Generate function spec";
+  private static final String ANY_TYPE_STRING = "any()";
 
   @NotNull
   @Override
@@ -48,95 +47,139 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-    ErlangFunction function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunction.class, false);
+    var function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunction.class, false);
+
     if (function != null) {
-      Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+      var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+
       if (editor != null) {
         generateSpec(editor, function);
       }
     }
   }
 
-  public static void generateSpec(@NotNull Editor editor, @NotNull ErlangFunction function) {
-    PsiFile containingFile = function.getContainingFile();
-    if (!(containingFile instanceof ErlangFile)) return;
-    ErlangFile file = (ErlangFile) containingFile;
-    Project project = function.getProject();
-    ErlangAttribute spec = createSpecTemplate(function, file, project);
-    runSpecTemplateEditor(editor, spec);
-  }
+  /**
+   * Try and guess variable name used in the given expression, for spec argument naming purpose.
+   * @return The guess or null
+   */
+  private static @Nullable String guessArgumentName(ErlangCompositeElement expression) {
+    var unwrapResult = PsiExprUtil.extractQVarFromAssignment((ErlangExpression) expression);
 
-  private static void runSpecTemplateEditor(final Editor editor, final ErlangAttribute attr) {
-    if (ApplicationManager.getApplication().isUnitTestMode()) return;
-    ApplicationManager.getApplication().invokeLater(() -> CommandProcessor.getInstance().executeCommand(editor.getProject(), () -> ApplicationManager.getApplication().runWriteAction(() -> {
-      TemplateBuilder templateBuilder = TemplateBuilderFactory.getInstance().createTemplateBuilder(attr);
-      ErlangFunType funType = PsiTreeUtil.findChildOfType(attr, ErlangFunType.class);
-      Collection<ErlangType> types = PsiTreeUtil.findChildrenOfType(funType, ErlangType.class);
-      for (ErlangType type : types) {
-        templateBuilder.replaceElement(type, type.getText());
+    if (unwrapResult.qVar != null) return unwrapResult.qVar.getName();
+
+    if (unwrapResult.expression instanceof ErlangRecordExpression) {
+      var recordRef = ((ErlangRecordExpression) expression).getRecordRef();
+
+      if (recordRef != null) {
+        var RecordName = recordRef.getQAtom().getText();
+        return RecordName.length() > 0
+               ? RecordName.substring(0, 1).toUpperCase() + RecordName.substring(1)
+               : null;
       }
-      templateBuilder.run(editor, false);
-    }), "Generate spec template editor", null));
+    }
+    return null;
   }
 
-  private static ErlangAttribute createSpecTemplate(ErlangFunction function, ErlangFile file, Project project) {
-    String text = function.getName() + '(' + computeArgsTypeSpecs(function) + ')' + " -> " + getTypeString(computeReturnType(function)) + '.';
-    PsiElement spec = file.addBefore(ErlangElementFactory.createSpecFromText(project, text), function);
-    file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n"), function);
-    return (ErlangAttribute) spec;
+  private static List<ErlangExpression> getArgumentPatterns(ErlangFunction function, int argumentIdx) {
+    var clauses = function.getFunctionClauseList();
+    var argumentPatterns = new ArrayList<ErlangExpression>(clauses.size());
+
+    for (var clause : clauses) {
+      var argDefList = clause.getArgumentDefinitionList();
+      var clauseArgs = argDefList.getArgumentDefinitionList();
+      var argDef = argumentIdx < clauseArgs.size() ? clauseArgs.get(argumentIdx) : null;
+
+      ContainerUtil.addIfNotNull(argumentPatterns, argDef != null ? argDef.getExpression() : null);
+    }
+    return argumentPatterns;
   }
 
-  private static String computeArgsTypeSpecs(ErlangFunction function) {
-    StringBuilder argTypes = new StringBuilder();
+  private static String computeArgumentDescriptionString(ErlangFunction function, int argumentIdx) {
+    var argumentPatterns = getArgumentPatterns(function, argumentIdx);
+
+    if (argumentPatterns.isEmpty()) return ErlType.ANY_TYPE.toString();
+
+    var argType = new ErlTypeUnion(null);
+
+    for (ErlangExpression expression : argumentPatterns) {
+      var unwrapResult = PsiExprUtil.extractQVarFromAssignment(expression);
+      var exprType = ErlType.fromExpression(unwrapResult.expression);
+
+      argType.add(exprType);
+    }
+
+    String typeString = argType.toString();
+    var argName = guessArgumentName(argumentPatterns.get(0));
+
+    return argName == null || argName.isEmpty()
+           ? typeString
+           : "%s::%s".formatted(argName, typeString);
+  }
+
+  /**
+   * Add comma separated function args as template variables
+   */
+  private static void addArgsTypeSpecsAsTemplateFields(Template template, ErlangFunction function) {
     int arity = function.getArity();
+
     for (int i = 0; i < arity; i++) {
-      ErlangExpressionType argType = computeArgumentType(function, i);
-      argTypes.append(getTypeString(argType)).append(", ");
+      if (i > 0) template.addTextSegment(", ");
+
+      var argTypeText = computeArgumentDescriptionString(function, i);
+
+      template.addVariable("ARG" + i, new ConstantNode(argTypeText), true);
     }
-    if (arity != 0) {
-      argTypes.setLength(argTypes.length() - 2);
-    }
-    return argTypes.toString();
   }
 
-  private static String getTypeString(ErlangExpressionType t) {
-    return t == ErlangExpressionType.UNKNOWN ? "any()" : t.getName().toLowerCase() + "()";
+  private static ErlType computeCommonType(List<ErlangExpression> expressions) {
+    var types = expressions.stream().map(ErlType::fromExpression).toList();
+    var unionType = new ErlTypeUnion(types);
+
+    // Empty union by default converges to NONE_TYPE, but we want ANY_TYPE instead
+    return unionType.isEmpty()
+           ? ErlType.ANY_TYPE
+           : types.get(0);
   }
 
-  private static ErlangExpressionType computeReturnType(ErlangFunction function) {
-    List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
-    List<ErlangExpression> lastExpressions = new ArrayList<>(clauses.size());
+  private static ErlType computeReturnType(ErlangFunction function) {
+    var clauses = function.getFunctionClauseList();
+    var lastExpressions = new ArrayList<ErlangExpression>(clauses.size());
+
     for (ErlangFunctionClause clause : clauses) {
-      ErlangClauseBody clauseBody = clause.getClauseBody();
+      var clauseBody = clause.getClauseBody();
+
       if (clauseBody != null) {
-        ErlangExpression lastExpressionInClause = ContainerUtil.getLastItem(clauseBody.getExpressionList());
+        var lastExpressionInClause = ContainerUtil.getLastItem(clauseBody.getExpressionList());
         ContainerUtil.addIfNotNull(lastExpressions, lastExpressionInClause);
       }
     }
     return computeCommonType(lastExpressions);
   }
 
-  private static ErlangExpressionType computeArgumentType(ErlangFunction function, int argumentIdx) {
-    List<ErlangExpression> argumentPatterns = getArgumentPatterns(function, argumentIdx);
-    return computeCommonType(argumentPatterns);
+  private static Template createErlangSpecTemplate(ErlangFunction function, Project project) {
+    var template = TemplateManager.getInstance(project).createTemplate("", "");
+    template.setToReformat(true);
+
+    template.addTextSegment("-spec " + function.getName() + "(");
+    addArgsTypeSpecsAsTemplateFields(template, function);
+    template.addTextSegment(") -> ");
+    template.addVariable("RETURN", new ConstantNode(computeReturnType(function).toString()), true);
+    template.addTextSegment(".\n");
+
+    template.addEndVariable();
+    return template;
   }
 
-  private static List<ErlangExpression> getArgumentPatterns(ErlangFunction function, int argumentIdx) {
-    List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
-    List<ErlangExpression> argumentPatterns = new ArrayList<>(clauses.size());
-    for (ErlangFunctionClause clause : clauses) {
-      ErlangArgumentDefinitionList argDefList = clause.getArgumentDefinitionList();
-      List<ErlangArgumentDefinition> clauseArgs = argDefList.getArgumentDefinitionList();
-      ErlangArgumentDefinition argDef = argumentIdx < clauseArgs.size() ? clauseArgs.get(argumentIdx) : null;
-      ContainerUtil.addIfNotNull(argumentPatterns, argDef != null ? argDef.getExpression() : null);
-    }
-    return argumentPatterns;
-  }
+  public static void generateSpec(@NotNull Editor editor, @NotNull ErlangFunction function) {
+    var containingFile = function.getContainingFile();
 
-  private static ErlangExpressionType computeCommonType(List<ErlangExpression> expressions) {
-    List<ErlangExpressionType> types = ContainerUtil.map(expressions, ErlangExpressionType::create);
-    //TODO compute common type
-    return types.isEmpty() ? ErlangExpressionType.UNKNOWN : types.get(0);
-  }
+    if (!(containingFile instanceof ErlangFile)) return;
 
+    var project = Objects.requireNonNull(editor.getProject());
+    var textOffset = function.getTextOffset();
+    var template = createErlangSpecTemplate(function, project);
+
+    editor.getCaretModel().moveToOffset(textOffset);
+    TemplateManager.getInstance(project).startTemplate(editor, template);
+  }
 }

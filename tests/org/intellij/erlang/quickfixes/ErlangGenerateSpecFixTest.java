@@ -31,6 +31,7 @@ public class ErlangGenerateSpecFixTest extends ErlangQuickFixTestBase {
   public void testNoActionIfSpecExists() {
     String testName = getTestName(true);
     myFixture.configureByFile(testName + ".erl");
-    assertNoIntentionsAvailable(ErlangGenerateSpecFix.NAME, "Generate spec fix should not be available if spec already exists.");
+    assertNoIntentionsAvailable(ErlangGenerateSpecFix.NAME,
+                                "Generate spec fix should not be available if spec already exists.");
   }
 }

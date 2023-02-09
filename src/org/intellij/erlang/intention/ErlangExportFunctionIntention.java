@@ -44,6 +44,7 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
+    // TODO: Copy -export... popup chooser from ErlangExportFunctionFix
     if (function != null) {
       new ErlangExportFunctionFix(function).invoke(project, file, editor, function, null); // todo: inline the whole class
     }

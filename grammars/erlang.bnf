@@ -291,7 +291,7 @@ type ::=
   | map_type {pin(".*")=1}
 record_like_type ::= '{' top_type_list? '}'
 
-int_type ::= '-'? (integer | macros argument_list?)
+int_type ::= '-'? (integer | macros argument_list? | char)
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {extends=type pin(".*")=1}
 fun_type ::= fun_type_arguments top_type_clause {extends=type pin=1}
 top_type_clause ::= '->' top_type {pin=1}
