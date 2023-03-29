@@ -41,11 +41,13 @@ import java.util.Collection;
 import java.util.List;
 
 public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
-  @Nullable
   @Override
-  public Collection<? extends PsiElement> getElementsToSearch(@NotNull PsiElement element, @Nullable Module module, @NotNull Collection<PsiElement> allElementsToDelete) {
+  public @Nullable Collection<? extends PsiElement> getElementsToSearch(@NotNull PsiElement element,
+                                                                        @Nullable Module module,
+                                                                        @NotNull Collection<? extends PsiElement> allElementsToDelete) {
     return allElementsToDelete;
   }
+
 
   @Override
   public boolean handlesElement(PsiElement element) {
@@ -54,7 +56,9 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
 
   @Nullable
   @Override
-  public NonCodeUsageSearchInfo findUsages(@NotNull PsiElement element, @NotNull PsiElement[] allElementsToDelete, @NotNull List<UsageInfo> result) {
+  public NonCodeUsageSearchInfo findUsages(@NotNull PsiElement element,
+                                           @NotNull PsiElement @NotNull [] allElementsToDelete,
+                                           @NotNull List<? super UsageInfo> result) {
     if (element instanceof ErlangFunction) {
       Collection<PsiReference> all = ReferencesSearch.search(element).findAll();
       for (PsiReference ref : all) {
@@ -93,7 +97,9 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
 
   @Nullable
   @Override
-  public Collection<PsiElement> getAdditionalElementsToDelete(@NotNull PsiElement element, @NotNull Collection<PsiElement> allElementsToDelete, boolean askUser) {
+  public Collection<PsiElement> getAdditionalElementsToDelete(@NotNull PsiElement element,
+                                                              @NotNull Collection<? extends PsiElement> allElementsToDelete,
+                                                              boolean askUser) {
     if (element instanceof ErlangFunction) {
       ErlangSpecification specification = ((ErlangFunction) element).findSpecification();
       if (specification != null) {
@@ -120,4 +126,5 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
   @Override public void setToSearchInComments(PsiElement element, boolean enabled) { }
   @Override public boolean isToSearchForTextOccurrences(PsiElement element) { return false; }
   @Override public void setToSearchForTextOccurrences(PsiElement element, boolean enabled) { }
+
 }
