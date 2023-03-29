@@ -86,7 +86,7 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
           }
 
           @Contract("null -> false")
-          private boolean isComma(@Nullable PsiElement leaf) {
+          private static boolean isComma(@Nullable PsiElement leaf) {
             return leaf instanceof LeafPsiElement && ((LeafPsiElement) leaf).getElementType() == ErlangTypes.ERL_COMMA;
           }
         });
@@ -111,20 +111,19 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
 
   @Nullable
   @Override
-  public Collection<String> findConflicts(@NotNull PsiElement element, @NotNull PsiElement[] allElementsToDelete) {
+  public Collection<String> findConflicts(@NotNull PsiElement element, @NotNull PsiElement @NotNull [] allElementsToDelete) {
     return null;
   }
 
   @Nullable
   @Override
-  public UsageInfo[] preprocessUsages(Project project, UsageInfo[] usages) {
+  public UsageInfo[] preprocessUsages(@NotNull Project project, UsageInfo @NotNull [] usages) {
     return usages;
   }
 
-  @Override public void prepareForDeletion(PsiElement element) throws IncorrectOperationException { }
+  @Override public void prepareForDeletion(@NotNull PsiElement element) throws IncorrectOperationException { }
   @Override public boolean isToSearchInComments(PsiElement element) { return false; }
   @Override public void setToSearchInComments(PsiElement element, boolean enabled) { }
   @Override public boolean isToSearchForTextOccurrences(PsiElement element) { return false; }
   @Override public void setToSearchForTextOccurrences(PsiElement element, boolean enabled) { }
-
 }
