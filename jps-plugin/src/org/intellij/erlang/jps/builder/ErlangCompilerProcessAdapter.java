@@ -32,7 +32,8 @@ public class ErlangCompilerProcessAdapter extends BuilderProcessAdapter {
 
   @Override
   public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
-    showMessage(createCompilerMessage(myBuilderName, myCompileTargetRootPath, event.getText()));
+    CompilerMessage m = createCompilerMessage(myBuilderName, myCompileTargetRootPath, event.getText());
+    showMessage(m);
   }
 
   @NotNull
@@ -47,7 +48,8 @@ public class ErlangCompilerProcessAdapter extends BuilderProcessAdapter {
     ErlangCompilerError error = ErlangCompilerError.create(compileTargetRootPath, text);
     if (error != null) {
       kind = error.getKind();
-      messageText = error.getErrorMessage();
+      //
+      // messageText = error.getErrorMessage();
 
       sourcePath = extractPath(error.getUrl());
       line = error.getLine();
