@@ -1,12 +1,12 @@
 plugins {
-  id 'org.jetbrains.intellij' version "1.10.0"
+  id 'org.jetbrains.intellij' version "1.13.3"
 }
 
 dependencies {
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.6.1'
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
-  testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.6.1'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.3'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.3'
+  testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.6.3'
   testCompileOnly 'junit:junit:4.13.1'
 }
 

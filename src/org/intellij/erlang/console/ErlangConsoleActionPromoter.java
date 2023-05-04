@@ -34,7 +34,7 @@ public class ErlangConsoleActionPromoter implements ActionPromoter {
       return notEnter(o1) ? notEnter(o2) ? 0 : -1 : notEnter(o2) ? 1 : 0;
     }
 
-    private boolean notEnter(AnAction o) {
+    private static boolean notEnter(AnAction o) {
       return !(o instanceof EnterAction);
     }
   };
