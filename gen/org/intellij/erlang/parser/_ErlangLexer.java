@@ -1062,8 +1062,7 @@ public class _ErlangLexer implements FlexLexer {
           // fall through
           case 160: break;
           case 79:
-            { boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe();
-        return isSupported ? ERL_MAYBE : ERL_ATOM_NAME;
+            { boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe(); return isSupported ? ERL_MAYBE : ERL_ATOM_NAME;
             }
           // fall through
           case 161: break;
