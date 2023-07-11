@@ -223,7 +223,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         }
       }
 
-      private boolean isDot(@NotNull PsiElement position) {
+      private static boolean isDot(@NotNull PsiElement position) {
         PsiElement dot = PsiTreeUtil.prevVisibleLeaf(position);
         return dot != null && dot.getNode().getElementType() == ErlangTypes.ERL_DOT;
       }
@@ -388,7 +388,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           return child.getName().startsWith(childPrefix) && (child.isDirectory() || canBeIncluded(child));
         }
 
-        private boolean canBeIncluded(@NotNull VirtualFile file) {
+        private static boolean canBeIncluded(@NotNull VirtualFile file) {
           FileType type = file.getFileType();
           return type == ErlangFileType.HEADER ||
                  type == ErlangFileType.MODULE;
