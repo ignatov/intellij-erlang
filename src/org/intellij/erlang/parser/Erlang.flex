@@ -100,50 +100,47 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> "catch"                       { return ERL_CATCH; }
 <YYINITIAL> "if"                          { return ERL_IF; }
 <YYINITIAL> "receive"                     { return ERL_RECEIVE; }
-<YYINITIAL> "maybe"                       {
-        boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe();
-        return isSupported ? ERL_MAYBE : ERL_ATOM_NAME;
-      }
+<YYINITIAL> "maybe"                       { boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe(); return isSupported ? ERL_MAYBE : ERL_ATOM_NAME; }
 <YYINITIAL> "else"                        { return ERL_ELSE; }
 
 <YYINITIAL> ":="                          { return ERL_MATCH; }
 <YYINITIAL> "=>"                          { return ERL_ASSOC; }
 
-<YYINITIAL> "<<"                           { return ERL_BIN_START; }
-<YYINITIAL> ">>"                           { return ERL_BIN_END; }
-<YYINITIAL> "+"                            { return ERL_OP_PLUS; }
-<YYINITIAL> "-"                            { return ERL_OP_MINUS; }
-<YYINITIAL> "*"                            { return ERL_OP_AR_MUL; }
-<YYINITIAL> "/"                            { return ERL_OP_AR_DIV; }
-<YYINITIAL> "div"                          { return ERL_DIV; }
-<YYINITIAL> "rem"                          { return ERL_REM; }
-<YYINITIAL> "or"                           { return ERL_OR; }
-<YYINITIAL> "xor"                          { return ERL_XOR; }
-<YYINITIAL> "bor"                          { return ERL_BOR; }
-<YYINITIAL> "bxor"                         { return ERL_BXOR; }
-<YYINITIAL> "bsl"                          { return ERL_BSL; }
-<YYINITIAL> "bsr"                          { return ERL_BSR; }
-<YYINITIAL> "and"                          { return ERL_AND; }
-<YYINITIAL> "band"                         { return ERL_BAND; }
-<YYINITIAL> "=="                           { return ERL_OP_EQ_EQ; }
-<YYINITIAL> "/="                           { return ERL_OP_DIV_EQ; }
-<YYINITIAL> "=:="                          { return ERL_OP_EQ_COL_EQ; }
-<YYINITIAL> "=/="                          { return ERL_OP_EQ_DIV_EQ; }
-<YYINITIAL> "<"                            { return ERL_OP_LT; }
-<YYINITIAL> "=<"                           { return ERL_OP_EQ_LT; }
-<YYINITIAL> ">"                            { return ERL_OP_GT; }
-<YYINITIAL> ">="                           { return ERL_OP_GT_EQ; }
-<YYINITIAL> "not"                          { return ERL_NOT; }
-<YYINITIAL> "bnot"                         { return ERL_BNOT; }
-<YYINITIAL> "++"                           { return ERL_OP_PLUS_PLUS; }
-<YYINITIAL> "--"                           { return ERL_OP_MINUS_MINUS; }
-<YYINITIAL> "="                            { return ERL_OP_EQ; }
-<YYINITIAL> "?="                           { return ERL_OP_MAYBE_EQ; }
-<YYINITIAL> "!"                            { return ERL_OP_EXL; }
-<YYINITIAL> "<-"                           { return ERL_OP_LT_MINUS; }
-<YYINITIAL> "<="                           { return ERL_OP_LT_EQ; }
-<YYINITIAL> "andalso"                      { return ERL_ANDALSO; }
-<YYINITIAL> "orelse"                       { return ERL_ORELSE; }
+<YYINITIAL> "<<"                          { return ERL_BIN_START; }
+<YYINITIAL> ">>"                          { return ERL_BIN_END; }
+<YYINITIAL> "+"                           { return ERL_OP_PLUS; }
+<YYINITIAL> "-"                           { return ERL_OP_MINUS; }
+<YYINITIAL> "*"                           { return ERL_OP_AR_MUL; }
+<YYINITIAL> "/"                           { return ERL_OP_AR_DIV; }
+<YYINITIAL> "div"                         { return ERL_DIV; }
+<YYINITIAL> "rem"                         { return ERL_REM; }
+<YYINITIAL> "or"                          { return ERL_OR; }
+<YYINITIAL> "xor"                         { return ERL_XOR; }
+<YYINITIAL> "bor"                         { return ERL_BOR; }
+<YYINITIAL> "bxor"                        { return ERL_BXOR; }
+<YYINITIAL> "bsl"                         { return ERL_BSL; }
+<YYINITIAL> "bsr"                         { return ERL_BSR; }
+<YYINITIAL> "and"                         { return ERL_AND; }
+<YYINITIAL> "band"                        { return ERL_BAND; }
+<YYINITIAL> "=="                          { return ERL_OP_EQ_EQ; }
+<YYINITIAL> "/="                          { return ERL_OP_DIV_EQ; }
+<YYINITIAL> "=:="                         { return ERL_OP_EQ_COL_EQ; }
+<YYINITIAL> "=/="                         { return ERL_OP_EQ_DIV_EQ; }
+<YYINITIAL> "<"                           { return ERL_OP_LT; }
+<YYINITIAL> "=<"                          { return ERL_OP_EQ_LT; }
+<YYINITIAL> ">"                           { return ERL_OP_GT; }
+<YYINITIAL> ">="                          { return ERL_OP_GT_EQ; }
+<YYINITIAL> "not"                         { return ERL_NOT; }
+<YYINITIAL> "bnot"                        { return ERL_BNOT; }
+<YYINITIAL> "++"                          { return ERL_OP_PLUS_PLUS; }
+<YYINITIAL> "--"                          { return ERL_OP_MINUS_MINUS; }
+<YYINITIAL> "="                           { return ERL_OP_EQ; }
+<YYINITIAL> "?="                          { return ERL_OP_MAYBE_EQ; }
+<YYINITIAL> "!"                           { return ERL_OP_EXL; }
+<YYINITIAL> "<-"                          { return ERL_OP_LT_MINUS; }
+<YYINITIAL> "<="                          { return ERL_OP_LT_EQ; }
+<YYINITIAL> "andalso"                     { return ERL_ANDALSO; }
+<YYINITIAL> "orelse"                      { return ERL_ORELSE; }
 
 <YYINITIAL> {IntegerLiteral}              { return ERL_INTEGER; }
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
@@ -158,23 +155,23 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
 <YYINITIAL> {Variable}                    { return ERL_VAR; }
 
-<YYINITIAL>  "("                           { return ERL_PAR_LEFT; }
-<YYINITIAL>  ")"                           { return ERL_PAR_RIGHT; }
-<YYINITIAL>  "{"                           { return ERL_CURLY_LEFT; }
-<YYINITIAL>  "}"                           { return ERL_CURLY_RIGHT; }
-<YYINITIAL>  "["                           { return ERL_BRACKET_LEFT; }
-<YYINITIAL>  "]"                           { return ERL_BRACKET_RIGHT; }
-<YYINITIAL>  "."                           { return ERL_DOT; }
-<YYINITIAL>  ".."                          { return ERL_DOT_DOT; }
-<YYINITIAL>  "..."                         { return ERL_DOT_DOT_DOT; }
-<YYINITIAL>  ":"                           { return ERL_COLON; }
-<YYINITIAL>  "::"                          { return ERL_COLON_COLON; }
-<YYINITIAL>  "||"                          { return ERL_OR_OR; }
-<YYINITIAL>  "|"                           { return ERL_OP_OR; }
-<YYINITIAL>  ";"                           { return ERL_SEMI; }
-<YYINITIAL>  ","                           { return ERL_COMMA; }
-<YYINITIAL>  "?"                           { return ERL_QMARK; }
-<YYINITIAL>  "->"                          { return ERL_ARROW; }
-<YYINITIAL>  "#"                           { return ERL_RADIX; }
+<YYINITIAL>  "("                          { return ERL_PAR_LEFT; }
+<YYINITIAL>  ")"                          { return ERL_PAR_RIGHT; }
+<YYINITIAL>  "{"                          { return ERL_CURLY_LEFT; }
+<YYINITIAL>  "}"                          { return ERL_CURLY_RIGHT; }
+<YYINITIAL>  "["                          { return ERL_BRACKET_LEFT; }
+<YYINITIAL>  "]"                          { return ERL_BRACKET_RIGHT; }
+<YYINITIAL>  "."                          { return ERL_DOT; }
+<YYINITIAL>  ".."                         { return ERL_DOT_DOT; }
+<YYINITIAL>  "..."                        { return ERL_DOT_DOT_DOT; }
+<YYINITIAL>  ":"                          { return ERL_COLON; }
+<YYINITIAL>  "::"                         { return ERL_COLON_COLON; }
+<YYINITIAL>  "||"                         { return ERL_OR_OR; }
+<YYINITIAL>  "|"                          { return ERL_OP_OR; }
+<YYINITIAL>  ";"                          { return ERL_SEMI; }
+<YYINITIAL>  ","                          { return ERL_COMMA; }
+<YYINITIAL>  "?"                          { return ERL_QMARK; }
+<YYINITIAL>  "->"                         { return ERL_ARROW; }
+<YYINITIAL>  "#"                          { return ERL_RADIX; }
 
-[^]                                        {yybegin(YYINITIAL); return com.intellij.psi.TokenType.BAD_CHARACTER; }
+[^]                                       { yybegin(YYINITIAL); return com.intellij.psi.TokenType.BAD_CHARACTER; }
