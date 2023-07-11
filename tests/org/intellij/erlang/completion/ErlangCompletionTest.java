@@ -18,15 +18,36 @@ package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtilRt;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class ErlangCompletionTest extends ErlangCompletionTestBase {
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return new DefaultLightProjectDescriptor() {
+      @Override
+      public Sdk getSdk() {
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
+      }
+    };
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setUpProjectSdk();
+  }
+
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
@@ -460,13 +481,6 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         "new(Func, ClauseSpecs) -> ok.",
       CheckType.EQUALS, "Fun", "Fun2" , "Str"
     );
-  }
-
-  public void testCameCaseModules() {
-    myFixture.configureByText("CamelCase.erl", "");
-    myFixture.configureByText("a.erl", "bar() -> Cam<caret>");
-    myFixture.complete(CompletionType.BASIC, 2);
-    myFixture.checkResult("bar() -> 'CamelCase':<caret>");
   }
 
   public void testFunctionsFromCameCaseModule() {

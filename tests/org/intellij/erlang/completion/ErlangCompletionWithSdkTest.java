@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.completion;
 
+import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -43,5 +44,12 @@ public class ErlangCompletionWithSdkTest extends ErlangCompletionTestBase {
 
   public void test353_2() {
     doTestInclude("-record(aaa, {}). -record(bbb, {}). foo() -> is_record(1,<caret>", "aaa", "bbb");
+  }
+
+  public void testCameCaseModules() {
+    myFixture.configureByText("CamelCase.erl", "");
+    myFixture.configureByText("a.erl", "bar() -> Cam<caret>");
+    myFixture.complete(CompletionType.BASIC, 2);
+    myFixture.checkResult("bar() -> 'CamelCase':<caret>");
   }
 }

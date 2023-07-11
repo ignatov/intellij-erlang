@@ -97,7 +97,7 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
 
   @NotNull
   public SyntaxHighlighter getHighlighter() {
-    return new ErlangSyntaxHighlighter();
+    return new ErlangSyntaxHighlighter(null);
   }
 
   @NotNull

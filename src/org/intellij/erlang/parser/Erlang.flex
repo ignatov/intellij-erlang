@@ -1,15 +1,24 @@
 package org.intellij.erlang.parser;
+
 import com.intellij.lexer.FlexLexer;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.tree.IElementType;
-import static org.intellij.erlang.ErlangTypes.*;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
+import org.jetbrains.annotations.Nullable;
 import static org.intellij.erlang.ErlangParserDefinition.*;
+import static org.intellij.erlang.ErlangTypes.*;
 
 %%
 
 %{
-  public _ErlangLexer() {
-    this((java.io.Reader)null);
-  }
+    // Used by the tokenizer to request language features to be enabled
+    public Project project = null;
+
+    public _ErlangLexer(@Nullable Project project_) {
+      this((java.io.Reader)null);
+      this.project = project_;
+    }
 %}
 
 %class _ErlangLexer
@@ -91,7 +100,10 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> "catch"                       { return ERL_CATCH; }
 <YYINITIAL> "if"                          { return ERL_IF; }
 <YYINITIAL> "receive"                     { return ERL_RECEIVE; }
-<YYINITIAL> "maybe"                       { return ERL_MAYBE; }
+<YYINITIAL> "maybe"                       {
+        boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe();
+        return isSupported ? ERL_MAYBE : ERL_ATOM_NAME;
+      }
 <YYINITIAL> "else"                        { return ERL_ELSE; }
 
 <YYINITIAL> ":="                          { return ERL_MATCH; }
