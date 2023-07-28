@@ -47,6 +47,11 @@ public final class ErlangSdkRelease {
 
   public ErlangSdkRelease(@NotNull String otpRelease, @NotNull String ertsVersion) {
     myOtpRelease = otpRelease;
+
+    String[] splittedErtsVersion = ertsVersion.split("\\.");
+    if(splittedErtsVersion.length > 2){
+       ertsVersion = splittedErtsVersion[0] + "." + splittedErtsVersion[1];
+    }
     myErtsVersion = ertsVersion;
   }
 
