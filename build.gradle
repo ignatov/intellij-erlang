@@ -37,7 +37,13 @@ allprojects {
   }
   
   def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
-  
+
+  tasks.withType(Test).configureEach {
+    jvmArgs = [
+      '-Djava.awt.headless=true'
+    ]
+  }
+
   test {
     useJUnitPlatform {
       exclude compilationPackages
