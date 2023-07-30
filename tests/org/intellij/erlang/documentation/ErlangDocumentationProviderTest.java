@@ -530,7 +530,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   private void doTestExternalDoc(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     List<String> urls = myErlangDocProvider.getUrlFor(element, null);
-    assertEquals(expected, myErlangDocProvider.fetchExternalDocumentation(getProject(), element, urls));
+    assertEquals(expected, myErlangDocProvider.fetchExternalDocumentation(getProject(), element, urls, false));
   }
 
   @NotNull
