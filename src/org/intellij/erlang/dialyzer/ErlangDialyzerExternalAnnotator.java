@@ -130,17 +130,19 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
       TextRange problemRange = TextRange.create(offset, offset + width);
       String message = "Dialyzer: " + problem.myDescription;
       HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
-      holder
-        .newAnnotation(HighlightSeverity.WARNING, message)
-        .range(problemRange)
-        .withFix(new DisableInspectionToolAction(key) {
-          @NotNull
-          @Override
-          public String getName() {
-            return "Disable 'Dialyzer-based inspections'";
-          }
-        })
-        .create();
+      if (key != null) {
+        holder
+          .newAnnotation(HighlightSeverity.WARNING, message)
+          .range(problemRange)
+          .withFix(new DisableInspectionToolAction(key) {
+            @NotNull
+            @Override
+            public String getName() {
+              return "Disable 'Dialyzer-based inspections'";
+            }
+          })
+          .create();
+      }
     }
   }
 
