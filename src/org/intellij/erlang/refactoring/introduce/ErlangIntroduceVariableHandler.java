@@ -130,26 +130,17 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
                                                  @NotNull final ErlangExpression expression) {
     if (!editor.getSettings().isVariableInplaceRenameEnabled()) return;
     switch (myReplaceStrategy) {
-      case ASK: {
-        OccurrencesChooser.simpleChooser(editor).showChooser(
-          expression,
-          getOccurrences(expression),
-          new Pass<OccurrencesChooser.ReplaceChoice>() {
-            @Override
-            public void pass(OccurrencesChooser.ReplaceChoice replaceChoice) {
-              performInplaceIntroduce(editor, expression, replaceChoice == OccurrencesChooser.ReplaceChoice.ALL);
-            }
-          });
-        break;
-      }
-      case ALL: {
-        performInplaceIntroduce(editor, expression, true);
-        break;
-      }
-      case SINGLE: {
-        performInplaceIntroduce(editor, expression, false);
-        break;
-      }
+      case ASK -> OccurrencesChooser.simpleChooser(editor).showChooser(
+        expression,
+        getOccurrences(expression),
+        new Pass<>() {
+          @Override
+          public void pass(OccurrencesChooser.ReplaceChoice replaceChoice) {
+            performInplaceIntroduce(editor, expression, replaceChoice == OccurrencesChooser.ReplaceChoice.ALL);
+          }
+        });
+      case ALL -> performInplaceIntroduce(editor, expression, true);
+      case SINGLE -> performInplaceIntroduce(editor, expression, false);
     }
   }
 
@@ -209,7 +200,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     if (PsiTreeUtil.getParentOfType(declaration, ErlangArgumentDefinition.class) != null) return;
 
     PsiElement comma = ErlangElementFactory.createLeafFromText(declaration.getProject(), ",\n");
-    PsiElement newLineNode = PsiParserFacade.SERVICE.getInstance(declaration.getProject()).createWhiteSpaceFromText("\n");
+    PsiElement newLineNode = PsiParserFacade.getInstance(declaration.getProject()).createWhiteSpaceFromText("\n");
     PsiElement parent = declaration.getParent();
     PsiElement psiElement = parent.addAfter(comma, declaration);
     parent.addAfter(newLineNode, psiElement);
@@ -220,7 +211,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
                                            @NotNull ErlangExpression initializer,
                                            @NotNull final List<PsiElement> occurrences) {
     Project project = declaration.getProject();
-    return WriteCommandAction.writeCommandAction(project, initializer.getContainingFile()).withName("Extract variable").compute(() -> {
+    return WriteCommandAction.writeCommandAction(project, initializer.getContainingFile()).withName("Extract Variable").compute(() -> {
       boolean alone = occurrences.size() == 1 && occurrences.get(0).getParent() instanceof ErlangClauseBody;
       PsiElement createdDeclaration = replaceLeftmostArgumentDefinition(declaration, occurrences);
       if (createdDeclaration == null) {
@@ -348,7 +339,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   }
 
   @Override
-  public void invoke(@NotNull Project project, @NotNull PsiElement[] elements, DataContext dataContext) {
+  public void invoke(@NotNull Project project, @NotNull PsiElement @NotNull [] elements, DataContext dataContext) {
   }
 
   private static class ErlangInplaceVariableIntroducer extends InplaceVariableIntroducer<PsiElement> {

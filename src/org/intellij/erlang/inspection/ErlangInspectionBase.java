@@ -185,11 +185,11 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
 
     @Override
     protected void createSuppression(@NotNull Project project, @NotNull PsiElement element, @NotNull PsiElement container) throws IncorrectOperationException {
-      PsiParserFacade parserFacade = PsiParserFacade.SERVICE.getInstance(project);
+      PsiParserFacade parserFacade = PsiParserFacade.getInstance(project);
       String text = SuppressionUtilCore.SUPPRESS_INSPECTIONS_TAG_NAME + " " + myID;
       PsiComment comment = parserFacade.createLineOrBlockCommentFromText(element.getContainingFile().getLanguage(), text);
       PsiElement where = container.getParent().addBefore(comment, container);
-      PsiElement spaceFromText = PsiParserFacade.SERVICE.getInstance(project).createWhiteSpaceFromText("\n");
+      PsiElement spaceFromText = PsiParserFacade.getInstance(project).createWhiteSpaceFromText("\n");
       where.getParent().addAfter(spaceFromText, where);
     }
   }

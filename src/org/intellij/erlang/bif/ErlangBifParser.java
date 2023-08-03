@@ -69,26 +69,28 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
 
     try (PrintStream bifTableJavaBuilder = new PrintStream(new File(GENERATED_FILE))) {
       Set<String> autoimported = getAutoimportedFunctions();
-      bifTableJavaBuilder.append("package org.intellij.erlang.bif;\n" +
-                                 "\n" +
-                                 "import org.jetbrains.annotations.NotNull;\n" +
-                                 "import org.jetbrains.annotations.Nullable;\n" +
-                                 "import com.intellij.util.containers.MultiMap;\n" +
-                                 "\n" +
-                                 "import java.util.ArrayList;\n" +
-                                 "import java.util.Collection;\n" +
-                                 "import java.util.TreeSet;\n" +
-                                 "import java.util.List;\n" +
-                                 "\n" +
-                                 "public final class ErlangBifTable {\n" +
-                                 "  private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {\n" +
-                                 "    @Override\n" +
-                                 "    protected Collection<ErlangBifDescriptor> createCollection() {\n" +
-                                 "      return new TreeSet<ErlangBifDescriptor>();\n" +
-                                 "    }\n" +
-                                 "  };\n" +
-                                 "\n" +
-                                 "  static {\n");
+      bifTableJavaBuilder.append("""
+                                   package org.intellij.erlang.bif;
+
+                                   import org.jetbrains.annotations.NotNull;
+                                   import org.jetbrains.annotations.Nullable;
+                                   import com.intellij.util.containers.MultiMap;
+
+                                   import java.util.ArrayList;
+                                   import java.util.Collection;
+                                   import java.util.TreeSet;
+                                   import java.util.List;
+
+                                   public final class ErlangBifTable {
+                                     private static final MultiMap<String, ErlangBifDescriptor> bifMap = new MultiMap<String, ErlangBifDescriptor>() {
+                                       @Override
+                                       protected Collection<ErlangBifDescriptor> createCollection() {
+                                         return new TreeSet<ErlangBifDescriptor>();
+                                       }
+                                     };
+
+                                     static {
+                                   """);
       for (String s : bifTableText) {
         Matcher matcher;
         if ((matcher = BIF_DECLARATION.matcher(s)).find()) {
@@ -106,40 +108,42 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
           bifTableJavaBuilder.append("    // Since ").append(version).append("\n");
         }
       }
-      bifTableJavaBuilder.append("  }\n" +
-                                 "\n" +
-                                 "  private ErlangBifTable() {\n" +
-                                 "  }\n" +
-                                 "\n" +
-                                 "  @NotNull\n" +
-                                 "  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName) {\n" +
-                                 "    return bifMap.get(moduleName);\n" +
-                                 "  }\n" +
-                                 "\n" +
-                                 "  @NotNull\n" +
-                                 "  public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName,\n" +
-                                 "                                                        @NotNull String functionName) {\n" +
-                                 "    final List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();\n" +
-                                 "    for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {\n" +
-                                 "      if (functionName.equals(bifDescriptor.getName())) {\n" +
-                                 "        bifDescriptors.add(bifDescriptor);\n" +
-                                 "      }\n" +
-                                 "    }\n" +
-                                 "    return bifDescriptors;\n" +
-                                 "  }\n" +
-                                 "\n" +
-                                 "\n" +
-                                 "  public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {\n" +
-                                 "    final Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);\n" +
-                                 "    for (ErlangBifDescriptor bifDescriptor : erlangBifDescriptors) {\n" +
-                                 "      if (bifDescriptor.getModule().equals(moduleName) && bifDescriptor.getName().equals(functionName) &&\n" +
-                                 "        bifDescriptor.getArity() == arity) {\n" +
-                                 "        return true;\n" +
-                                 "      }\n" +
-                                 "    }\n" +
-                                 "    return false;\n" +
-                                 "  }\n" +
-                                 "}\n");
+      bifTableJavaBuilder.append("""
+                                     }
+
+                                     private ErlangBifTable() {
+                                     }
+
+                                     @NotNull
+                                     public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName) {
+                                       return bifMap.get(moduleName);
+                                     }
+
+                                     @NotNull
+                                     public static Collection<ErlangBifDescriptor> getBifs(@NotNull String moduleName,
+                                                                                           @NotNull String functionName) {
+                                       final List<ErlangBifDescriptor> bifDescriptors = new ArrayList<ErlangBifDescriptor>();
+                                       for (ErlangBifDescriptor bifDescriptor : bifMap.get(moduleName)) {
+                                         if (functionName.equals(bifDescriptor.getName())) {
+                                           bifDescriptors.add(bifDescriptor);
+                                         }
+                                       }
+                                       return bifDescriptors;
+                                     }
+
+
+                                     public static boolean isBif(@NotNull String moduleName, @NotNull String functionName, int arity) {
+                                       final Collection<ErlangBifDescriptor> erlangBifDescriptors = bifMap.get(moduleName);
+                                       for (ErlangBifDescriptor bifDescriptor : erlangBifDescriptors) {
+                                         if (bifDescriptor.getModule().equals(moduleName) && bifDescriptor.getName().equals(functionName) &&
+                                           bifDescriptor.getArity() == arity) {
+                                           return true;
+                                         }
+                                       }
+                                       return false;
+                                     }
+                                   }
+                                   """);
     }
   }
 

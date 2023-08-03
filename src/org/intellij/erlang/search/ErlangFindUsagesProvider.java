@@ -37,7 +37,7 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @Override
   public WordsScanner getWordsScanner() {
     return (fileText, processor) -> {
-      ErlangLexer lexer = new ErlangLexer();
+      ErlangLexer lexer = new ErlangLexer(null);
       lexer.start(fileText);
       IElementType tokenType;
       while ((tokenType = lexer.getTokenType()) != null) {

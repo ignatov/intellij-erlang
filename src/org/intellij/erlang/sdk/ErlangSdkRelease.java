@@ -32,11 +32,18 @@ public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_18_0 = new ErlangSdkRelease("18", "7.0");
   public static final ErlangSdkRelease V_25_0 = new ErlangSdkRelease("25", "13.0");
 
+  // The release with most features, assumed to be in effect if the version cannot be determined. The parser will use
+  // this to guess the features available in the Erlang SDK.
+  public static final ErlangSdkRelease DefaultRelease = V_25_0;
+
   private static final Pattern VERSION_PATTERN = Pattern.compile("Erlang/OTP (\\S+) \\[erts-(\\S+)]");
   private static final Pattern NEW_VERSION_PATTERN = Pattern.compile("OTP (\\S+), erts-(\\S+)");
 
   private final String myOtpRelease;
   private final String myErtsVersion;
+
+  // Cached value of Erlang version 25 or greater
+  private Boolean haveErlang25 = null;
 
   public ErlangSdkRelease(@NotNull String otpRelease, @NotNull String ertsVersion) {
     myOtpRelease = otpRelease;
@@ -76,5 +83,18 @@ public final class ErlangSdkRelease {
       }
     }
     return null;
+  }
+
+  // True if Erlang of this version supports 'maybe' as a keyword, otherwise it is parsed as atom.
+  private boolean erlangIsAtLeast25() {
+    if (haveErlang25 != null) {
+      return haveErlang25;
+    }
+    haveErlang25 = VersionComparatorUtil.compare(myOtpRelease, "25") >= 0;
+    return haveErlang25;
+  }
+
+  public boolean erlangFeatureMaybe() {
+    return this.erlangIsAtLeast25();
   }
 }

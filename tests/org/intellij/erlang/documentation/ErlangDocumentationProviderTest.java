@@ -48,23 +48,29 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
 
   public void testExternalUrlSdkFunction() {
     doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#foreach-2",
-      "-module(test).\n" +
-        "test() ->\n" +
-        "    lists:for<caret>each(foo, bar).\n");
+                  """
+                    -module(test).
+                    test() ->
+                        lists:for<caret>each(foo, bar).
+                    """);
   }
 
   public void testExternalUrlSdkBif() {
     doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#member-2",
-      "-module(test).\n" +
-        "test() ->\n" +
-        "    lists:mem<caret>ber(foo, bar).\n");
+                  """
+                    -module(test).
+                    test() ->
+                        lists:mem<caret>ber(foo, bar).
+                    """);
   }
 
   public void testExternalUrlSdkModule() {
     doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html",
-      "-module(test).\n" +
-        "test() ->\n" +
-        "    lis<caret>ts:foreach(foo, bar).\n");
+                  """
+                    -module(test).
+                    test() ->
+                        lis<caret>ts:foreach(foo, bar).
+                    """);
   }
 
   public void testGenerateDocSdkBif() {
@@ -86,10 +92,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "          <span class=\"code\">List</span>, otherwise <span class=\"code\">false</span>.</p>\n" +
         "      </p></div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    lists:mem<caret>ber(foo, bar).\n");
+      """
+        -module(test).
+        test() ->
+            lists:mem<caret>ber(foo, bar).
+        """);
   }
 
   public void testGenerateDocSdkFunction() {
@@ -109,10 +116,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "          of the elements in the list.</p>\n" +
         "      </p></div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    lists:for<caret>each(foo, bar).\n");
+      """
+        -module(test).
+        test() ->
+            lists:for<caret>each(foo, bar).
+        """);
   }
 
   public void testGenerateDocSdkFunctionMulti() {
@@ -153,10 +161,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "[1]</pre></div>\n" +
         "      </p></div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    lists:s<caret>eq(foo, bar, blah).\n");
+      """
+        -module(test).
+        test() ->
+            lists:s<caret>eq(foo, bar, blah).
+        """);
   }
 
   public void testGenerateDocSdkLastFunction() {
@@ -191,10 +200,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "  \n" +
         "</div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    lists:zip<caret>with3(foo, bar, preved, medved).\n");
+      """
+        -module(test).
+        test() ->
+            lists:zip<caret>with3(foo, bar, preved, medved).
+        """);
   }
 
   public void testGenerateDocSdkModule() {
@@ -238,10 +248,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "\n" +
         "  </p></div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    lis<caret>ts:foreach(foo, bar).\n");
+      """
+        -module(test).
+        test() ->
+            lis<caret>ts:foreach(foo, bar).
+        """);
   }
 
   public void testGenerateDocSdkType() {
@@ -251,11 +262,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "<body>\n" +
         "      <span class=\"bold_code\"><a name=\"type-file_info\">file_info()</a> = <br>    #file_info{size = undefined | integer() &gt;= 0,<br>               type = undefined<br>                     | device<br>                     | directory<br>                     | other<br>                     | regular<br>                     | symlink,<br>               access = undefined<br>                       | read<br>                       | write<br>                       | read_write<br>                       | none,<br>               atime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               mtime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               ctime = undefined | <span class=\"bold_code\"><a href=\"psi_element://file#type-date_time\">file:date_time()</a></span> | integer(),<br>               mode = undefined | integer(),<br>               links = undefined | integer() &gt;= 0,<br>               major_device = undefined | integer(),<br>               minor_device = undefined | integer(),<br>               inode = undefined | integer(),<br>               uid = undefined | integer(),<br>               gid = undefined | integer()}</span><br></p>    <p>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "-spec test(file:fil<caret>e_info()) -> ok." +
-        "test(_FileInfo) ->\n" +
-        "    ok.\n");
+      """
+        -module(test).
+        -spec test(file:fil<caret>e_info()) -> ok.test(_FileInfo) ->
+            ok.
+        """);
   }
 
   public void testGenerateDocSdkLastType() {
@@ -266,11 +277,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "      <span class=\"bold_code\"><a name=\"type-sendfile_option\">sendfile_option()</a> = {chunk_size, integer() &gt;= 0}</span><br></p>   \n" +
         "\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "-spec test(file:send<caret>file_option()) -> ok." +
-        "test(_SendFileOption) ->\n" +
-        "    ok.\n");
+      """
+        -module(test).
+        -spec test(file:send<caret>file_option()) -> ok.test(_SendFileOption) ->
+            ok.
+        """);
   }
 
   public void testLinkConverterLocal() {
@@ -290,10 +301,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "          <span class=\"bold_code\"><a href=\"psi_element://file#write_file_info-2\">write_file_info/2</a></span>.</p>\n" +
         "      </p></div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    file:cha<caret>nge_time(foo, bar).\n");
+      """
+        -module(test).
+        test() ->
+            file:cha<caret>nge_time(foo, bar).
+        """);
   }
 
   public void testLinkConverterErlRef() {
@@ -318,10 +330,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "          variable bindings.</p>\n" +
         "      </p></div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    file:pat<caret>h_script(1, 2, 3).\n");
+      """
+        -module(test).
+        test() ->
+            file:pat<caret>h_script(1, 2, 3).
+        """);
   }
 
   public void testLinkConverterErlRef2() {
@@ -371,10 +384,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "        </dl>\n" +
         "      </p></div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    file:rea<caret>d_line(1).\n");
+      """
+        -module(test).
+        test() ->
+            file:rea<caret>d_line(1).
+        """);
   }
 
   public void testLinkConverterInModule() {
@@ -421,10 +435,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "\tof the application.</p>\n" +
         "      </p></div>\n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    file:sen<caret>dfile(1,2,3,4,5).\n");
+      """
+        -module(test).
+        test() ->
+            file:sen<caret>dfile(1,2,3,4,5).
+        """);
   }
 
   public void testLinkConverterWithLineBreak() {
@@ -484,10 +499,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         "      <span class=\"bold_code\"><a name=\"type-value\">value()</a> = term()</span><br></p>\n" +
         "  \n" +
         "</body></html>\n",
-      "" +
-        "-module(test).\n" +
-        "test() ->\n" +
-        "    erl<caret>_eval:expr(1, 2).\n");
+      """
+        -module(test).
+        test() ->
+            erl<caret>_eval:expr(1, 2).
+        """);
   }
 
   public void testResolveLinkModule() {
@@ -530,7 +546,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   private void doTestExternalDoc(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     List<String> urls = myErlangDocProvider.getUrlFor(element, null);
-    assertEquals(expected, myErlangDocProvider.fetchExternalDocumentation(getProject(), element, urls));
+    assertEquals(expected, myErlangDocProvider.fetchExternalDocumentation(getProject(), element, urls, false));
   }
 
   @NotNull

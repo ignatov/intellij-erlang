@@ -688,7 +688,7 @@ public class ErlangPsiImplUtil {
       }
 
       @Nullable
-      private PsiElement findNextToken(@NotNull InsertionContext context) {
+      private static PsiElement findNextToken(@NotNull InsertionContext context) {
         PsiFile file = context.getFile();
         PsiElement element = file.findElementAt(context.getTailOffset());
         if (element instanceof PsiWhiteSpace) {
@@ -728,8 +728,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity) {
-    if (containingFile instanceof ErlangFile) {
-      ErlangFile erlangFile = (ErlangFile) containingFile;
+    if (containingFile instanceof ErlangFile erlangFile) {
       List<ErlangTypeDefinition> types = ContainerUtil.concat(erlangFile.getTypes(), getErlangTypeFromIncludes(erlangFile, true, ""));
 
       final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<>() {
@@ -794,7 +793,7 @@ public class ErlangPsiImplUtil {
     ErlangFunTypeSigs signature = getSignature(o);
     List<ErlangTypeSig> typeSigs = signature != null ? signature.getTypeSigList()
                                                      : ContainerUtil.emptyList();
-    ErlangTypeSig sig = typeSigs.size() > 0 ? typeSigs.get(0) : null;
+    ErlangTypeSig sig = !typeSigs.isEmpty() ? typeSigs.get(0) : null;
     return sig != null ? sig.getFunType().getFunTypeArguments().getTypeList().size() : -1;
   }
 
@@ -1758,8 +1757,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static ErlangExpression getOutermostParenthesizedExpression(@NotNull ErlangExpression expression) {
-    while (expression.getParent() instanceof ErlangParenthesizedExpression) {
-      ErlangParenthesizedExpression parent = (ErlangParenthesizedExpression) expression.getParent();
+    while (expression.getParent() instanceof ErlangParenthesizedExpression parent) {
       if (!expression.isEquivalentTo(parent.getExpression())) break;
       expression = parent;
     }
@@ -1875,7 +1873,7 @@ public class ErlangPsiImplUtil {
   public static boolean isWhitespaceOrComment(@NotNull ASTNode node) {
     IElementType elementType = node.getElementType();
     return ErlangParserDefinition.WS.contains(elementType) ||
-      ErlangParserDefinition.COMMENTS.contains(elementType);
+           ErlangParserDefinition.COMMENTS.contains(elementType);
   }
 
   public static boolean is(@Nullable PsiElement element, IElementType type) {
@@ -1906,7 +1904,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   private static String getNameImpl(@NotNull ErlangNamedElement namedElement) {
     if (namedElement instanceof StubBasedPsiElement) {
-      String fromStub = getNameFromStub((StubBasedPsiElement)namedElement);
+      String fromStub = getNameFromStub((StubBasedPsiElement<?>)namedElement);
       if (fromStub != null) return fromStub;
     }
     PsiElement nameIdentifier = namedElement.getNameIdentifier();
@@ -1914,7 +1912,7 @@ public class ErlangPsiImplUtil {
   }
 
   @Nullable
-  private static String getNameFromStub(@NotNull StubBasedPsiElement element) {
+  private static String getNameFromStub(@NotNull StubBasedPsiElement<?> element) {
     NamedStubBase<?> stub = ObjectUtils.tryCast(element.getStub(), NamedStubBase.class);
     return stub != null ? StringUtil.notNullize(stub.getName()) : null;
   }

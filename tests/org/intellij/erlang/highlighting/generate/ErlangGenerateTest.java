@@ -43,22 +43,26 @@ public class ErlangGenerateTest extends ErlangLightPlatformCodeInsightFixtureTes
     doTest("EUnitGenerateTestMethod",
       "-include_lib(\"eunit/include/eunit.hrl\").\n" +
         "<caret>",
-      "-include_lib(\"eunit/include/eunit.hrl\").\n" +
-        "\n" +
-        "name_test() ->\n" +
-        "  ?assertEqual(expected, expr).");
+           """
+             -include_lib("eunit/include/eunit.hrl").
+
+             name_test() ->
+               ?assertEqual(expected, expr).""");
 
   }
 
   public void testEunitFunctionNewLines() {
     doTest("EUnitGenerateTestMethod",
-      "-include_lib(\"eunit/include/eunit.hrl\").\n" +
-        "\n<caret>",
-      "-include_lib(\"eunit/include/eunit.hrl\").\n" +
-        "\n" +
-        "\n" +
-        "name_test() ->\n" +
-        "  ?assertEqual(expected, expr).");
+           """
+             -include_lib("eunit/include/eunit.hrl").
+
+             <caret>""",
+           """
+             -include_lib("eunit/include/eunit.hrl").
+
+
+             name_test() ->
+               ?assertEqual(expected, expr).""");
 
   }
 
@@ -66,10 +70,11 @@ public class ErlangGenerateTest extends ErlangLightPlatformCodeInsightFixtureTes
     doTest("EUnitGenerateTestMethod",
       "-include_lib(\"eunit/include/eunit.hrl\").\n" +
         "foo() -> ok<caret>.",
-      "-include_lib(\"eunit/include/eunit.hrl\").\n" +
-        "foo() -> ok.\n" +
-        "\n" +
-        "foo_test() ->\n" +
-        "  ?assertEqual(expected, expr).");
+           """
+             -include_lib("eunit/include/eunit.hrl").
+             foo() -> ok.
+
+             foo_test() ->
+               ?assertEqual(expected, expr).""");
   }
 }

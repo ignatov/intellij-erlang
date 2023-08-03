@@ -29,6 +29,7 @@ import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
@@ -230,12 +231,11 @@ public class ErlangSdkType extends SdkType {
     return byModuleSdk != null ? byModuleSdk : getRelease(element.getProject());
   }
 
-  @Nullable
-  public static ErlangSdkRelease getRelease(@NotNull Project project) {
-    if (ErlangSystemUtil.isSmallIde()) {
-      return getReleaseForSmallIde(project);
-    }
-    return getRelease(ProjectRootManager.getInstance(project).getProjectSdk());
+  @NotNull
+  public static ErlangSdkRelease getRelease(@Nullable Project project) {
+    if (project == null) return ErlangSdkRelease.DefaultRelease;
+    ErlangSdkRelease release = ErlangSystemUtil.isSmallIde() ? getReleaseForSmallIde(project) : getRelease(ProjectRootManager.getInstance(project).getProjectSdk());
+    return release != null ? release : ErlangSdkRelease.DefaultRelease;
   }
 
   @TestOnly
@@ -461,12 +461,21 @@ public class ErlangSdkType extends SdkType {
     return version != null ? version.toString() : null;
   }
 
+  private static final Key<ErlangSdkRelease> ERLANG_SDK_RELEASE = Key.create("ERLANG_SDK_TYPE");
+
   @Nullable
   private static ErlangSdkRelease getRelease(@Nullable Sdk sdk) {
     if (sdk != null && sdk.getSdkType() == getInstance()) {
+
+      var key = sdk.getUserData(ERLANG_SDK_RELEASE);
+      if (key != null) return key;
+
       ErlangSdkRelease fromVersionString = ErlangSdkRelease.fromString(sdk.getVersionString());
-      return fromVersionString != null ? fromVersionString :
-             getInstance().detectSdkVersion(StringUtil.notNullize(sdk.getHomePath()));
+      ErlangSdkRelease release = fromVersionString != null ? fromVersionString : getInstance().detectSdkVersion(StringUtil.notNullize(sdk.getHomePath()));
+
+      if (release != null) sdk.putUserData(ERLANG_SDK_RELEASE, release);
+
+      return release;
     }
     return null;
   }
