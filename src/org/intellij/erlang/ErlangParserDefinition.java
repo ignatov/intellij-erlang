@@ -47,7 +47,7 @@ public class ErlangParserDefinition implements ParserDefinition {
   @NotNull
   @Override
   public Lexer createLexer(Project project) {
-    return new ErlangLexer();
+    return new ErlangLexer(project);
   }
 
   @Override

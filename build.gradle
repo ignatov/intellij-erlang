@@ -1,5 +1,5 @@
 plugins {
-  id 'org.jetbrains.intellij' version "1.13.3"
+  id 'org.jetbrains.intellij' version "1.15.0"
 }
 
 dependencies {
@@ -41,7 +41,13 @@ allprojects {
   }
   
   def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
-  
+
+  tasks.withType(Test).configureEach {
+    jvmArgs = [
+      '-Djava.awt.headless=true'
+    ]
+  }
+
   test {
     useJUnitPlatform {
       exclude compilationPackages

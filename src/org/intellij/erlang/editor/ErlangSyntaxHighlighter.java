@@ -20,11 +20,13 @@ import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 import static org.intellij.erlang.ErlangTypes.*;
@@ -54,10 +56,16 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey CALLBACK      = createTextAttributesKey("ERL_CALLBACK", DefaultLanguageHighlighterColors.FUNCTION_CALL);
   public static final TextAttributesKey MODULE_REF    = createTextAttributesKey("ERL_MODULE_REF", DefaultLanguageHighlighterColors.CLASS_NAME);
 
+  private final Project myProject;
+
+  public ErlangSyntaxHighlighter(@Nullable Project project) {
+    myProject = project;
+  }
+
   @NotNull
   @Override
   public Lexer getHighlightingLexer() {
-    return new ErlangLexer();
+    return new ErlangLexer(myProject);
   }
 
   @NotNull

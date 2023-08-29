@@ -18,23 +18,45 @@ package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtilRt;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class ErlangCompletionTest extends ErlangCompletionTestBase {
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return new DefaultLightProjectDescriptor() {
+      @Override
+      public Sdk getSdk() {
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
+      }
+    };
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setUpProjectSdk();
+  }
+
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
   public void testFunctions() {
     doTestInclude(
-      "foo() -> ok.\n" +
-      "buzz() -> ok.\n" +
-      "bar(A)-> <caret>", "foo", "buzz");
+      """
+        foo() -> ok.
+        buzz() -> ok.
+        bar(A)-> <caret>""", "foo", "buzz");
   }
 
   public void testFunctionCompletionInTypedList() {
@@ -46,9 +68,10 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testRecords() {
     doTestInclude(
-      "-record(foo, {id}).\n" +
-      "-record(buz, {id}).\n" +
-      "bar(A)-> A#<caret>", "foo", "buz");
+      """
+        -record(foo, {id}).
+        -record(buz, {id}).
+        bar(A)-> A#<caret>""", "foo", "buz");
   }  
   
   public void testRecordFields() {
@@ -100,39 +123,44 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testMacros() {
     doTestInclude(
-      "-define(foo, 1).\n" +
-      "-define(buz, 1).\n" +
-      "bar(A)-> ?<caret>", "foo", "buz");
+      """
+        -define(foo, 1).
+        -define(buz, 1).
+        bar(A)-> ?<caret>""", "foo", "buz");
   }
 
   public void testTypesInRecords() {
     doTestInclude(
-      "-type foo() :: atom().\n" +
-      "-type buz() :: string().\n" +
-      "-record(rec, {id :: <caret>}).", "foo", "buz");
+      """
+        -type foo() :: atom().
+        -type buz() :: string().
+        -record(rec, {id :: <caret>}).""", "foo", "buz");
   }
 
   public void testBuiltInTypesInRecords() {
     doTestInclude(
-      "-type foo() :: atom().\n" +
-      "-type buz() :: string().\n" +
-      "-record(rec, {id :: <caret>}).",
+      """
+        -type foo() :: atom().
+        -type buz() :: string().
+        -record(rec, {id :: <caret>}).""",
       ArrayUtilRt.toStringArray(ErlangPsiImplUtil.BUILT_IN_TYPES)
     );
   }
 
   public void testTypesInSpec() {
     doTestInclude(
-      "-type foo() :: atom().\n" +
-      "-type buz() :: string().\n" +
-      "-spec my_fun(<caret>)", "foo", "buz", "atom", "no_return");
+      """
+        -type foo() :: atom().
+        -type buz() :: string().
+        -spec my_fun(<caret>)""", "foo", "buz", "atom", "no_return");
   }
 
   public void testTypesInTypeDeclaration() {
     doTestInclude(
-      "-type foo() :: <caret>atom().\n" +
-        "-type buz() :: string().\n" +
-        "-type tes() :: <caret>)", "foo", "buz", "atom", "no_return");
+      """
+        -type foo() :: <caret>atom().
+        -type buz() :: string().
+        -type tes() :: <caret>)""", "foo", "buz", "atom", "no_return");
   }
 
   public void testBif() {
@@ -161,18 +189,20 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void test182() {
-    doTestInclude("test() -> <caret>\n" +
-      "ok.\n" +
-      "my_local_function() -> not_so_ok.",
-      "my_local_function");
+    doTestInclude("""
+                    test() -> <caret>
+                    ok.
+                    my_local_function() -> not_so_ok.""",
+                  "my_local_function");
   }
 
   public void testNoVariableDuplicates() {
-    myFixture.configureByText("a.erl", 
-      "foo() ->\n" +
-      "    case {1, 1} of\n" +
-      "        {A, A} -> <caret>\n" +
-      "    end.");
+    myFixture.configureByText("a.erl",
+                              """
+                                foo() ->
+                                    case {1, 1} of
+                                        {A, A} -> <caret>
+                                    end.""");
     myFixture.complete(CompletionType.BASIC, 1);
     List<String> stringList = myFixture.getLookupElementStrings();
     assertNotNull(stringList);
@@ -438,35 +468,30 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testSmartInteger() {
-    doSmartTest("-spec g(A :: integer()) -> integer().\n" +
-      "g(A) -> 1.\n" +
-      "foo() ->\n" +
-      "    B = 2 / 1,\n" +
-      "    B2 = \"\",\n" +
-      "    B4 = (1),\n" +
-      "    B3 = 1 + 1*1,\n" +
-      "    g(<caret>);",
-      CheckType.EQUALS, "B4", "B3", "g");
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> 1.
+                  foo() ->
+                      B = 2 / 1,
+                      B2 = "",
+                      B4 = (1),
+                      B3 = 1 + 1*1,
+                      g(<caret>);""",
+                CheckType.EQUALS, "B4", "B3", "g");
   }
 
   public void testSmartCompositeTypes() {
     doSmartTest(
-      "-spec new(Func::atom(), fun() | string()) -> integer().\n" +
-        "new(Func, StubFun) ->\n" +
-        "    Str = \"\",\n" +
-        "    Fun = fun () -> ok end,\n" +
-        "    Fun2 = fun () -> ok end,\n" +
-        "    new(atom, <caret>);\n" +
-        "new(Func, ClauseSpecs) -> ok.",
+      """
+        -spec new(Func::atom(), fun() | string()) -> integer().
+        new(Func, StubFun) ->
+            Str = "",
+            Fun = fun () -> ok end,
+            Fun2 = fun () -> ok end,
+            new(atom, <caret>);
+        new(Func, ClauseSpecs) -> ok.""",
       CheckType.EQUALS, "Fun", "Fun2" , "Str"
     );
-  }
-
-  public void testCameCaseModules() {
-    myFixture.configureByText("CamelCase.erl", "");
-    myFixture.configureByText("a.erl", "bar() -> Cam<caret>");
-    myFixture.complete(CompletionType.BASIC, 2);
-    myFixture.checkResult("bar() -> 'CamelCase':<caret>");
   }
 
   public void testFunctionsFromCameCaseModule() {

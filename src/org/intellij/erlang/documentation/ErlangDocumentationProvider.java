@@ -21,6 +21,7 @@ import com.intellij.lang.documentation.ExternalDocumentationProvider;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -31,6 +32,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,11 +69,10 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
     Matcher linkMatcher = PATTERN_PSI_LINK.matcher(link);
     if (linkMatcher.matches()) {
       String moduleName = linkMatcher.group(1);
-      PsiFile[] psiFiles = FilenameIndex.getFilesByName(
-        project, moduleName + ".erl", GlobalSearchScope.allScope(project));
-      for (PsiFile psiFile : psiFiles) {
-        if (psiFile instanceof ErlangFile) {
-          ErlangFile erlFile = (ErlangFile) psiFile;
+      @NotNull Collection<VirtualFile> vFiles = FilenameIndex.getVirtualFilesByName(moduleName + ".erl", GlobalSearchScope.allScope(project));
+      for (VirtualFile vFile : vFiles) {
+        PsiFile psiFile = psiManager.findFile(vFile);
+        if (psiFile instanceof ErlangFile erlFile) {
           if (linkMatcher.group(2) == null) {
             return erlFile.getModule();
           }
@@ -94,9 +95,8 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
 
   @Nullable
   @Override
-  public String fetchExternalDocumentation(Project project, final PsiElement element, List<String> docUrls) {
-    ErlangSdkDocProviderBase externalDocProvider =
-      ApplicationManager.getApplication().runReadAction((Computable<ErlangSdkDocProviderBase>) () -> ObjectUtils.tryCast(ElementDocProviderFactory.create(element), ErlangSdkDocProviderBase.class));
+  public String fetchExternalDocumentation(Project project, final PsiElement element, List<String> docUrls, boolean onHover) {
+    ErlangSdkDocProviderBase externalDocProvider = ApplicationManager.getApplication().runReadAction((Computable<ErlangSdkDocProviderBase>) () -> ObjectUtils.tryCast(ElementDocProviderFactory.create(element), ErlangSdkDocProviderBase.class));
     return externalDocProvider != null ? externalDocProvider.getDocText() : null;
   }
 

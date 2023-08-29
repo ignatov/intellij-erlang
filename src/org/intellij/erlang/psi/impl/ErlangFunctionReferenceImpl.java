@@ -106,7 +106,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   @NotNull
   @Override
-  public ResolveResult[] multiResolve(boolean incompleteCode) {
+  public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
     if (suppressResolve()) return ResolveResult.EMPTY_ARRAY; // for #132
 
     // todo: use incompleteCode
@@ -118,8 +118,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     }
     else {
       PsiFile containingFile = getElement().getContainingFile();
-      if (containingFile instanceof ErlangFile) {
-        ErlangFile erlangFile = (ErlangFile) containingFile;
+      if (containingFile instanceof ErlangFile erlangFile) {
         result = new ArrayList<>();
 
         for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
@@ -152,7 +151,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   }
 
   @Override
-  public boolean isReferenceTo(PsiElement element) {
+  public boolean isReferenceTo(@NotNull PsiElement element) {
     return getElement().getManager().areElementsEquivalent(resolve(), element);
   }
 
@@ -169,13 +168,13 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   @NotNull
   @Override
-  public Object[] getVariants() {
+  public Object @NotNull [] getVariants() {
     if (PsiTreeUtil.getParentOfType(myQAtom, ErlangExportFunction.class) != null) return EMPTY_ARRAY;
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getFunctionLookupElements(getElement().getContainingFile(), true, myModuleAtom));
   }
 
   @Override
-  public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+  public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
     ErlangPsiImplUtil.renameAtom(myQAtom.getAtom(), newElementName);
     return getElement();
   }

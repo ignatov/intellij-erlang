@@ -97,38 +97,39 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
 
   @NotNull
   public SyntaxHighlighter getHighlighter() {
-    return new ErlangSyntaxHighlighter();
+    return new ErlangSyntaxHighlighter(null);
   }
 
   @NotNull
   public String getDemoText() {
-    return "%%% Module fact documentation\n" +
-      "<m_att>-module</m_att>(fact).\n" +
-      "<m_att>-export</m_att>([<f>fac</f>/1]).\n" +
-      "\n" +
-      "<m_att>-record</m_att>(<r>state</r>, {id, name}).\n" +
-      "\n" +
-      "<m_att>-define</m_att>(<m>MACRO</m>, macro_value).\n" +
-      "\n" +
-      "<m_att>-type</m_att> <t>in</t>() :: ok | hello .\n" +
-      "<m_att>-type</m_att> <t>out</t>() :: ok | {error, <bt>term</bt>()}.\n" +
-      "\n" +
-      "%% Factorial implementation\n" +
-      "%% <d>@doc</d> Documentation\n" +
-      "<f>fac</f>(0) -> 1;\n" +
-      "<f>fac</f>(N) when N > 0, <g>is_integer</g>(N) -> N * <c>fac</c>(N-1).\n" +
-      "\n" +
-      "<f>string_sample</f>(A) -> \"string\n" +
-      "  second line\".\n" +
-      "\n" +
-      "<f>update_state</f>(State) -> State#<r>state</r>{id=10}.\n" +
-      "\n" +
-      "<m_att>-spec</m_att> <s>simple</s>(<t>in</t>())-> <t>out</t>(). \n"  +
-      "<f>simple</f>(<a>ok</a>) -> <a>ok</a>.\n" +
-      "\n" +
-      "<f>use_macro</f>() -> <mr>io</mr>:<c>format</c>(?<m>MACRO</m>).\n" +
-      "\n" +
-      "<m_att>-callback</m_att> <cb>start_service</cb>() -> {<a>ok</a>, <bt>pid</bt>()}."
+    return """
+      %%% Module fact documentation
+      <m_att>-module</m_att>(fact).
+      <m_att>-export</m_att>([<f>fac</f>/1]).
+
+      <m_att>-record</m_att>(<r>state</r>, {id, name}).
+
+      <m_att>-define</m_att>(<m>MACRO</m>, macro_value).
+
+      <m_att>-type</m_att> <t>in</t>() :: ok | hello .
+      <m_att>-type</m_att> <t>out</t>() :: ok | {error, <bt>term</bt>()}.
+
+      %% Factorial implementation
+      %% <d>@doc</d> Documentation
+      <f>fac</f>(0) -> 1;
+      <f>fac</f>(N) when N > 0, <g>is_integer</g>(N) -> N * <c>fac</c>(N-1).
+
+      <f>string_sample</f>(A) -> "string
+        second line".
+
+      <f>update_state</f>(State) -> State#<r>state</r>{id=10}.
+
+      <m_att>-spec</m_att> <s>simple</s>(<t>in</t>())-> <t>out</t>().\s
+      <f>simple</f>(<a>ok</a>) -> <a>ok</a>.
+
+      <f>use_macro</f>() -> <mr>io</mr>:<c>format</c>(?<m>MACRO</m>).
+
+      <m_att>-callback</m_att> <cb>start_service</cb>() -> {<a>ok</a>, <bt>pid</bt>()}."""
       ;
   }
 

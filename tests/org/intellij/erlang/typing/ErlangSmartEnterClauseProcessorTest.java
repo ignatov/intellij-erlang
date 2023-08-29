@@ -40,35 +40,40 @@ public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCode
     doTest(
       "foo() -> ok;<caret>\n" +
         "foo() -> ok;",
-      "foo() -> ok;\n" +
-      "foo() ->\n" +
-        "foo() -> ok;");
+      """
+        foo() -> ok;
+        foo() ->
+        foo() -> ok;""");
   }
 
   public void testNotLastCaseClause() {
     doTest(
-      "foo() ->\n" +
-        "  case 1 of\n" +
-        "    14 -> 30;<caret>\n" +
-        "    123 -> 123\n" +
-        "  end",
-      "foo() ->\n" +
-        "  case 1 of\n" +
-        "    14 -> 30;\n" +
-        "    _ ->\n" +
-        "    123 -> 123\n" +
-        "  end");
+      """
+        foo() ->
+          case 1 of
+            14 -> 30;<caret>
+            123 -> 123
+          end""",
+      """
+        foo() ->
+          case 1 of
+            14 -> 30;
+            _ ->
+            123 -> 123
+          end""");
   }
 
   public void testCaseClause() {
     doTest(
-      "main(A) ->\n" +
-        "  case A of\n" +
-        "    1 -> 2;<caret>",
-      "main(A) ->\n" +
-        "  case A of\n" +
-        "    1 -> 2;\n" +
-        "    _ -><caret>");
+      """
+        main(A) ->
+          case A of
+            1 -> 2;<caret>""",
+      """
+        main(A) ->
+          case A of
+            1 -> 2;
+            _ -><caret>""");
   }
 
   private void doTest(@NotNull String before, @NotNull String after) {

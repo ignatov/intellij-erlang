@@ -44,15 +44,16 @@ public class ErlangImportFixTest extends ErlangQuickFixTestBase {
 
   private void loadModule() {
     myFixture.configureByText("incl.erl",
-      "-module(incl).\n" +
-        "-export([crc32/1, crc32/2, abs/1, dt_get_tag/0, bar/0, abs/0, foo/0]).\n" +
-        "foo() -> ok.\n" +
-        "crc32(Data) -> Data.\n" +
-        "crc32(D, T) -> ok.\n" +
-        "abs(D) -> D.\n" +
-        "abs() -> zero.\n" +
-        "dt_get_tag() -> ok.\n" +
-        "bar() -> ok.");
+                              """
+                                -module(incl).
+                                -export([crc32/1, crc32/2, abs/1, dt_get_tag/0, bar/0, abs/0, foo/0]).
+                                foo() -> ok.
+                                crc32(Data) -> Data.
+                                crc32(D, T) -> ok.
+                                abs(D) -> D.
+                                abs() -> zero.
+                                dt_get_tag() -> ok.
+                                bar() -> ok.""");
   }
   
   public void testCommon()              { doTest(); }
@@ -65,14 +66,15 @@ public class ErlangImportFixTest extends ErlangQuickFixTestBase {
   public void testAlreadyImported2()    { doTest(); }
   public void testImportAutoimported() {
     myFixture.configureByText("incl.erl",
-      "-module(incl).\n" +
-        "-export([crc32/1, abs/1, dt_get_tag/0, bar/0, abs/0]).\n" +
-        "\n" +
-        "crc32(Data) -> Data.\n" +
-        "abs(D) -> D.\n" +
-        "abs() -> zero.\n" +
-        "dt_get_tag() -> ok.\n" +
-        "bar() -> ok.");
+                              """
+                                -module(incl).
+                                -export([crc32/1, abs/1, dt_get_tag/0, bar/0, abs/0]).
+
+                                crc32(Data) -> Data.
+                                abs(D) -> D.
+                                abs() -> zero.
+                                dt_get_tag() -> ok.
+                                bar() -> ok.""");
     doTest();
   }
 }
