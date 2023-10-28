@@ -17,7 +17,7 @@
 <idea-plugin>
     <!--Rebar related extensions -->
     <extensions defaultExtensionNs="com.intellij">
-        <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable"/>
+        <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable" displayName="Erlang External Tools"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationType"/>
         <programRunner implementation="org.intellij.erlang.rebar.runner.RebarRunner"/>
@@ -83,7 +83,7 @@
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameVariableProcessor"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameAtomProcessor"/>
 
-        <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor"/>
+        <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor" language="Erlang"/>
 
         <inlineActionHandler implementation="org.intellij.erlang.refactoring.ErlangInlineVariableHandler"/>
 
