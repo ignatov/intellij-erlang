@@ -46,10 +46,10 @@
         <internalFileTemplate name="Erlang Gen Event"/>
 
         <defaultLiveTemplates file="liveTemplates/erlang"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Generic"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Declaration"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Statement"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Expression"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Generic" contextId="ERLANG_CODE"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Declaration" contextId="ERLANG_DECLARATION" baseContextId="ERLANG_CODE"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Statement" contextId="ERLANG_STATEMENT" baseContextId="ERLANG_CODE"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Expression" contextId="ERLANG_EXPRESSION" baseContextId="ERLANG_CODE"/>
 
         <!-- file types -->
         <fileType language="Erlang" name="Erlang" extensions="erl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="MODULE"/>
