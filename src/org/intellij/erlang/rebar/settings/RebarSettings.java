@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 @State(name = JpsRebarSettingsSerializer.REBAR_COMPONENT_NAME,
        storages = {@Storage(value = JpsRebarSettingsSerializer.REBAR_CONFIG_FILE_NAME)})
+@Service(Service.Level.PROJECT)
 public final class RebarSettings implements PersistentStateComponent<RebarSettingsState> {
   @NotNull private RebarSettingsState myRebarSettingsState = new RebarSettingsState();
 
