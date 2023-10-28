@@ -35,7 +35,7 @@ public abstract class ErlangFileType extends LanguageFileType {
   public static final ErlangFileType HEADER = new HrlFileType();
   public static final ErlangFileType APP = new AppFileType();
   public static final ErlangFileType TERMS = new ErlangTermsFileType();
-  public static final List<ErlangFileType> TYPES = ContainerUtil.immutableList(MODULE, HEADER, APP, TERMS);
+  public static final List<ErlangFileType> TYPES = List.of(MODULE, HEADER, APP, TERMS);
 
   private final String myName;
   private final String myDescription;

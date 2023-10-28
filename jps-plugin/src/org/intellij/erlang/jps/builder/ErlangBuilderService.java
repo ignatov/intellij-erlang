@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.builders.BuildTargetType;
@@ -29,12 +28,12 @@ public class ErlangBuilderService extends BuilderService {
   @NotNull
   @Override
   public List<? extends BuildTargetType<?>> getTargetTypes() {
-    return ContainerUtil.newArrayList(ErlangModuleBuildOrderTargetType.INSTANCE, ErlangTargetType.INSTANCE);
+    return List.of(ErlangModuleBuildOrderTargetType.INSTANCE, ErlangTargetType.INSTANCE);
   }
 
   @NotNull
   @Override
   public List<? extends TargetBuilder<?, ?>> createBuilders() {
-    return ContainerUtil.newArrayList(new ErlangModuleBuildOrderBuilder(), new ErlangBuilder(), new RebarBuilder());
+    return List.of(new ErlangModuleBuildOrderBuilder(), new ErlangBuilder(), new RebarBuilder());
   }
 }
