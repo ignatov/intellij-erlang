@@ -57,9 +57,14 @@
         <!-- dialyzer -->
         <projectService serviceImplementation="org.intellij.erlang.dialyzer.DialyzerSettings"/>
 
+        <!-- file types -->
+        <fileType language="Erlang" name="Erlang" extensions="erl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="MODULE"/>
+        <fileType language="Erlang" name="Erlang Header" extensions="hrl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="HEADER"/>
+        <fileType language="Erlang" name="Erlang/OTP app" extensions="app;app.src" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="APP"  patterns="*.app.src;*.app"/>
+        <fileType language="Erlang" name="Erlang Terms" extensions="config;routes;rel" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="TERMS"/>
+
         <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder"/>
-        <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
         <iconProvider implementation="org.intellij.erlang.icons.ErlangIconProvider"/>
         <updateAddedFileProcessor implementation="org.intellij.erlang.ErlangUpdateAddedFileProcessor"/>
         <lang.findUsagesProvider language="Erlang" implementationClass="org.intellij.erlang.search.ErlangFindUsagesProvider"/>
