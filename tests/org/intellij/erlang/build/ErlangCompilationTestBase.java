@@ -106,7 +106,7 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
     }
   }
 
-  @Override
+  //@Override
   protected boolean isRunInWriteAction() {
     return false;
   }
