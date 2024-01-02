@@ -304,7 +304,7 @@
             <add-to-group group-id="RunContextPopupGroup" anchor="last"/>
             <keyboard-shortcut first-keystroke="ctrl shift X" keymap="$default"/>
         </action>
-        <action id="ErlangConsole.Execute" class="org.intellij.erlang.console.ErlangConsoleExecuteAction">
+        <action id="ErlangConsole.Execute" text="Run in Erlang Console" class="org.intellij.erlang.console.ErlangConsoleExecuteAction">
             <keyboard-shortcut first-keystroke="ENTER" keymap="$default"/>
         </action>
 
