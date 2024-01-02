@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<idea-plugin url="http://ignatov.github.com/intellij-erlang" xmlns:xi="http://www.w3.org/2001/XInclude">
+<idea-plugin url="https://ignatov.github.io/intellij-erlang" xmlns:xi="http://www.w3.org/2001/XInclude">
     <id>org.jetbrains.erlang</id>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
     <depends>com.intellij.modules.lang</depends>
