@@ -16,13 +16,16 @@
 
 package org.intellij.erlang.quickfixes;
 
+import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.codeInspection.LocalQuickFixAndIntentionActionOnPsiElement;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiAnchor;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -42,6 +45,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPsiElement {
   private static final int MAX_EXPORT_STRING_LENGTH = 80;
@@ -73,6 +77,13 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     }
   }
 
+  @Override
+  public @NotNull IntentionPreviewInfo generatePreview(@NotNull Project project,
+                                                       @NotNull Editor editor,
+                                                       @NotNull PsiFile file) {
+    return IntentionPreviewInfo.EMPTY;
+  }
+
   private static void processFunction(@NotNull final Project project,
                                       @NotNull final ErlangFunction function,
                                       @Nullable Editor editor) {
@@ -99,12 +110,13 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       exportsShow.add(createExport(project, ""));
     }
 
-    Consumer<PsiElement> onClick = erlangExport ->
+    Consumer<PsiAnchor> onClick = anchor ->
       CommandProcessor.getInstance().executeCommand(
         project,
         () ->
           ApplicationManager.getApplication().runWriteAction(
             () -> {
+              PsiElement erlangExport = anchor.retrieve();
               PsiDocumentManager.getInstance(project).commitAllDocuments();
 
               if (erlangExport instanceof ErlangExport erlangExportTyped) {
@@ -115,7 +127,9 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
               }
             }), "Export Function", null);
 
-    JBPopupFactory.getInstance().createPopupChooserBuilder(exportsShow)
+
+    List<PsiAnchor> collect = exportsShow.stream().map(PsiAnchor::create).collect(Collectors.toList());
+    JBPopupFactory.getInstance().createPopupChooserBuilder(collect)
                   .setTitle("Choose Export")
                   .setMovable(false)
                   .setResizable(false)
@@ -138,17 +152,18 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                                     boolean cellHasFocus) {
         var rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-        if (value instanceof ErlangExport export) {
-          if (export.getExportFunctions() != null) {
+        String text = ReadAction.compute(() -> {
+          PsiElement e = ((PsiAnchor) value).retrieve();
+          if (e instanceof ErlangExport export && export.getExportFunctions() != null) {
             var exportText = export.getExportFunctions().getText();
             // Replace consequent whitespaces and tabs with one space
             var trimmedText = exportText.trim().replaceAll(" +", " ");
-            setText(getPrettyPrefix(trimmedText));
+            return getPrettyPrefix(trimmedText);
           }
-        }
-        else {
-          setText("Add a new -export() attribute");
-        }
+          return "Add a new -export() attribute";
+        });
+
+        setText(text);
 
         return rendererComponent;
       }

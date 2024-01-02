@@ -18,6 +18,7 @@ package org.intellij.erlang.documentation;
 
 import com.intellij.codeInsight.documentation.PlatformDocumentationUtil;
 import com.intellij.ide.BrowserUtil;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.OrderEntry;
@@ -110,8 +111,10 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @NotNull
   private List<OrderEntry> getOrderEntries() {
     if (myOrderEntries == null) {
-      ProjectFileIndex fileIndex = ProjectRootManager.getInstance(myProject).getFileIndex();
-      myOrderEntries = fileIndex.getOrderEntriesForFile(myVirtualFile);
+      myOrderEntries = ReadAction.compute((() -> {
+        ProjectFileIndex fileIndex = ProjectRootManager.getInstance(myProject).getFileIndex();
+        return fileIndex.getOrderEntriesForFile(myVirtualFile);
+      }));
     }
     return myOrderEntries;
   }
