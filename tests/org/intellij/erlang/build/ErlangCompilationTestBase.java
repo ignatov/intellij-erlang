@@ -106,11 +106,6 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
     }
   }
 
-  @Override
-  protected boolean isRunInWriteAction() {
-    return false;
-  }
-
   @NotNull
   protected Module createModuleInOwnDirectoryWithSourceAndTestRoot(final String moduleName) throws Exception {
     return ApplicationManager.getApplication().runWriteAction((ThrowableComputable<Module, IOException>) () -> {
