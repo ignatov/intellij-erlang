@@ -22,10 +22,10 @@
     <description><![CDATA[
     <p>Erlang support for IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, RubyMine and other JetBrains IDE.</p>
     <p>
-    Feel free to file new feature requests as an issue on <a href="https://github.com/ignatov/intellij-erlang/issues">GitHub</a>, just like a bug.
+    Feel free to file new feature requests as an issue on <a href="https://github.com/ignatov/intellij-erlang/issues">GitHub</a>.
     </p>
     <p>
-        <a href="https://github.com/sponsors/ignatov">Donate</a> to support the project.
+        If you find this plugin useful, consider making a <a href="https://github.com/sponsors/ignatov">donation</a> to support the project.
     </p>
     ]]>
     </description>
