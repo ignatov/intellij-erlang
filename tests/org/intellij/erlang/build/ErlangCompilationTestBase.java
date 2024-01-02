@@ -92,7 +92,7 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
   }
 
   @Override
-  protected ModuleType getModuleType() {
+  protected @NotNull ModuleType<?> getModuleType() {
     return ErlangModuleType.getInstance();
   }
 
@@ -236,12 +236,11 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
     return sourceDir;
   }
 
-  @NotNull
-  private static VirtualFile addSourceRoot(@NotNull Module module,
-                                           @NotNull String sourceRootName,
-                                           boolean isTestSourceRoot) throws IOException {
+  private static void addSourceRoot(@NotNull Module module,
+                                    @NotNull String sourceRootName,
+                                    boolean isTestSourceRoot) throws IOException {
     JavaSourceRootType rootType = isTestSourceRoot? JavaSourceRootType.TEST_SOURCE:JavaSourceRootType.SOURCE;
-    return addSourceRoot(module, sourceRootName,rootType);
+    addSourceRoot(module, sourceRootName, rootType);
   }
 
   @NotNull
