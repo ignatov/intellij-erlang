@@ -20,19 +20,19 @@
     <depends>com.intellij.modules.lang</depends>
     <name>Erlang</name>
     <description><![CDATA[
-    <p>Erlang support for IntelliJ IDEA, RubyMine, WebStorm, etc.</p>
+    <p>Erlang support for IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, RubyMine and other JetBrains IDE.</p>
     <p>
     Feel free to file new feature requests as an issue on <a href="https://github.com/ignatov/intellij-erlang/issues">GitHub</a>, just like a bug.
     </p>
     <p>
-        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=C344TC8DDC5UN" rel="nofollow">Donate</a> to support the project.
+        <a href="https://github.com/sponsors/ignatov">Donate</a> to support the project.
     </p>
     ]]>
     </description>
     <change-notes>
         <![CDATA[
             <ul>
-              <li>IntelliJ 2021.2 support</li>
+              <li>IntelliJ 2023.3 support</li>
               <li>Erlang plugin could be installed and upgraded without restart</li>
             </ul>
         ]]>
