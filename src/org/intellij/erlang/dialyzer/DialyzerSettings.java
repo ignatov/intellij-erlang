@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
   @Storage("emacs.xml"),
   @Storage(value = "dialyzer.xml", deprecated = true)
 })
+@Service(Service.Level.PROJECT)
 public final class DialyzerSettings implements PersistentStateComponent<DialyzerSettings> {
   @NotNull
   private String myCurrentPltPath = "";

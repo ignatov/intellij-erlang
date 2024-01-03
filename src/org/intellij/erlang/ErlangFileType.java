@@ -16,16 +16,11 @@
 
 package org.intellij.erlang;
 
-import com.intellij.openapi.fileTypes.ExtensionFileNameMatcher;
-import com.intellij.openapi.fileTypes.FileTypeConsumer;
 import com.intellij.openapi.fileTypes.LanguageFileType;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.jps.model.fileTypes.FileNameMatcherFactory;
 
 import javax.swing.*;
 import java.util.List;
@@ -35,7 +30,7 @@ public abstract class ErlangFileType extends LanguageFileType {
   public static final ErlangFileType HEADER = new HrlFileType();
   public static final ErlangFileType APP = new AppFileType();
   public static final ErlangFileType TERMS = new ErlangTermsFileType();
-  public static final List<ErlangFileType> TYPES = ContainerUtil.immutableList(MODULE, HEADER, APP, TERMS);
+  public static final List<ErlangFileType> TYPES = List.of(MODULE, HEADER, APP, TERMS);
 
   private final String myName;
   private final String myDescription;
@@ -52,7 +47,7 @@ public abstract class ErlangFileType extends LanguageFileType {
     myName = name;
     myDescription = description;
     myIcon = icon;
-    myExtensions = ContainerUtil.immutableList(extensions);
+    myExtensions = List.of(extensions);
   }
 
   @NotNull
@@ -89,11 +84,6 @@ public abstract class ErlangFileType extends LanguageFileType {
     return myExtensions;
   }
 
-  public void register(@NotNull FileTypeConsumer registrar) {
-    registrar.consume(this, StringUtil.join(myExtensions, FileTypeConsumer.EXTENSION_DELIMITER));
-  }
-
-
   private static class ModuleFileType extends ErlangFileType {
     private ModuleFileType() {
       super("Erlang",
@@ -122,14 +112,6 @@ public abstract class ErlangFileType extends LanguageFileType {
             ErlangIcons.OTP_APP_RESOURCE,
             APP,
             APP_SRC);
-    }
-
-    @Override
-    public void register(@NotNull FileTypeConsumer registrar) {
-      // if we feed "app.src" as an extension, it may get compared to extension part of file name and won't match.
-      registrar.consume(this,
-                        new ExtensionFileNameMatcher(APP),
-                        FileNameMatcherFactory.getInstance().createMatcher("*." + APP_SRC));
     }
   }
 

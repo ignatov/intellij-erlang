@@ -40,8 +40,8 @@ import static com.intellij.patterns.StandardPatterns.instanceOf;
 public class ErlangAppCompletionContributor extends CompletionContributor {
   // source: "FILE SYNTAX" section of http://www.erlang.org/doc/man/app.html
   static final List<String> KEYWORDS =
-    ContainerUtil.immutableList("description", "id", "vsn", "modules", "maxP", "maxT", "registered", "applications",
-                                "included_applications", "env", "mod", "start_phases", "runtime_dependencies");
+    List.of("description", "id", "vsn", "modules", "maxP", "maxT", "registered", "applications",
+            "included_applications", "env", "mod", "start_phases", "runtime_dependencies");
   private static final String APPLICATION_KEYWORD = "application";
 
   @Override

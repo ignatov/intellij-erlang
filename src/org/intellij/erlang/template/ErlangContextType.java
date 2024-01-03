@@ -15,7 +15,6 @@
  */
 package org.intellij.erlang.template;
 
-import com.intellij.codeInsight.template.EverywhereContextType;
 import com.intellij.codeInsight.template.TemplateActionContext;
 import com.intellij.codeInsight.template.TemplateContextType;
 import com.intellij.psi.PsiElement;
@@ -32,13 +31,11 @@ import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public abstract class ErlangContextType extends TemplateContextType {
-  protected ErlangContextType(@NotNull @NonNls String id, @NotNull String presentableName, @Nullable Class<? extends TemplateContextType> baseContextType) {
-    super(id, presentableName, baseContextType);
+  protected ErlangContextType(@NotNull String presentableName) {
+    super(presentableName);
   }
 
   @Override
@@ -56,9 +53,8 @@ public abstract class ErlangContextType extends TemplateContextType {
   protected abstract boolean isInContext(PsiElement element);
 
   public static class Generic extends ErlangContextType {
-
     protected Generic() {
-      super("ERLANG_CODE", "Erlang", EverywhereContextType.class);
+      super("Erlang");
     }
 
     @Override
@@ -69,7 +65,7 @@ public abstract class ErlangContextType extends TemplateContextType {
 
   protected static class Declaration extends ErlangContextType {
     protected Declaration() {
-      super("ERLANG_DECLARATION", "Declaration", Generic.class);
+      super("Declaration");
     }
 
     @Override
@@ -88,7 +84,7 @@ public abstract class ErlangContextType extends TemplateContextType {
 
   protected static class Statement extends ErlangContextType {
     protected Statement() {
-      super("ERLANG_STATEMENT", "Statement", Generic.class);
+      super("Statement");
     }
 
     @Override
@@ -99,7 +95,7 @@ public abstract class ErlangContextType extends TemplateContextType {
 
   protected static class Expression extends ErlangContextType {
     protected Expression() {
-      super("ERLANG_EXPRESSION", "Expression", Generic.class);
+      super("Expression");
     }
 
     @Override

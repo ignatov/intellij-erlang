@@ -34,7 +34,6 @@ import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
-import gnu.trove.THashMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
@@ -53,7 +52,7 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
   private final CachedValue<ErlangModule> myModuleValue =
-    createCachedValue(new ValueProvider<ErlangModule>() {
+    createCachedValue(new ValueProvider<>() {
       @Nullable
       @Override
       protected ErlangModule computeValue() {
@@ -61,7 +60,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangRule>> myRulesValue =
-    createCachedValue(new ValueProvider<List<ErlangRule>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       protected List<ErlangRule> computeValue() {
@@ -69,7 +68,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangFunction>> myFunctionValue =
-    createCachedValue(new ValueProvider<List<ErlangFunction>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangFunction> computeValue() {
@@ -77,7 +76,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangImportFunction>> myImportValue =
-    createCachedValue(new ValueProvider<List<ErlangImportFunction>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangImportFunction> computeValue() {
@@ -85,7 +84,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Set<ErlangFunction>> myExportedFunctionValue =
-    createCachedValue(new ValueProvider<Set<ErlangFunction>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Set<ErlangFunction> computeValue() {
@@ -93,7 +92,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangAttribute>> myAttributeValue =
-    createCachedValue(new ValueProvider<List<ErlangAttribute>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangAttribute> computeValue() {
@@ -101,7 +100,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangRecordDefinition>> myRecordValue =
-    createCachedValue(new ValueProvider<List<ErlangRecordDefinition>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangRecordDefinition> computeValue() {
@@ -109,7 +108,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangInclude>> myIncludeValue =
-    createCachedValue(new ValueProvider<List<ErlangInclude>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangInclude> computeValue() {
@@ -117,7 +116,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangIncludeLib>> myIncludeLibValue =
-    createCachedValue(new ValueProvider<List<ErlangIncludeLib>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangIncludeLib> computeValue() {
@@ -125,7 +124,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<MultiMap<String, ErlangFunction>> myFunctionsMap =
-    createCachedValue(new ValueProvider<MultiMap<String, ErlangFunction>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public MultiMap<String, ErlangFunction> computeValue() {
@@ -137,7 +136,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<MultiMap<String, ErlangImportFunction>> myImportsMap =
-    createCachedValue(new ValueProvider<MultiMap<String, ErlangImportFunction>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public MultiMap<String, ErlangImportFunction> computeValue() {
@@ -149,11 +148,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Map<String, ErlangRecordDefinition>> myRecordsMap =
-    createCachedValue(new ValueProvider<Map<String, ErlangRecordDefinition>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Map<String, ErlangRecordDefinition> computeValue() {
-        Map<String, ErlangRecordDefinition> map = new THashMap<>();
+        Map<String, ErlangRecordDefinition> map = new HashMap<>();
         for (ErlangRecordDefinition record : getRecords()) {
           String recordName = record.getName();
           if (!map.containsKey(recordName)) {
@@ -164,7 +163,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangMacrosDefinition>> myMacrosValue =
-    createCachedValue(new ValueProvider<List<ErlangMacrosDefinition>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangMacrosDefinition> computeValue() {
@@ -172,11 +171,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Map<String, ErlangMacrosDefinition>> myMacrosesMap =
-    createCachedValue(new ValueProvider<Map<String, ErlangMacrosDefinition>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Map<String, ErlangMacrosDefinition> computeValue() {
-        Map<String, ErlangMacrosDefinition> map = new THashMap<>();
+        Map<String, ErlangMacrosDefinition> map = new HashMap<>();
         for (ErlangMacrosDefinition macros : getMacroses()) {
           String macrosName = ErlangPsiImplUtil.getName(macros);
           if (!map.containsKey(macrosName)) {
@@ -187,7 +186,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangTypeDefinition>> myTypeValue =
-    createCachedValue(new ValueProvider<List<ErlangTypeDefinition>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangTypeDefinition> computeValue() {
@@ -195,11 +194,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Map<String, ErlangTypeDefinition>> myTypeMap =
-    createCachedValue(new ValueProvider<Map<String, ErlangTypeDefinition>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Map<String, ErlangTypeDefinition> computeValue() {
-        Map<String, ErlangTypeDefinition> map = new THashMap<>();
+        Map<String, ErlangTypeDefinition> map = new HashMap<>();
         for (ErlangTypeDefinition type : getTypes()) {
           String mName = type.getName();
           if (!map.containsKey(mName)) {
@@ -210,7 +209,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Map<String, ErlangCallbackSpec>> myCallbackMap =
-    createCachedValue(new ValueProvider<Map<String, ErlangCallbackSpec>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Map<String, ErlangCallbackSpec> computeValue() {
@@ -218,7 +217,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangBehaviour>> myBehavioursValue =
-    createCachedValue(new ValueProvider<List<ErlangBehaviour>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangBehaviour> computeValue() {
@@ -226,7 +225,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Collection<ErlangCallbackFunction>> myOptionalCallbacks =
-    createCachedValue(new ValueProvider<Collection<ErlangCallbackFunction>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Collection<ErlangCallbackFunction> computeValue() {
@@ -234,7 +233,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<List<ErlangSpecification>> mySpecificationsValue =
-    createCachedValue(new ValueProvider<List<ErlangSpecification>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public List<ErlangSpecification> computeValue() {
@@ -242,7 +241,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Boolean> myExportAll =
-    createCachedValue(new ValueProvider<Boolean>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Boolean computeValue() {
@@ -250,7 +249,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Boolean> myNoAutoImportAll =
-    createCachedValue(new ValueProvider<Boolean>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Boolean computeValue() {
@@ -258,7 +257,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Set<String>> myExportedFunctionsSignatures =
-    createCachedValue(new ValueProvider<Set<String>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Set<String> computeValue() {
@@ -266,7 +265,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       }
     });
   private final CachedValue<Set<String>> myNoAutoImportFunctionsSignatures =
-    createCachedValue(new ValueProvider<Set<String>>() {
+    createCachedValue(new ValueProvider<>() {
       @NotNull
       @Override
       public Set<String> computeValue() {
@@ -312,7 +311,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @NotNull
   private FileType getFileTypeForTests() {
-    // when in unit test mode fileViewProvider gets replaced by a mock and we don't get filetype set correctly
+    // when in unit test mode fileViewProvider gets replaced by a mock, and we don't get filetype set correctly
 
     assert ApplicationManager.getApplication().isUnitTestMode() :
       "This method should only be called in unit tests";
@@ -810,8 +809,8 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return result;
   }
 
-  private static boolean processChildrenDummyAware(ErlangFileImpl file, final Processor<PsiElement> processor) {
-    return new Processor<PsiElement>() {
+  private static void processChildrenDummyAware(ErlangFileImpl file, final Processor<PsiElement> processor) {
+    new Processor<PsiElement>() {
       @Override
       public boolean process(PsiElement psiElement) {
         for (PsiElement child = psiElement.getFirstChild(); child != null; child = child.getNextSibling()) {

@@ -17,8 +17,7 @@
 <idea-plugin>
     <!--Rebar related extensions -->
     <extensions defaultExtensionNs="com.intellij">
-        <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable"/>
-        <projectService serviceImplementation="org.intellij.erlang.rebar.settings.RebarSettings"/>
+        <projectConfigurable instance="org.intellij.erlang.settings.ErlangExternalToolsConfigurable" displayName="Erlang External Tools"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarRunConfigurationType"/>
         <configurationType implementation="org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationType"/>
         <programRunner implementation="org.intellij.erlang.rebar.runner.RebarRunner"/>
@@ -47,19 +46,18 @@
         <internalFileTemplate name="Erlang Gen Event"/>
 
         <defaultLiveTemplates file="liveTemplates/erlang"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Generic"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Declaration"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Statement"/>
-        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Expression"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Generic" contextId="ERLANG_CODE"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Declaration" contextId="ERLANG_DECLARATION" baseContextId="ERLANG_CODE"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Statement" contextId="ERLANG_STATEMENT" baseContextId="ERLANG_CODE"/>
+        <liveTemplateContext implementation="org.intellij.erlang.template.ErlangContextType$Expression" contextId="ERLANG_EXPRESSION" baseContextId="ERLANG_CODE"/>
 
-        <!-- emacs -->
-        <projectService serviceImplementation="org.intellij.erlang.emacs.EmacsSettings"/>
-        <!-- dialyzer -->
-        <projectService serviceImplementation="org.intellij.erlang.dialyzer.DialyzerSettings"/>
+        <!-- file types -->
+        <fileType language="Erlang" name="Erlang" extensions="erl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="MODULE"/>
+        <fileType language="Erlang" name="Erlang Header" extensions="hrl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="HEADER"/>
+        <fileType language="Erlang" name="Erlang/OTP app" extensions="app;app.src" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="APP"  patterns="*.app.src;*.app"/>
+        <fileType language="Erlang" name="Erlang Terms" extensions="config;routes;rel" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="TERMS"/>
 
-        <errorHandler implementation="com.intellij.diagnostic.ITNReporter"/>
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder"/>
-        <fileTypeFactory implementation="org.intellij.erlang.ErlangFileTypeFactory"/>
         <iconProvider implementation="org.intellij.erlang.icons.ErlangIconProvider"/>
         <updateAddedFileProcessor implementation="org.intellij.erlang.ErlangUpdateAddedFileProcessor"/>
         <lang.findUsagesProvider language="Erlang" implementationClass="org.intellij.erlang.search.ErlangFindUsagesProvider"/>
@@ -84,7 +82,7 @@
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameVariableProcessor"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameAtomProcessor"/>
 
-        <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor"/>
+        <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor" language="Erlang"/>
 
         <inlineActionHandler implementation="org.intellij.erlang.refactoring.ErlangInlineVariableHandler"/>
 
@@ -306,7 +304,7 @@
             <add-to-group group-id="RunContextPopupGroup" anchor="last"/>
             <keyboard-shortcut first-keystroke="ctrl shift X" keymap="$default"/>
         </action>
-        <action id="ErlangConsole.Execute" class="org.intellij.erlang.console.ErlangConsoleExecuteAction">
+        <action id="ErlangConsole.Execute" text="Run in Erlang Console" class="org.intellij.erlang.console.ErlangConsoleExecuteAction">
             <keyboard-shortcut first-keystroke="ENTER" keymap="$default"/>
         </action>
 

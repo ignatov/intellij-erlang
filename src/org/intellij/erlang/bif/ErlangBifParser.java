@@ -25,7 +25,6 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangGlobalFunctionCallExpression;
@@ -39,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,7 +60,7 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
   private static Set<String> getAutoimportedFunctions() throws IOException {
     File bifAutoimportTableFile = new File(BIF_AUTOIMPORT_TABLE_PATH);
     String[] bifAutoimportTableText = StringUtil.splitByLines(FileUtilRt.loadFile(bifAutoimportTableFile));
-    return new HashSet<>(ContainerUtil.set(bifAutoimportTableText));
+    return new HashSet<>(List.of(bifAutoimportTableText));
   }
 
   public void testSomething() throws Exception {
