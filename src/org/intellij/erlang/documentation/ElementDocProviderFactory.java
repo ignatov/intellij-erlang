@@ -36,28 +36,25 @@ public final class ElementDocProviderFactory {
   @Nullable
   static ElementDocProvider create(@NotNull PsiElement psiElement) {
     Project project = psiElement.getProject();
-    if (psiElement instanceof ErlangModule) {
+    if (psiElement instanceof ErlangModule erlangModule) {
       VirtualFile virtualFile = getVirtualFile(psiElement);
       if (virtualFile == null) return null;
-      ErlangModule erlangModule = (ErlangModule) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
         return new ErlangSdkModuleDocProvider(project, virtualFile);
       }
       return new ErlangModuleDocProvider(erlangModule);
     }
-    else if (psiElement instanceof ErlangFunction) {
+    else if (psiElement instanceof ErlangFunction erlangFunction) {
       VirtualFile virtualFile = getVirtualFile(psiElement);
       if (virtualFile == null) return null;
-      ErlangFunction erlangFunction = (ErlangFunction) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
         return new ErlangSdkFunctionDocProvider(project, erlangFunction.getName(), erlangFunction.getArity(), virtualFile);
       }
       return new ErlangFunctionDocProvider(erlangFunction);
     }
-    else if (psiElement instanceof ErlangTypeDefinition) {
+    else if (psiElement instanceof ErlangTypeDefinition typeDefinition) {
       VirtualFile virtualFile = getVirtualFile(psiElement);
       if (virtualFile == null) return null;
-      ErlangTypeDefinition typeDefinition = (ErlangTypeDefinition) psiElement;
       if (isFileFromErlangSdk(project, virtualFile)) {
         return new ErlangSdkTypeDocProvider(project, virtualFile, typeDefinition.getName());
       }

@@ -84,9 +84,8 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
           Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
           PsiElement psiElement = location != null ? location.getPsiElement() : null;
 
-          if (!(psiElement instanceof ErlangFunction)) continue;
+          if (!(psiElement instanceof ErlangFunction function)) continue;
 
-          ErlangFunction function = (ErlangFunction) psiElement;
           String functionName = ErlangPsiImplUtil.getQualifiedFunctionName(function);
           testsToRerun.add(functionName);
         }

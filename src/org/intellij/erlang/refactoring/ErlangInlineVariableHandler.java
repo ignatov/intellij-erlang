@@ -107,9 +107,7 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
   }
 
   private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {
-    if (!(variableValue instanceof ErlangFunExpression)) return variable.replace(variableValue);
-
-    ErlangFunExpression funExpression = (ErlangFunExpression) variableValue;
+    if (!(variableValue instanceof ErlangFunExpression funExpression)) return variable.replace(variableValue);
 
     if (null != funExpression.getFunClauses()) return variable.replace(variableValue);
 

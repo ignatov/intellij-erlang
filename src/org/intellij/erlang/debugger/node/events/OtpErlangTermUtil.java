@@ -40,8 +40,7 @@ final class OtpErlangTermUtil {
     if (listObject instanceof OtpErlangList) {
       return (OtpErlangList)listObject;
     }
-    if (listObject instanceof OtpErlangString) {
-      OtpErlangString string = (OtpErlangString) listObject;
+    if (listObject instanceof OtpErlangString string) {
       return new OtpErlangList(string.stringValue());
     }
     return null;

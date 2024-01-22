@@ -38,8 +38,7 @@ public class ErlangFoldingBuilder extends FoldingBuilderEx implements DumbAware 
   @NotNull
   @Override
   public FoldingDescriptor @NotNull [] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
-    if (!(root instanceof ErlangFile)) return FoldingDescriptor.EMPTY;
-    ErlangFile file = (ErlangFile) root;
+    if (!(root instanceof ErlangFile file)) return FoldingDescriptor.EMPTY_ARRAY;
 
     final List<FoldingDescriptor> result = new ArrayList<>();
     for (ErlangFunction function : file.getFunctions()) {
@@ -55,7 +54,7 @@ public class ErlangFoldingBuilder extends FoldingBuilderEx implements DumbAware 
       });
     }
 
-    return result.toArray(new FoldingDescriptor[result.size()]);
+    return result.toArray(new FoldingDescriptor[0]);
   }
 
   @Nullable

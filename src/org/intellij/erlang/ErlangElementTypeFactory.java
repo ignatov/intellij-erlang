@@ -26,19 +26,19 @@ public class ErlangElementTypeFactory {
 
   @NotNull
   public static IElementType factory(@NotNull String name) {
-    switch (name) {
-      case "ERL_FUNCTION":          return new ErlangFunctionStubElementType(name);
-      case "ERL_BEHAVIOUR":         return new ErlangBehaviourStubElementType(name);
-      case "ERL_MODULE":            return new ErlangModuleStubElementType(name);
-      case "ERL_TYPE_DEFINITION":   return new ErlangTypeDefinitionElementType(name);
-      case "ERL_MACROS_DEFINITION": return new ErlangMacrosDefinitionElementType(name);
-      case "ERL_RECORD_DEFINITION": return new ErlangRecordDefinitionElementType(name);
-      case "ERL_INCLUDE":           return new ErlangIncludeElementType(name);
-      case "ERL_INCLUDE_LIB":       return new ErlangIncludeLibElementType(name);
-      case "ERL_CALLBACK_SPEC":     return new ErlangCallbackStubElementType(name);
-      case "ERL_CALLBACK_FUNCTION": return new ErlangCallbackFunctionStubElementType(name);
-      case "ERL_SPECIFICATION":     return new ErlangSpecificationElementType(name);
-    }
-    throw new RuntimeException("Unknown element type: " + name);
+    return switch (name) {
+      case "ERL_FUNCTION"          -> new ErlangFunctionStubElementType(name);
+      case "ERL_BEHAVIOUR"         -> new ErlangBehaviourStubElementType(name);
+      case "ERL_MODULE"            -> new ErlangModuleStubElementType(name);
+      case "ERL_TYPE_DEFINITION"   -> new ErlangTypeDefinitionElementType(name);
+      case "ERL_MACROS_DEFINITION" -> new ErlangMacrosDefinitionElementType(name);
+      case "ERL_RECORD_DEFINITION" -> new ErlangRecordDefinitionElementType(name);
+      case "ERL_INCLUDE"           -> new ErlangIncludeElementType(name);
+      case "ERL_INCLUDE_LIB"       -> new ErlangIncludeLibElementType(name);
+      case "ERL_CALLBACK_SPEC"     -> new ErlangCallbackStubElementType(name);
+      case "ERL_CALLBACK_FUNCTION" -> new ErlangCallbackFunctionStubElementType(name);
+      case "ERL_SPECIFICATION"     -> new ErlangSpecificationElementType(name);
+      default -> throw new RuntimeException("Unknown element type: " + name);
+    };
   }
 }

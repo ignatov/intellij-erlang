@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.bif;
 
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +24,7 @@ import java.util.Set;
 public class ErlangOperatorTable {
   //Source: http://erlang.org/doc/reference_manual/expressions.html
   //Operators '=', 'andalso', 'orelse' cannot be invoked as functions because of loss of semantics.
-  private static final Set<String> OPERATORS_ALLOWED_INVOKING_AS_FUNCTION = ContainerUtil.immutableSet(
+  private static final Set<String> OPERATORS_ALLOWED_INVOKING_AS_FUNCTION = Set.of(
     "'!'/2",
     "'=='/2",
     "'/='/2",

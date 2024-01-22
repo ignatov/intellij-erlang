@@ -49,7 +49,7 @@ public class ErlangSpellcheckingStrategy extends SpellcheckingStrategy {
     private static final AtomTokenizer INSTANCE = new AtomTokenizer();
 
     @Override
-    public void tokenize(@NotNull ErlangAtom a, TokenConsumer consumer) {
+    public void tokenize(@NotNull ErlangAtom a, @NotNull TokenConsumer consumer) {
       PsiElement identifier = a.getNameIdentifier();
       TextRange range = identifier.getTextRange();
       if (range.isEmpty()) return;

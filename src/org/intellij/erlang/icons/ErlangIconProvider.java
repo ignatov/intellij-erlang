@@ -92,7 +92,7 @@ public class ErlangIconProvider extends IconProvider implements DumbAware {
 
     @NotNull
     public static ModuleType getType(@NotNull String behaviourName) {
-      for (ModuleType type : ModuleType.values())
+      for (ModuleType type : values())
         if (StringUtil.equals(type.behaviourName, behaviourName)) return type;
       return REGULAR;
     }

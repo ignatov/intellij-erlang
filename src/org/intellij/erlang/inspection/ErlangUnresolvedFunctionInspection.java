@@ -78,11 +78,10 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
 
       private void inspect(PsiElement what, ErlangQAtom target, @Nullable PsiReference reference) {
         if (PsiTreeUtil.getParentOfType(what, ErlangCallbackSpec.class) != null || target.getMacros() != null ||
-          !(reference instanceof ErlangFunctionReference) || reference.resolve() != null) {
+            !(reference instanceof ErlangFunctionReference r) || reference.resolve() != null) {
           return;
         }
 
-        ErlangFunctionReference r = (ErlangFunctionReference) reference;
         int arity = r.getArity();
         String name = r.getName();
         if (arity < 0 || name == null) return;

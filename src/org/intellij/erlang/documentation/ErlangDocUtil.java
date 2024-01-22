@@ -33,28 +33,28 @@ public final class ErlangDocUtil {
   /**
    * <a href="https://www.erlang.org/doc/apps/edoc/chapter.html#generic-tags">Generic tags</a>
    */
-  private static final Set<String> EDOC_GENERIC_TAGS = ContainerUtil.set(
+  private static final Set<String> EDOC_GENERIC_TAGS = ContainerUtil.newHashSet(
     "@clear", "@docfile", "@end", "@headerfile", "@todo", "@TODO", "@type"
   );
 
   /**
    * <a href="https://www.erlang.org/doc/apps/edoc/chapter.html#overview-tags">Overview tags</a>
    */
-  private static final Set<String> EDOC_OVERVIEW_TAGS = ContainerUtil.set(
+  private static final Set<String> EDOC_OVERVIEW_TAGS = ContainerUtil.newHashSet(
     "@author", "@copyright", "@doc", "@reference", "@see", "@since", "@title", "@version"
   );
 
   /**
    * <a href="https://www.erlang.org/doc/apps/edoc/chapter.html#module-tags">Module tags</a>
    */
-  public static final Set<String> EDOC_MODULE_TAGS = ContainerUtil.set(
+  public static final Set<String> EDOC_MODULE_TAGS = ContainerUtil.newHashSet(
     "@author", "@copyright", "@deprecated", "@doc", "@hidden", "@private", "@reference", "@see", "@since", "@version"
   );
 
   /**
    * <a href="https://www.erlang.org/doc/apps/edoc/chapter.html#function-tags">Function tags</a>
    */
-  public static final Set<String> EDOC_FUNCTION_TAGS = ContainerUtil.set(
+  public static final Set<String> EDOC_FUNCTION_TAGS = ContainerUtil.newHashSet(
     "@deprecated", "@doc", "@equiv", "@hidden", "@param", "@private", "@returns",
     "@see", "@since", "@spec", "@throws", "@type"
   );
@@ -71,9 +71,9 @@ public final class ErlangDocUtil {
   private ErlangDocUtil() {
   }
 
-  public static String getCommentsText(@NotNull List<PsiComment> comments,
-                                       @NotNull final String commentStartsWith,
-                                       @NotNull final Set<String> contextTags) {
+  public static String getCommentText(@NotNull List<PsiComment> comments,
+                                      @NotNull final String commentStartsWith,
+                                      @NotNull final Set<String> contextTags) {
     List<String> lines = ContainerUtil.map(comments, PsiElement::getText);
     return StringUtil.join(ContainerUtil.map(lines, s -> {
       String replace = StringUtil.replace(s, commentStartsWith, "");

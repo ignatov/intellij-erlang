@@ -197,7 +197,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       }
     }
 
-    if (builder.length() == 0) {
+    if (builder.isEmpty()) {
       builder.append("<no parameters>");
     }
 

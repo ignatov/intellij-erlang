@@ -139,7 +139,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       for (Map.Entry<String, List<String>> e : modules.entrySet()) {
         String moduleName = e.getKey();
 
-        result.append("{\"module \'").append(moduleName).append("\'\", [");
+        result.append("{\"module '").append(moduleName).append("'\", [");
         for (String function : e.getValue()) {
           boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
           result.append(isGenerator ? "{generator, " : "")

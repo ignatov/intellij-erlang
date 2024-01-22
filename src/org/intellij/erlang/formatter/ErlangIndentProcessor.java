@@ -25,7 +25,10 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
-import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.ErlangArgumentDefinition;
+import org.intellij.erlang.psi.ErlangExpression;
+import org.intellij.erlang.psi.ErlangListOpExpression;
+import org.intellij.erlang.psi.ErlangParenthesizedExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +37,7 @@ import java.util.Set;
 import static org.intellij.erlang.ErlangTypes.*;
 
 public class ErlangIndentProcessor {
-  private static final Set<IElementType> BIN_OPERATORS = ContainerUtil.set(
+  private static final Set<IElementType> BIN_OPERATORS = ContainerUtil.newHashSet(
     ERL_OP_PLUS, ERL_OP_MINUS, ERL_OP_AR_MUL, ERL_OP_AR_DIV, ERL_REM,
     ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND,
     ERL_BAND, ERL_OP_EQ_EQ, ERL_OP_DIV_EQ, ERL_OP_EQ_COL_EQ, ERL_OP_EQ_DIV_EQ,

@@ -44,8 +44,8 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     CONTROL_SEQUENCE_PATTERN = Pattern.compile("~" + fieldWidth + "(?:" + precision + paddingCharacter + ")?" + controlSequenceModifier + controlSequenceType);
   }
 
-  private static final Set<String> MODULE_NAMES = ContainerUtil.set("io", "io_lib");
-  private static final Set<String> FUNCTION_NAMES = ContainerUtil.set("format", "fwrite");
+  private static final Set<String> MODULE_NAMES = Set.of("io", "io_lib");
+  private static final Set<String> FUNCTION_NAMES = Set.of("format", "fwrite");
 
   @NotNull
   @Override

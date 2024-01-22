@@ -17,7 +17,6 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -28,7 +27,7 @@ import java.util.Set;
 public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
   private static final String ERROR = "Illegal guard expression";
   //Source: http://www.erlang.org/doc/man/erlang.html
-  private static final Set<String> BIFS_ALLOWED_IN_GUARDS = ContainerUtil.immutableSet(
+  private static final Set<String> BIFS_ALLOWED_IN_GUARDS = Set.of(
     "abs/1", "bit_size/1", "binary_part/3",
     "byte_size/1", "binary_part/2", "element/2",
     "float/1", "hd/1", "is_atom/1", "is_binary/1",
@@ -80,7 +79,7 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     }
   }
 
-  private class GuardInspector extends ErlangRecursiveVisitor {
+  private static class GuardInspector extends ErlangRecursiveVisitor {
     private final ProblemsHolder myHolder;
 
     public GuardInspector(ProblemsHolder holder) {

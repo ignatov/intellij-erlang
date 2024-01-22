@@ -46,7 +46,7 @@ final class ErlangModuleDocProvider implements ElementDocProvider {
     PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(parent, PsiComment.class);
     if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_MODULE_DOC_COMMENT) {
       List<PsiComment> comments = ErlangDocUtil.collectPrevComments(comment);
-      String commentsText = ErlangDocUtil.getCommentsText(comments, "%%%", ErlangDocUtil.EDOC_MODULE_TAGS);
+      String commentsText = ErlangDocUtil.getCommentText(comments, "%%%", ErlangDocUtil.EDOC_MODULE_TAGS);
       return ErlangDocUtil.wrapInPreTag(commentsText);
     }
     return null;

@@ -85,12 +85,6 @@ public class ErlangSdkType extends SdkType {
     return ErlangIcons.FILE;
   }
 
-  @NotNull
-  @Override
-  public Icon getIconForAddAction() {
-    return getIcon();
-  }
-
   @Nullable
   @Override
   public String suggestHomePath() {

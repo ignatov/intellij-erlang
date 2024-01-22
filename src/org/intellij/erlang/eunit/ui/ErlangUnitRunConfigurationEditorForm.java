@@ -110,9 +110,13 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   }
 
   private static ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> getTestKindListCellRendererWrapper() {
-    return new ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind>() {
+    return new ListCellRendererWrapper<>() {
       @Override
-      public void customize(JList list, ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind, int index, boolean selected, boolean hasFocus) {
+      public void customize(JList list,
+                            ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind,
+                            int index,
+                            boolean selected,
+                            boolean hasFocus) {
         if (kind != null) {
           String kindName = StringUtil.capitalize(kind.toString().toLowerCase());
           setText(kindName);

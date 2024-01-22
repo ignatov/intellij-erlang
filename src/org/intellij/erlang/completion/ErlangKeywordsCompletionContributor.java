@@ -49,7 +49,7 @@ import static com.intellij.patterns.PlatformPatterns.psiElement;
 import static com.intellij.patterns.StandardPatterns.instanceOf;
 
 public class ErlangKeywordsCompletionContributor extends CompletionContributor implements DumbAware {
-  private static final Set<String> KEYWORDS_WITH_PARENTHESIS = ContainerUtil.immutableSet(
+  private static final Set<String> KEYWORDS_WITH_PARENTHESIS = Set.of(
     "include", "include_lib", "module", "export", "export_type", "import",
     "define", "record", "behaviour", "behavior", "optional_callbacks"
   );

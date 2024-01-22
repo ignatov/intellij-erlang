@@ -78,7 +78,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
 
     @NotNull
     @Override
-    public Sorter[] getSorters() {
+    public Sorter @NotNull [] getSorters() {
       return new Sorter[] {
         Sorter.ALPHA_SORTER,
         };
@@ -133,8 +133,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
           return elementsArray(clauses);
         }
       }
-      else if (myElement instanceof ErlangFile) {
-        ErlangFile file = (ErlangFile) myElement;
+      else if (myElement instanceof ErlangFile file) {
         return elementsArray(
           file.getMacroses(),
           file.getRecords(),
