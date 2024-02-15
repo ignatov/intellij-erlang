@@ -81,7 +81,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   @Nullable
   @Override
   public ErlangSourceRootDescriptor findRootDescriptor(String rootId, BuildRootIndex rootIndex) {
-    return ErlangTargetBuilderUtil.findRootDescriptor(rootId, rootIndex, (ErlangTargetType) getTargetType());
+    return ErlangTargetBuilderUtil.findRootDescriptor(rootId, rootIndex, getTargetType());
   }
 
   @NotNull

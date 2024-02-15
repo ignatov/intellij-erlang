@@ -38,7 +38,7 @@ public class ErlangTestRunConfigProducersUtil {
   public static boolean shouldProduceRebarTestRunConfiguration(@Nullable Project project, @Nullable Module module) {
     if (project == null || module == null) return false;
     if (StringUtil.isEmpty(RebarSettings.getInstance(project).getRebarPath())) return false;
-    Collection<VirtualFile> configs = FilenameIndex.getVirtualFilesByName(project, "rebar.config", module.getModuleContentScope());
+    Collection<VirtualFile> configs = FilenameIndex.getVirtualFilesByName("rebar.config", module.getModuleContentScope());
     return !configs.isEmpty();
   }
 }

@@ -24,6 +24,7 @@ import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.openapi.actionSystem.PlatformCoreDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleType;
@@ -119,7 +120,7 @@ public class ErlangDebuggableRunConfigurationProducerTest extends JavaModuleTest
     PsiElement elementToProduceFor = getElementToProduceFor(module, useTestSource);
     MapDataContext dataContext = new MapDataContext();
     dataContext.put(CommonDataKeys.PROJECT, myProject);
-    dataContext.put(LangDataKeys.MODULE, ModuleUtilCore.findModuleForPsiElement(elementToProduceFor));
+    dataContext.put(PlatformCoreDataKeys.MODULE, ModuleUtilCore.findModuleForPsiElement(elementToProduceFor));
     dataContext.put(CommonDataKeys.PSI_ELEMENT, elementToProduceFor);
     dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(elementToProduceFor));
 

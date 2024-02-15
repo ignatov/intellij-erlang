@@ -65,7 +65,7 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
             int textOffset = function.getTextOffset();
             int lineNumber = document.getLineNumber(textOffset);
             if (!lines.contains(lineNumber)) {
-              result.add(new RecursiveMethodCallMarkerInfo(element));
+              result.add(new RecursiveMethodCallMarkerInfo(element, ((ErlangFunction) resolve).getName()));
             }
             lines.add(lineNumber);
           }
@@ -75,13 +75,14 @@ public class ErlangRecursiveCallLineMarkerProvider implements LineMarkerProvider
   }
 
   private static class RecursiveMethodCallMarkerInfo extends LineMarkerInfo<PsiElement> {
-    private RecursiveMethodCallMarkerInfo(@NotNull PsiElement e) {
+    private RecursiveMethodCallMarkerInfo(@NotNull PsiElement e, @NotNull String name) {
       super(e,
             e.getTextRange(),
             ErlangIcons.RECURSIVE_CALL,
             FunctionUtil.constant("Recursive call"),
             null,
-            GutterIconRenderer.Alignment.RIGHT
+            GutterIconRenderer.Alignment.RIGHT,
+            () -> "Function " + name
       );
     }
   }

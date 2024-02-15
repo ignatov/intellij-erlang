@@ -77,9 +77,7 @@ public class ErlangModuleBuildOrderTarget extends BuildTarget<ErlangSourceRootDe
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof ErlangModuleBuildOrderTarget)) return false;
-
-    ErlangModuleBuildOrderTarget that = (ErlangModuleBuildOrderTarget) o;
+    if (!(o instanceof ErlangModuleBuildOrderTarget that)) return false;
 
     if (!myProject.equals(that.myProject)) return false;
 
@@ -96,7 +94,7 @@ public class ErlangModuleBuildOrderTarget extends BuildTarget<ErlangSourceRootDe
   public ErlangSourceRootDescriptor findRootDescriptor(String rootId, BuildRootIndex rootIndex) {
     return ErlangTargetBuilderUtil.findRootDescriptor(rootId,
                                                       rootIndex,
-                                                      (ErlangModuleBuildOrderTargetType) getTargetType());
+                                                      getTargetType());
   }
 
   @NotNull

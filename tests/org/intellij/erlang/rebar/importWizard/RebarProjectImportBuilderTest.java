@@ -91,8 +91,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
   public void testModuleNameConflict() throws Exception {
     doTest(moduleWizardStep -> {
-      if (moduleWizardStep instanceof SelectImportedOtpAppsStep) {
-        SelectImportedOtpAppsStep theStep = (SelectImportedOtpAppsStep) moduleWizardStep;
+      if (moduleWizardStep instanceof SelectImportedOtpAppsStep theStep) {
         theStep.autoResolveConflicts();
       }
     });

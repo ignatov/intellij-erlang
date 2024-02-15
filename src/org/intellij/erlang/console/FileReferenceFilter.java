@@ -23,7 +23,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.ProjectScope;
@@ -147,14 +146,14 @@ public final class FileReferenceFilter implements Filter {
     if (filenameMatcher.find()) {
       String filename = filenameMatcher.group(1);
       GlobalSearchScope projectScope = ProjectScope.getProjectScope(myProject);
-      PsiFile[] projectFiles = FilenameIndex.getFilesByName(myProject, filename, projectScope);
-      if (projectFiles.length > 0) {
-        return projectFiles[0].getVirtualFile();
+      var projectFiles = FilenameIndex.getVirtualFilesByName(filename, projectScope);
+      if (!projectFiles.isEmpty()) {
+        return projectFiles.iterator().next();
       }
       GlobalSearchScope libraryScope = ProjectScope.getLibrariesScope(myProject);
-      PsiFile[] libraryFiles = FilenameIndex.getFilesByName(myProject, filename, libraryScope);
-      if (libraryFiles.length > 0) {
-        return libraryFiles[0].getVirtualFile();
+      var libraryFiles = FilenameIndex.getVirtualFilesByName(filename, libraryScope);
+      if (!libraryFiles.isEmpty()) {
+        return libraryFiles.iterator().next();
       }
     }
     return null;
