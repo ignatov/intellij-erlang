@@ -43,7 +43,7 @@ public class ErlangCallbackFunctionStubElementType extends ErlangStubElementType
   }
 
   @Override
-  public ErlangCallbackFunctionStub createStub(@NotNull ErlangCallbackFunction psi, StubElement parentStub) {
+  public @NotNull ErlangCallbackFunctionStub createStub(@NotNull ErlangCallbackFunction psi, StubElement parentStub) {
     String name = ErlangPsiImplUtil.getName(psi.getQAtom());
     return new ErlangCallbackFunctionStub(parentStub, this, name);
   }

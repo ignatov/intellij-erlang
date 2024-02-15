@@ -43,9 +43,12 @@ import java.util.Set;
 public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunningState> extends ModuleBasedConfiguration<ErlangModuleBasedConfiguration, Element>
   implements RunConfigurationWithSuppressedDefaultRunAction {
   private ErlangDebugOptions myDebugOptions = new ErlangDebugOptions();
+  @Nullable
   private String myWorkDirectory;
 
-  public ErlangRunConfigurationBase(String name, ErlangModuleBasedConfiguration configurationModule, ConfigurationFactory factory) {
+  public ErlangRunConfigurationBase(String name,
+                                    ErlangModuleBasedConfiguration configurationModule,
+                                    ConfigurationFactory factory) {
     super(name, configurationModule, factory);
   }
 
@@ -74,7 +77,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   }
 
   @Override
-  public void writeExternal(Element element) throws WriteExternalException {
+  public void writeExternal(@NotNull Element element) throws WriteExternalException {
     super.writeExternal(element);
     XmlSerializer.serializeInto(this, element);
   }

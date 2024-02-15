@@ -175,7 +175,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
       try {
         PsiFile file = first.getContainingFile();
-        WriteCommandAction.writeCommandAction(project, file).withName("Extract function").run(() -> {
+        WriteCommandAction.writeCommandAction(project, file).withName("Extract Function").run(() -> {
           ErlangFunction newFunction = ErlangElementFactory.createFunctionFromText(project, functionText);
 
           PsiElement functionParent = function.getParent();
@@ -267,10 +267,10 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     }
 
     @Override
-    public void visitElement(PsiElement element) {
+    public void visitElement(@NotNull PsiElement element) {
       if (element instanceof ErlangQVar) {
         PsiReference reference = element.getReference();
-        PsiElement resolve = reference != null ? reference.resolve() : null;
+        PsiElement resolve = reference.resolve();
         if (resolve instanceof ErlangNamedElement) {
           myComponentNames.add((ErlangNamedElement) resolve);
         }
@@ -287,6 +287,6 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   }
 
   @Override
-  public void invoke(@NotNull Project project, @NotNull PsiElement[] elements, DataContext dataContext) {
+  public void invoke(@NotNull Project project, @NotNull PsiElement @NotNull [] elements, DataContext dataContext) {
   }
 }

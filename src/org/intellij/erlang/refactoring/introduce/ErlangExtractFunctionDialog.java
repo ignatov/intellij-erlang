@@ -40,7 +40,7 @@ public class ErlangExtractFunctionDialog extends DialogWrapper {
     myInParams = inParams;
     myFunctionNameField.getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
-      protected void textChanged(DocumentEvent e) {
+      protected void textChanged(@NotNull DocumentEvent e) {
         mySignatureLabel.setText(createSignature());
       }
     });

@@ -17,6 +17,7 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangLineBreakpointProperties extends XBreakpointProperties<ErlangLineBreakpointProperties> {
@@ -27,6 +28,6 @@ public class ErlangLineBreakpointProperties extends XBreakpointProperties<Erlang
   }
 
   @Override
-  public void loadState(ErlangLineBreakpointProperties state) {
+  public void loadState(@NotNull ErlangLineBreakpointProperties state) {
   }
 }

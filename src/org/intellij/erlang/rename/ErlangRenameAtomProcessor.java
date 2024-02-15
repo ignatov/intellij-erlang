@@ -36,7 +36,7 @@ public class ErlangRenameAtomProcessor extends RenamePsiElementProcessor {
   }
 
   @Override
-  public void renameElement(PsiElement element, String newName, UsageInfo[] usages, @Nullable RefactoringElementListener listener) throws IncorrectOperationException {
+  public void renameElement(@NotNull PsiElement element, @NotNull String newName, UsageInfo[] usages, @Nullable RefactoringElementListener listener) throws IncorrectOperationException {
     // see RenameUtil#doRenameGenericNamedElement
     boolean hasBindables = false;
     for (UsageInfo usage : usages) {

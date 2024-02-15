@@ -42,7 +42,7 @@ public class ErlangTypeDefinitionElementType extends ErlangNamedStubElementType<
   }
 
   @Override
-  public ErlangTypeDefinitionStub createStub(@NotNull ErlangTypeDefinition psi, StubElement parentStub) {
+  public @NotNull ErlangTypeDefinitionStub createStub(@NotNull ErlangTypeDefinition psi, StubElement parentStub) {
     return new ErlangTypeDefinitionStub(parentStub, this, psi.getName(), psi.getArity());
   }
 

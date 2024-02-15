@@ -20,13 +20,14 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangSpecification;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangSpecificationStub extends ErlangWithArityStub<ErlangSpecification> {
   public ErlangSpecificationStub(StubElement parent, IStubElementType elementType, String name, int arity) {
     super(parent, elementType, name, arity);
   }
 
-  public ErlangSpecificationStub(StubElement parent, IStubElementType elementType, StringRef name, int arity) {
+  public ErlangSpecificationStub(StubElement parent, IStubElementType elementType, @Nullable StringRef name, int arity) {
     super(parent, elementType, name, arity);
   }
 }

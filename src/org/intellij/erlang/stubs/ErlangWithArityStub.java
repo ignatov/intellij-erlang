@@ -21,11 +21,12 @@ import com.intellij.psi.stubs.NamedStubBase;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangNamedElement;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangWithArityStub<T extends ErlangNamedElement> extends NamedStubBase<T> {
   private final int myArity;
 
-  protected ErlangWithArityStub(StubElement parent, IStubElementType elementType, StringRef name, int arity) {
+  protected ErlangWithArityStub(StubElement parent, IStubElementType elementType, @Nullable StringRef name, int arity) {
     super(parent, elementType, name);
     myArity = arity;
   }

@@ -42,7 +42,7 @@ public class ErlangMacrosDefinitionElementType extends ErlangNamedStubElementTyp
   }
 
   @Override
-  public ErlangMacrosDefinitionStub createStub(@NotNull ErlangMacrosDefinition psi, StubElement parentStub) {
+  public @NotNull ErlangMacrosDefinitionStub createStub(@NotNull ErlangMacrosDefinition psi, StubElement parentStub) {
     return new ErlangMacrosDefinitionStub(parentStub, this, psi.getName());
   }
 

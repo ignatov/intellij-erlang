@@ -59,7 +59,7 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
 
   @NotNull
   @Override
-  public Object[] getVariants() {
+  public Object @NotNull [] getVariants() {
     return ArrayUtil.EMPTY_OBJECT_ARRAY;
   }
 
@@ -116,7 +116,9 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
       return FileUtil.comparePaths(m1File.getPath(), m2File.getPath());
     }
 
-    private int compareByLibDir(@NotNull VirtualFile m1File, @NotNull VirtualFile m2File, @Nullable VirtualFile libDir) {
+    private static int compareByLibDir(@NotNull VirtualFile m1File,
+                                       @NotNull VirtualFile m2File,
+                                       @Nullable VirtualFile libDir) {
       if (libDir == null) return COMPARE_NO_RESULT;
 
       boolean m1InLib = VfsUtilCore.isAncestor(libDir, m1File, true);
@@ -129,7 +131,7 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
     }
 
     @Nullable
-    private VirtualFile getVirtualFile(@NotNull PsiElement e) {
+    private static VirtualFile getVirtualFile(@NotNull PsiElement e) {
       PsiFile psiFile = e.getContainingFile();
       return psiFile != null ? psiFile.getVirtualFile() : null;
     }

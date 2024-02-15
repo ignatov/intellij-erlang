@@ -58,15 +58,15 @@ public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
   }
 
   @Override
-  public Icon getNodeIcon(boolean isOpened) {
+  public @NotNull Icon getNodeIcon(boolean isOpened) {
     return ErlangIcons.ERLANG_MODULE_NODE;
   }
 
   @NotNull
   @Override
-  public ModuleWizardStep[] createWizardSteps(@NotNull WizardContext wizardContext,
-                                              @NotNull final ErlangModuleBuilder moduleBuilder,
-                                              @NotNull ModulesProvider modulesProvider) {
+  public ModuleWizardStep @NotNull [] createWizardSteps(@NotNull WizardContext wizardContext,
+                                                        @NotNull final ErlangModuleBuilder moduleBuilder,
+                                                        @NotNull ModulesProvider modulesProvider) {
     return new ModuleWizardStep[]{new ProjectJdkForModuleStep(wizardContext, ErlangSdkType.getInstance()) {
       public void updateDataModel() {
         super.updateDataModel();

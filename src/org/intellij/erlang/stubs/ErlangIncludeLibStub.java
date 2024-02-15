@@ -20,13 +20,14 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangIncludeLib;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangIncludeLibStub extends ErlangStringContainerStub<ErlangIncludeLib> {
   public ErlangIncludeLibStub(StubElement parent, IStubElementType elementType, String name) {
     super(parent, elementType, name);
   }
 
-  public ErlangIncludeLibStub(StubElement parent, IStubElementType elementType, StringRef nameRef) {
+  public ErlangIncludeLibStub(StubElement parent, IStubElementType elementType, @Nullable StringRef nameRef) {
     super(parent, elementType, nameRef);
   }
 }

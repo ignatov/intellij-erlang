@@ -20,6 +20,7 @@ import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangFunctionStub extends ErlangWithArityStub<ErlangFunction> {
   private final boolean myExported;
@@ -29,7 +30,7 @@ public class ErlangFunctionStub extends ErlangWithArityStub<ErlangFunction> {
     myExported = exported;
   }
 
-  public ErlangFunctionStub(StubElement parent, IStubElementType elementType, StringRef name, int arity, boolean exported) {
+  public ErlangFunctionStub(StubElement parent, IStubElementType elementType, @Nullable StringRef name, int arity, boolean exported) {
     super(parent, elementType, name, arity);
     myExported = exported;
   }

@@ -41,7 +41,7 @@ public class ErlangFacetEditor extends FacetEditorTab {
     myConfiguration = configuration;
     myParseTransformsEditorField.getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
-      protected void textChanged(DocumentEvent e) {
+      protected void textChanged(@NotNull DocumentEvent e) {
         myIsModified = true;
       }
     });

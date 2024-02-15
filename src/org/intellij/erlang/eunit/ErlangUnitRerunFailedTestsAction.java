@@ -61,7 +61,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
     return new MyRunProfile((RunConfigurationBase) model.getProperties().getConfiguration()) {
       @NotNull
       @Override
-      public Module[] getModules() {
+      public Module @NotNull [] getModules() {
         return ((ErlangUnitRunConfiguration)getPeer()).getModules();
       }
 

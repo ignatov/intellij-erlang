@@ -22,6 +22,7 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends ErlangRunConfigurationBase> extends SettingsEditor<RunConfig> {
   private final ErlangDebugOptionsEditorForm myDebugOptionsEditor = new ErlangDebugOptionsEditorForm();
@@ -31,7 +32,7 @@ public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends E
   }
 
   @Override
-  protected final void resetEditorFrom(RunConfig runConfig) {
+  protected final void resetEditorFrom(@NotNull RunConfig runConfig) {
     ErlangDebuggableRunConfigurationProducer.updateDebugOptions(runConfig);
     myDebugOptionsEditor.resetFrom(runConfig.getDebugOptions());
     doResetEditorFrom(runConfig);

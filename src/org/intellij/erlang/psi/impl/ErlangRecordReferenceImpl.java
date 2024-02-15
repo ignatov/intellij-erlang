@@ -45,7 +45,7 @@ public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
 
   @NotNull
   @Override
-  public Object[] getVariants() {
+  public Object @NotNull [] getVariants() {
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getRecordLookupElements(myElement.getContainingFile()));
   }
 

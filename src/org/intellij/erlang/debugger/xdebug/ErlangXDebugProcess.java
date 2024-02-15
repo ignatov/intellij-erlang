@@ -39,7 +39,6 @@ import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.PathUtil;
 import com.intellij.util.ResourceUtil;
 import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.io.URLUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XExpression;
@@ -63,7 +62,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -237,7 +235,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @NotNull
   @Override
-  public XBreakpointHandler<?>[] getBreakpointHandlers() {
+  public XBreakpointHandler<?> @NotNull [] getBreakpointHandlers() {
     return myBreakpointHandlers;
   }
 

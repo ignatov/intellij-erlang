@@ -37,7 +37,7 @@ import java.util.List;
 public class ErlangModuleContributor implements ChooseByNameContributor {
   @NotNull
   @Override
-  public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
+  public NavigationItem @NotNull [] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
     GlobalSearchScope scope = includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
     List<ErlangModule> result = ErlangModuleIndex.getModulesByName(project, name, scope);
     ArrayList<NavigationItem> items = new ArrayList<>(result.size());
@@ -47,12 +47,12 @@ public class ErlangModuleContributor implements ChooseByNameContributor {
       String moduleName = virtualFile != null ? virtualFile.getNameWithoutExtension() : null;
       items.add(new ErlangModuleNavigationItem(element, moduleName == null ? element.getName() : moduleName));
     }
-    return items.toArray(new NavigationItem[items.size()]);
+    return items.toArray(new NavigationItem[0]);
   }
 
   @NotNull
   @Override
-  public String[] getNames(Project project, boolean includeNonProjectItems) {
+  public String @NotNull [] getNames(Project project, boolean includeNonProjectItems) {
     return ArrayUtil.toStringArray(ErlangModuleIndex.getNames(project));
   }
 

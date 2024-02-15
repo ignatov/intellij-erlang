@@ -94,7 +94,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
     return new MyRunProfile((RunConfigurationBase) model.getProperties().getConfiguration()) {
       @NotNull
       @Override
-      public Module[] getModules() {
+      public Module @NotNull [] getModules() {
         return ((RebarEunitRunConfiguration)getPeer()).getModules();
       }
 
@@ -143,7 +143,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         return configurationModule != null ? configurationModule.getModule() : null;
       }
 
-      private void notifyGeneratedTestsFailed(final List<ErlangFunction> failedGeneratedTests) {
+      private static void notifyGeneratedTestsFailed(final List<ErlangFunction> failedGeneratedTests) {
         ApplicationManager.getApplication().invokeLater(() -> Notifications.Bus.notify(
           new Notification("TestRunner", "Some tests cannot be rerun directly",
             "Some of failed tests were obtained via generator functions and cannot be rerun directly.\n" +
@@ -151,7 +151,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
             NotificationType.WARNING)));
       }
 
-      private String createFailedTestsListMessage(List<ErlangFunction> failedTests) {
+      private static String createFailedTestsListMessage(List<ErlangFunction> failedTests) {
         int maxShownTests = 3;
         List<String> testNames = takeFunctionNames(failedTests, maxShownTests);
         int notShownTestsCount = failedTests.size() - testNames.size();
@@ -159,7 +159,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         return "Tests failed: " + StringUtil.join(testNames, ", ") + more;
       }
 
-      private List<String> takeFunctionNames(List<ErlangFunction> failedFunctions, int n) {
+      private static List<String> takeFunctionNames(List<ErlangFunction> failedFunctions, int n) {
         ArrayList<String> result = new ArrayList<>(n);
         Iterator<ErlangFunction> iterator = failedFunctions.iterator();
         while (iterator.hasNext() && n > 0) {

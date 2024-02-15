@@ -42,7 +42,7 @@ public class ErlangBehaviourStubElementType extends ErlangStubElementType<Erlang
   }
 
   @Override
-  public ErlangBehaviourStub createStub(@NotNull ErlangBehaviour psi, StubElement parentStub) {
+  public @NotNull ErlangBehaviourStub createStub(@NotNull ErlangBehaviour psi, StubElement parentStub) {
     return new ErlangBehaviourStub(parentStub, this, psi.getName());
   }
 

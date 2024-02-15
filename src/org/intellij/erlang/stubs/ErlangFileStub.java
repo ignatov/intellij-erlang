@@ -22,6 +22,7 @@ import com.intellij.psi.tree.IStubFileElementType;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.stubs.types.ErlangFileElementType;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
@@ -63,7 +64,7 @@ public class ErlangFileStub extends PsiFileStubImpl<ErlangFile> {
   }
 
   @Override
-  public IStubFileElementType getType() {
+  public @NotNull IStubFileElementType getType() {
     return ErlangFileElementType.INSTANCE;
   }
 }

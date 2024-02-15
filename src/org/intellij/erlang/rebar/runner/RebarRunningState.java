@@ -43,7 +43,7 @@ final class RebarRunningState extends CommandLineState {
   public ExecutionResult execute(@NotNull Executor executor, @NotNull ProgramRunner runner) throws ExecutionException {
     TextConsoleBuilder consoleBuilder = new TextConsoleBuilderImpl(myConfiguration.getProject()) {
       @Override
-      public ConsoleView getConsole() {
+      public @NotNull ConsoleView getConsole() {
         ConsoleView consoleView = super.getConsole();
         ErlangConsoleUtil.attachFilters(myConfiguration.getProject(), consoleView);
         return consoleView;

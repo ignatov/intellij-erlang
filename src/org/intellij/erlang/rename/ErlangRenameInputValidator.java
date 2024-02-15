@@ -26,12 +26,13 @@ import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangRenameInputValidator implements RenameInputValidator {
   @Override
-  public ElementPattern<? extends PsiElement> getPattern() {
-    return new ElementPattern<PsiElement>() {
+  public @NotNull ElementPattern<? extends PsiElement> getPattern() {
+    return new ElementPattern<>() {
       @Override
       public boolean accepts(@Nullable Object o) {
         return false;
@@ -40,7 +41,7 @@ public class ErlangRenameInputValidator implements RenameInputValidator {
       @Override
       public boolean accepts(@Nullable Object o, ProcessingContext context) {
         return o instanceof ErlangQVar || o instanceof ErlangQAtom ||
-          o instanceof ErlangFunction || o instanceof ErlangRecordDefinition || o instanceof ErlangModule;
+               o instanceof ErlangFunction || o instanceof ErlangRecordDefinition || o instanceof ErlangModule;
       }
 
       @Nullable
@@ -52,7 +53,7 @@ public class ErlangRenameInputValidator implements RenameInputValidator {
   }
 
   @Override
-  public boolean isInputValid(String s, PsiElement o, ProcessingContext context) {
+  public boolean isInputValid(@NotNull String s, @NotNull PsiElement o, @NotNull ProcessingContext context) {
     try {
       if (o instanceof ErlangQVar) {
         ErlangElementFactory.createQVarFromText(o.getProject(), s);
