@@ -72,10 +72,6 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     LOG.info("Prepare build order for project " + project.getName());
 
     File projectSystemDirectory = BuildManager.getInstance().getProjectSystemDirectory(project);
-    if (projectSystemDirectory == null) {
-      addPrepareDependenciesFailedMessage(context);
-      return true;
-    }
     ErlangProjectBuildOrder projectBuildOrder = ApplicationManager.getApplication().runReadAction((Computable<ErlangProjectBuildOrder>) () -> getProjectBuildOrder(context));
     if (projectBuildOrder == null) {
       return false; // errors are reported to context.
