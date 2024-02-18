@@ -44,13 +44,13 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   }
 
   @Override
-  public String getId() {
+  public @NotNull String getId() {
     return myModule.getName();
   }
 
   @Override
-  public Collection<BuildTarget<?>> computeDependencies(BuildTargetRegistry targetRegistry,
-                                                        TargetOutputIndex outputIndex) {
+  public @NotNull Collection<BuildTarget<?>> computeDependencies(@NotNull BuildTargetRegistry targetRegistry,
+                                                                 @NotNull TargetOutputIndex outputIndex) {
     List<BuildTarget<?>> dependencies = new ArrayList<>();
     Set<JpsModule> modules = getDependenciesModules();
     for (JpsModule module : modules) {
@@ -69,10 +69,10 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
 
   @NotNull
   @Override
-  public List<ErlangSourceRootDescriptor> computeRootDescriptors(JpsModel model,
-                                                                 ModuleExcludeIndex index,
-                                                                 IgnoredFileIndex ignoredFileIndex,
-                                                                 BuildDataPaths dataPaths) {
+  public List<ErlangSourceRootDescriptor> computeRootDescriptors(@NotNull JpsModel model,
+                                                                 @NotNull ModuleExcludeIndex index,
+                                                                 @NotNull IgnoredFileIndex ignoredFileIndex,
+                                                                 @NotNull BuildDataPaths dataPaths) {
     List<ErlangSourceRootDescriptor> result = new ArrayList<>();
     ErlangTargetBuilderUtil.addRootDescriptors(this, myModule, result);
     return result;
@@ -80,7 +80,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
 
   @Nullable
   @Override
-  public ErlangSourceRootDescriptor findRootDescriptor(String rootId, BuildRootIndex rootIndex) {
+  public ErlangSourceRootDescriptor findRootDescriptor(@NotNull String rootId, @NotNull BuildRootIndex rootIndex) {
     return ErlangTargetBuilderUtil.findRootDescriptor(rootId, rootIndex, getTargetType());
   }
 
@@ -92,7 +92,7 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
 
   @NotNull
   @Override
-  public Collection<File> getOutputRoots(CompileContext context) {
+  public Collection<File> getOutputRoots(@NotNull CompileContext context) {
     return ContainerUtil.newArrayList(JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, false),
                                       JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, true));
   }

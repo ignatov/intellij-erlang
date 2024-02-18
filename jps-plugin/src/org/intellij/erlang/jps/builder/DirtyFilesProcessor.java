@@ -37,7 +37,7 @@ public abstract class DirtyFilesProcessor<T, P extends BuildTarget<ErlangSourceR
   }
 
   @Override
-  public boolean apply(P erlangTarget, File file, ErlangSourceRootDescriptor erlangSourceRootDescriptor) {
+  public boolean apply(@NotNull P erlangTarget, @NotNull File file, @NotNull ErlangSourceRootDescriptor erlangSourceRootDescriptor) {
     ContainerUtil.addIfNotNull(myDirtyElements, getDirtyElement(file));
     return true;
   }

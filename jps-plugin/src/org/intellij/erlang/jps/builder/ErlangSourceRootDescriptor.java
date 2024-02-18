@@ -40,17 +40,17 @@ public class ErlangSourceRootDescriptor extends BuildRootDescriptor {
   }
 
   @Override
-  public String getRootId() {
+  public @NotNull String getRootId() {
     return myRoot.getAbsolutePath();
   }
 
   @Override
-  public File getRootFile() {
+  public @NotNull File getRootFile() {
     return myRoot;
   }
 
   @Override
-  public BuildTarget<?> getTarget() {
+  public @NotNull BuildTarget<?> getTarget() {
     return myErlangTarget;
   }
 
