@@ -16,9 +16,11 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.LocalQuickFixBase;
+import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.codeInspection.util.IntentionFamilyName;
+import com.intellij.codeInspection.util.IntentionName;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
@@ -76,13 +78,23 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
     }
   }
 
-  private static class CreateAndExportFunctionsFix extends LocalQuickFixBase {
+  private static class CreateAndExportFunctionsFix implements LocalQuickFix {
+    @SafeFieldForPreview
     private final List<SmartPsiElementPointer<ErlangCallbackSpec>> myCallbackSpecs;
 
     public CreateAndExportFunctionsFix(@NotNull List<ErlangCallbackSpec> callbackSpecs, @NotNull Project project) {
-      super(FIX_MESSAGE);
       final SmartPointerManager manager = SmartPointerManager.getInstance(project);
       myCallbackSpecs = ContainerUtil.map(callbackSpecs, manager::createSmartPsiElementPointer);
+    }
+
+    @Override
+    public @IntentionName @NotNull String getName() {
+      return FIX_MESSAGE;
+    }
+
+    @Override
+    public @IntentionFamilyName @NotNull String getFamilyName() {
+      return getName();
     }
 
     @Override

@@ -20,8 +20,9 @@ import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.ConstantNode;
-import com.intellij.codeInspection.LocalQuickFixBase;
+import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
+import com.intellij.codeInspection.util.IntentionFamilyName;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
@@ -32,8 +33,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements IntentionAction {
+public class ErlangCreateFunctionQuickFix implements IntentionAction, LocalQuickFix {
   public static final String FUNCTION_BODY_DEFAULT_TEXT = "erlang:error(not_implemented).";
+  private final String myFixMessage;
+  @SafeFieldForPreview
   private final FunctionTextProvider myFunctionText;
 
   public ErlangCreateFunctionQuickFix(@NotNull String fixMessage, @NotNull String name, int arity) {
@@ -41,7 +44,7 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements I
   }
 
   public ErlangCreateFunctionQuickFix(@NotNull String fixMessage, @NotNull FunctionTextProvider provider) {
-    super(fixMessage, "Erlang");
+    myFixMessage = fixMessage;
     myFunctionText = provider;
   }
 
@@ -53,7 +56,7 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements I
   @NotNull
   @Override
   public String getText() {
-    return super.getName();
+    return myFixMessage;
   }
 
   @Override
@@ -88,6 +91,11 @@ public class ErlangCreateFunctionQuickFix extends LocalQuickFixBase implements I
   @Override
   public boolean startInWriteAction() {
     return true;
+  }
+
+  @Override
+  public @NotNull @IntentionFamilyName String getFamilyName() {
+    return "Erlang";
   }
 
   public interface FunctionTextProvider {

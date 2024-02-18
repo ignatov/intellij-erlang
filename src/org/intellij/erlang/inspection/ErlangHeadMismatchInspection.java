@@ -16,10 +16,9 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.LocalInspectionToolSession;
-import com.intellij.codeInspection.LocalQuickFixBase;
-import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.codeInspection.*;
+import com.intellij.codeInspection.util.IntentionFamilyName;
+import com.intellij.codeInspection.util.IntentionName;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
@@ -52,7 +51,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     };
   }
 
-  private void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {
+  private static void checkFunction(ErlangFunction function, ProblemsHolder problemsHolder) {
     String functionName = function.getName();
     List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
     if (clauses.size() <= 1) return;
@@ -99,12 +98,21 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     return argumentDefinition != null ? argumentDefinition.getText() : null;
   }
 
-  private static class RenameFunctionClauseHeadQuickFix extends LocalQuickFixBase {
+  private static class RenameFunctionClauseHeadQuickFix implements LocalQuickFix {
     private final String myFunctionName;
 
     protected RenameFunctionClauseHeadQuickFix(String functionName) {
-      super("Rename clause head");
       myFunctionName = functionName;
+    }
+
+    @Override
+    public @IntentionName @NotNull String getName() {
+      return "Rename clause head";
+    }
+
+    @Override
+    public @IntentionFamilyName @NotNull String getFamilyName() {
+      return getName();
     }
 
     @Override
@@ -116,12 +124,21 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     }
   }
 
-  private static class ChangeFunExpressionNameQuickFix extends LocalQuickFixBase {
+  private static class ChangeFunExpressionNameQuickFix implements LocalQuickFix {
     private final String myNewName;
 
     public ChangeFunExpressionNameQuickFix(@Nullable String newName) {
-      super("Change clause name");
       myNewName = newName;
+    }
+
+    @Override
+    public @IntentionName @NotNull String getName() {
+      return "Change clause name";
+    }
+
+    @Override
+    public @IntentionFamilyName @NotNull String getFamilyName() {
+      return getName();
     }
 
     @Override
