@@ -85,7 +85,7 @@ public final class ErlangSdkRelease {
     return null;
   }
 
-  // True if Erlang of this version supports 'maybe' as a keyword, otherwise it is parsed as atom.
+  // True, if Erlang of this version supports 'maybe' as a keyword, otherwise it is parsed as atom.
   private boolean erlangIsAtLeast25() {
     if (haveErlang25 != null) {
       return haveErlang25;

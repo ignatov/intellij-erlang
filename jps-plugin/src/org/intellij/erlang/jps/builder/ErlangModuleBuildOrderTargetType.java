@@ -42,7 +42,7 @@ public class ErlangModuleBuildOrderTargetType extends BuildTargetType<ErlangModu
   @NotNull
   @Override
   public BuildTargetLoader<ErlangModuleBuildOrderTarget> createLoader(@NotNull final JpsModel model) {
-    return new BuildTargetLoader<ErlangModuleBuildOrderTarget>() {
+    return new BuildTargetLoader<>() {
       @Nullable
       @Override
       public ErlangModuleBuildOrderTarget createTarget(@NotNull String targetId) {

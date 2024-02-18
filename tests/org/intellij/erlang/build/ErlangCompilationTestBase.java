@@ -82,7 +82,7 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
       fail(JpsErlangSdkType.getSdkConfigurationFailureMessage());
     }
 
-    // Erlang SDK can contain symlinks to files outside of allowed root set.
+    // Erlang SDK can contain symlinks to files outside the allowed root set.
     // So we remove all roots from the sdk as we don't need SDK contents anyway.
     SdkModificator sdkModificator = sdk.getSdkModificator();
     sdkModificator.removeAllRoots();

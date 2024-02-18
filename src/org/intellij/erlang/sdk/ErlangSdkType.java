@@ -72,7 +72,7 @@ public class ErlangSdkType extends SdkType {
 
   @NotNull
   public static ErlangSdkType getInstance() {
-    return SdkType.findInstance(ErlangSdkType.class);
+    return findInstance(ErlangSdkType.class);
   }
 
   private ErlangSdkType() {
@@ -117,7 +117,7 @@ public class ErlangSdkType extends SdkType {
   }
 
   // Look into nested directories under each of the roots, and see if there's */lib/erlang in them
-  // Reason is that on MacOS and Linux the erl/erlc binaries are often installed separately
+  // Reason is that on macOS and Linux the erl/erlc binaries are often installed separately
   // from the rest of the OTP files
   private static @Nullable String searchForErlangRecursivelyIn(String[] roots) {
     // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
@@ -239,7 +239,7 @@ public class ErlangSdkType extends SdkType {
     Sdk sdk = new ProjectJdkImpl(getDefaultSdkName(sdkHome, version), getInstance());
     SdkModificator sdkModificator = sdk.getSdkModificator();
     sdkModificator.setHomePath(sdkHome);
-    sdkModificator.setVersionString(getVersionString(version)); // must be set after home path, otherwise setting home path clears the version string
+    sdkModificator.setVersionString(getVersionString(version)); // must be set after the home path, otherwise setting the home path clears the version string
     sdkModificator.commitChanges();
     configureSdkPaths(sdk);
     return sdk;

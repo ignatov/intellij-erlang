@@ -41,7 +41,7 @@ public class RebarProcessAdapter extends BuilderProcessAdapter {
   @Override
   public void processTerminated(@NotNull ProcessEvent event) {
     super.processTerminated(event);
-    if (myMessageBuilder.length() > 0) {
+    if (!myMessageBuilder.isEmpty()) {
       processMessage(myMessageBuilder.toString());
     }
   }
@@ -63,7 +63,7 @@ public class RebarProcessAdapter extends BuilderProcessAdapter {
   }
 
   private void addToProcessing(@NotNull String messagePart) {
-    if (!isMessageContinue(messagePart) && myMessageBuilder.length() != 0) {
+    if (!isMessageContinue(messagePart) && !myMessageBuilder.isEmpty()) {
       processMessage(myMessageBuilder.toString());
       myMessageBuilder.setLength(0);
     }
