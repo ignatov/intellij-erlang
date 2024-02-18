@@ -34,12 +34,6 @@ public class JpsRebarSettingsSerializer extends JpsProjectExtensionSerializer {
   public void loadExtension(@NotNull JpsProject jpsProject, @NotNull Element componentTag) {
     JpsRebarConfigurationExtension extension = JpsRebarConfigurationExtension.getOrCreateExtension(jpsProject);
     RebarSettingsState rebarSettings = XmlSerializer.deserialize(componentTag, RebarSettingsState.class);
-    if (rebarSettings != null) {
-      extension.setRebarSettingsState(rebarSettings);
-    }
-  }
-
-  @Override
-  public void saveExtension(@NotNull JpsProject jpsProject, @NotNull Element componentTag) {
+    extension.setRebarSettingsState(rebarSettings);
   }
 }
