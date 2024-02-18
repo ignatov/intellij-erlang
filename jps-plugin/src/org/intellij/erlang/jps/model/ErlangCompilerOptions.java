@@ -29,6 +29,7 @@ public class ErlangCompilerOptions {
   public ErlangCompilerOptions(ErlangCompilerOptions options) {
     myUseRebarCompiler = options.myUseRebarCompiler;
     myAddDebugInfoEnabled = options.myAddDebugInfoEnabled;
+    myAdditionalErlcArguments = options.myAdditionalErlcArguments;
   }
 
   @Tag("useRebarCompiler")
