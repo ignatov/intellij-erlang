@@ -19,11 +19,6 @@ package org.intellij.erlang.quickfixes;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public abstract class ErlangQuickFixTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
   protected void doTest(String quickFixName) {
     String testName = getTestName(true);
 

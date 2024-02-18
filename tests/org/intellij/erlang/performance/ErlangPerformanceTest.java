@@ -50,11 +50,6 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
     setUpProjectSdk();
   }
 
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
   private void doTest(int expectedMs) {
     PlatformTestUtil.startPerformanceTest("erlang highlighting is slow", expectedMs, () -> {
       myFixture.configureByFile(getTestName(false) + ".erl");

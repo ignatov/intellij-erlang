@@ -171,11 +171,6 @@ public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCa
     setUpProjectSdk();
   }
 
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
   private String fetchSpec(@NotNull String moduleName, @NotNull String functionName, int arity) {
     String paramList = paramList(arity);
     String functionCallText = moduleName + ":" + functionName + "(" + paramList + ")";

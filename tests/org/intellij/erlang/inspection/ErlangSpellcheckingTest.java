@@ -26,8 +26,13 @@ public class ErlangSpellcheckingTest extends ErlangLightPlatformCodeInsightFixtu
     myFixture.enableInspections(new SpellCheckingInspection());
   }
 
-  public void testFunctionName() { doTest(); }
-  public void testAtom()         { doTest(); }
+  public void testFunctionName() {
+    doTest();
+  }
+
+  public void testAtom() {
+    doTest();
+  }
 
   private void doTest() {
     myFixture.testHighlighting(false, false, true, getTestName(true) + ".erl");
@@ -36,10 +41,5 @@ public class ErlangSpellcheckingTest extends ErlangLightPlatformCodeInsightFixtu
   @Override
   protected String getTestDataPath() {
     return "testData/spellchecker/";
-  }
-
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
   }
 }

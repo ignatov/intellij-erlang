@@ -41,11 +41,6 @@ public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeIn
     return "testData/marker/methodSeparators/";
   }
 
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
   private static void setShowMethodSeparatorsEnabled(boolean b) {
     DaemonCodeAnalyzerSettings settings = DaemonCodeAnalyzerSettings.getInstance();
     settings.SHOW_METHOD_SEPARATORS = b;

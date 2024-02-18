@@ -33,11 +33,6 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
   }
 
   @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
-  @Override
   protected void setUp() throws Exception {
     super.setUp();
     //noinspection unchecked

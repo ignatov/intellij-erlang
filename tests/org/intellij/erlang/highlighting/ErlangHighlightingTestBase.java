@@ -54,11 +54,6 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
   }
 
   @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
-  @Override
   protected String getTestDataPath() {
     return "testData/highlighting/";
   }

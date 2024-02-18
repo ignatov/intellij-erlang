@@ -55,10 +55,6 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
     myFixture.checkResultByFile("testRemoveDuplicate-after.erl");
   }
 
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
 
   private void doHighlightingTest(String... files) {
     myFixture.configureByFiles(files);
