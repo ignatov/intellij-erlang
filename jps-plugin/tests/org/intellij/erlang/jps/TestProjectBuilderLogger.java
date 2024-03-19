@@ -17,8 +17,8 @@ package org.intellij.erlang.jps;
 
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.UsefulTestCase;
+import com.intellij.util.containers.CollectionFactory;
 import com.intellij.util.containers.MultiMap;
-import gnu.trove.THashSet;
 import org.jetbrains.jps.builders.impl.logging.ProjectBuilderLoggerBase;
 
 import java.io.File;
@@ -29,13 +29,10 @@ import java.util.Set;
 
 public class TestProjectBuilderLogger extends ProjectBuilderLoggerBase {
   private final MultiMap<String, File> myCompiledFiles = new MultiMap<>();
-  private final Set<File> myDeletedFiles = new THashSet<>(FileUtil.FILE_HASHING_STRATEGY);
-  
+  private final Set<String> myDeletedFiles = CollectionFactory.createFilePathSet();
   @Override
   public void logDeletedFiles(Collection<String> paths) {
-    for (String path : paths) {
-      myDeletedFiles.add(new File(path));
-    }
+    myDeletedFiles.addAll(paths);
   }
 
   @Override
@@ -49,16 +46,17 @@ public class TestProjectBuilderLogger extends ProjectBuilderLoggerBase {
   }
 
   public void assertCompiled(String builderName, File[] baseDirs, String... paths) {
-    assertRelativePaths(baseDirs, myCompiledFiles.get(builderName), paths);
+    assertRelativePaths(baseDirs, myCompiledFiles.get(builderName).stream().map(File::getAbsolutePath).toList(), paths);
   }
 
   public void assertDeleted(File[] baseDirs, String... paths) {
     assertRelativePaths(baseDirs, myDeletedFiles, paths);
   }
 
-  private static void assertRelativePaths(File[] baseDirs, Collection<File> files, String[] expected) {
+  private static void assertRelativePaths(File[] baseDirs, Collection<String> files, String[] expected) {
     List<String> relativePaths = new ArrayList<>();
-    for (File file : files) {
+    for (String filePath : files) {
+      var file = new File(filePath);
       String path = file.getAbsolutePath();
       for (File baseDir : baseDirs) {
         if (baseDir != null && FileUtil.isAncestor(baseDir, file, false)) {
