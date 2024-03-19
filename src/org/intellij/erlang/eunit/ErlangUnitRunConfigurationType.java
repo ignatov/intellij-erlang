@@ -35,6 +35,7 @@ public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
     addFactory(new ErlangUnitConfigurationFactory(this));
   }
 
+
   public static ErlangUnitRunConfigurationType getInstance() {
     return CONFIGURATION_TYPE_EP.findExtensionOrFail(ErlangUnitRunConfigurationType.class);
   }

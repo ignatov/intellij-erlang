@@ -17,7 +17,7 @@
 <idea-plugin>
   <extensions defaultExtensionNs="com.intellij">
     <moduleType id="ERLANG_MODULE" implementationClass="org.intellij.erlang.module.ErlangModuleType"/>
-    <compileServer.plugin classpath="jps-plugin.jar"/>
+    <compileServer.plugin classpath="jps-plugin.jar;antlr4-runtime-4.0.jar;hamcrest-core-1.3.jar;commons-io-2.7.jar;etp-0.7.jar;jinterface-1.6.1.jar"/>
     <buildProcess.parametersProvider implementation="org.intellij.erlang.ErlangBuildProcessParametersProvider"/>
     <facetType implementation="org.intellij.erlang.facet.ErlangFacetType"/>
     <framework.detector implementation="org.intellij.erlang.facet.ErlangFacetBasedFrameworkDetector"/>

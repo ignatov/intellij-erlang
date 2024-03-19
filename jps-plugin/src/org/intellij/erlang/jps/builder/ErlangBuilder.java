@@ -153,8 +153,9 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     for (File appConfigSrc : appConfigFiles) {
       for (File outputDir : outputDirectories) {
         File appConfigDst = getDestinationAppConfig(outputDir, appConfigSrc.getName());
-        FileUtil.copy(appConfigSrc, appConfigDst);
-        reportMessage(context, String.format("Copy %s to %s", ErlangBuilderUtil.getPath(appConfigSrc), ErlangBuilderUtil.getPath(outputDir)));
+        LOG.warn("Using AppFileConverter to generate app file");
+        new AppFileConverter(context, appConfigSrc, outputDir).writeToFile(appConfigDst);
+        reportMessage(context, String.format("Copy AppFileConverter %s to %s", ErlangBuilderUtil.getPath(appConfigSrc), ErlangBuilderUtil.getPath(outputDir)));
         outputConsumer.registerOutputFile(appConfigDst, Collections.singletonList(ErlangBuilderUtil.getPath(appConfigSrc)));
       }
     }
@@ -283,9 +284,13 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
                                          @Nullable JpsModule module) {
     JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
     List<String> parseTransforms = extension != null ? extension.getParseTransforms() : Collections.emptyList();
+    List<String> flags = extension != null ? extension.getExtraFlags() : Collections.emptyList();
     if (parseTransforms.isEmpty()) return;
     for (String ptModule : parseTransforms) {
       commandLine.addParameter("+{parse_transform, " + ptModule + "}");
+    }
+    for (String ptModule : flags) {
+      commandLine.addParameter(ptModule);
     }
   }
 

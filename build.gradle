@@ -12,7 +12,10 @@ dependencies {
 
 version = "${version}.$buildNumber"
 allprojects {
-  repositories { mavenCentral() }
+  repositories {
+    mavenLocal()
+    mavenCentral()
+  }
   apply plugin: 'java'
   sourceCompatibility = javaVersion
   targetCompatibility = javaTargetVersion
@@ -31,6 +34,7 @@ allprojects {
   apply plugin: 'org.jetbrains.intellij'
   intellij {
     version = ideaVersion
+    type.set("IC")
     plugins = ['copyright', 'java']
     downloadSources = Boolean.valueOf(sources)
     sameSinceUntilBuild = Boolean.valueOf(isEAP)
@@ -67,6 +71,7 @@ allprojects {
 }
 
 repositories {
+  mavenLocal()
   jcenter()
   flatDir {
     dirs 'libs'

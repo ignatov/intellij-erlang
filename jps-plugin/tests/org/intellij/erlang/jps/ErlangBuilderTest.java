@@ -77,4 +77,6 @@ public class ErlangBuilderTest extends JpsBuildTestCase {
                                                   @NotNull JpsSdk<T> sdk) {
     addModule(moduleName, srcPaths, outputPath, testOutputPath, sdk, JpsErlangModuleType.INSTANCE);
   }
+
+
 }
