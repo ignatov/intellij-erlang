@@ -20,10 +20,10 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
-import com.intellij.ide.SaveAndSyncHandler;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -58,6 +58,11 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
     PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
     boolean isErlang = psiFile instanceof ErlangFile;
     e.getPresentation().setEnabled(isErlang);
+  }
+
+  @Override
+  public @NotNull ActionUpdateThread getActionUpdateThread() {
+    return ActionUpdateThread.BGT;
   }
 
   @Override

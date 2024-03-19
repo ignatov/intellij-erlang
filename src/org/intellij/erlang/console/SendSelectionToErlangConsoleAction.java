@@ -51,6 +51,11 @@ public class SendSelectionToErlangConsoleAction extends AnAction {
   }
 
   @Override
+  public @NotNull ActionUpdateThread getActionUpdateThread() {
+    return ActionUpdateThread.BGT;
+  }
+
+  @Override
   public void actionPerformed(@NotNull AnActionEvent actionEvent) {
     DataContext dataContext = actionEvent.getDataContext();
     Editor editor = CommonDataKeys.EDITOR.getData(dataContext);
