@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.utils;
 
-import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -65,7 +64,7 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Base
     super.tearDown();
   }
 
-  protected static void releaseErlangSdks() {
+  private static void releaseErlangSdks() {
     ApplicationManager.getApplication().runWriteAction(() -> {
       ProjectJdkTable table = ProjectJdkTable.getInstance();
       List<Sdk> sdksOfType = table.getSdksOfType(ErlangSdkType.getInstance());
@@ -79,7 +78,12 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Base
     ApplicationManager.getApplication().runWriteAction(() -> {
       Sdk sdk = getProjectDescriptor().getSdk();
       if (sdk != null) {
-        ProjectJdkTable.getInstance().addJdk(sdk);
+        ProjectJdkTable instance = ProjectJdkTable.getInstance();
+        var prev = instance.findJdk(sdk.getName(), sdk.getSdkType().getName());
+        if (prev != null) {
+          instance.removeJdk(prev);
+        }
+        instance.addJdk(sdk);
         ProjectRootManager.getInstance(myFixture.getProject()).setProjectSdk(sdk);
       }
     });

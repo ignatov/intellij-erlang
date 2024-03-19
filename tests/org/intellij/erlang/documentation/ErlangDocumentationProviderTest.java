@@ -16,9 +16,11 @@
 
 package org.intellij.erlang.documentation;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.JavadocOrderRootType;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -527,13 +529,15 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        Sdk mockSdk = ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
-        // Set local SDK documentation path
-        SdkModificator sdkModificator = mockSdk.getSdkModificator();
-        VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath("testData/mockSdk-R15B02/");
-        sdkModificator.addRoot(localDocDir, JavadocOrderRootType.getInstance());
-        sdkModificator.commitChanges();
-        return mockSdk;
+        return ApplicationManager.getApplication().runWriteAction((Computable<Sdk>) () -> {
+          Sdk mockSdk = ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
+          // Set local SDK documentation path
+          SdkModificator sdkModificator = mockSdk.getSdkModificator();
+          VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath("testData/mockSdk-R15B02/");
+          sdkModificator.addRoot(localDocDir, JavadocOrderRootType.getInstance());
+          sdkModificator.commitChanges();
+          return mockSdk;
+        });
       }
     };
   }

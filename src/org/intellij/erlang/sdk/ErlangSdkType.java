@@ -29,6 +29,7 @@ import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.SystemInfo;
@@ -235,14 +236,16 @@ public class ErlangSdkType extends SdkType {
   @TestOnly
   @NotNull
   public static Sdk createMockSdk(@NotNull String sdkHome, @NotNull ErlangSdkRelease version) {
-    getInstance().mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), version); // we'll not try to detect sdk version in tests environment
-    Sdk sdk = new ProjectJdkImpl(getDefaultSdkName(sdkHome, version), getInstance());
-    SdkModificator sdkModificator = sdk.getSdkModificator();
-    sdkModificator.setHomePath(sdkHome);
-    sdkModificator.setVersionString(getVersionString(version)); // must be set after the home path, otherwise setting the home path clears the version string
-    sdkModificator.commitChanges();
-    configureSdkPaths(sdk);
-    return sdk;
+    return ApplicationManager.getApplication().runWriteAction((Computable<Sdk>) () -> {
+      getInstance().mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), version); // we'll not try to detect sdk version in tests environment
+      Sdk sdk = new ProjectJdkImpl(getDefaultSdkName(sdkHome, version), getInstance());
+      SdkModificator sdkModificator = sdk.getSdkModificator();
+      sdkModificator.setHomePath(sdkHome);
+      sdkModificator.setVersionString(getVersionString(version)); // must be set after the home path, otherwise setting the home path clears the version string
+      sdkModificator.commitChanges();
+      configureSdkPaths(sdk);
+      return sdk;
+    });
   }
 
   @Nullable
