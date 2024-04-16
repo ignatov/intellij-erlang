@@ -27,7 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ErlangCompilerError {
-  static final Pattern COMPILER_MESSAGE_PATTERN = Pattern.compile("^((?:[a-zA-Z]:)?.+?):(?:(\\d+):)?(\\s*Warning:)?\\s*(.+)$");
+
+  static final Pattern COMPILER_MESSAGE_PATTERN = Pattern.compile("^((?:[a-zA-Z]:)?.+?):(?:(\\d+)(?::\\d+)?:)?(\\s*Warning:)?\\s*(.+)$");
   static final int PATH_MATCH_INDEX = 1;
   static final int LINE_MATCH_INDEX = 2;
   static final int WARNING_MATCH_INDEX = 3;

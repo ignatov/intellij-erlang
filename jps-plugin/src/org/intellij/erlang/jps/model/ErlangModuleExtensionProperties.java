@@ -29,10 +29,17 @@ public class ErlangModuleExtensionProperties {
   //should not contain duplicate elements
   public List<String> myParseTransforms = new ArrayList<>();
 
+  @Tag("extraFlags")
+  @XCollection(elementName="flags")
+  //should not contain duplicate elements
+  public List<String> myExtraFlags = new ArrayList<>();
+
   public ErlangModuleExtensionProperties() {
   }
 
   public ErlangModuleExtensionProperties(@NotNull ErlangModuleExtensionProperties props) {
     myParseTransforms = new ArrayList<>(props.myParseTransforms);
+    myExtraFlags = new ArrayList<>(props.myExtraFlags);
+
   }
 }

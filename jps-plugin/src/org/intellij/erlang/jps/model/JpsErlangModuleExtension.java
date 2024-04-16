@@ -58,6 +58,10 @@ public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangM
     return Collections.unmodifiableList(myProperties.myParseTransforms);
   }
 
+  public List<String> getExtraFlags() {
+    return Collections.unmodifiableList(myProperties.myExtraFlags);
+  }
+
   @Nullable
   public static JpsErlangModuleExtension getExtension(@Nullable JpsModule module) {
     return module != null ? module.getContainer().getChild(ROLE) : null;

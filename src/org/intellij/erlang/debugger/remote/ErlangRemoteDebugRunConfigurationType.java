@@ -38,6 +38,12 @@ public class ErlangRemoteDebugRunConfigurationType extends ConfigurationTypeBase
       public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
         return new ErlangRemoteDebugRunConfiguration(project, "Erlang remote node");
       }
+
+      @NotNull
+      @Override
+      public String getId() {
+        return "Erlang Remote Node";
+      }
     });
   }
 
