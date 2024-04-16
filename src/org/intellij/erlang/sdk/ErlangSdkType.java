@@ -39,6 +39,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.concurrency.annotations.RequiresWriteLock;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.jps.model.JpsErlangModelSerializerExtension;
@@ -202,7 +203,7 @@ public class ErlangSdkType extends SdkType {
 
   @Override
   public void setupSdkPaths(@NotNull Sdk sdk) {
-    configureSdkPaths(sdk);
+    ApplicationManager.getApplication().runWriteAction(() -> configureSdkPaths(sdk));
   }
 
   @Nullable
@@ -381,6 +382,7 @@ public class ErlangSdkType extends SdkType {
     return otpRelease != null && ertsVersion != null ? new ErlangSdkRelease(otpRelease, ertsVersion) : null;
   }
 
+  @RequiresWriteLock
   private static void configureSdkPaths(@NotNull Sdk sdk) {
     SdkModificator sdkModificator = sdk.getSdkModificator();
     setupLocalSdkPaths(sdkModificator);
