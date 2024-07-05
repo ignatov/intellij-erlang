@@ -20,13 +20,13 @@ import com.intellij.ide.util.ElementsChooser;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.projectImport.SelectImportedProjectsStep;
-import com.intellij.vcsUtil.VcsFileUtil;
+// import com.intellij.vcsUtil.VcsFileUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.io.File;
+// import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,10 +67,8 @@ final class SelectImportedOtpAppsStep extends SelectImportedProjectsStep<Importe
   }
 
   @Override
-  protected String getElementText(@NotNull ImportedOtpApp app) {
-    String projectFileDirectory = getWizardContext().getProjectFileDirectory();
-    String relativePath = VcsFileUtil.relativePath(new File(projectFileDirectory), app.getRoot());
-    return ".".equals(relativePath) ? relativePath + " (" + app.getName() + ")" : relativePath;
+  protected String getElementText(@NotNull ImportedOtpApp importedOtpApp) {
+    return importedOtpApp.toString();
   }
 
   @Nullable
