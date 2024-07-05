@@ -37,7 +37,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.PathUtil;
-import com.intellij.util.ResourceUtil;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
@@ -333,7 +332,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       GeneralCommandLine commandLine = new GeneralCommandLine();
       myRunningState.setExePath(commandLine);
       myRunningState.setWorkDirectory(commandLine);
-      setUpErlangDebuggerCodePath(commandLine);
+      setUpErlangDebuggerCodePath(this.getClass(), commandLine);
       myRunningState.setCodePath(commandLine);
       commandLine.addParameters("-run", "debugnode", "main", String.valueOf(myDebuggerNode.getLocalDebuggerPort()));
       myRunningState.setErlangFlags(commandLine);
@@ -374,14 +373,14 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     return erlangProcessHandler;
   }
 
-  private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
+  private static void setUpErlangDebuggerCodePath(Class<? extends ErlangXDebugProcess> currentClass, GeneralCommandLine commandLine) throws ExecutionException {
     LOG.debug("Setting up debugger environment.");
     try {
       String[] beams = {"debugnode.beam", "remote_debugger.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
       File tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
       LOG.debug("Debugger beams will be put to: " + tempDirectory.getPath());
       for (String beam : beams) {
-        copyBeamTo(beam, tempDirectory);
+        copyBeamTo(currentClass, beam, tempDirectory);
       }
       LOG.debug("Debugger beams were copied successfully.");
       commandLine.addParameters("-pa", tempDirectory.getPath());
@@ -391,8 +390,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
   }
 
-  private static void copyBeamTo(String beamName, File directory) throws IOException {
-    try (var inputStream = ResourceUtil.getResourceAsStream(ClassLoader.getSystemClassLoader(), "/debugger/beams", beamName)) {
+  private static void copyBeamTo(Class<? extends ErlangXDebugProcess> currentClass, String beamName, File directory) throws IOException {
+    try (var inputStream = currentClass.getResourceAsStream("/debugger/beams/" + beamName)) {
       if (inputStream == null) {
         throw new IOException("Failed to locate debugger module: " + beamName);
       }
