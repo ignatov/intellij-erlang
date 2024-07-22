@@ -392,7 +392,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   private static void copyBeamTo(String beamName, File directory) throws IOException {
-    try (var inputStream = ResourceUtil.getResourceAsStream(ClassLoader.getSystemClassLoader(), "/debugger/beams", beamName)) {
+    try (var inputStream = ResourceUtil.getResourceAsStream(ErlangXDebugProcess.class.getClassLoader(), "/debugger/beams", beamName)) {
       if (inputStream == null) {
         throw new IOException("Failed to locate debugger module: " + beamName);
       }
