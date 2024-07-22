@@ -109,10 +109,8 @@ public class ErlangSdkType extends SdkType {
     var searchRoots = new String[]{
       System.getProperty("user.home") + "/.asdf/installs/erlang",
       "/opt/brewroot/Cellar/erlang", // Brew install location for M1 arm64
+      "/opt/homebrew/Cellar/erlang", // Brew install location for M1 arm64
       "/usr/local/Cellar/erlang",
-      "/usr/local/Cellar/erlang-r14",
-      "/usr/local/Cellar/erlang-r15",
-      "/usr/local/Cellar/erlang-r16",
       };
 
     return searchForErlangRecursivelyIn(searchRoots);
