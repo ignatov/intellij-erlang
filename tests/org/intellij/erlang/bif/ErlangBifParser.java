@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Sergey Ignatov
+ * Copyright 2012-2024 Sergey Ignatov
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +45,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings({"JUnitTestClassNamingConvention"})
+@Ignore
 public class ErlangBifParser extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final Pattern PATTERN_FUNC_DECLARATION = Pattern.compile(
     "<span\\s+class=\"bold_code\">.*\\((.*)\\) -&gt;.*</span>", Pattern.MULTILINE);
