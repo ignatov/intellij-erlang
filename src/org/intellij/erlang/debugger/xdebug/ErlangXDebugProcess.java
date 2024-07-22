@@ -306,8 +306,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     myDebuggerNode.setBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
   }
 
-  void removeBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint,
-                        @SuppressWarnings("UnusedParameters") boolean temporary) {
+  void removeBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
     ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
     if (breakpointPosition == null) return;
     myPositionToLineBreakpointMap.remove(breakpointPosition);
