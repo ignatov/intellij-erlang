@@ -38,6 +38,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.PathUtil;
 import com.intellij.util.ResourceUtil;
+import com.intellij.util.SlowOperations;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
@@ -101,8 +102,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       throw new ExecutionException(e);
     }
 
-    // it's important to set modules to interpret before running debug target
-    setModulesToInterpret();
+    // it's important to set modules to interpret before running the debug target
+    SlowOperations.allowSlowOperations(this::setModulesToInterpret);
     //TODO split running debug target and debugger process spawning
     myErlangProcessHandler = runDebugTarget();
 
