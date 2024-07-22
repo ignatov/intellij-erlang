@@ -388,7 +388,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       commandLine.addParameters("-pa", tempDirectory.getPath());
     }
     catch (IOException e) {
-      throw new ExecutionException("Failed to setup debugger environment", e);
+      throw new ExecutionException("Failed to setup debugger environment: " + e.getMessage(), e);
     }
   }
 
