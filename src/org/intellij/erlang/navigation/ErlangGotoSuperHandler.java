@@ -52,7 +52,7 @@ public class ErlangGotoSuperHandler implements LanguageCodeInsightActionHandler 
     List<ErlangCallbackSpec> callbackSpecs = ErlangNavigationUtil.getCallbackSpecs(function);
     String presentation = ErlangPsiImplUtil.createFunctionPresentation(function);
 
-    PsiElementListNavigator.openTargets(editor, getNavigatables(presentation, callbackSpecs), "Go to callback specification", presentation, new DefaultPsiElementCellRenderer());
+    PsiElementListNavigator.openTargets(editor, getNavigatables(presentation, callbackSpecs), "Go to Callback Specification", presentation, new DefaultPsiElementCellRenderer(), null);
   }
 
   @Override
@@ -67,6 +67,6 @@ public class ErlangGotoSuperHandler implements LanguageCodeInsightActionHandler 
       ContainerUtil.addIfNotNull(navigatables, ErlangNavigationUtil.getNavigatableSpecFun(targetPresentation, specFun));
     }
 
-    return navigatables.toArray(new NavigatablePsiElement[navigatables.size()]);
+    return navigatables.toArray(new NavigatablePsiElement[0]);
   }
 }
