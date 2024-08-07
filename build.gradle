@@ -7,8 +7,6 @@ plugins {
 
 apply plugin: 'org.jetbrains.intellij.platform'
 
-version = "${version}.$buildNumber"
-
 subprojects {
   apply plugin: 'org.jetbrains.intellij.platform.module'
 }
@@ -42,7 +40,7 @@ allprojects {
 
 
   intellijPlatform {
-    version = ideaVersion
+    version = "${version}.$buildNumber"
 //    plugins = ['copyright', 'java']
 //    downloadSources = Boolean.valueOf(sources)
 //    sameSinceUntilBuild = Boolean.valueOf(isEAP)
