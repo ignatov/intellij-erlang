@@ -54,7 +54,7 @@ allprojects {
 
   dependencies {
     intellijPlatform { IntelliJPlatformDependenciesExtension ijp ->
-      ijp.intellijIdeaCommunity("242.20224.91")
+      ijp.intellijIdeaCommunity("2024.2")
       ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java")
       ijp.instrumentationTools()
       ijp.testFramework(TestFrameworkType.Platform.INSTANCE)
