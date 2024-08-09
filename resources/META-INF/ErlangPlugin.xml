@@ -105,6 +105,7 @@
         <lang.foldingBuilder language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangFoldingBuilder"/>
 
         <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
+        <workspaceModel.fileIndexContributor implementation="org.intellij.erlang.sdk.ErlangExcludeHtmlFileIndexContributor"/>
         <!-- run -->
         <programRunner implementation="org.intellij.erlang.runconfig.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationType"/>
