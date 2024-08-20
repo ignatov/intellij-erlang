@@ -29,6 +29,7 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.SystemInfo;
@@ -49,7 +50,6 @@ import java.util.List;
 
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
-  private static final NotificationGroup NOTIFICATION_GROUP = NotificationGroup.logOnlyGroup("Dialyzer-based inspections");
 
   @Nullable
   private static Problem parseProblem(String input) {
@@ -82,7 +82,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
     String currentPltPath = DialyzerSettings.getInstance(file.getProject()).getCurrentPltPath();
 
-    return new State(dialyzerPath, currentPltPath, canonicalPath, workingDir);
+    return new State(file.getProject(), dialyzerPath, currentPltPath, canonicalPath, workingDir);
   }
 
   @Nullable
@@ -103,7 +103,9 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
         for (String line : output.getStdoutLines()) {
           LOG.debug(line);
           if (line.startsWith("dialyzer: ")) {
-            NOTIFICATION_GROUP.createNotification(line, NotificationType.WARNING).notify(null); // todo: get a project
+            NotificationGroup.logOnlyGroup("Dialyzer-based inspections")
+                             .createNotification(line, NotificationType.WARNING)
+                             .notify(state.myProject);
             return state;
           }
           Problem problem = parseProblem(line);
@@ -166,12 +168,14 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
   public static class State {
     public final List<Problem> problems = new ArrayList<>();
+    private final Project myProject;
     private final String myDialyzerPath;
     private final String myCurrentPltPath;
     private final String myFilePath;
     private final String myWorkingDir;
 
-    public State(String dialyzerPath, String currentPltPath, String filePath, String workingDir) {
+    public State(Project project, String dialyzerPath, String currentPltPath, String filePath, String workingDir) {
+      myProject = project;
       myDialyzerPath = dialyzerPath;
       myCurrentPltPath = currentPltPath;
       myFilePath = filePath;
