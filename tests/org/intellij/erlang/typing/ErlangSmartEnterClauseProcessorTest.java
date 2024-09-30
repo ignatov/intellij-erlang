@@ -18,7 +18,15 @@ package org.intellij.erlang.typing;
 
 import com.intellij.codeInsight.editorActions.smartEnter.SmartEnterProcessor;
 import com.intellij.codeInsight.editorActions.smartEnter.SmartEnterProcessors;
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupEx;
+import com.intellij.codeInsight.lookup.LookupManager;
+import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.util.containers.ContainerUtil;
+
+import java.util.List;
+
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
@@ -76,13 +84,67 @@ public class ErlangSmartEnterClauseProcessorTest extends ErlangLightPlatformCode
             _ -><caret>""");
   }
 
-  private void doTest(@NotNull String before, @NotNull String after) {
+  public void testTerminatorProcessor() {
+    doTest(
+      "foo() -><caret>",
+      "foo() ->,",
+      ",", ";", "."
+    );
+  }
+
+  public void testTerminatorProcessorWithExistingContent() {
+    doTest(
+      "foo() -> bar(<caret>)",
+      "foo() -> bar(),",
+      ",", ";", "."
+    );
+  }
+
+  public void testTerminatorProcessorInCaseClause() {
+    doTest(
+      """
+        case X of
+          1 -> one<caret>
+        end""",
+      """
+        case X of
+          1 -> one
+        end"""
+    );
+  }
+
+  public void testTerminatorProcessorInFunction() {
+    doTest(
+      """
+        foo() ->
+          bar()<caret>
+          baz().""",
+      """
+        foo() ->
+          bar()<selection>,<caret></selection>
+          baz().""",
+      ",", ";", "."
+    );
+  }
+
+  private void doTest(@NotNull String before, @NotNull String after, String... popupStrings) {
+    if (popupStrings.length > 0) {
+      TemplateManagerImpl.setTemplateTesting(getTestRootDisposable());
+    }
     myFixture.configureByText("a.erl", before);
     WriteCommandAction.writeCommandAction(getProject()).run(() -> {
       for (SmartEnterProcessor processor : SmartEnterProcessors.INSTANCE.forKey(ErlangLanguage.INSTANCE)) {
-        processor.process(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile());
+        if (processor.process(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile())) break;
       }
     });
+
+    if (popupStrings.length > 0) {
+      LookupEx lookup = LookupManager.getActiveLookup(myFixture.getEditor());
+      assertNotNull("Lookup should be shown", lookup);
+      List<String> lookupStrings = ContainerUtil.map(lookup.getItems(), LookupElement::getLookupString);
+      assertContainsElements(lookupStrings, popupStrings);
+    }
+    
     myFixture.checkResult(after);
   }
 }

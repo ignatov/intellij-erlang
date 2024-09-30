@@ -94,6 +94,7 @@
 
         <extendWordSelectionHandler implementation="org.intellij.erlang.editor.ErlangWordSelectioner" order="last"/>
         <lang.smartEnterProcessor language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangClausesSmartEnterProcessor" id="ErlangClause"/>
+        <lang.smartEnterProcessor language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangTerminatorSmartEnterProcessor" id="ErlangTerm" order="after ErlangClause"/>
         <lang.elementManipulator forClass="org.intellij.erlang.psi.impl.ErlangStringLiteralImpl"
                                  implementationClass="org.intellij.erlang.editor.ErlangStringManipulator"/>
         <lang.elementManipulator forClass="org.intellij.erlang.psi.impl.ErlangASTFactory$ErlangCommentImpl" order="first"
