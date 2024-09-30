@@ -58,7 +58,8 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     try {
       List<String> reporterModuleCodePath = Arrays.asList("-pa", createReporterModuleDirectory());
       return ContainerUtil.concat(reporterModuleCodePath, super.getCodePath());
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       throw new ExecutionException("Failed to setup eunit reports environment", e);
     }
   }
@@ -143,14 +144,14 @@ public class ErlangUnitRunningState extends ErlangRunningState {
         for (String function : e.getValue()) {
           boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
           result.append(isGenerator ? "{generator, " : "")
-            .append("fun ").append(moduleName).append(':').append(function).append("/0")
-            .append(isGenerator ? "}" : "")
-            .append(", ");
+                .append("fun ").append(moduleName).append(':').append(function).append("/0")
+                .append(isGenerator ? "}" : "")
+                .append(", ");
         }
         result.setLength(result.length() - 2);
         result.append("]}, ");
       }
-      if (result.length() != 0) {
+      if (!result.isEmpty()) {
         result.setLength(result.length() - 2);
       }
       tests = result.toString();

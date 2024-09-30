@@ -32,7 +32,6 @@ import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
@@ -102,9 +101,9 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
     boolean needBrackets = "export".equalsIgnoreCase(keyword) || "export_type".equalsIgnoreCase(keyword) ||
                            "optional_callbacks".equalsIgnoreCase(keyword);
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(keyword)
-      .withInsertHandler(needHandler ? new ErlangKeywordInsertHandler(needQuotas, needBrackets) : null)
-      .withTailText(needHandler ? "()" : null)
-      .bold(), ErlangCompletionContributor.KEYWORD_PRIORITY);
+                                                                     .withInsertHandler(needHandler ? new ErlangKeywordInsertHandler(needQuotas, needBrackets) : null)
+                                                                     .withTailText(needHandler ? "()" : null)
+                                                                     .bold(), ErlangCompletionContributor.KEYWORD_PRIORITY);
   }
 
   private static class ErlangKeywordInsertHandler extends ParenthesesInsertHandler<LookupElement> {
@@ -135,7 +134,10 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
       if (insertBrackets()) doInsert(editor, document, "[", "]");
     }
 
-    private static void doInsert(@NotNull Editor editor, @NotNull Document document, @NotNull String open, @NotNull String closed) {
+    private static void doInsert(@NotNull Editor editor,
+                                 @NotNull Document document,
+                                 @NotNull String open,
+                                 @NotNull String closed) {
       int offset = editor.getCaretModel().getOffset();
       document.insertString(offset, open);
       document.insertString(offset + 1, closed);

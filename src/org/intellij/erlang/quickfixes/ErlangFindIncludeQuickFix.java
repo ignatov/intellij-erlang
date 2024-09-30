@@ -159,7 +159,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       @NotNull
       @Override
       public String getTitle() {
-        return "Multiple files found";
+        return "Multiple Files Found";
       }
 
       @Nullable
@@ -169,7 +169,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
           fixUsingIncludeFile(problem, o);
           renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
           FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
-        }), "add facet action(find include quick fix)", null, problemEditor.getDocument());
+        }), "Add Facet Action (Find Include Quick Fix)", null, problemEditor.getDocument());
 
         return null;
       }
@@ -228,13 +228,13 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
   }
 
   /*
-  * returns file name from includeString
-  * eg:
-  * getFileName("pr285_helper/include/internal_communication.hrl")
-  *   -> "internal_communications.hrl"
-  * getFileName("ecst_events.hrl")
-  *   -> "ecst_events.hrl"
-  * */
+   * returns file name from includeString
+   * eg:
+   * getFileName("pr285_helper/include/internal_communication.hrl")
+   *   -> "internal_communications.hrl"
+   * getFileName("ecst_events.hrl")
+   *   -> "ecst_events.hrl"
+   * */
   private static String getFileName(String includeString) {
     int index = includeString.lastIndexOf(INCLUDE_STRING_PATH_SEPARATOR);
     return includeString.substring(index + 1);

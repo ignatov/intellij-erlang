@@ -36,7 +36,10 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnitTestMethodAction extends CodeInsightAction implements CodeInsightActionHandler {
-  private static void insertTestFunction(@NotNull Project project, @NotNull Editor editor, String name, boolean needNewline) {
+  private static void insertTestFunction(@NotNull Project project,
+                                         @NotNull Editor editor,
+                                         String name,
+                                         boolean needNewline) {
     Template template = TemplateManager.getInstance(project).createTemplate("", "");
     Expression nameExpr = new ConstantNode(name);
     Expression expected = new ConstantNode("expected");
@@ -73,11 +76,6 @@ public class ErlangUnitTestMethodAction extends CodeInsightAction implements Cod
     String name = function != null ? function.getName() : "name";
     caretModel.moveToOffset(endOffset);
     insertTestFunction(project, editor, name, needNewline);
-  }
-
-  @Override
-  public boolean startInWriteAction() {
-    return true;
   }
 
   @Override

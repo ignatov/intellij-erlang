@@ -50,14 +50,16 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
       StringBuilder newExport = new StringBuilder();
       for (ErlangExportFunction ef : exportFunctions.getExportFunctionList()) {
         if (ef == function || !ef.getText().equals(function.getText())) {
-          if (newExport.length() > 0)
+          if (!newExport.isEmpty()) {
             newExport.append(", ");
+          }
           newExport.append(ef.getText());
         }
       }
-      if (newExport.length() == 0) {
-        if (attribute.getNextSibling() instanceof PsiWhiteSpace)
+      if (newExport.isEmpty()) {
+        if (attribute.getNextSibling() instanceof PsiWhiteSpace) {
           attribute.getNextSibling().delete();
+        }
         attribute.delete();
       }
       else {
