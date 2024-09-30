@@ -29,9 +29,15 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
-  @NotNull
+  @Nullable
   public PsiElement getString() {
-    return notNullChild(findChildByType(ERL_STRING));
+    return findChildByType(ERL_STRING);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getTripleQuotedString() {
+    return findChildByType(ERL_TRIPLE_QUOTED_STRING);
   }
 
   @Override

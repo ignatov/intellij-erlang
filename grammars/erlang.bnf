@@ -591,7 +591,7 @@ private exprs_tail ::= ',' expression {pin=1 recoverWhile=exprs_recover}
 private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | else | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
 private atomic ::= q_atom !'(' | integer | (string_literal | macros)+ | float | char
-string_literal ::= string {
+string_literal ::= string | triple_quoted_string {
   implements = "com.intellij.psi.PsiLanguageInjectionHost"
   methods = [isValidHost updateText createLiteralTextEscaper]
 }

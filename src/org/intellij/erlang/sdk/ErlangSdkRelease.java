@@ -23,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.util.Objects;
+
 public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_R14A = new ErlangSdkRelease("R14A", "5.8");
   public static final ErlangSdkRelease V_R15B02 = new ErlangSdkRelease("R15B02", "5.9.2");
@@ -31,6 +33,7 @@ public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_17_0 = new ErlangSdkRelease("17", "6.0");
   public static final ErlangSdkRelease V_18_0 = new ErlangSdkRelease("18", "7.0");
   public static final ErlangSdkRelease V_25_0 = new ErlangSdkRelease("25", "13.0");
+  public static final ErlangSdkRelease V_27_0 = new ErlangSdkRelease("27", "15.1");
 
   // The release with most features, assumed to be in effect if the version cannot be determined. The parser will use
   // this to guess the features available in the Erlang SDK.

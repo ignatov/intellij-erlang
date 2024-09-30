@@ -81,7 +81,8 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
       ErlangDefiningImportedFunctionInspection.class,
       ErlangImportDirectiveOverridesAutoImportedBifInspection.class,
       ErlangAmbiguousCallOfAutoImportedFunctionInspection.class,
-      ErlangFunctionAlreadyImportedInspection.class
+      ErlangFunctionAlreadyImportedInspection.class,
+      ErlangTripleQuotasSyntaxInspection.class
     );
   }
 
@@ -129,5 +130,10 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
   protected void enableErlang25SyntaxInspection() {
     //noinspection unchecked
     myFixture.enableInspections(Erlang25SyntaxInspection.class);
+  }
+
+  protected void enableErlang27SyntaxInspection() {
+    //noinspection unchecked
+    myFixture.enableInspections(Erlang27SyntaxInspection.class);
   }
 }

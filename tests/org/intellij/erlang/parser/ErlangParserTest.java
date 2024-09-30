@@ -98,4 +98,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testMacroCallsInCompoundStringLiterals()  { doTest(false); }
   public void testTypo()                                { doTest(true);  }
   public void testNewNumbers()                          { doTest(true);  }
+  public void testTripleQuotes()                        { doTest(true);  }
 }

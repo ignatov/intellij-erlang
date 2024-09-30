@@ -211,6 +211,7 @@ public interface ErlangTypes {
   IElementType ERL_SEMI = new ErlangTokenType(";");
   IElementType ERL_SINGLE_QUOTE = new ErlangTokenType("single_quote");
   IElementType ERL_STRING = new ErlangTokenType("string");
+  IElementType ERL_TRIPLE_QUOTED_STRING = new ErlangTokenType("triple_quoted_string");
   IElementType ERL_TRY = new ErlangTokenType("try");
   IElementType ERL_VAR = new ErlangTokenType("var");
   IElementType ERL_WHEN = new ErlangTokenType("when");

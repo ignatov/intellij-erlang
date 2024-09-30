@@ -68,7 +68,8 @@ CharLiteral = \$ {CharLiteralChar} | \$
 ESC = "\\" ( [^] )
 CHAR = {ESC} | [^\'\"\\]
 STRING_BAD1 = \" ({CHAR} | \') *
-StringLiteral = {STRING_BAD1} \"
+TripleQuotedString = \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
+StringLiteral = {TripleQuotedString} | {STRING_BAD1} \"
 
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
 NameChars = {NameChar}*
@@ -147,6 +148,7 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }
+<YYINITIAL> {TripleQuotedString}          { return ERL_TRIPLE_QUOTED_STRING; }
 
 <YYINITIAL> {AtomName} | {EmptyAtom}      { return ERL_ATOM_NAME; }
 <YYINITIAL> '                             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE; }
