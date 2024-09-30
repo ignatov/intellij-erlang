@@ -1,1 +1,5 @@
 jar.archiveFileName = "jps-plugin.jar"
+
+composedJar {
+  archiveVersion = ""
+}
