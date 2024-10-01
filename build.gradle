@@ -45,6 +45,10 @@ allprojects {
 //    sameSinceUntilBuild = Boolean.valueOf(isEAP)
   }
 
+  composedJar {
+    archiveVersion = ""
+  }
+
   repositories {
     intellijPlatform {
       defaultRepositories()
