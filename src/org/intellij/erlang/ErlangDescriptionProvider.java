@@ -72,6 +72,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       else if (o instanceof ErlangQAtom) return "atom";
       else if (o instanceof ErlangTypeRef) return "type";
       else if (o instanceof ErlangFunctionCallExpression) return "function";
+      else if (o instanceof ErlangSpecification) return "specification";
     }
     LOG.error("Unexpected element " + o.getText() +
               ", class: " + o.getClass() +

@@ -58,7 +58,7 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     }
   }
 
-  private class GuardDetector extends ErlangRecursiveVisitor {
+  private static class GuardDetector extends ErlangRecursiveVisitor {
     private final ProblemsHolder myHolder;
 
     public GuardDetector(ProblemsHolder holder) {

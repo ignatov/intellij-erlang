@@ -41,7 +41,7 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
             if (isForceSkipped(o) || !inLeftPartOfAssignment(o) && (!inArgumentDefinition(o) || inArgumentList(o))) return;
 
             PsiReference reference = o.getReference();
-            PsiElement resolve = reference != null ? reference.resolve() : null;
+            PsiElement resolve = reference.resolve();
             if (resolve != null) return;
 
             Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));

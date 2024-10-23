@@ -37,7 +37,7 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
     }
   }
 
-  private class PatternInspector extends ErlangRecursiveVisitor {
+  private static class PatternInspector extends ErlangRecursiveVisitor {
     private final ProblemsHolder myHolder;
 
     public PatternInspector(ProblemsHolder holder) {
@@ -76,7 +76,8 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
       }
     }
 
-    private void checkExpressionAndReport(@NotNull PsiElement element, @NotNull final ProblemsHolder problemsHolder) {
+    private static void checkExpressionAndReport(@NotNull PsiElement element,
+                                                 @NotNull final ProblemsHolder problemsHolder) {
       element.accept(new ErlangRecursiveVisitor() {
 
         private void registerProblemIfContainsNonConstant(@NotNull ErlangExpression o) {

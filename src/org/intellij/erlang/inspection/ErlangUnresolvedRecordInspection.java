@@ -48,7 +48,7 @@ public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
     };
   }
 
-  private void process(@NotNull PsiElement o, @NotNull ProblemsHolder problemsHolder) {
+  private static void process(@NotNull PsiElement o, @NotNull ProblemsHolder problemsHolder) {
     PsiReference ref = o.getReference();
     if (ref == null || ref.resolve() == null) {
       registerProblem(problemsHolder, o, "Unresolved record " + "'" + o.getText() + "'", new ErlangIntroduceRecordFix());

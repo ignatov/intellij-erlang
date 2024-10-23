@@ -51,7 +51,7 @@ public class ErlangUnresolvedIncludeLibInspection extends ErlangInspectionBase {
                              String what) {
     boolean empty = string.getTextLength() <= 2;
     TextRange range = empty ? TextRange.create(0, string.getTextLength()) : TextRange.create(1, string.getTextLength() - 1);
-    if (files.size() == 0) {
+    if (files.isEmpty()) {
       LOG.debug(what + ": " + string.getText() + " unresolved");
       if (empty) {
         problemsHolder.registerProblem(string, range, "Unresolved " + what + ": file not found", getFindIncludeQuickFix(what));

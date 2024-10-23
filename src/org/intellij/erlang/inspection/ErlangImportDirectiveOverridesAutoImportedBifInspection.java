@@ -51,5 +51,4 @@ public class ErlangImportDirectiveOverridesAutoImportedBifInspection extends Erl
                                      new ErlangRemoveFunctionFromImportFixBase.ErlangRemoveFunctionFromImportFix());
     }
   }
-
 }
