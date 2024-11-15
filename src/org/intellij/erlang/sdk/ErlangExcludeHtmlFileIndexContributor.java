@@ -17,8 +17,6 @@
 package org.intellij.erlang.sdk;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.vfs.VfsUtilCore;
-import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.platform.workspace.jps.entities.SdkEntity;
 import com.intellij.platform.workspace.storage.EntityStorage;
 import com.intellij.workspaceModel.core.fileIndex.WorkspaceFileIndexContributor;
@@ -40,24 +38,13 @@ public class ErlangExcludeHtmlFileIndexContributor implements WorkspaceFileIndex
     if (!"Erlang SDK".equals(entity.getType())) {
       return;
     }
-    var homePath = entity.getHomePath();
-    if (homePath != null) {
-      var path = VfsUtilCore.pathToUrl(homePath.getUrl());
-      var home = VirtualFileManager.getInstance().findFileByUrl(path);
-      var lib = home != null ? home.findChild("lib") : null;
-      if (lib != null) {
-        registrar.registerExclusionCondition(lib, virtualFile -> {
-          var name = virtualFile.getName();
-          if (name.endsWith("html")) {
-            LOG.info("Excluded " + virtualFile.getUrl() + " from Erlang SDK" + entity.getName() + " to speedup indexing");
-            return true;
-          }
-          return false;
-        }, entity);
+    registrar.registerExclusionCondition(entity.getHomePath().append("lib"), virtualFile -> {
+      var name = virtualFile.getName();
+      if (name.endsWith("html")) {
+        LOG.info("Excluded " + virtualFile.getUrl() + " from Erlang SDK" + entity.getName() + " to speedup indexing");
+        return true;
       }
-      else {
-        LOG.info("Lib dir not found for SDK" + entity.getName() + " at " + homePath);
-      }
-    }
+      return false;
+    }, entity);
   }
 }

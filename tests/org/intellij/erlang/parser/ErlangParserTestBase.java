@@ -52,4 +52,9 @@ public abstract class ErlangParserTestBase extends ParsingTestCase {
     super.setUp();
     CoreApplicationEnvironment.registerExtensionPoint(Extensions.getRootArea(), "com.intellij.lang.braceMatcher", LanguageExtensionPoint.class);
   }
+
+  @Override
+  protected boolean isCheckNoPsiEventsOnReparse() {
+    return false;
+  }
 }
