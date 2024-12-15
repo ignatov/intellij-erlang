@@ -88,10 +88,10 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     }
     //Multiple files -- allow user select which file should be imported
     if (matchFiles.length > 1) {
-      displayPopupListDialog(project, problem, matchFiles, setDirectHrlLink, includeString, includeFileName);
+      ApplicationManager.getApplication().invokeLater(
+        () -> displayPopupListDialog(project, problem, matchFiles, setDirectHrlLink, includeString, includeFileName)
+      );
     }
-
-
   }
 
   private static void renameIncludeString(Project project,
