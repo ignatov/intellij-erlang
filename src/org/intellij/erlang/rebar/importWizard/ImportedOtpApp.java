@@ -33,7 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-final class ImportedOtpApp {
+public final class ImportedOtpApp {
   private final String myName;
   private final VirtualFile myRoot;
   private final Set<String> myDeps = new HashSet<>();
