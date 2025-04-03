@@ -24,7 +24,6 @@ import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -33,6 +32,8 @@ import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
+import com.intellij.util.concurrency.ThreadingAssertions;
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -119,6 +120,7 @@ public class RebarRunningStateUtil {
   }
 
   @NotNull
+  @RequiresBackgroundThread
   public static String findEscriptExecutable() {
     String which = which(JpsErlangSdkType.SCRIPT_INTERPRETER);
     if (StringUtil.isNotEmpty(which)) return which;
@@ -126,35 +128,21 @@ public class RebarRunningStateUtil {
   }
 
   @NotNull
+  @RequiresBackgroundThread
   private static String which(@NotNull String name) {
-    if (!(SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix)) {
-      return "";
-    }
+    ThreadingAssertions.assertBackgroundThread();
 
-    GeneralCommandLine command = new GeneralCommandLine("which");
-    command.addParameter(name);
+    if (!(SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix)) return "";
 
     try {
-      String output;
-      if (ApplicationManager.getApplication().isDispatchThread()) {
-        output = ApplicationManager.getApplication()
-                   .executeOnPooledThread(() -> getProcessOutputSafe(command))
-                   .get();
-      } else {
-        output = getProcessOutputSafe(command);
-      }
-      return output.trim();
-    } catch (Exception e) {
-      return "";
+      GeneralCommandLine command = new GeneralCommandLine("which");
+      command.addParameter(name);
+      return ScriptRunnerUtil.getProcessOutput(command).trim();
     }
-  }
-
-  private static String getProcessOutputSafe(GeneralCommandLine command) {
-    try {
-      return ScriptRunnerUtil.getProcessOutput(command);
-    } catch (Exception e) {
+    catch (Exception e) {
       LOG.warn(e);
       return "";
     }
   }
+
 }

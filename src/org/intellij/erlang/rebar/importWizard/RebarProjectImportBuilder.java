@@ -135,13 +135,13 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     boolean unitTestMode = ApplicationManager.getApplication().isUnitTestMode();
     
     myProjectRoot = projectRoot;
-    if (!unitTestMode && projectRoot instanceof VirtualDirectoryImpl) {
-      ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("deps");
-      ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("_build");
-    }
 
     ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Scanning Rebar Projects", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
+        if (!unitTestMode && projectRoot instanceof VirtualDirectoryImpl) {
+          ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("deps");
+          ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("_build");
+        }
 
         List<VirtualFile> rebarConfigFiles = findRebarConfigs(myProjectRoot, indicator);
         final LinkedHashSet<ImportedOtpApp> importedOtpApps = new LinkedHashSet<>(rebarConfigFiles.size());
@@ -399,22 +399,24 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
   private static void deleteIdeaModuleFiles(@NotNull final List<ImportedOtpApp> importedOtpApps) throws IOException {
     final IOException[] ex = new IOException[1];
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        for (ImportedOtpApp importedOtpApp : importedOtpApps) {
-          VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
-          if (ideaModuleFile != null) {
-            try {
-              ideaModuleFile.delete(this);
-              importedOtpApp.setIdeaModuleFile(null);
-            } catch (IOException e) {
-              ex[0] = e;
+    ApplicationManager.getApplication().invokeAndWait(
+      () -> ApplicationManager.getApplication().runWriteAction(new Runnable() {
+        @Override
+        public void run() {
+          for (ImportedOtpApp importedOtpApp : importedOtpApps) {
+            VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
+            if (ideaModuleFile != null) {
+              try {
+                ideaModuleFile.delete(this);
+                importedOtpApp.setIdeaModuleFile(null);
+              }
+              catch (IOException e) {
+                ex[0] = e;
+              }
             }
           }
         }
-      }
-    });
+      }));
     if (ex[0] != null) {
       throw ex[0];
     }
