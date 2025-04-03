@@ -43,6 +43,7 @@ import com.intellij.openapi.vfs.VirtualFileVisitor;
 import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl;
 import com.intellij.packaging.artifacts.ModifiableArtifactModel;
 import com.intellij.projectImport.ProjectImportBuilder;
+import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.io.URLUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
@@ -185,21 +186,29 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   @SuppressWarnings("DialogTitleCapitalization")
   @Override
   public boolean validate(Project current, @NotNull Project dest) {
+    ThreadingAssertions.assertBackgroundThread();
+
     if (!findIdeaModuleFiles(mySelectedOtpApps)) {
       return true;
     }
-    int resultCode = Messages.showYesNoCancelDialog(
-      ApplicationInfoEx.getInstanceEx().getFullApplicationName() + " module files found:\n\n" +
-      StringUtil.join(mySelectedOtpApps, importedOtpApp -> {
-        VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
-        return ideaModuleFile != null ? "    " + ideaModuleFile.getPath() + "\n" : "";
-      }, "") +
-      "\nWould you like to reuse them?", "Module files found",
-      Messages.getQuestionIcon());
-    if (resultCode == DialogWrapper.OK_EXIT_CODE) {
+    
+    // Use invokeLater and wait to ensure UI operations run on EDT
+    final int[] resultCode = new int[1];
+    ApplicationManager.getApplication().invokeAndWait(() -> {
+      resultCode[0] = Messages.showYesNoCancelDialog(
+        ApplicationInfoEx.getInstanceEx().getFullApplicationName() + " module files found:\n\n" +
+        StringUtil.join(mySelectedOtpApps, importedOtpApp -> {
+          VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
+          return ideaModuleFile != null ? "    " + ideaModuleFile.getPath() + "\n" : "";
+        }, "") +
+        "\nWould you like to reuse them?", "Module files found",
+        Messages.getQuestionIcon());
+    });
+    
+    if (resultCode[0] == DialogWrapper.OK_EXIT_CODE) {
       return true;
     }
-    else if (resultCode == DialogWrapper.CANCEL_EXIT_CODE) {
+    else if (resultCode[0] == DialogWrapper.CANCEL_EXIT_CODE) {
       try {
         deleteIdeaModuleFiles(mySelectedOtpApps);
         return true;
