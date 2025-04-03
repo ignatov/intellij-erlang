@@ -115,12 +115,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     return ERLANG_RELATED_TOOLS;
   }
 
-  @Nullable
-  @Override
-  public Runnable enableSearch(String option) {
-    return null;
-  }
-
   @NonNls
   @Override
   public String getDisplayName() {
@@ -166,10 +160,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myPltPathSelector.setText(myDialyzerSettings.getCurrentPltPath());
     mySdkPathSelector.setText(StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)));
     validateEmacsPath();
-  }
-
-  @Override
-  public void disposeUIResources() {
   }
 
   private void validateEmacsPath() {
