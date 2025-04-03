@@ -24,6 +24,8 @@ import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
@@ -44,6 +46,7 @@ import java.util.List;
 
 public class RebarRunningStateUtil {
   private static final String REBAR = "rebar3";
+  private static final Logger LOG = Logger.getInstance(RebarRunningStateUtil.class);
 
   private RebarRunningStateUtil() {
   }
@@ -124,17 +127,34 @@ public class RebarRunningStateUtil {
 
   @NotNull
   private static String which(@NotNull String name) {
-    boolean isPosix = SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix;
-    if (!isPosix) return "";
+    if (!(SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix)) {
+      return "";
+    }
 
-    String output = "";
+    GeneralCommandLine command = new GeneralCommandLine("which");
+    command.addParameter(name);
+
     try {
-      GeneralCommandLine which = new GeneralCommandLine("which");
-      which.addParameter(name);
-      output = ScriptRunnerUtil.getProcessOutput(which);
+      String output;
+      if (ApplicationManager.getApplication().isDispatchThread()) {
+        output = ApplicationManager.getApplication()
+                   .executeOnPooledThread(() -> getProcessOutputSafe(command))
+                   .get();
+      } else {
+        output = getProcessOutputSafe(command);
+      }
+      return output.trim();
+    } catch (Exception e) {
+      return "";
     }
-    catch (Exception ignored) {
+  }
+
+  private static String getProcessOutputSafe(GeneralCommandLine command) {
+    try {
+      return ScriptRunnerUtil.getProcessOutput(command);
+    } catch (Exception e) {
+      LOG.warn(e);
+      return "";
     }
-    return output.trim();
   }
 }
