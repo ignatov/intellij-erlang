@@ -59,7 +59,7 @@ public class ErlangModuleType extends ModuleType<ErlangModuleBuilder> {
 
   @Override
   public @NotNull Icon getNodeIcon(boolean isOpened) {
-    return ErlangIcons.ERLANG_MODULE_NODE;
+    return ErlangIcons.getErlangModuleNode();
   }
 
   @NotNull

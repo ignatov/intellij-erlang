@@ -46,7 +46,7 @@ public final class ErlangConsoleRunConfigurationType implements ConfigurationTyp
   @NotNull
   @Override
   public Icon getIcon() {
-    return ErlangIcons.ERLANG_CONSOLE;
+    return ErlangIcons.getErlangConsole();
   }
 
   @NotNull

@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class RebarEunitRunConfigurationType extends ConfigurationTypeBase {
   private RebarEunitRunConfigurationType() {
-    super("RebarEunitRunConfigurationType", "Erlang Rebar Eunit", "Runs Eunit tests with Rebar", ErlangIcons.REBAR_EUNIT);
+    super("RebarEunitRunConfigurationType", "Erlang Rebar Eunit", "Runs Eunit tests with Rebar", ErlangIcons.getRebarEunit());
   }
 
   public static RebarEunitRunConfigurationType getInstance() {
