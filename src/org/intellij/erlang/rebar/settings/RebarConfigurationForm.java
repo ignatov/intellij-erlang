@@ -58,6 +58,13 @@ public class RebarConfigurationForm {
         validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
       }
     });
+
+    ApplicationManager.getApplication().executeOnPooledThread(() -> {
+      String rebarPath = RebarRunningStateUtil.getRebarPath(null);
+      if (getPath().isEmpty()) {
+        ApplicationManager.getApplication().invokeLater(() -> setPath(rebarPath));
+      }
+    });
   }
 
   public void setPath(@NotNull String rebarPath) {
@@ -77,14 +84,14 @@ public class RebarConfigurationForm {
   }
 
   private static void validateRebarPath(String rebarPath, Consumer<String> consumer) {
-    File rebarFile = new File(rebarPath);
-    if (!rebarFile.exists()) {
-      consumer.accept("");
-      return;
-    }
-
     ApplicationManager.getApplication().executeOnPooledThread(
       () -> {
+        File rebarFile = new File(rebarPath);
+        if (!rebarFile.exists()) {
+          consumer.accept("File " + rebarPath + " not found");
+          return;
+        }
+
         ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(3000, rebarPath, "--version");
         String version = rebar.getStdOut();
 
