@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.jps.model;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.JpsElementChildRole;
 import org.jetbrains.jps.model.ex.JpsCompositeElementBase;
@@ -42,12 +41,6 @@ public class JpsErlangModuleExtension extends JpsCompositeElementBase<JpsErlangM
 
   private JpsErlangModuleExtension(JpsErlangModuleExtension moduleExtension) {
     myProperties = new ErlangModuleExtensionProperties(moduleExtension.myProperties);
-  }
-
-  @NotNull
-  @Override
-  public JpsErlangModuleExtension createCopy() {
-    return new JpsErlangModuleExtension(this);
   }
 
   public ErlangModuleExtensionProperties getProperties() {
