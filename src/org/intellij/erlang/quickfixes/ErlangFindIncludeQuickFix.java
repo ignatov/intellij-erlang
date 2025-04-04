@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.quickfixes;
 
+import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
@@ -81,17 +82,27 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     if (matchFiles.length == 0) {
       return;
     }
+
+    ApplicationManager.getApplication().assertIsDispatchThread();
+
     //Single file found
     if (matchFiles.length == 1) {
-      fixUsingIncludeFile(problem, matchFiles[0]);
-      renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
+      CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
+        fixUsingIncludeFile(problem, matchFiles[0]);
+        renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
+        FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
+      }), "Include File", "Include File");
     }
     //Multiple files -- allow user select which file should be imported
     if (matchFiles.length > 1) {
-      ApplicationManager.getApplication().invokeLater(
-        () -> displayPopupListDialog(project, problem, matchFiles, setDirectHrlLink, includeString, includeFileName)
-      );
+      displayPopupListDialog(project, problem, matchFiles, setDirectHrlLink, includeString, includeFileName);
     }
+  }
+
+  @Override
+  public @NotNull IntentionPreviewInfo generatePreview(@NotNull Project project,
+                                                       @NotNull ProblemDescriptor previewDescriptor) {
+    return IntentionPreviewInfo.EMPTY;
   }
 
   private static void renameIncludeString(Project project,
@@ -169,7 +180,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
           fixUsingIncludeFile(problem, o);
           renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
           FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
-        }), "Add Facet Action (Find Include Quick Fix)", null, problemEditor.getDocument());
+        }), "Add Facet Action (Find Include Quick Fix)", "Include File", problemEditor.getDocument());
 
         return null;
       }
@@ -245,5 +256,3 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
   }
 
 }
-
-
