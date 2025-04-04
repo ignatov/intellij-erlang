@@ -58,6 +58,8 @@ import org.intellij.erlang.debugger.xdebug.xvalue.ErlangXValueFactory;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -374,14 +376,16 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     return erlangProcessHandler;
   }
 
-  private static void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
+  private void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
     LOG.debug("Setting up debugger environment.");
     try {
       String[] beams = {"debugnode.beam", "remote_debugger.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
       File tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
       LOG.debug("Debugger beams will be put to: " + tempDirectory.getPath());
+      String beamSubdir = resolveBeamDirectory();
+      LOG.debug("Using beam files from: " + beamSubdir + " directory");
       for (String beam : beams) {
-        copyBeamTo(beam, tempDirectory);
+        copyBeamTo(beamSubdir, beam, tempDirectory);
       }
       LOG.debug("Debugger beams were copied successfully.");
       commandLine.addParameters("-pa", tempDirectory.getPath());
@@ -391,8 +395,15 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
   }
 
-  private static void copyBeamTo(String beamName, File directory) throws IOException {
-    try (var inputStream = ResourceUtil.getResourceAsStream(ErlangXDebugProcess.class.getClassLoader(), "/debugger/beams", beamName)) {
+  private @NotNull String resolveBeamDirectory() {
+    ErlangSdkRelease release = ErlangSdkType.getRelease(myRunningState.getModule());
+    if (release.isNewerOrEqualTo(ErlangSdkRelease.V_27_0)) return "otp_27_plus";
+    return "otp_pre_27";
+  }
+
+  private static void copyBeamTo(String prefix, String beamName, File directory) throws IOException {
+    try (var inputStream = ResourceUtil.getResourceAsStream(ErlangXDebugProcess.class.getClassLoader(),
+                                                            "/debugger/beams/" + prefix, beamName)) {
       if (inputStream == null) {
         throw new IOException("Failed to locate debugger module: " + beamName);
       }

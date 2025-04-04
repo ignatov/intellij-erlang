@@ -232,6 +232,13 @@ public class ErlangSdkType extends SdkType {
     return release != null ? release : ErlangSdkRelease.DefaultRelease;
   }
 
+  @NotNull
+  public static ErlangSdkRelease getRelease(@Nullable Module module) {
+    if (module == null) return ErlangSdkRelease.DefaultRelease;
+    ErlangSdkRelease byModuleSdk = getRelease(ModuleRootManager.getInstance(module).getSdk());
+    return byModuleSdk != null ? byModuleSdk : getRelease(module.getProject());
+  }
+
   @TestOnly
   @NotNull
   public static Sdk createMockSdk(@NotNull String sdkHome, @NotNull ErlangSdkRelease version) {

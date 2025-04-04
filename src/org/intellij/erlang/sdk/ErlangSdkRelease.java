@@ -67,6 +67,10 @@ public final class ErlangSdkRelease {
     return VersionComparatorUtil.compare(myErtsVersion, other.myErtsVersion) > 0;
   }
 
+  public boolean isNewerOrEqualTo(@NotNull ErlangSdkRelease other) {
+    return VersionComparatorUtil.compare(myErtsVersion, other.myErtsVersion) >= 0;
+  }
+
   public boolean needBifCompletion(@NotNull String moduleName) {
     return V_R16A.isNewerThan(this) || "lager".equals(moduleName) || moduleName.isEmpty();
   }
