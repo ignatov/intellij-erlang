@@ -61,13 +61,13 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
 
   public void testExportsToShowInPopupAllEmpty() {
     myFixture.configureByFile("without.erl");
-    assertEquals(getExportsToShow(myFixture.getFile()).size(), 0);
+    assertEquals(0, getExportsToShow(myFixture.getFile()).size());
     myFixture.configureByFile("fewEmpties.erl");
-    assertEquals(getExportsToShow(myFixture.getFile()).size(), 0);
+    assertEquals(0, getExportsToShow(myFixture.getFile()).size());
     myFixture.configureByFile("fewNonEmpties1.erl");
-    assertEquals(getExportsToShow(myFixture.getFile()).size(), 2);
+    assertEquals(2, getExportsToShow(myFixture.getFile()).size());
     myFixture.configureByFile("fewNonEmpties2.erl");
-    assertEquals(getExportsToShow(myFixture.getFile()).size(), 2);
+    assertEquals(2, getExportsToShow(myFixture.getFile()).size());
   }
 
   private static List<ErlangExport> getExportsToShow(PsiFile file) {
