@@ -22,8 +22,14 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.colors.EditorColors;
+import com.intellij.openapi.editor.markup.HighlighterLayer;
+import com.intellij.openapi.editor.markup.HighlighterTargetArea;
+import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.util.Ref;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiAnchor;
 import com.intellij.psi.PsiDocumentManager;
@@ -96,7 +102,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       return;
     }
 
-    if (editor == null || ApplicationManager.getApplication().isUnitTestMode()) {
+    if (editor == null || ApplicationManager.getApplication().isUnitTestMode() || ApplicationManager.getApplication().isHeadlessEnvironment()) {
       var first = ContainerUtil.getFirstItem(exports);
       assert first != null;
       updateExport(project, function, first);
@@ -127,6 +133,8 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
               }
             }), "Export Function", null);
 
+    // Variable to store the current highlighter
+    Ref<RangeHighlighter> currentHighlighter = new Ref<>();
 
     List<PsiAnchor> collect = exportsShow.stream().map(PsiAnchor::create).collect(Collectors.toList());
     JBPopupFactory.getInstance().createPopupChooserBuilder(collect)
@@ -134,10 +142,36 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                   .setMovable(false)
                   .setResizable(false)
                   .setItemChosenCallback(onClick)
+                  .setItemSelectedCallback(anchor -> {
+                    removeHighlighter(editor, currentHighlighter);
+
+                    PsiElement element = anchor == null ? null : anchor.retrieve();
+                    if (element instanceof ErlangExport export && export.getExportFunctions() != null) {
+                      TextRange range = export.getExportFunctions().getTextRange();
+                      currentHighlighter.set(editor.getMarkupModel().addRangeHighlighter(
+                        range.getStartOffset(), range.getEndOffset(),
+                        HighlighterLayer.SELECTION, EditorColors.SEARCH_RESULT_ATTRIBUTES.getDefaultAttributes(),
+                        HighlighterTargetArea.EXACT_RANGE));
+                    }
+                  })
+
                   .setRequestFocus(true)
                   .setRenderer(getRenderer())
+                  .setCancelCallback(() -> {
+                    removeHighlighter(editor, currentHighlighter);
+                    return true;
+                  })
                   .createPopup()
                   .showInBestPositionFor(editor);
+  }
+
+  private static void removeHighlighter(@NotNull Editor editor, @NotNull Ref<RangeHighlighter> currentHighlighter) {
+    // Remove previous highlighter
+    RangeHighlighter highlighter = currentHighlighter.get();
+    if (highlighter != null) {
+      editor.getMarkupModel().removeHighlighter(highlighter);
+      currentHighlighter.set(null);
+    }
   }
 
   @NotNull
@@ -244,4 +278,5 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
         return functions != null && !functions.getExportFunctionList().isEmpty();
       });
   }
+
 }
