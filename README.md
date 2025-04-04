@@ -8,6 +8,13 @@ and other IntelliJ-based products
 [PyCharm](http://www.jetbrains.com/pycharm/), 
 [WebStorm](http://www.jetbrains.com/webstorm/), etc.) to a convenient [Erlang](http://www.erlang.org/) IDE.
 
+## Requirements
+- IntelliJ IDEA 2022.1 or later (Community or Ultimate)
+- Java 17 or later
+
+## For Developers
+If you're developing or modifying the plugin, please see the [Development Guide](docs/DEVELOPMENT.md) for information about Java version compatibility requirements.
+
 ## Pre-release builds
 Download [the latest successful plugin](https://teamcity.jetbrains.com/repository/download/IntellijIdeaPlugins_IntellijErlang_Tests/.lastSuccessful/intellij-erlang-0.11.{build.number}.zip?guest=1), hit 'Install plugin from disk...' at 'Plugins' page in 'Settings' of your IDE, and point it to the downloaded archive.
 

@@ -34,6 +34,8 @@
             <ul>
               <li>IntelliJ 2023.3 support</li>
               <li>Erlang plugin could be installed and upgraded without restart</li>
+              <li>Fixed compatibility with different Java versions (fixed JPS module)</li>
+              <li>Added support for Erlang/OTP 27</li>
             </ul>
         ]]>
     </change-notes>

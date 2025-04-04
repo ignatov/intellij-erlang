@@ -24,9 +24,17 @@ allprojects {
   }
 
   apply plugin: 'java'
-  sourceCompatibility = javaVersion
-  targetCompatibility = javaTargetVersion
-  tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+  
+  // Only apply the main Java version if this is not the JPS module
+  // JPS module defines its own Java compatibility version (11)
+  if (project.name != 'jps-plugin') {
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaTargetVersion
+  }
+  
+  tasks.withType(JavaCompile).configureEach { 
+    options.encoding = 'UTF-8' 
+  }
 
   sourceSets {
     main {
@@ -104,6 +112,21 @@ repositories {
 dependencies {
   implementation name: 'OtpErlang'
   implementation project('jps-plugin')
+}
+
+// Add JPS Java 11 verification to the plugin build pipeline
+afterEvaluate {
+  tasks.named('prepareSandbox') {
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
+  }
+  
+  tasks.named('buildPlugin') {
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
+  }
+  
+  tasks.named('check') {
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
+  }
 }
 
 apply plugin: 'idea'

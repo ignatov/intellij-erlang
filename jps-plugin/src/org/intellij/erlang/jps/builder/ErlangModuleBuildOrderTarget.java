@@ -77,8 +77,9 @@ public class ErlangModuleBuildOrderTarget extends BuildTarget<ErlangSourceRootDe
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof ErlangModuleBuildOrderTarget that)) return false;
+    if (!(o instanceof ErlangModuleBuildOrderTarget)) return false;
 
+    ErlangModuleBuildOrderTarget that = (ErlangModuleBuildOrderTarget) o;
     if (!myProject.equals(that.myProject)) return false;
 
     return true;

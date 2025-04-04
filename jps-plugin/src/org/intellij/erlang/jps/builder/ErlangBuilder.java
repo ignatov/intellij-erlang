@@ -311,7 +311,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     addedModuleNames.add(moduleName);
     addedModules.add(module);
     for (JpsDependencyElement dependency : module.getDependenciesList().getDependencies()) {
-      if (!(dependency instanceof JpsModuleDependency moduleDependency)) continue;
+      if (!(dependency instanceof JpsModuleDependency)) continue;
+      JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
       JpsModule depModule = moduleDependency.getModule();
       if (depModule != null) {
         collectDependentModules(depModule, addedModules, addedModuleNames);

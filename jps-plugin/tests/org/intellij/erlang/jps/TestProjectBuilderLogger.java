@@ -46,7 +46,11 @@ public class TestProjectBuilderLogger extends ProjectBuilderLoggerBase {
   }
 
   public void assertCompiled(String builderName, File[] baseDirs, String... paths) {
-    assertRelativePaths(baseDirs, myCompiledFiles.get(builderName).stream().map(File::getAbsolutePath).toList(), paths);
+    List<String> filePaths = new ArrayList<>();
+    myCompiledFiles.get(builderName).stream()
+      .map(File::getAbsolutePath)
+      .forEach(filePaths::add);
+    assertRelativePaths(baseDirs, filePaths, paths);
   }
 
   public void assertDeleted(File[] baseDirs, String... paths) {
@@ -56,7 +60,7 @@ public class TestProjectBuilderLogger extends ProjectBuilderLoggerBase {
   private static void assertRelativePaths(File[] baseDirs, Collection<String> files, String[] expected) {
     List<String> relativePaths = new ArrayList<>();
     for (String filePath : files) {
-      var file = new File(filePath);
+      File file = new File(filePath);
       String path = file.getAbsolutePath();
       for (File baseDir : baseDirs) {
         if (baseDir != null && FileUtil.isAncestor(baseDir, file, false)) {
