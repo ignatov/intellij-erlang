@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.intention;
 
+import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
@@ -44,10 +45,14 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
-    // TODO: Copy -export... popup chooser from ErlangExportFunctionFix
     if (function != null) {
-      new ErlangExportFunctionFix(function).invoke(project, file, editor, function, null); // todo: inline the whole class
+      new ErlangExportFunctionFix(function).invoke(project, file, editor, function, null);
     }
+  }
+
+  @Override
+  public @NotNull IntentionPreviewInfo generatePreview(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
+    return IntentionPreviewInfo.EMPTY;
   }
 
   @Nullable
