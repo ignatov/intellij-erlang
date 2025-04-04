@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.quickfixes;
 
+import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.application.ApplicationManager;
@@ -23,26 +24,31 @@ import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.ui.popup.*;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiAnchor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiEditorUtil;
 import com.intellij.util.FileContentUtilCore;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.intellij.erlang.index.ErlangModuleIndex;
+import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,6 +56,21 @@ import java.util.List;
  * @author mark-dev
  */
 public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
+
+  /**
+   * Data class that holds a PsiAnchor for a file and its pre-calculated display path.
+   * This avoids expensive calculations during UI rendering and prevents EDT issues.
+   */
+  private static class FileItem {
+    final PsiAnchor fileAnchor;
+    final String displayPath;
+
+    FileItem(PsiAnchor fileAnchor, String displayPath) {
+      this.fileAnchor = fileAnchor;
+      this.displayPath = displayPath;
+    }
+  }
+
   private static final char INCLUDE_STRING_PATH_SEPARATOR = '/';
   /*
    * if true after adding facets include string will be renamed to direct link on hrl file
@@ -74,29 +95,51 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
     PsiElement problem = problemDescriptor.getPsiElement();
     if (problem == null) return;
+    Editor editor = PsiEditorUtil.findEditor(problem);
+    if (editor == null) return;
 
     //Looks for a file that is referenced by include string
     String includeString = StringUtil.unquoteString(problem.getText());
     String includeFileName = getFileName(includeString);
-    PsiFile[] matchFiles = searchFileInsideProject(project, includeFileName);
-    if (matchFiles.length == 0) {
-      return;
-    }
 
-    ApplicationManager.getApplication().assertIsDispatchThread();
+    ProgressManager.getInstance().run(
+      new Task.Backgroundable(project, editor.getComponent(), "Searching for include file '" + includeFileName + "'...", true, null) {
+        @Override
+        public void run(@NotNull ProgressIndicator indicator) {
+          indicator.setIndeterminate(true);
+          List<ErlangFile> files = ApplicationManager.getApplication().runReadAction(
+            (Computable<List<ErlangFile>>) () -> {
+              // pass indicator into the search
+              return ErlangModuleIndex.getFilesByName(project, includeFileName, GlobalSearchScope.allScope(project));
+            }
+          );
 
-    //Single file found
-    if (matchFiles.length == 1) {
-      CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
-        fixUsingIncludeFile(problem, matchFiles[0]);
-        renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
-        FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
-      }), "Include File", "Include File");
-    }
-    //Multiple files -- allow user select which file should be imported
-    if (matchFiles.length > 1) {
-      displayPopupListDialog(project, problem, matchFiles, setDirectHrlLink, includeString, includeFileName);
-    }
+          // Pre-compute all display paths and create FileItem objects
+          // This work is done outside the EDT to avoid performance issues
+          // during popup rendering
+          final List<FileItem> fileItems = files.stream().map(file -> {
+                                                  PsiAnchor anchor = PsiAnchor.create(file);
+                                                  String displayPath = calcFilePath(file, project);
+                                                  return new FileItem(anchor, displayPath);
+                                                })
+                                                .toList();
+
+
+          ApplicationManager.getApplication().invokeLater(() -> {
+            if (!files.isEmpty()) {
+              displayPopupListDialog(project, problem, fileItems, setDirectHrlLink, includeString, includeFileName);
+            }
+            else {
+              // Show editor notification that no files are found
+              Editor editor = PsiEditorUtil.findEditor(problem);
+              if (editor != null) {
+                HintManager.getInstance().showErrorHint(editor, "No files matching '" + includeFileName + "' were found");
+              }
+            }
+          });
+        }
+      }
+    );
   }
 
   @Override
@@ -118,47 +161,47 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
   private static void displayPopupListDialog(final Project project,
                                              final PsiElement problem,
-                                             final PsiFile[] files,
+                                             final List<FileItem> fileItems,
                                              final boolean setDirectHrlLink,
                                              final String includeString,
                                              final String includeFileName
   ) {
     final Editor problemEditor = PsiEditorUtil.findEditor(problem);
-    if (problemEditor == null) {
-      return;
-    }
-    ListPopup p = JBPopupFactory.getInstance().createListPopup(new ListPopupStep<PsiFile>() {
+    if (problemEditor == null) return;
 
+    ListPopup p = JBPopupFactory.getInstance().createListPopup(new ListPopupStep<FileItem>() {
       @NotNull
       @Override
-      public List<PsiFile> getValues() {
-        return Arrays.asList(files);
+      public List<FileItem> getValues() {
+        return fileItems;
       }
 
       @Override
-      public boolean isSelectable(PsiFile o) {
+      public boolean isSelectable(FileItem item) {
         return true;
       }
 
       @NotNull
       @Override
-      public Icon getIconFor(PsiFile o) {
-        return ErlangIcons.HEADER;
+      public Icon getIconFor(FileItem item) {
+        if (item.displayPath.endsWith("hrl")) {
+          return ErlangIcons.HEADER;
+        }
+        else {
+          return ErlangIcons.FILE;
+        }
       }
 
       @NotNull
       @Override
-      public String getTextFor(PsiFile o) {
-        // Uses relative path to project root if possible (if not - full path)
-        VirtualFile f = o.getVirtualFile();
-        VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
-        String projectRootRelativePath = projectDir == null ? null : VfsUtilCore.getRelativePath(f, projectDir, INCLUDE_STRING_PATH_SEPARATOR);
-        return projectRootRelativePath == null ? f.getPath() : projectRootRelativePath;
+      public String getTextFor(FileItem item) {
+        // Return the pre-calculated display path
+        return item.displayPath;
       }
 
       @Nullable
       @Override
-      public ListSeparator getSeparatorAbove(PsiFile o) {
+      public ListSeparator getSeparatorAbove(FileItem item) {
         return null;
       }
 
@@ -170,23 +213,26 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       @NotNull
       @Override
       public String getTitle() {
-        return "Multiple Files Found";
+        return StringUtil.pluralize("File") + " to Include";
       }
 
       @Nullable
       @Override
-      public PopupStep<PsiFile> onChosen(PsiFile o, boolean b) {
+      public PopupStep<FileItem> onChosen(FileItem item, boolean finalChoice) {
         CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
-          fixUsingIncludeFile(problem, o);
-          renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
-          FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
-        }), "Add Facet Action (Find Include Quick Fix)", "Include File", problemEditor.getDocument());
+          PsiElement element = item.fileAnchor.retrieve();
+          if (element instanceof PsiFile) {
+            fixUsingIncludeFile(problem, (PsiFile) element);
+            renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
+            FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
+          }
+        }), "Include File Fix", "Include File", problemEditor.getDocument());
 
         return null;
       }
 
       @Override
-      public boolean hasSubstep(PsiFile o) {
+      public boolean hasSubstep(FileItem item) {
         return false;
       }
 
@@ -201,7 +247,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
       @Nullable
       @Override
-      public MnemonicNavigationFilter<PsiFile> getMnemonicNavigationFilter() {
+      public MnemonicNavigationFilter<FileItem> getMnemonicNavigationFilter() {
         return null;
       }
 
@@ -212,7 +258,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
       @Nullable
       @Override
-      public SpeedSearchFilter<PsiFile> getSpeedSearchFilter() {
+      public SpeedSearchFilter<FileItem> getSpeedSearchFilter() {
         return null;
       }
 
@@ -230,12 +276,28 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     p.showInBestPositionFor(problemEditor);
   }
 
+  private static @NotNull String calcFilePath(PsiFile file, Project project) {
+    if (file == null) return "<invalid file>";
+
+    VirtualFile f = file.getVirtualFile();
+    if (f == null) return "<unknown path>";
+
+    VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
+    String projectRootRelativePath = projectDir == null ? null : VfsUtilCore.getRelativePath(f, projectDir, INCLUDE_STRING_PATH_SEPARATOR);
+    return projectRootRelativePath == null ? f.getPath() : projectRootRelativePath;
+  }
+
   private static void fixUsingIncludeFile(PsiElement problem,
                                           PsiFile includeFile) {
     //Search the module that contains the current(problem) file & fix facets
     Module containedModule = ModuleUtilCore.findModuleForPsiElement(problem);
     if (containedModule == null) return;
-    ErlangIncludeDirectoryUtil.markAsIncludeDirectory(containedModule, includeFile.getVirtualFile().getParent());
+
+    VirtualFile includeFileParent = includeFile.getVirtualFile() != null ?
+                                    includeFile.getVirtualFile().getParent() : null;
+    if (includeFileParent != null) {
+      ErlangIncludeDirectoryUtil.markAsIncludeDirectory(containedModule, includeFileParent);
+    }
   }
 
   /*
@@ -250,9 +312,4 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     int index = includeString.lastIndexOf(INCLUDE_STRING_PATH_SEPARATOR);
     return includeString.substring(index + 1);
   }
-
-  private static PsiFile[] searchFileInsideProject(Project project, String fileName) {
-    return FilenameIndex.getFilesByName(project, fileName, GlobalSearchScope.allScope(project));
-  }
-
 }
