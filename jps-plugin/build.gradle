@@ -88,7 +88,7 @@ def verifyJava11Compatibility(FileCollection classFiles, String context) {
 }
 
 // Helper to map class file version to Java version
-def getJavaVersionFromClassVersion(int majorVersion) {
+static def getJavaVersionFromClassVersion(int majorVersion) {
     def versionMap = [
         45: 1.1,
         46: 1.2,
