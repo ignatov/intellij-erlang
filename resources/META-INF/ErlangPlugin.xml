@@ -138,6 +138,7 @@
         <breadcrumbsInfoProvider implementation="org.intellij.erlang.ErlangBreadcrumbsProvider"/>
 
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
+        <codeInsight.parameterNameHints language="Erlang" implementationClass="org.intellij.erlang.hints.ErlangInlayHintsProvider"/>
         <codeInsight.gotoSuper language="Erlang" implementationClass="org.intellij.erlang.navigation.ErlangGotoSuperHandler"/>
 
         <fileBasedIndex implementation="org.intellij.erlang.index.ErlangModuleIndex"/>
