@@ -1,5 +1,34 @@
 # IntelliJ Erlang Plugin Development Guide
 
+## Official IntelliJ Platform SDK Documentation
+
+This project follows the IntelliJ Platform Plugin SDK guidelines. For comprehensive information on plugin development, refer to:
+
+- [IntelliJ Platform SDK Documentation](https://plugins.jetbrains.com/docs/intellij/welcome.html)
+- [IntelliJ Plugin Development Quick Start Guide](https://plugins.jetbrains.com/docs/intellij/plugins-quick-start.html)
+- [Gradle IntelliJ Plugin Documentation](https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html)
+
+## Standard Gradle Commands
+
+The plugin uses the Gradle build system with the Gradle IntelliJ Plugin. Here are the common commands:
+
+```bash
+# Build the plugin distribution (zip file)
+./gradlew buildPlugin
+
+# Run the tests
+./gradlew test
+
+# Run an IDE instance with the plugin installed
+./gradlew runIde
+
+# Clean build directory
+./gradlew clean
+
+# Verify plugin compatibility with specified IDE version
+./gradlew verifyPlugin
+```
+
 ## Java Version Compatibility Requirements
 
 The IntelliJ Erlang plugin has specific Java version requirements for different components:
@@ -95,3 +124,52 @@ This setup addresses the following issues:
 - #976: IntelliJ 2022.1 class version compatibility error
 - #1022: Unsupported class version error
 - #1054: Intellij Erlang plugin run configuration not working
+
+## Getting Started with Plugin Development
+
+To start contributing to the Erlang plugin:
+
+1. Fork the repository on GitHub
+2. Clone your fork locally
+3. Import the project as a Gradle project in IntelliJ IDEA
+4. Run `./gradlew runIde` to test your changes in a development instance
+
+### Project Structure
+
+- `src/` - Main plugin source code
+- `jps-plugin/` - JPS module for build system integration
+- `resources/` - Plugin resources (icons, templates, etc.)
+- `testData/` - Test data files
+- `tests/` - Test source code
+
+### Development Workflow
+
+1. Create a branch for your feature or fix
+2. Make your changes
+3. Run tests with `./gradlew test`
+4. Test the plugin with `./gradlew runIde`
+5. Submit a pull request
+
+### Common Development Tasks
+
+- **Adding a new inspection**: Create a class that extends `org.intellij.erlang.inspection.ErlangInspection`
+- **Adding a new intention action**: Create a class that implements `org.intellij.erlang.intention.ErlangIntention`
+- **Adding new file templates**: Add template files to `resources/fileTemplates/`
+- **Modifying the parser**: Update `grammars/erlang.bnf` and run the grammar generator
+
+## Debugging
+
+To debug the plugin:
+
+### Method 1: Using Gradle command line
+1. Run `./gradlew runIde --debug-jvm`
+2. Connect to the JVM using remote debugging in IntelliJ IDEA
+3. Set breakpoints in your code
+
+### Method 2: Using IntelliJ directly (recommended)
+1. Open the Gradle tool window in IntelliJ IDEA
+2. Navigate to Tasks → intellij → runIde
+3. Right-click on runIde and select "Debug 'intellij-erlang [runIde]'"
+4. Set breakpoints in your code
+
+This second method is more convenient as it allows you to simply click the debug button on an existing run configuration or create a permanent run configuration with debugging enabled. The debugger will attach automatically, and you can start debugging right away without manual connection steps.
