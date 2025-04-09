@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.debugger.xdebug;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.xdebugger.frame.XExecutionStack;
 import com.intellij.xdebugger.frame.XStackFrame;
@@ -46,16 +47,22 @@ public class ErlangExecutionStack extends XExecutionStack {
 
   @Override
   public void computeStackFrames(int firstFrameIndex, XStackFrameContainer container) {
-    if (myStack.isEmpty()) {
-      List<ErlangTraceElement> traceElements = myProcessSnapshot.getStack();
-      for (ErlangTraceElement traceElement : traceElements) {
-        boolean isTopStackFrame = myStack.isEmpty(); // if it's a top stack frame we can set a line that's being executed.
-        ErlangStackFrame stackFrame = isTopStackFrame ?
-          new ErlangStackFrame(myDebugProcess, traceElement, ErlangSourcePosition.create(myDebugProcess.getLocationResolver(), myProcessSnapshot)) :
-          new ErlangStackFrame(myDebugProcess, traceElement);
-        myStack.add(stackFrame);
+    ApplicationManager.getApplication().executeOnPooledThread(() -> {
+      // Wrap the computation in a synchronized block to avoid data races
+      synchronized (myStack) {
+        if (myStack.isEmpty()) {
+          List<ErlangTraceElement> traceElements = myProcessSnapshot.getStack();
+          for (ErlangTraceElement traceElement : traceElements) {
+            boolean isTopStackFrame = myStack.isEmpty(); // if it's a top stack frame we can set a line that's being executed.
+            ErlangStackFrame stackFrame = isTopStackFrame ?
+              new ErlangStackFrame(myDebugProcess, traceElement, ErlangSourcePosition.create(myDebugProcess.getLocationResolver(), myProcessSnapshot)) :
+              new ErlangStackFrame(myDebugProcess, traceElement);
+            myStack.add(stackFrame);
+          }
+        }
       }
-      container.addStackFrames(myStack, true);
-    }
+      // Schedule updating the UI on the main thread
+      ApplicationManager.getApplication().invokeLater(() -> container.addStackFrames(myStack, true));
+    });
   }
 }
