@@ -2,7 +2,7 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformDependenciesExtension
 
 plugins {
-  id 'org.jetbrains.intellij.platform' version "2.1.0"
+  id 'org.jetbrains.intellij.platform' version "2.5.0"
 }
 
 apply plugin: 'org.jetbrains.intellij.platform'
@@ -65,7 +65,8 @@ allprojects {
 
   dependencies {
     intellijPlatform { IntelliJPlatformDependenciesExtension ijp ->
-      ijp.intellijIdeaCommunity("2024.3")
+      // https://data.services.jetbrains.com/products?code=IC
+      ijp.intellijIdeaCommunity("251.23774.318")
       ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java")
       ijp.instrumentationTools()
       ijp.testFramework(TestFrameworkType.Platform.INSTANCE)

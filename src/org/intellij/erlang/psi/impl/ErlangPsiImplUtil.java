@@ -1163,6 +1163,8 @@ public class ErlangPsiImplUtil {
     List<VirtualFile> allOtpAppRoots = ErlangApplicationIndex.getAllApplicationDirectories(project, GlobalSearchScope.allScope(project));
     List<VirtualFile> containingOtpAppRoots = ContainerUtil.filter(allOtpAppRoots, appRoot -> VfsUtilCore.isAncestor(appRoot, file, true));
     //sort it in order to have longest path first
+    // Create a mutable copy before sorting to avoid UnsupportedOperationException
+    containingOtpAppRoots = new ArrayList<>(containingOtpAppRoots);
     ContainerUtil.sort(containingOtpAppRoots, (o1, o2) -> o2.getPath().length() - o1.getPath().length());
     return ContainerUtil.getFirstItem(containingOtpAppRoots);
   }

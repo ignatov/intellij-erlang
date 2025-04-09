@@ -37,6 +37,7 @@ import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -52,6 +53,8 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
     GlobalSearchScope scope = getSearchScope();
     List<ErlangModule> modules = ErlangModuleIndex.getModulesByName(myElement.getProject(), myReferenceName, scope);
     if (modules.size() > 1) {
+      // Create a mutable copy before sorting to avoid UnsupportedOperationException
+      modules = new ArrayList<>(modules);
       ContainerUtil.sort(modules, new ModuleResolutionComparator());
     }
     return ContainerUtil.getFirstItem(modules);
