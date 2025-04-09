@@ -83,6 +83,7 @@ allprojects {
   }
 
   test {
+    environment 'NO_FS_ROOTS_ACCESS_CHECK', 'true'
     useJUnitPlatform {
       exclude compilationPackages
     }
