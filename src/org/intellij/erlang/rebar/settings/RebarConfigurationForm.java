@@ -32,6 +32,7 @@ import com.intellij.util.download.DownloadableFileDescription;
 import com.intellij.util.download.DownloadableFileService;
 import com.intellij.util.download.FileDownloader;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
+import org.intellij.erlang.utils.ErlangUiUtil;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -50,8 +51,8 @@ public class RebarConfigurationForm {
   private JPanel myLinkContainer;
 
   public RebarConfigurationForm() {
-    myRebarPathSelector.addBrowseFolderListener("Select Rebar Executable", "", null,
-                                                FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
+    ErlangUiUtil.addBrowseFolderListener(myRebarPathSelector, "Select Rebar Executable", "", null,
+                                         FileChooserDescriptorFactory.singleFile());
     myRebarPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
       protected void textChanged(@NotNull DocumentEvent documentEvent) {
