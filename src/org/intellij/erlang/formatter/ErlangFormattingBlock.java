@@ -284,7 +284,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       ((ErlangFormattingBlock) child2).getNode().getElementType() == ERL_FUN_CLAUSES) {
       ErlangFunClauses funClauses = (ErlangFunClauses) ((ErlangFormattingBlock) child2).getNode().getPsi();
       List<ErlangFunClause> funClauseList = funClauses.getFunClauseList();
-      if (!funClauseList.isEmpty() && funClauseList.get(0).getArgumentDefinition() != null) {
+      if (!funClauseList.isEmpty() && funClauseList.getFirst().getArgumentDefinition() != null) {
         return Spacing.createSpacing(1, 1, 0, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
       }
     }
@@ -318,7 +318,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     List<Block> subBlocks = getSubBlocks();
     if (type != ERL_COMMA && myErlangSettings.NEW_LINE_BEFORE_COMMA) {
       if (BRACKETS_CONTAINERS.contains(parentType) || parentType == ERL_RECORD_TUPLE) {
-        return subBlocks.get(0).getAlignment();
+        return subBlocks.getFirst().getAlignment();
       }
     }
     if (type == ERL_COMMA && myErlangSettings.ALIGN_MULTILINE_BLOCK) {

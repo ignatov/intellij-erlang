@@ -99,7 +99,7 @@ public class ErlangInlayHintsProvider implements InlayParameterHintsProvider {
       }
     } else {
       // Default behavior - show just the first clause
-      ErlangFunctionClause clause = matchingClauses.get(0);
+      ErlangFunctionClause clause = matchingClauses.getFirst();
       var parameterList = clause.getArgumentDefinitionList().getArgumentDefinitionList();
       
       if (arguments.size() != parameterList.size()) {

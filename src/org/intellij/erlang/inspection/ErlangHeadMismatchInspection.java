@@ -72,7 +72,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
     ErlangFunClauses funClauses = funExpression.getFunClauses();
     List<ErlangFunClause> funClauseList = funClauses != null ? funClauses.getFunClauseList() : Collections.emptyList();
     if (funClauseList.size() <= 1) return;
-    ErlangFunClause firstClause = funClauseList.get(0);
+    ErlangFunClause firstClause = funClauseList.getFirst();
     String firstClauseName = getFunExpressionClauseName(firstClause);
     for (ErlangFunClause funClause : funClauseList) {
       String funClauseName = getFunExpressionClauseName(funClause);

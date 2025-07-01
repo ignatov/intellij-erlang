@@ -64,7 +64,7 @@ public class ErlangInlayHintsProviderTest extends ErlangLightPlatformCodeInsight
         
         assertEquals("Should generate 1 parameter hint", 1, hints.size());
         // Provider takes first clause, so hint shows the parameter name from the first clause
-        assertEquals("Hint should be from first clause (1)", "1", hints.get(0).getText());
+        assertEquals("Hint should be from first clause (1)", "1", hints.getFirst().getText());
         
         // Test parameter hints with showAllClauseParams = true
         ErlangInlayHintsProvider.SHOW_ALL_PARAMS_OPTION.set(true);
@@ -72,7 +72,7 @@ public class ErlangInlayHintsProviderTest extends ErlangLightPlatformCodeInsight
         
         assertEquals("Should generate 1 parameter hint", 1, hints.size());
         // Should show all parameter names from all clauses
-        assertEquals("Hint should show all parameter names", "1|2|M|N", hints.get(0).getText());
+        assertEquals("Hint should show all parameter names", "1|2|M|N", hints.getFirst().getText());
     }
 
     public void testProviderExistence() {
@@ -112,7 +112,7 @@ public class ErlangInlayHintsProviderTest extends ErlangLightPlatformCodeInsight
         assertNotNull("Function definition for 'add' not found", function);
 
         // Check that the function has the expected parameters
-        ErlangFunctionClause clause = function.getFunctionClauseList().get(0);
+        ErlangFunctionClause clause = function.getFunctionClauseList().getFirst();
         ErlangArgumentDefinitionList argDefList = clause.getArgumentDefinitionList();
         List<ErlangArgumentDefinition> argDefs = argDefList.getArgumentDefinitionList();
         assertEquals("Function should have 2 parameters", 2, argDefs.size());

@@ -67,7 +67,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
         if (function == null || !FUNCTION_NAMES.contains(function.getName())) return;
 
         List<ErlangExpression> reverse = ContainerUtil.reverse(expressionList);
-        ErlangListExpression args = ObjectUtils.tryCast(reverse.get(0), ErlangListExpression.class);
+        ErlangListExpression args = ObjectUtils.tryCast(reverse.getFirst(), ErlangListExpression.class);
         ErlangStringLiteral formatLiteral = ObjectUtils.tryCast(reverse.get(1), ErlangStringLiteral.class);
         String formatString = formatLiteral != null ? formatLiteral.getString().getText() : null;
         if (formatString == null || formatString.length() < 2) return;

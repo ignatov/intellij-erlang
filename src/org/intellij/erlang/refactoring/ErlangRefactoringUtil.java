@@ -106,7 +106,7 @@ public class ErlangRefactoringUtil {
       element = element.getParent();
     }
     if (expressions.size() == 1 || ApplicationManager.getApplication().isUnitTestMode()) {
-      extractor.process(editor, expressions.get(0));
+      extractor.process(editor, expressions.getFirst());
     }
     else if (expressions.size() > 1) {
       IntroduceTargetChooser.showChooser(editor, expressions,

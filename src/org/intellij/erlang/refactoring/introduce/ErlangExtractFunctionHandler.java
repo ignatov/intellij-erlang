@@ -211,9 +211,9 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
 
   private static Pair<List<ErlangNamedElement>, List<ErlangNamedElement>> analyze(@NotNull List<? extends PsiElement> elements) {
-    PsiElement first = elements.get(0);
+    PsiElement first = elements.getFirst();
     PsiElement scope = PsiTreeUtil.getTopmostParentOfType(first, ErlangFunction.class);
-    PsiElement lastElement = elements.get(elements.size() - 1);
+    PsiElement lastElement = elements.getLast();
     final int lastElementEndOffset = lastElement.getTextOffset() + lastElement.getTextLength();
     final int firstElementStartOffset = first.getTextOffset();
 

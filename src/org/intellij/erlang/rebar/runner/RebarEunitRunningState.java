@@ -164,7 +164,7 @@ public class RebarEunitRunningState extends CommandLineState {
       configPsi.add(ErlangTermFileUtil.createForm(EUNIT_OPTS));
     } else {
       removeReportOptions(eunitOptsSections);
-      addEunitTeamcityReportOptions(eunitOptsSections.get(0));
+      addEunitTeamcityReportOptions(eunitOptsSections.getFirst());
     }
     return configPsi;
   }

@@ -277,7 +277,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       split = Collections.singletonList("");
     }
 
-    String appName = split.get(0);
+    String appName = split.getFirst();
     String pathSeparator = includeText.endsWith("/") ? "/" : "";
     String libRelativePath = split.size() > 1 ? StringUtil.join(split.subList(1, split.size()), "/") + pathSeparator : "";
     boolean completingAppName = split.size() == 1 && !includeText.endsWith("/");

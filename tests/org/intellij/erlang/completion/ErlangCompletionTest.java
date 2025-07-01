@@ -323,7 +323,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.complete(CompletionType.BASIC, 1);
     List<String> compList = myFixture.getLookupElementStrings();
     assertNotNull(compList);
-    assertEquals(compList.get(0), "bar");
+    assertEquals(compList.getFirst(), "bar");
   }
 
   public void testFunctionExpandByPartialName() {

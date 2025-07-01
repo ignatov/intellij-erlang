@@ -109,7 +109,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     }
 
     String typeString = argType.toString();
-    var argName = guessArgumentName(argumentPatterns.get(0));
+    var argName = guessArgumentName(argumentPatterns.getFirst());
 
     return argName == null || argName.isEmpty()
            ? typeString
@@ -138,7 +138,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     // Empty union by default converges to NONE_TYPE, but we want ANY_TYPE instead
     return unionType.isEmpty()
            ? ErlType.ANY_TYPE
-           : types.get(0);
+           : types.getFirst();
   }
 
   private static ErlType computeReturnType(ErlangFunction function) {

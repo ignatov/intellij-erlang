@@ -438,7 +438,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         List<ErlangExpression> exprs = o.getExpressionList();
         if (exprs.size() != 2) return;
 
-        String functionName = getAtomName(ObjectUtils.tryCast(exprs.get(0), ErlangMaxExpression.class));
+        String functionName = getAtomName(ObjectUtils.tryCast(exprs.getFirst(), ErlangMaxExpression.class));
         int functionArity = getArity(ObjectUtils.tryCast(exprs.get(1), ErlangMaxExpression.class));
         if (functionName == null || functionArity == -1) return;
 

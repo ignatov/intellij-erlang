@@ -170,13 +170,13 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
   private static boolean needCommaAfter(@NotNull ErlangClauseOwner owner) {
     List<ErlangCrClause> crClauses = owner.getCrClauseList();
     if (crClauses.isEmpty()) return false;
-    return crClauses.get(0).getClauseBody() == null;
+    return crClauses.getFirst().getClauseBody() == null;
   }
 
   private static boolean needCommaAfter(@NotNull ErlangIfExpression ifExpression) {
     List<ErlangIfClause> ifClauseList = ifExpression.getIfClauseList();
     if (ifClauseList.isEmpty()) return false;
-    ErlangIfClause firstIfClause = ifClauseList.get(0);
+    ErlangIfClause firstIfClause = ifClauseList.getFirst();
     return firstIfClause.getClauseBody() == null ||
       PsiTreeUtil.findChildOfType(firstIfClause, ErlangIfExpression.class) != null;
   }

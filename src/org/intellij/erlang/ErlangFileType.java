@@ -76,7 +76,7 @@ public abstract class ErlangFileType extends LanguageFileType {
   @NotNull
   @Override
   public final String getDefaultExtension() {
-    return myExtensions.get(0);
+    return myExtensions.getFirst();
   }
 
   @NotNull

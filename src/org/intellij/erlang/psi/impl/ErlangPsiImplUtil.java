@@ -793,7 +793,7 @@ public class ErlangPsiImplUtil {
     ErlangFunTypeSigs signature = getSignature(o);
     List<ErlangTypeSig> typeSigs = signature != null ? signature.getTypeSigList()
                                                      : ContainerUtil.emptyList();
-    ErlangTypeSig sig = !typeSigs.isEmpty() ? typeSigs.get(0) : null;
+    ErlangTypeSig sig = !typeSigs.isEmpty() ? typeSigs.getFirst() : null;
     return sig != null ? sig.getFunType().getFunTypeArguments().getTypeList().size() : -1;
   }
 
@@ -1186,7 +1186,7 @@ public class ErlangPsiImplUtil {
   public static void extractParseTransforms(@NotNull ErlangTupleExpression tuple, @NotNull Set<String> parseTransforms) {
     List<ErlangExpression> expressionList = tuple.getExpressionList();
     if (expressionList.size() != 2) return;
-    ErlangExpression first = expressionList.get(0);
+    ErlangExpression first = expressionList.getFirst();
     if (!"parse_transform".equals(getAtomName(first instanceof ErlangMaxExpression ? (ErlangMaxExpression) first : null))) return;
     ErlangExpression second = expressionList.get(1);
     String parseTransformModuleName = getAtomName(second instanceof ErlangMaxExpression ? (ErlangMaxExpression) second : null);
