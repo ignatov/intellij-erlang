@@ -148,7 +148,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   private static void perform(@NotNull List<ErlangExpression> selection) {
     final ErlangExpression first = ContainerUtil.getFirstItem(selection);
     final ErlangFunction function = PsiTreeUtil.getParentOfType(first, ErlangFunction.class);
-    final ErlangExpression last = selection.get(selection.size() - 1);
+    final ErlangExpression last = selection.getLast();
     assert first != null;
     assert function != null;
     assert last != null;

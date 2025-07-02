@@ -335,7 +335,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     Block block = getSubBlocks().get(newChildIndex - 1);
     while (block instanceof ErlangFormattingBlock && !block.getSubBlocks().isEmpty()) {
       List<Block> subBlocks = block.getSubBlocks();
-      Block childBlock = subBlocks.get(subBlocks.size() - 1);
+      Block childBlock = subBlocks.getLast();
       if (!(childBlock instanceof ErlangFormattingBlock)) break;
       else {
         ASTNode node = ((ErlangFormattingBlock) childBlock).getNode();
