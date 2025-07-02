@@ -18,6 +18,7 @@ package org.intellij.erlang.sdk;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
+import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
@@ -201,7 +202,8 @@ public class ErlangSdkType extends SdkType {
 
   @Override
   public void setupSdkPaths(@NotNull Sdk sdk) {
-    ApplicationManager.getApplication().runWriteAction(() -> configureSdkPaths(sdk));
+    Application application = ApplicationManager.getApplication();
+    application.invokeAndWait(() -> application.runWriteAction(() -> configureSdkPaths(sdk)));
   }
 
   @Nullable
