@@ -20,7 +20,7 @@ import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.codeInspection.LocalQuickFixAndIntentionActionOnPsiElement;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.colors.EditorColors;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
@@ -117,21 +117,19 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     }
 
     Consumer<PsiAnchor> onClick = anchor ->
-      CommandProcessor.getInstance().executeCommand(
-        project,
-        () ->
-          ApplicationManager.getApplication().runWriteAction(
-            () -> {
-              PsiElement erlangExport = anchor.retrieve();
-              PsiDocumentManager.getInstance(project).commitAllDocuments();
+      WriteCommandAction.writeCommandAction(project, file)
+        .withName("Export Function")
+        .run(() -> {
+          PsiElement erlangExport = anchor.retrieve();
+          PsiDocumentManager.getInstance(project).commitAllDocuments();
 
-              if (erlangExport instanceof ErlangExport erlangExportTyped) {
-                updateExport(project, function, erlangExportTyped);
-              }
-              else {
-                createNewExport(project, file, function, exports.isEmpty() ? null : exports.get(exports.size() - 1).getParent());
-              }
-            }), "Export Function", null);
+          if (erlangExport instanceof ErlangExport erlangExportTyped) {
+            updateExport(project, function, erlangExportTyped);
+          }
+          else {
+            createNewExport(project, file, function, exports.isEmpty() ? null : exports.get(exports.size() - 1).getParent());
+          }
+        });
 
     // Variable to store the current highlighter
     Ref<RangeHighlighter> currentHighlighter = new Ref<>();

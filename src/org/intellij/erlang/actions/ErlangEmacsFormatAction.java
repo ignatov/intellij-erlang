@@ -28,7 +28,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.DumbAware;
@@ -143,7 +143,9 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
               }
               final Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
               if (document == null) return;
-              CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> document.setText(emacsText)), NOTIFICATION_TITLE, "", document);
+              WriteCommandAction.writeCommandAction(project, psiFile)
+                .withName(NOTIFICATION_TITLE)
+                .run(() -> document.setText(emacsText));
 
               Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
                 psiFile.getName() + " formatted with Emacs",

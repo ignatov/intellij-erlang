@@ -20,7 +20,8 @@ import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.UndoConfirmationPolicy;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -219,14 +220,18 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
       @Nullable
       @Override
       public PopupStep<FileItem> onChosen(FileItem item, boolean finalChoice) {
-        CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
-          PsiElement element = item.fileAnchor.retrieve();
-          if (element instanceof PsiFile) {
-            fixUsingIncludeFile(problem, (PsiFile) element);
-            renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
-            FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
-          }
-        }), "Include File Fix", "Include File", problemEditor.getDocument());
+        WriteCommandAction.writeCommandAction(project, problem.getContainingFile())
+          .withName("Include File Fix")
+          .withGroupId("Include File")
+          .withUndoConfirmationPolicy(UndoConfirmationPolicy.DEFAULT)
+          .run(() -> {
+            PsiElement element = item.fileAnchor.retrieve();
+            if (element instanceof PsiFile) {
+              fixUsingIncludeFile(problem, (PsiFile) element);
+              renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
+              FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
+            }
+          });
 
         return null;
       }

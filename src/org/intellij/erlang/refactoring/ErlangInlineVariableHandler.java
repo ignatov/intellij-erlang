@@ -19,8 +19,7 @@ package org.intellij.erlang.refactoring;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.Language;
 import com.intellij.lang.refactoring.InlineActionHandler;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -71,39 +70,41 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
       return;
     }
 
-    CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> {
-      for (PsiReference psiReference : ReferencesSearch.search(element).findAll()) {
-        PsiElement host = psiReference.getElement();
-        PsiElement expr = host.getParent();
-        ASTNode replacementNode = null;
+    WriteCommandAction.writeCommandAction(project, element.getContainingFile())
+      .withName("Inline variable")
+      .run(() -> {
+        for (PsiReference psiReference : ReferencesSearch.search(element).findAll()) {
+          PsiElement host = psiReference.getElement();
+          PsiElement expr = host.getParent();
+          ASTNode replacementNode = null;
 
-        if (expr instanceof ErlangMaxExpression) {
-          if (ErlangPsiImplUtil.getExpressionPrecedence(expr.getParent()) > ErlangPsiImplUtil.getExpressionPrecedence(rightWithoutParentheses)) {
-            replacementNode = expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses)).getNode();
+          if (expr instanceof ErlangMaxExpression) {
+            if (ErlangPsiImplUtil.getExpressionPrecedence(expr.getParent()) > ErlangPsiImplUtil.getExpressionPrecedence(rightWithoutParentheses)) {
+              replacementNode = expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses)).getNode();
+            }
+            else {
+              replacementNode = expr.replace(rightWithoutParentheses).getNode();
+            }
           }
-          else {
-            replacementNode = expr.replace(rightWithoutParentheses).getNode();
+          else if (expr instanceof ErlangFunExpression) {
+            replacementNode = host.replace(rightWithoutParentheses).getNode();
+          }
+          else if (expr instanceof ErlangGenericFunctionCallExpression) {
+            replacementNode = substituteFunctionCall(project, host, rightWithoutParentheses).getNode();
+          }
+
+          if (replacementNode != null) {
+            CodeEditUtil.markToReformat(replacementNode, true);
           }
         }
-        else if (expr instanceof ErlangFunExpression) {
-          replacementNode = host.replace(rightWithoutParentheses).getNode();
-        }
-        else if (expr instanceof ErlangGenericFunctionCallExpression) {
-          replacementNode = substituteFunctionCall(project, host, rightWithoutParentheses).getNode();
+
+        PsiElement comma = PsiTreeUtil.getNextSiblingOfType(assignment, LeafPsiElement.class);
+        if (comma != null && comma.getNode().getElementType() == ErlangTypes.ERL_COMMA) {
+          comma.delete();
         }
 
-        if (replacementNode != null) {
-          CodeEditUtil.markToReformat(replacementNode, true);
-        }
-      }
-
-      PsiElement comma = PsiTreeUtil.getNextSiblingOfType(assignment, LeafPsiElement.class);
-      if (comma != null && comma.getNode().getElementType() == ErlangTypes.ERL_COMMA) {
-        comma.delete();
-      }
-
-      assignment.delete();
-    }), "Inline variable", null);
+        assignment.delete();
+      });
   }
 
   private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {
