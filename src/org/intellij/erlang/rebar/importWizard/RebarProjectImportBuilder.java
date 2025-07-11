@@ -186,8 +186,6 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   @SuppressWarnings("DialogTitleCapitalization")
   @Override
   public boolean validate(Project current, @NotNull Project dest) {
-    ThreadingAssertions.assertBackgroundThread();
-
     if (!findIdeaModuleFiles(mySelectedOtpApps)) {
       return true;
     }
