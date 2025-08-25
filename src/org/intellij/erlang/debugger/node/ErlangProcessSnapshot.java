@@ -81,4 +81,11 @@ public class ErlangProcessSnapshot {
   public List<ErlangTraceElement> getStack() {
     return myStack;
   }
+
+  public boolean isSameBreakpoint(@NotNull ErlangProcessSnapshot snapshot) {
+    return myPid.equals(snapshot.getPid())
+           && myBreakModule != null
+           && myBreakModule.equals(snapshot.getBreakModule())
+           && myBreakLine == snapshot.getBreakLine();
+  }
 }
