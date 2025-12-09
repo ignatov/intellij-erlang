@@ -6,7 +6,7 @@
       <entry name="!?*.java" />
       <entry name="!?*.form" />
     </wildcardResourcePatterns>
-    <bytecodeTargetLevel target="11">
+    <bytecodeTargetLevel target="21">
       <module name="Erlang_main" target="1.8" />
       <module name="Erlang_test" target="1.8" />
       <module name="intellij-erlang_main" target="1.8" />
@@ -14,5 +14,12 @@
       <module name="jps-plugin_main" target="1.8" />
       <module name="jps-plugin_test" target="1.8" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="intellij-erlang.jps-plugin" options="-Xlint:deprecation -Xlint:unchecked" />
+      <module name="intellij-erlang.jps-plugin.main" options="-Xlint:deprecation -Xlint:unchecked" />
+      <module name="intellij-erlang.jps-plugin.test" options="-Xlint:deprecation -Xlint:unchecked" />
+    </option>
   </component>
 </project>
