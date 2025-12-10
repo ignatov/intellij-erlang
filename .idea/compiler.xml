@@ -6,7 +6,7 @@
       <entry name="!?*.java" />
       <entry name="!?*.form" />
     </wildcardResourcePatterns>
-    <bytecodeTargetLevel target="21">
+    <bytecodeTargetLevel target="11">
       <module name="Erlang_main" target="1.8" />
       <module name="Erlang_test" target="1.8" />
       <module name="intellij-erlang_main" target="1.8" />

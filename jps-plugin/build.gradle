@@ -2,11 +2,11 @@ jar.archiveFileName = "jps-plugin.jar"
 
 // Override the Java version for the JPS plugin to ensure compatibility with older IDEs
 // This addresses issues #957, #976, #1022, #1054
-sourceCompatibility = 21
-targetCompatibility = 21
+sourceCompatibility = 11
+targetCompatibility = 11
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = 21
+    options.release = 11
     options.compilerArgs += [
         '-Xlint:deprecation',
         '-Xlint:unchecked'
@@ -16,13 +16,13 @@ tasks.withType(JavaCompile).configureEach {
 // Add a specific task to verify Java compatibility
 task verifyJavaCompatibility {
     group = 'verification'
-    description = 'Verifies the JPS plugin is compatible with Java 21'
+    description = 'Verifies the JPS plugin is compatible with Java 11'
     
     doLast {
-        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
-            logger.lifecycle('Java version is compatible with Java 21')
+        if (JavaVersion.current().isJava11Compatible()) {
+            logger.lifecycle('Java version is compatible with Java 11')
         } else {
-            throw new GradleException('Current Java version is not compatible with Java 21. Please use Java 21 or higher.')
+            throw new GradleException('Current Java version is not compatible with Java 11. Please use Java 11 or higher.')
         }
     }
 }
@@ -30,11 +30,11 @@ task verifyJavaCompatibility {
 // Ensure compatibility check runs before compilation
 compileJava.dependsOn verifyJavaCompatibility
 
-// Make sure all build tasks know this module needs Java 21 compatibility
-project.ext.requiresJava21Compatibility = true
+// Make sure all build tasks know this module needs Java 11 compatibility
+project.ext.requiresJava11Compatibility = true
 
-// Utility function to verify Java 21 compatibility of class files
-def verifyJava21Compatibility(FileCollection classFiles, String context) {
+// Utility function to verify Java 11 compatibility of class files
+def verifyJava11Compatibility(FileCollection classFiles, String context) {
     if (classFiles.empty) {
         throw new GradleException("No class files found in ${context}")
     }
@@ -42,8 +42,8 @@ def verifyJava21Compatibility(FileCollection classFiles, String context) {
     // List to track non-compliant files
     def nonCompliantFiles = []
     
-    // Java 21's major class file version is 65
-    def maxAllowedVersion = 65
+    // Java 11's major class file version is 55
+    def maxAllowedVersion = 55
     
     // Check each class file
     classFiles.each { file ->
@@ -75,13 +75,13 @@ def verifyJava21Compatibility(FileCollection classFiles, String context) {
     
     // Report results
     if (!nonCompliantFiles.empty) {
-        logger.error("Found ${nonCompliantFiles.size()} class files not compatible with Java 21 in ${context}:")
+        logger.error("Found ${nonCompliantFiles.size()} class files not compatible with Java 11 in ${context}:")
         nonCompliantFiles.each { info ->
-            logger.error(" - ${info.file}: class file version ${info.version} (Java ${info.javaVersion}, should be <= 65/Java 21)")
+            logger.error(" - ${info.file}: class file version ${info.version} (Java ${info.javaVersion}, should be <= 55/Java 11)")
         }
-        throw new GradleException("JPS module contains class files not compatible with Java 21")
+        throw new GradleException("JPS module contains class files not compatible with Java 11")
     } else {
-        logger.lifecycle("All ${classFiles.size()} class files are compatible with Java 21 in ${context}")
+        logger.lifecycle("All ${classFiles.size()} class files are compatible with Java 11 in ${context}")
     }
     
     return true
@@ -116,10 +116,10 @@ static def getJavaVersionFromClassVersion(int majorVersion) {
     return versionMap.getOrDefault(majorVersion, "unknown (version ${majorVersion})")
 }
 
-// Task to verify that the compiled class files are Java 21 compatible
-task verifyJpsClassFilesJava21Compatible {
+// Task to verify that the compiled class files are Java 11 compatible
+task verifyJpsClassFilesJava11Compatible {
     group = 'verification'
-    description = 'Verifies that JPS classes are compiled with Java 21 compatibility'
+    description = 'Verifies that JPS classes are compiled with Java 11 compatibility'
     
     // Make this task run after the classes have been compiled
     dependsOn classes
@@ -141,17 +141,17 @@ task verifyJpsClassFilesJava21Compatible {
             return
         }
         
-        verifyJava21Compatibility(classFiles, "compiled classes")
+        verifyJava11Compatibility(classFiles, "compiled classes")
     }
 }
 
 // Run the verification as part of the check task
-check.dependsOn verifyJpsClassFilesJava21Compatible
+check.dependsOn verifyJpsClassFilesJava11Compatible
 
 // Verify the jar file after it's been created
-task verifyJpsJarJava21Compatible {
+task verifyJpsJarJava11Compatible {
     group = 'verification'
-    description = 'Verifies that JPS jar file contains only Java 21 compatible classes'
+    description = 'Verifies that JPS jar file contains only Java 11 compatible classes'
     
     // This task should run after the jar task
     dependsOn jar
@@ -178,7 +178,7 @@ task verifyJpsJarJava21Compatible {
         try {
             // Find all class files in the extracted jar
             def classFiles = fileTree(tempDir).include('**/*.class')
-            verifyJava21Compatibility(classFiles, "JAR file")
+            verifyJava11Compatibility(classFiles, "JAR file")
         } finally {
             // Clean up
             tempDir.deleteDir()
@@ -187,14 +187,14 @@ task verifyJpsJarJava21Compatible {
 }
 
 // Also run this verification as part of the check task
-check.dependsOn verifyJpsJarJava21Compatible
+check.dependsOn verifyJpsJarJava11Compatible
 
 // Create a convenient task that runs all verifications
-task verifyJpsJava21Compatibility {
+task verifyJpsJava11Compatibility {
     group = 'verification'
-    description = 'Runs all Java 21 compatibility checks for JPS module'
+    description = 'Runs all Java 11 compatibility checks for JPS module'
     
     dependsOn verifyJavaCompatibility
-    dependsOn verifyJpsClassFilesJava21Compatible
-    dependsOn verifyJpsJarJava21Compatible
+    dependsOn verifyJpsClassFilesJava11Compatible
+    dependsOn verifyJpsJarJava11Compatible
 }

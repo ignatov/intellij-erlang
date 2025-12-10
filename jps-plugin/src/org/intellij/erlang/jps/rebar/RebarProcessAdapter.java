@@ -16,8 +16,6 @@
 
 package org.intellij.erlang.jps.rebar;
 
-import com.intellij.execution.process.ProcessEvent;
-import com.intellij.openapi.util.Key;
 import org.intellij.erlang.jps.builder.BuilderProcessAdapter;
 import org.intellij.erlang.jps.builder.ErlangCompilerProcessAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -34,13 +32,13 @@ public class RebarProcessAdapter extends BuilderProcessAdapter {
   }
 
   @Override
-  public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
-    addToProcessing(event.getText());
+  public void onTextAvailable(@NotNull String text) {
+    addToProcessing(text);
   }
 
   @Override
-  public void processTerminated(@NotNull ProcessEvent event) {
-    super.processTerminated(event);
+  public void processTerminated() {
+    super.processTerminated();
     if (myMessageBuilder.length() > 0) {
       processMessage(myMessageBuilder.toString());
     }

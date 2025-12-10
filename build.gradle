@@ -117,18 +117,18 @@ dependencies {
   implementation project('jps-plugin')
 }
 
-// Add JPS Java 21 verification to the plugin build pipeline
+// Add JPS Java 11 verification to the plugin build pipeline
 afterEvaluate {
   tasks.named('prepareSandbox') {
-    dependsOn ':jps-plugin:verifyJpsJava21Compatibility'
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
   }
   
   tasks.named('buildPlugin') {
-    dependsOn ':jps-plugin:verifyJpsJava21Compatibility'
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
   }
   
   tasks.named('check') {
-    dependsOn ':jps-plugin:verifyJpsJava21Compatibility'
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
   }
 }
 
