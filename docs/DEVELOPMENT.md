@@ -6,11 +6,11 @@ This project follows the IntelliJ Platform Plugin SDK guidelines. For comprehens
 
 - [IntelliJ Platform SDK Documentation](https://plugins.jetbrains.com/docs/intellij/welcome.html)
 - [IntelliJ Plugin Development Quick Start Guide](https://plugins.jetbrains.com/docs/intellij/plugins-quick-start.html)
-- [Gradle IntelliJ Plugin Documentation](https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html)
+- [IntelliJ Platform Gradle Plugin Documentation](https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html)
 
 ## Standard Gradle Commands
 
-The plugin uses the Gradle build system with the Gradle IntelliJ Plugin. Here are the common commands:
+The plugin uses the Gradle build system with the IntelliJ Platform Gradle Plugin. Here are the common commands:
 
 ```bash
 # Build the plugin distribution (zip file)
@@ -34,8 +34,8 @@ The plugin uses the Gradle build system with the Gradle IntelliJ Plugin. Here ar
 The IntelliJ Erlang plugin has specific Java version requirements for different components:
 
 ### Main Plugin
-- Built with Java 17
-- Targets Java 17 bytecode (class file version 61.0)
+- Built with Java 21
+- Targets Java 21 bytecode (class file version 65.0)
 - Compatible with the latest IntelliJ platform
 
 ### JPS (JetBrains Project System) Module
@@ -73,7 +73,7 @@ To build the plugin correctly:
 ```
 
 This will:
-1. Build the main plugin with Java 17 compatibility
+1. Build the main plugin with Java 21 compatibility
 2. Build the JPS module with Java 11 compatibility
 3. Package everything together correctly
 

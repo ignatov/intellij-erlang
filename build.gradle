@@ -2,7 +2,7 @@ import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformDependenciesExtension
 
 plugins {
-  id 'org.jetbrains.intellij.platform' version '2.10.5'
+  id 'org.jetbrains.intellij.platform' version '2.12.0'
 }
 
 apply plugin: 'org.jetbrains.intellij.platform'
@@ -26,10 +26,12 @@ allprojects {
   apply plugin: 'java'
   
   // Only apply the main Java version if this is not the JPS module
-  // JPS module defines its own Java compatibility version (17)
+  // JPS module defines its own bytecode compatibility separately (Java 11)
   if (project.name != 'jps-plugin') {
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaTargetVersion
+    java {
+      sourceCompatibility = JavaVersion.toVersion(javaVersion)
+      targetCompatibility = JavaVersion.toVersion(javaTargetVersion)
+    }
   }
   
   tasks.withType(JavaCompile).configureEach { 
@@ -66,10 +68,9 @@ allprojects {
   dependencies {
     intellijPlatform { IntelliJPlatformDependenciesExtension ijp ->
       // https://data.services.jetbrains.com/products?code=IC
-      ijp.intellijIdea("2025.3")
+      ijp.intellijIdea("2026.1")
 
       ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi")
-      ijp.instrumentationTools()
       ijp.testFramework(TestFrameworkType.Platform.INSTANCE)
       ijp.testFramework(TestFrameworkType.Plugin.Java.INSTANCE)
     }
@@ -119,6 +120,13 @@ dependencies {
 
 // Add JPS Java 11 verification to the plugin build pipeline
 afterEvaluate {
+  // The JPS helper module is packaged into the main plugin but intentionally keeps
+  // Java 11 bytecode compatibility, so the generic IntelliJ Platform module check
+  // produces a misleading sourceCompatibility warning for 2026.1.
+  project(':jps-plugin').tasks.named('verifyPluginProjectConfiguration') {
+    enabled = false
+  }
+
   tasks.named('prepareSandbox') {
     dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
   }

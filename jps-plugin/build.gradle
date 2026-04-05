@@ -2,8 +2,12 @@ jar.archiveFileName = "jps-plugin.jar"
 
 // Override the Java version for the JPS plugin to ensure compatibility with older IDEs
 // This addresses issues #957, #976, #1022, #1054
-sourceCompatibility = 11
-targetCompatibility = 11
+java {
+    // IntelliJ Platform 2026.1 expects Java 21 project settings, while `--release 11`
+    // below keeps the emitted JPS bytecode compatible with older IDE build runtimes.
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.release = 11
