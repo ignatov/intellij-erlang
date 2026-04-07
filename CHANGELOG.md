@@ -1,5 +1,19 @@
 ## Change log
 
+### Version 0.12 (Upcoming)
+* **Project Infrastructure Improvements**:
+  * Added comprehensive SECURITY.md with vulnerability reporting guidelines
+  * Added CODE_OF_CONDUCT.md following Contributor Covenant 2.0
+  * Enhanced README.md with professional structure, badges, and better documentation
+  * Expanded CONTRIBUTING.md with detailed contribution guidelines
+  * Added GitHub issue templates for bug reports and feature requests
+  * Added pull request template for standardized contributions
+  * Added KNOWN_ISSUES.md documenting build system challenges
+* **CI/CD Enhancements**:
+  * Added GitHub Actions workflow for continuous integration
+  * Added Dependabot configuration for automated dependency updates
+* **Documentation**: Significant improvements to project documentation and community standards
+
 ### Version 0.5.2
 * Go to module action (Ctrl+N, Cmd+N for Mac OS X)
 * Better typing for some cases
