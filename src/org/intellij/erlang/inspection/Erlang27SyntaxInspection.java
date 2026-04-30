@@ -27,6 +27,9 @@ public class Erlang27SyntaxInspection extends ErlangInspectionBase {
         if (text.startsWith("\"\"\"") || text.endsWith("\"\"\"")) {
           holder.registerProblem(o, "Triple quotes are only supported in Erlang 27 and newer versions");
         }
+        else if (text.startsWith("~")) {
+          holder.registerProblem(o, "Sigils are only supported in Erlang 27 and newer versions");
+        }
       }
     };
   }

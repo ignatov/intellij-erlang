@@ -15,6 +15,9 @@ public interface ErlangStringLiteral extends ErlangExpression, PsiLanguageInject
   @Nullable
   PsiElement getTripleQuotedString();
 
+  @Nullable
+  PsiElement getSigilString();
+
   boolean isValidHost();
 
   @NotNull ErlangStringLiteral updateText(@NotNull String text);
