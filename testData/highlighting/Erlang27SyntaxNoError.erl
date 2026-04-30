@@ -1,4 +1,4 @@
--export([quotes/0, single_line/0, bad_indent/0]).
+-export([quotes/0, single_line/0, bad_indent/0, sigils/0]).
 
 quotes() ->
   """
@@ -13,3 +13,9 @@ single_line() ->
 bad_indent() ->
   <error>"""
   main"""</error>.
+
+sigils() ->
+    ~"hello",
+    ~b(binary),
+    ~S[verbatim],
+    ok.

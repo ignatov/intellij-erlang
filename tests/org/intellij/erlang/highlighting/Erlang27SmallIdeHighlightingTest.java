@@ -50,4 +50,9 @@ public class Erlang27SmallIdeHighlightingTest extends ErlangHighlightingTestBase
     enableErlang27SyntaxInspection();
     doTest();
   }
+
+  public void testSigilStrings() {
+    enableErlang27SyntaxInspection();
+    doTest();
+  }
 }

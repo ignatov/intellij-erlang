@@ -104,4 +104,8 @@ public final class ErlangSdkRelease {
   public boolean erlangFeatureMaybe() {
     return this.erlangIsAtLeast25();
   }
+
+  public boolean erlangFeatureSigils() {
+    return this.isNewerOrEqualTo(V_27_0);
+  }
 }

@@ -140,4 +140,9 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
 
   public void testFunctionImportFromTransitiveInclusion() { doTestWithApp(); }
   public void testFunctionImportFromInclusion()           { doTestWithApp(); }
+
+  public void testSigilSyntaxError() {
+    enableErlang27SyntaxInspection();
+    doTest();
+  }
 }

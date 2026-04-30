@@ -2346,7 +2346,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // '+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | var | '#' | '.'
+  // '+' | '-' | '<<' | '?' | '[' | '{' | atom_name | single_quote | bnot | char | float | integer | not | string | sigil_string | var | '#' | '.'
   private static boolean form_recover_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "form_recover_0")) return false;
     boolean r;
@@ -2364,6 +2364,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, ERL_INTEGER);
     if (!r) r = consumeToken(b, ERL_NOT);
     if (!r) r = consumeToken(b, ERL_STRING);
+    if (!r) r = consumeToken(b, ERL_SIGIL_STRING);
     if (!r) r = consumeToken(b, ERL_VAR);
     if (!r) r = consumeToken(b, ERL_RADIX);
     if (!r) r = consumeToken(b, ERL_DOT);
@@ -4985,14 +4986,15 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // string | triple_quoted_string
+  // string | triple_quoted_string | sigil_string
   public static boolean string_literal(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "string_literal")) return false;
-    if (!nextTokenIs(b, "<expression>", ERL_STRING, ERL_TRIPLE_QUOTED_STRING)) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_SIGIL_STRING, ERL_STRING, ERL_TRIPLE_QUOTED_STRING)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_STRING_LITERAL, "<expression>");
     r = consumeToken(b, ERL_STRING);
     if (!r) r = consumeToken(b, ERL_TRIPLE_QUOTED_STRING);
+    if (!r) r = consumeToken(b, ERL_SIGIL_STRING);
     exit_section_(b, l, m, r, false, null);
     return r;
   }

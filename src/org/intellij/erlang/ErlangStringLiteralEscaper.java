@@ -47,6 +47,10 @@ public class ErlangStringLiteralEscaper extends LiteralTextEscaper<ErlangStringL
 
   @Override
   public boolean isOneLine() {
+    String text = myHost.getText();
+    if (text.startsWith("\"\"\"") || text.startsWith("~")) {
+      return false;
+    }
     return true;
   }
 }

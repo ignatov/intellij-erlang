@@ -21,4 +21,9 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     enableErlang27SyntaxInspection();
     doTest();
   }
+
+  public void testSigilStrings() {
+    enableErlang27SyntaxInspection();
+    doTest();
+  }
 }

@@ -99,4 +99,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testTypo()                                { doTest(true);  }
   public void testNewNumbers()                          { doTest(true);  }
   public void testTripleQuotes()                        { doTest(true);  }
+  public void testSigilStrings()                        { doTest(false); }
 }

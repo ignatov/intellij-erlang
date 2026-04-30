@@ -71,6 +71,21 @@ STRING_BAD1 = \" ({CHAR} | \') *
 TripleQuotedString = \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
 StringLiteral = {TripleQuotedString} | {STRING_BAD1} \"
 
+/* Sigil strings (OTP 27+) */
+SigilPrefix = "~" [bBsS]?
+SigilPairedParen = {SigilPrefix} "(" ([^)] | "\\)")* ")"
+SigilPairedBracket = {SigilPrefix} "[" ([^\]] | "\\]")* "]"
+SigilPairedBrace = {SigilPrefix} "{" ([^}] | "\\}")* "}"
+SigilPairedAngle = {SigilPrefix} "<" ([^>] | "\\>")* ">"
+SigilSymSlash = {SigilPrefix} "/" ([^/] | "\\/")* "/"
+SigilSymPipe = {SigilPrefix} "|" ([^|] | "\\|")* "|"
+SigilSymSQuote = {SigilPrefix} "'" ([^'] | "\\'")* "'"
+SigilSymDQuote = {SigilPrefix} "\"" ({CHAR} | \')* "\""
+SigilSymBacktick = {SigilPrefix} "`" ([^`] | "\\`")* "`"
+SigilSymHash = {SigilPrefix} "#" ([^#] | "\\#")* "#"
+SigilTripleQuoted = {SigilPrefix} {TripleQuotedString}
+SigilString = {SigilTripleQuoted} | {SigilPairedParen} | {SigilPairedBracket} | {SigilPairedBrace} | {SigilPairedAngle} | {SigilSymSlash} | {SigilSymPipe} | {SigilSymSQuote} | {SigilSymDQuote} | {SigilSymBacktick} | {SigilSymHash}
+
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
 NameChars = {NameChar}*
 
@@ -147,6 +162,7 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
 
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
+<YYINITIAL> {SigilString}                 { return ERL_SIGIL_STRING; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }
 <YYINITIAL> {TripleQuotedString}          { return ERL_TRIPLE_QUOTED_STRING; }
 

@@ -41,6 +41,12 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
   }
 
   @Override
+  @Nullable
+  public PsiElement getSigilString() {
+    return findChildByType(ERL_SIGIL_STRING);
+  }
+
+  @Override
   public boolean isValidHost() {
     return ErlangPsiImplUtil.isValidHost(this);
   }
