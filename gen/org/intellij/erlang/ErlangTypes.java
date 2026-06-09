@@ -209,6 +209,7 @@ public interface ErlangTypes {
   IElementType ERL_RECEIVE = new ErlangTokenType("receive");
   IElementType ERL_REM = new ErlangTokenType("rem");
   IElementType ERL_SEMI = new ErlangTokenType(";");
+  IElementType ERL_SIGIL_STRING = new ErlangTokenType("sigil_string");
   IElementType ERL_SINGLE_QUOTE = new ErlangTokenType("single_quote");
   IElementType ERL_STRING = new ErlangTokenType("string");
   IElementType ERL_TRIPLE_QUOTED_STRING = new ErlangTokenType("triple_quoted_string");

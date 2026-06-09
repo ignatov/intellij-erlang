@@ -77,7 +77,7 @@ public class ErlangSyntaxHighlighter extends SyntaxHighlighterBase {
     if (ErlangParserDefinition.COMMENTS.contains(type)) {
       return pack(COMMENT);
     }
-    if (type == ERL_STRING || type == ERL_CHAR) {
+    if (type == ERL_STRING || type == ERL_CHAR || type == ERL_TRIPLE_QUOTED_STRING || type == ERL_SIGIL_STRING) {
       return pack(STRING);
     }
     if (type == ERL_INTEGER || type == ERL_FLOAT) {
