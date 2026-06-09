@@ -16,15 +16,15 @@
 
 <html>
 <body>
-Reports usage of triple quotes in Erlang versions prior to OTP 27.
+Reports usage of triple quotes and sigils in Erlang versions prior to OTP 27.
 <p>
-    This inspection detects the use of triple quotes for string literals in Erlang code when the project's Erlang SDK version is older than OTP 27. Triple quotes were introduced in Erlang OTP 27 and are not supported in earlier versions.
+    This inspection detects the use of triple quotes and sigils for string literals in Erlang code when the project's Erlang SDK version is older than OTP 27. Both features were introduced in Erlang OTP 27 and are not supported in earlier versions.
 </p>
 <p>
-    Using triple quotes in older Erlang versions will result in syntax errors. This inspection helps prevent such errors by highlighting incompatible usage.
+    Using triple quotes or sigils in older Erlang versions will result in syntax errors. This inspection helps prevent such errors by highlighting incompatible usage.
 </p>
 <p>
-    Example of unsupported usage in Erlang versions prior to OTP 27:
+    Example of unsupported triple quotes in Erlang versions prior to OTP 27:
 </p>
 <pre><code>
 String = """
@@ -33,11 +33,20 @@ String = """
     """.
 </code></pre>
 <p>
-    To fix this issue, either upgrade your Erlang SDK to version 27 or later, or use traditional string syntax:
+    Example of unsupported sigils in Erlang versions prior to OTP 27:
+</p>
+<pre><code>
+Binary = ~"Hello, World!".
+Binary2 = ~b"UTF-8 binary".
+String = ~s"A string".
+</code></pre>
+<p>
+    To fix this issue, either upgrade your Erlang SDK to version 27 or later, or use traditional string/binary syntax:
 </p>
 <pre><code>
 String = "This is a multi-line\n"
          "string using traditional syntax.\n".
+Binary = &lt;&lt;"Hello, World!"/utf8&gt;&gt;.
 </code></pre>
 <!-- tooltip end -->
 <p>

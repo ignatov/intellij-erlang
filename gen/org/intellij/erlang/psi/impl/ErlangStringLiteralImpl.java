@@ -30,6 +30,12 @@ public class ErlangStringLiteralImpl extends ErlangExpressionImpl implements Erl
 
   @Override
   @Nullable
+  public PsiElement getSigilString() {
+    return findChildByType(ERL_SIGIL_STRING);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getString() {
     return findChildByType(ERL_STRING);
   }

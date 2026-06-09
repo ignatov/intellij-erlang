@@ -81,6 +81,30 @@ EmptyAtom = ''
 
 Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
+/* Sigil support (OTP 27+) */
+/* Sigil with double-quoted string delimiter */
+SigilDoubleQuoteString = "~" [bBsS]? \" ([^\\\"] | {ESC})* \"
+/* Sigil with triple-quoted string delimiter */
+SigilTripleQuoteString = "~" [bBsS]? \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
+/* Sigil with single-quote delimiter */
+SigilSingleQuoteString = "~" [bBsS]? \' ([^\\\'] | {ESC})* \'
+/* Sigil with parentheses delimiter */
+SigilParenString = "~" [bBsS]? \( ([^\\\)] | {ESC})* \)
+/* Sigil with brackets delimiter */
+SigilBracketString = "~" [bBsS]? \[ ([^\\\]] | {ESC})* \]
+/* Sigil with braces delimiter */
+SigilBraceString = "~" [bBsS]? \{ ([^\\\}] | {ESC})* \}
+/* Sigil with angle brackets delimiter */
+SigilAngleString = "~" [bBsS]? \< ([^\\\>] | {ESC})* \>
+/* Sigil with slash delimiter */
+SigilSlashString = "~" [bBsS]? \/ ([^\\\\/] | {ESC})* \/
+/* Sigil with pipe delimiter */
+SigilPipeString = "~" [bBsS]? \| ([^\\\|] | {ESC})* \|
+/* Sigil with backtick delimiter */
+SigilBacktickString = "~" [bBsS]? \` ([^\\\`] | {ESC})* \`
+/* Sigil with hash delimiter */
+SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
+
 %state IN_QUOTES
 
 %%
@@ -149,6 +173,18 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }
 <YYINITIAL> {TripleQuotedString}          { return ERL_TRIPLE_QUOTED_STRING; }
+
+<YYINITIAL> {SigilTripleQuoteString}      { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilDoubleQuoteString}      { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilSingleQuoteString}      { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilParenString}            { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilBracketString}          { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilBraceString}            { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilAngleString}            { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilSlashString}            { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilPipeString}             { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilBacktickString}         { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilHashString}             { return ERL_SIGIL_STRING; }
 
 <YYINITIAL> {AtomName} | {EmptyAtom}      { return ERL_ATOM_NAME; }
 <YYINITIAL> '                             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE; }
