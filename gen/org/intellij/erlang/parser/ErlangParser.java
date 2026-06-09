@@ -902,7 +902,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "attribute_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = module(b, l + 1);
+    r = module_$(b, l + 1);
     if (!r) r = export(b, l + 1);
     if (!r) r = export_type_attribute(b, l + 1);
     if (!r) r = import_directive(b, l + 1);
@@ -3222,7 +3222,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // [ lc_generator_definition ('<-' | '<=')] expression
+  // [ lc_generator_definition ('<-' | '<=' | '<:-' | '<:=')] expression
   public static boolean lc_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_expression")) return false;
     boolean r;
@@ -3233,14 +3233,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // [ lc_generator_definition ('<-' | '<=')]
+  // [ lc_generator_definition ('<-' | '<=' | '<:-' | '<:=')]
   private static boolean lc_expression_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_expression_0")) return false;
     lc_expression_0_0(b, l + 1);
     return true;
   }
 
-  // lc_generator_definition ('<-' | '<=')
+  // lc_generator_definition ('<-' | '<=' | '<:-' | '<:=')
   private static boolean lc_expression_0_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_expression_0_0")) return false;
     boolean r;
@@ -3251,17 +3251,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // '<-' | '<='
+  // '<-' | '<=' | '<:-' | '<:='
   private static boolean lc_expression_0_0_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_expression_0_0_1")) return false;
     boolean r;
     r = consumeToken(b, ERL_OP_LT_MINUS);
     if (!r) r = consumeToken(b, ERL_OP_LT_EQ);
+    if (!r) r = consumeToken(b, ERL_OP_LT_COLON_MINUS);
+    if (!r) r = consumeToken(b, ERL_OP_LT_COLON_EQ);
     return r;
   }
 
   /* ********************************************************** */
-  // lc_expression (',' lc_expression)*
+  // lc_expression ((',' | '&&') lc_expression)*
   static boolean lc_exprs(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_exprs")) return false;
     boolean r, p;
@@ -3273,7 +3275,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // (',' lc_expression)*
+  // ((',' | '&&') lc_expression)*
   private static boolean lc_exprs_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_exprs_1")) return false;
     while (true) {
@@ -3284,16 +3286,25 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // ',' lc_expression
+  // (',' | '&&') lc_expression
   private static boolean lc_exprs_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_exprs_1_0")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
-    r = consumeToken(b, ERL_COMMA);
+    r = lc_exprs_1_0_0(b, l + 1);
     p = r; // pin = 1
     r = r && lc_expression(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  // ',' | '&&'
+  private static boolean lc_exprs_1_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lc_exprs_1_0_0")) return false;
+    boolean r;
+    r = consumeToken(b, ERL_COMMA);
+    if (!r) r = consumeToken(b, ERL_OP_AND_AND);
+    return r;
   }
 
   /* ********************************************************** */
@@ -4201,8 +4212,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // 'module' '(' q_atom [',' module_tail] ')'
-  public static boolean module(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "module")) return false;
+  public static boolean module_$(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "module_$")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_MODULE, "<module>");
     r = consumeToken(b, "module");

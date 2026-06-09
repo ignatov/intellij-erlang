@@ -1,0 +1,47 @@
+<!--
+  ~ Copyright 2012-2026 Sergey Ignatov
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<html>
+<body>
+Reports usage of strict and zip generators in Erlang versions prior to OTP 28.
+<p>
+    Strict generators (<code>&lt;:-</code> for lists and maps, <code>&lt;:=</code> for bit strings) and zip
+    generators (<code>&amp;&amp;</code>) were introduced in Erlang/OTP 28 and are not supported in earlier versions.
+</p>
+<p>
+    Using them with an older Erlang SDK will result in syntax errors. This inspection helps prevent such errors by
+    highlighting incompatible usage.
+</p>
+<p>
+    Example of unsupported usage in Erlang versions prior to OTP 28:
+</p>
+<pre><code>
+[X || {ok, X} &lt;:- Results]
+[{X, Y} || X &lt;- Xs &amp;&amp; Y &lt;- Ys]
+</code></pre>
+<p>
+    To fix this issue, either upgrade your Erlang SDK to version 28 or later, or use a relaxed generator:
+</p>
+<pre><code>
+[X || {ok, X} &lt;- Results]
+</code></pre>
+<!-- tooltip end -->
+<p>
+    See <a href="https://www.erlang.org/eeps/eep-0070">EEP 70</a> (strict generators) and
+    <a href="https://www.erlang.org/eeps/eep-0073">EEP 73</a> (zip generators).
+</p>
+</body>
+</html>
