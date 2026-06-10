@@ -454,7 +454,8 @@ begin_end_body ::= exprs {name="expression"}
 
 private expr_with_brackets ::= <<maybeComprehension list_expr_or_comprehension>>
 list_expr_or_comprehension ::= '[' list_expr_or_comprehension_body? ']' { pin=1 elementType=list_expression }
-private list_expr_or_comprehension_body ::= expression_parse_error? marked_lc_tail | expression (marked_lc_tail | list_expression_tail)
+private list_expr_or_comprehension_body ::= expression_parse_error? marked_lc_tail | expression (list_comprehension_head_tail marked_lc_tail | marked_lc_tail | list_expression_tail)
+private list_comprehension_head_tail ::= (',' expression)+ &('||')
 private marked_lc_tail ::= '||' <<markComprehension>> lc_exprs {pin=1}
 private expression_parse_error ::= &('||') expression {pin=1}
 
@@ -463,7 +464,8 @@ private list_expression_tail ::= list_items? list_concat?
 private list_items ::= (',' expression)+ {pin(".*")=1}
 private list_concat ::= '|' expression {pin(".*")=1}
 
-list_comprehension ::= '[' expression '||' lc_exprs ']' { methods=[processDeclarations] }
+list_comprehension ::= '[' lc_head '||' lc_exprs ']' { methods=[processDeclarations] }
+private lc_head ::= expression (',' expression)*
 private meta comprehension_element ::= (&('||'))? <<p1>> {pin=1}
 private lc_exprs ::= lc_expression ((',' | '&&') lc_expression)*
 lc_expression ::= [ lc_generator_definition ('<-' | '<=' | '<:-' | '<:=')] expression {pin(".*")=2}
