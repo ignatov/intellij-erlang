@@ -218,6 +218,7 @@ public final class ErlangBifTable {
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "is_tuple", 1, "Term", true));
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "is_float", 1, "Term", true));
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "is_integer", 1, "Term", true));
+    bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "is_integer", 3, "Term, Lower, Upper", true));
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "is_number", 1, "Term", true));
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "is_pid", 1, "Term", true));
     bifMap.putValue("erlang", new ErlangBifDescriptor("erlang", "is_port", 1, "Term", true));

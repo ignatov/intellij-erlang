@@ -32,7 +32,7 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     "byte_size/1", "binary_part/2", "element/2",
     "float/1", "hd/1", "is_atom/1", "is_binary/1",
     "is_bitstring/1", "is_boolean/1", "is_float/1",
-    "is_function/1", "is_function/2", "is_integer/1",
+    "is_function/1", "is_function/2", "is_integer/1", "is_integer/3",
     "is_list/1", "is_map/1", "is_number/1",
     "is_pid/1", "is_port/1", "is_record/2",
     "is_record/3", "is_reference/1", "is_tuple/1",

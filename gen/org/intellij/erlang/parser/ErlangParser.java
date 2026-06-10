@@ -3320,6 +3320,40 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // expression (',' expression)*
+  static boolean lc_head(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lc_head")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = expression(b, l + 1, -1);
+    r = r && lc_head_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // (',' expression)*
+  private static boolean lc_head_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lc_head_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!lc_head_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "lc_head_1", c)) break;
+    }
+    return true;
+  }
+
+  // ',' expression
+  private static boolean lc_head_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lc_head_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_COMMA);
+    r = r && expression(b, l + 1, -1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // config_call_expression | qualified_expression+
   static boolean left_accessors(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "left_accessors")) return false;
@@ -3347,17 +3381,66 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '[' expression '||' lc_exprs ']'
+  // '[' lc_head '||' lc_exprs ']'
   public static boolean list_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_comprehension")) return false;
     if (!nextTokenIs(b, "<expression>", ERL_BRACKET_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
     r = consumeToken(b, ERL_BRACKET_LEFT);
-    r = r && expression(b, l + 1, -1);
+    r = r && lc_head(b, l + 1);
     r = r && consumeToken(b, ERL_OR_OR);
     r = r && lc_exprs(b, l + 1);
     r = r && consumeToken(b, ERL_BRACKET_RIGHT);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (',' expression)+ &('||')
+  static boolean list_comprehension_head_tail(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_comprehension_head_tail")) return false;
+    if (!nextTokenIs(b, ERL_COMMA)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = list_comprehension_head_tail_0(b, l + 1);
+    r = r && list_comprehension_head_tail_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // (',' expression)+
+  private static boolean list_comprehension_head_tail_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_comprehension_head_tail_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = list_comprehension_head_tail_0_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!list_comprehension_head_tail_0_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "list_comprehension_head_tail_0", c)) break;
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // ',' expression
+  private static boolean list_comprehension_head_tail_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_comprehension_head_tail_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_COMMA);
+    r = r && expression(b, l + 1, -1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &('||')
+  private static boolean list_comprehension_head_tail_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_comprehension_head_tail_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = consumeToken(b, ERL_OR_OR);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -3399,7 +3482,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // expression_parse_error? marked_lc_tail | expression (marked_lc_tail | list_expression_tail)
+  // expression_parse_error? marked_lc_tail | expression (list_comprehension_head_tail marked_lc_tail | marked_lc_tail | list_expression_tail)
   static boolean list_expr_or_comprehension_body(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expr_or_comprehension_body")) return false;
     boolean r;
@@ -3428,7 +3511,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // expression (marked_lc_tail | list_expression_tail)
+  // expression (list_comprehension_head_tail marked_lc_tail | marked_lc_tail | list_expression_tail)
   private static boolean list_expr_or_comprehension_body_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expr_or_comprehension_body_1")) return false;
     boolean r;
@@ -3439,12 +3522,26 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // marked_lc_tail | list_expression_tail
+  // list_comprehension_head_tail marked_lc_tail | marked_lc_tail | list_expression_tail
   private static boolean list_expr_or_comprehension_body_1_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expr_or_comprehension_body_1_1")) return false;
     boolean r;
-    r = marked_lc_tail(b, l + 1);
+    Marker m = enter_section_(b);
+    r = list_expr_or_comprehension_body_1_1_0(b, l + 1);
+    if (!r) r = marked_lc_tail(b, l + 1);
     if (!r) r = list_expression_tail(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // list_comprehension_head_tail marked_lc_tail
+  private static boolean list_expr_or_comprehension_body_1_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_expr_or_comprehension_body_1_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = list_comprehension_head_tail(b, l + 1);
+    r = r && marked_lc_tail(b, l + 1);
+    exit_section_(b, m, null, r);
     return r;
   }
 

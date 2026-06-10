@@ -64,6 +64,7 @@ is_float/1
 is_function/1
 is_function/2
 is_integer/1
+is_integer/3
 is_list/1
 is_map/1
 is_number/1
