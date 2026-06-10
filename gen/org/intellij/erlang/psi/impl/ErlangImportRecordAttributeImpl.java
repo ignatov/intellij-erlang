@@ -9,16 +9,15 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.util.PsiTreeUtil;
 import static org.intellij.erlang.ErlangTypes.*;
 import org.intellij.erlang.psi.*;
-import com.intellij.psi.PsiReference;
 
-public class ErlangRecordRefImpl extends ErlangCompositeElementImpl implements ErlangRecordRef {
+public class ErlangImportRecordAttributeImpl extends ErlangCompositeElementImpl implements ErlangImportRecordAttribute {
 
-  public ErlangRecordRefImpl(ASTNode node) {
+  public ErlangImportRecordAttributeImpl(ASTNode node) {
     super(node);
   }
 
   public void accept(@NotNull ErlangVisitor visitor) {
-    visitor.visitRecordRef(this);
+    visitor.visitImportRecordAttribute(this);
   }
 
   @Override
@@ -34,25 +33,27 @@ public class ErlangRecordRefImpl extends ErlangCompositeElementImpl implements E
   }
 
   @Override
-  @NotNull
-  public ErlangQAtom getQAtom() {
-    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
+  @Nullable
+  public ErlangRecordRefs getRecordRefs() {
+    return PsiTreeUtil.getChildOfType(this, ErlangRecordRefs.class);
   }
 
   @Override
   @Nullable
-  public PsiElement getColon() {
-    return findChildByType(ERL_COLON);
+  public PsiElement getComma() {
+    return findChildByType(ERL_COMMA);
   }
 
   @Override
-  public @Nullable PsiReference getReference(@Nullable ErlangMacrosName o) {
-    return ErlangPsiImplUtil.getReference(this, o);
+  @Nullable
+  public PsiElement getParLeft() {
+    return findChildByType(ERL_PAR_LEFT);
   }
 
   @Override
-  public @NotNull PsiReference getReference() {
-    return ErlangPsiImplUtil.getReference(this);
+  @Nullable
+  public PsiElement getParRight() {
+    return findChildByType(ERL_PAR_RIGHT);
   }
 
 }

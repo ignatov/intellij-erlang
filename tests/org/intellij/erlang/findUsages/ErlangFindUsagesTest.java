@@ -27,6 +27,9 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testFunctionUsagesInSingleFile()    { doTest(4); }
   public void testFunctionUsagesInMultipleFiles() { doTest(5, "functionUsagesInSingleFile.erl");}
   public void testBinaryWidthIsNotAVarDef()       { doTest(2, "binaryWidthIsNotAVarDef.erl");}
+  public void testNativeRecordUsagesInSingleFile()    { doTest(3); }
+  public void testNativeRecordUsagesInMultipleFiles() { doTest(6, "nativeRecordUsagesInSingleFile.erl"); }
+  public void testNativeRecordFieldUsages()           { doTest(3); }
 
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations
 //  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }

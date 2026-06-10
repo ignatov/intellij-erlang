@@ -27,6 +27,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testQuoteUnquote()      { doTest(); }
   public void test23()                { doTest(); }
   public void testRecordsResolve()    { doTest(); }
+  public void testNativeRecordsResolve() { doTest("native_records_resolve.erl", "native_records_remote.erl"); }
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
   public void testDuplicate()         { doTest(); }
