@@ -209,7 +209,7 @@ behaviour ::= ('behaviour'|'behavior') '(' module_ref ')' {
   stubClass="org.intellij.erlang.stubs.ErlangBehaviourStub"
 }
 
-type_definition ::= '-' ('type'|'opaque') <<attribute_tail type_body>> {
+type_definition ::= '-' ('type'|'opaque'|'nominal') <<attribute_tail type_body>> {
   pin = 2
   methods = [getName setName getNameIdentifier getTextOffset getArity]
   stubClass="org.intellij.erlang.stubs.ErlangTypeDefinitionStub"
