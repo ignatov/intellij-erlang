@@ -221,6 +221,9 @@
         <localInspection language="Erlang" shortName="Erlang27Syntax" displayName="Erlang 27.0 syntax"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.Erlang27SyntaxInspection"/>
+        <localInspection language="Erlang" shortName="Erlang28Syntax" displayName="Erlang 28.0 syntax"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.Erlang28SyntaxInspection"/>
         <localInspection language="Erlang" shortName="ErlangTripleQuotas" displayName="Erlang triple quotas syntax"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.ErlangTripleQuotasSyntaxInspection"/>

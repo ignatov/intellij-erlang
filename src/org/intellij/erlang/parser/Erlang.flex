@@ -164,8 +164,11 @@ SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
 <YYINITIAL> "!"                           { return ERL_OP_EXL; }
 <YYINITIAL> "<-"                          { return ERL_OP_LT_MINUS; }
 <YYINITIAL> "<="                          { return ERL_OP_LT_EQ; }
+<YYINITIAL> "<:-"                         { return ERL_OP_LT_COLON_MINUS; }
+<YYINITIAL> "<:="                         { return ERL_OP_LT_COLON_EQ; }
 <YYINITIAL> "andalso"                     { return ERL_ANDALSO; }
 <YYINITIAL> "orelse"                      { return ERL_ORELSE; }
+<YYINITIAL> "&&"                          { return ERL_OP_AND_AND; }
 
 <YYINITIAL> {IntegerLiteral}              { return ERL_INTEGER; }
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }

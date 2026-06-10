@@ -179,6 +179,7 @@ public interface ErlangTypes {
   IElementType ERL_MAYBE = new ErlangTokenType("maybe");
   IElementType ERL_NOT = new ErlangTokenType("not");
   IElementType ERL_OF = new ErlangTokenType("of");
+  IElementType ERL_OP_AND_AND = new ErlangTokenType("&&");
   IElementType ERL_OP_AR_DIV = new ErlangTokenType("/");
   IElementType ERL_OP_AR_MUL = new ErlangTokenType("*");
   IElementType ERL_OP_DIV_EQ = new ErlangTokenType("/=");
@@ -191,6 +192,8 @@ public interface ErlangTypes {
   IElementType ERL_OP_GT = new ErlangTokenType(">");
   IElementType ERL_OP_GT_EQ = new ErlangTokenType(">=");
   IElementType ERL_OP_LT = new ErlangTokenType("<");
+  IElementType ERL_OP_LT_COLON_EQ = new ErlangTokenType("<:=");
+  IElementType ERL_OP_LT_COLON_MINUS = new ErlangTokenType("<:-");
   IElementType ERL_OP_LT_EQ = new ErlangTokenType("<=");
   IElementType ERL_OP_LT_MINUS = new ErlangTokenType("<-");
   IElementType ERL_OP_MAYBE_EQ = new ErlangTokenType("?=");

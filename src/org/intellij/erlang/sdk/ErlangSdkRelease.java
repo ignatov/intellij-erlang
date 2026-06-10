@@ -34,6 +34,7 @@ public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_18_0 = new ErlangSdkRelease("18", "7.0");
   public static final ErlangSdkRelease V_25_0 = new ErlangSdkRelease("25", "13.0");
   public static final ErlangSdkRelease V_27_0 = new ErlangSdkRelease("27", "15.1");
+  public static final ErlangSdkRelease V_28_0 = new ErlangSdkRelease("28", "16.0");
 
   // The release with most features, assumed to be in effect if the version cannot be determined. The parser will use
   // this to guess the features available in the Erlang SDK.

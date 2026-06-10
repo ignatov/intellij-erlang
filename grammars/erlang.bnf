@@ -39,6 +39,9 @@
   OP_EQ           = "="
   OP_EXL          = "!"
   OP_LT_MINUS     = "<-"
+  OP_LT_COLON_MINUS = "<:-"
+  OP_LT_COLON_EQ  = "<:="
+  OP_AND_AND      = "&&"
   OP_MAYBE_EQ     = "?="
 
   BIN_START       = "<<"
@@ -462,8 +465,8 @@ private list_concat ::= '|' expression {pin(".*")=1}
 
 list_comprehension ::= '[' expression '||' lc_exprs ']' { methods=[processDeclarations] }
 private meta comprehension_element ::= (&('||'))? <<p1>> {pin=1}
-private lc_exprs ::= lc_expression (',' lc_expression)*
-lc_expression ::= [ lc_generator_definition ('<-' | '<=')] expression {pin(".*")=2}
+private lc_exprs ::= lc_expression ((',' | '&&') lc_expression)*
+lc_expression ::= [ lc_generator_definition ('<-' | '<=' | '<:-' | '<:=')] expression {pin(".*")=2}
 lc_generator_definition ::= (map_match | expression) {elementType=argument_definition}
 private map_match ::= expression ':=' expression {pin=2}
 

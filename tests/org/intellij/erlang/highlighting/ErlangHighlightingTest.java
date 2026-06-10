@@ -119,6 +119,11 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testErlang28SyntaxError() {
+    enableErlang28SyntaxInspection();
+    doTest();
+  }
+
   public void testUnresolvedMacros()  {
     enableUnresolvedMacroInspection();
     doTest();
