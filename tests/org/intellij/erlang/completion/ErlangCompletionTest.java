@@ -169,6 +169,11 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         bar() -> #point{<caret>}""", "x", "y");
   }
 
+  public void testModuleQualifiedNativeRecordFields() {
+    addNativeRecordRemoteModule();
+    doTestEquals("bar() -> #geometry:point{<caret>}", "x", "y");
+  }
+
   private void addNativeRecordRemoteModule() {
     myFixture.addFileToProject(
       "geometry.erl",
