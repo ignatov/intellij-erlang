@@ -56,6 +56,10 @@ IntegerLiteral = {DecimalLiteral} | {ExplicitRadixLiteral}
 ExponentPart = [Ee] [+-]? {DecimalLiteral}
 FloatLiteral = {DecimalLiteral} "." {DecimalLiteral} {ExponentPart}?
 
+/* Based float literals (OTP 28+, EEP 75): base#digits.digits with an optional #e exponent */
+BasedDigits = [0-9a-zA-Z]+ ( _[0-9a-zA-Z]+ )*
+BasedFloatLiteral = [0-9]{1,2} "#" {BasedDigits} "." {BasedDigits} ("#" {ExponentPart})?
+
 OctalEscape = \\ [0-7]{1,3}
 ControlName = [@A-Z\[\\\]\^_] /* this is the octal range \100 - \137 */ 
 ControlEscape = \\ \^ {ControlName}
@@ -172,6 +176,7 @@ SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
 
 <YYINITIAL> {IntegerLiteral}              { return ERL_INTEGER; }
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
+<YYINITIAL> {BasedFloatLiteral}           { return ERL_FLOAT; }
 
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }

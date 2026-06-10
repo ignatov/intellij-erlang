@@ -19,11 +19,14 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiUtilCore;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangLcExpression;
 import org.intellij.erlang.psi.ErlangListComprehension;
+import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -32,6 +35,8 @@ import org.jetbrains.annotations.NotNull;
 public class Erlang28SyntaxInspection extends ErlangInspectionBase {
   private static final String STRICT_MESSAGE = "Strict generators are only supported in Erlang 28 and newer versions";
   private static final String ZIP_MESSAGE = "Zip generators are only supported in Erlang 28 and newer versions";
+  private static final String BASED_FLOAT_MESSAGE = "Based float literals are only supported in Erlang 28 and newer versions";
+  private static final String NOMINAL_MESSAGE = "Nominal types are only supported in Erlang 28 and newer versions";
 
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
@@ -61,6 +66,24 @@ public class Erlang28SyntaxInspection extends ErlangInspectionBase {
               }
             }
           }
+        }
+      }
+
+      @Override
+      public void visitTypeDefinition(@NotNull ErlangTypeDefinition o) {
+        // The 'type'/'opaque'/'nominal' keyword is the only atom_name leaf directly under the
+        // definition: the type name itself is wrapped in a q_atom composite.
+        ASTNode keyword = o.getNode().findChildByType(ErlangTypes.ERL_ATOM_NAME);
+        if (keyword != null && "nominal".equals(keyword.getText())) {
+          registerProblem(holder, keyword.getPsi(), NOMINAL_MESSAGE);
+        }
+      }
+
+      @Override
+      public void visitElement(@NotNull PsiElement o) {
+        // Based float literals (16#fefe.fefe#e16) lex as a single float token containing '#'.
+        if (PsiUtilCore.getElementType(o) == ErlangTypes.ERL_FLOAT && o.getText().indexOf('#') >= 0) {
+          registerProblem(holder, o, BASED_FLOAT_MESSAGE);
         }
       }
     };

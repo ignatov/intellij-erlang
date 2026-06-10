@@ -5575,7 +5575,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '-' ('type'|'opaque') <<attribute_tail type_body>>
+  // '-' ('type'|'opaque'|'nominal') <<attribute_tail type_body>>
   public static boolean type_definition(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_definition")) return false;
     if (!nextTokenIs(b, ERL_OP_MINUS)) return false;
@@ -5589,12 +5589,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // 'type'|'opaque'
+  // 'type'|'opaque'|'nominal'
   private static boolean type_definition_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_definition_1")) return false;
     boolean r;
     r = consumeToken(b, "type");
     if (!r) r = consumeToken(b, "opaque");
+    if (!r) r = consumeToken(b, "nominal");
     return r;
   }
 

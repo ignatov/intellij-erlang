@@ -16,11 +16,16 @@
 
 <html>
 <body>
-Reports usage of strict and zip generators in Erlang versions prior to OTP 28.
+Reports usage of OTP 28 syntax in Erlang versions prior to OTP 28.
 <p>
-    Strict generators (<code>&lt;:-</code> for lists and maps, <code>&lt;:=</code> for bit strings) and zip
-    generators (<code>&amp;&amp;</code>) were introduced in Erlang/OTP 28 and are not supported in earlier versions.
+    The following constructs were introduced in Erlang/OTP 28 and are not supported in earlier versions:
 </p>
+<ul>
+    <li>Strict generators: <code>&lt;:-</code> for lists and maps, <code>&lt;:=</code> for bit strings</li>
+    <li>Zip generators: <code>&amp;&amp;</code></li>
+    <li>Based float literals: <code>16#fefe.fefe#e16</code></li>
+    <li>Nominal types: <code>-nominal meter() :: integer().</code></li>
+</ul>
 <p>
     Using them with an older Erlang SDK will result in syntax errors. This inspection helps prevent such errors by
     highlighting incompatible usage.
@@ -31,17 +36,19 @@ Reports usage of strict and zip generators in Erlang versions prior to OTP 28.
 <pre><code>
 [X || {ok, X} &lt;:- Results]
 [{X, Y} || X &lt;- Xs &amp;&amp; Y &lt;- Ys]
+Pi = 2#11.001001#e0
+-nominal meter() :: integer().
 </code></pre>
 <p>
-    To fix this issue, either upgrade your Erlang SDK to version 28 or later, or use a relaxed generator:
+    To fix this issue, either upgrade your Erlang SDK to version 28 or later, or use the pre-28 equivalents
+    (relaxed generators, decimal floats, <code>-type</code>).
 </p>
-<pre><code>
-[X || {ok, X} &lt;- Results]
-</code></pre>
 <!-- tooltip end -->
 <p>
-    See <a href="https://www.erlang.org/eeps/eep-0070">EEP 70</a> (strict generators) and
-    <a href="https://www.erlang.org/eeps/eep-0073">EEP 73</a> (zip generators).
+    See <a href="https://www.erlang.org/eeps/eep-0070">EEP 70</a> (strict generators),
+    <a href="https://www.erlang.org/eeps/eep-0073">EEP 73</a> (zip generators),
+    <a href="https://www.erlang.org/eeps/eep-0075">EEP 75</a> (based float literals) and
+    <a href="https://www.erlang.org/eeps/eep-0069">EEP 69</a> (nominal types).
 </p>
 </body>
 </html>
