@@ -26,6 +26,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.List;
@@ -73,10 +74,24 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         -record(buz, {id}).
         bar(A)-> A#<caret>""", "foo", "buz");
   }  
+
+  public void testNativeRecords() {
+    doTestInclude(
+      """
+        -record #foo{id}.
+        -record #buz{id}.
+        bar(A)-> A#<caret>""", "foo", "buz");
+  }
   
   public void testRecordFields() {
     doTestEquals(
       "-record(foo, {id, two}).\n" +
+      "bar(A)-> #foo{<caret>}", "id", "two");
+  }
+
+  public void testNativeRecordFields() {
+    doTestEquals(
+      "-record #foo{id, two}.\n" +
       "bar(A)-> #foo{<caret>}", "id", "two");
   }
   
@@ -119,6 +134,61 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "-record(foo, {id, 'WeirdCase', 'strange-symbol'}).\n" +
       "bar(A, B)-> A#foo{<caret>}",
       "id", "'WeirdCase'", "'strange-symbol'");
+  }
+
+  public void testExportRecordAttribute() {
+    doTestInclude(
+      """
+        -record #local{id}.
+        -export_record([<caret>]).""", "local");
+  }
+
+  public void testImportRecordAttribute() {
+    addNativeRecordRemoteModule();
+    assertNativeRecordCompletion("-import_record(geometry, [<caret>]).");
+  }
+
+  public void testImportedNativeRecord() {
+    addNativeRecordRemoteModule();
+    assertNativeRecordCompletion(
+      """
+        -import_record(geometry, [point]).
+        bar(A)-> A#<caret>""");
+  }
+
+  public void testModuleQualifiedNativeRecord() {
+    addNativeRecordRemoteModule();
+    assertNativeRecordCompletion("bar() -> #geometry:<caret>");
+  }
+
+  public void testImportedNativeRecordFields() {
+    addNativeRecordRemoteModule();
+    doTestEquals(
+      """
+        -import_record(geometry, [point]).
+        bar() -> #point{<caret>}""", "x", "y");
+  }
+
+  private void addNativeRecordRemoteModule() {
+    myFixture.addFileToProject(
+      "geometry.erl",
+      """
+        -module(geometry).
+
+        -record #point{x = 0, y = 0}.
+        -record #hidden{secret = 0}.
+
+        -export_record([point]).
+        """);
+  }
+
+  private void assertNativeRecordCompletion(@NotNull String text) {
+    myFixture.configureByText("a.erl", text);
+    myFixture.complete(CompletionType.BASIC, 1);
+    List<String> variants = myFixture.getLookupElementStrings();
+    assertNotNull(variants);
+    assertTrue("Missing variant: point", variants.contains("point"));
+    assertFalse("Unexpected non-exported record variant: hidden", variants.contains("hidden"));
   }
 
   public void testMacros() {

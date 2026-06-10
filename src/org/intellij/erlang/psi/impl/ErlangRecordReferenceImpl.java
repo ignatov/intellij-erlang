@@ -19,11 +19,17 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.ErlangExportRecordAttribute;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangImportRecordAttribute;
+import org.intellij.erlang.psi.ErlangModuleRef;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
+import org.intellij.erlang.psi.ErlangRecordRef;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
@@ -33,12 +39,29 @@ public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
 
   @Override
   public PsiElement resolveInner() {
+    ErlangRecordRef recordRef = ObjectUtils.tryCast(myElement, ErlangRecordRef.class);
+    if (recordRef != null) {
+      ErlangImportRecordAttribute importRecordAttribute = PsiTreeUtil.getParentOfType(recordRef, ErlangImportRecordAttribute.class);
+      if (importRecordAttribute != null) {
+        return ErlangPsiImplUtil.resolveImportedRecord(importRecordAttribute, myReferenceName);
+      }
+
+      ErlangModuleRef moduleRef = recordRef.getModuleRef();
+      if (moduleRef != null &&
+          PsiTreeUtil.getParentOfType(recordRef, ErlangExportRecordAttribute.class) == null) {
+        return ErlangPsiImplUtil.resolveRecordFromModule(moduleRef, myReferenceName);
+      }
+    }
+
     PsiFile containingFile = myElement.getContainingFile();
     if (containingFile instanceof ErlangFile) {
       ErlangRecordDefinition record = ((ErlangFile) containingFile).getRecord(myReferenceName);
       if (record != null) return record;
 
-      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangRecordFromIncludes((ErlangFile) containingFile, false, myReferenceName));
+      record = ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangRecordFromIncludes((ErlangFile) containingFile, false, myReferenceName));
+      if (record != null) return record;
+
+      return ErlangPsiImplUtil.getImportedRecord((ErlangFile) containingFile, myReferenceName);
     }
     return null;
   }
@@ -46,6 +69,10 @@ public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @NotNull
   @Override
   public Object @NotNull [] getVariants() {
+    ErlangRecordRef recordRef = ObjectUtils.tryCast(myElement, ErlangRecordRef.class);
+    if (recordRef != null) {
+      return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getRecordLookupElements(recordRef));
+    }
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getRecordLookupElements(myElement.getContainingFile()));
   }
 

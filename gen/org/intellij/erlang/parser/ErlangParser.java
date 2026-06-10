@@ -4983,13 +4983,32 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom
+  // [module_ref ':'] q_atom
   public static boolean record_ref(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_ref")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_REF, "<record ref>");
-    r = q_atom(b, l + 1);
+    r = record_ref_0(b, l + 1);
+    r = r && q_atom(b, l + 1);
     exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // [module_ref ':']
+  private static boolean record_ref_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_ref_0")) return false;
+    record_ref_0_0(b, l + 1);
+    return true;
+  }
+
+  // module_ref ':'
+  private static boolean record_ref_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_ref_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = module_ref(b, l + 1);
+    r = r && consumeToken(b, ERL_COLON);
+    exit_section_(b, m, null, r);
     return r;
   }
 

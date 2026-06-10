@@ -181,4 +181,34 @@ ERL_FILE
               ERL_MAX_EXPRESSION
                 PsiElement(float)('0.0')
             PsiElement(})('}')
+        PsiElement(,)(',')
+        ERL_RECORD_EXPRESSION
+          PsiElement(#)('#')
+          ERL_RECORD_REF
+            ERL_MODULE_REF
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('geometry')
+            PsiElement(:)(':')
+            ERL_Q_ATOM
+              ERL_ATOM
+                PsiElement(atom_name)('point')
+          ERL_RECORD_TUPLE
+            PsiElement({)('{')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('x')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                PsiElement(float)('0.0')
+            PsiElement(,)(',')
+            ERL_RECORD_FIELD
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('y')
+              PsiElement(=)('=')
+              ERL_MAX_EXPRESSION
+                PsiElement(float)('0.0')
+            PsiElement(})('}')
     PsiElement(.)('.')

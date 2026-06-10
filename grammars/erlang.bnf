@@ -509,7 +509,7 @@ private record_head ::= record_head_classic | macros &('{'|'.' q_atom &(!('(')))
 private record_head_classic ::= record_hash record_ref {pin=1}
 private record_hash ::= '#' &(!'{')
 record_field_ref ::= '.' q_atom {pin=1 elementType=record_field}
-record_ref ::= q_atom {methods = [getReference]}
+record_ref ::= [module_ref ':'] q_atom {methods = [getReference]}
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
 private record_fields ::= record_field (',' record_field)* {pin(".*")=1}

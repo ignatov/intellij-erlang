@@ -718,12 +718,49 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<LookupElement> getRecordLookupElements(@NotNull PsiFile containingFile) {
     if (containingFile instanceof ErlangFile) {
-      List<ErlangRecordDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getRecords(), getErlangRecordFromIncludes((ErlangFile) containingFile, true, ""));
-      return ContainerUtil.map(
-        concat,
-        rd -> LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD));
+      return createRecordLookupElements(getVisibleRecords((ErlangFile) containingFile));
     }
     return Collections.emptyList();
+  }
+
+  @NotNull
+  public static List<LookupElement> getRecordLookupElements(@NotNull ErlangRecordRef recordRef) {
+    ErlangImportRecordAttribute importRecordAttribute = PsiTreeUtil.getParentOfType(recordRef, ErlangImportRecordAttribute.class);
+    if (importRecordAttribute != null) {
+      return createRecordLookupElements(getRecordsFromModule(importRecordAttribute.getModuleRef(), true));
+    }
+
+    ErlangExportRecordAttribute exportRecordAttribute = PsiTreeUtil.getParentOfType(recordRef, ErlangExportRecordAttribute.class);
+    if (exportRecordAttribute != null) {
+      PsiFile containingFile = recordRef.getContainingFile();
+      if (containingFile instanceof ErlangFile erlangFile) {
+        return createRecordLookupElements(ContainerUtil.concat(erlangFile.getRecords(), getErlangRecordFromIncludes(erlangFile, true, "")));
+      }
+      return Collections.emptyList();
+    }
+
+    ErlangModuleRef moduleRef = recordRef.getModuleRef();
+    if (moduleRef != null) {
+      return createRecordLookupElements(getRecordsFromModule(moduleRef, true));
+    }
+
+    return getRecordLookupElements(recordRef.getContainingFile());
+  }
+
+  @NotNull
+  private static List<ErlangRecordDefinition> getVisibleRecords(@NotNull ErlangFile containingFile) {
+    return ContainerUtil.concat(
+      containingFile.getRecords(),
+      getErlangRecordFromIncludes(containingFile, true, ""),
+      getImportedRecords(containingFile, true, "")
+    );
+  }
+
+  @NotNull
+  private static List<LookupElement> createRecordLookupElements(@NotNull List<ErlangRecordDefinition> records) {
+    return ContainerUtil.map(
+      records,
+      rd -> LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD));
   }
 
   @NotNull
@@ -1224,6 +1261,93 @@ public class ErlangPsiImplUtil {
       }
     }
     return fromIncludes;
+  }
+
+  @Nullable
+  static ErlangRecordDefinition resolveRecordFromModule(@Nullable ErlangModuleRef moduleRef, @NotNull String name) {
+    return ContainerUtil.getFirstItem(getRecordsFromModule(moduleRef, false, name));
+  }
+
+  @Nullable
+  static ErlangRecordDefinition resolveImportedRecord(@NotNull ErlangImportRecordAttribute importRecordAttribute, @NotNull String name) {
+    ErlangRecordRefs recordRefs = importRecordAttribute.getRecordRefs();
+    if (recordRefs == null || !containsRecordRef(recordRefs, name)) return null;
+    return resolveRecordFromModule(importRecordAttribute.getModuleRef(), name);
+  }
+
+  @Nullable
+  static ErlangRecordDefinition getImportedRecord(@NotNull ErlangFile containingFile, @NotNull String name) {
+    return ContainerUtil.getFirstItem(getImportedRecords(containingFile, false, name));
+  }
+
+  @NotNull
+  private static List<ErlangRecordDefinition> getImportedRecords(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name) {
+    List<ErlangRecordDefinition> result = new SmartList<>();
+    for (ErlangAttribute attribute : containingFile.getAttributes()) {
+      ErlangImportRecordAttribute importRecordAttribute = attribute.getImportRecordAttribute();
+      if (importRecordAttribute == null) continue;
+
+      if (forCompletion) {
+        ErlangRecordRefs recordRefs = importRecordAttribute.getRecordRefs();
+        if (recordRefs == null) continue;
+
+        for (ErlangRecordRef recordRef : recordRefs.getRecordRefList()) {
+          String importedName = getName(recordRef.getQAtom());
+          ContainerUtil.addIfNotNull(result, resolveRecordFromModule(importRecordAttribute.getModuleRef(), importedName));
+        }
+      }
+      else {
+        ContainerUtil.addIfNotNull(result, resolveImportedRecord(importRecordAttribute, name));
+      }
+    }
+    return result;
+  }
+
+  @NotNull
+  private static List<ErlangRecordDefinition> getRecordsFromModule(@Nullable ErlangModuleRef moduleRef, boolean forCompletion) {
+    return getRecordsFromModule(moduleRef, forCompletion, "");
+  }
+
+  @NotNull
+  private static List<ErlangRecordDefinition> getRecordsFromModule(@Nullable ErlangModuleRef moduleRef, boolean forCompletion, @NotNull String name) {
+    ErlangFile file = resolveToFile(moduleRef);
+    if (file == null) return Collections.emptyList();
+
+    if (forCompletion) {
+      List<ErlangRecordDefinition> exportedRecords = new SmartList<>();
+      for (ErlangRecordDefinition record : ContainerUtil.concat(file.getRecords(), getErlangRecordFromIncludes(file, true, ""))) {
+        if (isRecordExported(file, record.getName())) {
+          exportedRecords.add(record);
+        }
+      }
+      return exportedRecords;
+    }
+
+    ErlangRecordDefinition record = file.getRecord(name);
+    if (record == null) {
+      record = ContainerUtil.getFirstItem(getErlangRecordFromIncludes(file, false, name));
+    }
+    return record != null && isRecordExported(file, name) ? Collections.singletonList(record) : Collections.emptyList();
+  }
+
+  private static boolean isRecordExported(@NotNull ErlangFile file, @NotNull String name) {
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      ErlangExportRecordAttribute exportRecordAttribute = attribute.getExportRecordAttribute();
+      ErlangRecordRefs recordRefs = exportRecordAttribute != null ? exportRecordAttribute.getRecordRefs() : null;
+      if (recordRefs != null && containsRecordRef(recordRefs, name)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean containsRecordRef(@NotNull ErlangRecordRefs recordRefs, @NotNull String name) {
+    for (ErlangRecordRef recordRef : recordRefs.getRecordRefList()) {
+      if (name.equals(getName(recordRef.getQAtom()))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @NotNull

@@ -9,4 +9,5 @@
 -import_record('quoted-module', [remote]).
 
 origin() ->
-    #vec{x = 0.0, y = 0.0}.
+    #vec{x = 0.0, y = 0.0},
+    #geometry:point{x = 0.0, y = 0.0}.
