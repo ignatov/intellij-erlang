@@ -58,6 +58,12 @@ public class ErlangAttributeImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @Nullable
+  public ErlangExportRecordAttribute getExportRecordAttribute() {
+    return PsiTreeUtil.getChildOfType(this, ErlangExportRecordAttribute.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangExportTypeAttribute getExportTypeAttribute() {
     return PsiTreeUtil.getChildOfType(this, ErlangExportTypeAttribute.class);
   }
@@ -66,6 +72,12 @@ public class ErlangAttributeImpl extends ErlangCompositeElementImpl implements E
   @Nullable
   public ErlangImportDirective getImportDirective() {
     return PsiTreeUtil.getChildOfType(this, ErlangImportDirective.class);
+  }
+
+  @Override
+  @Nullable
+  public ErlangImportRecordAttribute getImportRecordAttribute() {
+    return PsiTreeUtil.getChildOfType(this, ErlangImportRecordAttribute.class);
   }
 
   @Override

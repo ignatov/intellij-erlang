@@ -104,7 +104,7 @@ public class ErlangElementFactory {
 
   @NotNull
   public static PsiElement createRecordFieldsFromText(@NotNull Project project, @NotNull String text) {
-    ErlangFile fileFromText = createFileFromText(project, "-record(text{" + text + "}).");
+    ErlangFile fileFromText = createFileFromText(project, "-record(text, {" + text + "}).");
     return fileFromText.getRecords().getFirst().getTypedRecordFields();
   }
 

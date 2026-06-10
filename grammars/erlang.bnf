@@ -134,11 +134,13 @@ macros_name ::= atom | var {
 
 private tuple_recoverer ::= !('}'|',')
 
-record_definition ::= '-' 'record' '(' q_atom ',' typed_record_fields ')' {
+record_definition ::= '-' 'record' (classic_record_definition_body | native_record_definition_body) {
   pin=2
   methods = [getName setName getNameIdentifier getTextOffset]
   stubClass="org.intellij.erlang.stubs.ErlangRecordDefinitionStub"
 }
+private classic_record_definition_body ::= '(' q_atom ',' typed_record_fields ')'
+private native_record_definition_body ::= record_hash q_atom typed_record_fields
 
 macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ',' <<guarded macros_body>> ')' {
   pin = 2
@@ -163,8 +165,10 @@ include_string ::= string {methods = [getReference]}
 attribute ::= '-' (
     module
   | export
+  | export_record_attribute
   | export_type_attribute
   | import_directive
+  | import_record_attribute
   | specification
   | callback_spec
   | optional_callbacks
@@ -193,8 +197,10 @@ specification ::= 'spec' type_spec {
   stubClass="org.intellij.erlang.stubs.ErlangSpecificationStub"
 }
 export ::= 'export' <<attribute_tail export_functions>> {pin=1}
+export_record_attribute ::= 'export_record' <<attribute_tail record_refs>> {pin=1}
 export_type_attribute ::= 'export_type' <<attribute_tail export_types>> {pin=1}
 import_directive ::= 'import' '(' module_ref ',' import_functions ')' {pin=1}
+import_record_attribute ::= 'import_record' '(' module_ref ',' record_refs ')' {pin=1}
 module ::= 'module' '(' q_atom [',' module_tail] ')' {
   pin=1
   methods = [getName setName getNameIdentifier getTextOffset processDeclarations]
@@ -245,6 +251,9 @@ import_function ::= q_atom '/' integer {
   pin = 1
   methods = [getReference]
 }
+
+record_refs ::= '[' record_ref_list? ']' {pin=1}
+private record_ref_list ::= record_ref (',' record_ref)*
 
 optional_callback_functions ::= '[' callback_function_list? ']' {pin=1}
 private callback_function_list ::= callback_function (',' callback_function)*

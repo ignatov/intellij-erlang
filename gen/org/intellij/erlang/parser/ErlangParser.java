@@ -863,8 +863,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '-' (
   //     module
   //   | export
+  //   | export_record_attribute
   //   | export_type_attribute
   //   | import_directive
+  //   | import_record_attribute
   //   | specification
   //   | callback_spec
   //   | optional_callbacks
@@ -888,8 +890,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   // module
   //   | export
+  //   | export_record_attribute
   //   | export_type_attribute
   //   | import_directive
+  //   | import_record_attribute
   //   | specification
   //   | callback_spec
   //   | optional_callbacks
@@ -904,23 +908,25 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = module_$(b, l + 1);
     if (!r) r = export(b, l + 1);
+    if (!r) r = export_record_attribute(b, l + 1);
     if (!r) r = export_type_attribute(b, l + 1);
     if (!r) r = import_directive(b, l + 1);
+    if (!r) r = import_record_attribute(b, l + 1);
     if (!r) r = specification(b, l + 1);
     if (!r) r = callback_spec(b, l + 1);
     if (!r) r = optional_callbacks(b, l + 1);
     if (!r) r = behaviour(b, l + 1);
     if (!r) r = on_load(b, l + 1);
     if (!r) r = ifdef_ifndef_undef_attribute(b, l + 1);
-    if (!r) r = attribute_1_10(b, l + 1);
+    if (!r) r = attribute_1_12(b, l + 1);
     if (!r) r = withOn(b, l + 1, "ATOM_ATTRIBUTE", ErlangParser::atom_attribute);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // else_atom_attribute <<enterMode "ELSE">>
-  private static boolean attribute_1_10(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "attribute_1_10")) return false;
+  private static boolean attribute_1_12(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "attribute_1_12")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = else_atom_attribute(b, l + 1);
@@ -1412,6 +1418,22 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = p && consumeToken(b, ERL_END) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  /* ********************************************************** */
+  // '(' q_atom ',' typed_record_fields ')'
+  static boolean classic_record_definition_body(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "classic_record_definition_body")) return false;
+    if (!nextTokenIs(b, ERL_PAR_LEFT)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_PAR_LEFT);
+    r = r && q_atom(b, l + 1);
+    r = r && consumeToken(b, ERL_COMMA);
+    r = r && typed_record_fields(b, l + 1);
+    r = r && consumeToken(b, ERL_PAR_RIGHT);
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   /* ********************************************************** */
@@ -2007,6 +2029,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "export_functions_1")) return false;
     export_function_list(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // 'export_record' <<attribute_tail record_refs>>
+  public static boolean export_record_attribute(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "export_record_attribute")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_EXPORT_RECORD_ATTRIBUTE, "<attribute>");
+    r = consumeToken(b, "export_record");
+    p = r; // pin = 1
+    r = r && attribute_tail(b, l + 1, ErlangParser::record_refs);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */
@@ -3091,6 +3126,23 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "import_functions_1")) return false;
     import_function_list(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // 'import_record' '(' module_ref ',' record_refs ')'
+  public static boolean import_record_attribute(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "import_record_attribute")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_IMPORT_RECORD_ATTRIBUTE, "<attribute>");
+    r = consumeToken(b, "import_record");
+    p = r; // pin = 1
+    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
+    r = p && report_error_(b, module_ref(b, l + 1)) && r;
+    r = p && report_error_(b, consumeToken(b, ERL_COMMA)) && r;
+    r = p && report_error_(b, record_refs(b, l + 1)) && r;
+    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */
@@ -4377,6 +4429,20 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // record_hash q_atom typed_record_fields
+  static boolean native_record_definition_body(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "native_record_definition_body")) return false;
+    if (!nextTokenIs(b, ERL_RADIX)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = record_hash(b, l + 1);
+    r = r && q_atom(b, l + 1);
+    r = r && typed_record_fields(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // <<isModeOn "GUARD">> | !('->'|when)
   static boolean not_function_definition(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "not_function_definition")) return false;
@@ -4666,7 +4732,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '-' 'record' '(' q_atom ',' typed_record_fields ')'
+  // '-' 'record' (classic_record_definition_body | native_record_definition_body)
   public static boolean record_definition(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_definition")) return false;
     if (!nextTokenIs(b, ERL_OP_MINUS)) return false;
@@ -4675,13 +4741,18 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, ERL_OP_MINUS);
     r = r && consumeToken(b, "record");
     p = r; // pin = 2
-    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
-    r = p && report_error_(b, q_atom(b, l + 1)) && r;
-    r = p && report_error_(b, consumeToken(b, ERL_COMMA)) && r;
-    r = p && report_error_(b, typed_record_fields(b, l + 1)) && r;
-    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    r = r && record_definition_2(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  // classic_record_definition_body | native_record_definition_body
+  private static boolean record_definition_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_definition_2")) return false;
+    boolean r;
+    r = classic_record_definition_body(b, l + 1);
+    if (!r) r = native_record_definition_body(b, l + 1);
+    return r;
   }
 
   /* ********************************************************** */
@@ -4920,6 +4991,64 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = q_atom(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
+  }
+
+  /* ********************************************************** */
+  // record_ref (',' record_ref)*
+  static boolean record_ref_list(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_ref_list")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = record_ref(b, l + 1);
+    p = r; // pin = 1
+    r = r && record_ref_list_1(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // (',' record_ref)*
+  private static boolean record_ref_list_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_ref_list_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!record_ref_list_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "record_ref_list_1", c)) break;
+    }
+    return true;
+  }
+
+  // ',' record_ref
+  private static boolean record_ref_list_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_ref_list_1_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_COMMA);
+    p = r; // pin = 1
+    r = r && record_ref(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // '[' record_ref_list? ']'
+  public static boolean record_refs(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_refs")) return false;
+    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_REFS, null);
+    r = consumeToken(b, ERL_BRACKET_LEFT);
+    p = r; // pin = 1
+    r = r && report_error_(b, record_refs_1(b, l + 1));
+    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // record_ref_list?
+  private static boolean record_refs_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_refs_1")) return false;
+    record_ref_list(b, l + 1);
+    return true;
   }
 
   /* ********************************************************** */

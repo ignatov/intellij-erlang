@@ -104,4 +104,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBasedFloats()                         { doTest(false); }
   public void testNominalTypes()                        { doTest(false); }
   public void testOtp29Comprehensions()                 { doTest(false); }
+  public void testNativeRecords()                       { doTest(false); }
 }
