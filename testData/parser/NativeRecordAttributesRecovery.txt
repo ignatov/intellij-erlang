@@ -1,0 +1,65 @@
+ERL_FILE
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_MODULE
+      PsiElement(atom_name)('module')
+      PsiElement(()('(')
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('native_record_attributes_recovery')
+      PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_EXPORT_RECORD_ATTRIBUTE
+      PsiElement(atom_name)('export_record')
+    PsiErrorElement:'(' expected, got '('
+      <empty list>
+    PsiElement(()('(')
+    PsiElement([)('[')
+    PsiElement(atom_name)('geometry')
+    PsiElement(:)(':')
+  PsiErrorElement:'-', <atom>, <attribute>, '?', atom_name or single_quote expected, got 'point'
+    PsiElement(atom_name)('point')
+    PsiElement(])(']')
+    PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_IMPORT_RECORD_ATTRIBUTE
+      PsiElement(atom_name)('import_record')
+      PsiElement(()('(')
+      ERL_MODULE_REF
+        ERL_Q_ATOM
+          ERL_ATOM
+            PsiElement(atom_name)('geometry')
+      PsiElement(,)(',')
+      ERL_RECORD_REFS
+        PsiElement([)('[')
+        ERL_RECORD_REF
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('geometry')
+        PsiErrorElement:',' or ']' expected, got ':'
+          <empty list>
+    PsiElement(:)(':')
+  PsiErrorElement:'-', <atom>, <attribute>, '?', atom_name or single_quote expected, got 'point'
+    PsiElement(atom_name)('point')
+    PsiElement(])(']')
+    PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('ok')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('ok')
+    PsiElement(.)('.')

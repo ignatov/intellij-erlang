@@ -252,8 +252,12 @@ import_function ::= q_atom '/' integer {
   methods = [getReference]
 }
 
-record_refs ::= '[' record_ref_list? ']' {pin=1}
-private record_ref_list ::= record_ref (',' record_ref)*
+record_refs ::= '[' record_attribute_ref_list? ']' {pin=1}
+private record_attribute_ref_list ::= unqualified_record_ref (',' unqualified_record_ref)*
+unqualified_record_ref ::= q_atom {
+  elementType=record_ref
+  methods = [getReference]
+}
 
 optional_callback_functions ::= '[' callback_function_list? ']' {pin=1}
 private callback_function_list ::= callback_function (',' callback_function)*

@@ -4732,6 +4732,42 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // unqualified_record_ref (',' unqualified_record_ref)*
+  static boolean record_attribute_ref_list(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_attribute_ref_list")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = unqualified_record_ref(b, l + 1);
+    p = r; // pin = 1
+    r = r && record_attribute_ref_list_1(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // (',' unqualified_record_ref)*
+  private static boolean record_attribute_ref_list_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_attribute_ref_list_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!record_attribute_ref_list_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "record_attribute_ref_list_1", c)) break;
+    }
+    return true;
+  }
+
+  // ',' unqualified_record_ref
+  private static boolean record_attribute_ref_list_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_attribute_ref_list_1_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_COMMA);
+    p = r; // pin = 1
+    r = r && unqualified_record_ref(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // '-' 'record' (classic_record_definition_body | native_record_definition_body)
   public static boolean record_definition(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_definition")) return false;
@@ -5013,43 +5049,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // record_ref (',' record_ref)*
-  static boolean record_ref_list(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "record_ref_list")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_);
-    r = record_ref(b, l + 1);
-    p = r; // pin = 1
-    r = r && record_ref_list_1(b, l + 1);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
-  }
-
-  // (',' record_ref)*
-  private static boolean record_ref_list_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "record_ref_list_1")) return false;
-    while (true) {
-      int c = current_position_(b);
-      if (!record_ref_list_1_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "record_ref_list_1", c)) break;
-    }
-    return true;
-  }
-
-  // ',' record_ref
-  private static boolean record_ref_list_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "record_ref_list_1_0")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_);
-    r = consumeToken(b, ERL_COMMA);
-    p = r; // pin = 1
-    r = r && record_ref(b, l + 1);
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
-  }
-
-  /* ********************************************************** */
-  // '[' record_ref_list? ']'
+  // '[' record_attribute_ref_list? ']'
   public static boolean record_refs(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_refs")) return false;
     if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
@@ -5063,10 +5063,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // record_ref_list?
+  // record_attribute_ref_list?
   private static boolean record_refs_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_refs_1")) return false;
-    record_ref_list(b, l + 1);
+    record_attribute_ref_list(b, l + 1);
     return true;
   }
 
@@ -6226,6 +6226,17 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "typed_record_fields_1")) return false;
     typed_exprs(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // q_atom
+  public static boolean unqualified_record_ref(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "unqualified_record_ref")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_REF, "<unqualified record ref>");
+    r = q_atom(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   /* ********************************************************** */
