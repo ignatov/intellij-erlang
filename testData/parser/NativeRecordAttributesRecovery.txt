@@ -48,6 +48,33 @@ ERL_FILE
     PsiElement(])(']')
     PsiElement())(')')
     PsiElement(.)('.')
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_EXPORT_RECORD_ATTRIBUTE
+      PsiElement(atom_name)('export_record')
+    PsiErrorElement:'(' expected, got '('
+      <empty list>
+    PsiElement(()('(')
+  PsiErrorElement:'-', <atom>, <attribute>, '?', atom_name or single_quote expected, got 'point'
+    PsiElement(atom_name)('point')
+    PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_IMPORT_RECORD_ATTRIBUTE
+      PsiElement(atom_name)('import_record')
+      PsiElement(()('(')
+      ERL_MODULE_REF
+        ERL_Q_ATOM
+          ERL_ATOM
+            PsiElement(atom_name)('geometry')
+      PsiElement(,)(',')
+      PsiErrorElement:'[' expected, got 'point'
+        <empty list>
+  PsiErrorElement:'-', <atom>, <attribute>, '?', atom_name or single_quote expected, got 'point'
+    PsiElement(atom_name)('point')
+    PsiElement())(')')
+    PsiElement(.)('.')
   ERL_FUNCTION
     ERL_FUNCTION_CLAUSE
       ERL_Q_ATOM
