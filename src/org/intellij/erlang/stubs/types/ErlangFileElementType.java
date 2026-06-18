@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 public class ErlangFileElementType extends IStubFileElementType<ErlangFileStub> {
-  private static final int VERSION = 4;
+  private static final int VERSION = 5;
   public static final IStubFileElementType INSTANCE = new ErlangFileElementType();
 
   private ErlangFileElementType() {
