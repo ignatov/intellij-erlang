@@ -143,6 +143,16 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testAlignedImport() throws Exception {
+    alignBlocks();
+    doTest();
+  }
+
+  public void testAlignedExport() throws Exception {
+    alignBlocks();
+    doTest();
+  }
+
   public void testFunctionClausesAligned() throws Exception {
     getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
     doTest();
@@ -206,12 +216,14 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testTry3() throws Exception { doEnterTest(); }
   public void testTry4() throws Exception { doEnterTest(); }
   public void testTry5() throws Exception { doEnterTest(); }
+  public void testTry6() throws Exception { doEnterTest(); }
 
   public void testTryParasite1() throws Exception { doEnterTest(); }
   public void testTryParasite2() throws Exception { doEnterTest(); }
   public void testTryParasite3() throws Exception { doEnterTest(); }
   public void testTryParasite4() throws Exception { doEnterTest(); }
   public void testTryParasite5() throws Exception { doEnterTest(); }
+  public void testTryParasite6() throws Exception { doEnterTest(); }
 
   public void testBindTry()                 throws Exception { doEnterTest(); }
   public void testBindTryExpr()             throws Exception { doEnterTest(); }
@@ -242,12 +254,14 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMaybe3() throws Exception { doEnterTest(); }
   public void testMaybe4() throws Exception { doEnterTest(); }
   public void testMaybe5() throws Exception { doEnterTest(); }
+  public void testMaybe6() throws Exception { doEnterTest(); }
 
   public void testMaybeParasite1() throws Exception { doEnterTest(); }
   public void testMaybeParasite2() throws Exception { doEnterTest(); }
   public void testMaybeParasite3() throws Exception { doEnterTest(); }
   public void testMaybeParasite4() throws Exception { doEnterTest(); }
   public void testMaybeParasite5() throws Exception { doEnterTest(); }
+  public void testMaybeParasite6() throws Exception { doEnterTest(); }
 
   public void testBindMaybe()                throws Exception { doEnterTest(); }
   public void testBindMaybeElse()            throws Exception { doEnterTest(); }
