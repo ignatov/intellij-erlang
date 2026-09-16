@@ -72,6 +72,33 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                     -module(test).
                     test() ->
                         lis<caret>ts:foreach(foo, bar).
+                  """);
+  }
+
+  public void testExternalUrlSdkType() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/kernel/file.html#t:file_info/0",
+                  """
+                    -module(test).
+                    -spec test(file:fil<caret>e_info()) -> ok.
+                    test(_FileInfo) -> ok.
+                    """);
+  }
+
+  public void testExternalUrlSdkBifFromErts() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/erts/erlang.html#length/1",
+                  """
+                    -module(test).
+                    test() ->
+                        erlang:len<caret>gth([]).
+                    """);
+  }
+
+  public void testExternalUrlErtsModule() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/erts/erlang.html",
+                  """
+                    -module(test).
+                    test() ->
+                        erl<caret>ang:length([]).
                     """);
   }
 

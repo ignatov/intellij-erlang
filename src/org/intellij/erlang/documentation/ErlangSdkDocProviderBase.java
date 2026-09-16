@@ -269,8 +269,13 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @NotNull
   private static String modernHttpDocRelPath(@NotNull VirtualFile virtualFile) {
     String appDirName = virtualFile.getParent().getParent().getName();
-    String appName = appDirName.replaceFirst("-\\d.*$", "");
+    String appName = getApplicationName(appDirName);
     return "apps/" + appName + "/" + virtualFile.getNameWithoutExtension() + ".html";
+  }
+
+  @NotNull
+  static String getApplicationName(@NotNull String appDirName) {
+    return appDirName.replaceFirst("-\\d.*$", "");
   }
 
   @NotNull

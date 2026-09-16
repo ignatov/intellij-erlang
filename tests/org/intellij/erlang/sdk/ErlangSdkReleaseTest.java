@@ -34,6 +34,8 @@ public class ErlangSdkReleaseTest extends TestCase {
 
   public void testDocumentationUrl() {
     assertEquals("https://www.erlang.org/docs/29", ErlangSdkType.getDefaultDocumentationUrl(ErlangSdkRelease.V_29_0));
+    assertEquals("https://www.erlang.org/docs/29",
+                 ErlangSdkType.getDefaultDocumentationUrl(new ErlangSdkRelease("29.1", "17.1")));
     assertEquals("https://www.erlang.org/doc", ErlangSdkType.getDefaultDocumentationUrl(ErlangSdkRelease.V_25_0));
   }
 }

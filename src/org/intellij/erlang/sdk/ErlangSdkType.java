@@ -405,8 +405,9 @@ public class ErlangSdkType extends SdkType {
   public static String getDefaultDocumentationUrl(@Nullable ErlangSdkRelease version) {
     if (version == null) return null;
 
+    String otpMajorRelease = version.getOtpRelease().replaceFirst("^(\\d+).*$", "$1");
     String documentationVersion = version.isNewerOrEqualTo(ErlangSdkRelease.V_27_0)
-                                  ? "docs/" + version.getOtpRelease()
+                                  ? "docs/" + otpMajorRelease
                                   : "doc";
     return "https://www.erlang.org/" + documentationVersion;
   }

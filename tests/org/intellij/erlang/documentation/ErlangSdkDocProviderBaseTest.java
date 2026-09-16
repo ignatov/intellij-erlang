@@ -34,6 +34,12 @@ public class ErlangSdkDocProviderBaseTest extends TestCase {
       "https://docs.example.com/erlang"));
   }
 
+  public void testApplicationNames() {
+    assertEquals("stdlib", ErlangSdkDocProviderBase.getApplicationName("stdlib-8.1"));
+    assertEquals("erts", ErlangSdkDocProviderBase.getApplicationName("erts-17.1"));
+    assertEquals("syntax_tools", ErlangSdkDocProviderBase.getApplicationName("syntax_tools-3.2"));
+  }
+
   public void testEmptyLink() {
     assertEquals("", ErlangSdkDocProviderBase.convertLink("", "lists"));
   }
