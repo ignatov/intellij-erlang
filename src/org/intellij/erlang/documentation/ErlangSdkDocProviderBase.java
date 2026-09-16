@@ -212,7 +212,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
       if (url == null) {
         return null;
       }
-      if (url.getProtocol().equals("http")) {
+      if (isHttpProtocol(url.getProtocol())) {
         return createHttpReader(url);
       }
       else if (url.getProtocol().equals("file")) {
@@ -221,6 +221,10 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
     } catch (Exception e) { // Ignore
     }
     return null;
+  }
+
+  static boolean isHttpProtocol(@NotNull String protocol) {
+    return protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("https");
   }
 
   @NotNull
@@ -267,6 +271,13 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @NotNull
   private String convertLink(@NotNull String href) {
+    return convertLink(href, myVirtualFile.getNameWithoutExtension());
+  }
+
+  @NotNull
+  static String convertLink(@NotNull String href, @NotNull String currentModuleName) {
+    if (href.isEmpty()) return href;
+
     Matcher evaluatedLinkMatcher = PATTERN_EVALUATED_LINK.matcher(href);
     String concreteHref = evaluatedLinkMatcher.matches() ? evaluatedLinkMatcher.group(1) : href;
     Matcher externalLinkMatcher = PATTERN_EXTERNAL_LINK.matcher(concreteHref);
@@ -274,7 +285,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
       return PSI_ELEMENT_PROTOCOL + externalLinkMatcher.group(1) + "#" + externalLinkMatcher.group(2);
     }
     if (concreteHref.charAt(0) == '#') {
-      return PSI_ELEMENT_PROTOCOL + myVirtualFile.getNameWithoutExtension() + concreteHref;
+      return PSI_ELEMENT_PROTOCOL + currentModuleName + concreteHref;
     }
     if (concreteHref.endsWith(".html")) {
       return PSI_ELEMENT_PROTOCOL + concreteHref.substring(0, concreteHref.length() - 5);
