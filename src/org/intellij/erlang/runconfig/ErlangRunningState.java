@@ -26,21 +26,32 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
+import com.intellij.lexer.Lexer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.TokenType;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.intellij.erlang.parser.ErlangLexer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static org.intellij.erlang.ErlangTypes.ERL_BIN_END;
+import static org.intellij.erlang.ErlangTypes.ERL_BIN_START;
+import static org.intellij.erlang.ErlangTypes.ERL_BRACKET_LEFT;
+import static org.intellij.erlang.ErlangTypes.ERL_BRACKET_RIGHT;
+import static org.intellij.erlang.ErlangTypes.ERL_CURLY_LEFT;
+import static org.intellij.erlang.ErlangTypes.ERL_CURLY_RIGHT;
+import static org.intellij.erlang.ErlangTypes.ERL_PAR_LEFT;
+import static org.intellij.erlang.ErlangTypes.ERL_PAR_RIGHT;
 
 public abstract class ErlangRunningState extends CommandLineState {
   private final Module myModule;
@@ -141,7 +152,6 @@ public abstract class ErlangRunningState extends CommandLineState {
   public abstract ConsoleView createConsoleView(Executor executor);
 
   public static class ErlangEntryPoint {
-    protected static final Pattern PATTERN = Pattern.compile("([^\"']\\S*|\".+?\"|'.+?')\\s*");
     private final String myModuleName;
     private final String myFunctionName;
     private final List<String> myArgsList;
@@ -171,13 +181,55 @@ public abstract class ErlangRunningState extends CommandLineState {
       String module = split.get(0);
       String function = split.get(1);
 
-      List<String> args = new SmartList<>();
-      Matcher m = PATTERN.matcher(params);
-      while (m.find()) {
-        args.add(m.group(1));
-      }
+      List<String> args = parseArguments(params);
       
       return new ErlangEntryPoint(module, function, args);
+    }
+
+    @NotNull
+    private static List<String> parseArguments(@NotNull String params) {
+      List<String> args = new SmartList<>();
+      Lexer lexer = new ErlangLexer(null);
+      lexer.start(params);
+
+      int argumentStart = -1;
+      int nestingLevel = 0;
+      while (lexer.getTokenType() != null) {
+        IElementType tokenType = lexer.getTokenType();
+        if (tokenType == TokenType.WHITE_SPACE && nestingLevel == 0) {
+          if (argumentStart >= 0) {
+            args.add(params.substring(argumentStart, lexer.getTokenStart()));
+            argumentStart = -1;
+          }
+        }
+        else {
+          if (argumentStart < 0) {
+            argumentStart = lexer.getTokenStart();
+          }
+          if (isOpeningDelimiter(tokenType)) {
+            nestingLevel++;
+          }
+          else if (isClosingDelimiter(tokenType) && nestingLevel > 0) {
+            nestingLevel--;
+          }
+        }
+        lexer.advance();
+      }
+
+      if (argumentStart >= 0) {
+        args.add(params.substring(argumentStart));
+      }
+      return args;
+    }
+
+    private static boolean isOpeningDelimiter(@NotNull IElementType tokenType) {
+      return tokenType == ERL_PAR_LEFT || tokenType == ERL_CURLY_LEFT ||
+             tokenType == ERL_BRACKET_LEFT || tokenType == ERL_BIN_START;
+    }
+
+    private static boolean isClosingDelimiter(@NotNull IElementType tokenType) {
+      return tokenType == ERL_PAR_RIGHT || tokenType == ERL_CURLY_RIGHT ||
+             tokenType == ERL_BRACKET_RIGHT || tokenType == ERL_BIN_END;
     }
   }
 }
