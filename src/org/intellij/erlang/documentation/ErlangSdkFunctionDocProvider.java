@@ -44,6 +44,14 @@ final class ErlangSdkFunctionDocProvider extends ErlangSdkDocProviderBase {
     return "#" + myFuncSignature;
   }
 
+  @NotNull
+  @Override
+  protected String getModernInDocRef() {
+    int aritySeparator = myFuncSignature.lastIndexOf('-');
+    return "#" + myFuncSignature.substring(0, aritySeparator) + "/" +
+           myFuncSignature.substring(aritySeparator + 1);
+  }
+
   @Override
   public boolean isDocBegin(@NotNull String line) {
     Matcher matcher = PATTERN_FUNC_BEGIN.matcher(line);

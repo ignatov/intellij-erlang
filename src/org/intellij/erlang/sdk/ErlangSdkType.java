@@ -402,8 +402,14 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Nullable
-  private static String getDefaultDocumentationUrl(@Nullable ErlangSdkRelease version) {
-    return version == null ? null : "http://www.erlang.org/documentation/doc-" + version.getErtsVersion();
+  public static String getDefaultDocumentationUrl(@Nullable ErlangSdkRelease version) {
+    if (version == null) return null;
+
+    String otpMajorRelease = version.getOtpRelease().replaceFirst("^(\\d+).*$", "$1");
+    String documentationVersion = version.isNewerOrEqualTo(ErlangSdkRelease.V_27_0)
+                                  ? "docs/" + otpMajorRelease
+                                  : "doc";
+    return "https://www.erlang.org/" + documentationVersion;
   }
 
   private static void setupLocalSdkPaths(@NotNull SdkModificator sdkModificator) {
