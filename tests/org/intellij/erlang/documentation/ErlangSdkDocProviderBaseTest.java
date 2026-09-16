@@ -25,6 +25,15 @@ public class ErlangSdkDocProviderBaseTest extends TestCase {
     assertFalse(ErlangSdkDocProviderBase.isHttpProtocol("file"));
   }
 
+  public void testOfficialDocumentationUrls() {
+    assertTrue(ErlangSdkDocProviderBase.isOfficialErlangDocumentationUrl(
+      "http://www.erlang.org/documentation/doc-17.1"));
+    assertTrue(ErlangSdkDocProviderBase.isOfficialErlangDocumentationUrl(
+      "https://www.erlang.org/docs/29"));
+    assertFalse(ErlangSdkDocProviderBase.isOfficialErlangDocumentationUrl(
+      "https://docs.example.com/erlang"));
+  }
+
   public void testEmptyLink() {
     assertEquals("", ErlangSdkDocProviderBase.convertLink("", "lists"));
   }

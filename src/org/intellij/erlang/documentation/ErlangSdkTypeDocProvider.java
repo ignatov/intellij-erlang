@@ -41,6 +41,12 @@ final class ErlangSdkTypeDocProvider extends ErlangSdkDocProviderBase {
     return "#type-" + myTypeName;
   }
 
+  @NotNull
+  @Override
+  protected String getModernInDocRef() {
+    return "#t:" + myTypeName + "/0";
+  }
+
   @Override
   protected boolean isDocBegin(@NotNull String line) {
     Matcher matcher = PATTERN_TYPE_BEGIN.matcher(line);

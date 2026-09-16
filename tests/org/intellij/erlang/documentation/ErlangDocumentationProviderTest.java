@@ -49,7 +49,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testExternalUrlSdkFunction() {
-    doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#foreach-2",
+    doTestGetUrls("https://www.erlang.org/doc/apps/stdlib/lists.html#foreach/2",
                   """
                     -module(test).
                     test() ->
@@ -58,7 +58,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testExternalUrlSdkBif() {
-    doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html#member-2",
+    doTestGetUrls("https://www.erlang.org/doc/apps/stdlib/lists.html#member/2",
                   """
                     -module(test).
                     test() ->
@@ -67,7 +67,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   }
 
   public void testExternalUrlSdkModule() {
-    doTestGetUrls("http://www.erlang.org/documentation/doc-5.9.2/lib/stdlib-1.18.2/doc/html/lists.html",
+    doTestGetUrls("https://www.erlang.org/doc/apps/stdlib/lists.html",
                   """
                     -module(test).
                     test() ->

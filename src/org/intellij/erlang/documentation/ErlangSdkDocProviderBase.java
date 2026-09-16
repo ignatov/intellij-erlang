@@ -27,6 +27,8 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ResourceUtil;
 import com.intellij.util.net.HttpConfigurable;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,7 +79,8 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @Override
   public List<String> getExternalDocUrls() {
     if (myExternalDocUrls == null) {
-      myExternalDocUrls = getHttpUrls(getOrderEntries(), myVirtualFile, getInDocRef());
+      myExternalDocUrls = getHttpUrls(getOrderEntries(), myVirtualFile, getInDocRef(), getModernInDocRef(),
+                                      ErlangSdkType.getRelease(myProject));
     }
     return myExternalDocUrls;
   }
@@ -166,6 +169,11 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @NotNull
   protected abstract String getInDocRef();
 
+  @NotNull
+  protected String getModernInDocRef() {
+    return getInDocRef();
+  }
+
   protected abstract boolean isDocEnd(@NotNull String line);
 
   protected abstract boolean isDocBegin(@NotNull String line);
@@ -173,17 +181,35 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   @NotNull
   private static List<String> getHttpUrls(@NotNull List<OrderEntry> orderEntries,
                                           @NotNull VirtualFile virtualFile,
-                                          @NotNull String inDocRef) {
+                                          @NotNull String legacyInDocRef,
+                                          @NotNull String modernInDocRef,
+                                          @NotNull ErlangSdkRelease release) {
     for (OrderEntry orderEntry : orderEntries) {
       String[] docRootUrls = JavadocOrderRootType.getUrls(orderEntry);
-      String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
-      List<String> httpUrls = PlatformDocumentationUtil.getHttpRoots(
-        docRootUrls, sdkHttpDocRelPath + inDocRef);
-      if (httpUrls != null) {
+      List<String> httpUrls = new ArrayList<>();
+      for (String docRootUrl : docRootUrls) {
+        if (isOfficialErlangDocumentationUrl(docRootUrl)) {
+          httpUrls.add(ErlangSdkType.getDefaultDocumentationUrl(release) + "/" +
+                       modernHttpDocRelPath(virtualFile) + modernInDocRef);
+        }
+        else {
+          List<String> customUrls = PlatformDocumentationUtil.getHttpRoots(
+            new String[]{docRootUrl}, legacyHttpDocRelPath(virtualFile) + legacyInDocRef);
+          if (customUrls != null) {
+            httpUrls.addAll(customUrls);
+          }
+        }
+      }
+      if (!httpUrls.isEmpty()) {
         return httpUrls;
       }
     }
     return Collections.emptyList();
+  }
+
+  static boolean isOfficialErlangDocumentationUrl(@NotNull String url) {
+    return url.startsWith("http://erlang.org/") || url.startsWith("https://erlang.org/") ||
+           url.startsWith("http://www.erlang.org/") || url.startsWith("https://www.erlang.org/");
   }
 
   @NotNull
@@ -192,7 +218,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
     List<String> fileUrls = null;
     for (OrderEntry orderEntry : orderEntries) {
       VirtualFile[] docRootFiles = orderEntry.getFiles(JavadocOrderRootType.getInstance());
-      String sdkHttpDocRelPath = httpDocRelPath(virtualFile);
+      String sdkHttpDocRelPath = legacyHttpDocRelPath(virtualFile);
       for (VirtualFile docRootFile : docRootFiles) {
         if (docRootFile.isInLocalFileSystem()) {
           if (fileUrls == null) {
@@ -228,7 +254,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   }
 
   @NotNull
-  private static String httpDocRelPath(@NotNull VirtualFile virtualFile) {
+  private static String legacyHttpDocRelPath(@NotNull VirtualFile virtualFile) {
     String appDirName = virtualFile.getParent().getParent().getName();
     String prefix;
     if (appDirName.startsWith("erts")) {
@@ -238,6 +264,13 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
       prefix = "lib/";
     }
     return prefix + appDirName + "/doc/html/" + virtualFile.getNameWithoutExtension() + ".html";
+  }
+
+  @NotNull
+  private static String modernHttpDocRelPath(@NotNull VirtualFile virtualFile) {
+    String appDirName = virtualFile.getParent().getParent().getName();
+    String appName = appDirName.replaceFirst("-\\d.*$", "");
+    return "apps/" + appName + "/" + virtualFile.getNameWithoutExtension() + ".html";
   }
 
   @NotNull
