@@ -123,7 +123,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   }
 
   @Nullable
-  private String retrieveDoc(@NotNull BufferedReader reader) {
+  String retrieveDoc(@NotNull BufferedReader reader) {
     try (reader) {
       String line;
       boolean functionDocFound = false;
