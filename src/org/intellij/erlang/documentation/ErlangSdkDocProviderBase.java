@@ -123,7 +123,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
   }
 
   @Nullable
-  private String retrieveDoc(@NotNull BufferedReader reader) {
+  String retrieveDoc(@NotNull BufferedReader reader) {
     try (reader) {
       String line;
       boolean functionDocFound = false;
@@ -142,12 +142,17 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
         appendCorrectedLine(builder, line);
         builder.append("\n");
       }
-      return builder.toString();
+      return prepareRetrievedDoc(builder.toString());
     }
     catch (IOException e) {
       // Ignore
     }
     return null;
+  }
+
+  @NotNull
+  protected String prepareRetrievedDoc(@NotNull String doc) {
+    return doc;
   }
 
   private void appendCorrectedLine(@NotNull StringBuilder builder, @NotNull String line) {

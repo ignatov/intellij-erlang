@@ -35,6 +35,8 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.util.List;
 
 @SuppressWarnings("ConstantConditions")
@@ -99,7 +101,45 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                     -module(test).
                     test() ->
                         erl<caret>ang:length([]).
-                    """);
+                  """);
+  }
+
+  public void testGenerateModernDocSdkFunction() {
+    PsiElement element = resolveElementAtCaret("""
+                                                -module(test).
+                                                test() ->
+                                                    io:for<caret>mat("hello").
+                                                """);
+    ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
+    assertTrue(elementDocProvider instanceof ErlangSdkFunctionDocProvider);
+
+    String doc = ((ErlangSdkFunctionDocProvider)elementDocProvider).retrieveDoc(new BufferedReader(new StringReader("""
+      <section class="detail" id="fread/2">
+      <p>Documentation for fread/2.</p>
+      </section>
+      <section class="detail" id="format/1">
+      <div class="detail-header">
+      <a href="#format/1" class="detail-link"><i class="ri-link-m"></i></a>
+      <div class="heading-with-actions">
+      <h1 class="signature">format(Format)</h1>
+      <a href="https://github.com/erlang/otp" class="icon-action"><i class="ri-code-s-slash-line"></i></a>
+      </div>
+      </div>
+      <section class="docstring"><p>Equivalent to format(Format, []).</p></section>
+      </section>
+      <section class="detail" id="format/2">
+      <p>Documentation for format/2.</p>
+      </section>
+      """)));
+
+    assertNotNull(doc);
+    assertTrue(doc.contains("format(Format)"));
+    assertTrue(doc.contains("Equivalent to format(Format, [])."));
+    assertFalse(doc.contains("Documentation for fread/2."));
+    assertFalse(doc.contains("Documentation for format/2."));
+    assertFalse(doc.contains("detail-header"));
+    assertFalse(doc.contains("detail-link"));
+    assertFalse(doc.contains("icon-action"));
   }
 
   public void testGenerateDocSdkBif() {
