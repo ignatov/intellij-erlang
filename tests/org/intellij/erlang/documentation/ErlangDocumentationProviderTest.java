@@ -118,7 +118,13 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
       <p>Documentation for fread/2.</p>
       </section>
       <section class="detail" id="format/1">
-      <div class="detail-header"><h1 class="signature">format(Format)</h1></div>
+      <div class="detail-header">
+      <a href="#format/1" class="detail-link"><i class="ri-link-m"></i></a>
+      <div class="heading-with-actions">
+      <h1 class="signature">format(Format)</h1>
+      <a href="https://github.com/erlang/otp" class="icon-action"><i class="ri-code-s-slash-line"></i></a>
+      </div>
+      </div>
       <section class="docstring"><p>Equivalent to format(Format, []).</p></section>
       </section>
       <section class="detail" id="format/2">
@@ -131,6 +137,9 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertTrue(doc.contains("Equivalent to format(Format, [])."));
     assertFalse(doc.contains("Documentation for fread/2."));
     assertFalse(doc.contains("Documentation for format/2."));
+    assertFalse(doc.contains("detail-header"));
+    assertFalse(doc.contains("detail-link"));
+    assertFalse(doc.contains("icon-action"));
   }
 
   public void testGenerateDocSdkBif() {
