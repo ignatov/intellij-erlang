@@ -25,18 +25,42 @@ The plugin uses the Gradle build system with the IntelliJ Platform Gradle Plugin
 # Clean build directory
 ./gradlew clean
 
-# Verify plugin compatibility with specified IDE version
+# Verify plugin compatibility with the targeted IntelliJ IDEA version
 ./gradlew verifyPlugin
 ```
+
+## Preparing a Release for IntelliJ IDEA 2026.3
+
+Use JDK 25 and the checked-in Gradle wrapper. The plugin targets the 263 platform
+branch. The Gradle plugin derives the minimum supported IDE build from this SDK.
+
+Supply a unique build number from the release pipeline, greater than the last
+published build number:
+
+```bash
+./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber=<build-number>
+```
+
+The resulting `build/distributions/intellij-erlang-0.11.<build-number>.zip` is the
+archive to install from disk for a smoke test and upload to JetBrains Marketplace.
+Check Erlang project loading, completion, Structure View, EUnit and debugging in
+IntelliJ IDEA 2026.3 before publishing. The existing CI uploads the plugin ZIP as a
+build artifact; publishing to Marketplace is a separate step.
+
+CI runs Plugin Verifier against the targeted IDE and fails on binary compatibility
+problems, missing dependencies, invalid plugin structure and override-only API
+violations. Existing internal, deprecated, experimental and non-extendable API
+usages remain visible in the verification report and should be reviewed before
+publishing.
 
 ## Java Version Compatibility Requirements
 
 The IntelliJ Erlang plugin has specific Java version requirements for different components:
 
 ### Main Plugin
-- Built with Java 21
-- Targets Java 21 bytecode (class file version 65.0)
-- Compatible with the latest IntelliJ platform
+- Built with Java 25
+- Targets Java 25 bytecode (class file version 69.0)
+- Targets IntelliJ Platform 2026.3
 
 ### JPS (JetBrains Project System) Module
 - Built with Java 11 compatibility
@@ -73,7 +97,7 @@ To build the plugin correctly:
 ```
 
 This will:
-1. Build the main plugin with Java 21 compatibility
+1. Build the main plugin with Java 25 compatibility
 2. Build the JPS module with Java 11 compatibility
 3. Package everything together correctly
 

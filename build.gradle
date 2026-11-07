@@ -1,8 +1,9 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformDependenciesExtension
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 
 plugins {
-  id 'org.jetbrains.intellij.platform' version '2.12.0'
+  id 'org.jetbrains.intellij.platform' version '2.20.0'
 }
 
 apply plugin: 'org.jetbrains.intellij.platform'
@@ -68,9 +69,11 @@ allprojects {
   dependencies {
     intellijPlatform { IntelliJPlatformDependenciesExtension ijp ->
       // https://data.services.jetbrains.com/products?code=IC
-      ijp.intellijIdea("2026.1")
+      ijp.intellijIdea("2026.3")
 
-      ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi")
+      ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi",
+                         "com.intellij.platform.testRunner", "com.intellij.structureView")
+      ijp.bundledModule("intellij.platform.debugger")
       ijp.testFramework(TestFrameworkType.Platform.INSTANCE)
       ijp.testFramework(TestFrameworkType.Plugin.Java.INSTANCE)
     }
@@ -115,14 +118,30 @@ repositories {
 
 dependencies {
   implementation name: 'OtpErlang'
-  implementation project('jps-plugin')
+  // JPS is a shared library loaded by both the IDE and the compile server, not a content module.
+  implementation files(project(':jps-plugin').tasks.named('composedJar'))
+}
+
+intellijPlatform {
+  pluginVerification {
+    // The existing Marketplace plugin predates the restriction on org.jetbrains plugin IDs.
+    freeArgs = ['-mute', 'ForbiddenPluginIdPrefix']
+    // Gate releases on binary compatibility; legacy API usages remain visible in the report.
+    failureLevel = [VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS,
+                    VerifyPluginTask.FailureLevel.MISSING_DEPENDENCIES,
+                    VerifyPluginTask.FailureLevel.INVALID_PLUGIN,
+                    VerifyPluginTask.FailureLevel.OVERRIDE_ONLY_API_USAGES]
+    ides {
+      current()
+    }
+  }
 }
 
 // Add JPS Java 11 verification to the plugin build pipeline
 afterEvaluate {
   // The JPS helper module is packaged into the main plugin but intentionally keeps
   // Java 11 bytecode compatibility, so the generic IntelliJ Platform module check
-  // produces a misleading sourceCompatibility warning for 2026.1.
+  // produces a misleading sourceCompatibility warning for the target platform.
   project(':jps-plugin').tasks.named('verifyPluginProjectConfiguration') {
     enabled = false
   }

@@ -18,6 +18,8 @@
     <id>org.jetbrains.erlang</id>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
     <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.platform.testRunner</depends>
+    <depends>com.intellij.structureView</depends>
     <name>Erlang</name>
     <description><![CDATA[
     <p>Erlang support for IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, RubyMine and other JetBrains IDE.</p>
@@ -32,7 +34,7 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>IntelliJ 2026.1 support</li>
+              <li>IntelliJ 2026.3 support</li>
               <li>Added parameter name hints for function calls</li>
               <li>Fixed compatibility with different Java versions (fixed JPS module)</li>
               <li>Added support for Erlang/OTP 27</li>
