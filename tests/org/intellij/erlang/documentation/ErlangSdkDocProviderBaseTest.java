@@ -44,6 +44,22 @@ public class ErlangSdkDocProviderBaseTest extends TestCase {
     assertEquals("", ErlangSdkDocProviderBase.convertLink("", "lists"));
   }
 
+  public void testModernLinks() {
+    assertEquals("psi_element://lists#foreach/2",
+                 ErlangSdkDocProviderBase.convertLink("#foreach/2", "lists"));
+    assertEquals("psi_element://lists#t:filename/0",
+                 ErlangSdkDocProviderBase.convertLink("#t:filename/0", "lists"));
+    assertEquals("psi_element://file#open/2",
+                 ErlangSdkDocProviderBase.convertLink("../../apps/kernel/file.html#open/2", "lists"));
+    assertEquals("psi_element://unicode#t:chardata/0",
+                 ErlangSdkDocProviderBase.convertLink("unicode.html#t:chardata/0", "io"));
+  }
+
+  public void testAbsoluteLinksAreKept() {
+    assertEquals("https://github.com/erlang/otp/blob/master/lib/stdlib/doc/lists.html#foreach",
+                 ErlangSdkDocProviderBase.convertLink("https://github.com/erlang/otp/blob/master/lib/stdlib/doc/lists.html#foreach", "lists"));
+  }
+
   public void testLocalAnchor() {
     assertEquals("psi_element://lists#member-2",
                  ErlangSdkDocProviderBase.convertLink("#member-2", "lists"));

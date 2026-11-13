@@ -31,11 +31,15 @@ final class ErlangSdkFunctionDocProvider extends ErlangSdkDocProviderBase {
   private static final Pattern PATTERN_END_OF_DOC = Pattern.compile("^<div class=\"footer\">$");
 
   @NotNull private final String myFuncSignature;
+  @NotNull private final String myModernFuncSignature;
+  @NotNull private final Pattern myModernFuncIdPattern;
 
   public ErlangSdkFunctionDocProvider(@NotNull Project project, @NotNull String functionName, int functionArity,
                                       @NotNull VirtualFile virtualFile) {
     super(project, virtualFile);
     myFuncSignature = functionName + "-" + functionArity;
+    myModernFuncSignature = functionName + "/" + functionArity;
+    myModernFuncIdPattern = Pattern.compile(Pattern.quote(myModernFuncSignature));
   }
 
   @NotNull
@@ -47,9 +51,7 @@ final class ErlangSdkFunctionDocProvider extends ErlangSdkDocProviderBase {
   @NotNull
   @Override
   protected String getModernInDocRef() {
-    int aritySeparator = myFuncSignature.lastIndexOf('-');
-    return "#" + myFuncSignature.substring(0, aritySeparator) + "/" +
-           myFuncSignature.substring(aritySeparator + 1);
+    return "#" + myModernFuncSignature;
   }
 
   @Override
@@ -73,5 +75,16 @@ final class ErlangSdkFunctionDocProvider extends ErlangSdkDocProviderBase {
   public boolean isDocEnd(@NotNull String line) {
     return PATTERN_FUNC_BEGIN.matcher(line).find() || PATTERN_BIF_BEGIN.matcher(line).find()
       || PATTERN_END_OF_DOC.matcher(line).matches();
+  }
+
+  @Override
+  protected boolean isModernDocBegin(@NotNull String line) {
+    return isModernDetailBegin(line, myModernFuncIdPattern);
+  }
+
+  @NotNull
+  @Override
+  protected String prepareModernDoc(@NotNull String doc) {
+    return prepareModernDetail(doc);
   }
 }
