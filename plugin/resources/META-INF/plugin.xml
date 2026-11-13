@@ -35,6 +35,9 @@
         <![CDATA[
             <ul>
               <li>IntelliJ 2026.3 support</li>
+              <li>Added support for Erlang/OTP 29 syntax and native records</li>
+              <li>Added support for Erlang/OTP 28 comprehension generators, based float literals and nominal types</li>
+              <li>Added support for Erlang/OTP 27 sigil string literals</li>
               <li>Added parameter name hints for function calls</li>
               <li>Fixed compatibility with different Java versions (fixed JPS module)</li>
               <li>Added support for Erlang/OTP 27</li>
