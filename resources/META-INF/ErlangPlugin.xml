@@ -138,7 +138,20 @@
         <breadcrumbsInfoProvider implementation="org.intellij.erlang.ErlangBreadcrumbsProvider"/>
 
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
-        <codeInsight.parameterNameHints language="Erlang" implementationClass="org.intellij.erlang.hints.ErlangInlayHintsProvider"/>
+        <codeInsight.declarativeInlayProvider language="Erlang"
+                                              implementationClass="org.intellij.erlang.hints.ErlangParameterHintsProvider"
+                                              isEnabledByDefault="true"
+                                              group="PARAMETERS_GROUP"
+                                              providerId="erlang.parameter.hints"
+                                              bundle="messages.ErlangBundle"
+                                              nameKey="inlay.erlang.parameter.hints.name"
+                                              descriptionKey="inlay.erlang.parameter.hints.description">
+            <option optionId="erlang.parameter.hints.pattern.summaries"
+                    enabledByDefault="true"
+                    bundle="messages.ErlangBundle"
+                    nameKey="inlay.erlang.parameter.hints.pattern.summaries.name"
+                    descriptionKey="inlay.erlang.parameter.hints.pattern.summaries.description"/>
+        </codeInsight.declarativeInlayProvider>
         <codeInsight.gotoSuper language="Erlang" implementationClass="org.intellij.erlang.navigation.ErlangGotoSuperHandler"/>
 
         <fileBasedIndex implementation="org.intellij.erlang.index.ErlangModuleIndex"/>
