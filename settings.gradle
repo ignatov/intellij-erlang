@@ -15,7 +15,7 @@
  */
 
 plugins {
-  // Lets Gradle provision the JDK 25 toolchain on CI agents (e.g. TeamCity) that only have older JDKs installed
+  // Lets Gradle provision the JDK 25 toolchain on machines that only have older JDKs installed
   id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
