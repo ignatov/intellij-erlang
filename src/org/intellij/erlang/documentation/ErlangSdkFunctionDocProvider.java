@@ -28,22 +28,18 @@ final class ErlangSdkFunctionDocProvider extends ErlangSdkDocProviderBase {
     "<a name=\"(.*?)\"></a><span class=\"bold_code\">.*?</span><br>");
   private static final Pattern PATTERN_BIF_BEGIN = Pattern.compile(
     "<a name=\"(.*?)\"><span class=\"bold_code\">.*?</span></a><br>");
-  private static final Pattern PATTERN_MODERN_FUNC_BEGIN = Pattern.compile(
-    "^<section class=\"detail\" id=\"(.*?)\">$");
-  private static final Pattern PATTERN_MODERN_FUNC_DOC = Pattern.compile(
-    "(?s)^<section class=\"detail\" id=\".*?\">\\s*" +
-    "<div class=\"detail-header\">.*?(<h1 class=\"signature\"[^>]*>.*?</h1>).*?</div>\\s*" +
-    "<section class=\"docstring\">\\s*(.*)\\s*</section>\\s*</section>\\s*$");
   private static final Pattern PATTERN_END_OF_DOC = Pattern.compile("^<div class=\"footer\">$");
 
   @NotNull private final String myFuncSignature;
   @NotNull private final String myModernFuncSignature;
+  @NotNull private final Pattern myModernFuncIdPattern;
 
   public ErlangSdkFunctionDocProvider(@NotNull Project project, @NotNull String functionName, int functionArity,
                                       @NotNull VirtualFile virtualFile) {
     super(project, virtualFile);
     myFuncSignature = functionName + "-" + functionArity;
     myModernFuncSignature = functionName + "/" + functionArity;
+    myModernFuncIdPattern = Pattern.compile(Pattern.quote(myModernFuncSignature));
   }
 
   @NotNull
@@ -72,20 +68,23 @@ final class ErlangSdkFunctionDocProvider extends ErlangSdkDocProviderBase {
         return true;
       }
     }
-    matcher = PATTERN_MODERN_FUNC_BEGIN.matcher(line);
-    return matcher.matches() && matcher.group(1).equals(myModernFuncSignature);
+    return false;
   }
 
   @Override
   public boolean isDocEnd(@NotNull String line) {
     return PATTERN_FUNC_BEGIN.matcher(line).find() || PATTERN_BIF_BEGIN.matcher(line).find()
-      || PATTERN_MODERN_FUNC_BEGIN.matcher(line).matches() || PATTERN_END_OF_DOC.matcher(line).matches();
+      || PATTERN_END_OF_DOC.matcher(line).matches();
+  }
+
+  @Override
+  protected boolean isModernDocBegin(@NotNull String line) {
+    return isModernDetailBegin(line, myModernFuncIdPattern);
   }
 
   @NotNull
   @Override
-  protected String prepareRetrievedDoc(@NotNull String doc) {
-    Matcher matcher = PATTERN_MODERN_FUNC_DOC.matcher(doc);
-    return matcher.matches() ? matcher.group(1) + "\n" + matcher.group(2) : doc;
+  protected String prepareModernDoc(@NotNull String doc) {
+    return prepareModernDetail(doc);
   }
 }

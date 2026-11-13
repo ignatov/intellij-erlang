@@ -34,8 +34,10 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
@@ -104,42 +106,128 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                   """);
   }
 
-  public void testGenerateModernDocSdkFunction() {
-    PsiElement element = resolveElementAtCaret("""
-                                                -module(test).
-                                                test() ->
-                                                    io:for<caret>mat("hello").
-                                                """);
-    ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
-    assertTrue(elementDocProvider instanceof ErlangSdkFunctionDocProvider);
+  public void testGenerateModernDocSdkFunction() throws Exception {
+    String doc = retrieveDoc("""
+                               -module(test).
+                               test() ->
+                                   io:for<caret>mat("hello").
+                               """,
+                             modernFunctionSection("fread/2", "fread(Prompt, Format)", "", "<p>Documentation for fread/2.</p>") +
+                             modernFunctionSection("format/1", "format(Format)", "",
+                                                   "<p>Equivalent to <a href=\"#format/2\"><code class=\"inline\">format(Format, [])</code></a>.</p>") +
+                             modernFunctionSection("format/2", "format(Format, Data)", "", "<p>Documentation for format/2.</p>"));
+    assertEquals("<h1 class=\"signature\" translate=\"no\">format(Format)</h1>\n" +
+                 "<div class=\"specs\">\n" +
+                 "\n" +
+                 "          <pre translate=\"no\">-spec format() -&gt; term().</pre>\n" +
+                 "\n" +
+                 "      </div>\n" +
+                 "\n" +
+                 "<p>Equivalent to <a href=\"psi_element://io#format/2\"><code class=\"inline\">format(Format, [])</code></a>.</p>\n",
+                 doc);
+  }
 
-    String doc = ((ErlangSdkFunctionDocProvider)elementDocProvider).retrieveDoc(new BufferedReader(new StringReader("""
-      <section class="detail" id="fread/2">
-      <p>Documentation for fread/2.</p>
-      </section>
-      <section class="detail" id="format/1">
-      <div class="detail-header">
-      <a href="#format/1" class="detail-link"><i class="ri-link-m"></i></a>
-      <div class="heading-with-actions">
-      <h1 class="signature">format(Format)</h1>
-      <a href="https://github.com/erlang/otp" class="icon-action"><i class="ri-code-s-slash-line"></i></a>
-      </div>
-      </div>
-      <section class="docstring"><p>Equivalent to format(Format, []).</p></section>
-      </section>
-      <section class="detail" id="format/2">
-      <p>Documentation for format/2.</p>
-      </section>
-      """)));
+  public void testGenerateModernDocSdkLastFunction() throws Exception {
+    String doc = retrieveDoc("""
+                               -module(test).
+                               test() ->
+                                   io:for<caret>mat("hello").
+                               """,
+                             modernFunctionSection("fread/2", "fread(Prompt, Format)", "", "<p>Documentation for fread/2.</p>") +
+                             modernFunctionSection("format/1", "format(Format)", "", "<p>Equivalent to format(Format, []).</p>") +
+                             """
 
-    assertNotNull(doc);
-    assertTrue(doc.contains("format(Format)"));
-    assertTrue(doc.contains("Equivalent to format(Format, [])."));
-    assertFalse(doc.contains("Documentation for fread/2."));
-    assertFalse(doc.contains("Documentation for format/2."));
-    assertFalse(doc.contains("detail-header"));
-    assertFalse(doc.contains("detail-link"));
-    assertFalse(doc.contains("icon-action"));
+                                   </div>
+                                 </section>
+
+                                   <footer class="footer">
+                                     <p>Built using ExDoc</p>
+                                   </footer>
+                               <script src="dist/app.js"></script>
+                               """);
+    assertEquals("<h1 class=\"signature\" translate=\"no\">format(Format)</h1>\n" +
+                 "<div class=\"specs\">\n" +
+                 "\n" +
+                 "          <pre translate=\"no\">-spec format() -&gt; term().</pre>\n" +
+                 "\n" +
+                 "      </div>\n" +
+                 "\n" +
+                 "<p>Equivalent to format(Format, []).</p>\n",
+                 doc);
+  }
+
+  public void testGenerateModernDocSdkDeprecatedFunction() throws Exception {
+    String doc = retrieveDoc("""
+                               -module(test).
+                               test() ->
+                                   io:for<caret>mat("hello").
+                               """,
+                             modernFunctionSection("format/1", "format(Format)",
+                                                   """
+                                                       <span class="note">(auto-imported)</span>
+                                                   """,
+                                                   "<p>Returns the tuple <code class=\"inline\">{MegaSecs, Secs, MicroSecs}</code>.</p>")
+                               .replace("  <section class=\"docstring\">", """
+                                   <div class="deprecated">
+                                     This function is deprecated.
+                                   </div>
+
+                                 <section class="docstring">"""));
+    assertEquals("""
+                   <h1 class="signature" translate="no">format(Format)</h1>
+                   <span class="note">(auto-imported)</span>
+                   <div class="deprecated">
+                       This function is deprecated.
+                     </div>
+                   <div class="specs">
+
+                             <pre translate="no">-spec format() -&gt; term().</pre>
+
+                         </div>
+
+                   <p>Returns the tuple <code class="inline">{MegaSecs, Secs, MicroSecs}</code>.</p>
+                   """, doc);
+  }
+
+  public void testGenerateModernDocSdkModule() throws Exception {
+    String doc = retrieveDoc("""
+                               -module(test).
+                               test() ->
+                                   lis<caret>ts:foreach(foo, bar).
+                               """,
+                             """
+                               <div id="top-content">
+                                 <div class="heading-with-actions top-heading">
+                                   <h1><span translate="no">lists</span></h1>
+                                 </div>
+
+                                   <section id="moduledoc">
+                               <p>List processing functions.</p><section role="note" class="admonition"><p>See <a href="../../apps/kernel/file.html#open/2"><code class="inline">file:open/2</code></a>.</p></section>
+                                    </section>
+                                   </section>
+
+                               </div>
+
+                                 <section id="summary" class="details-list">
+                               """);
+    assertEquals("""
+                   <p>List processing functions.</p><section role="note" class="admonition"><p>See <a href="psi_element://file#open/2"><code class="inline">file:open/2</code></a>.</p></section>
+                        </section>
+                   """, doc);
+  }
+
+  public void testGenerateModernDocSdkType() throws Exception {
+    String doc = retrieveDoc("""
+                               -module(test).
+                               -spec test(file:fil<caret>e_info()) -> ok.test(_FileInfo) ->
+                                   ok.
+                               """,
+                             modernFunctionSection("t:fd/0", "fd()", "", "<p>A file descriptor.</p>") +
+                             modernFunctionSection("t:file_info/0", "file_info()", "", "<p>File information.</p>") +
+                             modernFunctionSection("file_info/1", "file_info(Name)", "", "<p>A function.</p>"));
+    assertEquals("<h1 class=\"signature\" translate=\"no\">file_info()</h1>\n" +
+                 "<p>File information.</p>\n",
+                 doc);
   }
 
   public void testGenerateDocSdkBif() {
@@ -585,6 +673,21 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertTrue("Not a function: " + psiElement, psiElement instanceof ErlangFunction);
   }
 
+  public void testResolveModernLinkFunction() {
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#read_line/1", null);
+    assertTrue("Not a function: " + psiElement, psiElement instanceof ErlangFunction);
+  }
+
+  public void testResolveModernLinkType() {
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#t:filename/0", null);
+    assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
+  }
+
+  public void testResolveLinkUnknownAnchor() {
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#module-error-information", null);
+    assertTrue("Not a module: " + psiElement, psiElement instanceof ErlangModule);
+  }
+
   public void testResolveLinkType() {
     PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#type-filename", null);
     assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
@@ -618,6 +721,55 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     PsiElement element = resolveElementAtCaret(text);
     List<String> urls = myErlangDocProvider.getUrlFor(element, null);
     assertEquals(expected, myErlangDocProvider.fetchExternalDocumentation(getProject(), element, urls, false));
+  }
+
+  @Nullable
+  private String retrieveDoc(@NotNull String text, @NotNull String html) throws IOException {
+    PsiElement element = resolveElementAtCaret(text);
+    ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
+    assertInstanceOf(elementDocProvider, ErlangSdkDocProviderBase.class);
+    return ((ErlangSdkDocProviderBase)elementDocProvider).retrieveDoc(new BufferedReader(new StringReader(html)));
+  }
+
+  /**
+   * Mimics the markup of an entry on a modern (ex_doc based) erlang.org documentation page.
+   */
+  @NotNull
+  private static String modernFunctionSection(@NotNull String id,
+                                              @NotNull String signature,
+                                              @NotNull String notes,
+                                              @NotNull String docstring) {
+    String name = signature.substring(0, signature.indexOf('('));
+    return "<section class=\"detail\" id=\"" + id + "\">\n" +
+           "\n" +
+           "  <div class=\"detail-header\">\n" +
+           "    <a href=\"#" + id + "\" class=\"detail-link\" data-no-tooltip=\"\" aria-label=\"Link to this function\">\n" +
+           "      <i class=\"ri-link-m\" aria-hidden=\"true\"></i>\n" +
+           "    </a>\n" +
+           "    <div class=\"heading-with-actions\">\n" +
+           "      <h1 class=\"signature\" translate=\"no\">" + signature + "</h1>\n" +
+           "\n" +
+           notes +
+           "\n" +
+           "        <a href=\"https://github.com/erlang/otp/blob/OTP-29.1.2/lib/stdlib/src/io.erl#L1332\" class=\"icon-action\" rel=\"help nofollow\" aria-label=\"View Source\">\n" +
+           "          <i class=\"ri-code-s-slash-line\" aria-hidden=\"true\"></i>\n" +
+           "        </a>\n" +
+           "\n" +
+           "    </div>\n" +
+           "  </div>\n" +
+           "\n" +
+           "  <section class=\"docstring\">\n" +
+           "\n" +
+           (id.startsWith("t:") ? "" :
+           "      <div class=\"specs\">\n" +
+           "\n" +
+           "          <pre translate=\"no\">-spec " + name + "() -&gt; term().</pre>\n" +
+           "\n" +
+           "      </div>\n" +
+           "\n") +
+           docstring + "\n" +
+           "  </section>\n" +
+           "</section>\n";
   }
 
   @NotNull

@@ -29,10 +29,12 @@ final class ErlangSdkTypeDocProvider extends ErlangSdkDocProviderBase {
   private static final Pattern PATTERN_FUNC_BEGIN = Pattern.compile("^ {2}<h3>EXPORTS</h3>$");
 
   @NotNull private final String myTypeName;
+  @NotNull private final Pattern myModernTypeIdPattern;
 
   public ErlangSdkTypeDocProvider(@NotNull Project project, @NotNull VirtualFile virtualFile, @NotNull String typeName) {
     super(project, virtualFile);
     myTypeName = typeName;
+    myModernTypeIdPattern = Pattern.compile("t:" + Pattern.quote(typeName) + "/\\d+");
   }
 
   @NotNull
@@ -56,5 +58,16 @@ final class ErlangSdkTypeDocProvider extends ErlangSdkDocProviderBase {
   @Override
   protected boolean isDocEnd(@NotNull String line) {
     return PATTERN_TYPE_BEGIN.matcher(line).matches() || PATTERN_FUNC_BEGIN.matcher(line).matches();
+  }
+
+  @Override
+  protected boolean isModernDocBegin(@NotNull String line) {
+    return isModernDetailBegin(line, myModernTypeIdPattern);
+  }
+
+  @NotNull
+  @Override
+  protected String prepareModernDoc(@NotNull String doc) {
+    return prepareModernDetail(doc);
   }
 }
