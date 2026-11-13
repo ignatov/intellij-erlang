@@ -34,6 +34,7 @@
     <change-notes>
         <![CDATA[
             <ul>
+              <li>Fixed false 'multi-valued comprehension' error on map comprehensions (#1093)</li>
               <li>IntelliJ 2026.3 support</li>
               <li>Added support for Erlang/OTP 29 syntax and native records</li>
               <li>Added support for Erlang/OTP 28 comprehension generators, based float literals and nominal types</li>
