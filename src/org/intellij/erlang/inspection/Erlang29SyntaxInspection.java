@@ -20,6 +20,7 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
@@ -45,18 +46,23 @@ public class Erlang29SyntaxInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitListComprehension(@NotNull ErlangListComprehension o) {
-        int headExpressionCount = 0;
+        // List, binary and map comprehensions share this node. Head elements are separated by commas;
+        // a single map association (`K => V`) also yields two expressions, so counting expressions is wrong.
+        boolean afterComma = false;
         for (ASTNode child : o.getNode().getChildren(null)) {
-          if (child.getElementType() == ErlangTypes.ERL_OR_OR) {
+          IElementType type = child.getElementType();
+          if (type == ErlangTypes.ERL_OR_OR) {
             return;
+          }
+          if (type == ErlangTypes.ERL_COMMA) {
+            afterComma = true;
+            continue;
           }
 
           PsiElement psi = child.getPsi();
-          if (psi instanceof ErlangExpression) {
-            headExpressionCount++;
-            if (headExpressionCount > 1) {
-              registerProblem(holder, psi, MULTI_VALUED_COMPREHENSION_MESSAGE);
-            }
+          if (afterComma && psi instanceof ErlangExpression) {
+            registerProblem(holder, psi, MULTI_VALUED_COMPREHENSION_MESSAGE);
+            afterComma = false;
           }
         }
       }

@@ -21,4 +21,9 @@ public class Erlang29HighlightingTest extends ErlangHighlightingTestBase {
     enableErlang29SyntaxInspection();
     doTest();
   }
+
+  public void testErlang29SyntaxSingleValuedComprehensions() {
+    enableErlang29SyntaxInspection();
+    doTest();
+  }
 }
