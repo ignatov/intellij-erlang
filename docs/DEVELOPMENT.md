@@ -29,29 +29,41 @@ The plugin uses the Gradle build system with the IntelliJ Platform Gradle Plugin
 ./gradlew verifyPlugin
 ```
 
-## Preparing a Release for IntelliJ IDEA 2026.3
+## Releasing to JetBrains Marketplace
 
 Use JDK 25 and the checked-in Gradle wrapper. The plugin targets the 263 platform
-branch. The Gradle plugin derives the minimum supported IDE build from this SDK.
+branch; the Gradle plugin derives the minimum supported IDE build from this SDK.
+The plugin version is `<version>.<buildNumber>`, with `version` taken from
+`gradle.properties` and `buildNumber` passed by the release workflow.
 
-Supply a unique build number from the release pipeline, greater than the last
-published build number:
+Releases are published by `.github/workflows/release.yml` when a `v*` tag is pushed.
+
+One-time setup:
+
+1. Create a Marketplace token at https://plugins.jetbrains.com/author/me/tokens.
+2. Store it as a repository secret: `gh secret set JETBRAINS_MARKETPLACE_TOKEN`.
+
+To release, tag the commit on master with a build number `N` greater than the last
+published build (for example, 0.11.1299 -> `v0.11.1300`):
 
 ```bash
-./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber=<build-number>
+git tag v0.11.N && git push origin v0.11.N
 ```
 
-The resulting `build/distributions/intellij-erlang-0.11.<build-number>.zip` is the
-archive to install from disk for a smoke test and upload to JetBrains Marketplace.
-Check Erlang project loading, completion, Structure View, EUnit and debugging in
-IntelliJ IDEA 2026.3 before publishing. The existing CI uploads the plugin ZIP as a
-build artifact; publishing to Marketplace is a separate step.
+The workflow checks that the tag matches `version` in `gradle.properties`, runs
+`./gradlew clean test buildPlugin verifyPlugin publishPlugin -PbuildNumber=N`, and
+creates a GitHub release with the plugin ZIP and the `<change-notes>` from
+`plugin/resources/META-INF/plugin.xml`. Update the change notes before tagging. The
+workflow can also be rerun for an existing tag from the Actions tab (`workflow_dispatch`).
 
-CI runs Plugin Verifier against the targeted IDE and fails on binary compatibility
-problems, missing dependencies, invalid plugin structure and override-only API
-violations. Existing internal, deprecated, experimental and non-extendable API
-usages remain visible in the verification report and should be reviewed before
-publishing.
+To build a release archive locally for a smoke test, run
+`./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber=N` and install
+`build/distributions/intellij-erlang-0.11.N.zip` from disk.
+
+Plugin Verifier fails the build on binary compatibility problems, missing
+dependencies, invalid plugin structure and override-only API violations. Internal,
+deprecated, experimental and non-extendable API usages stay visible in the
+verification report and should be reviewed before publishing.
 
 ## Java Version Compatibility Requirements
 
