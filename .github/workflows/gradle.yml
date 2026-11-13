@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up JDK 25
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v6
       with:
         distribution: temurin
         java-version: '25'
@@ -29,7 +29,7 @@ jobs:
         BUILD_NUMBER: SNAPSHOT-${{ github.run_number }}
       run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber="$BUILD_NUMBER"
     - name: Upload Plugin Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: intellij-erlang-plugin
         path: build/distributions/*.zip
@@ -46,7 +46,7 @@ jobs:
       cancel-in-progress: false
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Skip if master has moved on
       id: head
       run: |
@@ -59,7 +59,7 @@ jobs:
         fi
     - name: Download Plugin Artifact
       if: steps.head.outputs.current == 'true'
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: intellij-erlang-plugin
         path: dist
