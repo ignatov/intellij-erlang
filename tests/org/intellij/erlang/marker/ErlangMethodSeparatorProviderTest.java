@@ -18,7 +18,7 @@ package org.intellij.erlang.marker;
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzerSettings;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
-import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl;
+import com.intellij.codeInsight.daemon.impl.LineMarkersPass;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
@@ -53,7 +53,7 @@ public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeIn
   }
 
   private Integer[] getMarkedLineNumbers() {
-    List<? extends LineMarkerInfo<?>> lineMarkers = DaemonCodeAnalyzerImpl.getLineMarkers(myFixture.getEditor().getDocument(), myFixture.getProject());
+    List<? extends LineMarkerInfo<?>> lineMarkers = LineMarkersPass.getDisplayedLineMarkers(myFixture.getEditor().getDocument(), myFixture.getProject());
     assertNotNull(lineMarkers);
     Integer[] markedLineNumbers = new Integer[lineMarkers.size()];
     for (int i = 0; i < lineMarkers.size(); i++) {

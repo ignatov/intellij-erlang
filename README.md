@@ -9,8 +9,8 @@ and other IntelliJ-based products
 [WebStorm](http://www.jetbrains.com/webstorm/), etc.) to a convenient [Erlang](http://www.erlang.org/) IDE.
 
 ## Requirements
-- IntelliJ IDEA 2022.1 or later (Community or Ultimate)
-- Java 17 or later
+- IntelliJ IDEA 2026.3 or later
+- Java 25 (bundled with the IDE)
 
 ## For Developers
 If you're developing or modifying the plugin, please see the [Development Guide](docs/DEVELOPMENT.md) for information about Java version compatibility requirements.

@@ -4,7 +4,7 @@
 %%% @doc
 %%%
 %%% @end
-%%% <TYPO>Creat</TYPO>1ed : 06. Aug 2015 10:30
+%%% Creat1ed : 06. Aug 2015 10:30
 %%%-------------------------------------------------------------------
 -module(<TYPO>aasd</TYPO>).
 -author("ignatov").
