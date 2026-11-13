@@ -2,11 +2,15 @@ name: Java CI
 
 on:
   push:
-    tags-ignore:
-      - 'v*'
+    # Branch pushes only: tag pushes (v* releases, the rolling nightly tag) never run this workflow.
+    branches:
+      - '**'
   pull_request:
     branches:
       - master
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -21,9 +25,71 @@ jobs:
         java-version: '25'
         cache: gradle
     - name: Test, Build and Verify Plugin
-      run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin
+      env:
+        BUILD_NUMBER: SNAPSHOT-${{ github.run_number }}
+      run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber="$BUILD_NUMBER"
     - name: Upload Plugin Artifact
       uses: actions/upload-artifact@v4
       with:
         name: intellij-erlang-plugin
         path: build/distributions/*.zip
+        if-no-files-found: error
+
+  nightly:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: nightly-release
+      cancel-in-progress: false
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Skip if master has moved on
+      id: head
+      run: |
+        head="$(git ls-remote origin refs/heads/master | cut -f1)"
+        if [[ "$head" == "$GITHUB_SHA" ]]; then
+          echo "current=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "master is at $head, not $GITHUB_SHA; a newer run will publish the nightly build."
+          echo "current=false" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Download Plugin Artifact
+      if: steps.head.outputs.current == 'true'
+      uses: actions/download-artifact@v4
+      with:
+        name: intellij-erlang-plugin
+        path: dist
+    - name: Publish nightly pre-release
+      if: steps.head.outputs.current == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RUN_NUMBER: ${{ github.run_number }}
+      run: |
+        shopt -s nullglob
+        zips=(dist/*.zip)
+        if (( ${#zips[@]} != 1 )); then
+          echo "::error::Expected exactly one plugin ZIP, found ${#zips[@]}"
+          exit 1
+        fi
+        cp "${zips[0]}" intellij-erlang-nightly.zip
+
+        git tag -f nightly "$GITHUB_SHA"
+        git push -f origin refs/tags/nightly
+
+        cat > nightly-notes.md <<EOF
+        Unsigned development build of \`master\` at commit $GITHUB_SHA (plugin version \`$(basename "${zips[0]}" .zip | sed 's/^intellij-erlang-//')\`, CI run $RUN_NUMBER).
+
+        It is not published to JetBrains Marketplace. To install it, open **Settings | Plugins**, choose **Install Plugin from Disk...** and select \`intellij-erlang-nightly.zip\`.
+        EOF
+
+        if gh release view nightly > /dev/null 2>&1; then
+          gh release edit nightly --prerelease --title "Nightly build" --notes-file nightly-notes.md
+          gh release upload nightly intellij-erlang-nightly.zip --clobber
+        else
+          gh release create nightly intellij-erlang-nightly.zip --verify-tag --prerelease \
+            --title "Nightly build" --notes-file nightly-notes.md
+        fi

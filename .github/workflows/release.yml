@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to publish, e.g. v0.11.1300'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: refs/tags/${{ inputs.tag || github.ref_name }}
+
+    - name: Derive build number from tag
+      id: version
+      run: |
+        if [[ ! "$RELEASE_TAG" =~ ^v([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
+          echo "::error::Tag '$RELEASE_TAG' must look like v<version>.<build>, e.g. v0.11.1300"
+          exit 1
+        fi
+        tag_version="${BASH_REMATCH[1]}"
+        build_number="${BASH_REMATCH[2]}"
+        gradle_version="$(sed -nE 's/^[[:space:]]*version[[:space:]]*=[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' gradle.properties)"
+        if [[ "$tag_version" != "$gradle_version" ]]; then
+          echo "::error::Tag version '$tag_version' does not match version '$gradle_version' in gradle.properties"
+          exit 1
+        fi
+        echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
+        echo "plugin_version=$gradle_version.$build_number" >> "$GITHUB_OUTPUT"
+        echo "Publishing plugin version $gradle_version.$build_number"
+
+    - name: Check Marketplace token
+      env:
+        PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+      run: |
+        if [[ -z "$PUBLISH_TOKEN" ]]; then
+          echo "::error::Repository secret JETBRAINS_MARKETPLACE_TOKEN is not set. Create a token at https://plugins.jetbrains.com/author/me/tokens and run: gh secret set JETBRAINS_MARKETPLACE_TOKEN"
+          exit 1
+        fi
+
+    - name: Set up JDK 25
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+
+    - name: Test, build, verify and publish plugin
+      env:
+        PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER"
+
+    - name: Create GitHub release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
+      run: |
+        zip="build/distributions/intellij-erlang-$PLUGIN_VERSION.zip"
+        if [[ ! -f "$zip" ]]; then
+          echo "::error::Expected plugin archive $zip was not built"
+          ls -l build/distributions || true
+          exit 1
+        fi
+        perl -0777 -ne '
+          if (m{<change-notes>(.*?)</change-notes>}s) {
+            my $notes = $1;
+            while ($notes =~ m{<li>(.*?)</li>}sg) {
+              my $item = $1;
+              $item =~ s/<[^>]+>//g;
+              $item =~ s/\s+/ /g;
+              $item =~ s/^ | $//g;
+              print "- $item\n";
+            }
+          }
+        ' plugin/resources/META-INF/plugin.xml > release-notes.md
+        printf '\nhttps://plugins.jetbrains.com/plugin/7083\n' >> release-notes.md
+        cat release-notes.md
+        gh release create "$RELEASE_TAG" "$zip" \
+          --verify-tag \
+          --title "$RELEASE_TAG" \
+          --notes-file release-notes.md

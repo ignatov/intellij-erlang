@@ -29,29 +29,51 @@ The plugin uses the Gradle build system with the IntelliJ Platform Gradle Plugin
 ./gradlew verifyPlugin
 ```
 
-## Preparing a Release for IntelliJ IDEA 2026.3
+## Continuous Integration
 
-Use JDK 25 and the checked-in Gradle wrapper. The plugin targets the 263 platform
-branch. The Gradle plugin derives the minimum supported IDE build from this SDK.
+All builds run on GitHub Actions with JDK 25 and the checked-in Gradle wrapper.
 
-Supply a unique build number from the release pipeline, greater than the last
-published build number:
+- **Pull requests and branch pushes** (`.github/workflows/gradle.yml`) run
+  `./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber=SNAPSHOT-<run>`
+  and upload the plugin ZIP as the `intellij-erlang-plugin` workflow artifact.
+- **Pushes to master** also update the rolling `nightly` pre-release: the `nightly` tag
+  is moved to the built commit and the unsigned development build is uploaded as
+  [`intellij-erlang-nightly.zip`](https://github.com/ignatov/intellij-erlang/releases/download/nightly/intellij-erlang-nightly.zip).
+  The download URL does not change between builds.
+
+Plugin Verifier fails the build on binary compatibility problems, missing
+dependencies, invalid plugin structure and override-only API violations. Internal,
+deprecated, experimental and non-extendable API usages stay visible in the
+verification report and should be reviewed before publishing.
+
+## Releasing to JetBrains Marketplace
+
+The plugin targets the 263 platform branch; the Gradle plugin derives the minimum
+supported IDE build from this SDK. The plugin version is `<version>.<buildNumber>`,
+with `version` taken from `gradle.properties` and `buildNumber` taken from the tag.
+
+`.github/workflows/release.yml` publishes a release when a `v*` tag is pushed. It
+authenticates with the `JETBRAINS_MARKETPLACE_TOKEN` repository secret. To rotate the
+token, create a new one at https://plugins.jetbrains.com/author/me/tokens and run
+`gh secret set JETBRAINS_MARKETPLACE_TOKEN`.
+
+To release, update the `<change-notes>` in `plugin/resources/META-INF/plugin.xml`, then
+tag the commit on master with a build number `N` greater than the last published
+build (for example, 0.11.1299 -> `v0.11.1300`):
 
 ```bash
-./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber=<build-number>
+git tag v0.11.N && git push origin v0.11.N
 ```
 
-The resulting `build/distributions/intellij-erlang-0.11.<build-number>.zip` is the
-archive to install from disk for a smoke test and upload to JetBrains Marketplace.
-Check Erlang project loading, completion, Structure View, EUnit and debugging in
-IntelliJ IDEA 2026.3 before publishing. The existing CI uploads the plugin ZIP as a
-build artifact; publishing to Marketplace is a separate step.
+The workflow checks that the tag matches `version` in `gradle.properties`, runs
+`./gradlew clean test buildPlugin verifyPlugin publishPlugin -PbuildNumber=N`, which
+uploads the plugin to Marketplace, and then creates a GitHub release for the tag with
+the plugin ZIP and the change notes. You can rerun it for an existing tag from the
+Actions tab (`workflow_dispatch`).
 
-CI runs Plugin Verifier against the targeted IDE and fails on binary compatibility
-problems, missing dependencies, invalid plugin structure and override-only API
-violations. Existing internal, deprecated, experimental and non-extendable API
-usages remain visible in the verification report and should be reviewed before
-publishing.
+To smoke-test a release archive locally, run
+`./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber=N` and install
+`build/distributions/intellij-erlang-0.11.N.zip` from disk.
 
 ## Java Version Compatibility Requirements
 

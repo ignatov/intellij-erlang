@@ -135,6 +135,12 @@ intellijPlatform {
       current()
     }
   }
+  // Only the root project applies the full platform plugin, so jps-plugin has no publishPlugin task.
+  // The release workflow supplies PUBLISH_TOKEN from the JETBRAINS_MARKETPLACE_TOKEN secret.
+  publishing {
+    token = providers.environmentVariable('PUBLISH_TOKEN')
+    channels = ['default']
+  }
 }
 
 // Add JPS Java 11 verification to the plugin build pipeline
