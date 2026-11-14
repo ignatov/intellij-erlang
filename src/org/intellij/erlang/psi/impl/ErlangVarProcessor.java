@@ -59,6 +59,7 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
       if (PsiTreeUtil.isAncestor(originArgList, psiElement, false)) return true;
     }
+    if (inFunArgList(psiElement) && inMapPatternKey(psiElement)) return true;
     
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
