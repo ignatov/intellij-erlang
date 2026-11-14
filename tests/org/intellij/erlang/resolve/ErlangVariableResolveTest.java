@@ -41,6 +41,42 @@ public class ErlangVariableResolveTest extends ErlangLightPlatformCodeInsightFix
     doTest("foo(<target>X) -> case <caret>X = bar() of _ -> X end.");
   }
 
+  public void testCaseHeadRematchOfParameterFromClause() {
+    doTest("foo(<target>X) -> case X = bar() of _ -> <caret>X end.");
+  }
+
+  public void testCaseHeadRematchOfParameterAfterEnd() {
+    doTest("foo(<target>X) -> case X = bar() of _ -> ok end, <caret>X.");
+  }
+
+  public void testCaseHeadRematchOfLocalFromClause() {
+    doTest("foo() -> <target>X = 1, case X = bar() of _ -> <caret>X end.");
+  }
+
+  public void testCaseHeadRematchInFunFromClause() {
+    doTest("foo() -> <target>X = 1, fun() -> case X = bar() of _ -> <caret>X end end.");
+  }
+
+  public void testCaseHeadBindingRepeatedInPatternFromGuard() {
+    doTest("foo() -> case <target>X = bar() of X when <caret>X > 0 -> X; _ -> X end.");
+  }
+
+  public void testCaseHeadBindingRepeatedInPatternFromBody() {
+    doTest("foo() -> case <target>X = bar() of X when X > 0 -> <caret>X; _ -> X end.");
+  }
+
+  public void testCaseHeadRematchRepeatedInPatternFromBody() {
+    doTest("foo(<target>X) -> case X = bar() of X -> <caret>X end.");
+  }
+
+  public void testCasePatternWithoutHeadVariable() {
+    doTest("foo(X) -> case bar() of <target>X -> <caret>X end.");
+  }
+
+  public void testRematchInSequentialCode() {
+    doTest("foo(X) -> <target>X = bar(), <caret>X.");
+  }
+
   private void doTest(String text) {
     int target = text.indexOf("<target>");
     int caretMarker = text.indexOf("<caret>");

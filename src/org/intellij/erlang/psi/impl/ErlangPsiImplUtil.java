@@ -1076,13 +1076,13 @@ public class ErlangPsiImplUtil {
       // the head is evaluated before the clauses: it sees none of their bindings,
       // and its own bindings are visible in the clauses and after 'end'
       if (lastParent == head) return true;
-      if (!head.processDeclarations(processor, state, null, place)) return false;
+      if (!head.processDeclarations(processor, state.put(ErlangVarProcessor.IN_CASE_HEAD, Boolean.TRUE), null, place)) return false;
     }
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
       ErlangClauseBody clauseBody = c.getClauseBody();
-      if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
+      if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state.put(ErlangVarProcessor.IN_CASE_HEAD, Boolean.FALSE));
     }
     return result;
   }

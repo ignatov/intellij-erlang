@@ -34,12 +34,15 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVarProcessor implements PsiScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
+  static final Key<Boolean> IN_CASE_HEAD = Key.create("ERLANG_IN_CASE_HEAD");
   private final List<ErlangQVar> myVarList = new SmartList<>();
   private final String myRequestedName;
-  private final PsiElement myOrigin;
+  private final PsiElement myReferenceElement;
+  private PsiElement myOrigin;
 
   public ErlangVarProcessor(String requestedName, PsiElement origin) {
     myRequestedName = requestedName;
+    myReferenceElement = origin;
     myOrigin = origin;
   }
 
@@ -54,6 +57,12 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (!(psiElement instanceof ErlangQVar)) return true;
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
+    if (myOrigin != myReferenceElement) {
+      // the walk goes on for an occurrence in a case head: that one sees neither the reference nor the clauses of its case
+      if (psiElement.equals(myReferenceElement)) return true;
+      if (PsiTreeUtil.findCommonParent(psiElement, myOrigin) instanceof ErlangCaseExpression caseExpression &&
+          PsiTreeUtil.isAncestor(caseExpression.getExpression(), myOrigin, false)) return true;
+    }
     if (inFunArgList(myOrigin)) {
       if (!inMapPatternKey(myOrigin)) return true;
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
@@ -83,9 +92,16 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
+      boolean inCaseHead = resolveState.get(IN_CASE_HEAD) == Boolean.TRUE;
+      if (!inCaseHead && processCaseHeadInsteadOfClausePattern(psiElement, resolveState)) return true;
+      // an occurrence in a case head that matches an earlier binding is not a declaration:
+      // the walk goes on as that occurrence would, and what it finds replaces the occurrence
+      if (myOrigin != myReferenceElement) myVarList.remove(myOrigin);
       // put all possible variables to list
       myVarList.add((ErlangQVar) psiElement);
-      return false;
+      if (!inCaseHead) return false;
+      myOrigin = psiElement;
+      return true;
     }
 
     return true;
@@ -104,6 +120,18 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       entry = PsiTreeUtil.getParentOfType(entry, ErlangMapEntry.class, true, ErlangArgumentDefinitionList.class);
     }
     return false;
+  }
+
+  // a clause pattern that repeats a variable of the head of its case expression is not a declaration for that clause
+  private boolean processCaseHeadInsteadOfClausePattern(@NotNull PsiElement psiElement, @NotNull ResolveState state) {
+    ErlangArgumentDefinition pattern = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    PsiElement clause = pattern != null ? pattern.getParent() : null;
+    if (!(clause instanceof ErlangCrClause) || !PsiTreeUtil.isAncestor(clause, myOrigin, false)) return false;
+    ErlangExpression head = clause.getParent() instanceof ErlangCaseExpression caseExpression ? caseExpression.getExpression() : null;
+    if (head == null) return false;
+    PsiElement origin = myOrigin;
+    head.processDeclarations(this, state.put(IN_CASE_HEAD, Boolean.TRUE), null, psiElement);
+    return myOrigin != origin;
   }
 
   private boolean hasNarrowerParentScope(PsiElement psiElement) {
