@@ -1,0 +1,1 @@
+-export([module_info/0, module_info/1, record_info/2, <error descr="Unresolved function module_info/2">module_info/2</error>]).
