@@ -72,7 +72,8 @@ CharLiteralChar = {InputCharacter} | {EscapeSequence} | (\\ {WhitespaceChar})
 CharLiteral = \$ {CharLiteralChar} | \$
 
 /* Without the \\\" at the start the lexer won't find it, for unknown reasons */
-ESC = "\\" ( [^] )
+/* \^ takes the next character too, so "\^\" ends after the second backslash */
+ESC = "\\" ( \^ [^] | [^\^] )
 CHAR = {ESC} | [^\'\"\\]
 STRING_BAD1 = \" ({CHAR} | \') *
 TripleQuotedString = \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"

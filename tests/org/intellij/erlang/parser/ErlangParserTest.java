@@ -105,6 +105,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testGenericEscapes()                      { doTest(false); }
   public void testHexEscapes()                          { doTest(false); }
   public void testHexEscapesErrors()                    { doTest(true);  }
+  public void testControlEscapeAtStringEnd()            { doTest(false); }
   public void testTripleQuotes()                        { doTest(true);  }
   public void testSigils()                              { doTest(true);  }
   public void testOtp28Generators()                     { doTest(false); }
