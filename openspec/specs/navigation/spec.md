@@ -36,7 +36,7 @@ The boundary scenarios say what still counts as a function of the module.
 - **AND** the test is `ErlangHighlightingTest.testExportFromInclusion`
 
 #### Scenario: Boundary: function defined in an included file
-Unchanged by the fix; pinned by its tests.
+Unchanged by the fix; pinned by its test.
 - **GIVEN** `m.hrl` with `from_hrl() -> ok.` and `-module(m). -include("m.hrl"). -export([from_hrl/0]).`
 - **WHEN** the entry `from_hrl/0` is resolved
 - **THEN** it resolves to `from_hrl/0` in `m.hrl` and the plugin reports nothing for it
@@ -69,19 +69,20 @@ Unchanged by the fix; pinned by its test.
 
 ### Requirement: Export entry of an importing module is not a usage of the imported function
 Find Usages and Rename of a function SHALL follow the resolve of export entries: the `-export` entry of another
-module that imports the function is not a usage and is not renamed, because erlc reads that entry as a function
-of the other module. The `-import` entry and the calls in that module are usages and are renamed.
+module that imports the function is not a usage and is not renamed, because it does not resolve to the function
+(the requirement "Export entry resolves only to a function of its own module", where erlc decides). The
+`-import` entry and the calls in that module resolve to it: they are usages and are renamed.
 
 #### Scenario: Find Usages
 - **GIVEN** `a.erl` with `-module(a). -export([xxx/0]). xxx() -> ok.` and `b.erl` with `-module(b). -import(a, [xxx/0]). -export([xxx/0]). foo() -> xxx().`
 - **WHEN** the user finds the usages of `xxx/0` of `a`
 - **THEN** there are three usages: the export entry in `a.erl`, the import entry in `b.erl` and the call in `b.erl`. The export entry in `b.erl` is not one
-- **AND** erlc does not take that entry for `a:xxx/0` either: for `b.erl` it prints `function xxx/0 undefined`
+- **AND** this follows from resolve: the export entry in `b.erl` does not resolve to `xxx/0` of `a`. erlc decides that: for `b.erl` it prints `function xxx/0 undefined`
 - **AND** the test is `ErlangFindUsagesTest.testImportedFunctionUsages`, which asserts the number of usages, three, and not which they are
 
 #### Scenario: Rename
 - **GIVEN** the files `a.erl` and `b.erl` of the scenario "Find Usages"
 - **WHEN** the user renames `xxx/0` of `a` to `bar`
 - **THEN** `a.erl` is `-module(a). -export([bar/0]). bar() -> ok.` and `b.erl` is `-module(b). -import(a, [bar/0]). -export([xxx/0]). foo() -> bar().`
-- **AND** erlc prints `function xxx/0 undefined` for `b.erl` before and after the rename: the entry never named the renamed function
+- **AND** this follows from resolve: the export entry in `b.erl` does not resolve to the renamed function. erlc decides that: it prints `function xxx/0 undefined` for `b.erl` before and after the rename
 - **AND** the test is `ErlangRenameTest.testImportedFunctionInExport`
