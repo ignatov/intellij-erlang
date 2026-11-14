@@ -18,7 +18,9 @@ permissions:
 jobs:
   # Copilot picks up only a job with exactly this name.
   copilot-setup-steps:
-    runs-on: ubuntu-latest
+    # An explicit label because ubuntu-latest gave normal runs ubuntu-26.04 and the agent session (run 43591669649)
+    # ubuntu-24.04. Every workflow pins ubuntu-24.04, the image the agent ran on.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
       contents: read
@@ -37,10 +39,9 @@ jobs:
     # need Erlang, so a broken Erlang or rebar3 install cannot skip it.
     - name: Resolve dependencies and warm up the build
       run: ./gradlew --no-daemon test --tests 'org.intellij.erlang.parser.ErlangAppParserTest' buildPlugin verifyPlugin
-    # A pinned Erlang/OTP from builds.hex.pm rather than apt, so that the agent can run testCompilation with the
-    # rebar3 below, which needs OTP 27 to 29. The agent session does not run on the image that runs-on gives a
-    # normal run: run 43591669649 got ubuntu-24.04, where apt has OTP 25, while ubuntu-latest runs got
-    # ubuntu-26.04 with OTP 27. OTP 27 is also what apt gives the compilation-tests job of gradle.yml.
+    # A pinned Erlang/OTP from builds.hex.pm rather than apt, which has OTP 25 on ubuntu-24.04, so that the agent
+    # can run testCompilation with the rebar3 below, which needs OTP 27 to 29. The compilation-tests job of
+    # gradle.yml installs the same OTP and rebar3: change the pins together in both files.
     # The links in /usr/local/bin put this Erlang on PATH without GITHUB_PATH.
     - name: Install Erlang/OTP
       id: erlang
@@ -49,6 +50,7 @@ jobs:
         OTP_VERSION: '27.3.4.9'
       run: |
         . /etc/os-release
+        [ "$VERSION_ID" = 24.04 ] || echo "::warning::Runs on Ubuntu $VERSION_ID, not the ubuntu-24.04 of runs-on"
         base="https://builds.hex.pm/builds/otp/$(dpkg --print-architecture)/ubuntu-$VERSION_ID"
         sha256=$(curl -fsSL --retry 3 "$base/builds.txt" | awk -v build="OTP-$OTP_VERSION" '$1 == build { print $4 }')
         if [ -z "$sha256" ]; then
