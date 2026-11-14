@@ -61,6 +61,8 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testNamedFunName()                  { doTest("Fact"); }
   public void testNamedFunShadowingArgument()     { doTest("Arg"); }
   public void testAnonymousFunLaterClauseVariable() { doTest("Zz"); }
+  public void testCaseHeadVariable()               { doTest("NewVar"); }
+  public void testCaseHeadVariableFromUse()        { doTest("NewVar"); }
   
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
