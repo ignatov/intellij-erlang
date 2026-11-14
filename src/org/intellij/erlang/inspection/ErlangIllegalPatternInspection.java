@@ -17,9 +17,13 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
   private static final String ERROR = "Illegal pattern";
@@ -110,7 +114,7 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitListOpExpression(@NotNull ErlangListOpExpression o) {
-          if (o.getLeft() instanceof ErlangStringLiteral && o.getRight() != null) {
+          if (isStringOrMacroPrefix(o.getLeft()) && o.getRight() != null) {
             checkExpressionAndReport(o.getRight(), problemsHolder);
           }
           else {
@@ -187,7 +191,9 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitGenericFunctionCallExpression(@NotNull ErlangGenericFunctionCallExpression o) {
-          registerProblem(problemsHolder, o, ERROR);
+          if (!isMacroCall(o)) {
+            registerProblem(problemsHolder, o, ERROR);
+          }
         }
 
         @Override
@@ -198,6 +204,27 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
         }
       });
     }
+  }
+
+  private static boolean isMacroCall(@NotNull ErlangGenericFunctionCallExpression o) {
+    PsiElement name = PsiTreeUtil.skipWhitespacesAndCommentsBackward(o.getArgumentList());
+    return name instanceof ErlangMacros || name instanceof ErlangQAtom && ((ErlangQAtom) name).getMacros() != null;
+  }
+
+  private static boolean isStringOrMacroPrefix(@Nullable ErlangExpression o) {
+    if (o instanceof ErlangStringLiteral) return true;
+    if (o instanceof ErlangFunctionCallExpression) return ((ErlangFunctionCallExpression) o).getQAtom().getMacros() != null;
+    if (o instanceof ErlangGenericFunctionCallExpression) return isMacroCall((ErlangGenericFunctionCallExpression) o);
+    if (!(o instanceof ErlangMaxExpression)) return false;
+    for (PsiElement child = o.getFirstChild(); child != null; child = child.getNextSibling()) {
+      if (child instanceof PsiWhiteSpace || child instanceof PsiComment ||
+          child instanceof ErlangStringLiteral || child instanceof ErlangMacros ||
+          child instanceof ErlangQAtom && ((ErlangQAtom) child).getMacros() != null) {
+        continue;
+      }
+      return false;
+    }
+    return true;
   }
 
   private static class ConstantExpressionChecker extends ErlangRecursiveVisitor {
