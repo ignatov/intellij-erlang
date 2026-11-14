@@ -1,0 +1,56 @@
+name: Copilot Setup Steps
+
+# Prepares the environment of the Copilot cloud agent (and of Copilot code review, unless
+# copilot-code-review.yml exists). Copilot reads it only from the default branch; the triggers below
+# run it as a normal workflow when it changes and from the Actions tab.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+permissions:
+  contents: read
+
+jobs:
+  # Copilot picks up only a job with exactly this name.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK 25
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+    # Same packages as the compilation-tests job of gradle.yml, so that the agent can run testCompilation.
+    - name: Install Erlang/OTP
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends erlang-nox erlang-dev
+        erl -noshell -eval 'io:put_chars(code:root_dir()), halt().'
+    # Same pinned escript and sha256 as the compilation-tests job. It is put on PATH rather than in GITHUB_ENV, which is
+    # not documented to reach the agent, so the agent passes -Drebar.path="$(command -v rebar3)" to testCompilation.
+    - name: Install rebar3
+      env:
+        REBAR3_VERSION: '3.28.0'
+        REBAR3_SHA256: 5a28b1cca082d3b023ec0f5df9d9f9d52557036c6f2a21c1ffa11b93a984dd42
+      run: |
+        rebar3="$RUNNER_TEMP/rebar3"
+        curl -fsSL --retry 3 -o "$rebar3" "https://github.com/erlang/rebar3/releases/download/$REBAR3_VERSION/rebar3"
+        echo "$REBAR3_SHA256  $rebar3" | sha256sum -c -
+        sudo install -m 755 "$rebar3" /usr/local/bin/rebar3
+        rebar3 version
+    # The setup steps run outside the agent firewall, which does not allow the JetBrains hosts the IntelliJ
+    # Platform, its test dependencies and the Plugin Verifier come from. Resolve all of them now by running
+    # one small test class, buildPlugin and verifyPlugin.
+    - name: Resolve dependencies and warm up the build
+      run: ./gradlew --no-daemon test --tests 'org.intellij.erlang.parser.ErlangAppParserTest' buildPlugin verifyPlugin
