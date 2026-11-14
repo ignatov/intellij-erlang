@@ -52,6 +52,11 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
+  public void testVariablesFromCaseHeadInClause() { doTestInclude("foo() -> case VarB = f() of _ -> <caret> end.", "VarB"); }
+  public void testVariablesFromCaseHeadAfterEnd() { doTestInclude("foo() -> case VarB = f() of _ -> ok end, <caret>", "VarB"); }
+  public void testNoVariablesFromCaseClausesInHead() {
+    doTestVariants("foo() -> case f(<caret>) of _ -> VarB = 1 end.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "VarB");
+  }
   public void testFunctions() {
     doTestInclude(
       """
