@@ -1,0 +1,2 @@
+-module(test).
+-export([sel<caret>f/0]).

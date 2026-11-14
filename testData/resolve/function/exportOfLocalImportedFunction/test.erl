@@ -1,0 +1,5 @@
+-module(test).
+-import(incl, [foo/0]).
+-export([fo<caret>o/0]).
+
+foo() -> ok.
