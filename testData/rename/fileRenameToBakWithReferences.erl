@@ -1,0 +1,3 @@
+-module(fileRenameToBakWithReferences).
+
+f() -> ok.

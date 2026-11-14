@@ -1,0 +1,3 @@
+-module(fileRenameToHrl).
+
+f() -> ok.

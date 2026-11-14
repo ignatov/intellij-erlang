@@ -1,0 +1,3 @@
+-module(fileRenameToErl).
+
+f() -> ok.
