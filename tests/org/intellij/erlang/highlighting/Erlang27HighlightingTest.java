@@ -22,6 +22,12 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testIoFormatSigils() {
+    myFixture.addFileToProject("io.erl", "-module(io).\n-export([format/2]).\nformat(_, _) -> ok.\n");
+    myFixture.addFileToProject("io_lib.erl", "-module(io_lib).\n-export([format/2]).\nformat(_, _) -> [].\n");
+    doTest();
+  }
+
   public void testErlang29SyntaxError() {
     enableErlang29SyntaxInspection();
     doTest();

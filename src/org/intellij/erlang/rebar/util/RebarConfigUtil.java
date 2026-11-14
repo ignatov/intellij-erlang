@@ -19,9 +19,11 @@ package org.intellij.erlang.rebar.util;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,11 +40,11 @@ public final class RebarConfigUtil {
     final List<String> includePaths = new ArrayList<>();
     ErlangTermFileUtil.processConfigSection(rebarConfig, "erl_opts", section -> ErlangTermFileUtil.processConfigSection(section, "i", includeOptionValue -> {
       if (includeOptionValue instanceof ErlangStringLiteral) {
-        includePaths.add(getStringLiteralText((ErlangStringLiteral) includeOptionValue));
+        ContainerUtil.addIfNotNull(includePaths, getStringLiteralText((ErlangStringLiteral) includeOptionValue));
       }
       else {
         for (ErlangStringLiteral includePath : PsiTreeUtil.findChildrenOfType(includeOptionValue, ErlangStringLiteral.class)) {
-          includePaths.add(getStringLiteralText(includePath));
+          ContainerUtil.addIfNotNull(includePaths, getStringLiteralText(includePath));
         }
       }
     }));
@@ -74,9 +76,10 @@ public final class RebarConfigUtil {
     return parseTransforms;
   }
 
-  @NotNull
+  @Nullable
   private static String getStringLiteralText(@NotNull ErlangStringLiteral literal) {
-    return StringUtil.unquoteString(literal.getString().getText());
+    PsiElement string = literal.getString();
+    return string != null ? StringUtil.unquoteString(string.getText()) : null;
   }
 
   @Nullable

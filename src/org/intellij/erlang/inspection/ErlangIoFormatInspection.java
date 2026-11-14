@@ -20,6 +20,7 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
@@ -69,8 +70,10 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
         List<ErlangExpression> reverse = ContainerUtil.reverse(expressionList);
         ErlangListExpression args = ObjectUtils.tryCast(reverse.getFirst(), ErlangListExpression.class);
         ErlangStringLiteral formatLiteral = ObjectUtils.tryCast(reverse.get(1), ErlangStringLiteral.class);
-        String formatString = formatLiteral != null ? formatLiteral.getString().getText() : null;
-        if (formatString == null || formatString.length() < 2) return;
+        int formatStart = formatLiteral != null ? getFormatStringStart(formatLiteral) : -1;
+        if (formatStart < 0) return;
+        String formatString = formatLiteral.getText().substring(formatStart);
+        if (formatString.length() < 2) return;
 
 
         int expectedArgumentsCount;
@@ -78,7 +81,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
           expectedArgumentsCount = getExpectedFormatArgsCount(formatString);
         } catch (InvalidControlSequenceException e) {
           registerProblem(holder, formatLiteral, "Invalid control sequence",
-            TextRange.create(e.getInvalidSequenceStartIdx(), formatString.length() - 1), null);
+            TextRange.create(formatStart + e.getInvalidSequenceStartIdx(), formatStart + formatString.length() - 1), null);
           return;
         }
 
@@ -89,6 +92,17 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
         }
       }
     };
+  }
+
+  /**
+   * Returns the offset of the format string after the sigil prefix, or -1 when the literal is a binary sigil,
+   * which erlc does not check either.
+   */
+  private static int getFormatStringStart(@NotNull ErlangStringLiteral literal) {
+    if (literal.getString() != null || literal.getTripleQuotedString() != null) return 0;
+    PsiElement sigil = literal.getSigilString();
+    String sigilText = sigil != null ? sigil.getText() : "";
+    return sigilText.startsWith("~s") || sigilText.startsWith("~S") ? 2 : -1;
   }
 
   private static int getExpectedFormatArgsCount(String formatString) throws InvalidControlSequenceException {
