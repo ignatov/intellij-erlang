@@ -47,6 +47,10 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testCommon()     { doTest("Export function"); }
   public void testMacroWithExport()      { doTest("Export function"); }
   public void testMacroWithout()         { doTest("Export function"); }
+  public void testMacroDefinedBelowExport() { doTest("Export function"); }
+  public void testMacroDefinedTwice()      { doTest("Export function"); }
+  public void testMacroSeveralExports()    { doTest("Export function"); }
+  public void testMacroNotDefined()        { doTest("Export function"); }
   public void testQuotedAtomWithExport() { doTest("Export function"); }
   public void testQuotedAtomWithout()    { doTest("Export function"); }
 
@@ -72,6 +76,17 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     assertEquals(2, getExportsToShow(myFixture.getFile()).size());
     myFixture.configureByFile("fewNonEmpties2.erl");
     assertEquals(2, getExportsToShow(myFixture.getFile()).size());
+  }
+
+  public void testExportsToShowInPopupForMacroFunction() {
+    myFixture.configureByFile("macroSeveralExports.erl");
+    var file = (ErlangFile) myFixture.getFile();
+    var function = file.getFunctions().getLast();
+    var definition = ErlangExportFunctionFix.getLastMacroDefinition(file, function);
+    assertNotNull(definition);
+    var exports = ErlangExportFunctionFix.getExportsBelow(ErlangExportFunctionFix.getExportPsiElements(file), definition);
+    assertEquals(1, exports.size());
+    assertEquals("[another/0]", exports.getFirst().getExportFunctions().getText());
   }
 
   private static List<ErlangExport> getExportsToShow(PsiFile file) {

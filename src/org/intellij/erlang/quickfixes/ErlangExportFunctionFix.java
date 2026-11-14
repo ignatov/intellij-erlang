@@ -42,7 +42,9 @@ import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -94,10 +96,11 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                       @Nullable Editor editor) {
     if (!(function.getContainingFile() instanceof ErlangFile file)) return;
 
-    var exports = getExportPsiElements(file);
+    var macroDefinition = getLastMacroDefinition(file, function);
+    var exports = getExportsBelow(getExportPsiElements(file), macroDefinition);
 
     if (exports.isEmpty()) {
-      createNewExport(project, file, function, null);
+      createNewExport(project, file, function, macroDefinition);
       return;
     }
 
@@ -256,6 +259,27 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   private static PsiElement createExport(Project project, String text) {
     return ErlangElementFactory.createExportFromText(project, text);
+  }
+
+  /**
+   * For a function whose name is a macro, returns the last {@code -define} of that macro in the file.
+   * The macro must be defined above any export entry that uses it.
+   */
+  @Nullable
+  static ErlangMacrosDefinition getLastMacroDefinition(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    var macros = function.getAtomName().getMacros();
+    var macrosName = macros != null ? macros.getMacrosName() : null;
+    if (macrosName == null) return null;
+
+    var name = ErlangPsiImplUtil.getNameIdentifier(macrosName).getText();
+    return ContainerUtil.findLast(file.getMacroses(), definition -> name.equals(definition.getName()));
+  }
+
+  @NotNull
+  static List<ErlangExport> getExportsBelow(@NotNull List<ErlangExport> exports, @Nullable PsiElement element) {
+    if (element == null) return exports;
+    var offset = element.getTextRange().getEndOffset();
+    return ContainerUtil.filter(exports, export -> export.getTextRange().getStartOffset() >= offset);
   }
 
   @NotNull
