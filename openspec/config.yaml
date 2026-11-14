@@ -9,15 +9,19 @@ context: |
   completion, formatter, run and debug, rebar and eunit. Its users are Erlang developers who work in IntelliJ IDEA.
   Read AGENTS.md at the repository root before writing an artifact. It has the layout, the commands, the platform
   rules, the definition of done and the areas that need the maintainer's consent. It applies to every change.
-  The Erlang compiler is the reference for behaviour: when it is unclear what the plugin should do, it does what
-  erlc does.
+  The Erlang compiler is the reference for behaviour where it decides the answer: what is valid syntax, what is an
+  error or a warning, what a name refers to. There the plugin does what erlc does. Elsewhere something else
+  decides and the artifact names it: the build tool, the platform convention, the code style setting.
+  Every command below needs `openspec` on PATH. When it is missing, stop and say so; do not write, move or merge
+  files under `openspec/` by hand.
   Specs grow from the work that is done. There are three kinds of change:
   - A feature or a change of user-visible behaviour: a proposal with all four artifacts. The proposal and its
     implementation are separate pull requests. The maintainer approves proposal.md by merging the proposal;
     nothing is implemented before that.
   - A bug fix: a change `fix-<issue>-<what>` that has only `.openspec.yaml` and a delta spec. It is created and
     archived inside the pull request of the fix, after the test and the fix. No proposal.md, design.md or tasks.md,
-    no "Open decisions", no approval before the fix.
+    no "Open decisions", no approval before the fix. When an open change modifies the same requirement, the fix
+    also copies its scenario into that change ("A fix on a requirement that an open change modifies" in AGENTS.md).
   - A baseline of existing behaviour: a change `baseline-<capability>-<slice>` that has a delta spec and a
     design.md. It is created and archived in a pull request of its own that changes nothing outside `openspec/`.
 
@@ -38,53 +42,76 @@ rules:
     - >-
       Record the public issue of the change in `.openspec.yaml` as `x-issue: <number>` and link it in "Why".
     - >-
-      The Erlang compiler is the reference. Where the change decides what is an error, what a name resolves to
-      or what is valid syntax, say what erlc does and propose the same. Name every place where the proposal
-      differs from erlc and why.
+      The Erlang compiler is the reference where it decides. Where the change decides what is an error, what a
+      name resolves to or what is valid syntax, say what erlc does and propose the same. Name every place where
+      the proposal differs from erlc and why. Where erlc does not decide, name what does (the build tool, the
+      platform convention, the code style setting) and what it does.
     - >-
-      Do not specify parser behaviour that depends on macros or on the preprocessor one special case at a time.
-      The maintainer's direction is a lexer that substitutes macros; such a change waits for that design. Say so
-      in the proposal and stop.
+      Do not propose new parser behaviour that depends on macros or on the preprocessor one special case at a
+      time. The maintainer's direction is a lexer that substitutes macros; such a proposal waits for that design.
+      Say so in the proposal and stop. This rule is about proposals only: a bug fix that "Parser and lexer fixes"
+      in AGENTS.md allows records its scenario as any other fix.
     - >-
       End a proposal with a section "Open decisions" that lists every decision the maintainer has to take, each with the
       options and the proposed one. The maintainer approves proposal.md before the implementation starts.
     - >-
       Say what the change does to find usages, rename, completion, the stub and file-based indices and the
-      stub and index versions when it touches resolve, the parser or the indices.
+      stub and index versions when it touches resolve, the parser or the indices. When it changes a shared
+      lookup or comparator, list every caller under "Impact" and what changes for it.
+    - >-
+      State as fact only what was run or read: what the plugin does today (a test or the code), what the tool
+      does (run it), what the issue says (quote the issue). Say where a quotation comes from.
+    - >-
+      Under "Capabilities", a capability that `openspec list --specs` shows is a modified one, not a new one.
+    - >-
+      The proposal pull request must pass `openspec validate --all --strict --no-interactive` on top of the
+      current master before it is merged.
   specs:
     - >-
-      The Erlang compiler is the reference. Phrase requirements for the parser, resolve and inspections as "the
-      same as erlc for ...", and say in every scenario what erlc does with its snippet (compiles it, or the
-      error or warning it prints). When erlc alone does not decide the answer, for example when a build tool
-      chooses the files, name the tool and what it does.
+      Every scenario has, in this order: the snippet or the files; what the plugin does; what decides that
+      answer and what it does; and in its last step the test that proves it, as `Class.testMethod`. In a bug
+      fix the test is the one the fix adds, in a baseline one that exists and passes, in a proposal the one the
+      implementation will add. This holds for proposals too, so that the archived spec carries the test names.
+    - >-
+      Say what erlc does (compiles the snippet, or the error or warning it prints) only where erlc decides the
+      answer: valid syntax, errors and warnings, what a name refers to. Phrase such requirements as "the same
+      as erlc for ...". Elsewhere name what does decide and what it does: the build tool (which files rebar3
+      compiles, what it puts on the code path), the platform convention (what the IntelliJ action does), the
+      code style setting (formatter).
+    - >-
+      Check it by running it: erlc on the snippet, the build tool on a project with those files. Do not write it
+      from memory. Where erlc rejects the snippet for a reason that the requirement is not about, say so in the
+      scenario.
     - >-
       One mismatch with erlc is accepted and is not a defect: the IDE treats a `.ERL` file as an Erlang file,
       erlc refuses it ("Unknown extension").
     - >-
-      A bug fix and a baseline have no tasks.md, so every scenario names the test that proves it, as
-      `Class.testMethod`, in its last step: in a bug fix the test that the fix adds, in a baseline a test that
-      exists and passes. A proposal names the tests in tasks.md.
+      A proposal and a bug fix specify the behaviour that the pull request adds or changes, and the boundary
+      cases that its own tests pin, and nothing else. A boundary case is behaviour next to the change that
+      stays as it is. Name its scenario `Boundary: ...` and make its first line "Unchanged by the fix; pinned
+      by its test." (in a proposal "Unchanged by the change; pinned by its test."). The test of a boundary
+      scenario passes before and after; every other test fails before. No requirement consists of boundary
+      scenarios only.
     - >-
-      Check what erlc does by running it on the snippet of the scenario; do not write it from memory. Where
-      erlc rejects the snippet for a reason that the requirement is not about, say so in the scenario.
-    - >-
-      A proposal and a bug fix specify only the behaviour that the pull request adds or changes: no
-      requirements for existing behaviour that stays as it is. A bug fix states the corrected behaviour and
-      nothing else.
+      Every part of a requirement's text has a scenario. Remove the words that have none.
     - >-
       A baseline specifies only existing behaviour that an existing test proves, one area or one slice of an
       area per change. Keep the slice small enough to be read in one sitting: what one test class proves, or a
       part of it, and at most about five requirements. Behaviour that the code has but no test proves is not
       specified; it goes into design.md.
     - >-
-      The first change that touches a capability creates it: `## Purpose` and `## ADDED Requirements`. A later
-      one has no `## Purpose`. To add a scenario to an existing requirement, copy the whole requirement block
-      from `openspec/specs/<capability>/spec.md` under `## MODIFIED Requirements` and add the scenario at its
-      end; a block that leaves out an existing scenario is refused. A new requirement goes under
-      `## ADDED Requirements`.
+      The first change that touches a capability creates it: `## Purpose` and `## ADDED Requirements`. The
+      Purpose has at least 50 characters and covers the whole area; a shorter one passes in the delta and fails
+      in the spec after archiving. A later change has no `## Purpose`. To add a scenario to an existing
+      requirement, copy the whole requirement block from `openspec/specs/<capability>/spec.md` under
+      `## MODIFIED Requirements` and add the scenario at its end; a block that leaves out an existing scenario
+      is refused. A new requirement goes under `## ADDED Requirements`; archiving refuses a name that exists.
     - >-
-      Use the capability paths of the proposal. Do not specify parser behaviour that depends on macros or on the
-      preprocessor one special case at a time.
+      A scenario name occurs once in a spec; the tool does not check it.
+    - >-
+      Use the capability paths of the proposal. A proposal does not specify new parser behaviour that depends
+      on macros or on the preprocessor one special case at a time. A bug fix that "Parser and lexer fixes" in
+      AGENTS.md allows records its scenario as any other fix.
   design:
     - >-
       Write design.md only as far as the requirements need it. Where the IDE cannot do what erlc does, say what
@@ -97,8 +124,13 @@ rules:
       Name every area of the "Stop and ask the maintainer" list of AGENTS.md that the implementation will touch.
   tasks:
     - >-
-      Only a proposal has tasks.md. Every scenario of the delta specs names the test that will prove it, as
-      `Class.testMethod` with its `testData` files. A scenario without a test is not done.
+      Only a proposal has tasks.md. The scenarios of the delta specs name the tests; a task refers to its
+      scenario by name and lists the `testData` files, and does not repeat the test name. A scenario without a
+      task is not done.
+    - >-
+      Say for every test how it is seen failing before the change. When the result of today's code depends on
+      the order in which files are created or the index returns them, fix that order in the test and say which
+      order fails. The test of a boundary scenario passes before and after; mark the task so.
     - >-
       Follow the definition of done of AGENTS.md: a test fails before the change and passes after it, and
       `./gradlew test` passes. Include the version bumps that AGENTS.md asks for (stub version, index versions).
@@ -116,5 +148,11 @@ operations:
         A proposal is archived only after its implementation is merged into master, in a pull request of its
         own that contains nothing else. A bug fix and a baseline are archived in the pull request that creates
         them: `openspec archive <name> --yes`, then `openspec validate --all --strict --no-interactive`.
-        `openspec/specs/` changes only through archiving; the one edit by hand is to keep both sides when two
-        pull requests conflict in the same spec.
+      - >-
+        Archive only with the command `openspec archive <name> --yes`. Never choose "Archive without syncing",
+        never merge a delta into a main spec yourself and never move a change folder into the archive with
+        `mv`: that skips the checks with which the command refuses a delta that does not fit the spec.
+      - >-
+        `openspec/specs/` changes only through the command. When two pull requests conflict in the same spec,
+        do not resolve the conflict by hand: take master's spec, move the change back out of the archive, fit
+        the delta and archive again ("When master's spec changed under an archived change" in AGENTS.md).
