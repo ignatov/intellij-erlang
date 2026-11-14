@@ -117,6 +117,20 @@ dependencies {
   implementation project('jps-plugin')
 }
 
+intellijPlatform {
+  pluginConfiguration {
+    ideaVersion {
+      // Maintenance branch for IntelliJ IDEA 2025.3 only; newer IDEs get releases from master.
+      untilBuild = '253.*'
+    }
+  }
+  // The release-253 workflow supplies PUBLISH_TOKEN from the JETBRAINS_MARKETPLACE_TOKEN secret.
+  publishing {
+    token = providers.environmentVariable('PUBLISH_TOKEN')
+    channels = ['default']
+  }
+}
+
 // Add JPS Java 11 verification to the plugin build pipeline
 afterEvaluate {
   tasks.named('prepareSandbox') {
