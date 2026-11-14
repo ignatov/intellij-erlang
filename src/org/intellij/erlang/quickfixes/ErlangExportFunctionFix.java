@@ -43,7 +43,6 @@ import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -222,7 +221,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
     var replace = exportFunctions.getText().replace("[", "").replace("]", "");
     var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") +
-            ErlangPsiImplUtil.createFunctionPresentation(function);
+            getExportText(function);
     var attribute = PsiTreeUtil.getParentOfType(oldExport, ErlangAttribute.class);
 
     if (attribute == null) return;
@@ -235,7 +234,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                       @NotNull ErlangFunction function,
                                       @Nullable PsiElement elementAfter) {
     if (elementAfter != null) {
-      file.addAfter(createExport(project, function.getName() + "/" + function.getArity()),
+      file.addAfter(createExport(project, getExportText(function)),
                     elementAfter);
       file.addAfter(ErlangElementFactory.createLeafFromText(project, "\n"), elementAfter);
       return;
@@ -244,10 +243,15 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     var elementBefore = ErlangQuickFixBase.getAnchorElement(file);
 
     if (elementBefore != null) {
-      file.addBefore(createExport(project, function.getName() + "/" + function.getArity()),
+      file.addBefore(createExport(project, getExportText(function)),
                      elementBefore);
       file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
     }
+  }
+
+  @NotNull
+  private static String getExportText(@NotNull ErlangFunction function) {
+    return function.getAtomName().getText() + "/" + function.getArity();
   }
 
   private static PsiElement createExport(Project project, String text) {

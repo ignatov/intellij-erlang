@@ -45,6 +45,10 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testEmpty()      { doTest("Export function"); }
   public void testWithout()    { doTest("Export function"); }
   public void testCommon()     { doTest("Export function"); }
+  public void testMacroWithExport()      { doTest("Export function"); }
+  public void testMacroWithout()         { doTest("Export function"); }
+  public void testQuotedAtomWithExport() { doTest("Export function"); }
+  public void testQuotedAtomWithout()    { doTest("Export function"); }
 
   public void testDelete()     { doTest("Remove function"); }
   public void testDeleteSpec() { doTest("Remove function"); }
