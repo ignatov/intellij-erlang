@@ -43,6 +43,16 @@ The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts
 - Never hand-edit `gen/`. A grammar or lexer change ships in the same commit as the regenerated `gen/` and the updated `testData/parser/*.txt` golden files. If you cannot run the generator, do not change the grammar; stop and say so.
 - Handwritten PSI logic goes in `ErlangPsiImplUtil` (the bnf `psiImplUtilClass`) or in mixins under `src/`. Stubbed rules are wired through `stubClass` and `ErlangElementTypeFactory` in the bnf.
 
+### Parser and lexer fixes
+You may change `grammars/erlang.bnf` and `Erlang.flex` to fix a parser or lexer bug: valid Erlang that the plugin marks as a syntax error, or a wrong PSI tree. `erlc` decides what is valid Erlang.
+- Start from a minimal module that `erlc` compiles and the plugin's parser gets wrong. Add it as a parser test (`testData/parser/X.erl` with its PSI dump `X.txt`) and see the test fail before you change the grammar or the lexer.
+- Regenerate with `./gradlew generateLexerAndParser` and commit `gen/` together with the grammar. `./gradlew verifyGeneratedSources` must pass.
+- An existing `testData/parser/*.txt` dump may change only where the new tree is the intended one. List every changed dump in the PR description and say why its new tree is right.
+- Syntax that exists only from some OTP release stays gated on `ErlangSdkRelease` (see Platform rules). Test it with the matching mock SDK.
+- If the change turns the same text into different stubbed elements, bump the stub version as Stubs and indices says, and name the bump in the PR description.
+- Run `./gradlew test`. Resolve, highlighting, completion and the formatter all read the tree the parser builds, so a grammar change can break any of them.
+- Still stop and ask for: the header attributes of the bnf (class names, `psiImplUtilClass`, `generate`), renaming or removing a rule or a token that `src/` uses, a new or changed `stubClass`, and anything in `grammar-generator/`.
+
 ## Stubs and indices
 - The stub version of `.erl` files is `VERSION` in `src/org/intellij/erlang/stubs/types/ErlangFileElementType.java`, returned by `getStubVersion()`. Bump it by one in the same change when either of these changes:
   - the bytes written per stub: `serialize`, `deserialize` or `createStub` of a type in `stubs/types/`;
@@ -87,9 +97,9 @@ The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts
 Change these only when the task explicitly asks for it, and name them at the top of the PR description:
 - anything under `.github/`, including workflows;
 - releases and versioning: `version` in `gradle.properties`, `<change-notes>` in `plugin.xml`, tags. For a user-facing fix, put a one-line change note in the PR description instead;
-- build files: `build.gradle`, `settings.gradle`, `jps-plugin/build.gradle`, `gradle.properties`, the wrapper, `libs/`;
-- `grammars/`, `Erlang.flex` and `gen/`;
-- stub element types, stub or index versions and the indexers;
+- build files: `build.gradle`, `settings.gradle`, `jps-plugin/build.gradle`, `grammar-generator/`, `gradle.properties`, the wrapper, `libs/`;
+- `grammars/`, `Erlang.flex` and `gen/`, except a parser or lexer fix made by the rules in Generated code;
+- stub element types, stub or index versions and the indexers, except the stub version bump that a parser fix requires;
 - the plugin descriptors `plugin.xml`, `ErlangPlugin.xml` and `java-deps.xml`. Registering a new extension in `ErlangPlugin.xml` is fine when the task asks for that feature; say so in the PR;
 - `jps-plugin/` and the committed `.beam` files;
 - deleting tests, disabling them (`@Ignore`, a `_test` rename, a new `Assume`), or weakening assertions;

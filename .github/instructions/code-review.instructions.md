@@ -30,7 +30,7 @@ The project rules are in `AGENTS.md` at the repository root. Review against them
    - markup removed so that a test passes;
    - tests deleted or disabled (`@Ignore`, a `_test` rename, a new `Assume`), or assertions weakened.
 9. **Scope.** Flag changes unrelated to the stated purpose: refactors, reformatting, renames, dependency bumps or documentation churn.
-10. **Stop-and-ask areas** (listed in `AGENTS.md`): `.github/`, versioning and change notes, build files, `grammars/` and `gen/`, stub and index versions, the plugin descriptors and `jps-plugin/`. If the PR touches one and its description does not call it out, say so.
+10. **Stop-and-ask areas** (listed in `AGENTS.md`): `.github/`, versioning and change notes, build files, `grammars/` and `gen/`, stub and index versions, the plugin descriptors and `jps-plugin/`. If the PR touches one and its description does not call it out, say so. A parser or lexer fix may change `grammars/erlang.bnf`, `Erlang.flex` and `gen/`: check it against "Parser and lexer fixes" in `AGENTS.md` instead. It needs a parser test that fails without the change, an `erlc` result for the snippet, and a reason for every changed `testData/parser/*.txt` dump.
 
 ## How to report
 - Report only concrete defects. For each one give the file and line, what goes wrong, and a scenario that triggers it: the input, the thread, or the IDE state.
